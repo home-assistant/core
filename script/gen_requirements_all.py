@@ -8,31 +8,33 @@ import sys
 import fnmatch
 
 COMMENT_REQUIREMENTS = (
-    'RPi.GPIO',
-    'raspihats',
-    'rpi-rf',
     'Adafruit-DHT',
     'Adafruit_BBIO',
-    'fritzconnection',
-    'pybluez',
+    'avion',
     'beacontools',
+    'blinkt',
     'bluepy',
+    'bme680',
+    'credstash',
+    'decora',
+    'envirophat',
+    'evdev',
+    'face_recognition',
+    'fritzconnection',
+    'i2csense',
     'opencv-python',
+    'py_noaa',
+    'pybluez',
+    'pycups',
+    'PySwitchbot',
+    'pySwitchmate',
+    'python-eq3bt',
     'python-lirc',
     'pyuserinput',
-    'evdev',
-    'pycups',
-    'python-eq3bt',
-    'avion',
-    'decora',
-    'face_recognition',
-    'blinkt',
+    'raspihats',
+    'rpi-rf',
+    'RPi.GPIO',
     'smbus-cffi',
-    'envirophat',
-    'i2csense',
-    'credstash',
-    'bme680',
-    'py_noaa',
 )
 
 TEST_REQUIREMENTS = (
@@ -106,6 +108,7 @@ TEST_REQUIREMENTS = (
     'pyupnp-async',
     'pywebpush',
     'pyHS100',
+    'PyNaCl',
     'regenmaschine',
     'restrictedpython',
     'rflink',
@@ -118,6 +121,7 @@ TEST_REQUIREMENTS = (
     'sqlalchemy',
     'srpenergy',
     'statsd',
+    'toonapilib',
     'uvcclient',
     'vsure',
     'warrant',
@@ -159,6 +163,10 @@ pycrypto==1000000000.0.0
 
 # Contains code to modify Home Assistant to work around our rules
 python-systemair-savecair==1000000000.0.0
+
+# Newer version causes pylint to take forever
+# https://github.com/timothycrosley/isort/issues/848
+isort==4.3.4
 """
 
 

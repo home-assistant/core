@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Solo se necesita una instancia."
+        },
+        "create_entry": {
+            "default": "\n\nEn Android, abra[la aplicaci\u00f3n OwnTracks]({android_url}), vaya a Preferencias -> Conexi\u00f3n. Cambie los siguientes ajustes:\n - Mode: HTTP privado\n - URL: {webhook_url}\n - Identificaci\u00f3n:\n   - Nombre de usuario: <Your name>\n   - ID de dispositivo: <Your device name>\n\nEn iOS, abra[la aplicaci\u00f3n OwnTracks] ({ios_url}), toque el icono (i) en la parte superior izquierda -> configuraci\u00f3n. Cambie los siguientes ajustes:\n - Mode: HTTP\n - URL: {webhook_url}\n - Activar la autenticaci\u00f3n\n - UserID: <Your name>\n\n{secret}\n\nConsulte[la documentaci\u00f3n]({docs_url}) para obtener m\u00e1s informaci\u00f3n."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfEst\u00e1s seguro de que quieres configurar OwnTracks?",
+                "title": "Configurar OwnTracks"
+            }
+        },
+        "title": "OwnTracks"
+    }
+}

@@ -8,6 +8,7 @@ import asyncio
 from enum import Enum
 import logging
 
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send
 )
@@ -48,8 +49,8 @@ class ZHADevice:
             self._model = zigpy_device.endpoints[ept_id].model
         self._zha_gateway = zha_gateway
         self.cluster_channels = {}
-        self._relay_channels = []
-        self._all_channels = []
+        self._relay_channels = {}
+        self._all_channels = {}
         self._name = "{} {}".format(
             self.manufacturer,
             self.model
@@ -125,7 +126,7 @@ class ZHADevice:
     @property
     def all_channels(self):
         """Return cluster channels and relay channels for device."""
-        return self._all_channels
+        return self._all_channels.values()
 
     @property
     def available_signal(self):
@@ -172,11 +173,13 @@ class ZHADevice:
         if cluster_channel.name is POWER_CONFIGURATION_CHANNEL and \
                 POWER_CONFIGURATION_CHANNEL in self.cluster_channels:
             return
-        self._all_channels.append(cluster_channel)
+
         if isinstance(cluster_channel, EventRelayChannel):
-            self._relay_channels.append(cluster_channel)
+            self._relay_channels[cluster_channel.unique_id] = cluster_channel
+            self._all_channels[cluster_channel.unique_id] = cluster_channel
         else:
             self.cluster_channels[cluster_channel.name] = cluster_channel
+            self._all_channels[cluster_channel.name] = cluster_channel
 
     async def async_configure(self):
         """Configure the device."""
@@ -188,13 +191,14 @@ class ZHADevice:
         """Initialize channels."""
         _LOGGER.debug('%s: started initialization', self.name)
         await self._execute_channel_tasks('async_initialize', from_cache)
-        self.power_source = self.cluster_channels.get(
-            BASIC_CHANNEL).get_power_source()
-        _LOGGER.debug(
-            '%s: power source: %s',
-            self.name,
-            BasicChannel.POWER_SOURCES.get(self.power_source)
-        )
+        if BASIC_CHANNEL in self.cluster_channels:
+            self.power_source = self.cluster_channels.get(
+                BASIC_CHANNEL).get_power_source()
+            _LOGGER.debug(
+                '%s: power source: %s',
+                self.name,
+                BasicChannel.POWER_SOURCES.get(self.power_source)
+            )
         self.status = DeviceStatus.INITIALIZED
         _LOGGER.debug('%s: completed initialization', self.name)
 
@@ -229,7 +233,8 @@ class ZHADevice:
         if self._unsub:
             self._unsub()
 
-    async def get_clusters(self):
+    @callback
+    def async_get_clusters(self):
         """Get all clusters for this device."""
         return {
             ep_id: {
@@ -239,25 +244,39 @@ class ZHADevice:
             if ep_id != 0
         }
 
-    async def get_cluster(self, endpoint_id, cluster_id, cluster_type=IN):
+    @callback
+    def async_get_zha_clusters(self):
+        """Get zigbee home automation clusters for this device."""
+        from zigpy.profiles.zha import PROFILE_ID
+        return {
+            ep_id: {
+                IN: endpoint.in_clusters,
+                OUT: endpoint.out_clusters
+            } for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
+            if ep_id != 0 and endpoint.profile_id == PROFILE_ID
+        }
+
+    @callback
+    def async_get_cluster(self, endpoint_id, cluster_id, cluster_type=IN):
         """Get zigbee cluster from this entity."""
-        clusters = await self.get_clusters()
+        clusters = self.async_get_clusters()
         return clusters[endpoint_id][cluster_type][cluster_id]
 
-    async def get_cluster_attributes(self, endpoint_id, cluster_id,
+    @callback
+    def async_get_cluster_attributes(self, endpoint_id, cluster_id,
                                      cluster_type=IN):
         """Get zigbee attributes for specified cluster."""
-        cluster = await self.get_cluster(endpoint_id, cluster_id,
+        cluster = self.async_get_cluster(endpoint_id, cluster_id,
                                          cluster_type)
         if cluster is None:
             return None
         return cluster.attributes
 
-    async def get_cluster_commands(self, endpoint_id, cluster_id,
+    @callback
+    def async_get_cluster_commands(self, endpoint_id, cluster_id,
                                    cluster_type=IN):
         """Get zigbee commands for specified cluster."""
-        cluster = await self.get_cluster(endpoint_id, cluster_id,
-                                         cluster_type)
+        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
         return {
@@ -269,8 +288,7 @@ class ZHADevice:
                                      attribute, value, cluster_type=IN,
                                      manufacturer=None):
         """Write a value to a zigbee attribute for a cluster in this entity."""
-        cluster = await self.get_cluster(
-            endpoint_id, cluster_id, cluster_type)
+        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
 
@@ -304,8 +322,7 @@ class ZHADevice:
                                     command_type, args, cluster_type=IN,
                                     manufacturer=None):
         """Issue a command against specified zigbee cluster on this entity."""
-        cluster = await self.get_cluster(
-            endpoint_id, cluster_id, cluster_type)
+        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
         response = None

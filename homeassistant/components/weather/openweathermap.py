@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
-FORECAST_MODE = ['hourly', 'daily']
+FORECAST_MODE = ['hourly', 'daily', 'freedaily']
 
 DEFAULT_NAME = 'OpenWeatherMap'
 
@@ -152,7 +152,12 @@ class OpenWeatherMapWeather(WeatherEntity):
                 return None
             return round(rain_value + snow_value, 1)
 
-        for entry in self.forecast_data.get_weathers():
+        if self._mode == 'freedaily':
+            weather = self.forecast_data.get_weathers()[::8]
+        else:
+            weather = self.forecast_data.get_weathers()
+
+        for entry in weather:
             if self._mode == 'daily':
                 data.append({
                     ATTR_FORECAST_TIME:

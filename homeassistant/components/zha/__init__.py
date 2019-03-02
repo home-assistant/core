@@ -33,7 +33,7 @@ REQUIREMENTS = [
     'zigpy-homeassistant==0.3.0',
     'zigpy-xbee-homeassistant==0.1.2',
     'zha-quirks==0.0.6',
-    'zigpy-deconz==0.1.1'
+    'zigpy-deconz==0.1.2'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -154,11 +154,9 @@ async def async_setup_entry(hass, config_entry):
         """Handle message from a device."""
         if not sender.initializing and sender.ieee in zha_gateway.devices and \
                 not zha_gateway.devices[sender.ieee].available:
-            hass.async_create_task(
-                zha_gateway.async_device_became_available(
-                    sender, is_reply, profile, cluster, src_ep, dst_ep, tsn,
-                    command_id, args
-                )
+            zha_gateway.async_device_became_available(
+                sender, is_reply, profile, cluster, src_ep, dst_ep, tsn,
+                command_id, args
             )
         return sender.handle_message(
             is_reply, profile, cluster, src_ep, dst_ep, tsn, command_id, args)

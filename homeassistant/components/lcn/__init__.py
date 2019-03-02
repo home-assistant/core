@@ -1,39 +1,22 @@
 """Support for LCN devices."""
 import logging
-import re
 
 import voluptuous as vol
 
+from homeassistant.components.lcn.const import (
+    CONF_CONNECTIONS, CONF_DIM_MODE, CONF_DIMMABLE, CONF_MOTOR, CONF_OUTPUT,
+    CONF_SK_NUM_TRIES, CONF_TRANSITION, DATA_LCN, DEFAULT_NAME, DIM_MODES,
+    DOMAIN, MOTOR_PORTS, OUTPUT_PORTS, PATTERN_ADDRESS, RELAY_PORTS)
 from homeassistant.const import (
-    CONF_ADDRESS, CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_SWITCHES, CONF_USERNAME)
+    CONF_ADDRESS, CONF_COVERS, CONF_HOST, CONF_LIGHTS, CONF_NAME,
+    CONF_PASSWORD, CONF_PORT, CONF_SWITCHES, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pypck==0.5.9']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'lcn'
-DATA_LCN = 'lcn'
-DEFAULT_NAME = 'pchk'
-
-CONF_SK_NUM_TRIES = 'sk_num_tries'
-CONF_DIM_MODE = 'dim_mode'
-CONF_OUTPUT = 'output'
-CONF_TRANSITION = 'transition'
-CONF_DIMMABLE = 'dimmable'
-CONF_CONNECTIONS = 'connections'
-
-DIM_MODES = ['STEPS50', 'STEPS200']
-OUTPUT_PORTS = ['OUTPUT1', 'OUTPUT2', 'OUTPUT3', 'OUTPUT4']
-RELAY_PORTS = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4',
-               'RELAY5', 'RELAY6', 'RELAY7', 'RELAY8']
-
-# Regex for address validation
-PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
-                             '\\.(?P<type>m|g)?(?P<id>\\d+)$')
+REQUIREMENTS = ['pypck==0.5.9']
 
 
 def has_unique_connection_names(connections):
@@ -78,6 +61,12 @@ def is_address(value):
     raise vol.error.Invalid('Not a valid address string.')
 
 
+COVERS_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ADDRESS): is_address,
+    vol.Required(CONF_MOTOR): vol.All(vol.Upper, vol.In(MOTOR_PORTS))
+    })
+
 LIGHTS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
@@ -111,8 +100,12 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONNECTIONS): vol.All(
             cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA]),
-        vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA]),
-        vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCHES_SCHEMA])
+        vol.Optional(CONF_COVERS): vol.All(
+            cv.ensure_list, [COVERS_SCHEMA]),
+        vol.Optional(CONF_LIGHTS): vol.All(
+            cv.ensure_list, [LIGHTS_SCHEMA]),
+        vol.Optional(CONF_SWITCHES): vol.All(
+            cv.ensure_list, [SWITCHES_SCHEMA])
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -166,14 +159,14 @@ async def async_setup(hass, config):
 
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections
 
-    hass.async_create_task(
-        async_load_platform(hass, 'light', DOMAIN,
-                            config[DOMAIN][CONF_LIGHTS], config))
-
-    hass.async_create_task(
-        async_load_platform(hass, 'switch', DOMAIN,
-                            config[DOMAIN][CONF_SWITCHES], config))
-
+    # load platforms
+    for component, conf_key in (('cover', CONF_COVERS),
+                                ('light', CONF_LIGHTS),
+                                ('switch', CONF_SWITCHES)):
+        if conf_key in config[DOMAIN]:
+            hass.async_create_task(
+                async_load_platform(hass, component, DOMAIN,
+                                    config[DOMAIN][conf_key], config))
     return True
 
 

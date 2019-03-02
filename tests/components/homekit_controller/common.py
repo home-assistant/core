@@ -134,8 +134,13 @@ class FakeService(AbstractService):
         return char
 
 
-async def setup_test_component(hass, services):
-    """Load a fake homekit accessory based on a homekit accessory model."""
+async def setup_test_component(hass, services, capitalize=False, suffix=None):
+    """Load a fake homekit accessory based on a homekit accessory model.
+
+    If capitalize is True, property names will be in upper case.
+
+    If suffix is set, entityId will include the suffix
+    """
     domain = None
     for service in services:
         service_name = ServicesTypes.get_short(service.type)
@@ -162,13 +167,14 @@ async def setup_test_component(hass, services):
         'host': '127.0.0.1',
         'port': 8080,
         'properties': {
-            'md': 'TestDevice',
-            'id': '00:00:00:00:00:00',
-            'c#': 1,
+            ('MD' if capitalize else 'md'): 'TestDevice',
+            ('ID' if capitalize else 'id'): '00:00:00:00:00:00',
+            ('C#' if capitalize else 'c#'): 1,
         }
     }
 
     fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
     await hass.async_block_till_done()
 
-    return Helper(hass, '.'.join((domain, 'testdevice')), pairing, accessory)
+    entity = 'testdevice' if suffix is None else 'testdevice_{}'.format(suffix)
+    return Helper(hass, '.'.join((domain, entity)), pairing, accessory)

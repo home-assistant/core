@@ -7,7 +7,8 @@
             "token_already_setup": "Token har allerede blitt satt opp.",
             "token_forbidden": "Tollet har ikke de n\u00f8dvendige OAuth m\u00e5lene.",
             "token_invalid_format": "Token m\u00e5 v\u00e6re i UID/GUID format",
-            "token_unauthorized": "Tollet er ugyldig eller ikke lenger autorisert."
+            "token_unauthorized": "Tollet er ugyldig eller ikke lenger autorisert.",
+            "webhook_error": "SmartThings kunne ikke validere endepunktet konfigurert i `base_url`. Vennligst se komponent krav."
         },
         "step": {
             "user": {

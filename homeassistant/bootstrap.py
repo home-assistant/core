@@ -85,14 +85,18 @@ async def async_from_config_dict(config: Dict[str, Any],
         async_enable_logging(hass, verbose, log_rotate_days, log_file,
                              log_no_color)
 
+    hass.config.skip_pip = skip_pip
+    if skip_pip:
+        _LOGGER.warning("Skipping pip installation of required modules. "
+                        "This may cause issues")
+
     core_config = config.get(core.DOMAIN, {})
-    has_api_password = bool((config.get('http') or {}).get('api_password'))
-    has_trusted_networks = bool((config.get('http') or {})
-                                .get('trusted_networks'))
+    has_api_password = bool(config.get('http', {}).get('api_password'))
+    trusted_networks = config.get('http', {}).get('trusted_networks')
 
     try:
         await conf_util.async_process_ha_core_config(
-            hass, core_config, has_api_password, has_trusted_networks)
+            hass, core_config, has_api_password, trusted_networks)
     except vol.Invalid as config_err:
         conf_util.async_log_exception(
             config_err, 'homeassistant', core_config, hass)
@@ -105,11 +109,6 @@ async def async_from_config_dict(config: Dict[str, Any],
     await hass.async_add_executor_job(
         conf_util.process_ha_config_upgrade, hass)
 
-    hass.config.skip_pip = skip_pip
-    if skip_pip:
-        _LOGGER.warning("Skipping pip installation of required modules. "
-                        "This may cause issues")
-
     # Make a copy because we are mutating it.
     config = OrderedDict(config)
 
@@ -118,7 +117,7 @@ async def async_from_config_dict(config: Dict[str, Any],
         hass, config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_load()
+    await hass.config_entries.async_initialize()
 
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()

@@ -345,9 +345,8 @@ class BluesoundPlayer(MediaPlayerDevice):
             if raise_timeout:
                 _LOGGER.info("Timeout: %s", self.host)
                 raise
-            else:
-                _LOGGER.debug("Failed communicating: %s", self.host)
-                return None
+            _LOGGER.debug("Failed communicating: %s", self.host)
+            return None
 
         return data
 
