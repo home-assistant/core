@@ -4,6 +4,7 @@ Lights on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/light.zha/
 """
+from datetime import timedelta
 import logging
 
 from homeassistant.components import light
@@ -26,6 +27,7 @@ CAPABILITIES_COLOR_XY = 0x08
 CAPABILITIES_COLOR_TEMP = 0x10
 
 UNSUPPORTED_ATTRIBUTE = 0x86
+SCAN_INTERVAL = timedelta(minutes=60)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -91,6 +93,11 @@ class Light(ZhaEntity, light.Light):
             if color_capabilities & CAPABILITIES_COLOR_XY:
                 self._supported_features |= light.SUPPORT_COLOR
                 self._hs_color = (0, 0)
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll state from device."""
+        return True
 
     @property
     def is_on(self) -> bool:
@@ -217,3 +224,8 @@ class Light(ZhaEntity, light.Light):
             return
         self._state = False
         self.async_schedule_update_ha_state()
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the light."""
+        if self._on_off_channel:
+            await self._on_off_channel.async_update()
