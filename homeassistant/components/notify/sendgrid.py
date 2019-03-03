@@ -9,8 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN, PLATFORM_SCHEMA,
-    BaseNotificationService)
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
     CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT, CONTENT_TYPE_TEXT_PLAIN)
 import homeassistant.helpers.config_validation as cv
@@ -34,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the SendGrid notification service."""
-    return SendgridNotificationService(config[DOMAIN])
+    return SendgridNotificationService(config)
 
 
 class SendgridNotificationService(BaseNotificationService):
