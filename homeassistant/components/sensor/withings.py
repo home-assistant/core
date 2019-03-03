@@ -401,7 +401,12 @@ WITHINGS_ATTRIBUTES = [
         'Pulse Wave Velocity', UOM_METERS_PER_SECOND, None
     ),
 
-    WithingsSleepStateAttribute(MEAS_SLEEP_STATE, 'Sleep state', ' ', None),
+    WithingsSleepStateAttribute(
+        MEAS_SLEEP_STATE,
+        'Sleep state',
+        ' ',
+        'mdi:sleep'
+    ),
 
     WithingsSleepSummaryAttribute(
         MEAS_SLEEP_WAKEUP_DURATION_HOURS, MEASURE_TYPE_SLEEP_WAKEUP_DURATION,
