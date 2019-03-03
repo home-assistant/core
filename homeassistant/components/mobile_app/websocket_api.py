@@ -7,33 +7,30 @@ from homeassistant.components.websocket_api import (ActiveConnection,
                                                     async_response,
                                                     error_message,
                                                     result_message,
+                                                    websocket_command,
                                                     ws_require_user)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (ATTR_DELETED_IDS, ATTR_REGISTRATIONS, ATTR_STORE,
                     CONF_USER_ID, CONF_WEBHOOK_ID, DOMAIN,
-                    SCHEMA_WS_DELETE_REGISTRATION, SCHEMA_WS_GET_REGISTRATION,
-                    WS_TYPE_DELETE_REGISTRATION, WS_TYPE_GET_REGISTRATION)
+                    SCHEMA_WS_DELETE_REGISTRATION, SCHEMA_WS_GET_REGISTRATION)
 
 from .helpers import safe_device, savable_state
 
 
 def register_websocket_handlers(hass: HomeAssistantType) -> bool:
     """Register the websocket handlers."""
-    async_register_command(hass, WS_TYPE_GET_REGISTRATION,
-                           websocket_get_registration,
-                           SCHEMA_WS_GET_REGISTRATION)
+    async_register_command(hass, websocket_get_registration)
 
-    async_register_command(hass, WS_TYPE_DELETE_REGISTRATION,
-                           websocket_delete_registration,
-                           SCHEMA_WS_DELETE_REGISTRATION)
+    async_register_command(hass, websocket_delete_registration)
 
     return True
 
 
 @ws_require_user()
 @async_response
+@websocket_command(SCHEMA_WS_GET_REGISTRATION)
 async def websocket_get_registration(
         hass: HomeAssistantType, connection: ActiveConnection,
         msg: WSMessage) -> None:
@@ -54,6 +51,7 @@ async def websocket_get_registration(
 
 @ws_require_user()
 @async_response
+@websocket_command(SCHEMA_WS_DELETE_REGISTRATION)
 async def websocket_delete_registration(hass: HomeAssistantType,
                                         connection: ActiveConnection,
                                         msg: WSMessage) -> None:

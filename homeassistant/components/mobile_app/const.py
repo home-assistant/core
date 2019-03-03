@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import SERVICE_SEE_PAYLOAD_SCHEMA
-from homeassistant.components.websocket_api import BASE_COMMAND_MESSAGE_SCHEMA
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
                                  CONF_WEBHOOK_ID)
 from homeassistant.helpers import config_validation as cv
@@ -97,16 +96,16 @@ RENDER_TEMPLATE_SCHEMA = vol.Schema({
 })
 
 WS_TYPE_GET_REGISTRATION = 'mobile_app/get_registration'
-SCHEMA_WS_GET_REGISTRATION = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+SCHEMA_WS_GET_REGISTRATION = {
     vol.Required('type'): WS_TYPE_GET_REGISTRATION,
     vol.Required(CONF_WEBHOOK_ID): cv.string,
-})
+}
 
 WS_TYPE_DELETE_REGISTRATION = 'mobile_app/delete_registration'
-SCHEMA_WS_DELETE_REGISTRATION = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+SCHEMA_WS_DELETE_REGISTRATION = {
     vol.Required('type'): WS_TYPE_DELETE_REGISTRATION,
     vol.Required(CONF_WEBHOOK_ID): cv.string,
-})
+}
 
 WEBHOOK_SCHEMAS = {
     WEBHOOK_TYPE_CALL_SERVICE: CALL_SERVICE_SCHEMA,
