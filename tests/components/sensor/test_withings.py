@@ -66,10 +66,12 @@ async def test_async_setup_platform(hass):
     result = await async_setup_component(hass, 'api', config)
     assert result
 
+    # pylint: disable=line-too-long
     with patch.object(hass.http, 'register_view', wraps=hass.http.register_view) as register_view_spy,\
             patch('homeassistant.components.configurator.async_request_config', wraps=configurator.async_request_config) as async_request_config_spy, \
             patch('homeassistant.components.configurator.async_request_done', wraps=configurator.async_request_done) as async_request_done_spy, \
             patch('homeassistant.components.sensor.withings.async_initialize') as async_initialize_mock:
+        # pylint: enable=line-too-long
 
         # Simulate an initial setup.
         result = await async_setup_component(hass, SENSOR_DOMAIN, config)
@@ -83,11 +85,11 @@ async def test_async_setup_platform(hass):
         async_request_config_spy.assert_called_with(
             hass,
             'Withings',
-            description=(
-                "Authorization is required to get access to Withings data. After clicking the button below, be sure to choose the profile that maps to '{}'.".format(profile)
-            ),
+            # pylint: disable=line-too-long
+            description="Authorization is required to get access to Withings data. After clicking the button below, be sure to choose the profile that maps to '%s'." % profile,  # noqa: E501
             link_name="Click here to authorize Home Assistant.",
-            link_url=callee.StartsWith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2F127.0.0.1%3A8123%2Fapi%2Fwithings%2Fcallback&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')
+            # pylint: disable=line-too-long
+            link_url=callee.StartsWith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2F127.0.0.1%3A8123%2Fapi%2Fwithings%2Fcallback&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')  # noqa: E501
         )
 
         # Get the instance of WithingsAuthCallbackView used when registering.
@@ -140,7 +142,7 @@ async def test_async_setup_platform_from_saved_credentials(hass):
         ]
     }
 
-    withings._write_credentials_to_file(
+    withings.write_credentials_to_file(
         hass,
         withings.WITHINGS_CONFIG_FILE.format(
             'my_client_id',
@@ -200,7 +202,7 @@ async def test_initialize_new_credentials(hass):
     sensors = add_entities_mock.call_args_list[0][0][0]
     measurements = []
     for sensor in sensors:
-        measurements.append(sensor._attribute.measurement)
+        measurements.append(sensor.attribute.measurement)
 
     assert set(measurements) == set(withings.WITHINGS_MEASUREMENTS_MAP.keys())
 
@@ -242,7 +244,7 @@ async def test_initialize_credentials_refreshed(hass):
             'homeassistant.components.sensor.withings.credentials_refreshed',
             wraps=withings.credentials_refreshed
     ) as credentials_refreshed_spy:
-        data_manager._api.set_token({
+        data_manager.get_api().set_token({
             'expires_in': 22222,
             'access_token': 'ACCESS_TOKEN',
             'refresh_token': 'REFRESH_TOKEN'
@@ -298,17 +300,18 @@ class TestWithingsAuthCallbackView(unittest.TestCase):
         response = view.get(request)
         assert response.body.startswith(b'ERROR_0004:')
 
-    def test__eq__(self):
+    @staticmethod
+    def test___eq__():
         """Test method."""
         view1a = withings.WithingsAuthCallbackView('profile_1')
         view1b = withings.WithingsAuthCallbackView('profile_1')
         view2a = withings.WithingsAuthCallbackView('profile_2')
 
-        assert view1b == view1a
-        assert view2a != view1a
-        assert view2a != view1b
-        assert {} != view1a
-        assert 'HELLO' != view1a
+        assert view1a == view1b
+        assert view1a != view2a
+        assert view1b != view2a
+        assert view1a != {}
+        assert view1a != 'HELLO'
 
 
 class TestWithingsDataManager(unittest.TestCase):
@@ -339,9 +342,8 @@ class TestWithingsDataManager(unittest.TestCase):
         self.api.get_measures.reset_mock()
 
         self.api.get_measures = MagicMock(return_value='DATA_NEW')
-        results2 = await data_manager.async_update_measures()
+        await data_manager.async_update_measures()
         self.api.get_measures.assert_not_called()
-        # assert results2 == 'DATA'
 
     @async_test
     async def test_async_update_sleep(self):
@@ -363,9 +365,8 @@ class TestWithingsDataManager(unittest.TestCase):
             self.api.get_sleep.reset_mock()
 
             self.api.get_sleep = MagicMock(return_value='DATA_NEW')
-            results2 = await data_manager.async_update_sleep()
+            await data_manager.async_update_sleep()
             self.api.get_sleep.assert_not_called()
-            # assert results2 == 'DATA'
 
     @async_test
     async def test_async_update_sleep_summary(self):
@@ -396,9 +397,8 @@ class TestWithingsDataManager(unittest.TestCase):
         self.api.get_sleep_summary.reset_mock()
 
         self.api.get_sleep_summary = MagicMock(return_value='DATA_NEW')
-        results2 = await data_manager.async_update_sleep_summary()
+        await data_manager.async_update_sleep_summary()
         self.api.get_sleep_summary.assert_not_called()
-        # assert results2 == 'DATA_NEW'
 
 
 class TestWithingsHealthSensor(unittest.TestCase):
@@ -464,7 +464,7 @@ class TestWithingsHealthSensor(unittest.TestCase):
                     new_measure(withings.MEASURE_TYPE_SYSTOLIC_BP, 100, 0),
                     new_measure(withings.MEASURE_TYPE_HEART_PULSE, 60, 0),
                     new_measure(withings.MEASURE_TYPE_SPO2, 95, -2),
-                    new_measure(withings.MEASURE_TYPE_HYDRATION, 95, -2),  # No idea what the units are.
+                    new_measure(withings.MEASURE_TYPE_HYDRATION, 95, -2),
                     new_measure(withings.MEASURE_TYPE_PWV, 100, 0),  # Deprecated
                 ]),
 
@@ -483,7 +483,7 @@ class TestWithingsHealthSensor(unittest.TestCase):
                     new_measure(withings.MEASURE_TYPE_SYSTOLIC_BP, 101, 0),
                     new_measure(withings.MEASURE_TYPE_HEART_PULSE, 61, 0),
                     new_measure(withings.MEASURE_TYPE_SPO2, 98, -2),
-                    new_measure(withings.MEASURE_TYPE_HYDRATION, 96, -2),  # No idea what the units are.
+                    new_measure(withings.MEASURE_TYPE_HYDRATION, 96, -2),
                     new_measure(withings.MEASURE_TYPE_PWV, 102, 0),  # Deprecated
                 ])
             ],
@@ -591,11 +591,39 @@ class TestWithingsHealthSensor(unittest.TestCase):
             'series': [
                 new_sleep_summary(
                     'UTC', 32, '2019-02-01', '2019-02-02', '2019-02-02', '12345',
-                    new_sleep_summary_detail(110, 210, 310, 410, 510, 610, 710, 810, 910, 1010, 1110, 1210, 1310),
+                    new_sleep_summary_detail(
+                        110,
+                        210,
+                        310,
+                        410,
+                        510,
+                        610,
+                        710,
+                        810,
+                        910,
+                        1010,
+                        1110,
+                        1210,
+                        1310
+                    ),
                 ),
                 new_sleep_summary(
                     'UTC', 32, '2019-02-01', '2019-02-02', '2019-02-02', '12345',
-                    new_sleep_summary_detail(210, 310, 410, 510, 610, 710, 810, 910, 1010, 1110, 1210, 1310, 1410),
+                    new_sleep_summary_detail(
+                        210,
+                        310,
+                        410,
+                        510,
+                        610,
+                        710,
+                        810,
+                        910,
+                        1010,
+                        1110,
+                        1210,
+                        1310,
+                        1410
+                    ),
                 )
             ]
         })

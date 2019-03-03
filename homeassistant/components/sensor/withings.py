@@ -514,10 +514,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def _get_credentials_from_file(hass: HomeAssistant, config_filename: str):
+def get_credentials_from_file(hass: HomeAssistant, config_filename: str):
     """Attempt to load token data from file."""
     import nokia
-    _LOGGER.debug('_get_credentials_from_file')
+    _LOGGER.debug('get_credentials_from_file')
     path = hass.config.path(config_filename)
 
     if not os.path.isfile(path):
@@ -539,13 +539,13 @@ def _get_credentials_from_file(hass: HomeAssistant, config_filename: str):
     )
 
 
-def _write_credentials_to_file(
+def write_credentials_to_file(
         hass: HomeAssistant,
         config_filename: str,
         creds
 ) -> None:
     """Attempt to store token data to file."""
-    _LOGGER.debug('_write_credentials_to_file')
+    _LOGGER.debug('write_credentials_to_file')
     path = hass.config.path(config_filename)
 
     _LOGGER.debug('Ensuring path to file exists. %s', path)
@@ -563,7 +563,7 @@ def credentials_refreshed(hass: HomeAssistant,
                           creds) -> None:
     """Handle calls from  when the nokia api refreshes credentials."""
     _LOGGER.debug('async_credentials_refreshed')
-    hass.add_job(_write_credentials_to_file, hass, config_filename, creds)
+    hass.add_job(write_credentials_to_file, hass, config_filename, creds)
 
 
 class WithingsConfiguring:
@@ -672,7 +672,7 @@ async def async_setup_platform(hass: HomeAssistant,
     slug = slugify(profile)
     config_filename = WITHINGS_CONFIG_FILE.format(config[CONF_CLIENT_ID], slug)
     creds = await hass.async_add_job(
-        _get_credentials_from_file,
+        get_credentials_from_file,
         hass,
         config_filename
     )
@@ -844,6 +844,11 @@ class WithingsHealthSensor(Entity):
     def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._attribute.icon
+
+    @property
+    def attribute(self) -> WithingsAttribute:
+        """Get withings attribute."""
+        return self._attribute
 
     async def async_update(self) -> None:
         """Update the data."""
