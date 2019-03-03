@@ -66,7 +66,8 @@ async def async_setup(hass, config):
         controller.sync_clock()
 
     controller.scan(callback)
-    hass.services.async_register(DOMAIN, 'sync_clock', syn_clock, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, 'sync_clock', syn_clock,
+            schema=vol.Schema({}))
 
     return True
 
