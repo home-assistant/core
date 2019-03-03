@@ -163,17 +163,12 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current state of the thermostat."""
-        return self.operation_mode
+        return self._operation_mode
 
     @property
     def operation_list(self):
         """Return the operation modes list."""
         return self._operation_list
-
-    @property
-    def operation_mode(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._operation_mode
 
     @property
     def device_state_attributes(self):
