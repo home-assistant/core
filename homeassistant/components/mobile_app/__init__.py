@@ -188,6 +188,11 @@ def context(device):
     return Context(user_id=device[CONF_USER_ID])
 
 
+def empty_okay_response():
+    """Return a Response with empty JSON object and a 200."""
+    return Response(body='{}', status=200, content_type='application/json')
+
+
 async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
                          request):
     """Handle webhook callback."""
@@ -207,7 +212,7 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
     except vol.Invalid as ex:
         err = vol.humanize.humanize_error(req_data, ex)
         _LOGGER.error('Received invalid webhook payload: %s', err)
-        return Response(status=200)
+        return empty_okay_response()
 
     webhook_type = req_data[ATTR_WEBHOOK_TYPE]
 
@@ -222,7 +227,7 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
     except vol.Invalid as ex:
         err = vol.humanize.humanize_error(webhook_payload, ex)
         _LOGGER.error('Received invalid webhook payload: %s', err)
-        return Response(status=200)
+        return empty_okay_response()
 
     if webhook_type == WEBHOOK_TYPE_CALL_SERVICE:
         try:
@@ -234,13 +239,13 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
         except (vol.Invalid, ServiceNotFound):
             raise HTTPBadRequest()
 
-        return Response(status=200)
+        return empty_okay_response()
 
     if webhook_type == WEBHOOK_TYPE_FIRE_EVENT:
         event_type = data[ATTR_EVENT_TYPE]
         hass.bus.async_fire(event_type, data[ATTR_EVENT_DATA],
                             ha.EventOrigin.remote, context=context(device))
-        return Response(status=200)
+        return empty_okay_response()
 
     if webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
         try:
@@ -254,7 +259,7 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
         await hass.services.async_call(DEVICE_TRACKER_DOMAIN,
                                        DEVICE_TRACKER_SEE, data,
                                        blocking=True, context=context(device))
-        return Response(status=200)
+        return empty_okay_response()
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
         data[ATTR_APP_ID] = device[ATTR_APP_ID]
@@ -270,7 +275,7 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
             await store.async_save(savable_state(hass))
         except HomeAssistantError as ex:
             _LOGGER.error("Error updating mobile_app registration: %s", ex)
-            return Response(status=200)
+            return empty_okay_response()
 
         return json_response(safe_device(data))
 

@@ -144,8 +144,8 @@ async def test_handle_fire_event(hass, webhook_client):
     )
 
     assert resp.status == 200
-    text = await resp.text()
-    assert text == ""
+    json = await resp.json()
+    assert json == {}
 
     assert len(events) == 1
     assert events[0].data['hello'] == 'yo world'
