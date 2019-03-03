@@ -73,7 +73,7 @@ def setup(hass, base_config):
                             (area.name, keypad.name, button, led))
 
                 hass.data[LUTRON_BUTTONS].append(
-                    LutronButton(hass, keypad, button))
+                    LutronButton(hass, area, keypad, button))
 
     for component in ('light', 'cover', 'switch', 'scene'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
@@ -120,9 +120,9 @@ class LutronButton:
     represented as an entity; it simply fires events.
     """
 
-    def __init__(self, hass, keypad, button):
+    def __init__(self, hass, area, keypad, button):
         """Register callback for activity on the button."""
-        name = '{}: {}'.format(keypad.name, button.name)
+        name = '{}: {}: {}'.format(area.name, keypad.name, button.name)
         self._hass = hass
         self._has_release_event = 'RaiseLower' in button.button_type
         self._id = slugify(name)
