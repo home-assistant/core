@@ -68,3 +68,7 @@ async def test_disable(mock_cloudhooks):
     assert publish_calls[0][1][1] == {
         'cloudhook_ids': []
     }
+
+
+async def test_create_without_connected(mock_cloudhooks):
+    """Test that we can create a cloudhook without being connected."""
