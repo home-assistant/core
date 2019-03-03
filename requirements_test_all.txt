@@ -230,7 +230,7 @@ pysmartapp==0.3.0
 pysmartthings==0.6.3
 
 # homeassistant.components.sonos
-pysonos==0.0.7
+pysonos==0.0.8
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
