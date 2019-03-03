@@ -4,10 +4,11 @@ import pytest
 from homeassistant.setup import async_setup_component
 
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import callback
 from homeassistant.components.mobile_app import (DOMAIN, STORAGE_KEY,
                                                  STORAGE_VERSION,
                                                  CONF_SECRET, CONF_USER_ID)
-from homeassistant.core import callback
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 
 from tests.common import async_mock_service
 
@@ -273,3 +274,57 @@ async def test_register_device(hass_client, mock_api_client):
 
     webhook_json = await resp.json()
     assert webhook_json == {'rendered': 'Hello world'}
+
+
+async def test_webocket_get_registration(hass, mock_api_client,
+                                         hass_ws_client):
+    """Test get_registration websocket command."""
+    register_resp = await mock_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
+    )
+
+    assert register_resp.status == 201
+    register_json = await register_resp.json()
+    assert CONF_WEBHOOK_ID in register_json
+    assert CONF_SECRET in register_json
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'mobile_app/get_registration',
+        CONF_WEBHOOK_ID: register_json[CONF_WEBHOOK_ID],
+    })
+
+    msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+    assert msg['result']['app_id'] == 'io.homeassistant.mobile_app_test'
+
+
+async def test_webocket_delete_registration(hass, mock_api_client,
+                                            hass_ws_client):
+    """Test delete_registration websocket command."""
+    register_resp = await mock_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
+    )
+
+    assert register_resp.status == 201
+    register_json = await register_resp.json()
+    assert CONF_WEBHOOK_ID in register_json
+    assert CONF_SECRET in register_json
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'mobile_app/delete_registration',
+        CONF_WEBHOOK_ID: register_json[CONF_WEBHOOK_ID],
+    })
+
+    msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == TYPE_RESULT
+    assert msg['success']
+    assert msg['result'] == 'ok'

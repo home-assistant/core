@@ -7,11 +7,11 @@ import voluptuous as vol
 from aiohttp.web import json_response, Response
 from aiohttp.web_exceptions import HTTPBadRequest
 
-from homeassistant import config_entries
 from homeassistant.auth.util import generate_secret
 import homeassistant.core as ha
 from homeassistant.core import Context
-from homeassistant.components import webhook
+from homeassistant.components import webhook, websocket_api
+from homeassistant.components.websocket_api import BASE_COMMAND_MESSAGE_SCHEMA
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.device_tracker import (
@@ -31,13 +31,16 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mobile_app'
 
-DEPENDENCIES = ['device_tracker', 'http', 'webhook']
+DEPENDENCIES = ['device_tracker', 'http', 'webhook', 'websocket_api']
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 CONF_SECRET = 'secret'
 CONF_USER_ID = 'user_id'
+
+ATTR_REGISTRATIONS = 'registrations'
+ATTR_STORE = 'store'
 
 ATTR_APP_DATA = 'app_data'
 ATTR_APP_ID = 'app_id'
@@ -114,6 +117,18 @@ RENDER_TEMPLATE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
 })
 
+WS_TYPE_GET_REGISTRATION = 'mobile_app/get_registration'
+SCHEMA_WS_GET_REGISTRATION = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_GET_REGISTRATION,
+    vol.Required(CONF_WEBHOOK_ID): cv.string,
+})
+
+WS_TYPE_DELETE_REGISTRATION = 'mobile_app/delete_registration'
+SCHEMA_WS_DELETE_REGISTRATION = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_DELETE_REGISTRATION,
+    vol.Required(CONF_WEBHOOK_ID): cv.string,
+})
+
 WEBHOOK_SCHEMAS = {
     WEBHOOK_TYPE_CALL_SERVICE: CALL_SERVICE_SCHEMA,
     WEBHOOK_TYPE_FIRE_EVENT: FIRE_EVENT_SCHEMA,
@@ -173,7 +188,7 @@ def context(device):
 async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
                          request):
     """Handle webhook callback."""
-    device = hass.data[DOMAIN][webhook_id]
+    device = hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id]
 
     try:
         req_data = await request.json()
@@ -243,10 +258,10 @@ async def handle_webhook(store, hass: HomeAssistantType, webhook_id: str,
         data[CONF_USER_ID] = device[CONF_USER_ID]
         data[CONF_WEBHOOK_ID] = device[CONF_WEBHOOK_ID]
 
-        hass.data[DOMAIN][webhook_id] = data
+        hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id] = data
 
         try:
-            await store.async_save(hass.data[DOMAIN])
+            await store.async_save(hass.data[DOMAIN][ATTR_REGISTRATIONS])
         except HomeAssistantError as ex:
             _LOGGER.error("Error updating mobile_app registration: %s", ex)
             return Response(status=200)
@@ -288,23 +303,31 @@ def register_device_webhook(hass: HomeAssistantType, store, device):
 
 async def async_setup(hass, config):
     """Set up the mobile app component."""
-    conf = config.get(DOMAIN)
-
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()
     if app_config is None:
         app_config = {}
 
-    hass.data[DOMAIN] = app_config
+    if hass.data.get(DOMAIN) is None:
+        hass.data[DOMAIN] = {}
+
+    hass.data[DOMAIN][ATTR_REGISTRATIONS] = app_config
+    hass.data[DOMAIN][ATTR_STORE] = store
 
     for device in app_config.values():
         register_device_webhook(hass, store, device)
 
-    if conf is not None:
-        hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
-
     hass.http.register_view(DevicesView(store))
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_GET_REGISTRATION, websocket_get_registration,
+        SCHEMA_WS_GET_REGISTRATION
+    )
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_DELETE_REGISTRATION, websocket_delete_registration,
+        SCHEMA_WS_DELETE_REGISTRATION
+    )
 
     return True
 
@@ -312,6 +335,55 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up an mobile_app entry."""
     return True
+
+
+@websocket_api.ws_require_user()
+@websocket_api.async_response
+async def websocket_get_registration(
+        hass: ha.HomeAssistant, connection: websocket_api.ActiveConnection,
+        msg):
+    """Return the registration for the given webhook_id."""
+    user = connection.user
+
+    webhook_id = msg[CONF_WEBHOOK_ID]
+
+    device = hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id]
+
+    if device[CONF_USER_ID] is not user.id and user.is_admin is False:
+        return websocket_api.error_message(
+            msg['id'], 'access_denied', 'User is not registration owner')
+
+    connection.send_message(
+        websocket_api.result_message(msg['id'], safe_device(device)))
+
+
+@websocket_api.ws_require_user()
+@websocket_api.async_response
+async def websocket_delete_registration(
+        hass: ha.HomeAssistant,
+        connection: websocket_api.ActiveConnection, msg):
+    """Delete the registration for the given webhook_id."""
+    user = connection.user
+
+    webhook_id = msg[CONF_WEBHOOK_ID]
+
+    device = hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id]
+
+    if device[CONF_USER_ID] is not user.id and user.is_admin is False:
+        return websocket_api.error_message(
+            msg['id'], 'access_denied', 'User is not registration owner')
+
+    del hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id]
+
+    store = hass.data[DOMAIN][ATTR_STORE]
+
+    try:
+        await store.async_save(hass.data[DOMAIN][ATTR_REGISTRATIONS])
+    except HomeAssistantError:
+        return websocket_api.error_message(
+            msg['id'], 'internal_error', 'Error deleting device')
+
+    connection.send_message(websocket_api.result_message(msg['id'], 'ok'))
 
 
 class DevicesView(HomeAssistantView):
@@ -342,10 +414,10 @@ class DevicesView(HomeAssistantView):
 
         data[CONF_USER_ID] = request['hass_user'].id
 
-        hass.data[DOMAIN][webhook_id] = data
+        hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id] = data
 
         try:
-            await self._store.async_save(hass.data[DOMAIN])
+            await self._store.async_save(hass.data[DOMAIN][ATTR_REGISTRATIONS])
         except HomeAssistantError:
             return self.json_message("Error saving device.",
                                      HTTP_INTERNAL_SERVER_ERROR)
