@@ -501,6 +501,7 @@ def establish_device_mappings():
         zcl.clusters.security.IasZone: 'binary_sensor',
         zcl.clusters.measurement.OccupancySensing: 'binary_sensor',
         zcl.clusters.hvac.Fan: 'fan',
+        SMARTTHINGS_ACCELERATION_CLUSTER: 'binary_sensor',
     })
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({

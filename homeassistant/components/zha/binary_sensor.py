@@ -12,7 +12,7 @@ from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, ON_OFF_CHANNEL,
     LEVEL_CHANNEL, ZONE_CHANNEL, SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL, ATTRIBUTE_CHANNEL, UNKNOWN, OPENING, ZONE, OCCUPANCY,
-    ATTR_LEVEL, SENSOR_TYPE)
+    ATTR_LEVEL, SENSOR_TYPE, ACCELERATION)
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ CLASS_MAPPING = {
     0x002a: 'moisture',
     0x002b: 'gas',
     0x002d: 'vibration',
+    0xfc02: 'moving',
 }
 
 
@@ -41,6 +42,7 @@ DEVICE_CLASS_REGISTRY = {
     OPENING: OPENING,
     ZONE: get_ias_device_class,
     OCCUPANCY: OCCUPANCY,
+    ACCELERATION: ACCELERATION,
 }
 
 
