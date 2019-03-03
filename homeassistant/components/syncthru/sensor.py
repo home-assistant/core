@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_RESOURCE, CONF_HOST, CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -60,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the SyncThru component."""
     from pysyncthru import SyncThru
 
@@ -76,13 +77,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         name = config.get(CONF_NAME)
         monitored = config.get(CONF_MONITORED_CONDITIONS)
 
-    printer = SyncThru(host)
+    session = aiohttp_client.async_get_clientsession(hass)
+
+    printer = SyncThru(host, hass.loop, session)
     # Test if the discovered device actually is a syncthru printer
     try:
         # No error is thrown when the device is off
         # (only after user added it manually)
         # therefore additional catches are inside the Sensor below
-        printer.update()
+        await printer.update()
     except ValueError:
         # if an exception is thrown, printer does not support syncthru
         _LOGGER.info("Samsung printer at %s does not support SyncThru", host)
@@ -103,7 +106,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if 'output_tray_{}'.format(key) in monitored:
             devices.append(SyncThruOutputTraySensor(printer, name, key))
 
-    add_entities(devices, True)
+    await async_add_entities(devices, True)
 
 
 class SyncThruSensor(Entity):
@@ -159,10 +162,10 @@ class SyncThruMainSensor(SyncThruSensor):
         super().__init__(syncthru, name)
         self._id_suffix = '_main'
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from SyncThru and update the state."""
         try:
-            self.syncthru.update()
+            await self.syncthru.update()
         except ValueError:
             # if an exception is thrown, printer does not support syncthru
             _LOGGER.info(
