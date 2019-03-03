@@ -76,7 +76,7 @@ UPDATE_DEVICE_SCHEMA = vol.Schema({
 })
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Schema({
-    vol.Required(ATTR_WEBHOOK_TYPE): vol.In(WEBHOOK_TYPES),
+    vol.Required(ATTR_WEBHOOK_TYPE): cv.string,  # vol.In(WEBHOOK_TYPES)
     vol.Required(ATTR_WEBHOOK_DATA, default={}): dict,
     vol.Optional(ATTR_WEBHOOK_ENCRYPTED, default=False): cv.boolean,
     vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
@@ -116,4 +116,8 @@ WEBHOOK_SCHEMAS = {
     WEBHOOK_TYPE_RENDER_TEMPLATE: RENDER_TEMPLATE_SCHEMA,
     WEBHOOK_TYPE_UPDATE_LOCATION: SERVICE_SEE_PAYLOAD_SCHEMA,
     WEBHOOK_TYPE_UPDATE_REGISTRATION: UPDATE_DEVICE_SCHEMA,
+}
+
+INTEGRATIONS_MAP = {
+    'io.homeassistant.curl': 'ios',
 }

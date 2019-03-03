@@ -17,11 +17,12 @@ from homeassistant.components.webhook import async_register as webhook_register
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
                                  CONF_WEBHOOK_ID, HTTP_BAD_REQUEST)
 from homeassistant.core import EventOrigin
+from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
+                                      TemplateError)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers import template
 from homeassistant.helpers.storage import Store
-from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
-                                      TemplateError)
+from homeassistant.loader import get_platform
 
 from .const import (ATTR_APP_ID, ATTR_APP_NAME, ATTR_DELETED_IDS,
                     ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
@@ -31,7 +32,8 @@ from .const import (ATTR_APP_ID, ATTR_APP_NAME, ATTR_DELETED_IDS,
                     ATTR_WEBHOOK_TYPE, CONF_CLOUDHOOK_ID, CONF_CLOUDHOOK_URL,
                     CONF_SECRET, CONF_USER_ID, DOMAIN,
                     HTTP_X_CLOUD_HOOK_ID, HTTP_X_CLOUD_HOOK_URL,
-                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
+                    INTEGRATIONS_MAP,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS, WEBHOOK_TYPES,
                     WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
                     WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
@@ -77,8 +79,6 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
 
     via_cloud = is_cloudhook_request(request)
 
-    _LOGGER.error("HASS %s", async_is_logged_in(hass))
-
     logged_in = async_is_logged_in(hass)
 
     if via_cloud is False and logged_in is True:
@@ -102,6 +102,16 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
     if req_data[ATTR_WEBHOOK_ENCRYPTED]:
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
         webhook_payload = _decrypt_payload(device[CONF_SECRET], enc_data)
+
+    if (webhook_type not in WEBHOOK_TYPES and
+            device[ATTR_APP_ID] in INTEGRATIONS_MAP):
+        # Unknown webhook type, check if there's a platform
+        platform_name = INTEGRATIONS_MAP[device[ATTR_APP_ID]]
+
+        platform = get_platform(hass, DOMAIN, platform_name)
+        return await platform.async_handle_webhook_message(hass, device,
+                                                           webhook_type,
+                                                           webhook_payload)
 
     try:
         data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
