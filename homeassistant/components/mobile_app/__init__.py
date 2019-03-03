@@ -1,5 +1,4 @@
 """Integrates Native Apps to Home Assistant."""
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import (ConfigType,
                                           HomeAssistantType)
 
@@ -35,9 +34,4 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     register_http_handlers(hass, store)
     register_websocket_handlers(hass)
 
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, config: ConfigEntry):
-    """Set up an mobile_app entry."""
     return True
