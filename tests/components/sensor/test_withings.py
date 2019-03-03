@@ -631,25 +631,78 @@ class TestWithingsHealthSensor(unittest.TestCase):
             ]
         })
 
-        await self.assert_sensor_equals(2.7, withings.MEAS_SLEEP_WAKEUP_DURATION_HOURS)
-        await self.assert_sensor_equals(4.3, withings.MEAS_SLEEP_LIGHT_DURATION_HOURS)
-        await self.assert_sensor_equals(6.0, withings.MEAS_SLEEP_DEEP_DURATION_HOURS)
-        await self.assert_sensor_equals(7.7, withings.MEAS_SLEEP_REM_DURATION_HOURS)
-        await self.assert_sensor_equals(160.0, withings.MEAS_SLEEP_WAKEUP_DURATION_MINUTES)
-        await self.assert_sensor_equals(260.0, withings.MEAS_SLEEP_LIGHT_DURATION_MINUTES)
-        await self.assert_sensor_equals(360, withings.MEAS_SLEEP_DEEP_DURATION_MINUTES)
-        await self.assert_sensor_equals(460.0, withings.MEAS_SLEEP_REM_DURATION_MINUTES)
-        await self.assert_sensor_equals(560.0, withings.MEAS_SLEEP_WAKEUP_COUNT)
-        await self.assert_sensor_equals(11.0, withings.MEAS_SLEEP_TOSLEEP_DURATION_HOURS)
-        await self.assert_sensor_equals(12.7, withings.MEAS_SLEEP_TOWAKEUP_DURATION_HOURS)
-        await self.assert_sensor_equals(660.0, withings.MEAS_SLEEP_TOSLEEP_DURATION_MINUTES)
-        await self.assert_sensor_equals(760.0, withings.MEAS_SLEEP_TOWAKEUP_DURATION_MINUTES)
-        await self.assert_sensor_equals(860.0, withings.MEAS_SLEEP_HEART_RATE_AVERAGE)
-        await self.assert_sensor_equals(960.0, withings.MEAS_SLEEP_HEART_RATE_MIN)
-        await self.assert_sensor_equals(1060.0, withings.MEAS_SLEEP_HEART_RATE_MAX)
-        await self.assert_sensor_equals(1160.0, withings.MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE)
-        await self.assert_sensor_equals(1260.0, withings.MEAS_SLEEP_RESPIRATORY_RATE_MIN)
-        await self.assert_sensor_equals(1360.0, withings.MEAS_SLEEP_RESPIRATORY_RATE_MAX)
+        await self.assert_sensor_equals(
+            2.7, withings.MEAS_SLEEP_WAKEUP_DURATION_HOURS
+        )
+        await self.assert_sensor_equals(
+            4.3, withings.MEAS_SLEEP_LIGHT_DURATION_HOURS
+        )
+        await self.assert_sensor_equals(
+            6.0, withings.MEAS_SLEEP_DEEP_DURATION_HOURS
+        )
+        await self.assert_sensor_equals(
+            7.7, withings.MEAS_SLEEP_REM_DURATION_HOURS
+        )
+        await self.assert_sensor_equals(
+            160.0,
+            withings.MEAS_SLEEP_WAKEUP_DURATION_MINUTES
+        )
+        await self.assert_sensor_equals(
+            260.0,
+            withings.MEAS_SLEEP_LIGHT_DURATION_MINUTES
+        )
+        await self.assert_sensor_equals(
+            360,
+            withings.MEAS_SLEEP_DEEP_DURATION_MINUTES
+        )
+        await self.assert_sensor_equals(
+            460.0,
+            withings.MEAS_SLEEP_REM_DURATION_MINUTES
+        )
+        await self.assert_sensor_equals(
+            560.0,
+            withings.MEAS_SLEEP_WAKEUP_COUNT
+        )
+        await self.assert_sensor_equals(
+            11.0,
+            withings.MEAS_SLEEP_TOSLEEP_DURATION_HOURS
+        )
+        await self.assert_sensor_equals(
+            12.7,
+            withings.MEAS_SLEEP_TOWAKEUP_DURATION_HOURS
+        )
+        await self.assert_sensor_equals(
+            660.0,
+            withings.MEAS_SLEEP_TOSLEEP_DURATION_MINUTES
+        )
+        await self.assert_sensor_equals(
+            760.0,
+            withings.MEAS_SLEEP_TOWAKEUP_DURATION_MINUTES
+        )
+        await self.assert_sensor_equals(
+            860.0,
+            withings.MEAS_SLEEP_HEART_RATE_AVERAGE
+        )
+        await self.assert_sensor_equals(
+            960.0,
+            withings.MEAS_SLEEP_HEART_RATE_MIN
+        )
+        await self.assert_sensor_equals(
+            1060.0,
+            withings.MEAS_SLEEP_HEART_RATE_MAX
+        )
+        await self.assert_sensor_equals(
+            1160.0,
+            withings.MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE
+        )
+        await self.assert_sensor_equals(
+            1260.0,
+            withings.MEAS_SLEEP_RESPIRATORY_RATE_MIN
+        )
+        await self.assert_sensor_equals(
+            1360.0,
+            withings.MEAS_SLEEP_RESPIRATORY_RATE_MAX
+        )
 
     async def assert_sensor_equals(self, expected, measure):
         """Simple assertion for a withings sensor."""
@@ -659,11 +712,12 @@ class TestWithingsHealthSensor(unittest.TestCase):
         )
 
         await sensor.async_update()
-        assert sensor.state == expected, 'Expected {} but was {} for measure: {}.'.format(
-            expected,
-            sensor.state,
-            measure
-        )
+        assert sensor.state == expected, \
+            'Expected %s but was %s for measure: %s.' % (
+                expected,
+                sensor.state,
+                measure
+            )
 
 
 def new_sleep_data(model, series):
@@ -682,7 +736,14 @@ def new_sleep_data_serie(startdate, enddate, state):
         'state': state
     }
 
-def new_sleep_summary(timezone, model, startdate, enddate, date, modified, data):
+
+def new_sleep_summary(timezone,
+                      model,
+                      startdate,
+                      enddate,
+                      date,
+                      modified,
+                      data):
     """Creates simple dict to simulate api data."""
     return {
         'timezone': timezone,
@@ -726,7 +787,15 @@ def new_sleep_summary_detail(wakeupduration,
     }
 
 
-def new_measure_group(grpid, attrib, date, created, category, deviceid, more, offset, measures):
+def new_measure_group(grpid,
+                      attrib,
+                      date,
+                      created,
+                      category,
+                      deviceid,
+                      more,
+                      offset,
+                      measures):
     """Creates simple dict to simulate api data."""
     return {
         'grpid': grpid,
