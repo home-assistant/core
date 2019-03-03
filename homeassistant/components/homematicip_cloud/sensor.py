@@ -5,7 +5,7 @@ from homeassistant.components.homematicip_cloud import (
     DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS, POWER_WATT)
+    POWER_WATT, TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,8 @@ async def async_setup_platform(
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud sensors from a config entry."""
     from homematicip.aio.device import (
-        AsyncHeatingThermostat, AsyncTemperatureHumiditySensorWithoutDisplay,
+        AsyncHeatingThermostat, AsyncHeatingThermostatCompact,
+        AsyncTemperatureHumiditySensorWithoutDisplay,
         AsyncTemperatureHumiditySensorDisplay, AsyncMotionDetectorIndoor,
         AsyncTemperatureHumiditySensorOutdoor,
         AsyncMotionDetectorPushButton, AsyncLightSensor,
@@ -37,8 +38,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = [HomematicipAccesspointStatus(home)]
     for device in home.devices:
-        if isinstance(device, AsyncHeatingThermostat):
+        if isinstance(device, (AsyncHeatingThermostat,
+                               AsyncHeatingThermostatCompact)):
             devices.append(HomematicipHeatingThermostat(home, device))
+            devices.append(
+                HomematicipThermostatTemperatureSensor(home, device))
         if isinstance(device, (AsyncTemperatureHumiditySensorDisplay,
                                AsyncTemperatureHumiditySensorWithoutDisplay,
                                AsyncTemperatureHumiditySensorOutdoor)):
@@ -169,6 +173,29 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
     def state(self):
         """Return the state."""
         return self._device.actualTemperature
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return TEMP_CELSIUS
+
+
+class HomematicipThermostatTemperatureSensor(HomematicipGenericDevice):
+    """Representation of a HomematicIP Cloud thermostat device."""
+
+    def __init__(self, home, device):
+        """Initialize the thermometer device."""
+        super().__init__(home, device, 'Temperature')
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
+    def state(self):
+        """Return the state."""
+        return self._device.valveActualTemperature
 
     @property
     def unit_of_measurement(self):
