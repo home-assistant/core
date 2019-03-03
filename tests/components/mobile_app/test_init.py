@@ -5,9 +5,11 @@ from homeassistant.setup import async_setup_component
 
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
-from homeassistant.components.mobile_app import (DOMAIN, STORAGE_KEY,
-                                                 STORAGE_VERSION,
-                                                 CONF_SECRET, CONF_USER_ID)
+from homeassistant.components.mobile_app import (ATTR_DELETED_IDS,
+                                                 ATTR_REGISTRATIONS,
+                                                 CONF_SECRET, CONF_USER_ID,
+                                                 DOMAIN, STORAGE_KEY,
+                                                 STORAGE_VERSION)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 
 from tests.common import async_mock_service
@@ -65,18 +67,21 @@ UPDATE = {
 
 
 @pytest.fixture
-def mobile_app_client(hass, aiohttp_client, hass_storage, hass_admin_user):
+def webhook_client(hass, aiohttp_client, hass_storage, hass_admin_user):
     """mobile_app mock client."""
     hass_storage[STORAGE_KEY] = {
         'version': STORAGE_VERSION,
         'data': {
-            'mobile_app_test': {
-                CONF_SECRET: '58eb127991594dad934d1584bdee5f27',
-                'supports_encryption': True,
-                CONF_WEBHOOK_ID: 'mobile_app_test',
-                'device_name': 'Test Device',
-                CONF_USER_ID: hass_admin_user.id,
-            }
+            ATTR_REGISTRATIONS: {
+                'mobile_app_test': {
+                    CONF_SECRET: '58eb127991594dad934d1584bdee5f27',
+                    'supports_encryption': True,
+                    CONF_WEBHOOK_ID: 'mobile_app_test',
+                    'device_name': 'Test Device',
+                    CONF_USER_ID: hass_admin_user.id,
+                }
+            },
+            ATTR_DELETED_IDS: [],
         }
     }
 
@@ -89,15 +94,15 @@ def mobile_app_client(hass, aiohttp_client, hass_storage, hass_admin_user):
 
 
 @pytest.fixture
-async def mock_api_client(hass, hass_client):
+async def authed_api_client(hass, hass_client):
     """Provide an authenticated client for mobile_app to use."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     return await hass_client()
 
 
-async def test_handle_render_template(mobile_app_client):
+async def test_handle_render_template(webhook_client):
     """Test that we render templates properly."""
-    resp = await mobile_app_client.post(
+    resp = await webhook_client.post(
         '/api/webhook/mobile_app_test',
         json=RENDER_TEMPLATE
     )
@@ -108,11 +113,11 @@ async def test_handle_render_template(mobile_app_client):
     assert json == {'rendered': 'Hello world'}
 
 
-async def test_handle_call_services(hass, mobile_app_client):
+async def test_handle_call_services(hass, webhook_client):
     """Test that we call services properly."""
     calls = async_mock_service(hass, 'test', 'mobile_app')
 
-    resp = await mobile_app_client.post(
+    resp = await webhook_client.post(
         '/api/webhook/mobile_app_test',
         json=CALL_SERVICE
     )
@@ -122,7 +127,7 @@ async def test_handle_call_services(hass, mobile_app_client):
     assert len(calls) == 1
 
 
-async def test_handle_fire_event(hass, mobile_app_client):
+async def test_handle_fire_event(hass, webhook_client):
     """Test that we can fire events."""
     events = []
 
@@ -133,7 +138,7 @@ async def test_handle_fire_event(hass, mobile_app_client):
 
     hass.bus.async_listen('test_event', store_event)
 
-    resp = await mobile_app_client.post(
+    resp = await webhook_client.post(
         '/api/webhook/mobile_app_test',
         json=FIRE_EVENT
     )
@@ -146,10 +151,10 @@ async def test_handle_fire_event(hass, mobile_app_client):
     assert events[0].data['hello'] == 'yo world'
 
 
-async def test_update_registration(mobile_app_client, hass_client):
+async def test_update_registration(webhook_client, hass_client):
     """Test that a we can update an existing registration via webhook."""
-    mock_api_client = await hass_client()
-    register_resp = await mock_api_client.post(
+    authed_api_client = await hass_client()
+    register_resp = await authed_api_client.post(
         '/api/mobile_app/devices', json=REGISTER
     )
 
@@ -163,7 +168,7 @@ async def test_update_registration(mobile_app_client, hass_client):
         'data': UPDATE
     }
 
-    update_resp = await mobile_app_client.post(
+    update_resp = await webhook_client.post(
         '/api/webhook/{}'.format(webhook_id), json=update_container
     )
 
@@ -174,9 +179,9 @@ async def test_update_registration(mobile_app_client, hass_client):
     assert CONF_SECRET not in update_json
 
 
-async def test_returns_error_incorrect_json(mobile_app_client, caplog):
+async def test_returns_error_incorrect_json(webhook_client, caplog):
     """Test that an error is returned when JSON is invalid."""
-    resp = await mobile_app_client.post(
+    resp = await webhook_client.post(
         '/api/webhook/mobile_app_test',
         data='not json'
     )
@@ -187,7 +192,7 @@ async def test_returns_error_incorrect_json(mobile_app_client, caplog):
     assert 'invalid JSON' in caplog.text
 
 
-async def test_handle_decryption(mobile_app_client):
+async def test_handle_decryption(webhook_client):
     """Test that we can encrypt/decrypt properly."""
     try:
         # pylint: disable=unused-import
@@ -215,7 +220,7 @@ async def test_handle_decryption(mobile_app_client):
         'encrypted_data': data,
     }
 
-    resp = await mobile_app_client.post(
+    resp = await webhook_client.post(
         '/api/webhook/mobile_app_test',
         json=container
     )
@@ -226,7 +231,7 @@ async def test_handle_decryption(mobile_app_client):
     assert json == {'rendered': 'Hello world'}
 
 
-async def test_register_device(hass_client, mock_api_client):
+async def test_register_device(hass_client, authed_api_client):
     """Test that a device can be registered."""
     try:
         # pylint: disable=unused-import
@@ -238,7 +243,7 @@ async def test_register_device(hass_client, mock_api_client):
 
     import json
 
-    resp = await mock_api_client.post(
+    resp = await authed_api_client.post(
         '/api/mobile_app/devices', json=REGISTER
     )
 
@@ -263,9 +268,9 @@ async def test_register_device(hass_client, mock_api_client):
         'encrypted_data': data,
     }
 
-    mobile_app_client = await hass_client()
+    webhook_client = await hass_client()
 
-    resp = await mobile_app_client.post(
+    resp = await webhook_client.post(
         '/api/webhook/{}'.format(register_json[CONF_WEBHOOK_ID]),
         json=container
     )
@@ -276,10 +281,10 @@ async def test_register_device(hass_client, mock_api_client):
     assert webhook_json == {'rendered': 'Hello world'}
 
 
-async def test_webocket_get_registration(hass, mock_api_client,
+async def test_webocket_get_registration(hass, authed_api_client,
                                          hass_ws_client):
     """Test get_registration websocket command."""
-    register_resp = await mock_api_client.post(
+    register_resp = await authed_api_client.post(
         '/api/mobile_app/devices', json=REGISTER
     )
 
@@ -303,10 +308,11 @@ async def test_webocket_get_registration(hass, mock_api_client,
     assert msg['result']['app_id'] == 'io.homeassistant.mobile_app_test'
 
 
-async def test_webocket_delete_registration(hass, mock_api_client,
-                                            hass_ws_client):
+async def test_webocket_delete_registration(hass, hass_client,
+                                            hass_ws_client, webhook_client):
     """Test delete_registration websocket command."""
-    register_resp = await mock_api_client.post(
+    authed_api_client = await hass_client()
+    register_resp = await authed_api_client.post(
         '/api/mobile_app/devices', json=REGISTER
     )
 
@@ -315,11 +321,13 @@ async def test_webocket_delete_registration(hass, mock_api_client,
     assert CONF_WEBHOOK_ID in register_json
     assert CONF_SECRET in register_json
 
+    webhook_id = register_json[CONF_WEBHOOK_ID]
+
     client = await hass_ws_client(hass)
     await client.send_json({
         'id': 5,
         'type': 'mobile_app/delete_registration',
-        CONF_WEBHOOK_ID: register_json[CONF_WEBHOOK_ID],
+        CONF_WEBHOOK_ID: webhook_id,
     })
 
     msg = await client.receive_json()
@@ -328,3 +336,9 @@ async def test_webocket_delete_registration(hass, mock_api_client,
     assert msg['type'] == TYPE_RESULT
     assert msg['success']
     assert msg['result'] == 'ok'
+
+    ensure_four_ten_gone = await webhook_client.post(
+        '/api/webhook/{}'.format(webhook_id), json=CALL_SERVICE
+    )
+
+    assert ensure_four_ten_gone.status == 410
