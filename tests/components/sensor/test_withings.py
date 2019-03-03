@@ -1,6 +1,4 @@
-"""
-Tests for the Withings sensor platform.
-"""
+"""Tests for the Withings sensor platform."""
 import asyncio
 import unittest
 import os
@@ -24,7 +22,7 @@ PLATFORM_NAME = 'withings'
 
 
 def async_test(coro):
-    """A decorator that allows unittest methods to be async."""
+    """Allow unittest methods to be async."""
     def wrapper(*args, **kwargs):
         loop = asyncio.new_event_loop()
         return loop.run_until_complete(coro(*args, **kwargs))
@@ -33,7 +31,6 @@ def async_test(coro):
 
 async def test_async_setup_platform(hass):
     """Test method."""
-
     profile = 'person 1'
     slug = 'person_1'
 
@@ -52,10 +49,12 @@ async def test_async_setup_platform(hass):
         ]
     }
 
-    credentials_file_path = hass.config.path(withings.WITHINGS_CONFIG_FILE.format(
-        'my_client_id',
-        slug
-    ))
+    credentials_file_path = hass.config.path(
+        withings.WITHINGS_CONFIG_FILE.format(
+            'my_client_id',
+            slug
+        )
+    )
 
     if os.path.isfile(credentials_file_path):
         os.remove(credentials_file_path)
@@ -66,25 +65,41 @@ async def test_async_setup_platform(hass):
     result = await async_setup_component(hass, 'api', config)
     assert result
 
-    # pylint: disable=line-too-long
-    with patch.object(hass.http, 'register_view', wraps=hass.http.register_view) as register_view_spy,\
-            patch('homeassistant.components.configurator.async_request_config', wraps=configurator.async_request_config) as async_request_config_spy, \
-            patch('homeassistant.components.configurator.async_request_done', wraps=configurator.async_request_done) as async_request_done_spy, \
-            patch('homeassistant.components.sensor.withings.async_initialize') as async_initialize_mock:
-        # pylint: enable=line-too-long
+    with \
+            patch.object(
+                    hass.http, 'register_view',
+                    wraps=hass.http.register_view
+            ) as register_view_spy,\
+            patch(
+                'homeassistant.components.configurator.async_request_config',
+                wraps=configurator.async_request_config
+            ) as async_request_config_spy, \
+            patch(
+                'homeassistant.components.configurator.async_request_done',
+                wraps=configurator.async_request_done
+            ) as async_request_done_spy, \
+            patch(
+                'homeassistant.components.sensor.withings.async_initialize'
+            ) as async_initialize_mock:
 
         # Simulate an initial setup.
         result = await async_setup_component(hass, SENSOR_DOMAIN, config)
         assert result
         assert withings.DATA_CONFIGURING in hass.data
         assert 'person_1' in hass.data[withings.DATA_CONFIGURING]
-        configuring: withings.WithingsConfiguring = hass.data[withings.DATA_CONFIGURING][slug]
+        configuring: withings.WithingsConfiguring = \
+            hass.data[withings.DATA_CONFIGURING][slug]
         assert isinstance(configuring, withings.WithingsConfiguring)
         assert callable(configuring.oauth_initialize_callback)
-        register_view_spy.assert_called_with(withings.WithingsAuthCallbackView(slug, '%s/%s' % (
-            withings.WITHINGS_AUTH_CALLBACK_PATH,
-            slug
-        )))
+        register_view_spy.assert_called_with(
+            withings.WithingsAuthCallbackView(
+                slug,
+                '%s/%s' % (
+                    withings.WITHINGS_AUTH_CALLBACK_PATH,
+                    slug
+                )
+            )
+        )
         async_request_config_spy.assert_called_with(
             hass,
             'Withings',
@@ -126,7 +141,6 @@ async def test_async_setup_platform(hass):
 
 async def test_async_setup_platform_from_saved_credentials(hass):
     """Test method."""
-
     profile = 'person 1'
     slug = 'person_1'
 
@@ -171,7 +185,6 @@ async def test_async_setup_platform_from_saved_credentials(hass):
 
 async def test_initialize_new_credentials(hass):
     """Test method."""
-
     profile = 'person 1'
     slug = 'person_1'
 
@@ -212,7 +225,6 @@ async def test_initialize_new_credentials(hass):
 
 async def test_initialize_credentials_refreshed(hass):
     """Test method."""
-
     profile = 'person 1'
     slug = 'person_1'
 
@@ -260,9 +272,11 @@ class TestWithingsAuthCallbackView(unittest.TestCase):
     """Tests the auth callback view."""
 
     def setUp(self):
+        """Set up the test."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
+        """Tear down the test."""
         self.hass.stop()
 
     def test_get_errors(self):
@@ -321,12 +335,14 @@ class TestWithingsDataManager(unittest.TestCase):
     """Tests the data manager class."""
 
     def setUp(self):
+        """Set up the test."""
         self.hass = get_test_home_assistant()
         self.api = nokia.NokiaApi.__new__(nokia.NokiaApi)
         self.api.get_measures = MagicMock()
         self.api.get_sleep = MagicMock()
 
     def tearDown(self):
+        """Tear down the test."""
         self.hass.stop()
 
     @async_test
@@ -408,12 +424,15 @@ class TestWithingsHealthSensor(unittest.TestCase):
     """Tests all the health sensors."""
 
     def setUp(self):
+        """Set up the test."""
         self.hass = get_test_home_assistant()
 
         self.api = nokia.NokiaApi.__new__(nokia.NokiaApi)
-        self.api.get_credentials = MagicMock(return_value=nokia.NokiaCredentials(
-            user_id='USER_ID'
-        ))
+        self.api.get_credentials = MagicMock(
+            return_value=nokia.NokiaCredentials(
+                user_id='USER_ID'
+            )
+        )
         self.api.get_measures = MagicMock()
         self.api.get_sleep = MagicMock()
         self.api.get_sleep_summary = MagicMock()
@@ -421,6 +440,7 @@ class TestWithingsHealthSensor(unittest.TestCase):
         self.recreate_data_manager()
 
     def tearDown(self):
+        """Tear down the test."""
         self.hass.stop()
 
     def recreate_data_manager(self):
@@ -429,7 +449,6 @@ class TestWithingsHealthSensor(unittest.TestCase):
             'person_1',
             self.api
         )
-
 
     def test_properties(self):
         """Test method."""
@@ -452,43 +471,49 @@ class TestWithingsHealthSensor(unittest.TestCase):
             'timezone': '',
             'measuregrps': [
                 # Un-ambiguous groups.
-                new_measure_group(1, 0, time.time(), time.time(), 1, 'DEV_ID', False, 0, [
-                    new_measure(withings.MEASURE_TYPE_WEIGHT, 70, 0),
-                    new_measure(withings.MEASURE_TYPE_FAT_MASS, 5, 0),
-                    new_measure(withings.MEASURE_TYPE_FAT_MASS_FREE, 60, 0),
-                    new_measure(withings.MEASURE_TYPE_MUSCLE_MASS, 50, 0),
-                    new_measure(withings.MEASURE_TYPE_BONE_MASS, 10, 0),
-                    new_measure(withings.MEASURE_TYPE_HEIGHT, 2, 0),
-                    new_measure(withings.MEASURE_TYPE_TEMP, 40, 0),
-                    new_measure(withings.MEASURE_TYPE_BODY_TEMP, 35, 0),
-                    new_measure(withings.MEASURE_TYPE_SKIN_TEMP, 20, 0),
-                    new_measure(withings.MEASURE_TYPE_FAT_RATIO, 70, -3),
-                    new_measure(withings.MEASURE_TYPE_DIASTOLIC_BP, 70, 0),
-                    new_measure(withings.MEASURE_TYPE_SYSTOLIC_BP, 100, 0),
-                    new_measure(withings.MEASURE_TYPE_HEART_PULSE, 60, 0),
-                    new_measure(withings.MEASURE_TYPE_SPO2, 95, -2),
-                    new_measure(withings.MEASURE_TYPE_HYDRATION, 95, -2),
-                    new_measure(withings.MEASURE_TYPE_PWV, 100, 0),  # Deprecated
-                ]),
+                new_measure_group(
+                    1, 0, time.time(), time.time(), 1, 'DEV_ID', False, 0, [
+                        new_measure(withings.MEASURE_TYPE_WEIGHT, 70, 0),
+                        new_measure(withings.MEASURE_TYPE_FAT_MASS, 5, 0),
+                        new_measure(
+                            withings.MEASURE_TYPE_FAT_MASS_FREE, 60, 0
+                        ),
+                        new_measure(withings.MEASURE_TYPE_MUSCLE_MASS, 50, 0),
+                        new_measure(withings.MEASURE_TYPE_BONE_MASS, 10, 0),
+                        new_measure(withings.MEASURE_TYPE_HEIGHT, 2, 0),
+                        new_measure(withings.MEASURE_TYPE_TEMP, 40, 0),
+                        new_measure(withings.MEASURE_TYPE_BODY_TEMP, 35, 0),
+                        new_measure(withings.MEASURE_TYPE_SKIN_TEMP, 20, 0),
+                        new_measure(withings.MEASURE_TYPE_FAT_RATIO, 70, -3),
+                        new_measure(withings.MEASURE_TYPE_DIASTOLIC_BP, 70, 0),
+                        new_measure(withings.MEASURE_TYPE_SYSTOLIC_BP, 100, 0),
+                        new_measure(withings.MEASURE_TYPE_HEART_PULSE, 60, 0),
+                        new_measure(withings.MEASURE_TYPE_SPO2, 95, -2),
+                        new_measure(withings.MEASURE_TYPE_HYDRATION, 95, -2),
+                        new_measure(withings.MEASURE_TYPE_PWV, 100, 0),
+                    ]
+                ),
 
                 # Ambiguous groups (we ignore these)
-                new_measure_group(1, 1, time.time(), time.time(), 1, 'DEV_ID', False, 0, [
-                    new_measure(withings.MEASURE_TYPE_WEIGHT, 71, 0),
-                    new_measure(withings.MEASURE_TYPE_FAT_MASS, 4, 0),
-                    new_measure(withings.MEASURE_TYPE_MUSCLE_MASS, 51, 0),
-                    new_measure(withings.MEASURE_TYPE_BONE_MASS, 11, 0),
-                    new_measure(withings.MEASURE_TYPE_HEIGHT, 201, 0),
-                    new_measure(withings.MEASURE_TYPE_TEMP, 41, 0),
-                    new_measure(withings.MEASURE_TYPE_BODY_TEMP, 34, 0),
-                    new_measure(withings.MEASURE_TYPE_SKIN_TEMP, 21, 0),
-                    new_measure(withings.MEASURE_TYPE_FAT_RATIO, 71, -3),
-                    new_measure(withings.MEASURE_TYPE_DIASTOLIC_BP, 71, 0),
-                    new_measure(withings.MEASURE_TYPE_SYSTOLIC_BP, 101, 0),
-                    new_measure(withings.MEASURE_TYPE_HEART_PULSE, 61, 0),
-                    new_measure(withings.MEASURE_TYPE_SPO2, 98, -2),
-                    new_measure(withings.MEASURE_TYPE_HYDRATION, 96, -2),
-                    new_measure(withings.MEASURE_TYPE_PWV, 102, 0),  # Deprecated
-                ])
+                new_measure_group(
+                    1, 1, time.time(), time.time(), 1, 'DEV_ID', False, 0, [
+                        new_measure(withings.MEASURE_TYPE_WEIGHT, 71, 0),
+                        new_measure(withings.MEASURE_TYPE_FAT_MASS, 4, 0),
+                        new_measure(withings.MEASURE_TYPE_MUSCLE_MASS, 51, 0),
+                        new_measure(withings.MEASURE_TYPE_BONE_MASS, 11, 0),
+                        new_measure(withings.MEASURE_TYPE_HEIGHT, 201, 0),
+                        new_measure(withings.MEASURE_TYPE_TEMP, 41, 0),
+                        new_measure(withings.MEASURE_TYPE_BODY_TEMP, 34, 0),
+                        new_measure(withings.MEASURE_TYPE_SKIN_TEMP, 21, 0),
+                        new_measure(withings.MEASURE_TYPE_FAT_RATIO, 71, -3),
+                        new_measure(withings.MEASURE_TYPE_DIASTOLIC_BP, 71, 0),
+                        new_measure(withings.MEASURE_TYPE_SYSTOLIC_BP, 101, 0),
+                        new_measure(withings.MEASURE_TYPE_HEART_PULSE, 61, 0),
+                        new_measure(withings.MEASURE_TYPE_SPO2, 98, -2),
+                        new_measure(withings.MEASURE_TYPE_HYDRATION, 96, -2),
+                        new_measure(withings.MEASURE_TYPE_PWV, 102, 0),
+                    ]
+                )
             ],
             'more': False,
             'offset': 0
@@ -523,77 +548,120 @@ class TestWithingsHealthSensor(unittest.TestCase):
         await self.assert_sensor_equals(100, withings.MEAS_PWV)
 
         self.recreate_data_manager()
-        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
-            new_sleep_data_serie(
-                '2019-02-01 00:00:00',
-                '2019-02-01 00:30:00',
-                withings.MEASURE_TYPE_SLEEP_STATE_AWAKE
-            ),
-            new_sleep_data_serie(
-                '2019-02-01 02:00:00',
-                '2019-02-01 02:30:00',
-                withings.MEASURE_TYPE_SLEEP_STATE_DEEP
-            ),
-            new_sleep_data_serie(
-                '2019-02-01 01:00:00',
-                '2019-02-01 01:30:00',
-                withings.MEASURE_TYPE_SLEEP_STATE_REM
-            ),
-        ]))
-        await self.assert_sensor_equals(withings.STATE_DEEP, withings.MEAS_SLEEP_STATE)
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data(
+            'aa',
+            [
+                new_sleep_data_serie(
+                    '2019-02-01 00:00:00',
+                    '2019-02-01 00:30:00',
+                    withings.MEASURE_TYPE_SLEEP_STATE_AWAKE
+                ),
+                new_sleep_data_serie(
+                    '2019-02-01 02:00:00',
+                    '2019-02-01 02:30:00',
+                    withings.MEASURE_TYPE_SLEEP_STATE_DEEP
+                ),
+                new_sleep_data_serie(
+                    '2019-02-01 01:00:00',
+                    '2019-02-01 01:30:00',
+                    withings.MEASURE_TYPE_SLEEP_STATE_REM
+                ),
+            ]
+        ))
+        await self.assert_sensor_equals(
+            withings.STATE_DEEP,
+            withings.MEAS_SLEEP_STATE
+        )
 
         self.recreate_data_manager()
-        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
-            new_sleep_data_serie(
-                '2019-02-01 00:00:00',
-                '2019-02-01 00:30:00',
-                withings.MEASURE_TYPE_SLEEP_STATE_AWAKE
-            ),
-        ]))
-        await self.assert_sensor_equals(withings.STATE_AWAKE, withings.MEAS_SLEEP_STATE)
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data(
+            'aa',
+            [
+                new_sleep_data_serie(
+                    '2019-02-01 00:00:00',
+                    '2019-02-01 00:30:00',
+                    withings.MEASURE_TYPE_SLEEP_STATE_AWAKE
+                ),
+            ]
+        ))
+        await self.assert_sensor_equals(
+            withings.STATE_AWAKE,
+            withings.MEAS_SLEEP_STATE
+        )
 
         self.recreate_data_manager()
-        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
-            new_sleep_data_serie(
-                '2019-02-01 00:00:00',
-                '2019-02-01 00:30:00',
-                withings.MEASURE_TYPE_SLEEP_STATE_LIGHT
-            ),
-        ]))
-        await self.assert_sensor_equals(withings.STATE_LIGHT, withings.MEAS_SLEEP_STATE)
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data(
+            'aa',
+            [
+                new_sleep_data_serie(
+                    '2019-02-01 00:00:00',
+                    '2019-02-01 00:30:00',
+                    withings.MEASURE_TYPE_SLEEP_STATE_LIGHT
+                ),
+            ]
+        ))
+        await self.assert_sensor_equals(
+            withings.STATE_LIGHT,
+            withings.MEAS_SLEEP_STATE
+        )
 
         self.recreate_data_manager()
-        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
-            new_sleep_data_serie(
-                '2019-02-01 00:00:00',
-                '2019-02-01 00:30:00',
-                withings.MEASURE_TYPE_SLEEP_STATE_DEEP
-            ),
-        ]))
-        await self.assert_sensor_equals(withings.STATE_DEEP, withings.MEAS_SLEEP_STATE)
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data(
+            'aa',
+            [
+                new_sleep_data_serie(
+                    '2019-02-01 00:00:00',
+                    '2019-02-01 00:30:00',
+                    withings.MEASURE_TYPE_SLEEP_STATE_DEEP
+                ),
+            ]
+        ))
+        await self.assert_sensor_equals(
+            withings.STATE_DEEP,
+            withings.MEAS_SLEEP_STATE
+        )
 
         self.recreate_data_manager()
-        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', [
-            new_sleep_data_serie(
-                '2019-02-01 00:00:00',
-                '2019-02-01 00:30:00',
-                withings.MEASURE_TYPE_SLEEP_STATE_REM
-            ),
-        ]))
-        await self.assert_sensor_equals(withings.STATE_REM, withings.MEAS_SLEEP_STATE)
+        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data(
+            'aa',
+            [
+                new_sleep_data_serie(
+                    '2019-02-01 00:00:00',
+                    '2019-02-01 00:30:00',
+                    withings.MEASURE_TYPE_SLEEP_STATE_REM
+                ),
+            ]
+        ))
+        await self.assert_sensor_equals(
+            withings.STATE_REM,
+            withings.MEAS_SLEEP_STATE
+        )
 
         self.recreate_data_manager()
         self.api.get_sleep.return_value = None
-        await self.assert_sensor_equals(withings.STATE_UNKNOWN, withings.MEAS_SLEEP_STATE)
+        await self.assert_sensor_equals(
+            withings.STATE_UNKNOWN,
+            withings.MEAS_SLEEP_STATE
+        )
 
         self.recreate_data_manager()
-        self.api.get_sleep.return_value = nokia.NokiaSleep(new_sleep_data('aa', []))
-        await self.assert_sensor_equals(withings.STATE_UNKNOWN, withings.MEAS_SLEEP_STATE)
+        self.api.get_sleep.return_value = nokia.NokiaSleep(
+            new_sleep_data('aa', [])
+        )
+        await self.assert_sensor_equals(
+            withings.STATE_UNKNOWN,
+            withings.MEAS_SLEEP_STATE
+        )
 
         self.api.get_sleep_summary.return_value = nokia.NokiaSleepSummary({
             'series': [
                 new_sleep_summary(
-                    'UTC', 32, '2019-02-01', '2019-02-02', '2019-02-02', '12345',
+                    'UTC',
+                    32,
+                    '2019-02-01',
+                    '2019-02-02',
+                    '2019-02-02',
+                    '12345',
                     new_sleep_summary_detail(
                         110,
                         210,
@@ -611,7 +679,12 @@ class TestWithingsHealthSensor(unittest.TestCase):
                     ),
                 ),
                 new_sleep_summary(
-                    'UTC', 32, '2019-02-01', '2019-02-02', '2019-02-02', '12345',
+                    'UTC',
+                    32,
+                    '2019-02-01',
+                    '2019-02-02',
+                    '2019-02-02',
+                    '12345',
                     new_sleep_summary_detail(
                         210,
                         310,
@@ -705,7 +778,7 @@ class TestWithingsHealthSensor(unittest.TestCase):
         )
 
     async def assert_sensor_equals(self, expected, measure):
-        """Simple assertion for a withings sensor."""
+        """Assert the state of a withings sensor."""
         sensor = withings.WithingsHealthSensor(
             self.data_manager,
             withings.WITHINGS_MEASUREMENTS_MAP[measure]
@@ -721,7 +794,7 @@ class TestWithingsHealthSensor(unittest.TestCase):
 
 
 def new_sleep_data(model, series):
-    """Creates simple dict to simulate api data."""
+    """Create simple dict to simulate api data."""
     return {
         'series': series,
         'model': model
@@ -729,7 +802,7 @@ def new_sleep_data(model, series):
 
 
 def new_sleep_data_serie(startdate, enddate, state):
-    """Creates simple dict to simulate api data."""
+    """Create simple dict to simulate api data."""
     return {
         'startdate': startdate,
         'enddate': enddate,
@@ -744,7 +817,7 @@ def new_sleep_summary(timezone,
                       date,
                       modified,
                       data):
-    """Creates simple dict to simulate api data."""
+    """Create simple dict to simulate api data."""
     return {
         'timezone': timezone,
         'model': model,
@@ -769,7 +842,7 @@ def new_sleep_summary_detail(wakeupduration,
                              rr_average,
                              rr_min,
                              rr_max):
-    """Creates simple dict to simulate api data."""
+    """Create simple dict to simulate api data."""
     return {
         'wakeupduration': wakeupduration,
         'lightsleepduration': lightsleepduration,
@@ -796,7 +869,7 @@ def new_measure_group(grpid,
                       more,
                       offset,
                       measures):
-    """Creates simple dict to simulate api data."""
+    """Create simple dict to simulate api data."""
     return {
         'grpid': grpid,
         'attrib': attrib,
@@ -812,7 +885,7 @@ def new_measure_group(grpid,
 
 
 def new_measure(type_str, value, unit):
-    """Creates simple dict to simulate api data."""
+    """Create simple dict to simulate api data."""
     return {
         'value': value,
         'type': type_str,
