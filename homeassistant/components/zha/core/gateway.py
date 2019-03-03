@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {}
 BINARY_SENSOR_TYPES = {}
 SMARTTHINGS_HUMIDITY_CLUSTER = 64581
+SMARTTHINGS_ACCELERATION_CLUSTER = 64514
 EntityReference = collections.namedtuple(
     'EntityReference', 'reference_id zha_device cluster_channels device_info')
 
@@ -451,6 +452,7 @@ def establish_device_mappings():
     NO_SENSOR_CLUSTERS.append(
         zcl.clusters.general.PowerConfiguration.cluster_id)
     NO_SENSOR_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
+    NO_SENSOR_CLUSTERS.append(SMARTTHINGS_ACCELERATION_CLUSTER)
 
     BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
@@ -566,6 +568,27 @@ def establish_device_mappings():
             )
         }],
         zcl.clusters.measurement.TemperatureMeasurement.cluster_id: [{
+            'attr': 'measured_value',
+            'config': (
+                REPORT_CONFIG_MIN_INT,
+                REPORT_CONFIG_MAX_INT,
+                50
+            )
+        }],
+        SMARTTHINGS_ACCELERATION_CLUSTER: [{
+            'attr': 'acceleration',
+            'config': REPORT_CONFIG_DEFAULT
+        }, {
+            'attr': 'x_axis',
+            'config': REPORT_CONFIG_DEFAULT
+        }, {
+            'attr': 'y_axis',
+            'config': REPORT_CONFIG_DEFAULT
+        }, {
+            'attr': 'z_axis',
+            'config': REPORT_CONFIG_DEFAULT
+        }],
+        SMARTTHINGS_HUMIDITY_CLUSTER: [{
             'attr': 'measured_value',
             'config': (
                 REPORT_CONFIG_MIN_INT,
