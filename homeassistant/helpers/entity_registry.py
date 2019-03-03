@@ -296,8 +296,8 @@ async def async_get_registry(hass) -> EntityRegistry:
 def async_entries_for_device(registry: EntityRegistry, device_id: str) \
         -> List[RegistryEntry]:
     """Return entries that match a device."""
-    return [entity for entity in registry.entities.values()
-            if entity.device_id == device_id]
+    return [entry for entry in registry.entities.values()
+            if entry.device_id == device_id]
 
 
 async def _async_migrate(entities):

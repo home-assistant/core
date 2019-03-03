@@ -87,7 +87,7 @@ async def async_call_from_config(hass, config, blocking=False, variables=None,
 
 
 @bind_hass
-async def extract_entity_ids(hass, service_call, expand_group=True):
+def extract_entity_ids(hass, service_call, expand_group=True):
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -114,10 +114,10 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
     extracted = set()
 
     if entity_ids:
+        # Entity ID attr can be a list or a string
         if isinstance(entity_ids, str):
             entity_ids = [entity_ids]
 
-        # Entity ID attr can be a list or a string
         if expand_group:
             entity_ids = \
                 hass.components.group.expand_entity_ids(entity_ids)
@@ -140,9 +140,9 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
                 dev_reg, area_id)
         ]
         extracted.update(
-            entity.entity_id
+            entry.entity_id
             for device in devices
-            for entity in
+            for entry in
             hass.helpers.entity_registry.async_entries_for_device(
                 ent_reg, device.id)
         )
