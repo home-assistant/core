@@ -215,9 +215,16 @@ class ZHADevice:
         """Gather and execute a set of CHANNEL tasks."""
         channel_tasks = []
         semaphore = asyncio.Semaphore(3)
+        zdo_task = None
         for channel in self.all_channels:
-            channel_tasks.append(
-                self._async_create_task(semaphore, channel, task_name, *args))
+            if channel.name == ZDO_CHANNEL:
+                zdo_task = self._async_create_task(
+                    semaphore, channel, task_name, *args)
+            else:
+                channel_tasks.append(
+                    self._async_create_task(
+                        semaphore, channel, task_name, *args))
+        await zdo_task
         await asyncio.gather(*channel_tasks)
 
     async def _async_create_task(self, semaphore, channel, func_name, *args):
