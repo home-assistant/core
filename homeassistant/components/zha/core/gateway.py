@@ -577,16 +577,16 @@ def establish_device_mappings():
         }],
         SMARTTHINGS_ACCELERATION_CLUSTER: [{
             'attr': 'acceleration',
-            'config': REPORT_CONFIG_DEFAULT
+            'config': REPORT_CONFIG_ASAP
         }, {
             'attr': 'x_axis',
-            'config': REPORT_CONFIG_DEFAULT
+            'config': REPORT_CONFIG_ASAP
         }, {
             'attr': 'y_axis',
-            'config': REPORT_CONFIG_DEFAULT
+            'config': REPORT_CONFIG_ASAP
         }, {
             'attr': 'z_axis',
-            'config': REPORT_CONFIG_DEFAULT
+            'config': REPORT_CONFIG_ASAP
         }],
         SMARTTHINGS_HUMIDITY_CLUSTER: [{
             'attr': 'measured_value',
