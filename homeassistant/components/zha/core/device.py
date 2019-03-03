@@ -224,7 +224,8 @@ class ZHADevice:
                 channel_tasks.append(
                     self._async_create_task(
                         semaphore, channel, task_name, *args))
-        await zdo_task
+        if zdo_task is not None:
+            await zdo_task
         await asyncio.gather(*channel_tasks)
 
     async def _async_create_task(self, semaphore, channel, func_name, *args):
