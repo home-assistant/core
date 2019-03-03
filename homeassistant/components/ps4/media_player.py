@@ -162,7 +162,7 @@ class PS4Device(MediaPlayerDevice):
                     self._ps4.keep_alive = True
                 else:
                     self._ps4.keep_alive = False
-                if self._power_on is True:
+                if self._power_on:
                     # Auto Login after Turn On.
                     self._ps4.open()
                     self._power_on = False
