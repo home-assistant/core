@@ -48,7 +48,7 @@ class AmazonChime(BaseNotificationService):
             message += ' @All'
 
         try:
-            r = post(
+            response = post(
                 url=self.webhook_url,
                 json={"Content": message}
             )
@@ -56,7 +56,7 @@ class AmazonChime(BaseNotificationService):
             _LOGGER.exception("Could not send Amazon Chime webhook service")
             return
 
-        if r.status_code != 200:
-            _LOGGER.exception("Invalid response: {}".format(r.text))
+        if response.status_code != 200:
+            _LOGGER.exception("Invalid response: %s", response.text)
             return
         _LOGGER.info('Amazon Chime webhook successfully sent')
