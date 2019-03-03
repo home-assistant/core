@@ -275,16 +275,16 @@ async def test_entity_media_states(hass: HomeAssistantType):
     state = hass.states.get('media_player.speaker')
     assert state.state == 'playing'
 
-    entity.new_media_status(media_status)
     media_status.player_is_playing = False
     media_status.player_is_paused = True
+    entity.new_media_status(media_status)
     await hass.async_block_till_done()
     state = hass.states.get('media_player.speaker')
     assert state.state == 'paused'
 
-    entity.new_media_status(media_status)
     media_status.player_is_paused = False
     media_status.player_is_idle = True
+    entity.new_media_status(media_status)
     await hass.async_block_till_done()
     state = hass.states.get('media_player.speaker')
     assert state.state == 'idle'
