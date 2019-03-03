@@ -23,6 +23,7 @@ from homeassistant.util.json import load_json, save_json
 from homeassistant.util import Throttle, slugify
 
 REQUIREMENTS = ['nokia==1.2.0']
+DEPENDENCIES = ['api', 'http']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -505,7 +506,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_SECRET): cv.string,
     vol.Required(CONF_PROFILE): cv.string,
-    vol.Optional(CONF_BASE_URL,): cv.string,
+    vol.Optional(CONF_BASE_URL): cv.string,
     vol.Required(CONF_MEASUREMENTS, default=[]):
         vol.All(cv.ensure_list, [vol.In(CONF_SENSORS)]),
 
