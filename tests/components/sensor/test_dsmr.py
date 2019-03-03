@@ -121,7 +121,7 @@ def test_derivative():
     }
     yield from entity.async_update()
 
-    assert entity.state == 1, \
+    assert entity.state == 3600, \
         'state should be difference between first and second update'
 
     assert entity.unit_of_measurement == 'm3/h'
