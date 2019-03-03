@@ -1,14 +1,20 @@
 """Test the mobile_app platform."""
 import pytest
 
+from asynctest import patch
+
 from homeassistant.setup import async_setup_component
 
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.components.mobile_app.const import (ATTR_DELETED_IDS,
                                                        ATTR_REGISTRATIONS,
+                                                       CONF_CLOUDHOOK_ID,
+                                                       CONF_CLOUDHOOK_URL,
                                                        CONF_SECRET,
                                                        CONF_USER_ID, DOMAIN,
+                                                       HTTP_X_CLOUD_HOOK_ID,
+                                                       HTTP_X_CLOUD_HOOK_URL,
                                                        STORAGE_KEY,
                                                        STORAGE_VERSION)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
@@ -280,6 +286,52 @@ async def test_register_device(hass_client, authed_api_client):
 
     webhook_json = await resp.json()
     assert webhook_json == {'rendered': 'Hello world'}
+
+
+async def mock_create_cloudhook(hass, webhook_id):
+    """Return a mock cloudhook create payload."""
+    return {
+        CONF_CLOUDHOOK_ID: 'mock-cloud-id',
+        CONF_CLOUDHOOK_URL: 'https://hooks.nabu.casa/ZXCZCXZ',
+    }
+
+
+def mock_cloud_logged_in(hass):
+    """Return logged in state (true)."""
+    return True
+
+
+@patch('homeassistant.components.mobile_app.webhook.async_create_cloudhook',
+       mock_create_cloudhook)
+@patch('homeassistant.components.mobile_app.webhook.async_is_logged_in',
+       mock_cloud_logged_in)
+async def test_cloud_forwarding(hass, hass_client, authed_api_client):
+    """Test that a local webhook provides a cloud URL in responses."""
+    resp = await authed_api_client.post(
+        '/api/mobile_app/devices', json=REGISTER
+    )
+
+    assert resp.status == 201
+    register_json = await resp.json()
+    assert CONF_WEBHOOK_ID in register_json
+    assert CONF_SECRET in register_json
+    assert CONF_CLOUDHOOK_ID not in register_json
+    assert CONF_CLOUDHOOK_URL not in register_json
+
+    local_url = register_json[CONF_WEBHOOK_ID]
+
+    webhook_client = await hass_client()
+
+    resp = await webhook_client.post(
+        '/api/webhook/{}'.format(local_url),
+        json=FIRE_EVENT
+    )
+
+    assert resp.status == 200
+
+    assert resp.headers[HTTP_X_CLOUD_HOOK_ID] == 'mock-cloud-id'
+    assert resp.headers[HTTP_X_CLOUD_HOOK_URL] == \
+        'https://hooks.nabu.casa/ZXCZCXZ'
 
 
 async def test_webocket_get_registration(hass, authed_api_client,

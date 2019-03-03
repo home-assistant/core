@@ -1,7 +1,8 @@
 """Websocket API for mobile_app."""
 from aiohttp.http_websocket import WSMessage
 
-from homeassistant.components.cloud import async_delete_cloudhook
+from homeassistant.components.cloud import (async_delete_cloudhook,
+                                            async_is_logged_in)
 from homeassistant.components.websocket_api import (ActiveConnection,
                                                     async_register_command,
                                                     async_response,
@@ -78,6 +79,7 @@ async def websocket_delete_registration(hass: HomeAssistantType,
         return error_message(
             msg['id'], 'internal_error', 'Error deleting device')
 
-    await async_delete_cloudhook(hass, webhook_id)
+    if async_is_logged_in(hass):
+        await async_delete_cloudhook(hass, webhook_id)
 
     connection.send_message(result_message(msg['id'], 'ok'))

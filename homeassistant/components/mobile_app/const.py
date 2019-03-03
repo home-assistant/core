@@ -41,6 +41,9 @@ ATTR_WEBHOOK_ENCRYPTED = 'encrypted'
 ATTR_WEBHOOK_ENCRYPTED_DATA = 'encrypted_data'
 ATTR_WEBHOOK_TYPE = 'type'
 
+HTTP_X_CLOUD_HOOK_ID = 'X-Cloud-Hook-ID'
+HTTP_X_CLOUD_HOOK_URL = 'X-Cloud-Hook-URL'
+
 WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
 WEBHOOK_TYPE_FIRE_EVENT = 'fire_event'
 WEBHOOK_TYPE_RENDER_TEMPLATE = 'render_template'

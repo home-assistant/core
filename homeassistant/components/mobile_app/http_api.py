@@ -4,7 +4,8 @@ from typing import Dict
 from aiohttp.web import Response, Request
 
 from homeassistant.auth.util import generate_secret
-from homeassistant.components.cloud import async_create_cloudhook
+from homeassistant.components.cloud import (async_create_cloudhook,
+                                            async_is_logged_in)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import (HTTP_CREATED, HTTP_INTERNAL_SERVER_ERROR,
@@ -48,13 +49,14 @@ class DevicesView(HomeAssistantView):
 
         webhook_id = generate_secret()
 
-        cloudhook = await async_create_cloudhook(hass, webhook_id)
+        if async_is_logged_in(hass):
+            cloudhook = await async_create_cloudhook(hass, webhook_id)
 
-        if cloudhook is not None:
-            data[CONF_CLOUDHOOK_ID] = resp[CONF_CLOUDHOOK_ID] = \
-                cloudhook[CONF_CLOUDHOOK_ID]
-            data[CONF_CLOUDHOOK_URL] = resp[CONF_CLOUDHOOK_URL] = \
-                cloudhook[CONF_CLOUDHOOK_URL]
+            if cloudhook is not None:
+                data[CONF_CLOUDHOOK_ID] = resp[CONF_CLOUDHOOK_ID] = \
+                    cloudhook[CONF_CLOUDHOOK_ID]
+                data[CONF_CLOUDHOOK_URL] = resp[CONF_CLOUDHOOK_URL] = \
+                    cloudhook[CONF_CLOUDHOOK_URL]
 
         data[CONF_WEBHOOK_ID] = resp[CONF_WEBHOOK_ID] = webhook_id
 
