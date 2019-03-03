@@ -65,7 +65,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(
         CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
     vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
-    vol.Optional(CONF_APPS, default=DEFAULT_APPS): dict,
+    vol.Optional(
+        CONF_APPS, default=DEFAULT_APPS): vol.Schema({cv.string: cv.string})
 })
 
 # Translate from `FireTV` reported state to HA state.
@@ -171,7 +172,7 @@ class FireTVDevice(MediaPlayerDevice):
         self.apps = APPS
         self.keys = KEYS
 
-        self.apps.update(dict(apps))
+        self.apps.update(apps)
 
         self.firetv = ftv
 
