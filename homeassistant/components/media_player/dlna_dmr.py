@@ -28,7 +28,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['async-upnp-client==0.14.4']
+REQUIREMENTS = ['async-upnp-client==0.14.5']
 
 _LOGGER = logging.getLogger(__name__)
 
