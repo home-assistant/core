@@ -135,11 +135,11 @@ class GeniusClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return self.GET_CURRENT_OPERARTON_MODE(self._mode)
+        return self.get_current_operation_mode(self._mode)
 
     @staticmethod
-    def GET_CURRENT_OPERARTON_MODE(mode):
-        """Static method to return the current operation mode."""
+    def get_current_operation_mode(mode):
+        """Return the current operational mode."""
         mode_map = {
             'override': STATE_HEAT,
             'footprint': STATE_ECO,
@@ -147,7 +147,7 @@ class GeniusClimate(ClimateDevice):
         }
         return mode_map.get(mode, STATE_IDLE)
 
-    def GET_OPERARTON_MODE(self, operation_mode):
+    def get_operation_mode(self, operation_mode):
         """Coverts operation mode from Home Assistant to Genius Hub."""
         # These needed to be mapped into HA modes:
         # Off       => OFF      => STATE_IDLE   # Mode_Off: 1,
@@ -170,7 +170,7 @@ class GeniusClimate(ClimateDevice):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        data = self.GET_OPERARTON_MODE(operation_mode)
+        data = self.get_operation_mode(operation_mode)
         self._mode = data['mode']
         if data['data'] is None:
             _LOGGER.error("Unknown mode")
@@ -201,12 +201,12 @@ class GeniusClimate(ClimateDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn on."""
-        self._mode = "timer"
         await GeniusClimate._genius_hub.putjson(
             self._device_id, {"iMode": 2})
+        self._mode = "timer"
 
     async def async_turn_off(self, **kwargs):
         """Turn off."""
-        self._mode = "off"
         await GeniusClimate._genius_hub.putjson(
             self._device_id, {"iMode": 1})
+        self._mode = "off"
