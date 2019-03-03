@@ -1,15 +1,16 @@
-"""Test the mobile_app_http platform."""
+"""Test the mobile_app platform."""
 import pytest
 
 from homeassistant.setup import async_setup_component
 
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
-from homeassistant.components.mobile_app import (ATTR_DELETED_IDS,
-                                                 ATTR_REGISTRATIONS,
-                                                 CONF_SECRET, CONF_USER_ID,
-                                                 DOMAIN, STORAGE_KEY,
-                                                 STORAGE_VERSION)
+from homeassistant.components.mobile_app.const import (ATTR_DELETED_IDS,
+                                                       ATTR_REGISTRATIONS,
+                                                       CONF_SECRET,
+                                                       CONF_USER_ID, DOMAIN,
+                                                       STORAGE_KEY,
+                                                       STORAGE_VERSION)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 
 from tests.common import async_mock_service
