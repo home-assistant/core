@@ -64,7 +64,8 @@ class SendgridNotificationService(BaseNotificationService):
                 }
             ],
             "from": {
-                "email": self.sender
+                "email": self.sender,
+                "name": "Home Assistant"
             },
             "content": [
                 {
