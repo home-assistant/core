@@ -1,5 +1,5 @@
 """
-Supports Genius hub to provide access to genius hub switches
+Supports Genius hub to provide access to genius hub switches.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.geniushub/
@@ -13,7 +13,7 @@ DOMAIN = 'geniushub'
 
 async def async_setup_platform(hass, config,
                                async_add_entities, discovery_info=None):
-    """ Find and return Genius switches """
+    """Find and return Genius switches."""
     switches = []
     genius_hub = hass.data[GENIUS_HUB]
     await genius_hub.getjson('/zones')
@@ -28,9 +28,10 @@ async def async_setup_platform(hass, config,
 
 
 class GeniusSwitch(SwitchDevice):
-    """ Provides a Genius switch. """
+    """Provides a Genius switch."""
 
     def __init__(self, genius_hub, zone):
+        """Initialize a Genius switch."""
         GeniusSwitch._genius_hub = genius_hub
         self._name = zone['name']
         self._device_id = zone['iID']
@@ -42,12 +43,12 @@ class GeniusSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """ Returns the name of the Genius switch. """
+        """Returns the name of the Genius switch."""
         return self._name
 
     @property
     def is_on(self):
-        """ True if Genius switch is on. """
+        """True if Genius switch is on."""
         return self._state
 
     async def async_update(self):
@@ -61,7 +62,7 @@ class GeniusSwitch(SwitchDevice):
                 self._state = True
 
     async def async_turn_on(self, **kwargs):
-        """ Turn the Genius switch on. """
+        """Turn the Genius switch on."""
         duration = 24 * 60 * 60 - (5 * 60)  # 23:55
         await GeniusSwitch._genius_hub.putjson(
             self._device_id, {
@@ -70,6 +71,6 @@ class GeniusSwitch(SwitchDevice):
                 "iMode": 16})
 
     async def async_turn_off(self, **kwargs):
-        """ Turn the Genius switch off. """
+        """Turn the Genius switch off."""
         await GeniusSwitch._genius_hub.putjson(
             self._device_id, {"iMode": 1})

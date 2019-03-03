@@ -1,6 +1,5 @@
 """
-Supports Genius hub to provide room sensor and TRV information
-
+Supports Genius hub to provide room sensor and TRV information.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.geniushub/

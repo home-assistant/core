@@ -1,4 +1,4 @@
-''' This module connects to the Genius hub and shares the data'''
+"""This module connects to the Genius hub and shares the data."""
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -21,8 +21,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
+    """Try to start embedded Genius Hub broker."""
     from geniushub.geniushub import GeniusHub
-    """Try to start embedded Genius Hub  broker."""
+
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
     host = config[DOMAIN].get(CONF_HOST)

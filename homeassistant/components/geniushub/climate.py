@@ -1,5 +1,5 @@
 """
-Supports Genius hub to provide climate controls
+Supports Genius hub to provide climate controls.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/climate.geniushub/
@@ -93,10 +93,12 @@ class GeniusClimate(ClimateDevice):
 
     @property
     def min_temp(self):
+        """Return max valid temperature that can be set."""
         return 4.0
 
     @property
     def max_temp(self):
+        """Return max valid temperature that can be set."""
         return 28.0
 
     @property
@@ -137,6 +139,7 @@ class GeniusClimate(ClimateDevice):
 
     @staticmethod
     def GET_CURRENT_OPERARTON_MODE(mode):
+        """Static method to return the current operation mode."""
         mode_map = {
             'override': STATE_HEAT,
             'footprint': STATE_ECO,
@@ -145,6 +148,7 @@ class GeniusClimate(ClimateDevice):
         return mode_map.get(mode, STATE_IDLE)
 
     def GET_OPERARTON_MODE(self, operation_mode):
+        """Coverts operation mode from Home Assistant to Genius Hub."""
         # These needed to be mapped into HA modes:
         # Off       => OFF      => STATE_IDLE   # Mode_Off: 1,
         # Override  => HEAT     => STATE_HEAT # Mode_Boost: 16,
@@ -186,7 +190,7 @@ class GeniusClimate(ClimateDevice):
               'iMode': 16})
 
     async def async_update(self):
-        """Get the latest data from the hub"""
+        """Get the latest data from the hub."""
         zone = GeniusClimate._genius_hub.getZone(self._device_id)
         if zone:
             zone = GeniusClimate._genius_hub.GET_CLIMATE(zone)
