@@ -1,4 +1,6 @@
 """Websocket API for mobile_app."""
+from aiohttp.http_websocket import WSMessage
+
 from homeassistant.components.cloud import async_delete_cloudhook
 from homeassistant.components.websocket_api import (ActiveConnection,
                                                     async_register_command,
@@ -17,7 +19,7 @@ from .const import (ATTR_DELETED_IDS, ATTR_REGISTRATIONS, ATTR_STORE,
 from .helpers import safe_device, savable_state
 
 
-def register_websocket_handlers(hass: HomeAssistantType):
+def register_websocket_handlers(hass: HomeAssistantType) -> bool:
     """Register the websocket handlers."""
     async_register_command(hass, WS_TYPE_GET_REGISTRATION,
                            websocket_get_registration,
@@ -33,7 +35,8 @@ def register_websocket_handlers(hass: HomeAssistantType):
 @ws_require_user()
 @async_response
 async def websocket_get_registration(
-        hass: HomeAssistantType, connection: ActiveConnection, msg):
+        hass: HomeAssistantType, connection: ActiveConnection,
+        msg: WSMessage) -> None:
     """Return the registration for the given webhook_id."""
     user = connection.user
 
@@ -52,7 +55,8 @@ async def websocket_get_registration(
 @ws_require_user()
 @async_response
 async def websocket_delete_registration(hass: HomeAssistantType,
-                                        connection: ActiveConnection, msg):
+                                        connection: ActiveConnection,
+                                        msg: WSMessage) -> None:
     """Delete the registration for the given webhook_id."""
     user = connection.user
 

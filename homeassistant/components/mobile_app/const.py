@@ -1,10 +1,10 @@
 """Constants for mobile_app."""
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import SERVICE_SEE_PAYLOAD_SCHEMA
 from homeassistant.components.websocket_api import BASE_COMMAND_MESSAGE_SCHEMA
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
                                  CONF_WEBHOOK_ID)
-from homeassistant.components.device_tracker import SERVICE_SEE_PAYLOAD_SCHEMA
 from homeassistant.helpers import config_validation as cv
 
 DOMAIN = 'mobile_app'

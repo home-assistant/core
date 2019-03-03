@@ -1,9 +1,9 @@
 """Webhook handlers for mobile_app."""
 from functools import partial
 import logging
+from typing import Dict
 
-from aiohttp.web import json_response, Response
-from aiohttp.web_exceptions import HTTPBadRequest
+from aiohttp.web import HTTPBadRequest, json_response, Response, Request
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (DOMAIN as DT_DOMAIN,
@@ -33,11 +33,12 @@ from .const import (ATTR_APP_ID, ATTR_APP_NAME, ATTR_DELETED_IDS,
 from .helpers import (device_context, _decrypt_payload, empty_okay_response,
                       safe_device, savable_state)
 
+
 _LOGGER = logging.getLogger(__name__)
 
 
 def register_device_webhook(hass: HomeAssistantType, store: Store,
-                            device: dict):
+                            device: Dict) -> None:
     """Register the webhook for a device."""
     device_name = 'Mobile App: {}'.format(device[ATTR_DEVICE_NAME])
     webhook_id = device[CONF_WEBHOOK_ID]
@@ -46,7 +47,7 @@ def register_device_webhook(hass: HomeAssistantType, store: Store,
 
 
 async def handle_webhook(store: Store, hass: HomeAssistantType,
-                         webhook_id: str, request):
+                         webhook_id: str, request: Request) -> Response:
     """Handle webhook callback."""
     if webhook_id in hass.data[DOMAIN][ATTR_DELETED_IDS]:
         return Response(status=410)

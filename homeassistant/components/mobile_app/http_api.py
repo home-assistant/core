@@ -1,5 +1,7 @@
 """Provides an HTTP API for mobile_app."""
-from aiohttp.web import Request
+from typing import Dict
+
+from aiohttp.web import Response, Request
 
 from homeassistant.auth.util import generate_secret
 from homeassistant.components.cloud import async_create_cloudhook
@@ -21,7 +23,7 @@ from .helpers import supports_encryption, savable_state
 from .webhook import register_device_webhook
 
 
-def register_http_handlers(hass: HomeAssistantType, store: Store):
+def register_http_handlers(hass: HomeAssistantType, store: Store) -> bool:
     """Register the HTTP handlers/views."""
     hass.http.register_view(DevicesView(store))
     return True
@@ -33,12 +35,12 @@ class DevicesView(HomeAssistantView):
     url = '/api/mobile_app/devices'
     name = 'api:mobile_app:register-device'
 
-    def __init__(self, store: Store):
+    def __init__(self, store: Store) -> None:
         """Initialize the view."""
         self._store = store
 
     @RequestDataValidator(REGISTER_DEVICE_SCHEMA)
-    async def post(self, request: Request, data: dict):
+    async def post(self, request: Request, data: Dict) -> Response:
         """Handle the POST request for device registration."""
         hass = request.app['hass']
 

@@ -1,6 +1,7 @@
 """Helpers for mobile_app."""
 import logging
 import json
+from typing import Callable, Dict, Tuple
 
 from aiohttp.web import Response
 
@@ -16,7 +17,7 @@ from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME,
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_cipher():
+def get_cipher() -> Tuple[int, Callable]:
     """Return decryption function and length of key.
 
     Async friendly.
@@ -30,7 +31,7 @@ def get_cipher():
     return (SecretBox.KEY_SIZE, decrypt)
 
 
-def _decrypt_payload(key: str, ciphertext: str):
+def _decrypt_payload(key: str, ciphertext: str) -> Dict[str, str]:
     """Decrypt encrypted payload."""
     try:
         keylen, decrypt = get_cipher()
@@ -58,17 +59,17 @@ def _decrypt_payload(key: str, ciphertext: str):
         return None
 
 
-def device_context(device: dict):
+def device_context(device: Dict) -> Context:
     """Generate a context from a request."""
     return Context(user_id=device[CONF_USER_ID])
 
 
-def empty_okay_response():
+def empty_okay_response() -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(body='{}', status=200, content_type='application/json')
 
 
-def supports_encryption():
+def supports_encryption() -> bool:
     """Test if we support encryption."""
     try:
         import nacl   # noqa pylint: disable=unused-import
@@ -77,7 +78,7 @@ def supports_encryption():
         return False
 
 
-def safe_device(device: dict):
+def safe_device(device: Dict) -> Dict:
     """Return a device without sensitive values."""
     # Sensitive values: webhook_id, secret, cloudhook_id, cloudhook_url
     return {
@@ -93,7 +94,7 @@ def safe_device(device: dict):
     }
 
 
-def savable_state(hass: HomeAssistantType):
+def savable_state(hass: HomeAssistantType) -> Dict:
     """Return a clean object containing things that should be saved."""
     return {
         ATTR_DELETED_IDS: hass.data[DOMAIN][ATTR_DELETED_IDS],
