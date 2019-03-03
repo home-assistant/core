@@ -9,14 +9,13 @@ from homeassistant.helpers import config_validation as cv
 
 DOMAIN = 'mobile_app'
 
-
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-CONF_SECRET = 'secret'
-CONF_USER_ID = 'user_id'
 CONF_CLOUDHOOK_ID = 'cloudhook_id'
 CONF_CLOUDHOOK_URL = 'cloudhook_url'
+CONF_SECRET = 'secret'
+CONF_USER_ID = 'user_id'
 
 ATTR_DELETED_IDS = 'deleted_ids'
 ATTR_REGISTRATIONS = 'registrations'
