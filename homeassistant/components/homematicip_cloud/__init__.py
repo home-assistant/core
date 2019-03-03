@@ -52,6 +52,7 @@ async def async_setup_entry(hass, entry):
     """Set up an access point from a config entry."""
     hap = HomematicipHAP(hass, entry)
     hapid = entry.data[HMIPC_HAPID].replace('-', '').upper()
+    hapname = entry.data[HMIPC_NAME]
     hass.data[DOMAIN][hapid] = hap
 
     if not await hap.async_setup():
@@ -60,11 +61,14 @@ async def async_setup_entry(hass, entry):
     # Register hap as device in registry.
     device_registry = await dr.async_get_registry(hass)
     home = hap.home
+    # Add the HAP name from config if set.
+    hapname = home.label \
+        if hapname == '' else "{} {}".format(home.label, hapname)
     device_registry.async_get_or_create(
         config_entry_id=home.id,
         identifiers={(DOMAIN, home.id)},
         manufacturer='eQ-3',
-        name=home.label,
+        name= hapname,
         model=home.modelType,
         sw_version=home.currentAPVersion,
     )
