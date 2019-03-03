@@ -740,6 +740,8 @@ async def async_setup_platform(hass: HomeAssistant,
 class WithingsAuthCallbackView(HomeAssistantView):
     """Handle OAuth finish callback requests."""
 
+    requires_auth = False
+
     def __init__(self, slug: str, url: str) -> None:
         """Constructor."""
         self.slug = slug
