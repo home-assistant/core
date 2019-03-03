@@ -4,8 +4,11 @@ import logging
 from netdisco.const import ATTR_HOST
 
 from homeassistant.const import CONF_DEVICES
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.components.yeelight import DATA_YEELIGHT
+from homeassistant.components.yeelight import DATA_YEELIGHT, MODE_MOONLIGHT, \
+    MODE_DAYLIGHT, DATA_UPDATED
 
 DEPENDENCIES = ['yeelight']
 
@@ -32,9 +35,26 @@ class YeelightPowerModeSwitch(ToggleEntity):
     def __init__(self, device):
         self._device = device
 
+    @callback
+    def _schedule_immediate_update(self, ipaddr):
+        if ipaddr == self._device.ipaddr:
+            self.async_schedule_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
+    @property
+    def should_poll(self):
+        """No polling needed"""
+        return False
+
     @property
     def is_on(self) -> bool:
-        return self._bulb.last_properties.get('active_mode') == '1'
+        return self._device.is_nightlight_enabled
 
     @property
     def name(self):
@@ -50,15 +70,7 @@ class YeelightPowerModeSwitch(ToggleEntity):
         return 'mdi:weather-night'
 
     def turn_on(self, **kwargs) -> None:
-        import yeelight
-
-        self._bulb.set_power_mode(yeelight.enums.PowerMode.MOONLIGHT)
-        self._device.update()
-        self.async_schedule_update_ha_state(True)
+        self._device.set_mode(MODE_MOONLIGHT)
 
     def turn_off(self, **kwargs) -> None:
-        import yeelight
-
-        self._bulb.set_power_mode(yeelight.enums.PowerMode.NORMAL)
-        self._device.update()
-        self.async_schedule_update_ha_state(True)
+        self._device.set_mode(MODE_DAYLIGHT)

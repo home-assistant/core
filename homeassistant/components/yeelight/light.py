@@ -3,10 +3,12 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 from homeassistant.const import CONF_NAME, CONF_DEVICES, CONF_LIGHTS, CONF_HOST
+from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
     ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
@@ -17,7 +19,7 @@ import homeassistant.util.color as color_util
 from homeassistant.components.yeelight import (
     CONF_TRANSITION, CONF_FLOW_PARAMS, DATA_YEELIGHT, CONF_MODE_MUSIC,
     CONF_SAVE_ON_CHANGE, ACTION_RECOVER, ATTR_TRANSITIONS, ATTR_COUNT,
-    CONF_CUSTOM_EFFECTS, YEELIGHT_FLOW_TRANSITION_SCHEMA)
+    CONF_CUSTOM_EFFECTS, YEELIGHT_FLOW_TRANSITION_SCHEMA, DATA_UPDATED)
 
 DEPENDENCIES = ['yeelight']
 
@@ -185,6 +187,23 @@ class YeelightLight(Light):
         else:
             self._custom_effects = {}
 
+    @callback
+    def _schedule_immediate_update(self, ipaddr):
+        if ipaddr == self._device.ipaddr:
+            self.async_schedule_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
+    @property
+    def should_poll(self):
+        """No polling needed"""
+        return False
+
     @property
     def available(self) -> bool:
         """Return if bulb is available."""
@@ -296,12 +315,13 @@ class YeelightLight(Light):
         """Update properties from the bulb."""
         import yeelight
         try:
-            self._device.update()
-
             if self._bulb.bulb_type == yeelight.BulbType.Color:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
             elif self._bulb.bulb_type == yeelight.BulbType.WhiteTemp:
-                self._supported_features = SUPPORT_YEELIGHT_WHITE_TEMP
+                if self._device.is_nightlight_enabled:
+                    self._supported_features = SUPPORT_YEELIGHT
+                else:
+                    self._supported_features = SUPPORT_YEELIGHT_WHITE_TEMP
 
             if self._min_mireds is None:
                 model_specs = self._bulb.get_model_specs()
@@ -312,7 +332,11 @@ class YeelightLight(Light):
 
             self._is_on = self._properties.get('power') == 'on'
 
-            bright = self._properties.get('bright', None)
+            if self._device.is_nightlight_enabled:
+                bright = self._properties.get('nl_br', None)
+            else:
+                bright = self._properties.get('bright', None)
+
             if bright:
                 self._brightness = round(255 * (int(bright) / 100))
 
@@ -452,11 +476,7 @@ class YeelightLight(Light):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        try:
-            self._bulb.turn_on(duration=duration)
-        except yeelight.BulbException as ex:
-            _LOGGER.error("Unable to turn the bulb on: %s", ex)
-            return
+        self._device.turn_on(duration=duration)
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
@@ -488,23 +508,11 @@ class YeelightLight(Light):
 
     def turn_off(self, **kwargs) -> None:
         """Turn off."""
-        import yeelight
         duration = int(self.config[CONF_TRANSITION])  # in ms
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
-        try:
-            self._bulb.turn_off(duration=duration)
-        except yeelight.BulbException as ex:
-            _LOGGER.error("Unable to turn the bulb off: %s", ex)
 
-    def set_mode(self, mode: str):
-        """Set a power mode."""
-        import yeelight
-        try:
-            self._bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()])
-            self.async_schedule_update_ha_state(True)
-        except yeelight.BulbException as ex:
-            _LOGGER.error("Unable to set the power mode: %s", ex)
+        self._device.turn_off(duration=duration)
 
     def start_flow(self, transitions, count=0, action=ACTION_RECOVER):
         """Start flow."""
