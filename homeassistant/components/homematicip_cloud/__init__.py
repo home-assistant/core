@@ -68,7 +68,7 @@ async def async_setup_entry(hass, entry):
         config_entry_id=home.id,
         identifiers={(DOMAIN, home.id)},
         manufacturer='eQ-3',
-        name= hapname,
+        name=hapname,
         model=home.modelType,
         sw_version=home.currentAPVersion,
     )
