@@ -7,7 +7,7 @@ https://home-assistant.io/components/light.flux_led/
 import logging
 import socket
 import random
-from asyncio import sleep, Lock
+from asyncio import sleep
 from functools import partial
 
 import voluptuous as vol
@@ -75,7 +75,7 @@ EFFECT_MAP = {
     EFFECT_COLORSTROBE:           0x30,
     EFFECT_RED_STROBE:            0x31,
     EFFECT_GREEN_STROBE:          0x32,
-    EFFECT_BLUE_STROBE:            0x33,
+    EFFECT_BLUE_STROBE:           0x33,
     EFFECT_YELLOW_STROBE:         0x34,
     EFFECT_CYAN_STROBE:           0x35,
     EFFECT_PURPLE_STROBE:         0x36,
@@ -221,7 +221,8 @@ class FluxLight(Light):
         return FLUX_EFFECT_LIST
 
     async def async_turn_on(self, **kwargs):
-        await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
+        await self.hass.async_add_executor_job(partial(self._turn_on,
+                                                       **kwargs))
         await sleep(2)
 
     def _turn_on(self, **kwargs):
@@ -257,7 +258,8 @@ class FluxLight(Light):
         if hs_color:
             self._color = (hs_color[0], hs_color[1], brightness / 255 * 100)
         elif brightness and (hs_color is None) and self._mode != MODE_WHITE:
-            self._color = (self._color[0], self._color[1], brightness / 255 * 100)
+            self._color = (self._color[0], self._color[1],
+                           brightness / 255 * 100)
 
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
