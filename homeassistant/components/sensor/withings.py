@@ -753,7 +753,7 @@ class WithingsAuthCallbackView(HomeAssistantView):
 
         hass = request.app['hass']
         params = request.query
-        response = web.HTTPFound('/states')
+        response = web.HTTPFound('/')
         _LOGGER.debug('Params: %s', params)
 
         if 'state' not in params or 'code' not in params:
