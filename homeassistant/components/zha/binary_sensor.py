@@ -27,7 +27,6 @@ CLASS_MAPPING = {
     0x002a: 'moisture',
     0x002b: 'gas',
     0x002d: 'vibration',
-    0xfc02: 'moving',
 }
 
 
@@ -42,7 +41,7 @@ DEVICE_CLASS_REGISTRY = {
     OPENING: OPENING,
     ZONE: get_ias_device_class,
     OCCUPANCY: OCCUPANCY,
-    ACCELERATION: ACCELERATION,
+    ACCELERATION: 'moving',
 }
 
 

@@ -524,7 +524,8 @@ def establish_device_mappings():
     BINARY_SENSOR_TYPES.update({
         zcl.clusters.measurement.OccupancySensing.cluster_id: OCCUPANCY,
         zcl.clusters.security.IasZone.cluster_id: ZONE,
-        zcl.clusters.general.OnOff.cluster_id: OPENING
+        zcl.clusters.general.OnOff.cluster_id: OPENING,
+        SMARTTHINGS_ACCELERATION_CLUSTER: ACCELERATION,
     })
 
     CLUSTER_REPORT_CONFIGS.update({
