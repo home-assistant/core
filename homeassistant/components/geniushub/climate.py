@@ -3,7 +3,6 @@ Genius hub platform that offers reading temperature and valve settings.
 
 """
 import logging
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateDevice, STATE_ECO, STATE_HEAT, STATE_AUTO, STATE_IDLE,
