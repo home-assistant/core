@@ -97,7 +97,7 @@ afsapi==0.0.4
 aioambient==0.1.3
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.1.20
+aioasuswrt==1.1.21
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
