@@ -8,7 +8,7 @@ from homeassistant.components.lock import LockDevice
 from homeassistant.components.mopar import DOMAIN as MOPAR_DOMAIN, \
     SUCCESS_RESPONSE
 
-REQUIREMENTS = ['motorparts==1.0.2']
+REQUIREMENTS = ['motorparts==1.1.0']
 
 DEPENDENCIES = ['mopar']
 
