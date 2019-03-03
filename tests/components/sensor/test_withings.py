@@ -81,7 +81,10 @@ async def test_async_setup_platform(hass):
         configuring: withings.WithingsConfiguring = hass.data[withings.DATA_CONFIGURING][slug]
         assert isinstance(configuring, withings.WithingsConfiguring)
         assert callable(configuring.oauth_initialize_callback)
-        register_view_spy.assert_called_with(withings.WithingsAuthCallbackView(slug))
+        register_view_spy.assert_called_with(withings.WithingsAuthCallbackView(slug, '%s/%s' % (
+            withings.WITHINGS_AUTH_CALLBACK_PATH,
+            slug
+        )))
         async_request_config_spy.assert_called_with(
             hass,
             'Withings',
@@ -89,7 +92,7 @@ async def test_async_setup_platform(hass):
             description="Authorization is required to get access to Withings data. After clicking the button below, be sure to choose the profile that maps to '%s'." % profile,  # noqa: E501
             link_name="Click here to authorize Home Assistant.",
             # pylint: disable=line-too-long
-            link_url=callee.StartsWith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2F127.0.0.1%3A8123%2Fapi%2Fwithings%2Fcallback&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')  # noqa: E501
+            link_url=callee.StartsWith('https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=my_client_id&redirect_uri=http%3A%2F%2F127.0.0.1%3A8123%2Fapi%2Fwithings%2Fcallback%2Fperson_1&scope=user.info%2Cuser.metrics%2Cuser.activity&state=')  # noqa: E501
         )
 
         # Get the instance of WithingsAuthCallbackView used when registering.
@@ -273,7 +276,7 @@ class TestWithingsAuthCallbackView(unittest.TestCase):
             'code': 'my_code'
         }
 
-        view = withings.WithingsAuthCallbackView('person_1')
+        view = withings.WithingsAuthCallbackView('person_1', 'url1')
 
         request.query = {}
         response = view.get(request)
@@ -303,9 +306,9 @@ class TestWithingsAuthCallbackView(unittest.TestCase):
     @staticmethod
     def test___eq__():
         """Test method."""
-        view1a = withings.WithingsAuthCallbackView('profile_1')
-        view1b = withings.WithingsAuthCallbackView('profile_1')
-        view2a = withings.WithingsAuthCallbackView('profile_2')
+        view1a = withings.WithingsAuthCallbackView('profile_1', 'url1')
+        view1b = withings.WithingsAuthCallbackView('profile_1', 'url1')
+        view2a = withings.WithingsAuthCallbackView('profile_2', 'url1')
 
         assert view1a == view1b
         assert view1a != view2a

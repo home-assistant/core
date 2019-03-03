@@ -677,9 +677,13 @@ async def async_setup_platform(hass: HomeAssistant,
         hass,
         config_filename
     )
+    callback_path = '%s/%s' % (
+        WITHINGS_AUTH_CALLBACK_PATH,
+        slug
+    )
     callback_uri = '{}{}'.format(
         (config.get(CONF_BASE_URL) or hass.config.api.base_url).rstrip('/'),
-        WITHINGS_AUTH_CALLBACK_PATH
+        callback_path
     )
 
     _LOGGER.debug('Creating auth client with callback uri: %s', callback_uri)
@@ -715,7 +719,7 @@ async def async_setup_platform(hass: HomeAssistant,
             )
 
     _LOGGER.debug('Starting configuration for slug: %s', slug)
-    hass.http.register_view(WithingsAuthCallbackView(slug))
+    hass.http.register_view(WithingsAuthCallbackView(slug, callback_path))
 
     configuring.request_id = hass.components.configurator.async_request_config(
         "Withings",
@@ -736,12 +740,11 @@ async def async_setup_platform(hass: HomeAssistant,
 class WithingsAuthCallbackView(HomeAssistantView):
     """Handle OAuth finish callback requests."""
 
-    url = WITHINGS_AUTH_CALLBACK_PATH
-    name = 'api:withings:callback'
-
-    def __init__(self, slug: str) -> None:
+    def __init__(self, slug: str, url: str) -> None:
         """Constructor."""
         self.slug = slug
+        self.url = url
+        self.name = 'api:withings:callback:%s' % slug
 
     @callback
     def get(self, request):  # pylint: disable=no-self-use
