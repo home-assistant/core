@@ -104,8 +104,8 @@ def test_derivative():
 
     entity.telegram = {
         '1.0.0': MBusObject([
-            {'value': 1},
-            {'value': 1, 'unit': 'm3'},
+            {'value': 1551642213},
+            {'value': 745.695, 'unit': 'm3'},
         ])
     }
     yield from entity.async_update()
@@ -115,13 +115,13 @@ def test_derivative():
 
     entity.telegram = {
         '1.0.0': MBusObject([
-            {'value': 2},
-            {'value': 2, 'unit': 'm3'},
+            {'value': 1551642543},
+            {'value': 745.698, 'unit': 'm3'},
         ])
     }
     yield from entity.async_update()
 
-    assert entity.state == 3600, \
+    assert entity.state == 0.03272727272649883, \
         'state should be difference between first and second update'
 
     assert entity.unit_of_measurement == 'm3/h'
