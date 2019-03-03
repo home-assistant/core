@@ -186,11 +186,16 @@ class ZigbeeChannel:
 
     async def get_attribute_value(self, attribute, from_cache=True):
         """Get the value for an attribute."""
+        manufacturer = None
+        manufacturer_code = self._zha_device.manufacturer_code
+        if self.cluster.cluster_id >= 0xfc00 and manufacturer_code:
+            manufacturer = manufacturer_code
         result = await safe_read(
             self._cluster,
             [attribute],
             allow_cache=from_cache,
-            only_cache=from_cache
+            only_cache=from_cache,
+            manufacturer=manufacturer
         )
         return result.get(attribute)
 
