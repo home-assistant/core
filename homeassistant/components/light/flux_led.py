@@ -7,7 +7,8 @@ https://home-assistant.io/components/light.flux_led/
 import logging
 import socket
 import random
-from asyncio import sleep
+from asyncio import sleep, Lock
+from functools import partial
 
 import voluptuous as vol
 
@@ -148,6 +149,7 @@ class FluxLight(Light):
         self._bulb = None
         self._error_reported = False
         self._color = (255, 255, 255)
+        self._white_value = 0
 
     def _connect(self):
         """Connect to Flux light."""
@@ -188,14 +190,14 @@ class FluxLight(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self._mode == MODE_WHITE:
-            return self.white_value
+            return self._white_value
 
-        return self._bulb.brightness
+        return self._color[2] / 100 * 255
 
     @property
     def hs_color(self):
         """Return the color property."""
-        return color_util.color_RGB_to_hsv(*self._color)[0:2]
+        return self._color[0:2]
 
     @property
     def supported_features(self):
@@ -211,7 +213,7 @@ class FluxLight(Light):
     @property
     def white_value(self):
         """Return the white value of this light between 0..255."""
-        return self._bulb.getRgbw()[3]
+        return self._white_value
 
     @property
     def effect_list(self):
@@ -219,6 +221,10 @@ class FluxLight(Light):
         return FLUX_EFFECT_LIST
 
     async def async_turn_on(self, **kwargs):
+        await self.hass.async_add_executor_job(partial(self._turn_on, **kwargs))
+        await sleep(2)
+
+    def _turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         self._bulb.turnOn()
 
@@ -237,26 +243,21 @@ class FluxLight(Light):
             self._bulb.setRgb(random.randint(0, 255),
                               random.randint(0, 255),
                               random.randint(0, 255))
-            await sleep(delay=2)
             return
 
         # Effect selection
         if effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
-            await sleep(delay=2)
             return
 
         # Preserve current brightness on color/white level change
         if brightness is None:
             brightness = self.brightness
 
-        if hs_color and brightness:
-            self._color = color_util.color_hsv_to_RGB(hs_color[0], hs_color[1],
-                                                      brightness / 255 * 100)
+        if hs_color:
+            self._color = (hs_color[0], hs_color[1], brightness / 255 * 100)
         elif brightness and (hs_color is None) and self._mode != MODE_WHITE:
-            hsv = color_util.color_RGB_to_hsv(*self._color)
-            self._color = color_util.color_hsv_to_RGB(hsv[0], hsv[1],
-                                                      brightness / 255 * 100)
+            self._color = (self._color[0], self._color[1], brightness / 255 * 100)
 
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
@@ -265,14 +266,13 @@ class FluxLight(Light):
         # handle RGBW mode
         elif self._mode == MODE_RGBW:
             if white is None:
-                self._bulb.setRgbw(*tuple(self._color))
+                self._bulb.setRgbw(*color_util.color_hsv_to_RGB(*self._color))
             else:
                 self._bulb.setRgbw(w=white)
         # handle RGB mode
         else:
-            self._bulb.setRgb(*tuple(self._color), brightness=brightness)
-
-        await sleep(delay=2)
+            self._bulb.setRgb(*color_util.color_hsv_to_RGB(*self._color))
+        return
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -285,7 +285,9 @@ class FluxLight(Light):
                 self._connect()
                 self._error_reported = False
                 if self._bulb.getRgb() != (0, 0, 0):
-                    self._color = self._bulb.getRgb()
+                    color = self._bulb.getRgbw()
+                    self._color = color_util.color_RGB_to_hsv(*color[0:3])
+                    self._white_value = color[3]
             except socket.error:
                 self._disconnect()
                 if not self._error_reported:
@@ -294,3 +296,7 @@ class FluxLight(Light):
                     self._error_reported = True
                 return
         self._bulb.update_state(retry=2)
+        if self._bulb.getRgb() != (0, 0, 0):
+            color = self._bulb.getRgbw()
+            self._color = color_util.color_RGB_to_hsv(*color[0:3])
+            self._white_value = color[3]
