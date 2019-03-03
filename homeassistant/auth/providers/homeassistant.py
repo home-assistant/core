@@ -208,7 +208,7 @@ class HassAuthProvider(AuthProvider):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize an Home Assistant auth provider."""
         super().__init__(*args, **kwargs)
-        self.data = None
+        self.data = None  # type: Optional[Data]
         self._init_lock = asyncio.Lock()
 
     async def async_initialize(self) -> None:

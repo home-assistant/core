@@ -79,6 +79,9 @@ class TotpAuthModule(MultiFactorAuthModule):
     async def _async_load(self) -> None:
         """Load stored data."""
         async with self._init_lock:
+            if self._users is not None:
+                return
+
             data = await self._user_store.async_load()
 
             if data is None:
