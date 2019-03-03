@@ -1,16 +1,19 @@
 """
-Genius hub platform that offers reading temperature and valve settings.
+Supports Genius hub to provide climate controls
 
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/climate.geniushub/
 """
 import logging
 
-from homeassistant.components.climate import (
-    ClimateDevice, STATE_ECO, STATE_HEAT, STATE_AUTO, STATE_IDLE,
-    STATE_OFF, STATE_ON, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_ECO, STATE_HEAT, STATE_AUTO, STATE_IDLE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_ON_OFF, SUPPORT_AWAY_MODE)
-
 from homeassistant.components.geniushub import GENIUS_HUB
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.const import (
+    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'geniushub'
@@ -41,7 +44,7 @@ OPERATION_LIST = [STATE_IDLE, STATE_HEAT, STATE_ECO, STATE_AUTO]
 
 async def async_setup_platform(hass, config,
                                async_add_entities, discovery_info=None):
-    """Set up the Demo climate devices."""
+    """Set up the Genius hub climate devices."""
     genius_hub = hass.data[GENIUS_HUB]
     await genius_hub.getjson('/zones')
 
@@ -53,7 +56,7 @@ async def async_setup_platform(hass, config,
 
 
 class GeniusClimate(ClimateDevice):
-    """Representation of a demo climate device."""
+    """Representation of a Genius Hub climate device."""
 
     def __init__(self, genius_hub, zone):
         """Initialize the climate device."""
@@ -86,7 +89,6 @@ class GeniusClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-
         return self._target_temperature
 
     @property

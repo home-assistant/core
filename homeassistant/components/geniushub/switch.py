@@ -1,14 +1,13 @@
 """
-homeassistant.components.switch.genius
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Implements Genius switches.
+Supports Genius hub to provide access to genius hub switches
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/switch.geniushub/
 """
 
-import logging
 from homeassistant.components.geniushub import GENIUS_HUB
 from homeassistant.components.switch import SwitchDevice
 
-_LOGGER = logging.getLogger(__name__)
 DOMAIN = 'geniushub'
 
 
