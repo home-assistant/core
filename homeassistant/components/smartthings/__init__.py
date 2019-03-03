@@ -192,8 +192,8 @@ async def async_remove_entry(
         await api.delete_installed_app(installed_app_id)
     except ClientResponseError as ex:
         if ex.status == 403:
-            _LOGGER.exception("Installed app %s has already been removed",
-                              installed_app_id)
+            _LOGGER.debug("Installed app %s has already been removed",
+                          installed_app_id, exc_info=True)
         else:
             raise
     _LOGGER.debug("Removed installed app %s", installed_app_id)
@@ -203,18 +203,20 @@ async def async_remove_entry(
     app_id = entry.data[CONF_APP_ID]
     app_count = sum(1 for entry in hass.config_entries.async_entries(DOMAIN)
                     if entry.data[CONF_APP_ID] == app_id)
-    if app_count <= 1:
-        try:
-            await api.delete_app(app_id)
-        except ClientResponseError as ex:
-            if ex.status == 403:
-                _LOGGER.exception("App %s has already been removed", app_id)
-            else:
-                raise
-        _LOGGER.debug("Removed app %s", app_id)
-    else:
+    if app_count > 1:
         _LOGGER.debug("App %s was not removed because it is in use by other"
                       "config entries", app_id)
+        return
+    # Remove the app
+    try:
+        await api.delete_app(app_id)
+    except ClientResponseError as ex:
+        if ex.status == 403:
+            _LOGGER.debug("App %s has already been removed",
+                          app_id, exc_info=True)
+        else:
+            raise
+    _LOGGER.debug("Removed app %s", app_id)
 
 
 class DeviceBroker:
