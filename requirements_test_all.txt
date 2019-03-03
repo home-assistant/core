@@ -126,7 +126,7 @@ home-assistant-frontend==20190228.0
 homekit==0.12.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.5
+homematicip==0.10.6
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
