@@ -5,12 +5,15 @@ workflow "Tox" {
 
 action "Python 3.7" {
   uses = "home-assistant/actions/py37-tox@master"
+  args = "-e lint,pylint,typing,cov"
 }
 
 action "Python 3.6" {
   uses = "home-assistant/actions/py36-tox@master"
+  args = "-e lint,pylint,typing"
 }
 
 action "Python 3.5" {
   uses = "home-assistant/actions/py35-tox@master"
+  args = "-e lint,pylint,typing"
 }
