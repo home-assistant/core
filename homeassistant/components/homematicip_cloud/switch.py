@@ -96,8 +96,8 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
 
     @property
     def available(self):
-        """Device available."""
-        # A group must be available, and should not be affected by the
+        """Switch-Group available."""
+        # A switch-group must be available, and should not be affected by the
         # individual availability of group members.
         # This allows switching even when individual group members
         # are not available.
@@ -105,7 +105,7 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the generic device."""
+        """Return the state attributes of the switch-group."""
         attr = {}
         if self._device.unreach:
             attr.update({ATTR_GROUPMEMBERUNREADCHABLE: True})

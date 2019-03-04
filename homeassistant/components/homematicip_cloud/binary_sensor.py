@@ -141,9 +141,9 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
 
     @property
     def available(self):
-        """Device available."""
-        # A group must be available, and should not be affected by the
-        # individual availability of group members.
+        """Security-Group available."""
+        # A security-group must be available, and should not be affected by
+        # the individual availability of group members.
         return True
 
     @property
