@@ -10,6 +10,8 @@ import threading
 import voluptuous as vol
 
 from homeassistant.auth.util import generate_secret
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
@@ -82,6 +84,16 @@ async def async_setup(hass, config):
     hls_endpoint = await async_setup_hls(hass)
     hass.data[DOMAIN][ATTR_ENDPOINTS]['hls'] = hls_endpoint
 
+    @callback
+    def shutdown(event):
+        """Stop all stream workers."""
+        for stream in hass.data[DOMAIN][ATTR_STREAMS].values():
+            stream.keepalive = False
+            stream.stop()
+        _LOGGER.info("Stopped stream workers.")
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+
     return True
 
 
@@ -129,6 +141,7 @@ class Stream:
                 args=(
                     self.hass, self, self._thread_quit))
             self._thread.start()
+            _LOGGER.info("Started stream: %s", self.source)
 
     def stop(self):
         """Remove outputs and access token."""
@@ -145,3 +158,4 @@ class Stream:
             self._thread.join()
             self._thread = None
             self._container = None
+            _LOGGER.info("Stopped stream: %s", self.source)

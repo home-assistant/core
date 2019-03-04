@@ -2,9 +2,12 @@
 import asyncio
 from fractions import Fraction
 import io
+import logging
 
 from .const import AUDIO_SAMPLE_RATE
 from .core import Segment, StreamBuffer
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def generate_audio_frame():
@@ -50,7 +53,7 @@ def stream_worker(hass, stream, quit_event):
     try:
         video_stream = stream.container.streams.video[0]
     except (KeyError, IndexError):
-        hass.getLogger().error("Stream has no video")
+        _LOGGER.error("Stream has no video")
         return
 
     audio_frame = generate_audio_frame()
