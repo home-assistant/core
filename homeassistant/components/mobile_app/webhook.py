@@ -127,7 +127,11 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
                                            data[ATTR_SERVICE_DATA],
                                            blocking=True,
                                            context=device_context(device))
-        except (vol.Invalid, ServiceNotFound):
+        # noqa: E722 pylint: disable=broad-except
+        except (vol.Invalid, ServiceNotFound, Exception) as ex:
+            _LOGGER.error("Error when calling service during mobile_app "
+                          "webhook (device name: %s): %s",
+                          device[ATTR_DEVICE_NAME], ex)
             raise HTTPBadRequest()
 
         return empty_okay_response(headers=headers)
@@ -144,15 +148,25 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             tpl = template.Template(data[ATTR_TEMPLATE], hass)
             rendered = tpl.async_render(data.get(ATTR_TEMPLATE_VARIABLES))
             return json_response({"rendered": rendered}, headers=headers)
-        except (ValueError, TemplateError) as ex:
+        # noqa: E722 pylint: disable=broad-except
+        except (ValueError, TemplateError, Exception) as ex:
+            _LOGGER.error("Error when rendering template during mobile_app "
+                          "webhook (device name: %s): %s",
+                          device[ATTR_DEVICE_NAME], ex)
             return json_response(({"error": ex}), status=HTTP_BAD_REQUEST,
                                  headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
-        await hass.services.async_call(DT_DOMAIN,
-                                       DT_SEE, data,
-                                       blocking=True,
-                                       context=device_context(device))
+        try:
+            await hass.services.async_call(DT_DOMAIN,
+                                           DT_SEE, data,
+                                           blocking=True,
+                                           context=device_context(device))
+        # noqa: E722 pylint: disable=broad-except
+        except (vol.Invalid, ServiceNotFound, Exception) as ex:
+            _LOGGER.error("Error when updating location during mobile_app "
+                          "webhook (device name: %s): %s",
+                          device[ATTR_DEVICE_NAME], ex)
         return empty_okay_response(headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
