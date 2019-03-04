@@ -87,8 +87,7 @@ async def test_async_setup_platform(hass):
         assert result
         assert withings.DATA_CONFIGURING in hass.data
         assert 'person_1' in hass.data[withings.DATA_CONFIGURING]
-        configuring: withings.WithingsConfiguring = \
-            hass.data[withings.DATA_CONFIGURING][slug]
+        configuring = hass.data[withings.DATA_CONFIGURING][slug]
         assert isinstance(configuring, withings.WithingsConfiguring)
         assert callable(configuring.oauth_initialize_callback)
         register_view_spy.assert_called_with(
@@ -278,6 +277,15 @@ class TestWithingsAuthCallbackView(unittest.TestCase):
     def tearDown(self):
         """Tear down the test."""
         self.hass.stop()
+
+    @staticmethod
+    def test_init():
+        """Test method."""
+        view = withings.WithingsAuthCallbackView('person_1', 'url1')
+        assert view.slug == 'person_1'
+        assert view.url == 'url1'
+        assert not view.requires_auth
+        assert view.name == 'api:withings:callback:person_1'
 
     def test_get_errors(self):
         """Test method."""

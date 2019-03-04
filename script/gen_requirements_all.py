@@ -73,6 +73,7 @@ TEST_REQUIREMENTS = (
     'luftdaten',
     'mbddns',
     'mficlient',
+    'nokia',
     'numpy',
     'paho-mqtt',
     'pexpect',
