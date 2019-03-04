@@ -23,7 +23,7 @@ from .const import (
     REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_MAX_INT, REPORT_CONFIG_OP, SIGNAL_REMOVE,
     NO_SENSOR_CLUSTERS, POWER_CONFIGURATION_CHANNEL, BINDABLE_CLUSTERS,
-    DATA_ZHA_GATEWAY)
+    DATA_ZHA_GATEWAY, ACCELERATION)
 from .device import ZHADevice, DeviceStatus
 from ..device_entity import ZhaDeviceEntity
 from .channels import (
@@ -452,7 +452,6 @@ def establish_device_mappings():
     NO_SENSOR_CLUSTERS.append(
         zcl.clusters.general.PowerConfiguration.cluster_id)
     NO_SENSOR_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
-    NO_SENSOR_CLUSTERS.append(SMARTTHINGS_ACCELERATION_CLUSTER)
 
     BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
@@ -501,6 +500,7 @@ def establish_device_mappings():
         zcl.clusters.security.IasZone: 'binary_sensor',
         zcl.clusters.measurement.OccupancySensing: 'binary_sensor',
         zcl.clusters.hvac.Fan: 'fan',
+        SMARTTHINGS_ACCELERATION_CLUSTER: 'binary_sensor',
     })
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
@@ -523,7 +523,8 @@ def establish_device_mappings():
     BINARY_SENSOR_TYPES.update({
         zcl.clusters.measurement.OccupancySensing.cluster_id: OCCUPANCY,
         zcl.clusters.security.IasZone.cluster_id: ZONE,
-        zcl.clusters.general.OnOff.cluster_id: OPENING
+        zcl.clusters.general.OnOff.cluster_id: OPENING,
+        SMARTTHINGS_ACCELERATION_CLUSTER: ACCELERATION,
     })
 
     CLUSTER_REPORT_CONFIGS.update({
