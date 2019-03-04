@@ -27,9 +27,8 @@ from .const import (
 from .device import ZHADevice, DeviceStatus
 from ..device_entity import ZhaDeviceEntity
 from .channels import (
-    AttributeListeningChannel, EventRelayChannel, ZDOChannel
+    AttributeListeningChannel, EventRelayChannel, ZDOChannel, MAINS_POWERED
 )
-from .channels.general import BasicChannel
 from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .helpers import convert_ieee
 
@@ -38,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {}
 BINARY_SENSOR_TYPES = {}
 SMARTTHINGS_HUMIDITY_CLUSTER = 64581
+SMARTTHINGS_ACCELERATION_CLUSTER = 64514
 EntityReference = collections.namedtuple(
     'EntityReference', 'reference_id zha_device cluster_channels device_info')
 
@@ -163,15 +163,14 @@ class ZHAGateway:
             # configure the device
             await zha_device.async_configure()
         elif not zha_device.available and zha_device.power_source is not None\
-                and zha_device.power_source != BasicChannel.BATTERY\
-                and zha_device.power_source != BasicChannel.UNKNOWN:
+                and zha_device.power_source == MAINS_POWERED:
             # the device is currently marked unavailable and it isn't a battery
             # powered device so we should be able to update it now
             _LOGGER.debug(
                 "attempting to request fresh state for %s %s",
                 zha_device.name,
                 "with power source: {}".format(
-                    BasicChannel.POWER_SOURCES.get(zha_device.power_source)
+                    ZDOChannel.POWER_SOURCES.get(zha_device.power_source)
                 )
             )
             await zha_device.async_initialize(from_cache=False)
@@ -453,6 +452,7 @@ def establish_device_mappings():
     NO_SENSOR_CLUSTERS.append(
         zcl.clusters.general.PowerConfiguration.cluster_id)
     NO_SENSOR_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
+    NO_SENSOR_CLUSTERS.append(SMARTTHINGS_ACCELERATION_CLUSTER)
 
     BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
@@ -568,6 +568,27 @@ def establish_device_mappings():
             )
         }],
         zcl.clusters.measurement.TemperatureMeasurement.cluster_id: [{
+            'attr': 'measured_value',
+            'config': (
+                REPORT_CONFIG_MIN_INT,
+                REPORT_CONFIG_MAX_INT,
+                50
+            )
+        }],
+        SMARTTHINGS_ACCELERATION_CLUSTER: [{
+            'attr': 'acceleration',
+            'config': REPORT_CONFIG_ASAP
+        }, {
+            'attr': 'x_axis',
+            'config': REPORT_CONFIG_ASAP
+        }, {
+            'attr': 'y_axis',
+            'config': REPORT_CONFIG_ASAP
+        }, {
+            'attr': 'z_axis',
+            'config': REPORT_CONFIG_ASAP
+        }],
+        SMARTTHINGS_HUMIDITY_CLUSTER: [{
             'attr': 'measured_value',
             'config': (
                 REPORT_CONFIG_MIN_INT,

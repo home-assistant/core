@@ -17,10 +17,10 @@ from .const import (
     ATTR_CLUSTER_ID, ATTR_ATTRIBUTE, ATTR_VALUE, ATTR_COMMAND, SERVER,
     ATTR_COMMAND_TYPE, ATTR_ARGS, CLIENT_COMMANDS, SERVER_COMMANDS,
     ATTR_ENDPOINT_ID, IEEE, MODEL, NAME, UNKNOWN, QUIRK_APPLIED,
-    QUIRK_CLASS, BASIC_CHANNEL
+    QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE
 )
-from .channels import EventRelayChannel
-from .channels.general import BasicChannel
+from .channels import EventRelayChannel, ZDOChannel
+from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,6 @@ class ZHADevice:
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__
         )
-        self.power_source = None
         self.status = DeviceStatus.CREATED
 
     @property
@@ -84,12 +83,12 @@ class ZHADevice:
 
     @property
     def manufacturer(self):
-        """Return ieee address for device."""
+        """Return manufacturer for device."""
         return self._manufacturer
 
     @property
     def model(self):
-        """Return ieee address for device."""
+        """Return model for device."""
         return self._model
 
     @property
@@ -115,7 +114,15 @@ class ZHADevice:
     @property
     def manufacturer_code(self):
         """Return manufacturer code for device."""
-        # will eventually get this directly from Zigpy
+        if ZDO_CHANNEL in self.cluster_channels:
+            return self.cluster_channels.get(ZDO_CHANNEL).manufacturer_code
+        return None
+
+    @property
+    def power_source(self):
+        """Return True if sensor is available."""
+        if ZDO_CHANNEL in self.cluster_channels:
+            return self.cluster_channels.get(ZDO_CHANNEL).power_source
         return None
 
     @property
@@ -164,7 +171,9 @@ class ZHADevice:
             MODEL: self.model,
             NAME: self.name or ieee,
             QUIRK_APPLIED: self.quirk_applied,
-            QUIRK_CLASS: self.quirk_class
+            QUIRK_CLASS: self.quirk_class,
+            MANUFACTURER_CODE: self.manufacturer_code,
+            POWER_SOURCE: ZDOChannel.POWER_SOURCES.get(self.power_source)
         }
 
     def add_cluster_channel(self, cluster_channel):
@@ -186,19 +195,19 @@ class ZHADevice:
         _LOGGER.debug('%s: started configuration', self.name)
         await self._execute_channel_tasks('async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
+        entry = (await async_get_registry(
+            self.hass)).async_create_or_update(self)
+        _LOGGER.debug('%s: stored in registry: %s', self.name, entry)
 
     async def async_initialize(self, from_cache=False):
         """Initialize channels."""
         _LOGGER.debug('%s: started initialization', self.name)
         await self._execute_channel_tasks('async_initialize', from_cache)
-        if BASIC_CHANNEL in self.cluster_channels:
-            self.power_source = self.cluster_channels.get(
-                BASIC_CHANNEL).get_power_source()
-            _LOGGER.debug(
-                '%s: power source: %s',
-                self.name,
-                BasicChannel.POWER_SOURCES.get(self.power_source)
-            )
+        _LOGGER.debug(
+            '%s: power source: %s',
+            self.name,
+            ZDOChannel.POWER_SOURCES.get(self.power_source)
+        )
         self.status = DeviceStatus.INITIALIZED
         _LOGGER.debug('%s: completed initialization', self.name)
 
@@ -206,9 +215,18 @@ class ZHADevice:
         """Gather and execute a set of CHANNEL tasks."""
         channel_tasks = []
         semaphore = asyncio.Semaphore(3)
+        zdo_task = None
         for channel in self.all_channels:
-            channel_tasks.append(
-                self._async_create_task(semaphore, channel, task_name, *args))
+            if channel.name == ZDO_CHANNEL:
+                # pylint: disable=E1111
+                zdo_task = self._async_create_task(
+                    semaphore, channel, task_name, *args)
+            else:
+                channel_tasks.append(
+                    self._async_create_task(
+                        semaphore, channel, task_name, *args))
+        if zdo_task is not None:
+            await zdo_task
         await asyncio.gather(*channel_tasks)
 
     async def _async_create_task(self, semaphore, channel, func_name, *args):
