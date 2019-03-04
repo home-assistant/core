@@ -52,6 +52,7 @@ async def test_full_flow_implementation(hass):
 
     # Init config manager.
     manager = config_entries.ConfigEntries(hass, {})
+    hass.config_entries = manager
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
@@ -100,6 +101,7 @@ async def test_multiple_flow_implementation(hass):
 
     # Init config manager.
     manager = config_entries.ConfigEntries(hass, {})
+    hass.config_entries = manager
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
@@ -224,6 +226,7 @@ async def test_additional_device(hass):
 
     # Init config manager.
     manager = config_entries.ConfigEntries(hass, {})
+    hass.config_entries = manager
 
     # Mock existing entry.
     entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA)
