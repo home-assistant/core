@@ -299,7 +299,7 @@ async def test_race_condition_in_data_loading(hass):
     counter = 0
 
     async def mock_load(_):
-        """Mock of homeassistant.helpers.storage.Store.async_load"""
+        """Mock of homeassistant.helpers.storage.Store.async_load."""
         nonlocal counter
         counter += 1
         await asyncio.sleep(0)
