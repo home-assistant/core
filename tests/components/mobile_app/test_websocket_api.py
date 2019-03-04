@@ -1,9 +1,11 @@
 """Test the mobile_app websocket API."""
+# pylint: disable=redefined-outer-name,unused-import
 from homeassistant.components.mobile_app.const import (CONF_SECRET, DOMAIN)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
+from . import authed_api_client, webhook_client
 from .const import (CALL_SERVICE, REGISTER)
 
 

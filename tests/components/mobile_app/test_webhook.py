@@ -1,4 +1,5 @@
 """Webhook tests for mobile_app."""
+# pylint: disable=redefined-outer-name,unused-import
 import pytest
 
 from asynctest import patch
@@ -12,6 +13,8 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 
 from tests.common import async_mock_service
+
+from . import authed_api_client, webhook_client
 
 from .const import (CALL_SERVICE, FIRE_EVENT, REGISTER, RENDER_TEMPLATE,
                     UPDATE)

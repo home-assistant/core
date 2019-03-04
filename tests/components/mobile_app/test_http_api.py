@@ -1,10 +1,12 @@
 """Tests for the mobile_app HTTP API."""
+# pylint: disable=redefined-outer-name,unused-import
 import pytest
 
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.const import CONF_WEBHOOK_ID
 
 from .const import REGISTER
+from . import authed_api_client
 
 
 async def test_register_device(hass_client, authed_api_client):

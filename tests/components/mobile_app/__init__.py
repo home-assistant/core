@@ -1,4 +1,5 @@
 """Tests for mobile_app component."""
+# pylint: disable=redefined-outer-name,unused-import
 import pytest
 
 from homeassistant.setup import async_setup_component
