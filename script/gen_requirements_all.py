@@ -58,6 +58,7 @@ TEST_REQUIREMENTS = (
     'dsmr_parser',
     'eebrightbox',
     'emulated_roku',
+    'enocean',
     'ephem',
     'evohomeclient',
     'feedparser-homeassistant',
