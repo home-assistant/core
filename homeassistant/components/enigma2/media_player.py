@@ -1,6 +1,6 @@
 """Support for Enigma2 media players."""
 import logging
-
+import asyncio
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice
@@ -8,13 +8,13 @@ from homeassistant.helpers.config_validation import (PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MEDIA_TYPE_TVSHOW)
+    SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_STEP, MEDIA_TYPE_TVSHOW)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_SSL,
     STATE_OFF, STATE_ON, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['openwebifpy==1.0.4']
+REQUIREMENTS = ['openwebifpy==1.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,12 +22,12 @@ DEFAULT_NAME = 'Enigma2 Media Player'
 DEFAULT_PORT = 80
 DEFAULT_SSL = False
 DEFAULT_USERNAME = 'root'
-DEFAULT_PASSWORD = ''
+DEFAULT_PASSWORD = 'dreambox'
 
 SUPPORTED_ENIGMA2 = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                          SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | \
-                          SUPPORT_PREVIOUS_TRACK | \
-                          SUPPORT_TURN_ON | SUPPORT_PAUSE
+                    SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | \
+                    SUPPORT_PREVIOUS_TRACK | SUPPORT_VOLUME_STEP | \
+                    SUPPORT_TURN_ON | SUPPORT_PAUSE | SUPPORT_SELECT_SOURCE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -44,6 +44,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info:
         discovered_config = {
             CONF_NAME: DEFAULT_NAME,
+            # Do not use the discovered port, as it is the streaming
+            # service port (8001) which is not what we want.
             CONF_PORT: DEFAULT_PORT,
             CONF_HOST: discovery_info['host'],
             CONF_USERNAME: DEFAULT_USERNAME,
@@ -78,6 +80,7 @@ class Enigma2Device(MediaPlayerDevice):
         self.current_service_ref = None
         self.muted = False
         self.picon_url = None
+        self.sources = self.e2_box.sources
 
     @property
     def name(self):
@@ -180,10 +183,25 @@ class Enigma2Device(MediaPlayerDevice):
         """Mute or unmute."""
         self.e2_box.mute_volume()
 
+    # GET - Current channel - Current Channel Name
+    @property
+    def source(self):
+        """Return the current input source."""
+        return "1"
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return list(self.sources.keys())
+
+    @asyncio.coroutine
+    def async_select_source(self, source):
+        """Select input source."""
+        self.e2_box.select_source(self.sources[source])
+
     def update(self):
         """Update state of the media_player."""
         status_info = self.e2_box.refresh_status_info()
-
         if self.e2_box.is_box_in_standby():
             self._state = STATE_OFF
             return
