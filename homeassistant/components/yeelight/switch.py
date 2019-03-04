@@ -1,7 +1,5 @@
-"""Switch platform support for yeelight"""
+"""Switch platform support for yeelight."""
 import logging
-
-from netdisco.const import ATTR_HOST
 
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import callback
@@ -17,11 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight switches."""
-
     if not discovery_info:
         return
 
-    device = hass.data[DATA_YEELIGHT][CONF_DEVICES][discovery_info[ATTR_HOST]]
+    device = hass.data[DATA_YEELIGHT][CONF_DEVICES][discovery_info['host']]
 
     _LOGGER.debug("Adding power mode switch for %s", device.name)
 
@@ -30,9 +27,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class YeelightPowerModeSwitch(ToggleEntity):
-    """Representation of a Yeelight power mode switch for night / moon light"""
+    """Representation of a Yeelight power mode switch for nightlight."""
 
     def __init__(self, device):
+        """Itialize power mode switch."""
         self._device = device
 
     @callback
@@ -42,18 +40,18 @@ class YeelightPowerModeSwitch(ToggleEntity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-
         async_dispatcher_connect(
             self.hass, DATA_UPDATED, self._schedule_immediate_update
         )
 
     @property
     def should_poll(self):
-        """No polling needed"""
+        """No polling needed."""
         return False
 
     @property
     def is_on(self) -> bool:
+        """Return true if on."""
         return self._device.is_nightlight_enabled
 
     @property
@@ -67,10 +65,13 @@ class YeelightPowerModeSwitch(ToggleEntity):
 
     @property
     def icon(self):
+        """Return the icon."""
         return 'mdi:weather-night'
 
     def turn_on(self, **kwargs) -> None:
+        """Turn the nightlight on and turn off daylight."""
         self._device.set_mode(MODE_MOONLIGHT)
 
     def turn_off(self, **kwargs) -> None:
+        """Turn the daylight on and turn off nightlight."""
         self._device.set_mode(MODE_DAYLIGHT)

@@ -1,4 +1,4 @@
-"""Light platform support for yeelight"""
+"""Light platform support for yeelight."""
 import logging
 
 import voluptuous as vol
@@ -194,14 +194,13 @@ class YeelightLight(Light):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-
         async_dispatcher_connect(
             self.hass, DATA_UPDATED, self._schedule_immediate_update
         )
 
     @property
     def should_poll(self):
-        """No polling needed"""
+        """No polling needed."""
         return False
 
     @property

@@ -114,7 +114,6 @@ UPDATE_REQUEST_PROPERTIES = [
 
 def setup(hass, config):
     """Set up the Yeelight bulbs."""
-
     conf = config[DOMAIN]
     hass.data[DATA_YEELIGHT] = {
         CONF_DEVICES: {},
@@ -176,9 +175,10 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
 
 
 class YeelightDevice:
-    """Represents single Yeelight device"""
+    """Represents single Yeelight device."""
 
     def __init__(self, hass, ipaddr, config):
+        """Initialize device."""
         self._hass = hass
         self._config = config
         self._ipaddr = ipaddr
@@ -215,23 +215,23 @@ class YeelightDevice:
 
     @property
     def ipaddr(self):
-        """Return ip address"""
+        """Return ip address."""
         return self._ipaddr
 
     @property
     def is_nightlight_supported(self) -> bool:
-        """Return true / false if nightlight is supported"""
-
+        """Return true / false if nightlight is supported."""
         return self._model in NIGHTLIGHT_SUPPORTED_MODELS
 
     @property
     def is_nightlight_enabled(self) -> bool:
-        """Return true / false if nightlight is currently enabled"""
+        """Return true / false if nightlight is currently enabled."""
         return self.bulb.last_properties.get('active_mode') == '1'
 
     def turn_on(self, duration=DEFAULT_TRANSITION):
-        """Turn on device"""
+        """Turn on device."""
         import yeelight
+
         try:
             self._bulb_device.turn_on(duration=duration)
         except yeelight.BulbException as ex:
@@ -241,8 +241,9 @@ class YeelightDevice:
         self.update()
 
     def turn_off(self, duration=DEFAULT_TRANSITION):
-        """Turn off device"""
+        """Turn off device."""
         import yeelight
+
         try:
             self._bulb_device.turn_off(duration=duration)
         except yeelight.BulbException as ex:
@@ -254,6 +255,7 @@ class YeelightDevice:
     def set_mode(self, mode: str):
         """Set a power mode."""
         import yeelight
+
         try:
             self.bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()])
         except yeelight.BulbException as ex:
@@ -262,7 +264,7 @@ class YeelightDevice:
         self.update()
 
     def update(self):
-        """Read new properties from the device"""
+        """Read new properties from the device."""
         if not self.bulb:
             return
 
