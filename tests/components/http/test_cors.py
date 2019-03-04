@@ -11,7 +11,10 @@ from aiohttp.hdrs import (
 )
 import pytest
 
-from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.const import (
+    HTTP_HEADER_HA_AUTH,
+    HTTP_HEADER_AUTHORIZATION
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.components.http.cors import setup_cors
 from homeassistant.components.http.view import HomeAssistantView
@@ -78,6 +81,15 @@ async def test_cors_requests(client):
     # With password in headers
     req = await client.get('/', headers={
         HTTP_HEADER_HA_AUTH: 'some-pass',
+        ORIGIN: TRUSTED_ORIGIN
+    })
+    assert req.status == 200
+    assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == \
+        TRUSTED_ORIGIN
+
+    # With auth token in headers
+    req = await client.get('/', headers={
+        HTTP_HEADER_AUTHORIZATION: 'Bearer some-token',
         ORIGIN: TRUSTED_ORIGIN
     })
     assert req.status == 200
