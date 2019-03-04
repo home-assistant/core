@@ -145,6 +145,10 @@ class ZHADevice:
         """Return True if sensor is available."""
         return self._available
 
+    def set_available(self, available):
+        """Set availability from restore and prevent signals."""
+        self._available = available
+
     def update_available(self, available):
         """Set sensor availability."""
         if self._available != available and available:
@@ -252,6 +256,11 @@ class ZHADevice:
         """Unsubscribe the dispatcher."""
         if self._unsub:
             self._unsub()
+
+    @callback
+    def async_update_last_seen(self, last_seen):
+        """Set last seen on the zigpy device."""
+        self._zigpy_device.last_seen = last_seen
 
     @callback
     def async_get_clusters(self):

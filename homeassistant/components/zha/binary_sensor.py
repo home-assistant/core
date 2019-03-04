@@ -7,6 +7,8 @@ at https://home-assistant.io/components/binary_sensor.zha/
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.const import STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, ON_OFF_CHANNEL,
@@ -125,6 +127,14 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         if self._attr_channel:
             await self.async_accept_signal(
                 self._attr_channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        super().async_restore_last_state(last_state)
+        self._state = last_state.state == STATE_ON
+        if 'level' in last_state.attributes:
+            self._level = last_state.attributes['level']
 
     @property
     def is_on(self) -> bool:

@@ -23,7 +23,7 @@ from .core.const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
-    DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
+    DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DATA_ZHA_GATEWAY,
     DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
 from .core.gateway import establish_device_mappings
 from .core.channels.registry import populate_channel_registry
@@ -192,11 +192,14 @@ async def async_setup_entry(hass, config_entry):
 
     api.async_load_api(hass, application_controller, zha_gateway)
 
-    def zha_shutdown(event):
-        """Close radio."""
+    async def async_zha_shutdown(event):
+        """Handle shutdown tasks."""
+        await hass.data[DATA_ZHA][
+            DATA_ZHA_GATEWAY].async_update_device_storage()
         hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
 
-    hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, zha_shutdown)
+    hass.bus.async_listen_once(
+        ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
     return True
 
 

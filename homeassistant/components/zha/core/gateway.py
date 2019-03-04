@@ -31,6 +31,7 @@ from .channels import (
 )
 from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .helpers import convert_ieee
+from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,9 +150,20 @@ class ZHAGateway:
             if device.status is DeviceStatus.INITIALIZED:
                 device.update_available(True)
 
+    async def async_update_device_storage(self):
+        """Update the devices in the store."""
+        storage = await async_get_registry(self._hass)
+        for device in self.devices.values():
+            storage.async_update(device)
+        await storage.async_save()
+
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
         zha_device = self._async_get_or_create_device(device)
+        entry = (await async_get_registry(self._hass)).async_get_or_create(
+            zha_device
+        )
+        zha_device.async_update_last_seen(entry.last_seen)
         discovery_infos = []
         for endpoint_id, endpoint in device.endpoints.items():
             self._async_process_endpoint(

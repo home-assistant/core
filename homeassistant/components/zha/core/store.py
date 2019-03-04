@@ -28,6 +28,7 @@ class ZhaDeviceEntry:
     ieee = attr.ib(type=str, default=None)
     power_source = attr.ib(type=int, default=None)
     manufacturer_code = attr.ib(type=int, default=None)
+    last_seen = attr.ib(type=float, default=None)
 
 
 class ZhaDeviceStorage:
@@ -46,7 +47,8 @@ class ZhaDeviceStorage:
             name=device.name,
             ieee=str(device.ieee),
             power_source=device.power_source,
-            manufacturer_code=device.manufacturer_code
+            manufacturer_code=device.manufacturer_code,
+            last_seen=device.last_seen
 
         )
         self.devices[device_entry.ieee] = device_entry
@@ -87,6 +89,8 @@ class ZhaDeviceStorage:
         if device.manufacturer_code != old.manufacturer_code:
             changes['manufacturer_code'] = device.manufacturer_code
 
+        changes['last_seen'] = device.last_seen
+
         new = self.devices[ieee_str] = attr.evolve(old, **changes)
         self.async_schedule_save()
         return new
@@ -103,7 +107,9 @@ class ZhaDeviceStorage:
                     name=device['name'],
                     ieee=device['ieee'],
                     power_source=device['power_source'],
-                    manufacturer_code=device['manufacturer_code']
+                    manufacturer_code=device['manufacturer_code'],
+                    last_seen=device['last_seen'] if 'last_seen' in device
+                    else None
                 )
 
         self.devices = devices
@@ -112,6 +118,10 @@ class ZhaDeviceStorage:
     def async_schedule_save(self) -> None:
         """Schedule saving the registry of zha devices."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
+
+    async def async_save(self) -> None:
+        """Save the registry of zha devices."""
+        await self._store.async_save(self._data_to_save())
 
     @callback
     def _data_to_save(self) -> dict:
@@ -124,6 +134,7 @@ class ZhaDeviceStorage:
                 'ieee': entry.ieee,
                 'power_source': entry.power_source,
                 'manufacturer_code': entry.manufacturer_code,
+                'last_seen': entry.last_seen
             } for entry in self.devices.values()
         ]
 
