@@ -6,7 +6,8 @@ from os import path
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_CONTROL
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ATTR_AREA_ID)
 import homeassistant.core as ha
 from homeassistant.exceptions import TemplateError, Unauthorized, UnknownUser
 from homeassistant.helpers import template
@@ -90,29 +91,63 @@ def extract_entity_ids(hass, service_call, expand_group=True):
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
+    """
+    return run_coroutine_threadsafe(
+        async_extract_entity_ids(hass, service_call, expand_group), hass.loop
+    ).result()
+
+
+@bind_hass
+async def async_extract_entity_ids(hass, service_call, expand_group=True):
+    """Extract a list of entity ids from a service call.
+
+    Will convert group entity ids to the entity ids it represents.
 
     Async friendly.
     """
-    if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
+    entity_ids = service_call.data.get(ATTR_ENTITY_ID)
+    area_ids = service_call.data.get(ATTR_AREA_ID)
+
+    if not entity_ids and not area_ids:
         return []
 
-    group = hass.components.group
+    extracted = set()
 
-    # Entity ID attr can be a list or a string
-    service_ent_id = service_call.data[ATTR_ENTITY_ID]
+    if entity_ids:
+        # Entity ID attr can be a list or a string
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
 
-    if expand_group:
+        if expand_group:
+            entity_ids = \
+                hass.components.group.expand_entity_ids(entity_ids)
 
-        if isinstance(service_ent_id, str):
-            return group.expand_entity_ids([service_ent_id])
+        extracted.update(entity_ids)
 
-        return [ent_id for ent_id in
-                group.expand_entity_ids(service_ent_id)]
+    if area_ids:
+        if isinstance(area_ids, str):
+            area_ids = [area_ids]
 
-    if isinstance(service_ent_id, str):
-        return [service_ent_id]
+        dev_reg, ent_reg = await asyncio.gather(
+            hass.helpers.device_registry.async_get_registry(),
+            hass.helpers.entity_registry.async_get_registry(),
+        )
+        devices = [
+            device
+            for area_id in area_ids
+            for device in
+            hass.helpers.device_registry.async_entries_for_area(
+                dev_reg, area_id)
+        ]
+        extracted.update(
+            entry.entity_id
+            for device in devices
+            for entry in
+            hass.helpers.entity_registry.async_entries_for_device(
+                ent_reg, device.id)
+        )
 
-    return service_ent_id
+    return extracted
 
 
 @bind_hass
@@ -213,8 +248,7 @@ async def entity_service_call(hass, platforms, func, call, service_name=''):
 
     if not target_all_entities:
         # A set of entities we're trying to target.
-        entity_ids = set(
-            extract_entity_ids(hass, call, True))
+        entity_ids = await async_extract_entity_ids(hass, call, True)
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
