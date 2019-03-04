@@ -104,6 +104,12 @@ SCHEMA_WS_GET_REGISTRATION = {
     vol.Required(CONF_WEBHOOK_ID): cv.string,
 }
 
+WS_TYPE_GET_USER_REGISTRATIONS = 'mobile_app/get_user_registrations'
+SCHEMA_WS_GET_USER_REGISTRATIONS = {
+    vol.Required('type'): WS_TYPE_GET_USER_REGISTRATIONS,
+    vol.Optional(CONF_USER_ID): cv.string,
+}
+
 WS_TYPE_DELETE_REGISTRATION = 'mobile_app/delete_registration'
 SCHEMA_WS_DELETE_REGISTRATION = {
     vol.Required('type'): WS_TYPE_DELETE_REGISTRATION,
