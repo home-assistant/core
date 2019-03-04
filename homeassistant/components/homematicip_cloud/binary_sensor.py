@@ -138,6 +138,13 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
         return 'safety'
 
     @property
+    def available(self):
+        """Device available."""
+        # A group must be available, and should not be affected by the
+        # individual availability of group members.
+        return True
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes of the security zone group."""
         attr = super().device_state_attributes

@@ -92,6 +92,15 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
         """Return true if group is on."""
         return self._device.on
 
+    @property
+    def available(self):
+        """Device available."""
+        # A group must be available, and should not be affected by the
+        # individual availability of group members.
+        # This allows switching even when individual group members
+        # are not available.
+        return True
+
     async def async_turn_on(self, **kwargs):
         """Turn the group on."""
         await self._device.turn_on()
