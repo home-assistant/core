@@ -183,11 +183,10 @@ class Enigma2Device(MediaPlayerDevice):
         """Mute or unmute."""
         self.e2_box.mute_volume()
 
-    # GET - Current channel - Current Channel Name
     @property
     def source(self):
         """Return the current input source."""
-        return "1"
+        return self.current_service_channel_name
 
     @property
     def source_list(self):
