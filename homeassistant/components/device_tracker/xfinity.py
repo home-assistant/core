@@ -9,7 +9,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
-REQUIREMENTS = ['xfinity-gateway==0.0.3']
+REQUIREMENTS = ['xfinity-gateway==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,27 +22,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return an Xfinity Gateway scanner."""
-    scanner = XfinityDeviceScanner(config[DOMAIN][CONF_HOST])
+    from xfinity_gateway import XfinityGateway
 
-    return scanner if scanner.success_init else None
+    gateway = XfinityGateway(config[DOMAIN][CONF_HOST])
+    scanner = None
+    try:
+        gateway.scan_devices()
+        scanner = XfinityDeviceScanner(gateway)
+    except (RequestException, ValueError):
+        _LOGGER.error("Error communicating with Xfinity Gateway. "
+                      "Check host: %s", gateway.host)
+
+    return scanner
 
 
 class XfinityDeviceScanner(DeviceScanner):
     """This class queries an Xfinity Gateway."""
 
-    def __init__(self, address):
+    def __init__(self, xfinityGateway):
         """Initialize the scanner."""
-        from xfinity_gateway import XfinityGateway
-
-        try:
-            _LOGGER.debug('Initializing')
-            self.gateway = XfinityGateway(address)
-            self.gateway.scan_devices()
-            self.success_init = True
-        except (RequestException, ValueError):
-            self.success_init = False
-            _LOGGER.error("Unable to connect to gateway. Check host: %s",
-                          self.gateway.host)
+        self.gateway = xfinityGateway
 
     def scan_devices(self):
         """Scan for new devices and return a list of found MACs."""
