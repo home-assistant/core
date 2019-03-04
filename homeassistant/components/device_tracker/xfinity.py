@@ -39,9 +39,9 @@ def get_scanner(hass, config):
 class XfinityDeviceScanner(DeviceScanner):
     """This class queries an Xfinity Gateway."""
 
-    def __init__(self, xfinityGateway):
+    def __init__(self, gateway):
         """Initialize the scanner."""
-        self.gateway = xfinityGateway
+        self.gateway = gateway
 
     def scan_devices(self):
         """Scan for new devices and return a list of found MACs."""
