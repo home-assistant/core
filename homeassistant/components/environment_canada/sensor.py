@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['env_canada==0.0.5']
+REQUIREMENTS = ['env_canada==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,11 @@ SENSOR_TYPES = {
                  'unit': TEMP_CELSIUS},
     'pop': {'name': 'Chance of Precip.',
             'unit': '%'},
-    'warning': {'name': 'Warning'}
+    'warnings': {'name': 'Warnings'},
+    'watches': {'name': 'Watches'},
+    'advisories': {'name': 'Advisories'},
+    'statements': {'name': 'Statements'},
+    'endings': {'name': 'Ended'}
 }
 
 
@@ -139,7 +143,13 @@ class ECSensor(Entity):
     def update(self):
         """Update current conditions."""
         self.ec_data.update()
-        self._state = self.ec_data.conditions.get(self.sensor_type)
+        self.ec_data.conditions.update(self.ec_data.alerts)
+
+        sensor_data = self.ec_data.conditions.get(self.sensor_type)
+        if isinstance(sensor_data, list):
+            self._state = ', '.join(sensor_data)
+        else:
+            self._state = sensor_data
 
         timestamp = self.ec_data.conditions.get('timestamp')
         if timestamp:
