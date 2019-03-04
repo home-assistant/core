@@ -52,7 +52,6 @@ async def test_full_flow_implementation(hass):
 
     # Init config manager.
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = []  # noqa: pylint: disable=protected-access
     hass.config_entries = manager
 
     # User Step Started, results in Step Creds
@@ -102,7 +101,6 @@ async def test_multiple_flow_implementation(hass):
 
     # Init config manager.
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = []   # noqa: pylint: disable=protected-access
     hass.config_entries = manager
 
     # User Step Started, results in Step Creds
@@ -228,7 +226,6 @@ async def test_additional_device(hass):
 
     # Init config manager.
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = []  # noqa: pylint: disable=protected-access
     hass.config_entries = manager
 
     # Mock existing entry.
