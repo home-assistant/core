@@ -16,14 +16,13 @@ from homeassistant.util.aiohttp import MockRequest
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
 from . import utils
-from .const import MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL
+from .const import (
+    MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL, STATE_CONNECTED, STATE_CONNECTING,
+    STATE_DISCONNECTED
+)
 
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
-
-STATE_CONNECTING = 'connecting'
-STATE_CONNECTED = 'connected'
-STATE_DISCONNECTED = 'disconnected'
 
 
 class UnknownHandler(Exception):
