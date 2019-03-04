@@ -49,10 +49,7 @@ async def test_full_flow_implementation(hass):
     """Test registering an implementation and flow works."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
-
-    # Init config manager.
-    manager = config_entries.ConfigEntries(hass, {})
-    hass.config_entries = manager
+    manager = flow.hass.config_entries()
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
@@ -98,10 +95,7 @@ async def test_multiple_flow_implementation(hass):
     """Test multiple device flows."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
-
-    # Init config manager.
-    manager = config_entries.ConfigEntries(hass, {})
-    hass.config_entries = manager
+    manager = flow.hass.config_entries()
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
@@ -223,10 +217,7 @@ async def test_additional_device(hass):
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
     flow.creds = MOCK_CREDS
-
-    # Init config manager.
-    manager = config_entries.ConfigEntries(hass, {})
-    hass.config_entries = manager
+    manager = flow.hass.config_entries()
 
     # Mock existing entry.
     entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA)
