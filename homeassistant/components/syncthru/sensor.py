@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
-REQUIREMENTS = ['pysyncthru==0.4.1']
+REQUIREMENTS = ['pysyncthru==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     session = aiohttp_client.async_get_clientsession(hass)
 
-    printer = SyncThru(host, hass.loop, session)
+    printer = SyncThru(host, session)
     # Test if the discovered device actually is a syncthru printer
     try:
         # No error is thrown when the device is off
