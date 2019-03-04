@@ -6,17 +6,21 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, CLOUD_NEVER_EXPOSED_ENTITIES, CONF_REGION,
     CONF_MODE, CONF_NAME)
 from homeassistant.helpers import entityfilter, config_validation as cv
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+from homeassistant.util.aiohttp import MockRequest
 from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import helpers as ga_h
 from homeassistant.components.google_assistant import const as ga_c
 
 from . import http_api, iot, auth_api, prefs, cloudhooks
-from .const import CONFIG_DIR, DOMAIN, SERVERS
+from .const import CONFIG_DIR, DOMAIN, SERVERS, STATE_CONNECTED
 
 REQUIREMENTS = ['warrant==0.6.1']
 
@@ -79,6 +83,43 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+
+class CloudNotAvailable(HomeAssistantError):
+    """Raised when an action requires the cloud but it's not available."""
+
+
+@bind_hass
+@callback
+def async_is_logged_in(hass):
+    """Test if user is logged in."""
+    return DOMAIN in hass.data and hass.data[DOMAIN].is_logged_in
+
+
+@bind_hass
+async def async_create_cloudhook(hass, webhook_id):
+    """Create a cloudhook."""
+    if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    return await hass.data[DOMAIN].cloudhooks.async_create(webhook_id)
+
+
+@bind_hass
+async def async_delete_cloudhook(hass, webhook_id):
+    """Delete a cloudhook."""
+    if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    return await hass.data[DOMAIN].cloudhooks.async_delete(webhook_id)
+
+
+def is_cloudhook_request(request):
+    """Test if a request came from a cloudhook.
+
+    Async friendly.
+    """
+    return isinstance(request, MockRequest)
 
 
 async def async_setup(hass, config):
@@ -151,6 +192,11 @@ class Cloud:
     def is_logged_in(self):
         """Get if cloud is logged in."""
         return self.id_token is not None
+
+    @property
+    def is_connected(self):
+        """Get if cloud is connected."""
+        return self.iot.state == STATE_CONNECTED
 
     @property
     def subscription_expired(self):

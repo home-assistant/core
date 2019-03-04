@@ -32,3 +32,7 @@ You have been logged out of Home Assistant Cloud because we have been unable
 to verify your credentials. Please [log in](/config/cloud) again to continue
 using the service.
 """
+
+STATE_CONNECTING = 'connecting'
+STATE_CONNECTED = 'connected'
+STATE_DISCONNECTED = 'disconnected'
