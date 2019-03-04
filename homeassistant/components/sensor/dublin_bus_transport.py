@@ -28,7 +28,8 @@ ATTR_DUE_IN = 'Due in'
 ATTR_DUE_AT = 'Due at'
 ATTR_NEXT_UP = 'Later Bus'
 
-CONF_ATTRIBUTION = "Data provided by data.dublinked.ie"
+ATTRIBUTION = "Data provided by data.dublinked.ie"
+
 CONF_STOP_ID = 'stopid'
 CONF_ROUTE = 'route'
 
@@ -56,14 +57,14 @@ def due_in_minutes(timestamp):
     return str(int(diff.total_seconds() / 60))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dublin public transport sensor."""
     name = config.get(CONF_NAME)
     stop = config.get(CONF_STOP_ID)
     route = config.get(CONF_ROUTE)
 
     data = PublicTransportData(stop, route)
-    add_devices([DublinPublicTransportSensor(data, stop, route, name)], True)
+    add_entities([DublinPublicTransportSensor(data, stop, route, name)], True)
 
 
 class DublinPublicTransportSensor(Entity):
@@ -92,7 +93,7 @@ class DublinPublicTransportSensor(Entity):
         """Return the state attributes."""
         if self._times is not None:
             next_up = "None"
-            if self._times:
+            if len(self._times) > 1:
                 next_up = self._times[1][ATTR_ROUTE] + " in "
                 next_up += self._times[1][ATTR_DUE_IN]
 
@@ -101,7 +102,7 @@ class DublinPublicTransportSensor(Entity):
                 ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
                 ATTR_STOP_ID: self._stop,
                 ATTR_ROUTE: self._times[0][ATTR_ROUTE],
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_NEXT_UP: next_up
             }
 
@@ -125,7 +126,7 @@ class DublinPublicTransportSensor(Entity):
             pass
 
 
-class PublicTransportData(object):
+class PublicTransportData:
     """The Class for handling the data retrieval."""
 
     def __init__(self, stop, route):

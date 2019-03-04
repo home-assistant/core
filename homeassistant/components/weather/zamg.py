@@ -1,23 +1,18 @@
-"""
-Sensor for data from Austrian "Zentralanstalt für Meteorologie und Geodynamik".
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/weather.zamg/
-"""
+"""Sensor for data from Austrian Zentralanstalt für Meteorologie."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.weather import (
-    WeatherEntity, ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE)
-from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.zamg import (
-    ATTRIBUTION, closest_station, CONF_STATION_ID, zamg_stations, ZamgData)
+    ATTRIBUTION, CONF_STATION_ID, ZamgData, closest_station, zamg_stations)
+from homeassistant.components.weather import (
+    ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED, PLATFORM_SCHEMA,
+    WeatherEntity)
+from homeassistant.const import (
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZAMG weather platform."""
     name = config.get(CONF_NAME)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -51,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Received error from ZAMG: %s", err)
         return False
 
-    add_devices([ZamgWeather(probe, name)], True)
+    add_entities([ZamgWeather(probe, name)], True)
 
 
 class ZamgWeather(WeatherEntity):

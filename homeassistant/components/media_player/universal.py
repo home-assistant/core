@@ -4,15 +4,14 @@ Combination of multiple media players into one for a universal controller.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.universal/
 """
-import asyncio
-import logging
-# pylint: disable=import-error
 from copy import copy
+import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.media_player import (
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
     ATTR_APP_ID, ATTR_APP_NAME, ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST, ATTR_MEDIA_ALBUM_NAME, ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
@@ -20,38 +19,38 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_POSITION, ATTR_MEDIA_POSITION_UPDATED_AT, ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION, ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK, ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN, MediaPlayerDevice, PLATFORM_SCHEMA,
-    SERVICE_CLEAR_PLAYLIST, SERVICE_PLAY_MEDIA, SERVICE_SELECT_SOURCE,
-    SUPPORT_CLEAR_PLAYLIST, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    ATTR_MEDIA_VOLUME_MUTED, DOMAIN, SERVICE_CLEAR_PLAYLIST,
+    SERVICE_PLAY_MEDIA, SERVICE_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, CONF_NAME,
-    CONF_STATE_TEMPLATE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP,
-    SERVICE_SHUFFLE_SET, STATE_IDLE, STATE_OFF, STATE_ON, SERVICE_MEDIA_STOP)
+    CONF_STATE, CONF_STATE_TEMPLATE, SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP,
+    SERVICE_SHUFFLE_SET, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF, STATE_ON, STATE_UNAVAILABLE)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_call_from_config
 
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_ACTIVE_CHILD = 'active_child'
+ATTR_DATA = 'data'
 
 CONF_ATTRS = 'attributes'
 CONF_CHILDREN = 'children'
 CONF_COMMANDS = 'commands'
-CONF_PLATFORM = 'platform'
 CONF_SERVICE = 'service'
 CONF_SERVICE_DATA = 'service_data'
-ATTR_DATA = 'data'
-CONF_STATE = 'state'
 
-OFF_STATES = [STATE_IDLE, STATE_OFF]
-REQUIREMENTS = []
-_LOGGER = logging.getLogger(__name__)
+OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
 
-ATTRS_SCHEMA = vol.Schema({cv.slug: cv.string})
-CMD_SCHEMA = vol.Schema({cv.slug: cv.SERVICE_SCHEMA})
+ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
+CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
@@ -63,8 +62,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }, extra=vol.REMOVE_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the universal media players."""
     player = UniversalMediaPlayer(
         hass,
@@ -75,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_STATE_TEMPLATE)
     )
 
-    async_add_devices([player])
+    async_add_entities([player])
 
 
 class UniversalMediaPlayer(MediaPlayerDevice):
@@ -99,8 +98,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if state_template is not None:
             self._state_template.hass = hass
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to children and template state changes.
 
         This method must be run in the event loop and returns a coroutine.
@@ -144,17 +142,17 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         active_child = self._child_state
         return active_child.attributes.get(attr_name) if active_child else None
 
-    @asyncio.coroutine
-    def _async_call_service(self, service_name, service_data=None,
-                            allow_override=False):
+    async def _async_call_service(self, service_name, service_data=None,
+                                  allow_override=False):
         """Call either a specified or active child's service."""
         if service_data is None:
             service_data = {}
 
         if allow_override and service_name in self._cmds:
-            yield from async_call_from_config(
+            await async_call_from_config(
                 self.hass, self._cmds[service_name],
-                variables=service_data, blocking=True)
+                variables=service_data, blocking=True,
+                validate_config=False)
             return
 
         active_child = self._child_state
@@ -164,7 +162,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
-        yield from self.hass.services.async_call(
+        await self.hass.services.async_call(
             DOMAIN, service_name, service_data, blocking=True)
 
     @property
@@ -337,8 +335,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if any([cmd in self._cmds for cmd in [SERVICE_VOLUME_UP,
                                               SERVICE_VOLUME_DOWN]]):
             flags |= SUPPORT_VOLUME_STEP
-            flags &= ~SUPPORT_VOLUME_SET
-        elif SERVICE_VOLUME_SET in self._cmds:
+        if SERVICE_VOLUME_SET in self._cmds:
             flags |= SUPPORT_VOLUME_SET
 
         if SERVICE_VOLUME_MUTE in self._cmds and \
@@ -505,8 +502,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._async_call_service(
             SERVICE_SHUFFLE_SET, data, allow_override=True)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update state in HA."""
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)

@@ -26,8 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Supervisord platform."""
     url = config.get(CONF_URL)
     try:
@@ -37,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Could not connect to Supervisord")
         return False
 
-    add_devices(
+    add_entities(
         [SupervisorProcessSensor(info, supervisor_server)
          for info in processes], True)
 

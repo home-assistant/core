@@ -19,8 +19,8 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric" \
-                   "Administration"
+ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric " \
+              "Administration"
 CONF_THRESHOLD = 'forecast_threshold'
 
 DEFAULT_DEVICE_CLASS = 'visible'
@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aurora sensor."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Lat. or long. not set in Home Assistant config")
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Connection to aurora forecast service failed: %s", error)
         return False
 
-    add_devices([AuroraSensor(aurora_data, name)], True)
+    add_entities([AuroraSensor(aurora_data, name)], True)
 
 
 class AuroraSensor(BinarySensorDevice):
@@ -91,7 +91,7 @@ class AuroraSensor(BinarySensorDevice):
         if self.aurora_data:
             attrs['visibility_level'] = self.aurora_data.visibility_level
             attrs['message'] = self.aurora_data.is_visible_text
-            attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+            attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         return attrs
 
     def update(self):
@@ -99,7 +99,7 @@ class AuroraSensor(BinarySensorDevice):
         self.aurora_data.update()
 
 
-class AuroraData(object):
+class AuroraData:
     """Get aurora forecast."""
 
     def __init__(self, latitude, longitude, threshold):

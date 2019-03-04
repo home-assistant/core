@@ -13,13 +13,16 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==3.3.0']
+REQUIREMENTS = ['py-cpuinfo==4.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BRAND = 'Brand'
 ATTR_HZ = 'GHz Advertised'
 ATTR_ARCH = 'arch'
+
+HZ_ACTUAL_RAW = 'hz_actual_raw'
+HZ_ADVERTISED_RAW = 'hz_advertised_raw'
 
 DEFAULT_NAME = 'CPU speed'
 
@@ -30,12 +33,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CPU speed sensor."""
     name = config.get(CONF_NAME)
 
-    add_devices([CpuSpeedSensor(name)], True)
+    add_entities([CpuSpeedSensor(name)], True)
 
 
 class CpuSpeedSensor(Entity):
@@ -67,11 +69,16 @@ class CpuSpeedSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.info is not None:
-            return {
+            attrs = {
                 ATTR_ARCH: self.info['arch'],
                 ATTR_BRAND: self.info['brand'],
-                ATTR_HZ: round(self.info['hz_advertised_raw'][0]/10**9, 2)
             }
+
+            if HZ_ADVERTISED_RAW in self.info:
+                attrs[ATTR_HZ] = round(
+                    self.info[HZ_ADVERTISED_RAW][0] / 10 ** 9, 2
+                )
+            return attrs
 
     @property
     def icon(self):
@@ -83,4 +90,9 @@ class CpuSpeedSensor(Entity):
         from cpuinfo import cpuinfo
 
         self.info = cpuinfo.get_cpu_info()
-        self._state = round(float(self.info['hz_actual_raw'][0])/10**9, 2)
+        if HZ_ACTUAL_RAW in self.info:
+            self._state = round(
+                float(self.info[HZ_ACTUAL_RAW][0]) / 10 ** 9, 2
+            )
+        else:
+            self._state = None

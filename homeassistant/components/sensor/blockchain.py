@@ -18,8 +18,9 @@ REQUIREMENTS = ['python-blockchain-api==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTRIBUTION = "Data provided by blockchain.info"
+
 CONF_ADDRESSES = 'addresses'
-CONF_ATTRIBUTION = "Data provided by blockchain.info"
 
 DEFAULT_NAME = 'Bitcoin Balance'
 
@@ -33,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Blockchain.info sensors."""
     from pyblockchain import validate_address
 
@@ -45,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Bitcoin address is not valid: %s", address)
             return False
 
-    add_devices([BlockchainSensor(name, addresses)], True)
+    add_entities([BlockchainSensor(name, addresses)], True)
 
 
 class BlockchainSensor(Entity):
@@ -82,7 +83,7 @@ class BlockchainSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):

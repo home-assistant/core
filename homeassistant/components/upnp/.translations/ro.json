@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD este deja configurat",
+            "no_devices_discovered": "Nu au fost descoperite UPnP/IGD-uri"
+        },
+        "error": {
+            "few": "",
+            "one": "Unul",
+            "other": ""
+        },
+        "step": {
+            "init": {
+                "title": "UPnP/IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_port_mapping": "Activa\u021bi maparea porturilor pentru Home Assistant",
+                    "enable_sensors": "Ad\u0103uga\u021bi senzori de trafic",
+                    "igd": "UPnP/IGD"
+                },
+                "title": "Op\u021biuni de configurare pentru UPnP/IGD"
+            }
+        },
+        "title": "UPnP/IGD"
+    }
+}

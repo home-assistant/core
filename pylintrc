@@ -1,29 +1,27 @@
-[MASTER]
-reports=no
-
+[MESSAGES CONTROL]
 # Reasons disabled:
 # locally-disabled - it spams too much
 # duplicate-code - unavoidable
 # cyclic-import - doesn't test if both import on load
 # abstract-class-little-used - prevents from setting right foundation
-# abstract-class-not-used - is flaky, should not show up but does
 # unused-argument - generic callbacks and setup methods create a lot of warnings
 # global-statement - used for the on-demand requirement installation
 # redefined-variable-type - this is Python, we're duck typing!
 # too-many-* - are not enforced for the sake of readability
 # too-few-* - same as too-many-*
 # abstract-method - with intro of async there are always methods missing
-
-generated-members=botocore.errorfactory
-
+# inconsistent-return-statements - doesn't handle raise
+# not-an-iterable - https://github.com/PyCQA/pylint/issues/2311
+# unnecessary-pass - readability for functions which only contain pass
 disable=
   abstract-class-little-used,
-  abstract-class-not-used,
   abstract-method,
   cyclic-import,
   duplicate-code,
   global-statement,
+  inconsistent-return-statements,
   locally-disabled,
+  not-an-iterable,
   not-context-manager,
   redefined-variable-type,
   too-few-public-methods,
@@ -35,7 +33,19 @@ disable=
   too-many-public-methods,
   too-many-return-statements,
   too-many-statements,
+  unnecessary-pass,
   unused-argument
+
+[REPORTS]
+reports=no
+
+[TYPECHECK]
+# For attrs
+ignored-classes=_CountingAttr
+generated-members=botocore.errorfactory
+
+[FORMAT]
+expected-line-ending-format=LF
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception,HomeAssistantError

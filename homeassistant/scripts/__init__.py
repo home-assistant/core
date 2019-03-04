@@ -1,17 +1,17 @@
 """Home Assistant command line scripts."""
 import argparse
+import asyncio
 import importlib
 import logging
 import os
 import sys
-
 from typing import List
 
-from homeassistant.bootstrap import mount_local_lib_path
+from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
-from homeassistant.const import CONSTRAINT_FILE
-from homeassistant.util.package import (
-    install_package, running_under_virtualenv)
+from homeassistant.core import HomeAssistant
+from homeassistant.requirements import pip_kwargs, PackageLoadable
+from homeassistant.util.package import install_package, is_virtual_env
 
 
 def run(args: List) -> int:
@@ -39,17 +39,27 @@ def run(args: List) -> int:
     script = importlib.import_module('homeassistant.scripts.' + args[0])
 
     config_dir = extract_config_dir()
-    deps_dir = mount_local_lib_path(config_dir)
+
+    loop = asyncio.get_event_loop()
+
+    if not is_virtual_env():
+        loop.run_until_complete(async_mount_local_lib_path(config_dir))
+
+    _pip_kwargs = pip_kwargs(config_dir)
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
+    hass = HomeAssistant(loop)
+    pkgload = PackageLoadable(hass)
     for req in getattr(script, 'REQUIREMENTS', []):
-        if running_under_virtualenv():
-            returncode = install_package(req, constraints=os.path.join(
-                os.path.dirname(__file__), os.pardir, CONSTRAINT_FILE))
-        else:
-            returncode = install_package(
-                req, target=deps_dir, constraints=os.path.join(
-                    os.path.dirname(__file__), os.pardir, CONSTRAINT_FILE))
+        try:
+            loop.run_until_complete(pkgload.loadable(req))
+            continue
+        except ImportError:
+            pass
+
+        returncode = install_package(req, **_pip_kwargs)
+
         if not returncode:
             print('Aborting script, could not install dependency', req)
             return 1

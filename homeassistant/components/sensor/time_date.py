@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.time_date/
 """
 from datetime import timedelta
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -37,8 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Time and Date sensor."""
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant configuration")
@@ -51,7 +50,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             hass, device.point_in_time_listener, device.get_next_interval())
         devices.append(device)
 
-    async_add_devices(devices, True)
+    async_add_entities(devices, True)
 
 
 class TimeDateSensor(Entity):
@@ -81,7 +80,7 @@ class TimeDateSensor(Entity):
         """Icon to use in the frontend, if any."""
         if 'date' in self.type and 'time' in self.type:
             return 'mdi:calendar-clock'
-        elif 'date' in self.type:
+        if 'date' in self.type:
             return 'mdi:calendar'
         return 'mdi:clock'
 
@@ -92,7 +91,7 @@ class TimeDateSensor(Entity):
         if self.type == 'date':
             now = dt_util.start_of_local_day(dt_util.as_local(now))
             return now + timedelta(seconds=86400)
-        elif self.type == 'beat':
+        if self.type == 'beat':
             interval = 86.4
         else:
             interval = 60

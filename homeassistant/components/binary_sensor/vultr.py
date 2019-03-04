@@ -30,8 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Vultr subscription (server) sensor."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Vultr subscription (server) binary sensor."""
     vultr = hass.data[DATA_VULTR]
 
     subscription = config.get(CONF_SUBSCRIPTION)
@@ -39,16 +39,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if subscription not in vultr.data:
         _LOGGER.error("Subscription %s not found", subscription)
-        return False
+        return
 
-    add_devices([VultrBinarySensor(vultr, subscription, name)], True)
+    add_entities([VultrBinarySensor(vultr, subscription, name)], True)
 
 
 class VultrBinarySensor(BinarySensorDevice):
     """Representation of a Vultr subscription sensor."""
 
     def __init__(self, vultr, subscription, name):
-        """Initialize a new Vultr sensor."""
+        """Initialize a new Vultr binary sensor."""
         self._vultr = vultr
         self._name = name
 

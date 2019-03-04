@@ -10,7 +10,6 @@ https://home-assistant.io/components/sensor.hydroquebec/
 import logging
 from datetime import timedelta
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -21,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyhydroquebec==1.3.1']
+REQUIREMENTS = ['pyhydroquebec==2.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +92,8 @@ DAILY_MAP = (('yesterday_total_consumption', 'consoTotalQuot'),
              ('yesterday_higher_price_consumption', 'consoHautQuot'))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the HydroQuebec sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
@@ -102,13 +102,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     contract = config.get(CONF_CONTRACT)
 
-    try:
-        hydroquebec_data = HydroquebecData(username, password, contract)
-        _LOGGER.info("Contract list: %s",
-                     ", ".join(hydroquebec_data.get_contract_list()))
-    except requests.exceptions.HTTPError as error:
-        _LOGGER.error("Failt login: %s", error)
-        return False
+    httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
+    hydroquebec_data = HydroquebecData(username, password, httpsession,
+                                       contract)
+    contracts = await hydroquebec_data.get_contract_list()
+    if not contracts:
+        return
+    _LOGGER.info("Contract list: %s",
+                 ", ".join(contracts))
 
     name = config.get(CONF_NAME)
 
@@ -116,7 +117,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(HydroQuebecSensor(hydroquebec_data, variable, name))
 
-    add_devices(sensors)
+    async_add_entities(sensors, True)
 
 
 class HydroQuebecSensor(Entity):
@@ -152,41 +153,44 @@ class HydroQuebecSensor(Entity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from Hydroquebec and update the state."""
-        self.hydroquebec_data.update()
-        if self.type in self.hydroquebec_data.data:
+        await self.hydroquebec_data.async_update()
+        if self.hydroquebec_data.data.get(self.type) is not None:
             self._state = round(self.hydroquebec_data.data[self.type], 2)
 
 
-class HydroquebecData(object):
+class HydroquebecData:
     """Get data from HydroQuebec."""
 
-    def __init__(self, username, password, contract=None):
+    def __init__(self, username, password, httpsession, contract=None):
         """Initialize the data object."""
         from pyhydroquebec import HydroQuebecClient
         self.client = HydroQuebecClient(
-            username, password, REQUESTS_TIMEOUT)
+            username, password, REQUESTS_TIMEOUT, httpsession)
         self._contract = contract
         self.data = {}
 
-    def get_contract_list(self):
+    async def get_contract_list(self):
         """Return the contract list."""
         # Fetch data
-        self._fetch_data()
-        return self.client.get_contracts()
+        ret = await self._fetch_data()
+        if ret:
+            return self.client.get_contracts()
+        return []
 
-    def _fetch_data(self):
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def _fetch_data(self):
         """Fetch latest data from HydroQuebec."""
         from pyhydroquebec.client import PyHydroQuebecError
         try:
-            self.client.fetch_data()
+            await self.client.fetch_data()
         except PyHydroQuebecError as exp:
             _LOGGER.error("Error on receive last Hydroquebec data: %s", exp)
-            return
+            return False
+        return True
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    async def async_update(self):
         """Return the latest collected data from HydroQuebec."""
-        self._fetch_data()
+        await self._fetch_data()
         self.data = self.client.get_data(self._contract)[self._contract]

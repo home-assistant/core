@@ -1,63 +1,52 @@
 """Test to verify that we can load components."""
-# pylint: disable=protected-access
 import asyncio
-import unittest
 
 import pytest
 
 import homeassistant.loader as loader
 import homeassistant.components.http as http
 
-from tests.common import (
-    get_test_home_assistant, MockModule, async_mock_service)
+from tests.common import MockModule, async_mock_service
 
 
-class TestLoader(unittest.TestCase):
-    """Test the loader module."""
+def test_set_component(hass):
+    """Test if set_component works."""
+    comp = object()
+    loader.set_component(hass, 'switch.test_set', comp)
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Setup tests."""
-        self.hass = get_test_home_assistant()
+    assert loader.get_component(hass, 'switch.test_set') is comp
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def test_set_component(self):
-        """Test if set_component works."""
-        loader.set_component('switch.test_set', http)
+def test_get_component(hass):
+    """Test if get_component works."""
+    assert http == loader.get_component(hass, 'http')
 
-        self.assertEqual(http, loader.get_component('switch.test_set'))
 
-    def test_get_component(self):
-        """Test if get_component works."""
-        self.assertEqual(http, loader.get_component('http'))
+def test_component_dependencies(hass):
+    """Test if we can get the proper load order of components."""
+    loader.set_component(hass, 'mod1', MockModule('mod1'))
+    loader.set_component(hass, 'mod2', MockModule('mod2', ['mod1']))
+    loader.set_component(hass, 'mod3', MockModule('mod3', ['mod2']))
 
-        self.assertIsNotNone(loader.get_component('switch.test'))
+    assert {'mod1', 'mod2', 'mod3'} == \
+        loader.component_dependencies(hass, 'mod3')
 
-    def test_load_order_component(self):
-        """Test if we can get the proper load order of components."""
-        loader.set_component('mod1', MockModule('mod1'))
-        loader.set_component('mod2', MockModule('mod2', ['mod1']))
-        loader.set_component('mod3', MockModule('mod3', ['mod2']))
+    # Create circular dependency
+    loader.set_component(hass, 'mod1', MockModule('mod1', ['mod3']))
 
-        self.assertEqual(
-            ['mod1', 'mod2', 'mod3'], loader.load_order_component('mod3'))
+    with pytest.raises(loader.CircularDependency):
+        print(loader.component_dependencies(hass, 'mod3'))
 
-        # Create circular dependency
-        loader.set_component('mod1', MockModule('mod1', ['mod3']))
+    # Depend on non-existing component
+    loader.set_component(hass, 'mod1',
+                         MockModule('mod1', ['nonexisting']))
 
-        self.assertEqual([], loader.load_order_component('mod3'))
+    with pytest.raises(loader.ComponentNotFound):
+        print(loader.component_dependencies(hass, 'mod1'))
 
-        # Depend on non-existing component
-        loader.set_component('mod1', MockModule('mod1', ['nonexisting']))
-
-        self.assertEqual([], loader.load_order_component('mod1'))
-
-        # Try to get load order for non-existing component
-        self.assertEqual([], loader.load_order_component('mod1'))
+    # Try to get dependencies for non-existing component
+    with pytest.raises(loader.ComponentNotFound):
+        print(loader.component_dependencies(hass, 'nonexisting'))
 
 
 def test_component_loader(hass):
@@ -77,10 +66,10 @@ def test_component_loader_non_existing(hass):
 @asyncio.coroutine
 def test_component_wrapper(hass):
     """Test component wrapper."""
-    calls = async_mock_service(hass, 'light', 'turn_on')
+    calls = async_mock_service(hass, 'persistent_notification', 'create')
 
     components = loader.Components(hass)
-    components.light.async_turn_on('light.test')
+    components.persistent_notification.async_create('message')
     yield from hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -103,3 +92,53 @@ def test_helpers_wrapper(hass):
     yield from hass.async_block_till_done()
 
     assert result == ['hello']
+
+
+async def test_custom_component_name(hass):
+    """Test the name attribte of custom components."""
+    comp = loader.get_component(hass, 'test_standalone')
+    assert comp.__name__ == 'custom_components.test_standalone'
+    assert comp.__package__ == 'custom_components'
+
+    comp = loader.get_component(hass, 'test_package')
+    assert comp.__name__ == 'custom_components.test_package'
+    assert comp.__package__ == 'custom_components.test_package'
+
+    comp = loader.get_component(hass, 'light.test')
+    assert comp.__name__ == 'custom_components.light.test'
+    assert comp.__package__ == 'custom_components.light'
+
+    # Test custom components is mounted
+    from custom_components.test_package import TEST
+    assert TEST == 5
+
+
+async def test_log_warning_custom_component(hass, caplog):
+    """Test that we log a warning when loading a custom component."""
+    loader.get_component(hass, 'test_standalone')
+    assert \
+        'You are using a custom component for test_standalone' in caplog.text
+
+    loader.get_component(hass, 'light.test')
+    assert 'You are using a custom component for light.test' in caplog.text
+
+
+async def test_get_platform(hass, caplog):
+    """Test get_platform."""
+    # Test we prefer embedded over normal platforms."""
+    embedded_platform = loader.get_platform(hass, 'switch', 'test_embedded')
+    assert embedded_platform.__name__ == \
+        'custom_components.test_embedded.switch'
+
+    caplog.clear()
+
+    legacy_platform = loader.get_platform(hass, 'switch', 'test')
+    assert legacy_platform.__name__ == 'custom_components.switch.test'
+    assert 'Integrations need to be in their own folder.' in caplog.text
+
+
+async def test_get_platform_enforces_component_path(hass, caplog):
+    """Test that existence of a component limits lookup path of platforms."""
+    assert loader.get_platform(hass, 'comp_path_test', 'hue') is None
+    assert ('Search path was limited to path of component: '
+            'homeassistant.components') in caplog.text

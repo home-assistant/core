@@ -12,8 +12,8 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_state_change
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService, DOMAIN)
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+    ATTR_TARGET, ATTR_DATA, BaseNotificationService, DOMAIN, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, ATTR_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
@@ -27,9 +27,8 @@ DEVICE_TRACKER_DOMAIN = 'device_tracker'
 SERVICE_REGISTER = 'apns_register'
 
 ATTR_PUSH_ID = 'push_id'
-ATTR_NAME = 'name'
 
-PLATFORM_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): 'apns',
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_CERTFILE): cv.isfile,
@@ -39,15 +38,12 @@ PLATFORM_SCHEMA = vol.Schema({
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_PUSH_ID): cv.string,
-    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(ATTR_NAME): cv.string,
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Return push service."""
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     name = config.get(CONF_NAME)
     cert_file = config.get(CONF_CERTFILE)
     topic = config.get(CONF_TOPIC)
@@ -56,11 +52,11 @@ def get_service(hass, config, discovery_info=None):
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
     hass.services.register(
         DOMAIN, 'apns_{}'.format(name), service.register,
-        descriptions.get(SERVICE_REGISTER), schema=REGISTER_SERVICE_SCHEMA)
+        schema=REGISTER_SERVICE_SCHEMA)
     return service
 
 
-class ApnsDevice(object):
+class ApnsDevice:
     """
     The APNS Device class.
 
@@ -69,7 +65,7 @@ class ApnsDevice(object):
     """
 
     def __init__(self, push_id, name, tracking_device_id=None, disabled=False):
-        """Initialize Apns Device."""
+        """Initialize APNS Device."""
         self.device_push_id = push_id
         self.device_name = name
         self.tracking_id = tracking_device_id
@@ -107,7 +103,7 @@ class ApnsDevice(object):
 
     @property
     def disabled(self):
-        """Return the ."""
+        """Return the state of the service."""
         return self.device_disabled
 
     def disable(self):
@@ -115,13 +111,13 @@ class ApnsDevice(object):
         self.device_disabled = True
 
     def __eq__(self, other):
-        """Return the comparision."""
+        """Return the comparison."""
         if isinstance(other, self.__class__):
             return self.push_id == other.push_id and self.name == other.name
         return NotImplemented
 
     def __ne__(self, other):
-        """Return the comparision."""
+        """Return the comparison."""
         return not self.__eq__(other)
 
 

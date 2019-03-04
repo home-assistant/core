@@ -5,17 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.keenetic_ndms2/
 """
 import logging
-from collections import namedtuple
 
-import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+    CONF_HOST, CONF_PORT, CONF_PASSWORD, CONF_USERNAME
 )
+
+REQUIREMENTS = ['ndms2_client==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,11 +25,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_INTERFACE = 'interface'
 
 DEFAULT_INTERFACE = 'Home'
+DEFAULT_PORT = 23
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
 })
@@ -42,21 +44,22 @@ def get_scanner(_hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple('Device', ['mac', 'name'])
-
-
 class KeeneticNDMS2DeviceScanner(DeviceScanner):
     """This class scans for devices using keenetic NDMS2 web interface."""
 
     def __init__(self, config):
         """Initialize the scanner."""
+        from ndms2_client import Client, TelnetConnection
         self.last_results = []
 
-        self._url = 'http://%s/rci/show/ip/arp' % config[CONF_HOST]
         self._interface = config[CONF_INTERFACE]
 
-        self._username = config.get(CONF_USERNAME)
-        self._password = config.get(CONF_PASSWORD)
+        self._client = Client(TelnetConnection(
+            config.get(CONF_HOST),
+            config.get(CONF_PORT),
+            config.get(CONF_USERNAME),
+            config.get(CONF_PASSWORD),
+        ))
 
         self.success_init = self._update_info()
         _LOGGER.info("Scanner initialized")
@@ -67,55 +70,34 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
 
         return [device.mac for device in self.last_results]
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [device.name for device in self.last_results
-                        if device.mac == mac]
+        name = next((
+            result.name for result in self.last_results
+            if result.mac == device), None)
+        return name
 
-        if filter_named:
-            return filter_named[0]
-        return None
+    def get_extra_attributes(self, device):
+        """Return the IP of the given device."""
+        attributes = next((
+            {'ip': result.ip} for result in self.last_results
+            if result.mac == device), {})
+        return attributes
 
     def _update_info(self):
         """Get ARP from keenetic router."""
-        _LOGGER.info("Fetching...")
+        _LOGGER.debug("Fetching devices from router...")
 
-        last_results = []
-
-        # doing a request
+        from ndms2_client import ConnectionException
         try:
-            from requests.auth import HTTPDigestAuth
-            res = requests.get(self._url, timeout=10, auth=HTTPDigestAuth(
-                self._username, self._password
-            ))
-        except requests.exceptions.Timeout:
-            _LOGGER.error(
-                "Connection to the router timed out at URL %s", self._url)
+            self.last_results = [
+                dev
+                for dev in self._client.get_devices()
+                if dev.interface == self._interface
+            ]
+            _LOGGER.debug("Successfully fetched data from router")
+            return True
+
+        except ConnectionException:
+            _LOGGER.error("Error fetching data from router")
             return False
-        if res.status_code != 200:
-            _LOGGER.error(
-                "Connection failed with http code %s", res.status_code)
-            return False
-        try:
-            result = res.json()
-        except ValueError:
-            # If json decoder could not parse the response
-            _LOGGER.error("Failed to parse response from router")
-            return False
-
-        # parsing response
-        for info in result:
-            if info.get('interface') != self._interface:
-                continue
-            mac = info.get('mac')
-            name = info.get('name')
-            # No address = no item :)
-            if mac is None:
-                continue
-
-            last_results.append(Device(mac.upper(), name))
-
-        self.last_results = last_results
-
-        _LOGGER.info("Request successful")
-        return True

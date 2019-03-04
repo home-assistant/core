@@ -41,7 +41,7 @@ git submodule update --init src/platform
         -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" \
         -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE_DIR}" \
         ..
-    make
+    make -j$(nproc)
     make install
     ldconfig
 )

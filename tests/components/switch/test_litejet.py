@@ -5,8 +5,10 @@ from unittest import mock
 
 from homeassistant import setup
 from homeassistant.components import litejet
-from tests.common import get_test_home_assistant
 import homeassistant.components.switch as switch
+
+from tests.common import get_test_home_assistant
+from tests.components.switch import common
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +23,7 @@ class TestLiteJetSwitch(unittest.TestCase):
 
     @mock.patch('pylitejet.LiteJet')
     def setup_method(self, method, mock_pylitejet):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.start()
 
@@ -51,9 +53,9 @@ class TestLiteJetSwitch(unittest.TestCase):
                 'port': '/tmp/this_will_be_mocked',
             }
         }
-        if method == self.test_include_switches_False:
+        if method == self.__class__.test_include_switches_False:
             config['litejet']['include_switches'] = False
-        elif method != self.test_include_switches_unspecified:
+        elif method != self.__class__.test_include_switches_unspecified:
             config['litejet']['include_switches'] = True
 
         assert setup.setup_component(self.hass, litejet.DOMAIN, config)
@@ -88,11 +90,11 @@ class TestLiteJetSwitch(unittest.TestCase):
 
         assert not switch.is_on(self.hass, ENTITY_SWITCH)
 
-        switch.turn_on(self.hass, ENTITY_SWITCH)
+        common.turn_on(self.hass, ENTITY_SWITCH)
         self.hass.block_till_done()
         self.mock_lj.press_switch.assert_called_with(ENTITY_SWITCH_NUMBER)
 
-        switch.turn_off(self.hass, ENTITY_SWITCH)
+        common.turn_off(self.hass, ENTITY_SWITCH)
         self.hass.block_till_done()
         self.mock_lj.release_switch.assert_called_with(ENTITY_SWITCH_NUMBER)
 

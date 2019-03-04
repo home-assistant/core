@@ -1,23 +1,22 @@
-"""
-Sensor for Last.fm account status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.lastfm/
-"""
+"""Sensor for Last.fm account status."""
+import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylast==2.0.0']
+REQUIREMENTS = ['pylast==3.0.0']
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_LAST_PLAYED = 'last_played'
 ATTR_PLAY_COUNT = 'play_count'
 ATTR_TOP_PLAYED = 'top_played'
+ATTRIBUTION = "Data provided by Last.fm"
 
 CONF_USERS = 'users'
 
@@ -29,15 +28,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Last.fm platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Last.fm sensor platform."""
     import pylast as lastfm
-    network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY))
+    from pylast import WSError
 
-    add_devices(
-        [LastfmSensor(
-            username, network) for username in config.get(CONF_USERS)], True)
+    api_key = config[CONF_API_KEY]
+    users = config.get(CONF_USERS)
+
+    lastfm_api = lastfm.LastFMNetwork(api_key=api_key)
+
+    entities = []
+    for username in users:
+        try:
+            lastfm_api.get_user(username).get_image()
+            entities.append(LastfmSensor(username, lastfm_api))
+        except WSError as error:
+            _LOGGER.error(error)
+            return
+
+    add_entities(entities, True)
 
 
 class LastfmSensor(Entity):
@@ -69,7 +79,6 @@ class LastfmSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    # pylint: disable=no-member
     def update(self):
         """Update device state."""
         self._cover = self._user.get_image()
@@ -92,6 +101,7 @@ class LastfmSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_LAST_PLAYED: self._lastplayed,
             ATTR_PLAY_COUNT: self._playcount,
             ATTR_TOP_PLAYED: self._topplayed,

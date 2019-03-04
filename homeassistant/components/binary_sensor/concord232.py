@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['concord232==0.14']
+REQUIREMENTS = ['concord232==0.15']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ DEFAULT_NAME = 'Alarm'
 DEFAULT_PORT = '5007'
 DEFAULT_SSL = False
 
-SCAN_INTERVAL = datetime.timedelta(seconds=1)
+SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 ZONE_TYPES_SCHEMA = vol.Schema({
     cv.positive_int: vol.In(DEVICE_CLASSES),
@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 binary sensor platform."""
     from concord232 import client as concord232_client
 
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
 
     try:
-        _LOGGER.debug("Initializing Client")
+        _LOGGER.debug("Initializing client")
         client = concord232_client.Client('http://{}:{}'.format(host, port))
         client.zones = client.list_zones()
         client.last_zone_update = datetime.datetime.now()
@@ -61,6 +61,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
         return False
+
+    # The order of zones returned by client.list_zones() can vary.
+    # When the zones are not named, this can result in the same entity
+    # name mapping to different sensors in an unpredictable way.  Sort
+    # the zones by zone number to prevent this.
+
+    client.zones.sort(key=lambda zone: zone['number'])
 
     for zone in client.zones:
         _LOGGER.info("Loading Zone found: %s", zone['name'])
@@ -72,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 )
             )
 
-        add_devices(sensors, True)
+        add_entities(sensors, True)
 
 
 def get_opening_type(zone):
@@ -118,7 +125,7 @@ class Concord232ZoneSensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
-        return bool(self._zone['state'] == 'Normal')
+        return bool(self._zone['state'] != 'Normal')
 
     def update(self):
         """Get updated stats from API."""

@@ -10,15 +10,16 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
-    ATTR_RGB_COLOR, ATTR_WHITE_VALUE,
-    SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 REQUIREMENTS = ['zengge==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_ZENGGE_LED = (SUPPORT_RGB_COLOR | SUPPORT_WHITE_VALUE)
+SUPPORT_ZENGGE_LED = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
@@ -29,8 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Zengge platform."""
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if light.is_valid:
             lights.append(light)
 
-    add_devices(lights, True)
+    add_entities(lights, True)
 
 
 class ZenggeLight(Light):
@@ -56,7 +56,8 @@ class ZenggeLight(Light):
         self.is_valid = True
         self._bulb = zengge.zengge(self._address)
         self._white = 0
-        self._rgb = (0, 0, 0)
+        self._brightness = 0
+        self._hs_color = (0, 0)
         self._state = False
         if self._bulb.connect() is False:
             self.is_valid = False
@@ -67,7 +68,7 @@ class ZenggeLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this light."""
-        return "{}.{}".format(self.__class__, self._address)
+        return self._address
 
     @property
     def name(self):
@@ -80,9 +81,14 @@ class ZenggeLight(Light):
         return self._state
 
     @property
-    def rgb_color(self):
+    def brightness(self):
+        """Return the brightness property."""
+        return self._brightness
+
+    @property
+    def hs_color(self):
         """Return the color property."""
-        return self._rgb
+        return self._hs_color
 
     @property
     def white_value(self):
@@ -117,21 +123,29 @@ class ZenggeLight(Light):
         self._state = True
         self._bulb.on()
 
-        rgb = kwargs.get(ATTR_RGB_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
         white = kwargs.get(ATTR_WHITE_VALUE)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if white is not None:
             self._white = white
-            self._rgb = (0, 0, 0)
+            self._hs_color = (0, 0)
 
-        if rgb is not None:
+        if hs_color is not None:
             self._white = 0
-            self._rgb = rgb
+            self._hs_color = hs_color
+
+        if brightness is not None:
+            self._white = 0
+            self._brightness = brightness
 
         if self._white != 0:
             self.set_white(self._white)
         else:
-            self.set_rgb(self._rgb[0], self._rgb[1], self._rgb[2])
+            rgb = color_util.color_hsv_to_RGB(
+                self._hs_color[0], self._hs_color[1],
+                self._brightness / 255 * 100)
+            self.set_rgb(*rgb)
 
     def turn_off(self, **kwargs):
         """Turn the specified light off."""
@@ -140,6 +154,9 @@ class ZenggeLight(Light):
 
     def update(self):
         """Synchronise internal state with the actual light state."""
-        self._rgb = self._bulb.get_colour()
+        rgb = self._bulb.get_colour()
+        hsv = color_util.color_RGB_to_hsv(*rgb)
+        self._hs_color = hsv[:2]
+        self._brightness = hsv[2]
         self._white = self._bulb.get_white()
         self._state = self._bulb.get_on()

@@ -67,7 +67,7 @@ class DysonTest(unittest.TestCase):
     """Dyson 360 eye robot vacuum component test class."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -77,9 +77,9 @@ class DysonTest(unittest.TestCase):
     def test_setup_component_with_no_devices(self):
         """Test setup component with no devices."""
         self.hass.data[dyson.DYSON_DEVICES] = []
-        add_devices = mock.MagicMock()
-        dyson.setup_platform(self.hass, {}, add_devices)
-        add_devices.assert_called_with([])
+        add_entities = mock.MagicMock()
+        dyson.setup_platform(self.hass, {}, add_entities)
+        add_entities.assert_called_with([])
 
     def test_setup_component(self):
         """Test setup component with devices."""
@@ -100,13 +100,13 @@ class DysonTest(unittest.TestCase):
         component.entity_id = "entity_id"
         component.schedule_update_ha_state = mock.Mock()
         component.on_message(mock.Mock())
-        self.assertTrue(component.schedule_update_ha_state.called)
+        assert component.schedule_update_ha_state.called
 
     def test_should_poll(self):
         """Test polling is disable."""
         device = _get_vacuum_device_cleaning()
         component = Dyson360EyeDevice(device)
-        self.assertFalse(component.should_poll)
+        assert not component.should_poll
 
     def test_properties(self):
         """Test component properties."""
@@ -116,46 +116,45 @@ class DysonTest(unittest.TestCase):
         component = Dyson360EyeDevice(device1)
         component2 = Dyson360EyeDevice(device2)
         component3 = Dyson360EyeDevice(device3)
-        self.assertEqual(component.name, "Device_Vacuum")
-        self.assertTrue(component.is_on)
-        self.assertEqual(component.icon, "mdi:roomba")
-        self.assertEqual(component.status, "Cleaning")
-        self.assertEqual(component2.status, "Unknown")
-        self.assertEqual(component.battery_level, 85)
-        self.assertEqual(component.fan_speed, "Quiet")
-        self.assertEqual(component.fan_speed_list, ["Quiet", "Max"])
-        self.assertEqual(component.device_state_attributes['position'],
-                         '(0, 0)')
-        self.assertTrue(component.available)
-        self.assertEqual(component.supported_features, 255)
-        self.assertEqual(component.battery_icon, "mdi:battery-80")
-        self.assertEqual(component3.battery_icon, "mdi:battery-charging-40")
+        assert component.name == "Device_Vacuum"
+        assert component.is_on
+        assert component.status == "Cleaning"
+        assert component2.status == "Unknown"
+        assert component.battery_level == 85
+        assert component.fan_speed == "Quiet"
+        assert component.fan_speed_list == ["Quiet", "Max"]
+        assert component.device_state_attributes['position'] == \
+            '(0, 0)'
+        assert component.available
+        assert component.supported_features == 255
+        assert component.battery_icon == "mdi:battery-80"
+        assert component3.battery_icon == "mdi:battery-charging-40"
 
     def test_turn_on(self):
         """Test turn on vacuum."""
         device1 = _get_vacuum_device_charging()
         component1 = Dyson360EyeDevice(device1)
         component1.turn_on()
-        self.assertTrue(device1.start.called)
+        assert device1.start.called
 
         device2 = _get_vacuum_device_pause()
         component2 = Dyson360EyeDevice(device2)
         component2.turn_on()
-        self.assertTrue(device2.resume.called)
+        assert device2.resume.called
 
     def test_turn_off(self):
         """Test turn off vacuum."""
         device1 = _get_vacuum_device_cleaning()
         component1 = Dyson360EyeDevice(device1)
         component1.turn_off()
-        self.assertTrue(device1.pause.called)
+        assert device1.pause.called
 
     def test_stop(self):
         """Test stop vacuum."""
         device1 = _get_vacuum_device_cleaning()
         component1 = Dyson360EyeDevice(device1)
         component1.stop()
-        self.assertTrue(device1.pause.called)
+        assert device1.pause.called
 
     def test_set_fan_speed(self):
         """Test set fan speed vacuum."""
@@ -169,21 +168,21 @@ class DysonTest(unittest.TestCase):
         device1 = _get_vacuum_device_charging()
         component1 = Dyson360EyeDevice(device1)
         component1.start_pause()
-        self.assertTrue(device1.start.called)
+        assert device1.start.called
 
         device2 = _get_vacuum_device_pause()
         component2 = Dyson360EyeDevice(device2)
         component2.start_pause()
-        self.assertTrue(device2.resume.called)
+        assert device2.resume.called
 
         device3 = _get_vacuum_device_cleaning()
         component3 = Dyson360EyeDevice(device3)
         component3.start_pause()
-        self.assertTrue(device3.pause.called)
+        assert device3.pause.called
 
     def test_return_to_base(self):
         """Test return to base."""
         device = _get_vacuum_device_pause()
         component = Dyson360EyeDevice(device)
         component.return_to_base()
-        self.assertTrue(device.abort.called)
+        assert device.abort.called

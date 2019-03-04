@@ -18,11 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FUNCTIONS = 'functions'
 CONF_PINS = 'pins'
+CONF_INVERT = 'invert'
 
 DEFAULT_NAME = 'aREST switch'
 
 PIN_FUNCTION_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_INVERT, default=False): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -35,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST switches."""
     resource = config.get(CONF_RESOURCE)
 
@@ -54,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for pinnum, pin in pins.items():
         dev.append(ArestSwitchPin(
             resource, config.get(CONF_NAME, response.json()[CONF_NAME]),
-            pin.get(CONF_NAME), pinnum))
+            pin.get(CONF_NAME), pinnum, pin.get(CONF_INVERT)))
 
     functions = config.get(CONF_FUNCTIONS)
     for funcname, func in functions.items():
@@ -62,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             resource, config.get(CONF_NAME, response.json()[CONF_NAME]),
             func.get(CONF_NAME), funcname))
 
-    add_devices(dev)
+    add_entities(dev)
 
 
 class ArestSwitchBase(SwitchDevice):
@@ -152,10 +154,11 @@ class ArestSwitchFunction(ArestSwitchBase):
 class ArestSwitchPin(ArestSwitchBase):
     """Representation of an aREST switch. Based on digital I/O."""
 
-    def __init__(self, resource, location, name, pin):
+    def __init__(self, resource, location, name, pin, invert):
         """Initialize the switch."""
         super().__init__(resource, location, name)
         self._pin = pin
+        self.invert = invert
 
         request = requests.get(
             '{}/mode/{}/o'.format(self._resource, self._pin), timeout=10)
@@ -165,8 +168,11 @@ class ArestSwitchPin(ArestSwitchBase):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        turn_on_payload = int(not self.invert)
         request = requests.get(
-            '{}/digital/{}/1'.format(self._resource, self._pin), timeout=10)
+            '{}/digital/{}/{}'.format(self._resource, self._pin,
+                                      turn_on_payload),
+            timeout=10)
         if request.status_code == 200:
             self._state = True
         else:
@@ -175,8 +181,11 @@ class ArestSwitchPin(ArestSwitchBase):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        turn_off_payload = int(self.invert)
         request = requests.get(
-            '{}/digital/{}/0'.format(self._resource, self._pin), timeout=10)
+            '{}/digital/{}/{}'.format(self._resource, self._pin,
+                                      turn_off_payload),
+            timeout=10)
         if request.status_code == 200:
             self._state = False
         else:
@@ -188,7 +197,8 @@ class ArestSwitchPin(ArestSwitchBase):
         try:
             request = requests.get(
                 '{}/digital/{}'.format(self._resource, self._pin), timeout=10)
-            self._state = request.json()['return_value'] != 0
+            status_value = int(self.invert)
+            self._state = request.json()['return_value'] != status_value
             self._available = True
         except requests.exceptions.ConnectionError:
             _LOGGER.warning("No route to device %s", self._resource)

@@ -4,69 +4,63 @@ Support for Vanderbilt (formerly Siemens) SPC alarm systems.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.spc/
 """
-import asyncio
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.spc import (
-    SpcWebGateway, ATTR_DISCOVER_AREAS, DATA_API, DATA_REGISTRY)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
+from homeassistant.components.spc import (DATA_API, SIGNAL_UPDATE_ALARM)
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN)
-
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
 
-SPC_AREA_MODE_TO_STATE = {'0': STATE_ALARM_DISARMED,
-                          '1': STATE_ALARM_ARMED_HOME,
-                          '3': STATE_ALARM_ARMED_AWAY}
+
+def _get_alarm_state(area):
+    """Get the alarm state."""
+    from pyspcwebgw.const import AreaMode
+
+    if area.verified_alarm:
+        return STATE_ALARM_TRIGGERED
+
+    mode_to_state = {
+        AreaMode.UNSET: STATE_ALARM_DISARMED,
+        AreaMode.PART_SET_A: STATE_ALARM_ARMED_HOME,
+        AreaMode.PART_SET_B: STATE_ALARM_ARMED_NIGHT,
+        AreaMode.FULL_SET: STATE_ALARM_ARMED_AWAY,
+    }
+    return mode_to_state.get(area.mode)
 
 
-def _get_alarm_state(spc_mode):
-    return SPC_AREA_MODE_TO_STATE.get(spc_mode, STATE_UNKNOWN)
-
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the SPC alarm control panel platform."""
-    if (discovery_info is None or
-            discovery_info[ATTR_DISCOVER_AREAS] is None):
+    if discovery_info is None:
         return
-
     api = hass.data[DATA_API]
-    devices = [SpcAlarm(api, area)
-               for area in discovery_info[ATTR_DISCOVER_AREAS]]
-
-    async_add_devices(devices)
+    async_add_entities([SpcAlarm(area=area, api=api)
+                        for area in api.areas.values()])
 
 
 class SpcAlarm(alarm.AlarmControlPanel):
-    """Represents the SPC alarm panel."""
+    """Representation of the SPC alarm panel."""
 
-    def __init__(self, api, area):
+    def __init__(self, area, api):
         """Initialize the SPC alarm panel."""
-        self._area_id = area['id']
-        self._name = area['name']
-        self._state = _get_alarm_state(area['mode'])
-        if self._state == STATE_ALARM_DISARMED:
-            self._changed_by = area.get('last_unset_user_name', 'unknown')
-        else:
-            self._changed_by = area.get('last_set_user_name', 'unknown')
+        self._area = area
         self._api = api
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Calbback for init handlers."""
-        self.hass.data[DATA_REGISTRY].register_alarm_device(
-            self._area_id, self)
+    async def async_added_to_hass(self):
+        """Call for adding new entities."""
+        async_dispatcher_connect(self.hass,
+                                 SIGNAL_UPDATE_ALARM.format(self._area.id),
+                                 self._update_callback)
 
-    @asyncio.coroutine
-    def async_update_from_spc(self, state, extra):
-        """Update the alarm panel with a new state."""
-        self._state = state
-        self._changed_by = extra.get('changed_by', 'unknown')
-        self.async_schedule_update_ha_state()
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
 
     @property
     def should_poll(self):
@@ -76,32 +70,38 @@ class SpcAlarm(alarm.AlarmControlPanel):
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return self._area.name
 
     @property
     def changed_by(self):
         """Return the user the last change was triggered by."""
-        return self._changed_by
+        return self._area.last_changed_by
 
     @property
     def state(self):
         """Return the state of the device."""
-        return self._state
+        return _get_alarm_state(self._area)
 
-    @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        yield from self._api.send_area_command(
-            self._area_id, SpcWebGateway.AREA_COMMAND_UNSET)
+        from pyspcwebgw.const import AreaMode
+        await self._api.change_mode(area=self._area,
+                                    new_mode=AreaMode.UNSET)
 
-    @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        yield from self._api.send_area_command(
-            self._area_id, SpcWebGateway.AREA_COMMAND_PART_SET)
+        from pyspcwebgw.const import AreaMode
+        await self._api.change_mode(area=self._area,
+                                    new_mode=AreaMode.PART_SET_A)
 
-    @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_night(self, code=None):
+        """Send arm home command."""
+        from pyspcwebgw.const import AreaMode
+        await self._api.change_mode(area=self._area,
+                                    new_mode=AreaMode.PART_SET_B)
+
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        yield from self._api.send_area_command(
-            self._area_id, SpcWebGateway.AREA_COMMAND_SET)
+        from pyspcwebgw.const import AreaMode
+        await self._api.change_mode(area=self._area,
+                                    new_mode=AreaMode.FULL_SET)

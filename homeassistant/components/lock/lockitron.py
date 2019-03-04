@@ -26,16 +26,15 @@ API_STATE_URL = BASE_URL + '/v2/locks/{}?access_token={}'
 API_ACTION_URL = BASE_URL + '/v2/locks/{}?access_token={}&state={}'
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lockitron platform."""
     access_token = config.get(CONF_ACCESS_TOKEN)
     device_id = config.get(CONF_ID)
     response = requests.get(
         API_STATE_URL.format(device_id, access_token), timeout=5)
     if response.status_code == 200:
-        add_devices([Lockitron(response.json()['state'], access_token,
-                               device_id)])
+        add_entities([Lockitron(response.json()['state'], access_token,
+                                device_id)])
     else:
         _LOGGER.error(
             "Error retrieving lock status during init: %s", response.text)

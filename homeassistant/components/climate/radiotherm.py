@@ -4,21 +4,22 @@ Support for Radio Thermostat wifi-enabled home thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.radiotherm/
 """
-import asyncio
 import datetime
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_ON, STATE_OFF,
-    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE,
+    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE)
 from homeassistant.const import (
-    CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE, PRECISION_HALVES)
+    ATTR_TEMPERATURE, CONF_HOST, PRECISION_HALVES, TEMP_FAHRENHEIT, STATE_ON,
+    STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['radiotherm==1.3']
+REQUIREMENTS = ['radiotherm==2.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +84,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                  SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Radio Thermostat."""
     import radiotherm
 
@@ -112,7 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
                               host)
 
-    add_devices(tstats, True)
+    add_entities(tstats, True)
 
 
 class RadioThermostat(ClimateDevice):
@@ -137,16 +138,15 @@ class RadioThermostat(ClimateDevice):
 
         # Fan circulate mode is only supported by the CT80 models.
         import radiotherm
-        self._is_model_ct80 = isinstance(self.device,
-                                         radiotherm.thermostat.CT80)
+        self._is_model_ct80 = isinstance(
+            self.device, radiotherm.thermostat.CT80)
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         # Set the time on the device.  This shouldn't be in the
         # constructor because it's a network call.  We can't put it in
@@ -174,8 +174,8 @@ class RadioThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
-            ATTR_FAN: self._fmode,
-            ATTR_MODE: self._tmode,
+            ATTR_FAN: self._fstate,
+            ATTR_MODE: self._tstate,
         }
 
     @property
@@ -183,17 +183,16 @@ class RadioThermostat(ClimateDevice):
         """List of available fan modes."""
         if self._is_model_ct80:
             return CT80_FAN_OPERATION_LIST
-        else:
-            return CT30_FAN_OPERATION_LIST
+        return CT30_FAN_OPERATION_LIST
 
     @property
     def current_fan_mode(self):
         """Return whether the fan is on."""
         return self._fmode
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        code = FAN_MODE_TO_CODE.get(fan, None)
+        code = FAN_MODE_TO_CODE.get(fan_mode, None)
         if code is not None:
             self.device.fmode = code
 
@@ -222,6 +221,11 @@ class RadioThermostat(ClimateDevice):
         """Return true if away mode is on."""
         return self._away
 
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._tstate != STATE_IDLE
+
     def update(self):
         """Update and validate the data from the thermostat."""
         # Radio thermostats are very slow, and sometimes don't respond
@@ -238,13 +242,15 @@ class RadioThermostat(ClimateDevice):
             self._name = self.device.name['raw']
 
         # Request the current state from the thermostat.
-        data = self.device.tstat['raw']
+        import radiotherm
+        try:
+            data = self.device.tstat['raw']
+        except radiotherm.validate.RadiothermTstatError:
+            _LOGGER.error('%s (%s) was busy (invalid value returned)',
+                          self._name, self.device.host)
+            return
 
         current_temp = data['temp']
-        if current_temp == -1:
-            _LOGGER.error('%s (%s) was busy (temp == -1)', self._name,
-                          self.device.host)
-            return
 
         # Map thermostat values into various STATE_ flags.
         self._current_temperature = current_temp
@@ -309,7 +315,7 @@ class RadioThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode (auto, cool, heat, off)."""
-        if operation_mode == STATE_OFF or operation_mode == STATE_AUTO:
+        if operation_mode in (STATE_OFF, STATE_AUTO):
             self.device.tmode = TEMP_MODE_TO_CODE[operation_mode]
 
         # Setting t_cool or t_heat automatically changes tmode.

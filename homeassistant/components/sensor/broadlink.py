@@ -14,18 +14,19 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS,
-    CONF_TIMEOUT)
+    CONF_TIMEOUT, CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL,
+    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['broadlink==0.5']
+REQUIREMENTS = ['broadlink==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_UPDATE_INTERVAL = 'update_interval'
 DEVICE_DEFAULT_NAME = 'Broadlink sensor'
 DEFAULT_TIMEOUT = 10
+SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS],
@@ -35,34 +36,39 @@ SENSOR_TYPES = {
     'noise': ['Noise', ' '],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
-})
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend({
+        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+            vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+        vol.Optional(CONF_UPDATE_INTERVAL):
+            vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
+    }),
+    cv.deprecated(
+        CONF_UPDATE_INTERVAL,
+        replacement_key=CONF_SCAN_INTERVAL,
+        invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
+        default=SCAN_INTERVAL
+    )
+)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink device sensors."""
     host = config.get(CONF_HOST)
     mac = config.get(CONF_MAC).encode().replace(b':', b'')
     mac_addr = binascii.unhexlify(mac)
     name = config.get(CONF_NAME)
     timeout = config.get(CONF_TIMEOUT)
-    update_interval = config.get(CONF_UPDATE_INTERVAL)
-
+    update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     broadlink_data = BroadlinkData(update_interval, host, mac_addr, timeout)
-
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BroadlinkSensor(name, broadlink_data, variable))
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class BroadlinkSensor(Entity):
@@ -99,15 +105,16 @@ class BroadlinkSensor(Entity):
         self._state = self._broadlink_data.data[self._type]
 
 
-class BroadlinkData(object):
+class BroadlinkData:
     """Representation of a Broadlink data object."""
 
     def __init__(self, interval, ip_addr, mac_addr, timeout):
         """Initialize the data object."""
-        import broadlink
         self.data = None
-        self._device = broadlink.a1((ip_addr, 80), mac_addr)
-        self._device.timeout = timeout
+        self.ip_addr = ip_addr
+        self.mac_addr = mac_addr
+        self.timeout = timeout
+        self._connect()
         self._schema = vol.Schema({
             vol.Optional('temperature'): vol.Range(min=-50, max=150),
             vol.Optional('humidity'): vol.Range(min=0, max=100),
@@ -119,6 +126,11 @@ class BroadlinkData(object):
         if not self._auth():
             _LOGGER.warning("Failed to connect to device")
 
+    def _connect(self):
+        import broadlink
+        self._device = broadlink.a1((self.ip_addr, 80), self.mac_addr, None)
+        self._device.timeout = self.timeout
+
     def _update(self, retry=3):
         try:
             data = self._device.check_sensors_raw()
@@ -129,7 +141,7 @@ class BroadlinkData(object):
             if retry < 1:
                 _LOGGER.error(error)
                 return
-        except vol.Invalid:
+        except (vol.Invalid, vol.MultipleInvalid):
             pass  # Continue quietly if device returned malformed data
         if retry > 0 and self._auth():
             self._update(retry-1)
@@ -140,5 +152,6 @@ class BroadlinkData(object):
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
+            self._connect()
             return self._auth(retry-1)
         return auth

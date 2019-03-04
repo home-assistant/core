@@ -13,14 +13,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_SCAN_INTERVAL,
-    CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+    CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['TravisPy==0.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Information provided by https://travis-ci.org/"
+ATTRIBUTION = "Information provided by https://travis-ci.org/"
+
 CONF_BRANCH = 'branch'
 CONF_REPOSITORY = 'repository'
 
@@ -54,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Travis CI sensor."""
     from travispy import TravisPy
     from travispy.errors import TravisError
@@ -79,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
 
-    # non specificy repository selected, then show all associated
+    # non specific repository selected, then show all associated
     if not repositories:
         all_repos = travis.repos(member=user.login)
         repositories = [repo.slug for repo in all_repos]
@@ -92,7 +93,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(
                 TravisCISensor(travis, repo, user, branch, sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
     return True
 
 
@@ -107,7 +108,7 @@ class TravisCISensor(Entity):
         self._repo_name = repo_name
         self._user = user
         self._branch = branch
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._name = "{0} {1}".format(self._repo_name,
                                       SENSOR_TYPES[self._sensor_type][0])
 
@@ -130,9 +131,9 @@ class TravisCISensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
-        if self._build and self._state is not STATE_UNKNOWN:
+        if self._build and self._state is not None:
             if self._user and self._sensor_type == 'state':
                 attrs['Owner Name'] = self._user.name
                 attrs['Owner Email'] = self._user.email

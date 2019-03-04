@@ -3,20 +3,15 @@ import unittest
 from unittest.mock import patch
 import asyncio
 
-from homeassistant.setup import setup_component
-from homeassistant.const import HTTP_HEADER_HA_AUTH
+import pytest
+import voluptuous as vol
+
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.media_player as mp
-import homeassistant.components.http as http
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
 
-import requests
-
-from tests.common import get_test_home_assistant, get_test_instance_port
-
-SERVER_PORT = get_test_instance_port()
-HTTP_BASE_URL = 'http://127.0.0.1:{}'.format(SERVER_PORT)
-API_PASSWORD = "test1234"
-HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
+from tests.common import get_test_home_assistant
+from tests.components.media_player import common
 
 entity_id = 'media_player.walkman'
 
@@ -25,7 +20,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -42,12 +37,13 @@ class TestDemoMediaPlayer(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert 'dvd' == state.attributes.get('source')
 
-        mp.select_source(self.hass, None, entity_id)
+        with pytest.raises(vol.Invalid):
+            common.select_source(self.hass, None, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 'dvd' == state.attributes.get('source')
 
-        mp.select_source(self.hass, 'xbox', entity_id)
+        common.select_source(self.hass, 'xbox', entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 'xbox' == state.attributes.get('source')
@@ -59,7 +55,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
             {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
 
-        mp.clear_playlist(self.hass, entity_id)
+        common.clear_playlist(self.hass, entity_id)
         self.hass.block_till_done()
         assert self.hass.states.is_state(entity_id, 'off')
 
@@ -71,34 +67,35 @@ class TestDemoMediaPlayer(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert 1.0 == state.attributes.get('volume_level')
 
-        mp.set_volume_level(self.hass, None, entity_id)
+        with pytest.raises(vol.Invalid):
+            common.set_volume_level(self.hass, None, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 1.0 == state.attributes.get('volume_level')
 
-        mp.set_volume_level(self.hass, 0.5, entity_id)
+        common.set_volume_level(self.hass, 0.5, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 0.5 == state.attributes.get('volume_level')
 
-        mp.volume_down(self.hass, entity_id)
+        common.volume_down(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 0.4 == state.attributes.get('volume_level')
 
-        mp.volume_up(self.hass, entity_id)
+        common.volume_up(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 0.5 == state.attributes.get('volume_level')
 
         assert False is state.attributes.get('is_volume_muted')
 
-        mp.mute_volume(self.hass, None, entity_id)
+        common.mute_volume(self.hass, None, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert False is state.attributes.get('is_volume_muted')
 
-        mp.mute_volume(self.hass, True, entity_id)
+        common.mute_volume(self.hass, True, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert True is state.attributes.get('is_volume_muted')
@@ -110,16 +107,16 @@ class TestDemoMediaPlayer(unittest.TestCase):
             {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
 
-        mp.turn_off(self.hass, entity_id)
+        common.turn_off(self.hass, entity_id)
         self.hass.block_till_done()
         assert self.hass.states.is_state(entity_id, 'off')
         assert not mp.is_on(self.hass, entity_id)
 
-        mp.turn_on(self.hass, entity_id)
+        common.turn_on(self.hass, entity_id)
         self.hass.block_till_done()
         assert self.hass.states.is_state(entity_id, 'playing')
 
-        mp.toggle(self.hass, entity_id)
+        common.toggle(self.hass, entity_id)
         self.hass.block_till_done()
         assert self.hass.states.is_state(entity_id, 'off')
         assert not mp.is_on(self.hass, entity_id)
@@ -131,19 +128,19 @@ class TestDemoMediaPlayer(unittest.TestCase):
             {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
 
-        mp.media_pause(self.hass, entity_id)
+        common.media_pause(self.hass, entity_id)
         self.hass.block_till_done()
         assert self.hass.states.is_state(entity_id, 'paused')
 
-        mp.media_play_pause(self.hass, entity_id)
+        common.media_play_pause(self.hass, entity_id)
         self.hass.block_till_done()
         assert self.hass.states.is_state(entity_id, 'playing')
 
-        mp.media_play_pause(self.hass, entity_id)
+        common.media_play_pause(self.hass, entity_id)
         self.hass.block_till_done()
         assert self.hass.states.is_state(entity_id, 'paused')
 
-        mp.media_play(self.hass, entity_id)
+        common.media_play(self.hass, entity_id)
         self.hass.block_till_done()
         assert self.hass.states.is_state(entity_id, 'playing')
 
@@ -154,29 +151,21 @@ class TestDemoMediaPlayer(unittest.TestCase):
             {'media_player': {'platform': 'demo'}})
         state = self.hass.states.get(entity_id)
         assert 1 == state.attributes.get('media_track')
-        assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
-                     state.attributes.get('supported_features'))
 
-        mp.media_next_track(self.hass, entity_id)
+        common.media_next_track(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 2 == state.attributes.get('media_track')
-        assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_features'))
 
-        mp.media_next_track(self.hass, entity_id)
+        common.media_next_track(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 3 == state.attributes.get('media_track')
-        assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_features'))
 
-        mp.media_previous_track(self.hass, entity_id)
+        common.media_previous_track(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 2 == state.attributes.get('media_track')
-        assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_features'))
 
         assert setup_component(
             self.hass, mp.DOMAIN,
@@ -184,22 +173,16 @@ class TestDemoMediaPlayer(unittest.TestCase):
         ent_id = 'media_player.lounge_room'
         state = self.hass.states.get(ent_id)
         assert 1 == state.attributes.get('media_episode')
-        assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
-                     state.attributes.get('supported_features'))
 
-        mp.media_next_track(self.hass, ent_id)
+        common.media_next_track(self.hass, ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 2 == state.attributes.get('media_episode')
-        assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_features'))
 
-        mp.media_previous_track(self.hass, ent_id)
+        common.media_previous_track(self.hass, ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 1 == state.attributes.get('media_episode')
-        assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
-                     state.attributes.get('supported_features'))
 
     @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.'
            'media_seek', autospec=True)
@@ -214,14 +197,15 @@ class TestDemoMediaPlayer(unittest.TestCase):
                     state.attributes.get('supported_features'))
         assert state.attributes.get('media_content_id') is not None
 
-        mp.play_media(self.hass, None, 'some_id', ent_id)
+        with pytest.raises(vol.Invalid):
+            common.play_media(self.hass, None, 'some_id', ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 0 < (mp.SUPPORT_PLAY_MEDIA &
                     state.attributes.get('supported_features'))
         assert not 'some_id' == state.attributes.get('media_content_id')
 
-        mp.play_media(self.hass, 'youtube', 'some_id', ent_id)
+        common.play_media(self.hass, 'youtube', 'some_id', ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 0 < (mp.SUPPORT_PLAY_MEDIA &
@@ -229,69 +213,50 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert 'some_id' == state.attributes.get('media_content_id')
 
         assert not mock_seek.called
-        mp.media_seek(self.hass, None, ent_id)
+        with pytest.raises(vol.Invalid):
+            common.media_seek(self.hass, None, ent_id)
         self.hass.block_till_done()
         assert not mock_seek.called
-        mp.media_seek(self.hass, 100, ent_id)
+        common.media_seek(self.hass, 100, ent_id)
         self.hass.block_till_done()
         assert mock_seek.called
 
 
-class TestMediaPlayerWeb(unittest.TestCase):
-    """Test the media player web views sensor."""
+async def test_media_image_proxy(hass, hass_client):
+    """Test the media server image proxy server ."""
+    assert await async_setup_component(
+        hass, mp.DOMAIN,
+        {'media_player': {'platform': 'demo'}})
 
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    fake_picture_data = 'test.test'
 
-        assert setup_component(self.hass, http.DOMAIN, {
-            http.DOMAIN: {
-                http.CONF_SERVER_PORT: SERVER_PORT,
-                http.CONF_API_PASSWORD: API_PASSWORD,
-            },
-        })
+    class MockResponse():
+        def __init__(self):
+            self.status = 200
+            self.headers = {'Content-Type': 'sometype'}
 
-        assert setup_component(
-            self.hass, mp.DOMAIN,
-            {'media_player': {'platform': 'demo'}})
+        @asyncio.coroutine
+        def read(self):
+            return fake_picture_data.encode('ascii')
 
-        self.hass.start()
+        @asyncio.coroutine
+        def release(self):
+            pass
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    class MockWebsession():
 
-    def test_media_image_proxy(self):
-        """Test the media server image proxy server ."""
-        fake_picture_data = 'test.test'
+        @asyncio.coroutine
+        def get(self, url):
+            return MockResponse()
 
-        class MockResponse():
-            def __init__(self):
-                self.status = 200
-                self.headers = {'Content-Type': 'sometype'}
+        def detach(self):
+            pass
 
-            @asyncio.coroutine
-            def read(self):
-                return fake_picture_data.encode('ascii')
+    hass.data[DATA_CLIENTSESSION] = MockWebsession()
 
-            @asyncio.coroutine
-            def release(self):
-                pass
-
-        class MockWebsession():
-
-            @asyncio.coroutine
-            def get(self, url):
-                return MockResponse()
-
-            def detach(self):
-                pass
-
-        self.hass.data[DATA_CLIENTSESSION] = MockWebsession()
-
-        assert self.hass.states.is_state(entity_id, 'playing')
-        state = self.hass.states.get(entity_id)
-        req = requests.get(HTTP_BASE_URL +
-                           state.attributes.get('entity_picture'))
-        assert req.status_code == 200
-        assert req.text == fake_picture_data
+    assert hass.states.is_state(entity_id, 'playing')
+    state = hass.states.get(entity_id)
+    client = await hass_client()
+    req = await client.get(state.attributes.get('entity_picture'))
+    assert req.status == 200
+    assert await req.text() == fake_picture_data

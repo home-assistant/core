@@ -41,9 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TCP Sensor."""
-    add_devices([TcpSensor(hass, config)])
+    add_entities([TcpSensor(hass, config)])
 
 
 class TcpSensor(Entity):
@@ -130,7 +130,7 @@ class TcpSensor(Entity):
                 self._state = self._config[CONF_VALUE_TEMPLATE].render(
                     value=value)
                 return
-            except TemplateError as err:
+            except TemplateError:
                 _LOGGER.error(
                     "Unable to render template of %r with value: %r",
                     self._config[CONF_VALUE_TEMPLATE], value)

@@ -12,7 +12,6 @@ from unittest.mock import Mock
 import asynctest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.sensor.dsmr import DerivativeDSMREntity
-from homeassistant.const import STATE_UNKNOWN
 import pytest
 from tests.common import assert_setup_component
 
@@ -83,7 +82,7 @@ def test_default_setup(hass, mock_connection_factory):
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get('sensor.power_consumption')
     assert power_consumption.state == '0.0'
-    assert power_consumption.attributes.get('unit_of_measurement') is 'kWh'
+    assert power_consumption.attributes.get('unit_of_measurement') == 'kWh'
 
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get('sensor.power_tariff')
@@ -96,32 +95,34 @@ def test_derivative():
     """Test calculation of derivative value."""
     from dsmr_parser.objects import MBusObject
 
-    entity = DerivativeDSMREntity('test', '1.0.0')
+    config = {'platform': 'dsmr'}
+
+    entity = DerivativeDSMREntity('test', '1.0.0', config)
     yield from entity.async_update()
 
-    assert entity.state == STATE_UNKNOWN, 'initial state not unknown'
+    assert entity.state is None, 'initial state not unknown'
 
     entity.telegram = {
         '1.0.0': MBusObject([
-            {'value': 1},
-            {'value': 1, 'unit': 'm3'},
+            {'value': 1551642213},
+            {'value': 745.695, 'unit': 'm3'},
         ])
     }
     yield from entity.async_update()
 
-    assert entity.state == STATE_UNKNOWN, \
-        'state after first update shoudl still be unknown'
+    assert entity.state is None, \
+        'state after first update should still be unknown'
 
     entity.telegram = {
         '1.0.0': MBusObject([
-            {'value': 2},
-            {'value': 2, 'unit': 'm3'},
+            {'value': 1551642543},
+            {'value': 745.698, 'unit': 'm3'},
         ])
     }
     yield from entity.async_update()
 
-    assert entity.state == 1, \
-        'state should be difference between first and second update'
+    assert abs(entity.state - 0.03272) < 0.00001, \
+        'state should be hourly usage calculated from first and second update'
 
     assert entity.unit_of_measurement == 'm3/h'
 
@@ -182,10 +183,14 @@ def test_reconnect(hass, monkeypatch, mock_connection_factory):
 
     # mock waiting coroutine while connection lasts
     closed = asyncio.Event(loop=hass.loop)
+    # Handshake so that `hass.async_block_till_done()` doesn't cycle forever
+    closed2 = asyncio.Event(loop=hass.loop)
 
     @asyncio.coroutine
     def wait_closed():
         yield from closed.wait()
+        closed2.set()
+        closed.clear()
     protocol.wait_closed = wait_closed
 
     yield from async_setup_component(hass, 'sensor', {'sensor': config})
@@ -195,8 +200,11 @@ def test_reconnect(hass, monkeypatch, mock_connection_factory):
     # indicate disconnect, release wait lock and allow reconnect to happen
     closed.set()
     # wait for lock set to resolve
-    yield from hass.async_block_till_done()
-    # wait for sleep to resolve
+    yield from closed2.wait()
+    closed2.clear()
+    assert not closed.is_set()
+
+    closed.set()
     yield from hass.async_block_till_done()
 
     assert connection_factory.call_count >= 2, \

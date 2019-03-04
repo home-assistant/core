@@ -1,22 +1,18 @@
-"""
-Support for Buienradar.nl weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/weather.buienradar/
-"""
+"""Support for Buienradar.nl weather service."""
 import logging
-import asyncio
-from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import \
-    CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.helpers import config_validation as cv
-# Reuse data and API logic from the sensor implementation
-from homeassistant.components.sensor.buienradar import (
-    BrData)
+
 import voluptuous as vol
 
-REQUIREMENTS = ['buienradar==0.9']
+# Reuse data and API logic from the sensor implementation
+from homeassistant.components.sensor.buienradar import BrData
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+from homeassistant.const import (
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
+from homeassistant.helpers import config_validation as cv
+
+REQUIREMENTS = ['buienradar==0.91']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,9 +21,6 @@ DATA_CONDITION = 'buienradar_condition'
 DEFAULT_TIMEFRAME = 60
 
 CONF_FORECAST = 'forecast'
-
-ATTR_FORECAST_CONDITION = 'condition'
-ATTR_FORECAST_TEMP_LOW = 'templow'
 
 
 CONDITION_CLASSES = {
@@ -55,8 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the buienradar platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -82,10 +75,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             for condi in condlst:
                 hass.data[DATA_CONDITION][condi] = cond
 
-    async_add_devices([BrWeather(data, config)])
+    async_add_entities([BrWeather(data, config)])
 
     # schedule the first update in 1 minute from now:
-    yield from data.schedule_update(1)
+    await data.schedule_update(1)
 
 
 class BrWeather(WeatherEntity):
@@ -118,15 +111,6 @@ class BrWeather(WeatherEntity):
                 conditions = self.hass.data.get(DATA_CONDITION)
                 if conditions:
                     return conditions.get(ccode)
-
-    @property
-    def entity_picture(self):
-        """Return the entity picture to use in the frontend, if any."""
-        from buienradar.buienradar import (IMAGE)
-
-        if self._data and self._data.condition:
-            return self._data.condition.get(IMAGE, None)
-        return None
 
     @property
     def temperature(self):

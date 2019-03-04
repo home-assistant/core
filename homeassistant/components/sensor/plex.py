@@ -10,12 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN)
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN,
+    CONF_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['plexapi==3.0.3']
+REQUIREMENTS = ['plexapi==3.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ CONF_SERVER = 'server'
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Plex'
 DEFAULT_PORT = 32400
+DEFAULT_SSL = False
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -35,11 +37,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Plex sensor."""
     name = config.get(CONF_NAME)
     plex_user = config.get(CONF_USERNAME)
@@ -48,11 +50,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_host = config.get(CONF_HOST)
     plex_port = config.get(CONF_PORT)
     plex_token = config.get(CONF_TOKEN)
-    plex_url = 'http://{}:{}'.format(plex_host, plex_port)
 
-    add_devices([PlexSensor(
-        name, plex_url, plex_user, plex_password, plex_server,
-        plex_token)], True)
+    plex_url = '{}://{}:{}'.format('https' if config.get(CONF_SSL) else 'http',
+                                   plex_host, plex_port)
+
+    import plexapi.exceptions
+
+    try:
+        add_entities([PlexSensor(
+            name, plex_url, plex_user, plex_password, plex_server,
+            plex_token)], True)
+    except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
+            plexapi.exceptions.NotFound) as error:
+        _LOGGER.error(error)
+        return
 
 
 class PlexSensor(Entity):
@@ -103,9 +114,41 @@ class PlexSensor(Entity):
         sessions = self._server.sessions()
         now_playing = []
         for sess in sessions:
-            user = sess.usernames[0] if sess.usernames is not None else ""
-            title = sess.title if sess.title is not None else ""
-            year = sess.year if sess.year is not None else ""
-            now_playing.append((user, "{0} ({1})".format(title, year)))
+            user = sess.usernames[0]
+            device = sess.players[0].title
+            now_playing_user = "{0} - {1}".format(user, device)
+            now_playing_title = ""
+
+            if sess.TYPE == 'episode':
+                # example:
+                # "Supernatural (2005) - S01 · E13 - Route 666"
+                season_title = sess.grandparentTitle
+                if sess.show().year is not None:
+                    season_title += " ({0})".format(sess.show().year)
+                season_episode = "S{0}".format(sess.parentIndex)
+                if sess.index is not None:
+                    season_episode += " · E{0}".format(sess.index)
+                episode_title = sess.title
+                now_playing_title = "{0} - {1} - {2}".format(season_title,
+                                                             season_episode,
+                                                             episode_title)
+            elif sess.TYPE == 'track':
+                # example:
+                # "Billy Talent - Afraid of Heights - Afraid of Heights"
+                track_artist = sess.grandparentTitle
+                track_album = sess.parentTitle
+                track_title = sess.title
+                now_playing_title = "{0} - {1} - {2}".format(track_artist,
+                                                             track_album,
+                                                             track_title)
+            else:
+                # example:
+                # "picture_of_last_summer_camp (2015)"
+                # "The Incredible Hulk (2008)"
+                now_playing_title = sess.title
+                if sess.year is not None:
+                    now_playing_title += " ({0})".format(sess.year)
+
+            now_playing.append((now_playing_user, now_playing_title))
         self._state = len(sessions)
         self._now_playing = now_playing

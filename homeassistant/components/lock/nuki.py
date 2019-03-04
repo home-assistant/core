@@ -4,21 +4,18 @@ Nuki.io lock platform.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.nuki/
 """
-import asyncio
 from datetime import timedelta
 import logging
-from os import path
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.lock import (DOMAIN, LockDevice, PLATFORM_SCHEMA)
-from homeassistant.config import load_yaml_config_file
+from homeassistant.components.lock import DOMAIN, PLATFORM_SCHEMA, LockDevice
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 
-REQUIREMENTS = ['pynuki==1.3.1']
+REQUIREMENTS = ['pynuki==1.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +24,12 @@ DEFAULT_PORT = 8080
 ATTR_BATTERY_CRITICAL = 'battery_critical'
 ATTR_NUKI_ID = 'nuki_id'
 ATTR_UNLATCH = 'unlatch'
+
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
+
 NUKI_DATA = 'nuki'
+
 SERVICE_LOCK_N_GO = 'nuki_lock_n_go'
 SERVICE_UNLATCH = 'nuki_unlatch'
 
@@ -46,16 +48,12 @@ UNLATCH_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 
-
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     from pynuki import NukiBridge
     bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN))
-    add_devices([NukiLock(lock) for lock in bridge.locks])
+    add_entities([NukiLock(lock) for lock in bridge.locks])
 
     def service_handler(service):
         """Service handler for nuki services."""
@@ -75,15 +73,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif service.service == SERVICE_UNLATCH:
                 lock.unlatch()
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(
         DOMAIN, SERVICE_LOCK_N_GO, service_handler,
-        descriptions.get(SERVICE_LOCK_N_GO), schema=LOCK_N_GO_SERVICE_SCHEMA)
+        schema=LOCK_N_GO_SERVICE_SCHEMA)
     hass.services.register(
         DOMAIN, SERVICE_UNLATCH, service_handler,
-        descriptions.get(SERVICE_UNLATCH), schema=UNLATCH_SERVICE_SCHEMA)
+        schema=UNLATCH_SERVICE_SCHEMA)
 
 
 class NukiLock(LockDevice):
@@ -96,9 +91,8 @@ class NukiLock(LockDevice):
         self._name = nuki_lock.name
         self._battery_critical = nuki_lock.battery_critical
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
         if NUKI_DATA not in self.hass.data:
             self.hass.data[NUKI_DATA] = {}
         if DOMAIN not in self.hass.data[NUKI_DATA]:

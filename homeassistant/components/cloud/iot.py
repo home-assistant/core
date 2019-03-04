@@ -1,27 +1,45 @@
 """Module to handle messages from Home Assistant cloud."""
 import asyncio
 import logging
+import pprint
+import random
+import uuid
 
 from aiohttp import hdrs, client_exceptions, WSMsgType
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.components.alexa import smart_home
+from homeassistant.components.alexa import smart_home as alexa
+from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.core import callback
 from homeassistant.util.decorator import Registry
+from homeassistant.util.aiohttp import MockRequest
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
-from .const import MESSAGE_EXPIRATION
-
+from . import utils
+from .const import (
+    MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL, STATE_CONNECTED, STATE_CONNECTING,
+    STATE_DISCONNECTED
+)
 
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-STATE_CONNECTING = 'connecting'
-STATE_CONNECTED = 'connected'
-STATE_DISCONNECTED = 'disconnected'
-
 
 class UnknownHandler(Exception):
     """Exception raised when trying to handle unknown handler."""
+
+
+class NotConnected(Exception):
+    """Exception raised when trying to handle unknown handler."""
+
+
+class ErrorMessage(Exception):
+    """Exception raised when there was error handling message in the cloud."""
+
+    def __init__(self, error):
+        """Initialize Error Message."""
+        super().__init__(self, "Error in Cloud")
+        self.error = error
 
 
 class CloudIoT:
@@ -40,24 +58,36 @@ class CloudIoT:
         self.tries = 0
         # Current state of the connection
         self.state = STATE_DISCONNECTED
+        # Local code waiting for a response
+        self._response_handler = {}
+        self._on_connect = []
+        self._on_disconnect = []
+
+    @callback
+    def register_on_connect(self, on_connect_cb):
+        """Register an async on_connect callback."""
+        self._on_connect.append(on_connect_cb)
+
+    @callback
+    def register_on_disconnect(self, on_disconnect_cb):
+        """Register an async on_disconnect callback."""
+        self._on_disconnect.append(on_disconnect_cb)
+
+    @property
+    def connected(self):
+        """Return if we're currently connected."""
+        return self.state == STATE_CONNECTED
 
     @asyncio.coroutine
     def connect(self):
         """Connect to the IoT broker."""
+        if self.state != STATE_DISCONNECTED:
+            raise RuntimeError('Connect called while not disconnected')
+
         hass = self.cloud.hass
-        if self.cloud.subscription_expired:
-            # Try refreshing the token to see if it is still expired.
-            yield from hass.async_add_job(auth_api.check_token, self.cloud)
-
-            if self.cloud.subscription_expired:
-                hass.components.persistent_notification.async_create(
-                    MESSAGE_EXPIRATION, 'Subscription expired',
-                    'cloud_subscription_expired')
-                self.state = STATE_DISCONNECTED
-                return
-
-        if self.state == STATE_CONNECTED:
-            raise RuntimeError('Already connected')
+        self.close_requested = False
+        self.state = STATE_CONNECTING
+        self.tries = 0
 
         @asyncio.coroutine
         def _handle_hass_stop(event):
@@ -66,33 +96,134 @@ class CloudIoT:
             remove_hass_stop_listener = None
             yield from self.disconnect()
 
-        self.state = STATE_CONNECTING
-        self.close_requested = False
         remove_hass_stop_listener = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, _handle_hass_stop)
+
+        while True:
+            try:
+                yield from self._handle_connection()
+            except Exception:  # pylint: disable=broad-except
+                # Safety net. This should never hit.
+                # Still adding it here to make sure we can always reconnect
+                _LOGGER.exception("Unexpected error")
+
+            if self.state == STATE_CONNECTED and self._on_disconnect:
+                try:
+                    yield from asyncio.wait([
+                        cb() for cb in self._on_disconnect
+                    ])
+                except Exception:  # pylint: disable=broad-except
+                    # Safety net. This should never hit.
+                    # Still adding it here to make sure we don't break the flow
+                    _LOGGER.exception(
+                        "Unexpected error in on_disconnect callbacks")
+
+            if self.close_requested:
+                break
+
+            self.state = STATE_CONNECTING
+            self.tries += 1
+
+            try:
+                # Sleep 2^tries + 0…tries*3 seconds between retries
+                self.retry_task = hass.async_create_task(
+                    asyncio.sleep(2**min(9, self.tries) +
+                                  random.randint(0, self.tries * 3),
+                                  loop=hass.loop))
+                yield from self.retry_task
+                self.retry_task = None
+            except asyncio.CancelledError:
+                # Happens if disconnect called
+                break
+
+        self.state = STATE_DISCONNECTED
+        if remove_hass_stop_listener is not None:
+            remove_hass_stop_listener()
+
+    async def async_send_message(self, handler, payload,
+                                 expect_answer=True):
+        """Send a message."""
+        if self.state != STATE_CONNECTED:
+            raise NotConnected
+
+        msgid = uuid.uuid4().hex
+
+        if expect_answer:
+            fut = self._response_handler[msgid] = asyncio.Future()
+
+        message = {
+            'msgid': msgid,
+            'handler': handler,
+            'payload': payload,
+        }
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Publishing message:\n%s\n",
+                          pprint.pformat(message))
+        await self.client.send_json(message)
+
+        if expect_answer:
+            return await fut
+
+    @asyncio.coroutine
+    def _handle_connection(self):
+        """Connect to the IoT broker."""
+        hass = self.cloud.hass
+
+        try:
+            yield from hass.async_add_job(auth_api.check_token, self.cloud)
+        except auth_api.Unauthenticated as err:
+            _LOGGER.error('Unable to refresh token: %s', err)
+
+            hass.components.persistent_notification.async_create(
+                MESSAGE_AUTH_FAIL, 'Home Assistant Cloud',
+                'cloud_subscription_expired')
+
+            # Don't await it because it will cancel this task
+            hass.async_create_task(self.cloud.logout())
+            return
+        except auth_api.CloudError as err:
+            _LOGGER.warning("Unable to refresh token: %s", err)
+            return
+
+        if self.cloud.subscription_expired:
+            hass.components.persistent_notification.async_create(
+                MESSAGE_EXPIRATION, 'Home Assistant Cloud',
+                'cloud_subscription_expired')
+            self.close_requested = True
+            return
+
         session = async_get_clientsession(self.cloud.hass)
         client = None
         disconnect_warn = None
 
         try:
-            yield from hass.async_add_job(auth_api.check_token, self.cloud)
-
             self.client = client = yield from session.ws_connect(
-                self.cloud.relayer, headers={
+                self.cloud.relayer, heartbeat=55, headers={
                     hdrs.AUTHORIZATION:
                         'Bearer {}'.format(self.cloud.id_token)
                 })
             self.tries = 0
 
-            _LOGGER.info('Connected')
+            _LOGGER.info("Connected")
             self.state = STATE_CONNECTED
+
+            if self._on_connect:
+                try:
+                    yield from asyncio.wait([cb() for cb in self._on_connect])
+                except Exception:  # pylint: disable=broad-except
+                    # Safety net. This should never hit.
+                    # Still adding it here to make sure we don't break the flow
+                    _LOGGER.exception(
+                        "Unexpected error in on_connect callbacks")
 
             while not client.closed:
                 msg = yield from client.receive()
 
-                if msg.type in (WSMsgType.ERROR, WSMsgType.CLOSED,
-                                WSMsgType.CLOSING):
-                    disconnect_warn = 'Connection cancelled.'
+                if msg.type in (WSMsgType.CLOSED, WSMsgType.CLOSING):
+                    break
+
+                elif msg.type == WSMsgType.ERROR:
+                    disconnect_warn = 'Connection error'
                     break
 
                 elif msg.type != WSMsgType.TEXT:
@@ -106,7 +237,20 @@ class CloudIoT:
                     disconnect_warn = 'Received invalid JSON.'
                     break
 
-                _LOGGER.debug('Received message: %s', msg)
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    _LOGGER.debug("Received message:\n%s\n",
+                                  pprint.pformat(msg))
+
+                response_handler = self._response_handler.pop(msg['msgid'],
+                                                              None)
+
+                if response_handler is not None:
+                    if 'payload' in msg:
+                        response_handler.set_result(msg["payload"])
+                    else:
+                        response_handler.set_exception(
+                            ErrorMessage(msg['error']))
+                    continue
 
                 response = {
                     'msgid': msg['msgid'],
@@ -125,58 +269,30 @@ class CloudIoT:
                     response['error'] = 'unknown-handler'
 
                 except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception('Error handling message')
+                    _LOGGER.exception("Error handling message")
                     response['error'] = 'exception'
 
-                _LOGGER.debug('Publishing message: %s', response)
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    _LOGGER.debug("Publishing message:\n%s\n",
+                                  pprint.pformat(response))
                 yield from client.send_json(response)
 
-        except auth_api.CloudError:
-            _LOGGER.warning('Unable to connect: Unable to refresh token.')
-
         except client_exceptions.WSServerHandshakeError as err:
-            if err.code == 401:
+            if err.status == 401:
                 disconnect_warn = 'Invalid auth.'
                 self.close_requested = True
                 # Should we notify user?
             else:
-                _LOGGER.warning('Unable to connect: %s', err)
+                _LOGGER.warning("Unable to connect: %s", err)
 
         except client_exceptions.ClientError as err:
-            _LOGGER.warning('Unable to connect: %s', err)
-
-        except Exception:  # pylint: disable=broad-except
-            if not self.close_requested:
-                _LOGGER.exception('Unexpected error')
+            _LOGGER.warning("Unable to connect: %s", err)
 
         finally:
-            if disconnect_warn is not None:
-                _LOGGER.warning('Connection closed: %s', disconnect_warn)
-
-            if remove_hass_stop_listener is not None:
-                remove_hass_stop_listener()
-
-            if client is not None:
-                self.client = None
-                yield from client.close()
-
-            if self.close_requested:
-                self.state = STATE_DISCONNECTED
-
+            if disconnect_warn is None:
+                _LOGGER.info("Connection closed")
             else:
-                self.state = STATE_CONNECTING
-                self.tries += 1
-
-                try:
-                    # Sleep 0, 5, 10, 15 … up to 30 seconds between retries
-                    self.retry_task = hass.async_add_job(asyncio.sleep(
-                        min(30, (self.tries - 1) * 5), loop=hass.loop))
-                    yield from self.retry_task
-                    self.retry_task = None
-                    hass.async_add_job(self.connect())
-                except asyncio.CancelledError:
-                    # Happens if disconnect called
-                    pass
+                _LOGGER.warning("Connection closed: %s", disconnect_warn)
 
     @asyncio.coroutine
     def disconnect(self):
@@ -204,22 +320,71 @@ def async_handle_message(hass, cloud, handler_name, payload):
 @asyncio.coroutine
 def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
-    return (yield from smart_home.async_handle_message(hass,
-                                                       cloud.alexa_config,
-                                                       payload))
+    result = yield from alexa.async_handle_message(
+        hass, cloud.alexa_config, payload,
+        enabled=cloud.prefs.alexa_enabled)
+    return result
+
+
+@HANDLERS.register('google_actions')
+@asyncio.coroutine
+def async_handle_google_actions(hass, cloud, payload):
+    """Handle an incoming IoT message for Google Actions."""
+    if not cloud.prefs.google_enabled:
+        return ga.turned_off_response(payload)
+
+    result = yield from ga.async_handle_message(
+        hass, cloud.gactions_config, payload)
+    return result
 
 
 @HANDLERS.register('cloud')
-@asyncio.coroutine
-def async_handle_cloud(hass, cloud, payload):
+async def async_handle_cloud(hass, cloud, payload):
     """Handle an incoming IoT message for cloud component."""
     action = payload['action']
 
     if action == 'logout':
-        yield from cloud.logout()
-        _LOGGER.error('You have been logged out from Home Assistant cloud: %s',
+        # Log out of Home Assistant Cloud
+        await cloud.logout()
+        _LOGGER.error("You have been logged out from Home Assistant cloud: %s",
                       payload['reason'])
     else:
-        _LOGGER.warning('Received unknown cloud action: %s', action)
+        _LOGGER.warning("Received unknown cloud action: %s", action)
 
-    return None
+
+@HANDLERS.register('webhook')
+async def async_handle_webhook(hass, cloud, payload):
+    """Handle an incoming IoT message for cloud webhooks."""
+    cloudhook_id = payload['cloudhook_id']
+
+    found = None
+    for cloudhook in cloud.prefs.cloudhooks.values():
+        if cloudhook['cloudhook_id'] == cloudhook_id:
+            found = cloudhook
+            break
+
+    if found is None:
+        return {
+            'status': 200
+        }
+
+    request = MockRequest(
+        content=payload['body'].encode('utf-8'),
+        headers=payload['headers'],
+        method=payload['method'],
+        query_string=payload['query'],
+    )
+
+    response = await hass.components.webhook.async_handle_webhook(
+        found['webhook_id'], request)
+
+    response_dict = utils.aiohttp_serialize_response(response)
+    body = response_dict.get('body')
+
+    return {
+        'body': body,
+        'status': response_dict['status'],
+        'headers': {
+            'Content-Type': response.content_type
+        }
+    }

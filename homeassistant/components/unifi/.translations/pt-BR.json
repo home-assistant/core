@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O site de controle j\u00e1 est\u00e1 configurado",
+            "user_privilege": "O usu\u00e1rio precisa ser administrador"
+        },
+        "error": {
+            "faulty_credentials": "Credenciais do usu\u00e1rio inv\u00e1lidas",
+            "service_unavailable": "Servi\u00e7o indispon\u00edvel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "port": "Porta"
+                }
+            }
+        }
+    }
+}

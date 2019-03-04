@@ -12,7 +12,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_EMAIL
+from homeassistant.const import CONF_EMAIL, ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
@@ -20,6 +20,8 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTRIBUTION = "Data provided by Have I Been Pwned (HIBP)"
 
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -35,32 +37,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HaveIBeenPwned sensor."""
     emails = config.get(CONF_EMAIL)
     data = HaveIBeenPwnedData(emails)
 
     devices = []
     for email in emails:
-        devices.append(HaveIBeenPwnedSensor(data, hass, email))
+        devices.append(HaveIBeenPwnedSensor(data, email))
 
-    add_devices(devices)
-
-    # To make sure we get initial data for the sensors ignoring the normal
-    # throttle of 15 minutes but using an update throttle of 5 seconds
-    for sensor in devices:
-        sensor.update_nothrottle()
+    add_entities(devices)
 
 
 class HaveIBeenPwnedSensor(Entity):
     """Implementation of a HaveIBeenPwned sensor."""
 
-    def __init__(self, data, hass, email):
+    def __init__(self, data, email):
         """Initialize the HaveIBeenPwned sensor."""
         self._state = None
         self._data = data
-        self._hass = hass
         self._email = email
         self._unit_of_measurement = "Breaches"
 
@@ -82,7 +77,7 @@ class HaveIBeenPwnedSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the attributes of the sensor."""
-        val = {}
+        val = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if self._email not in self._data.data:
             return val
 
@@ -96,6 +91,12 @@ class HaveIBeenPwnedSensor(Entity):
 
         return val
 
+    async def async_added_to_hass(self):
+        """Get initial data."""
+        # To make sure we get initial data for the sensors ignoring the normal
+        # throttle of 15 minutes but using an update throttle of 5 seconds
+        self.hass.async_add_executor_job(self.update_nothrottle)
+
     def update_nothrottle(self, dummy=None):
         """Update sensor without throttle."""
         self._data.update_no_throttle()
@@ -107,13 +108,12 @@ class HaveIBeenPwnedSensor(Entity):
         # normal using update
         if self._email not in self._data.data:
             track_point_in_time(
-                self._hass, self.update_nothrottle,
+                self.hass, self.update_nothrottle,
                 dt_util.now() + MIN_TIME_BETWEEN_FORCED_UPDATES)
             return
 
-        if self._email in self._data.data:
-            self._state = len(self._data.data[self._email])
-            self.schedule_update_ha_state()
+        self._state = len(self._data.data[self._email])
+        self.schedule_update_ha_state()
 
     def update(self):
         """Update data and see if it contains data for our email."""
@@ -123,7 +123,7 @@ class HaveIBeenPwnedSensor(Entity):
             self._state = len(self._data.data[self._email])
 
 
-class HaveIBeenPwnedData(object):
+class HaveIBeenPwnedData:
     """Class for handling the data retrieval."""
 
     def __init__(self, emails):

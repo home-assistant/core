@@ -14,16 +14,18 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
     CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
-    CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT,
     CONF_HEADERS, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Binary Sensor'
 DEFAULT_VERIFY_SSL = True
+DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -38,16 +40,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the REST binary sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
     verify_ssl = config.get(CONF_VERIFY_SSL)
+    timeout = config.get(CONF_TIMEOUT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
@@ -64,15 +68,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         auth = None
 
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
+    rest = RestData(method, resource, auth, headers, payload, verify_ssl,
+                    timeout)
     rest.update()
-
     if rest.data is None:
-        _LOGGER.error("Unable to fetch REST data from %s", resource)
-        return False
+        raise PlatformNotReady
 
-    add_devices([RestBinarySensor(
-        hass, rest, name, device_class, value_template)], True)
+    # No need to update the sensor now because it will determine its state
+    # based in the rest resource that has just been retrieved.
+    add_entities([RestBinarySensor(
+        hass, rest, name, device_class, value_template)])
 
 
 class RestBinarySensor(BinarySensorDevice):
@@ -97,6 +102,11 @@ class RestBinarySensor(BinarySensorDevice):
     def device_class(self):
         """Return the class of this sensor."""
         return self._device_class
+
+    @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self.rest.data is not None
 
     @property
     def is_on(self):

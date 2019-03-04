@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Konto bereits registriert",
+            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Hostname oder IP-Adresse",
+                    "password": "Passwort",
+                    "port": "Port"
+                },
+                "title": "Informationen eingeben"
+            }
+        },
+        "title": "RainMachine"
+    }
+}

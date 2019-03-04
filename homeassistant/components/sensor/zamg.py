@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZAMG sensor platform."""
     name = config.get(CONF_NAME)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -91,8 +91,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Received error from ZAMG: %s", err)
         return False
 
-    add_devices([ZamgSensor(probe, variable, name)
-                 for variable in config[CONF_MONITORED_CONDITIONS]], True)
+    add_entities([ZamgSensor(probe, variable, name)
+                  for variable in config[CONF_MONITORED_CONDITIONS]], True)
 
 
 class ZamgSensor(Entity):
@@ -133,7 +133,7 @@ class ZamgSensor(Entity):
         self.probe.update()
 
 
-class ZamgData(object):
+class ZamgData:
     """The class for handling the data retrieval."""
 
     API_URL = 'http://www.zamg.ac.at/ogd/'
@@ -236,7 +236,7 @@ def closest_station(lat, lon, cache_dir):
     stations = zamg_stations(cache_dir)
 
     def comparable_dist(zamg_id):
-        """Calculate the psudeo-distance from lat/lon."""
+        """Calculate the pseudo-distance from lat/lon."""
         station_lat, station_lon = stations[zamg_id]
         return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
 

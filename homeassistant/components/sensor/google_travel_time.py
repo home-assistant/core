@@ -4,21 +4,21 @@ Support for Google travel time sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.google_travel_time/
 """
+import logging
 from datetime import datetime
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE,
     ATTR_LONGITUDE, CONF_MODE)
+from homeassistant.helpers import location
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.location as location
-import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['googlemaps==2.5.1']
 
@@ -68,6 +68,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
+DATA_KEY = 'google_travel_time'
 
 
 def convert_time_to_utc(timestr):
@@ -79,13 +80,15 @@ def convert_time_to_utc(timestr):
     return dt_util.as_timestamp(combined)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the Google travel time platform."""
     def run_setup(event):
-        """Delay the setup until Home Assistant is fully initialized.
+        """
+        Delay the setup until Home Assistant is fully initialized.
 
         This allows any entities to be created already
         """
+        hass.data.setdefault(DATA_KEY, [])
         options = config.get(CONF_OPTIONS)
 
         if options.get('units') is None:
@@ -110,9 +113,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         sensor = GoogleTravelTimeSensor(
             hass, name, api_key, origin, destination, options)
+        hass.data[DATA_KEY].append(sensor)
 
         if sensor.valid_api_connection:
-            add_devices_callback([sensor])
+            add_entities_callback([sensor])
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)

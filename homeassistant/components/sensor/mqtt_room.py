@@ -4,14 +4,13 @@ Support for MQTT room presence detection.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt_room/
 """
-import asyncio
 import logging
 import json
 from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -39,12 +38,11 @@ DEFAULT_TOPIC = 'room_presence'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE_ID): cv.string,
-    vol.Required(CONF_STATE_TOPIC, default=DEFAULT_TOPIC): cv.string,
     vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_AWAY_TIMEOUT,
                  default=DEFAULT_AWAY_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
+}).extend(mqtt.MQTT_RO_PLATFORM_SCHEMA.schema)
 
 MQTT_PAYLOAD = vol.Schema(vol.All(json.loads, vol.Schema({
     vol.Required(ATTR_ID): cv.string,
@@ -52,10 +50,10 @@ MQTT_PAYLOAD = vol.Schema(vol.All(json.loads, vol.Schema({
 }, extra=vol.ALLOW_EXTRA)))
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up MQTT room Sensor."""
-    async_add_devices([MQTTRoomSensor(
+    async_add_entities([MQTTRoomSensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_DEVICE_ID),
@@ -80,11 +78,8 @@ class MQTTRoomSensor(Entity):
         self._distance = None
         self._updated = None
 
-    def async_added_to_hass(self):
-        """Subscribe to MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_added_to_hass(self):
+        """Subscribe to MQTT events."""
         @callback
         def update_state(device_id, room, distance):
             """Update the sensor state."""
@@ -119,7 +114,7 @@ class MQTTRoomSensor(Entity):
                             or timediff.seconds >= self._timeout:
                         update_state(**device)
 
-        return mqtt.async_subscribe(
+        return await mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, 1)
 
     @property

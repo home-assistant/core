@@ -1,5 +1,5 @@
 """
-Counter for the days till a HTTPS (TLS) certificate will expire.
+Counter for the days until an HTTPS (TLS) certificate will expire.
 
 For more details about this sensor please refer to the documentation at
 https://home-assistant.io/components/sensor.cert_expiry/
@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up certificate expiry sensor."""
     def run_setup(event):
         """Wait until Home Assistant is fully initialized before creating.
@@ -44,8 +44,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         server_port = config.get(CONF_PORT)
         sensor_name = config.get(CONF_NAME)
 
-        add_devices([SSLCertificate(sensor_name, server_name, server_port)],
-                    True)
+        add_entities([SSLCertificate(sensor_name, server_name, server_port)],
+                     True)
 
     # To allow checking of the HA certificate we must first be running.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
@@ -85,8 +85,10 @@ class SSLCertificate(Entity):
         """Fetch the certificate information."""
         try:
             ctx = ssl.create_default_context()
+            host_info = socket.getaddrinfo(self.server_name, self.server_port)
+            family = host_info[0][0]
             sock = ctx.wrap_socket(
-                socket.socket(), server_hostname=self.server_name)
+                socket.socket(family=family), server_hostname=self.server_name)
             sock.settimeout(TIMEOUT)
             sock.connect((self.server_name, self.server_port))
         except socket.gaierror:

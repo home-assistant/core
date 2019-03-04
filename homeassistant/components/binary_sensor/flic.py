@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 
-REQUIREMENTS = ['https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4']
+REQUIREMENTS = ['pyflic-homeassistant==0.4.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -238,6 +238,5 @@ class FlicButton(BinarySensorDevice):
         import pyflic
 
         if connection_status == pyflic.ConnectionStatus.Disconnected:
-            _LOGGER.info("Button (%s) disconnected. Reason: %s",
-                         self.address, disconnect_reason)
-            self.remove()
+            _LOGGER.warning("Button (%s) disconnected. Reason: %s",
+                            self.address, disconnect_reason)

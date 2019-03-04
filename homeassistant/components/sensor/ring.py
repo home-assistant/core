@@ -11,11 +11,11 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.ring import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DATA_RING)
+    ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DATA_RING)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
-    STATE_UNKNOWN, ATTR_ATTRIBUTION)
+    ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -61,25 +61,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Ring device."""
     ring = hass.data[DATA_RING]
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in ring.chimes:
+    for device in ring.chimes:  # ring.chimes is doing I/O
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'chime' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
-        for device in ring.doorbells:
+    for device in ring.doorbells:  # ring.doorbells is doing I/O
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
-        for device in ring.stickup_cams:
+    for device in ring.stickup_cams:  # ring.stickup_cams is doing I/O
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
     return True
 
 
@@ -96,8 +98,9 @@ class RingSensor(Entity):
         self._kind = SENSOR_TYPES.get(self._sensor_type)[4]
         self._name = "{0} {1}".format(
             self._data.name, SENSOR_TYPES.get(self._sensor_type)[0])
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._tz = str(hass.config.time_zone)
+        self._unique_id = '{}-{}'.format(self._data.id, self._sensor_type)
 
     @property
     def name(self):
@@ -110,11 +113,16 @@ class RingSensor(Entity):
         return self._state
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
 
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         attrs['device_id'] = self._data.id
         attrs['firmware'] = self._data.firmware
         attrs['kind'] = self._data.kind
@@ -133,7 +141,7 @@ class RingSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self._sensor_type == 'battery' and self._state is not STATE_UNKNOWN:
+        if self._sensor_type == 'battery' and self._state is not None:
             return icon_for_battery_level(battery_level=int(self._state),
                                           charging=False)
         return self._icon

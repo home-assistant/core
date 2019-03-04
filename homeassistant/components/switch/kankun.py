@@ -30,12 +30,11 @@ SWITCH_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
+    vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA),
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up Kankun Wifi switches."""
     switches = config.get('switches', {})
     devices = []
@@ -51,7 +50,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get(CONF_USERNAME, None),
                 properties.get(CONF_PASSWORD)))
 
-    add_devices_callback(devices)
+    add_entities_callback(devices)
 
 
 class KankunSwitch(SwitchDevice):

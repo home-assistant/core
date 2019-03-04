@@ -19,7 +19,7 @@ from homeassistant.const import (
 INTERFACES = 2
 DEFAULT_TIMEOUT = 10
 
-REQUIREMENTS = ['beautifulsoup4==4.6.0']
+REQUIREMENTS = ['beautifulsoup4==4.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,8 +61,7 @@ class LinksysAPDeviceScanner(DeviceScanner):
 
         return self.last_results
 
-    # pylint: disable=no-self-use
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """
         Return the name (if known) of the device.
 
@@ -82,13 +81,14 @@ class LinksysAPDeviceScanner(DeviceScanner):
             request = self._make_request(interface)
             self.last_results.extend(
                 [x.find_all('td')[1].text
-                 for x in BS(request.content, "html.parser")
+                 for x in BS(request.content, 'html.parser')
                  .find_all(class_='section-row')]
             )
 
         return True
 
     def _make_request(self, unit=0):
+        """Create a request to get the data."""
         # No, the '&&' is not a typo - this is expected by the web interface.
         login = base64.b64encode(bytes(self.username, 'utf8')).decode('ascii')
         pwd = base64.b64encode(bytes(self.password, 'utf8')).decode('ascii')

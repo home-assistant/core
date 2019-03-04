@@ -59,3 +59,75 @@ envisalink_alarm_keypress:
     keypress:
       description: 'String to send to the alarm panel (1-6 characters).'
       example: '*71'
+
+alarmdecoder_alarm_toggle_chime:
+  description: Send the alarm the toggle chime command.
+  fields:
+    entity_id:
+      description: Name of the alarm control panel to trigger.
+      example: 'alarm_control_panel.downstairs'
+    code:
+      description: A required code to toggle the alarm control panel chime with.
+      example: 1234
+
+ifttt_push_alarm_state:
+  description: Update the alarm state to the specified value.
+  fields:
+    entity_id:
+      description: Name of the alarm control panel which state has to be updated.
+      example: 'alarm_control_panel.downstairs'
+    state:
+      description: The state to which the alarm control panel has to be set.
+      example: 'armed_night'
+
+elkm1_alarm_arm_vacation:
+  description: Arm the ElkM1 in vacation mode.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm.
+      example: 'alarm_control_panel.main'
+    code:
+      description: An code to arm the alarm control panel.
+      example: 1234
+
+elkm1_alarm_arm_home_instant:
+  description: Arm the ElkM1 in home instant mode.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm.
+      example: 'alarm_control_panel.main'
+    code:
+      description: An code to arm the alarm control panel.
+      example: 1234
+
+elkm1_alarm_arm_night_instant:
+  description: Arm the ElkM1 in night instant mode.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm.
+      example: 'alarm_control_panel.main'
+    code:
+      description: An code to arm the alarm control panel.
+      example: 1234
+
+elkm1_alarm_display_message:
+  description: Display a message on all of the ElkM1 keypads for an area.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to display messages on.
+      example: 'alarm_control_panel.main'
+    clear:
+      description: 0=clear message, 1=clear message with * key, 2=Display until timeout; default 2
+      example: 1
+    beep:
+      description: 0=no beep, 1=beep; default 0
+      example: 1
+    timeout:
+      description: Time to display message, 0=forever, max 65535, default 0
+      example: 4242
+    line1:
+      description: Up to 16 characters of text (truncated if too long). Default blank.
+      example: The answer to life,
+    line2:
+      description: Up to 16 characters of text (truncated if too long). Default blank.
+      example: the universe, and everything.

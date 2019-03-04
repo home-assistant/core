@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Konto bereits registriert",
+            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Code (f\u00fcr Home Assistant)",
+                    "password": "Passwort",
+                    "username": "E-Mail-Adresse"
+                },
+                "title": "Gebe deine Informationen ein"
+            }
+        },
+        "title": "SimpliSafe"
+    }
+}

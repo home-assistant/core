@@ -1,94 +1,81 @@
 """The tests for the Yamaha Media player platform."""
 import unittest
-import xml.etree.ElementTree as ET
+from unittest.mock import patch, MagicMock
 
-import rxv
-
-
-def sample_content(name):
-    """Read content into a string from a file."""
-    with open('tests/components/media_player/yamaha_samples/%s' % name,
-              encoding='utf-8') as content:
-        return content.read()
+from homeassistant.setup import setup_component
+import homeassistant.components.media_player as mp
+from homeassistant.components.media_player import yamaha
+from tests.common import get_test_home_assistant
 
 
-class FakeYamaha(rxv.rxv.RXV):
-    """Fake Yamaha receiver.
-
-    This inherits from RXV but overrides methods for testing that
-    would normally have hit the network. This makes it easier to
-    ensure that usage of the rxv library by HomeAssistant is as we'd
-    expect.
-    """
-
-    _fake_input = 'HDMI1'
-
-    def _discover_features(self):
-        """Fake the discovery feature."""
-        self._desc_xml = ET.fromstring(sample_content('desc.xml'))
-
-    @property
-    def input(self):
-        """A fake input for the receiver."""
-        return self._fake_input
-
-    @input.setter
-    def input(self, input_name):
-        """Set the input for the fake receiver."""
-        assert input_name in self.inputs()
-        self._fake_input = input_name
-
-    def inputs(self):
-        """All inputs of the fake receiver."""
-        return {'AUDIO1': None,
-                'AUDIO2': None,
-                'AV1': None,
-                'AV2': None,
-                'AV3': None,
-                'AV4': None,
-                'AV5': None,
-                'AV6': None,
-                'AirPlay': 'AirPlay',
-                'HDMI1': None,
-                'HDMI2': None,
-                'HDMI3': None,
-                'HDMI4': None,
-                'HDMI5': None,
-                'NET RADIO': 'NET_RADIO',
-                'Pandora': 'Pandora',
-                'Rhapsody': 'Rhapsody',
-                'SERVER': 'SERVER',
-                'SiriusXM': 'SiriusXM',
-                'Spotify': 'Spotify',
-                'TUNER': 'Tuner',
-                'USB': 'USB',
-                'V-AUX': None,
-                'iPod (USB)': 'iPod_USB'}
+def _create_zone_mock(name, url):
+    zone = MagicMock()
+    zone.ctrl_url = url
+    zone.zone = name
+    return zone
 
 
-# pylint: disable=no-member, invalid-name
-class TestYamaha(unittest.TestCase):
-    """Test the media_player yamaha module."""
+class FakeYamahaDevice:
+    """A fake Yamaha device."""
+
+    def __init__(self, ctrl_url, name, zones=None):
+        """Initialize the fake Yamaha device."""
+        self.ctrl_url = ctrl_url
+        self.name = name
+        self.zones = zones or []
+
+    def zone_controllers(self):
+        """Return controllers for all available zones."""
+        return self.zones
+
+
+class TestYamahaMediaPlayer(unittest.TestCase):
+    """Test the Yamaha media player."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
-        super(TestYamaha, self).setUp()
-        self.rec = FakeYamaha("http://10.0.0.0:80/YamahaRemoteControl/ctrl")
+        """Set up things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.main_zone = _create_zone_mock('Main zone', 'http://main')
+        self.device = FakeYamahaDevice(
+            'http://receiver', 'Receiver', zones=[self.main_zone])
 
-    def test_get_playback_support(self):
-        """Test the playback."""
-        rec = self.rec
-        support = rec.get_playback_support()
-        self.assertFalse(support.play)
-        self.assertFalse(support.pause)
-        self.assertFalse(support.stop)
-        self.assertFalse(support.skip_f)
-        self.assertFalse(support.skip_r)
+    def tearDown(self):
+        """Stop everything that was started."""
+        self.hass.stop()
 
-        rec.input = 'NET RADIO'
-        support = rec.get_playback_support()
-        self.assertTrue(support.play)
-        self.assertFalse(support.pause)
-        self.assertTrue(support.stop)
-        self.assertFalse(support.skip_f)
-        self.assertFalse(support.skip_r)
+    def enable_output(self, port, enabled):
+        """Enable output on a specific port."""
+        data = {
+            'entity_id': 'media_player.yamaha_receiver_main_zone',
+            'port': port,
+            'enabled': enabled
+        }
+
+        self.hass.services.call(yamaha.DOMAIN,
+                                yamaha.SERVICE_ENABLE_OUTPUT,
+                                data,
+                                True)
+
+    def create_receiver(self, mock_rxv):
+        """Create a mocked receiver."""
+        mock_rxv.return_value = self.device
+
+        config = {
+            'media_player': {
+                'platform': 'yamaha',
+                'host': '127.0.0.1'
+            }
+        }
+
+        assert setup_component(self.hass, mp.DOMAIN, config)
+
+    @patch('rxv.RXV')
+    def test_enable_output(self, mock_rxv):
+        """Test enabling and disabling outputs."""
+        self.create_receiver(mock_rxv)
+
+        self.enable_output('hdmi1', True)
+        self.main_zone.enable_output.assert_called_with('hdmi1', True)
+
+        self.enable_output('hdmi2', False)
+        self.main_zone.enable_output.assert_called_with('hdmi2', False)

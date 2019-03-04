@@ -23,10 +23,6 @@ SUPPORT_LANGUAGES = [
     'de', 'en-GB', 'en-US', 'fr', 'it', 'lb', 'ru', 'sv', 'te', 'tr'
 ]
 
-SUPPORT_VOICES = [
-    'cmu-slt-hsmm'
-]
-
 SUPPORT_CODEC = [
     'aiff', 'au', 'wav'
 ]
@@ -44,13 +40,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
     vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC)
 })
 
 
-@asyncio.coroutine
-def async_get_engine(hass, config):
+async def async_get_engine(hass, config):
     """Set up MaryTTS speech component."""
     return MaryTTSProvider(hass, config)
 
@@ -78,8 +73,7 @@ class MaryTTSProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from MaryTTS."""
         websession = async_get_clientsession(self.hass)
 
@@ -102,13 +96,13 @@ class MaryTTSProvider(Provider):
                     'LOCALE': actual_language
                 }
 
-                request = yield from websession.get(url, params=url_param)
+                request = await websession.get(url, params=url_param)
 
                 if request.status != 200:
                     _LOGGER.error("Error %d on load url %s",
                                   request.status, request.url)
                     return (None, None)
-                data = yield from request.read()
+                data = await request.read()
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for MaryTTS API")

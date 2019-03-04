@@ -1,201 +1,523 @@
-"""The tests for the Google Actions component."""
-# pylint: disable=protected-access
-import asyncio
+"""Test Google Smart Home."""
+import pytest
 
-from homeassistant import const
-from homeassistant.components import climate
-from homeassistant.components import google_assistant as ga
-from homeassistant.util.unit_system import (IMPERIAL_SYSTEM, METRIC_SYSTEM)
+from homeassistant.core import State
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
+from homeassistant.setup import async_setup_component
+from homeassistant.components.climate.const import (
+    ATTR_MIN_TEMP, ATTR_MAX_TEMP, STATE_HEAT, SUPPORT_OPERATION_MODE
+)
+from homeassistant.components.google_assistant import (
+    const, trait, helpers, smart_home as sh,
+    EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
+from homeassistant.components.light.demo import DemoLight
 
-DETERMINE_SERVICE_TESTS = [{  # Test light brightness
-    'entity_id': 'light.test',
-    'command': ga.const.COMMAND_BRIGHTNESS,
-    'params': {
-        'brightness': 95
-    },
-    'expected': (
-        const.SERVICE_TURN_ON,
-        {'entity_id': 'light.test', 'brightness': 242}
+from homeassistant.helpers import device_registry
+from tests.common import (mock_device_registry, mock_registry,
+                          mock_area_registry)
+
+BASIC_CONFIG = helpers.Config(
+    should_expose=lambda state: True,
+    allow_unlock=False,
+    agent_user_id='test-agent',
+)
+REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
+
+
+@pytest.fixture
+def registries(hass):
+    """Registry mock setup."""
+    from types import SimpleNamespace
+    ret = SimpleNamespace()
+    ret.entity = mock_registry(hass)
+    ret.device = mock_device_registry(hass)
+    ret.area = mock_area_registry(hass)
+    return ret
+
+
+async def test_sync_message(hass):
+    """Test a sync message."""
+    light = DemoLight(
+        None, 'Demo Light',
+        state=False,
+        hs_color=(180, 75),
     )
-}, {  # Test light color temperature
-    'entity_id': 'light.test',
-    'command': ga.const.COMMAND_COLOR,
-    'params': {
-        'color': {
-            'temperature': 2300,
-            'name': 'warm white'
+    light.hass = hass
+    light.entity_id = 'light.demo_light'
+    await light.async_update_ha_state()
+
+    # This should not show up in the sync request
+    hass.states.async_set('sensor.no_match', 'something')
+
+    # Excluded via config
+    hass.states.async_set('light.not_expose', 'on')
+
+    config = helpers.Config(
+        should_expose=lambda state: state.entity_id != 'light.not_expose',
+        allow_unlock=False,
+        agent_user_id='test-agent',
+        entity_config={
+            'light.demo_light': {
+                const.CONF_ROOM_HINT: 'Living Room',
+                const.CONF_ALIASES: ['Hello', 'World']
+            }
         }
-    },
-    'expected': (
-        const.SERVICE_TURN_ON,
-        {'entity_id': 'light.test', 'kelvin': 2300}
     )
-}, {  # Test light color blue
-    'entity_id': 'light.test',
-    'command': ga.const.COMMAND_COLOR,
-    'params': {
-        'color': {
-            'spectrumRGB': 255,
-            'name': 'blue'
+
+    events = []
+    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+
+    result = await sh.async_handle_message(hass, config, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.SYNC"
+        }]
+    })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': [{
+                'id': 'light.demo_light',
+                'name': {
+                    'name': 'Demo Light',
+                    'nicknames': [
+                        'Hello',
+                        'World',
+                    ]
+                },
+                'traits': [
+                    trait.TRAIT_BRIGHTNESS,
+                    trait.TRAIT_ONOFF,
+                    trait.TRAIT_COLOR_SPECTRUM,
+                    trait.TRAIT_COLOR_TEMP,
+                ],
+                'type': sh.TYPE_LIGHT,
+                'willReportState': False,
+                'attributes': {
+                    'colorModel': 'rgb',
+                    'temperatureMinK': 2000,
+                    'temperatureMaxK': 6535,
+                },
+                'roomHint': 'Living Room'
+            }]
         }
-    },
-    'expected': (
-        const.SERVICE_TURN_ON,
-        {'entity_id': 'light.test', 'rgb_color': [0, 0, 255]}
+    }
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].event_type == EVENT_SYNC_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+    }
+
+
+async def test_sync_in_area(hass, registries):
+    """Test a sync message where room hint comes from area."""
+    area = registries.area.async_create("Living Room")
+
+    device = registries.device.async_get_or_create(
+        config_entry_id='1234',
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        })
+    registries.device.async_update_device(device.id, area_id=area.id)
+
+    entity = registries.entity.async_get_or_create(
+        'light', 'test', '1235',
+        suggested_object_id='demo_light',
+        device_id=device.id)
+
+    light = DemoLight(
+        None, 'Demo Light',
+        state=False,
+        hs_color=(180, 75),
     )
-}, {  # Test light color yellow
-    'entity_id': 'light.test',
-    'command': ga.const.COMMAND_COLOR,
-    'params': {
-        'color': {
-            'spectrumRGB': 16776960,
-            'name': 'yellow'
+    light.hass = hass
+    light.entity_id = entity.entity_id
+    await light.async_update_ha_state()
+
+    config = helpers.Config(
+        should_expose=lambda _: True,
+        allow_unlock=False,
+        agent_user_id='test-agent',
+        entity_config={}
+    )
+
+    events = []
+    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
+
+    result = await sh.async_handle_message(hass, config, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.SYNC"
+        }]
+    })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': [{
+                'id': 'light.demo_light',
+                'name': {
+                    'name': 'Demo Light'
+                },
+                'traits': [
+                    trait.TRAIT_BRIGHTNESS,
+                    trait.TRAIT_ONOFF,
+                    trait.TRAIT_COLOR_SPECTRUM,
+                    trait.TRAIT_COLOR_TEMP,
+                ],
+                'type': sh.TYPE_LIGHT,
+                'willReportState': False,
+                'attributes': {
+                    'colorModel': 'rgb',
+                    'temperatureMinK': 2000,
+                    'temperatureMaxK': 6535,
+                },
+                'roomHint': 'Living Room'
+            }]
         }
-    },
-    'expected': (
-        const.SERVICE_TURN_ON,
-        {'entity_id': 'light.test', 'rgb_color': [255, 255, 0]}
+    }
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].event_type == EVENT_SYNC_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+    }
+
+
+async def test_query_message(hass):
+    """Test a sync message."""
+    light = DemoLight(
+        None, 'Demo Light',
+        state=False,
+        hs_color=(180, 75),
     )
-}, {  # Test unhandled action/service
-    'entity_id': 'light.test',
-    'command': ga.const.COMMAND_COLOR,
-    'params': {
-        'color': {
-            'unhandled': 2300
+    light.hass = hass
+    light.entity_id = 'light.demo_light'
+    await light.async_update_ha_state()
+
+    light2 = DemoLight(
+        None, 'Another Light',
+        state=True,
+        hs_color=(180, 75),
+        ct=400,
+        brightness=78,
+    )
+    light2.hass = hass
+    light2.entity_id = 'light.another_light'
+    await light2.async_update_ha_state()
+
+    events = []
+    hass.bus.async_listen(EVENT_QUERY_RECEIVED, events.append)
+
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.QUERY",
+            "payload": {
+                "devices": [{
+                    "id": "light.demo_light",
+                }, {
+                    "id": "light.another_light",
+                }, {
+                    "id": "light.non_existing",
+                }]
+            }
+        }]
+    })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'devices': {
+                'light.non_existing': {
+                    'online': False,
+                },
+                'light.demo_light': {
+                    'on': False,
+                    'online': True,
+                },
+                'light.another_light': {
+                    'on': True,
+                    'online': True,
+                    'brightness': 30,
+                    'color': {
+                        'spectrumRGB': 4194303,
+                        'temperature': 2500,
+                    }
+                },
+            }
         }
-    },
-    'expected': (
-        None,
-        {'entity_id': 'light.test'}
+    }
+
+    assert len(events) == 3
+    assert events[0].event_type == EVENT_QUERY_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.demo_light'
+    }
+    assert events[1].event_type == EVENT_QUERY_RECEIVED
+    assert events[1].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.another_light'
+    }
+    assert events[2].event_type == EVENT_QUERY_RECEIVED
+    assert events[2].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.non_existing'
+    }
+
+
+async def test_execute(hass):
+    """Test an execute command."""
+    await async_setup_component(hass, 'light', {
+        'light': {'platform': 'demo'}
+    })
+
+    events = []
+    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
+
+    await hass.services.async_call(
+        'light', 'turn_off', {'entity_id': 'light.ceiling_lights'},
+        blocking=True)
+
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.EXECUTE",
+            "payload": {
+                "commands": [{
+                    "devices": [
+                        {"id": "light.non_existing"},
+                        {"id": "light.ceiling_lights"},
+                    ],
+                    "execution": [{
+                        "command": "action.devices.commands.OnOff",
+                        "params": {
+                            "on": True
+                        }
+                    }, {
+                        "command":
+                            "action.devices.commands.BrightnessAbsolute",
+                        "params": {
+                            "brightness": 20
+                        }
+                    }]
+                }]
+            }
+        }]
+    })
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "commands": [{
+                "ids": ['light.non_existing'],
+                "status": "ERROR",
+                "errorCode": "deviceOffline"
+            }, {
+                "ids": ['light.ceiling_lights'],
+                "status": "SUCCESS",
+                "states": {
+                    "on": True,
+                    "online": True,
+                    'brightness': 20,
+                    'color': {
+                        'spectrumRGB': 16773155,
+                        'temperature': 2631,
+                    },
+                }
+            }]
+        }
+    }
+
+    assert len(events) == 4
+    assert events[0].event_type == EVENT_COMMAND_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.non_existing',
+        'execution': {
+            'command': 'action.devices.commands.OnOff',
+            'params': {
+                'on': True
+            }
+        }
+    }
+    assert events[1].event_type == EVENT_COMMAND_RECEIVED
+    assert events[1].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.non_existing',
+        'execution': {
+            'command': 'action.devices.commands.BrightnessAbsolute',
+            'params': {
+                'brightness': 20
+            }
+        }
+    }
+    assert events[2].event_type == EVENT_COMMAND_RECEIVED
+    assert events[2].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.ceiling_lights',
+        'execution': {
+            'command': 'action.devices.commands.OnOff',
+            'params': {
+                'on': True
+            }
+        }
+    }
+    assert events[3].event_type == EVENT_COMMAND_RECEIVED
+    assert events[3].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'light.ceiling_lights',
+        'execution': {
+            'command': 'action.devices.commands.BrightnessAbsolute',
+            'params': {
+                'brightness': 20
+            }
+        }
+    }
+
+
+async def test_raising_error_trait(hass):
+    """Test raising an error while executing a trait command."""
+    hass.states.async_set('climate.bla', STATE_HEAT, {
+        ATTR_MIN_TEMP: 15,
+        ATTR_MAX_TEMP: 30,
+        ATTR_SUPPORTED_FEATURES: SUPPORT_OPERATION_MODE,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+    })
+
+    events = []
+    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
+    await hass.async_block_till_done()
+
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.EXECUTE",
+            "payload": {
+                "commands": [{
+                    "devices": [
+                        {"id": "climate.bla"},
+                    ],
+                    "execution": [{
+                        "command": "action.devices.commands."
+                                   "ThermostatTemperatureSetpoint",
+                        "params": {
+                            "thermostatTemperatureSetpoint": 10
+                        }
+                    }]
+                }]
+            }
+        }]
+    })
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "commands": [{
+                "ids": ['climate.bla'],
+                "status": "ERROR",
+                "errorCode": "valueOutOfRange"
+            }]
+        }
+    }
+
+    assert len(events) == 1
+    assert events[0].event_type == EVENT_COMMAND_RECEIVED
+    assert events[0].data == {
+        'request_id': REQ_ID,
+        'entity_id': 'climate.bla',
+        'execution': {
+            'command': 'action.devices.commands.ThermostatTemperatureSetpoint',
+            'params': {
+                'thermostatTemperatureSetpoint': 10
+            }
+        }
+    }
+
+
+async def test_serialize_input_boolean(hass):
+    """Test serializing an input boolean entity."""
+    state = State('input_boolean.bla', 'on')
+    entity = sh._GoogleEntity(hass, BASIC_CONFIG, state)
+    result = await entity.sync_serialize()
+    assert result == {
+        'id': 'input_boolean.bla',
+        'attributes': {},
+        'name': {'name': 'bla'},
+        'traits': ['action.devices.traits.OnOff'],
+        'type': 'action.devices.types.SWITCH',
+        'willReportState': False,
+    }
+
+
+async def test_unavailable_state_doesnt_sync(hass):
+    """Test that an unavailable entity does not sync over."""
+    light = DemoLight(
+        None, 'Demo Light',
+        state=False,
     )
-}, {  # Test switch to light custom type
-    'entity_id': 'switch.decorative_lights',
-    'command': ga.const.COMMAND_ONOFF,
-    'params': {
-        'on': True
-    },
-    'expected': (
-        const.SERVICE_TURN_ON,
-        {'entity_id': 'switch.decorative_lights'}
+    light.hass = hass
+    light.entity_id = 'light.demo_light'
+    light._available = False
+    await light.async_update_ha_state()
+
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.SYNC"
+        }]
+    })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': []
+        }
+    }
+
+
+async def test_empty_name_doesnt_sync(hass):
+    """Test that an entity with empty name does not sync over."""
+    light = DemoLight(
+        None, ' ',
+        state=False,
     )
-}, {  # Test light on / off
-    'entity_id': 'light.test',
-    'command': ga.const.COMMAND_ONOFF,
-    'params': {
-        'on': False
-    },
-    'expected': (const.SERVICE_TURN_OFF, {'entity_id': 'light.test'})
-}, {
-    'entity_id': 'light.test',
-    'command': ga.const.COMMAND_ONOFF,
-    'params': {
-        'on': True
-    },
-    'expected': (const.SERVICE_TURN_ON, {'entity_id': 'light.test'})
-}, {  # Test Cover open close
-    'entity_id': 'cover.bedroom',
-    'command': ga.const.COMMAND_ONOFF,
-    'params': {
-        'on': True
-    },
-    'expected': (const.SERVICE_OPEN_COVER, {'entity_id': 'cover.bedroom'}),
-}, {
-    'entity_id': 'cover.bedroom',
-    'command': ga.const.COMMAND_ONOFF,
-    'params': {
-        'on': False
-    },
-    'expected': (const.SERVICE_CLOSE_COVER, {'entity_id': 'cover.bedroom'}),
-}, {  # Test cover position
-    'entity_id': 'cover.bedroom',
-    'command': ga.const.COMMAND_BRIGHTNESS,
-    'params': {
-        'brightness': 50
-    },
-    'expected': (
-        const.SERVICE_SET_COVER_POSITION,
-        {'entity_id': 'cover.bedroom', 'position': 50}
-    ),
-}, {  # Test media_player volume
-    'entity_id': 'media_player.living_room',
-    'command': ga.const.COMMAND_BRIGHTNESS,
-    'params': {
-        'brightness': 30
-    },
-    'expected': (
-        const.SERVICE_VOLUME_SET,
-        {'entity_id': 'media_player.living_room', 'volume_level': 0.3}
-    ),
-}, {  # Test climate temperature
-    'entity_id': 'climate.living_room',
-    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
-    'params': {'thermostatTemperatureSetpoint': 24.5},
-    'expected': (
-        climate.SERVICE_SET_TEMPERATURE,
-        {'entity_id': 'climate.living_room', 'temperature': 24.5}
-    ),
-}, {  # Test climate temperature Fahrenheit
-    'entity_id': 'climate.living_room',
-    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT,
-    'params': {'thermostatTemperatureSetpoint': 24.5},
-    'units': IMPERIAL_SYSTEM,
-    'expected': (
-        climate.SERVICE_SET_TEMPERATURE,
-        {'entity_id': 'climate.living_room', 'temperature': 76.1}
-    ),
-}, {  # Test climate temperature range
-    'entity_id': 'climate.living_room',
-    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
-    'params': {
-        'thermostatTemperatureSetpointHigh': 24.5,
-        'thermostatTemperatureSetpointLow': 20.5,
-    },
-    'expected': (
-        climate.SERVICE_SET_TEMPERATURE,
-        {'entity_id': 'climate.living_room',
-         'target_temp_high': 24.5, 'target_temp_low': 20.5}
-    ),
-}, {  # Test climate temperature range Fahrenheit
-    'entity_id': 'climate.living_room',
-    'command': ga.const.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
-    'params': {
-        'thermostatTemperatureSetpointHigh': 24.5,
-        'thermostatTemperatureSetpointLow': 20.5,
-    },
-    'units': IMPERIAL_SYSTEM,
-    'expected': (
-        climate.SERVICE_SET_TEMPERATURE,
-        {'entity_id': 'climate.living_room',
-         'target_temp_high': 76.1, 'target_temp_low': 68.9}
-    ),
-}, {  # Test climate operation mode
-    'entity_id': 'climate.living_room',
-    'command': ga.const.COMMAND_THERMOSTAT_SET_MODE,
-    'params': {'thermostatMode': 'heat'},
-    'expected': (
-        climate.SERVICE_SET_OPERATION_MODE,
-        {'entity_id': 'climate.living_room', 'operation_mode': 'heat'}
-    ),
-}]
+    light.hass = hass
+    light.entity_id = 'light.demo_light'
+    await light.async_update_ha_state()
+
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.SYNC"
+        }]
+    })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': []
+        }
+    }
 
 
-@asyncio.coroutine
-def test_make_actions_response():
-    """Test make response helper."""
-    reqid = 1234
-    payload = 'hello'
-    result = ga.smart_home.make_actions_response(reqid, payload)
-    assert result['requestId'] == reqid
-    assert result['payload'] == payload
+async def test_query_disconnect(hass):
+    """Test a disconnect message."""
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        'inputs': [
+            {'intent': 'action.devices.DISCONNECT'}
+        ],
+        'requestId': REQ_ID
+    })
 
-
-@asyncio.coroutine
-def test_determine_service():
-    """Test all branches of determine service."""
-    for test in DETERMINE_SERVICE_TESTS:
-        result = ga.smart_home.determine_service(
-            test['entity_id'],
-            test['command'],
-            test['params'],
-            test.get('units', METRIC_SYSTEM))
-        assert result == test['expected']
+    assert result is None

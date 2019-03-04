@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "creds": {
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "Adresse IP",
+                    "name": "Nom",
+                    "region": "R\u00e9gion"
+                },
+                "description": "Entrez vos informations PlayStation 4. Pour \"Code PIN\", acc\u00e9dez \u00e0 \"Param\u00e8tres\" sur votre console PlayStation 4. Ensuite, acc\u00e9dez \u00e0 \"Param\u00e8tres de connexion de l'application mobile\" et s\u00e9lectionnez \"Ajouter un p\u00e9riph\u00e9rique\". Entrez le code PIN qui est affich\u00e9.",
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

@@ -11,7 +11,7 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY)
+from homeassistant.const import (CONF_API_KEY, POWER_WATT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neurio sensor."""
     api_key = config.get(CONF_API_KEY)
     api_secret = config.get(CONF_API_SECRET)
@@ -64,12 +64,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     update_active()
 
     # Active power sensor
-    add_devices([NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
+    add_entities([NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
     # Daily power sensor
-    add_devices([NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily)])
+    add_entities([NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily)])
 
 
-class NeurioData(object):
+class NeurioData:
     """Stores data retrieved from Neurio sensor."""
 
     def __init__(self, api_key, api_secret, sensor_id):
@@ -148,7 +148,7 @@ class NeurioEnergy(Entity):
         self._state = None
 
         if sensor_type == ACTIVE_TYPE:
-            self._unit_of_measurement = 'W'
+            self._unit_of_measurement = POWER_WATT
         elif sensor_type == DAILY_TYPE:
             self._unit_of_measurement = 'kWh'
 

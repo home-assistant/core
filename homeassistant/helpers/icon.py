@@ -2,8 +2,8 @@
 from typing import Optional
 
 
-def icon_for_battery_level(battery_level: Optional[int]=None,
-                           charging: bool=False) -> str:
+def icon_for_battery_level(battery_level: Optional[int] = None,
+                           charging: bool = False) -> str:
     """Return a battery icon valid identifier."""
     icon = 'mdi:battery'
     if battery_level is None:

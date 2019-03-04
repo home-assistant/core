@@ -13,8 +13,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD,
-                                 STATE_UNKNOWN)
+from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 
 
@@ -47,7 +46,7 @@ SENSOR_ATTRS = [
 ]
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tank Utility sensor."""
     from tank_utility import auth
     email = config.get(CONF_EMAIL)
@@ -66,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device in devices:
         sensor = TankUtilitySensor(email, password, token, device)
         all_sensors.append(sensor)
-    add_devices(all_sensors, True)
+    add_entities(all_sensors, True)
 
 
 class TankUtilitySensor(Entity):
@@ -78,7 +77,7 @@ class TankUtilitySensor(Entity):
         self._password = password
         self._token = token
         self._device = device
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._name = "Tank Utility " + self.device
         self._unit_of_measurement = SENSOR_UNIT_OF_MEASUREMENT
         self._attributes = {}

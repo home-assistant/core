@@ -24,11 +24,11 @@ DEPENDENCIES = ['vultr']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SUBSCRIPTION): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vultr subscription switch."""
     vultr = hass.data[DATA_VULTR]
 
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Subscription %s not found", subscription)
         return False
 
-    add_devices([VultrSwitch(vultr, subscription, name)], True)
+    add_entities([VultrSwitch(vultr, subscription, name)], True)
 
 
 class VultrSwitch(SwitchDevice):
@@ -90,12 +90,12 @@ class VultrSwitch(SwitchDevice):
             ATTR_VCPUS: self.data.get('vcpu_count'),
         }
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Boot-up the subscription."""
         if self.data['power_status'] != 'running':
             self._vultr.start(self.subscription)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Halt the subscription."""
         if self.data['power_status'] == 'running':
             self._vultr.halt(self.subscription)

@@ -31,7 +31,12 @@ SUPPORT_CODECS = [
 
 SUPPORT_VOICES = [
     'jane', 'oksana', 'alyss', 'omazh',
-    'zahar', 'ermil'
+    'zahar', 'ermil', 'levitan', 'ermilov',
+    'silaerkan', 'kolya', 'kostya', 'nastya',
+    'sasha', 'nick', 'erkanyavas', 'zhenya',
+    'tanya', 'anton_samokhvalov', 'tatyana_abramova',
+    'voicesearch', 'ermil_with_tuning', 'robot',
+    'dude', 'zombie', 'smoky'
 ]
 
 SUPPORTED_EMOTION = [
@@ -71,8 +76,7 @@ SUPPORTED_OPTIONS = [
 ]
 
 
-@asyncio.coroutine
-def async_get_engine(hass, config):
+async def async_get_engine(hass, config):
     """Set up VoiceRSS speech component."""
     return YandexSpeechKitProvider(hass, config)
 
@@ -106,8 +110,7 @@ class YandexSpeechKitProvider(Provider):
         """Return list of supported options."""
         return SUPPORTED_OPTIONS
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
         actual_language = language
@@ -125,14 +128,14 @@ class YandexSpeechKitProvider(Provider):
                     'speed': options.get(CONF_SPEED, self._speed)
                 }
 
-                request = yield from websession.get(
+                request = await websession.get(
                     YANDEX_API_URL, params=url_param)
 
                 if request.status != 200:
                     _LOGGER.error("Error %d on load URL %s",
                                   request.status, request.url)
                     return (None, None)
-                data = yield from request.read()
+                data = await request.read()
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for yandex speech kit API")

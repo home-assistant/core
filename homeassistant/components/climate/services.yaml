@@ -80,7 +80,22 @@ set_swing_mode:
       example: 'climate.nest'
     swing_mode:
       description: New value of swing mode.
-      example: 1
+      example:
+
+turn_on:
+  description: Turn climate device on.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
+turn_off:
+  description: Turn climate device off.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
 ecobee_set_fan_min_on_time:
   description: Set the minimum fan on time.
   fields:
@@ -100,3 +115,36 @@ ecobee_resume_program:
     resume_all:
       description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
       example: true
+
+mill_set_room_temperature:
+  description: Set Mill room temperatures.
+  fields:
+    room_name:
+      description: Name of room to change.
+      example: 'kitchen'
+    away_temp:
+      description: Away temp.
+      example: 12
+    comfort_temp:
+      description: Comfort temp.
+      example: 22
+    sleep_temp:
+      description: Sleep temp.
+      example: 17
+
+nuheat_resume_program:
+  description: Resume the programmed schedule.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
+sensibo_assume_state:
+  description: Set Sensibo device to external state.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+    state:
+      description: State to set.
+      example: 'idle'

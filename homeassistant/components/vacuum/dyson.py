@@ -4,49 +4,45 @@ Support for the Dyson 360 eye vacuum cleaner robot.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum.dyson/
 """
-import asyncio
 import logging
 
 from homeassistant.components.dyson import DYSON_DEVICES
-from homeassistant.components.vacuum import (SUPPORT_BATTERY,
-                                             SUPPORT_FAN_SPEED, SUPPORT_PAUSE,
-                                             SUPPORT_RETURN_HOME,
-                                             SUPPORT_STATUS, SUPPORT_STOP,
-                                             SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-                                             VacuumDevice)
+from homeassistant.components.vacuum import (
+    SUPPORT_BATTERY, SUPPORT_FAN_SPEED, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
+    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    VacuumDevice)
 from homeassistant.helpers.icon import icon_for_battery_level
-
-ATTR_FULL_CLEAN_TYPE = "full_clean_type"
-ATTR_CLEAN_ID = "clean_id"
-ATTR_POSITION = "position"
-
-DEPENDENCIES = ['dyson']
 
 _LOGGER = logging.getLogger(__name__)
 
-DYSON_360_EYE_DEVICES = "dyson_360_eye_devices"
+ATTR_CLEAN_ID = 'clean_id'
+ATTR_FULL_CLEAN_TYPE = 'full_clean_type'
+ATTR_POSITION = 'position'
 
-ICON = "mdi:roomba"
+DEPENDENCIES = ['dyson']
+
+DYSON_360_EYE_DEVICES = "dyson_360_eye_devices"
 
 SUPPORT_DYSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                 SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | SUPPORT_STATUS | \
                 SUPPORT_BATTERY | SUPPORT_STOP
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson 360 Eye robot vacuum platform."""
-    _LOGGER.info("Creating new Dyson 360 Eye robot vacuum")
+    from libpurecoollink.dyson_360_eye import Dyson360Eye
+
+    _LOGGER.debug("Creating new Dyson 360 Eye robot vacuum")
     if DYSON_360_EYE_DEVICES not in hass.data:
         hass.data[DYSON_360_EYE_DEVICES] = []
 
     # Get Dyson Devices from parent component
-    from libpurecoollink.dyson_360_eye import Dyson360Eye
     for device in [d for d in hass.data[DYSON_DEVICES] if
                    isinstance(d, Dyson360Eye)]:
         dyson_entity = Dyson360EyeDevice(device)
         hass.data[DYSON_360_EYE_DEVICES].append(dyson_entity)
 
-    add_devices(hass.data[DYSON_360_EYE_DEVICES])
+    add_entities(hass.data[DYSON_360_EYE_DEVICES])
     return True
 
 
@@ -55,18 +51,16 @@ class Dyson360EyeDevice(VacuumDevice):
 
     def __init__(self, device):
         """Dyson 360 Eye robot vacuum device."""
-        _LOGGER.info("Creating device %s", device.name)
+        _LOGGER.debug("Creating device %s", device.name)
         self._device = device
-        self._icon = ICON
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
         self.hass.async_add_job(
             self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
-        """Called when new messages received from the vacuum."""
+        """Handle a new messages that was received from the vacuum."""
         _LOGGER.debug("Message received for %s device: %s", self.name, message)
         self.schedule_update_ha_state()
 
@@ -82,11 +76,6 @@ class Dyson360EyeDevice(VacuumDevice):
     def name(self):
         """Return the name of the device."""
         return self._device.name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return self._icon
 
     @property
     def status(self):
@@ -105,8 +94,8 @@ class Dyson360EyeDevice(VacuumDevice):
             Dyson360EyeMode.FULL_CLEAN_FINISHED: "Finished",
             Dyson360EyeMode.FULL_CLEAN_NEEDS_CHARGE: "Need charging"
         }
-        return dyson_labels.get(self._device.state.state,
-                                self._device.state.state)
+        return dyson_labels.get(
+            self._device.state.state, self._device.state.state)
 
     @property
     def battery_level(self):
@@ -139,6 +128,7 @@ class Dyson360EyeDevice(VacuumDevice):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         from libpurecoollink.const import Dyson360EyeMode
+
         return self._device.state.state in [
             Dyson360EyeMode.FULL_CLEAN_INITIATED,
             Dyson360EyeMode.FULL_CLEAN_ABORTED,
@@ -159,6 +149,7 @@ class Dyson360EyeDevice(VacuumDevice):
     def battery_icon(self):
         """Return the battery icon for the vacuum cleaner."""
         from libpurecoollink.const import Dyson360EyeMode
+
         charging = self._device.state.state in [
             Dyson360EyeMode.INACTIVE_CHARGING]
         return icon_for_battery_level(
@@ -166,8 +157,9 @@ class Dyson360EyeDevice(VacuumDevice):
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on."""
-        _LOGGER.debug("Turn on device %s", self.name)
         from libpurecoollink.const import Dyson360EyeMode
+
+        _LOGGER.debug("Turn on device %s", self.name)
         if self._device.state.state in [Dyson360EyeMode.FULL_CLEAN_PAUSED]:
             self._device.resume()
         else:
@@ -185,8 +177,9 @@ class Dyson360EyeDevice(VacuumDevice):
 
     def set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
-        _LOGGER.debug("Set fan speed %s on device %s", fan_speed, self.name)
         from libpurecoollink.const import PowerMode
+
+        _LOGGER.debug("Set fan speed %s on device %s", fan_speed, self.name)
         power_modes = {
             "Quiet": PowerMode.QUIET,
             "Max": PowerMode.MAX
@@ -196,6 +189,7 @@ class Dyson360EyeDevice(VacuumDevice):
     def start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
         from libpurecoollink.const import Dyson360EyeMode
+
         if self._device.state.state in [Dyson360EyeMode.FULL_CLEAN_PAUSED]:
             _LOGGER.debug("Resume device %s", self.name)
             self._device.resume()

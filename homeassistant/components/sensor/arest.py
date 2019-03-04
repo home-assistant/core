@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, CONF_RESOURCE,
-    CONF_MONITORED_VARIABLES, CONF_NAME, STATE_UNKNOWN)
+    CONF_MONITORED_VARIABLES, CONF_NAME)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST sensor."""
     resource = config.get(CONF_RESOURCE)
     var_conf = config.get(CONF_MONITORED_VARIABLES)
@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pin=pinnum, unit_of_measurement=pin.get(
                     CONF_UNIT_OF_MEASUREMENT), renderer=renderer))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class ArestSensor(Entity):
@@ -116,7 +116,7 @@ class ArestSensor(Entity):
         self._name = '{} {}'.format(location.title(), name.title())
         self._variable = variable
         self._pin = pin
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._renderer = renderer
 
@@ -145,7 +145,7 @@ class ArestSensor(Entity):
             return values['error']
 
         value = self._renderer(
-            values.get('value', values.get(self._variable, STATE_UNKNOWN)))
+            values.get('value', values.get(self._variable, None)))
         return value
 
     def update(self):
@@ -158,7 +158,7 @@ class ArestSensor(Entity):
         return self.arest.available
 
 
-class ArestData(object):
+class ArestData:
     """The Class for handling the data retrieval for variables."""
 
     def __init__(self, resource, pin=None):

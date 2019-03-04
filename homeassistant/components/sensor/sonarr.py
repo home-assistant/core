@@ -67,10 +67,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sonarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
-    add_devices(
+    add_entities(
         [SonarrSensor(hass, config, sensor) for sensor in conditions], True)
 
 
@@ -158,8 +158,12 @@ class SonarrSensor(Entity):
                 )
         elif self.type == 'series':
             for show in self.data:
-                attributes[show['title']] = '{}/{} Episodes'.format(
-                    show['episodeFileCount'], show['episodeCount'])
+                if 'episodeFileCount' not in show \
+                        or 'episodeCount' not in show:
+                    attributes[show['title']] = 'N/A'
+                else:
+                    attributes[show['title']] = '{}/{} Episodes'.format(
+                        show['episodeFileCount'], show['episodeCount'])
         elif self.type == 'status':
             attributes = self.data
         return attributes
@@ -181,7 +185,7 @@ class SonarrSensor(Entity):
                 headers={'X-Api-Key': self.apikey},
                 timeout=10)
         except OSError:
-            _LOGGER.error("Host %s is not available", self.host)
+            _LOGGER.warning("Host %s is not available", self.host)
             self._available = False
             self._state = None
             return
