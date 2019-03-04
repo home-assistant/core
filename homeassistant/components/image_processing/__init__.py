@@ -75,7 +75,7 @@ async def async_setup(hass, config):
 
     async def async_scan_service(service):
         """Service handler for scan."""
-        image_entities = component.async_extract_from_service(service)
+        image_entities = await component.async_extract_from_service(service)
 
         update_tasks = []
         for entity in image_entities:
