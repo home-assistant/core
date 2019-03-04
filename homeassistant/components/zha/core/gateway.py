@@ -452,7 +452,6 @@ def establish_device_mappings():
     NO_SENSOR_CLUSTERS.append(
         zcl.clusters.general.PowerConfiguration.cluster_id)
     NO_SENSOR_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
-    NO_SENSOR_CLUSTERS.append(SMARTTHINGS_ACCELERATION_CLUSTER)
 
     BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
     BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
