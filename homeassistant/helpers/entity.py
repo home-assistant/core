@@ -285,7 +285,10 @@ class Entity:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
 
-        state, attr = stateattr or self._get_state_and_attributes()
+        if force_refresh or stateattr is None:
+            state, attr = self._get_state_and_attributes()
+        else:
+            state, attr = stateattr
 
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
@@ -317,7 +320,9 @@ class Entity:
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
 
-        That avoid executor dead looks.
+        Scheduling the update avoids executor dead looks.
+        The state is copied unless force_refresh is set to true to not miss
+        state transitions happening before async_update_ha_state is called.
         """
         stateattr = None
         if not force_refresh:
@@ -327,7 +332,12 @@ class Entity:
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh=False):
-        """Schedule an update ha state change task."""
+        """Schedule an update ha state change task.
+
+        Scheduling the update avoids executor dead looks.
+        The state is copied unless force_refresh is set to true to not miss
+        state transitions happening before async_update_ha_state is called.
+        """
         stateattr = None
         if not force_refresh:
             stateattr = self._get_state_and_attributes()
