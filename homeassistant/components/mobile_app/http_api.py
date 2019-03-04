@@ -45,25 +45,21 @@ class DevicesView(HomeAssistantView):
         """Handle the POST request for device registration."""
         hass = request.app['hass']
 
-        resp = {}
-
         webhook_id = generate_secret()
 
         if async_is_logged_in(hass):
             cloudhook = await async_create_cloudhook(hass, webhook_id)
 
             if cloudhook is not None:
-                data[CONF_CLOUDHOOK_ID] = resp[CONF_CLOUDHOOK_ID] = \
-                    cloudhook[CONF_CLOUDHOOK_ID]
-                data[CONF_CLOUDHOOK_URL] = resp[CONF_CLOUDHOOK_URL] = \
-                    cloudhook[CONF_CLOUDHOOK_URL]
+                data[CONF_CLOUDHOOK_ID] = cloudhook[CONF_CLOUDHOOK_ID]
+                data[CONF_CLOUDHOOK_URL] = cloudhook[CONF_CLOUDHOOK_URL]
 
-        data[CONF_WEBHOOK_ID] = resp[CONF_WEBHOOK_ID] = webhook_id
+        data[CONF_WEBHOOK_ID] = webhook_id
 
         if data[ATTR_SUPPORTS_ENCRYPTION] and supports_encryption():
             secret = generate_secret(16)
 
-            data[CONF_SECRET] = resp[CONF_SECRET] = secret
+            data[CONF_SECRET] = secret
 
         data[CONF_USER_ID] = request['hass_user'].id
 
@@ -77,4 +73,9 @@ class DevicesView(HomeAssistantView):
 
         register_device_webhook(hass, self._store, data)
 
-        return self.json(resp, status_code=HTTP_CREATED)
+        return self.json({
+            CONF_CLOUDHOOK_ID: data.get(CONF_CLOUDHOOK_ID),
+            CONF_CLOUDHOOK_URL: data.get(CONF_CLOUDHOOK_URL),
+            CONF_SECRET: data.get(CONF_SECRET),
+            CONF_WEBHOOK_ID: data[CONF_WEBHOOK_ID],
+        }, status_code=HTTP_CREATED)

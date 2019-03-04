@@ -315,8 +315,8 @@ async def test_cloud_forwarding(hass, hass_client, authed_api_client):
     register_json = await resp.json()
     assert CONF_WEBHOOK_ID in register_json
     assert CONF_SECRET in register_json
-    assert CONF_CLOUDHOOK_ID not in register_json
-    assert CONF_CLOUDHOOK_URL not in register_json
+    assert register_json.get(CONF_CLOUDHOOK_ID) is None
+    assert register_json.get(CONF_CLOUDHOOK_URL) is None
 
     local_url = register_json[CONF_WEBHOOK_ID]
 
