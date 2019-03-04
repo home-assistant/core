@@ -4,10 +4,10 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import (
-    STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, STATE_UNKNOWN, CONF_NAME)
+    STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_HEAT, STATE_IDLE, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE,
+    STATE_HEAT, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, STATE_MANUAL, STATE_AUTO,
     STATE_ECO, STATE_COOL)
 from homeassistant.util import Throttle
@@ -92,6 +92,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             room_data = ThermostatData(netatmo.NETATMO_AUTH, home)
         except pyatmo.NoDevice:
             continue
+        devices = []
         for room_id in room_data.get_room_ids():
             room_name = room_data.homedata.rooms[home][room_id]['name']
             _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
@@ -100,7 +101,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 continue
             _LOGGER.debug("Adding devices for room %s (%s) ...",
                           room_name, room_id)
-            add_entities([NetatmoThermostat(room_data, room_id)], True)
+            devices.append(NetatmoThermostat(room_data, room_id))
+        add_entities(devices, True)
 
 
 class NetatmoThermostat(ClimateDevice):
@@ -161,22 +163,12 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current state of the thermostat."""
-        state = self._data.room_status[self._room_id]['heating_status']
-        if state is False:
-            return STATE_IDLE
-        if state is True:
-            return STATE_HEAT
-        return STATE_UNKNOWN
+        return self._operation_mode
 
     @property
     def operation_list(self):
         """Return the operation modes list."""
         return self._operation_list
-
-    @property
-    def operation_mode(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._operation_mode
 
     @property
     def device_state_attributes(self):
