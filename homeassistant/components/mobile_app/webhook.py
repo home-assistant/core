@@ -19,9 +19,10 @@ from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
 from homeassistant.core import EventOrigin
 from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
                                       TemplateError)
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers import template
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import get_platform
 
 from .const import (ATTR_APP_COMPONENT, ATTR_DELETED_IDS,
@@ -44,13 +45,16 @@ from .helpers import (device_context, _decrypt_payload, empty_okay_response,
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_device_webhook(hass: HomeAssistantType, store: Store,
-                            device: Dict) -> None:
-    """Register the webhook for a device."""
+def setup_device(hass: HomeAssistantType, store: Store, device: Dict) -> None:
+    """Register the webhook for a device and loads the app component."""
     device_name = 'Mobile App: {}'.format(device[ATTR_DEVICE_NAME])
     webhook_id = device[CONF_WEBHOOK_ID]
     webhook_register(hass, DOMAIN, device_name, webhook_id,
                      partial(handle_webhook, store))
+
+    if ATTR_APP_COMPONENT in device:
+        load_platform(hass, device[ATTR_APP_COMPONENT], DOMAIN, {},
+                      {DOMAIN: {}})
 
 
 async def handle_webhook(store: Store, hass: HomeAssistantType,

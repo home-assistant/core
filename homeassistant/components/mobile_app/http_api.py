@@ -21,7 +21,7 @@ from .const import (ATTR_REGISTRATIONS, ATTR_SUPPORTS_ENCRYPTION,
 
 from .helpers import supports_encryption, savable_state
 
-from .webhook import register_device_webhook
+from .webhook import setup_device
 
 
 def register_http_handlers(hass: HomeAssistantType, store: Store) -> bool:
@@ -71,7 +71,7 @@ class DevicesView(HomeAssistantView):
             return self.json_message("Error saving device.",
                                      HTTP_INTERNAL_SERVER_ERROR)
 
-        register_device_webhook(hass, self._store, data)
+        setup_device(hass, self._store, data)
 
         return self.json({
             CONF_CLOUDHOOK_ID: data.get(CONF_CLOUDHOOK_ID),
