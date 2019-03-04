@@ -43,12 +43,12 @@ class GeniusSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """Returns the name of the Genius switch."""
+        """Return Genius switch name."""
         return self._name
 
     @property
     def is_on(self):
-        """True if Genius switch is on."""
+        """Return Genius switch state."""
         return self._state
 
     async def async_update(self):

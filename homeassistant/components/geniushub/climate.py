@@ -135,11 +135,11 @@ class GeniusClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return self.GET_CURRENT_OPERARTON_MODE(self._mode)
+        return self.get_current_operation_mode(self._mode)
 
     @staticmethod
-    def GET_CURRENT_OPERARTON_MODE(mode):
-        """Static method to return the current operation mode."""
+    def get_current_operation_mode(mode):
+        """Return the current operational mode."""
         mode_map = {
             'override': STATE_HEAT,
             'footprint': STATE_ECO,
@@ -147,7 +147,7 @@ class GeniusClimate(ClimateDevice):
         }
         return mode_map.get(mode, STATE_IDLE)
 
-    def GET_OPERARTON_MODE(self, operation_mode):
+    def get_operation_mode(self, operation_mode):
         """Coverts operation mode from Home Assistant to Genius Hub."""
         # These needed to be mapped into HA modes:
         # Off       => OFF      => STATE_IDLE   # Mode_Off: 1,
@@ -170,7 +170,7 @@ class GeniusClimate(ClimateDevice):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        data = self.GET_OPERARTON_MODE(operation_mode)
+        data = self.get_operation_mode(operation_mode)
         self._mode = data['mode']
         if data['data'] is None:
             _LOGGER.error("Unknown mode")
@@ -181,32 +181,24 @@ class GeniusClimate(ClimateDevice):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-            self._mode = "override"
-            await GeniusClimate._genius_hub.putjson
-            (self._device_id,
-             {'iBoostTimeRemaining': 3600,
-              'fBoostSP': self._target_temperature,
-              'iMode': 16})
+            await self.async_set_operation_mode(STATE_HEAT)
 
     async def async_update(self):
         """Get the latest data from the hub."""
-        zone = GeniusClimate._genius_hub.getZone(self._device_id)
-        if zone:
-            zone = GeniusClimate._genius_hub.GET_CLIMATE(zone)
+        what_zone = GeniusClimate._genius_hub.getZone(self._device_id)
+        if what_zone:
+            zone = GeniusClimate._genius_hub.GET_CLIMATE(what_zone)
             self._current_temperature = zone['current_temperature']
             self._target_temperature = zone['target_temperature']
             self._mode = zone['mode']
             self._is_active = zone['is_active']
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self):
         """Turn on."""
-        self._mode = "timer"
-        await GeniusClimate._genius_hub.putjson(
-            self._device_id, {"iMode": 2})
+        await self.async_set_operation_mode(STATE_AUTO)
+        self._mode = "on"
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self):
         """Turn off."""
+        await self.async_set_operation_mode(STATE_IDLE)
         self._mode = "off"
-        await GeniusClimate._genius_hub.putjson(
-            self._device_id, {"iMode": 1})

@@ -30,10 +30,12 @@ async def async_setup_platform(hass, config,
 class GeniusSensor(Entity):
     """Representation of a Wall Sensor."""
 
+    _genius_hub = None
+
     def __init__(self, genius_hub, sensor):
         """Initialize the Wall sensor."""
         GeniusSensor._genius_hub = genius_hub
-        self._name = sensor['name'] + '_sensor_' + str(sensor['index'])
+        self._name = sensor['name'] + ' sensor ' + str(sensor['index'])
         self._device_id = sensor['iID']
         self._device_addr = sensor['addr']
         self._battery = sensor['Battery']
@@ -85,10 +87,12 @@ class GeniusSensor(Entity):
 class GeniusTRV(Entity):
     """Representation of a TRV Sensor."""
 
+    _genius_hub = None
+
     def __init__(self, genius_hub, trv):
         """Initialize the TRV sensor."""
-        GeniusSensor._genius_hub = genius_hub
-        self._name = trv['name'] + '_TRV_' + str(trv['index'])
+        GeniusTRV._genius_hub = genius_hub
+        self._name = trv['name'] + ' TRV ' + str(trv['index'])
         self._device_id = trv['iID']
         self._device_addr = trv['addr']
         self._battery = trv['Battery']
@@ -124,8 +128,8 @@ class GeniusTRV(Entity):
 
     async def async_update(self):
         """Get the latest data."""
-        device = GeniusSensor._genius_hub.getDevice(
+        device = GeniusTRV._genius_hub.getDevice(
             self._device_id, self._device_addr)
-        data = GeniusSensor._genius_hub.getTRV(device)
+        data = GeniusTRV._genius_hub.getTRV(device)
         self._battery = data['Battery']
         self._temperature = data['TEMPERATURE']
