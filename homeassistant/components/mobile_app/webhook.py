@@ -24,18 +24,17 @@ from homeassistant.helpers import template
 from homeassistant.helpers.storage import Store
 from homeassistant.loader import get_platform
 
-from .const import (ATTR_APP_ID, ATTR_APP_NAME, ATTR_DELETED_IDS,
+from .const import (ATTR_APP_ID, ATTR_DELETED_IDS,
                     ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
-                    ATTR_REGISTRATIONS, ATTR_SUPPORTS_ENCRYPTION,
-                    ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES, ATTR_WEBHOOK_DATA,
-                    ATTR_WEBHOOK_ENCRYPTED, ATTR_WEBHOOK_ENCRYPTED_DATA,
-                    ATTR_WEBHOOK_TYPE, CONF_CLOUDHOOK_ID, CONF_CLOUDHOOK_URL,
-                    CONF_SECRET, CONF_USER_ID, DOMAIN,
-                    HTTP_X_CLOUD_HOOK_ID, HTTP_X_CLOUD_HOOK_URL,
-                    INTEGRATIONS_MAP,
-                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS, WEBHOOK_TYPES,
-                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
-                    WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
+                    ATTR_REGISTRATIONS, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
+                    ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
+                    ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
+                    CONF_CLOUDHOOK_ID, CONF_CLOUDHOOK_URL, CONF_SECRET,
+                    DOMAIN, HTTP_X_CLOUD_HOOK_ID, HTTP_X_CLOUD_HOOK_URL,
+                    INTEGRATIONS_MAP, WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
+                    WEBHOOK_TYPES, WEBHOOK_TYPE_CALL_SERVICE,
+                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
+                    WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
 from .helpers import (device_context, _decrypt_payload, empty_okay_response,
@@ -170,14 +169,9 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         return empty_okay_response(headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
-        data[ATTR_APP_ID] = device[ATTR_APP_ID]
-        data[ATTR_APP_NAME] = device[ATTR_APP_NAME]
-        data[ATTR_SUPPORTS_ENCRYPTION] = device[ATTR_SUPPORTS_ENCRYPTION]
-        data[CONF_SECRET] = device[CONF_SECRET]
-        data[CONF_USER_ID] = device[CONF_USER_ID]
-        data[CONF_WEBHOOK_ID] = device[CONF_WEBHOOK_ID]
+        new_device = {**device, **data}
 
-        hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id] = data
+        hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id] = new_device
 
         try:
             await store.async_save(savable_state(hass))
@@ -185,4 +179,4 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             _LOGGER.error("Error updating mobile_app registration: %s", ex)
             return empty_okay_response()
 
-        return json_response(safe_device(data))
+        return json_response(safe_device(new_device))
