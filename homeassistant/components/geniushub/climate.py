@@ -195,21 +195,10 @@ class GeniusClimate(ClimateDevice):
 
     async def async_turn_on(self):
         """Turn on."""
-<<<<<<< HEAD
         await self.async_set_operation_mode(STATE_AUTO)
         self._mode = "on"
-=======
-        await GeniusClimate._genius_hub.putjson(
-            self._device_id, {"iMode": 2})
-        self._mode = "timer"
->>>>>>> 77a9cb1cf800fcd6bbb8a9ecccb59e8231382c20
 
     async def async_turn_off(self):
         """Turn off."""
-<<<<<<< HEAD
         await self.async_set_operation_mode(STATE_IDLE)
-=======
-        await GeniusClimate._genius_hub.putjson(
-            self._device_id, {"iMode": 1})
->>>>>>> 77a9cb1cf800fcd6bbb8a9ecccb59e8231382c20
         self._mode = "off"
