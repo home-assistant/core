@@ -32,15 +32,18 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=dangerous-default-value
 @bind_hass
-async def async_request_stream(hass, stream_source, options={}, preload=False):
+async def async_request_stream(hass, stream_source, fmt='hls',
+                               options=None, preload=False):
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
-        raise HomeAssistantError("Stream is not configured.")
+        raise HomeAssistantError("Stream component is not set up.")
 
     if not stream_source:
         raise HomeAssistantError("Invalid stream source.")
+
+    if options is None:
+        options = {}
 
     keepalive = hass.data[DOMAIN][CONF_KEEPALIVE]
     try:
@@ -49,11 +52,12 @@ async def async_request_stream(hass, stream_source, options={}, preload=False):
         if not stream:
             stream = Stream(hass, stream_source,
                             options=options, keepalive=keepalive)
-            hass.data[DOMAIN][ATTR_STREAMS][stream_source] = stream
+            streams[stream_source] = stream
         if not preload and not stream.access_token:
             stream.access_token = generate_secret()
             stream.start()
-        return stream.access_token
+        return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(
+            hass.config.api.base_url, stream.access_token)
     except Exception:
         raise HomeAssistantError('Unable to get stream')
 
@@ -63,19 +67,6 @@ def get_stream(hass, stream_source):
     """Return available stream."""
     streams = hass.data[DOMAIN][ATTR_STREAMS]
     return streams.get(stream_source)
-
-
-@bind_hass
-def get_url(hass, fmt, stream_source=None, token=None):
-    """Return stream access url."""
-    if not token:
-        stream = hass.data[DOMAIN][ATTR_STREAMS].get(stream_source)
-        if stream:
-            token = stream.access_token
-    if token:
-        return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(
-            hass.config.api.base_url, token)
-    return None
 
 
 async def async_setup(hass, config):
@@ -105,52 +96,52 @@ class Stream:
         self.options = options
         self.keepalive = keepalive
         self.access_token = None
-        self.__container = None
-        self.__thread = None
-        self.__thread_quit = None
-        self.__outputs = {}
+        self._container = None
+        self._thread = None
+        self._thread_quit = None
+        self._outputs = {}
 
     @property
     def container(self):
         """Return container."""
-        return self.__container
+        return self._container
 
     @property
     def outputs(self):
         """Return stream outputs."""
-        return self.__outputs
+        return self._outputs
 
     def add_provider(self, provider):
         """Add provider output stream."""
-        if not self.__outputs.get(provider.format):
-            self.__outputs[provider.format] = provider
-        return self.__outputs[provider.format]
+        if not self._outputs.get(provider.format):
+            self._outputs[provider.format] = provider
+        return self._outputs[provider.format]
 
     def start(self):
         """Start a stream."""
         import av
-        if self.__thread is None or not self.__thread.isAlive():
-            self.__container = av.open(self.source, options=self.options)
-            self.__thread_quit = threading.Event()
-            self.__thread = threading.Thread(
+        if self._thread is None or not self._thread.isAlive():
+            self._container = av.open(self.source, options=self.options)
+            self._thread_quit = threading.Event()
+            self._thread = threading.Thread(
                 name='stream_worker',
                 target=stream_worker,
                 args=(
-                    self.hass, self, self.__thread_quit))
-            self.__thread.start()
+                    self.hass, self, self._thread_quit))
+            self._thread.start()
 
-    def stop_stream(self):
+    def stop(self):
         """Remove outputs and access token."""
-        self.__outputs = {}
+        self._outputs = {}
         self.access_token = None
 
         if not self.keepalive:
-            self.stop()
+            self._stop()
 
-    def stop(self):
+    def _stop(self):
         """Stop worker thread."""
-        if self.__thread is not None:
-            self.__thread_quit.set()
-            self.__thread.join()
-            self.__thread = None
-            self.__container = None
+        if self._thread is not None:
+            self._thread_quit.set()
+            self._thread.join()
+            self._thread = None
+            self._container = None

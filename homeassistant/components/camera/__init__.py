@@ -28,11 +28,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
-    SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
-from homeassistant.components.stream import (
-    async_request_stream, get_url)
 from homeassistant.components.stream.const import OUTPUT_FORMATS
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
@@ -508,10 +503,11 @@ async def ws_camera_stream(hass, connection, msg):
 
     Async friendly.
     """
+    from homeassistant.components.stream import async_request_stream
     try:
+        fmt = msg['format']
         camera = _get_camera_from_entity_id(hass, msg['entity_id'])
-        token = await async_request_stream(hass, camera.stream_source)
-        url = get_url(hass, msg['format'], token=token)
+        url = await async_request_stream(hass, camera.stream_source, fmt=fmt)
         connection.send_result(msg['id'], {'url': url})
     except HomeAssistantError:
         connection.send_error(
@@ -549,14 +545,16 @@ async def async_handle_snapshot_service(camera, service):
 
 async def async_handle_play_stream_service(camera, service):
     """Handle play stream services calls."""
+    from homeassistant.components.media_player.const import (
+        ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
+        SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
+    from homeassistant.components.stream import async_request_stream
     hass = camera.hass
     try:
-        token = await async_request_stream(hass, camera.stream_source)
-        entity_ids = service.data.get(ATTR_MEDIA_PLAYER)
         fmt = service.data.get(ATTR_FORMAT)
+        entity_ids = service.data.get(ATTR_MEDIA_PLAYER)
 
-        url = get_url(hass, fmt, token=token)
-        print(url)
+        url = await async_request_stream(hass, camera.stream_source, fmt=fmt)
         data = {
             ATTR_MEDIA_CONTENT_ID: url,
             ATTR_MEDIA_CONTENT_TYPE: 'application/vnd.apple.mpegurl'

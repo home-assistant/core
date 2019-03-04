@@ -3,6 +3,7 @@ import asyncio
 from fractions import Fraction
 import io
 
+from .const import AUDIO_SAMPLE_RATE
 from .core import Segment, StreamBuffer
 
 
@@ -13,8 +14,8 @@ def generate_audio_frame():
     audio_bytes = b''.join(b'\x00\x00\x00\x00\x00\x00\x00\x00'
                            for i in range(0, 1024))
     audio_frame.planes[0].update(audio_bytes)
-    audio_frame.sample_rate = 44100
-    audio_frame.time_base = Fraction(1, 44100)
+    audio_frame.sample_rate = AUDIO_SAMPLE_RATE
+    audio_frame.time_base = Fraction(1, AUDIO_SAMPLE_RATE)
     return audio_frame
 
 
@@ -34,7 +35,7 @@ def create_stream_buffer(stream_output, video_stream, audio_frame):
     astream = None
     if stream_output.audio_codec:
         astream = output.add_stream(
-            stream_output.audio_codec, 44100)
+            stream_output.audio_codec, AUDIO_SAMPLE_RATE)
         # Need to do it multiple times for some reason
         while not a_packet:
             a_packets = astream.encode(audio_frame)
@@ -67,7 +68,7 @@ def stream_worker(hass, stream, quit_event):
                 raise StopIteration
         except (av.AVError, StopIteration):
             # End of stream, clear listeners and stop thread
-            for fmt, buffer in outputs.items():
+            for fmt, _ in outputs.items():
                 asyncio.run_coroutine_threadsafe(
                     stream.outputs[fmt].put(None), hass.loop)
             break
@@ -85,10 +86,11 @@ def stream_worker(hass, stream, quit_event):
                         buffer.output.mux(packet)
                 buffer.output.close()
                 del audio_packets[buffer.astream]
-                asyncio.run_coroutine_threadsafe(
-                    stream.outputs[fmt].put(Segment(
-                        sequence, buffer.segment, segment_duration
-                    )), hass.loop)
+                if stream.outputs.get(fmt):
+                    asyncio.run_coroutine_threadsafe(
+                        stream.outputs[fmt].put(Segment(
+                            sequence, buffer.segment, segment_duration
+                        )), hass.loop)
 
             # Clear outputs and increment sequence
             outputs = {}
@@ -96,15 +98,14 @@ def stream_worker(hass, stream, quit_event):
                 sequence += 1
 
             # Initialize outputs
-            if not outputs:
-                for stream_output in stream.outputs.values():
-                    if video_stream.name != stream_output.video_codec:
-                        continue
+            for stream_output in stream.outputs.values():
+                if video_stream.name != stream_output.video_codec:
+                    continue
 
-                    a_packet, buffer = create_stream_buffer(
-                        stream_output, video_stream, audio_frame)
-                    audio_packets[buffer.astream] = a_packet
-                    outputs[stream_output.format] = buffer
+                a_packet, buffer = create_stream_buffer(
+                    stream_output, video_stream, audio_frame)
+                audio_packets[buffer.astream] = a_packet
+                outputs[stream_output.format] = buffer
 
         # First video packet tends to have a weird dts/pts
         if first_packet:

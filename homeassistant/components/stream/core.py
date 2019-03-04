@@ -38,9 +38,9 @@ class StreamOutput:
 
     def __init__(self) -> None:
         """Initialize a stream output."""
-        self.__cursor = None
-        self.__event = asyncio.Event()
-        self.__segments = []
+        self._cursor = None
+        self._event = asyncio.Event()
+        self._segments = []
 
     @property
     def format(self) -> str:
@@ -60,20 +60,20 @@ class StreamOutput:
     @property
     def segments(self) -> List[int]:
         """Return current sequence from segments."""
-        return [s.sequence for s in self.__segments]
+        return [s.sequence for s in self._segments]
 
     @property
     def target_duration(self) -> int:
         """Return the average duration of the segments in seconds."""
-        durations = [s.duration for s in self.__segments]
-        return round(sum(durations) // len(self.__segments)) or 1
+        durations = [s.duration for s in self._segments]
+        return round(sum(durations) // len(self._segments)) or 1
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""
         if not sequence:
-            return self.__segments
+            return self._segments
 
-        for segment in self.__segments:
+        for segment in self._segments:
             if segment.sequence == sequence:
                 return segment
         return None
@@ -81,32 +81,37 @@ class StreamOutput:
     async def recv(self) -> Segment:
         """Wait for and retrieve the latest segment."""
         last_segment = max(self.segments, default=0)
-        if self.__cursor is None or self.__cursor <= last_segment:
-            await self.__event.wait()
+        if self._cursor is None or self._cursor <= last_segment:
+            await self._event.wait()
 
-        if not self.__segments:
+        if not self._segments:
             return None
 
-        segment = self.__segments[-1]
-        self.__cursor = segment.sequence
+        segment = self._segments[-1]
+        self._cursor = segment.sequence
         return segment
 
     async def put(self, segment: Segment) -> None:
         """Store output."""
         if segment is None:
-            self.__segments = []
-            self.__event.set()
+            self._segments = []
+            self._event.set()
             return
 
-        self.__segments.append(segment)
-        if len(self.__segments) > self.num_segments:
-            self.__segments = self.__segments[-self.num_segments:]
-        self.__event.set()
-        self.__event.clear()
+        self._segments.append(segment)
+        if len(self._segments) > self.num_segments:
+            self._segments = self._segments[-self.num_segments:]
+        self._event.set()
+        self._event.clear()
 
 
 class StreamView(HomeAssistantView):
-    """Base StreamView."""
+    """
+    Base StreamView.
+
+    For implementation of a new stream format, define `url` and `name`
+    attributes, and implement `handle` method in a child class.
+    """
 
     requires_auth = False
     platform = None
@@ -124,7 +129,7 @@ class StreamView(HomeAssistantView):
             if s.access_token == token), None)
 
         if not stream:
-            raise web.HTTPUnauthorized()
+            raise web.HTTPNotFound()
 
         # Start worker if not already started
         stream.start()
@@ -134,7 +139,7 @@ class StreamView(HomeAssistantView):
 
         async def cleanup(_now):
             """Stop the stream."""
-            stream.stop_stream()
+            stream.stop()
             self._unsub = None
 
         self._unsub = async_call_later(hass, 300, cleanup)
