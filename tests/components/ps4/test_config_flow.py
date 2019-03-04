@@ -1,7 +1,7 @@
 """Define tests for the PlayStation 4 config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.components import ps4
 from homeassistant.components.ps4.const import (
     DEFAULT_NAME, DEFAULT_REGION)
@@ -49,7 +49,7 @@ async def test_full_flow_implementation(hass):
     """Test registering an implementation and flow works."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
-    manager = flow.hass.config_entries()
+    manager = hass.config_entries
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
@@ -95,7 +95,7 @@ async def test_multiple_flow_implementation(hass):
     """Test multiple device flows."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
-    manager = flow.hass.config_entries()
+    manager = hass.config_entries
 
     # User Step Started, results in Step Creds
     with patch('pyps4_homeassistant.Helper.port_bind',
@@ -217,7 +217,7 @@ async def test_additional_device(hass):
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
     flow.creds = MOCK_CREDS
-    manager = flow.hass.config_entries()
+    manager = hass.config_entries
 
     # Mock existing entry.
     entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA)
