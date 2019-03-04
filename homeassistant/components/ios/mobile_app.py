@@ -7,6 +7,8 @@ from homeassistant.helpers import template
 _LOGGER = logging.getLogger(__name__)
 WEBHOOK_TYPE_RENDER_COMPLICATIONS = 'render_complications'
 
+WEBHOOK_TYPES = [WEBHOOK_TYPE_RENDER_COMPLICATIONS]
+
 
 async def async_handle_webhook_message(hass, device, webhook_type, data):
     """Return a webhook response for the given arguments."""

@@ -24,14 +24,14 @@ from homeassistant.helpers import template
 from homeassistant.helpers.storage import Store
 from homeassistant.loader import get_platform
 
-from .const import (ATTR_APP_ID, ATTR_DELETED_IDS,
+from .const import (ATTR_APP_COMPONENT, ATTR_DELETED_IDS,
                     ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
                     ATTR_REGISTRATIONS, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
                     CONF_CLOUDHOOK_ID, CONF_CLOUDHOOK_URL, CONF_SECRET,
                     DOMAIN, HTTP_X_CLOUD_HOOK_ID, HTTP_X_CLOUD_HOOK_URL,
-                    INTEGRATIONS_MAP, WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
                     WEBHOOK_TYPES, WEBHOOK_TYPE_CALL_SERVICE,
                     WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
                     WEBHOOK_TYPE_UPDATE_LOCATION,
@@ -102,15 +102,21 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
         webhook_payload = _decrypt_payload(device[CONF_SECRET], enc_data)
 
-    if (webhook_type not in WEBHOOK_TYPES and
-            device[ATTR_APP_ID] in INTEGRATIONS_MAP):
-        # Unknown webhook type, check if there's a platform
-        platform_name = INTEGRATIONS_MAP[device[ATTR_APP_ID]]
+    if webhook_type not in WEBHOOK_TYPES:
 
-        platform = get_platform(hass, DOMAIN, platform_name)
-        return await platform.async_handle_webhook_message(hass, device,
-                                                           webhook_type,
-                                                           webhook_payload)
+        if ATTR_APP_COMPONENT in device:
+            # Unknown webhook type, check if there's a component
+            platform_name = device[ATTR_APP_COMPONENT]
+
+            plat = get_platform(hass, platform_name, DOMAIN)
+
+            if webhook_type in plat.WEBHOOK_TYPES:
+                return await plat.async_handle_webhook_message(hass, device,
+                                                               webhook_type,
+                                                               webhook_payload)
+        _LOGGER.error("Unknown mobile_app webhook type: %s",
+                      webhook_type)
+        return empty_okay_response(headers=headers)
 
     try:
         data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)

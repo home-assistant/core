@@ -20,6 +20,7 @@ ATTR_DELETED_IDS = 'deleted_ids'
 ATTR_REGISTRATIONS = 'registrations'
 ATTR_STORE = 'store'
 
+ATTR_APP_COMPONENT = 'app_component'
 ATTR_APP_DATA = 'app_data'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
@@ -55,6 +56,7 @@ WEBHOOK_TYPES = [WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
                  WEBHOOK_TYPE_UPDATE_REGISTRATION]
 
 REGISTER_DEVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_APP_COMPONENT): cv.string,
     vol.Optional(ATTR_APP_DATA, default={}): dict,
     vol.Required(ATTR_APP_ID): cv.string,
     vol.Optional(ATTR_APP_NAME): cv.string,
@@ -122,8 +124,4 @@ WEBHOOK_SCHEMAS = {
     WEBHOOK_TYPE_RENDER_TEMPLATE: RENDER_TEMPLATE_SCHEMA,
     WEBHOOK_TYPE_UPDATE_LOCATION: SERVICE_SEE_PAYLOAD_SCHEMA,
     WEBHOOK_TYPE_UPDATE_REGISTRATION: UPDATE_DEVICE_SCHEMA,
-}
-
-INTEGRATIONS_MAP = {
-    'io.homeassistant.curl': 'ios',
 }
