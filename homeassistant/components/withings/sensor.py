@@ -734,6 +734,7 @@ async def async_setup_platform(hass: HomeAssistant,
         description="Authorization is required to get access to Withings data. After clicking the button below, be sure to choose the profile that maps to '%s'." % profile,  # noqa: E501
         link_name="Click here to authorize Home Assistant.",
         link_url=auth_client.get_authorize_url(),
+        entity_picture="/static/images/logo_withings.png"
     )
 
     if DATA_CONFIGURING not in hass.data:
