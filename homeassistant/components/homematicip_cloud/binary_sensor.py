@@ -169,7 +169,8 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
         if self._device.motionDetected or \
                 self._device.presenceDetected or \
                 self._device.unreach or \
-                self._device.sabotage:
+                self._device.sabotage or \
+                self._device.lowBat:
             return True
         from homematicip.base.enums import WindowState
         if self._device.windowState is not None and \
