@@ -1779,7 +1779,7 @@ xbee-helper==0.0.7
 xboxapi==0.1.1
 
 # homeassistant.components.device_tracker.xfinity
-xfinity-gateway==0.0.3
+xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
 xknx==0.9.4
