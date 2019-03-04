@@ -90,6 +90,7 @@ async def daikin_api_setup(hass, host):
     try:
         with async_timeout.timeout(10):
             device = await hass.async_add_executor_job(Appliance, host)
+            await device.init()
     except asyncio.TimeoutError:
         _LOGGER.error("Connection to Daikin could not be established")
         return None
@@ -111,16 +112,24 @@ class DaikinApi:
         self.device = device
         self.name = name
         self.ip_address = device.ip
+        self._available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs):
+    async def async_update(self, **kwargs):
         """Pull the latest data from Daikin."""
         try:
-            self.device.update_status()
+            await self.device.update_status()
+            self._available = True
         except timeout:
             _LOGGER.warning(
                 "Connection failed for %s", self.ip_address
             )
+            self._available = False
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def mac(self):
