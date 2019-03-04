@@ -33,11 +33,11 @@ action "Python 3.5 - tests" {
 action "Python 3.5 - lints" {
   uses = "home-assistant/actions/py35-tox@master"
   needs = ["Python 3.5 - tests"]
-  args = "-e lint,pylint -p all"
+  args = "-e lint,pylint -p auto --parallel-live"
 }
 
 action "Pyton 3.5 - typing,cov" {
   uses = "home-assistant/actions/py35-tox@master"
-  args = "-e typing,cov -p all"
+  args = "-e typing,cov -p auto --parallel-live"
   needs = ["Python 3.5 - lints"]
 }
