@@ -1,18 +1,18 @@
 """Support for Netatmo Smart thermostats."""
 import logging
 from datetime import timedelta
+
 import voluptuous as vol
 
-from homeassistant.const import (
-    STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     STATE_HEAT, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, STATE_MANUAL, STATE_AUTO,
     STATE_ECO, STATE_COOL)
+from homeassistant.const import (
+    STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
-
 
 DEPENDENCIES = ['netatmo']
 
@@ -86,13 +86,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         homes = home_data.get_home_names()
 
+    devices = []
     for home in homes:
         _LOGGER.debug("Setting up %s ...", home)
         try:
             room_data = ThermostatData(netatmo.NETATMO_AUTH, home)
         except pyatmo.NoDevice:
             continue
-        devices = []
         for room_id in room_data.get_room_ids():
             room_name = room_data.homedata.rooms[home][room_id]['name']
             _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.debug("Adding devices for room %s (%s) ...",
                           room_name, room_id)
             devices.append(NetatmoThermostat(room_data, room_id))
-        add_entities(devices, True)
+    add_entities(devices, True)
 
 
 class NetatmoThermostat(ClimateDevice):
@@ -142,7 +142,7 @@ class NetatmoThermostat(ClimateDevice):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the thermostat."""
         return self._name
 
     @property
@@ -299,6 +299,8 @@ class HomeData:
     def get_home_names(self):
         """Get all the home names returned by NetAtmo API."""
         self.setup()
+        if self.homedata is None:
+            return []
         for home in self.homedata.homes:
             if 'therm_schedules' in self.homedata.homes[home] and 'modules' \
                in self.homedata.homes[home]:
@@ -312,9 +314,9 @@ class HomeData:
             self.homedata = pyatmo.HomeData(self.auth)
             self.home_id = self.homedata.gethomeId(self.home)
         except TypeError:
-            _LOGGER.error("Error when getting homedata.")
+            _LOGGER.error("Error when getting home data.")
         except pyatmo.NoDevice:
-            _LOGGER.error("Error when getting homestatus response.")
+            _LOGGER.debug("No thermostat devices available.")
 
 
 class ThermostatData:
@@ -337,11 +339,11 @@ class ThermostatData:
 
     def get_room_ids(self):
         """Return all module available on the API as a list."""
-        if self.setup():
-            for key in self.homestatus.rooms:
-                self.room_ids.append(key)
-            return self.room_ids
-        return []
+        if not self.setup():
+            return []
+        for key in self.homestatus.rooms:
+            self.room_ids.append(key)
+        return self.room_ids
 
     def setup(self):
         """Retrieve HomeData and HomeStatus by NetAtmo API."""
