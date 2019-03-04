@@ -8,13 +8,13 @@ import nokia
 import callee
 from asynctest import patch, MagicMock
 from aiohttp.web_request import BaseRequest
+import homeassistant.components.withings.sensor as withings
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (CONF_PLATFORM)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.http as http
 import homeassistant.components.api as api
 import homeassistant.components.configurator as configurator
-import homeassistant.components.sensor.withings as withings
 from tests.common import get_test_home_assistant
 
 
@@ -79,7 +79,7 @@ async def test_async_setup_platform(hass):
                 wraps=configurator.async_request_done
             ) as async_request_done_spy, \
             patch(
-                'homeassistant.components.sensor.withings.async_initialize'
+                'homeassistant.components.withings.sensor.async_initialize'
             ) as async_initialize_mock:
 
         # Simulate an initial setup.
@@ -168,7 +168,7 @@ async def test_async_setup_platform_from_saved_credentials(hass):
     )
 
     with patch(
-            'homeassistant.components.sensor.withings.async_initialize'
+            'homeassistant.components.withings.sensor.async_initialize'
     ) as async_initialize_mock:
         result = await async_setup_component(hass, 'http', config)
         assert result
@@ -255,7 +255,7 @@ async def test_initialize_credentials_refreshed(hass):
     data_manager = await withings.async_initialize(configuring, creds)
 
     with patch(
-            'homeassistant.components.sensor.withings.credentials_refreshed',
+            'homeassistant.components.withings.sensor.credentials_refreshed',
             wraps=withings.credentials_refreshed
     ) as credentials_refreshed_spy:
         data_manager.get_api().set_token({
