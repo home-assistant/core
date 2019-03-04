@@ -29,6 +29,22 @@ def async_test(coro):
     return wrapper
 
 
+def cleanup(hass):
+    """Cleanup after tests."""
+    config_dir = os.path.dirname(hass.config.path(
+        withings.WITHINGS_CONFIG_FILE.format(
+            'my_client_id',
+            'slug'
+        )
+    ))
+
+    for root, dirs, files in os.walk(config_dir, topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            os.rmdir(os.path.join(root, name))
+
+
 async def test_async_setup_platform(hass):
     """Test method."""
     profile = 'person 1'
@@ -138,6 +154,8 @@ async def test_async_setup_platform(hass):
         async_initialize_mock.assert_called()
         async_request_done_spy.assert_called()
 
+    cleanup(hass)
+
 
 async def test_async_setup_platform_from_saved_credentials(hass):
     """Test method."""
@@ -182,6 +200,8 @@ async def test_async_setup_platform_from_saved_credentials(hass):
 
         async_initialize_mock.assert_called()
 
+    cleanup(hass)
+
 
 async def test_initialize_new_credentials(hass):
     """Test method."""
@@ -221,6 +241,8 @@ async def test_initialize_new_credentials(hass):
         measurements.append(sensor.attribute.measurement)
 
     assert set(measurements) == set(withings.WITHINGS_MEASUREMENTS_MAP.keys())
+
+    cleanup(hass)
 
 
 async def test_initialize_credentials_refreshed(hass):
@@ -266,6 +288,8 @@ async def test_initialize_credentials_refreshed(hass):
         })
 
         credentials_refreshed_spy.assert_called()
+
+    cleanup(hass)
 
 
 class TestWithingsAuthCallbackView(unittest.TestCase):
