@@ -102,7 +102,7 @@ class ToonBinarySensor(ToonEntity, BinarySensorDevice):
 
         return value
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Get the latest data from the binary sensor."""
         section = getattr(self.toon, self.section)
         self._state = getattr(section, self.measurement)
