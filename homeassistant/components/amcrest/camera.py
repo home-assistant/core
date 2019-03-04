@@ -1,5 +1,9 @@
 """Support for Amcrest IP cameras."""
 import logging
+import threading
+
+from requests import RequestException
+from urllib3.exceptions import ReadTimeoutError
 
 from homeassistant.components.amcrest import (
     DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT)
@@ -43,12 +47,18 @@ class AmcrestCam(Camera):
         self._stream_source = amcrest.stream_source
         self._resolution = amcrest.resolution
         self._token = self._auth = amcrest.authentication
+        self._snapshot_lock = threading.Lock()
 
     def camera_image(self):
         """Return a still image response from the camera."""
-        # Send the request to snap a picture and return raw jpg data
-        response = self._camera.snapshot(channel=self._resolution)
-        return response.data
+        with self._snapshot_lock:
+            try:
+                # Send the request to snap a picture and return raw jpg data
+                return self._camera.snapshot(channel=self._resolution).data
+            except (RequestException, ReadTimeoutError, ValueError) as error:
+                _LOGGER.error(
+                    'Could not get camera image due to error %s', error)
+                return None
 
     async def handle_async_mjpeg_stream(self, request):
         """Return an MJPEG stream."""
