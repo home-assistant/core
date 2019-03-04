@@ -134,7 +134,7 @@ class ToonSensor(ToonEntity):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Get the latest data from the sensor."""
         section = getattr(self.toon, self.section)
         value = None
