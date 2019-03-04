@@ -10,10 +10,10 @@ action "Python 3.7" {
 
 action "Python 3.6" {
   uses = "home-assistant/actions/py36-tox@master"
-  args = "-e lint,pylint,typing,cov"
+  args = "-e lint,pylint,typing"
 }
 
 action "Python 3.5" {
   uses = "home-assistant/actions/py35-tox@master"
-  args = "-e lint,pylint,typing,cov"
+  args = "-e lint,pylint,typing"
 }
