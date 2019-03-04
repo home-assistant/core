@@ -21,6 +21,7 @@ ATTR_OPERATION_LOCK = 'operation_lock'
 ATTR_SABOTAGE = 'sabotage'
 ATTR_STATUS_UPDATE = 'status_update'
 ATTR_UNREACHABLE = 'unreachable'
+ATTR_GROUPMEMBERUNREADCHABLE = 'member device unreachable'
 
 
 class HomematicipGenericDevice(Entity):

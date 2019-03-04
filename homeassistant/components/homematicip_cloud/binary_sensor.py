@@ -4,6 +4,8 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.homematicip_cloud import (
     DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
+from homeassistant.components.homematicip_cloud.device import (
+    ATTR_GROUPMEMBERUNREADCHABLE)
 
 DEPENDENCIES = ['homematicip_cloud']
 
@@ -31,8 +33,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         AsyncWaterSensor, AsyncRotaryHandleSensor,
         AsyncMotionDetectorPushButton)
 
-    from homematicip.group import (
-        SecurityGroup, SecurityZoneGroup)
+    from homematicip.aio.group import (
+        AsyncSecurityGroup, AsyncSecurityZoneGroup)
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -48,9 +50,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(HomematicipWaterDetector(home, device))
 
     for group in home.groups:
-        if isinstance(group, SecurityGroup):
+        if isinstance(group, AsyncSecurityGroup):
             devices.append(HomematicipSecuritySensorGroup(home, group))
-        elif isinstance(group, SecurityZoneGroup):
+        elif isinstance(group, AsyncSecurityZoneGroup):
             devices.append(HomematicipSecurityZoneSensorGroup(home, group))
 
     if devices:
@@ -157,14 +159,16 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
         if self._device.windowState is not None and \
                 self._device.windowState != WindowState.CLOSED:
             attr.update({ATTR_WINDOWSTATE: str(self._device.windowState)})
-
+        if self._device.unreach:
+            attr.update({ATTR_GROUPMEMBERUNREADCHABLE: True})
         return attr
 
     @property
     def is_on(self):
         """Return true if security issue detected."""
         if self._device.motionDetected or \
-                self._device.presenceDetected:
+                self._device.presenceDetected or \
+                self._device.unreach:
             return True
         from homematicip.base.enums import WindowState
         if self._device.windowState is not None and \
