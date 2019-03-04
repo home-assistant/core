@@ -168,7 +168,8 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
         """Return true if security issue detected."""
         if self._device.motionDetected or \
                 self._device.presenceDetected or \
-                self._device.unreach:
+                self._device.unreach or \
+                self._device.sabotage:
             return True
         from homematicip.base.enums import WindowState
         if self._device.windowState is not None and \
