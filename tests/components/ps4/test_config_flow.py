@@ -126,7 +126,7 @@ async def test_multiple_flow_implementation(hass):
     assert result['data']['devices'] == [MOCK_DEVICE]
     assert result['title'] == MOCK_TITLE
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Add entry using result data.
     mock_data = {
@@ -161,7 +161,7 @@ async def test_multiple_flow_implementation(hass):
         result = await flow.async_step_link(user_input=MOCK_CONFIG_ADDITIONAL)
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['data'][CONF_TOKEN] == MOCK_CREDS
-        assert len(result['data']['devices']) == 1
+    assert len(result['data']['devices']) == 1
     assert result['title'] == MOCK_TITLE
 
     mock_data = {
@@ -233,7 +233,7 @@ async def test_additional_device(hass):
         result = await flow.async_step_link(user_input=MOCK_CONFIG_ADDITIONAL)
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['data'][CONF_TOKEN] == MOCK_CREDS
-        assert len(result['data']['devices']) == 1
+    assert len(result['data']['devices']) == 1
     assert result['title'] == MOCK_TITLE
 
     # Add New Entry
