@@ -68,6 +68,7 @@ UNKNOWN = 'unknown'
 OPENING = 'opening'
 ZONE = 'zone'
 OCCUPANCY = 'occupancy'
+ACCELERATION = 'acceleration'
 
 ATTR_LEVEL = 'level'
 
