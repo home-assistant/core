@@ -1674,7 +1674,7 @@ temescal==0.1
 temperusb==1.5.3
 
 # homeassistant.components.tesla
-teslajsonpy==0.0.23
+teslajsonpy==0.0.24
 
 # homeassistant.components.sensor.thermoworks_smoke
 thermoworks_smoke==0.1.8
