@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_PLAYING, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['openwebifpy==1.1.7']
+REQUIREMENTS = ['openwebifpy==1.1.8']
 
 _LOGGER = logging.getLogger(__name__)
 
