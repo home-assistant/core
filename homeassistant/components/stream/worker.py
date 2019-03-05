@@ -82,12 +82,6 @@ def stream_worker(hass, stream, quit_event):
             # Save segment to outputs
             segment_duration = (packet.pts * packet.time_base) / sequence
             for fmt, buffer in outputs.items():
-                # Flush streams
-                for packet in buffer.vstream.encode():
-                    buffer.output.mux(packet)
-                if buffer.astream:
-                    for packet in buffer.astream.encode():
-                        buffer.output.mux(packet)
                 buffer.output.close()
                 del audio_packets[buffer.astream]
                 if stream.outputs.get(fmt):

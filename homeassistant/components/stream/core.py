@@ -142,7 +142,7 @@ class StreamView(HomeAssistantView):
             stream.stop()
             self._unsub = None
 
-        self._unsub = async_call_later(hass, 30, cleanup)
+        self._unsub = async_call_later(hass, 300, cleanup)
 
         return await self.handle(request, stream, sequence)
 
