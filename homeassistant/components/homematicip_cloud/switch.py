@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.homematicip_cloud import (
     DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.homematicip_cloud.device import (
-    ATTR_GROUPMEMBERUNREADCHABLE)
+    ATTR_GROUP_MEMBER_UNREACHABLE)
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['homematicip_cloud']
@@ -108,7 +108,7 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
         """Return the state attributes of the switch-group."""
         attr = {}
         if self._device.unreach:
-            attr.update({ATTR_GROUPMEMBERUNREADCHABLE: True})
+            attr.update({ATTR_GROUP_MEMBER_UNREACHABLE: True})
         return attr
 
     async def async_turn_on(self, **kwargs):
