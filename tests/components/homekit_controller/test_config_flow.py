@@ -548,7 +548,7 @@ async def test_user_works(hass):
     assert result['type'] == 'form'
     assert result['step_id'] == 'init'
 
-    result = await flow.async_step_init({
+    result = await flow.async_step_user({
         'device': '00:00:00:00:00:00',
     })
     assert result['type'] == 'form'

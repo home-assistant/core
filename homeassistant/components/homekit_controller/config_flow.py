@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.core import callback
 
@@ -71,24 +72,17 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         self.devices = {}
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         import homekit
 
         errors = {}
 
-        if user_input is not None and 'device' in user_input:
+        if user_input is not None:
             key = user_input['device']
-            if key in self.devices:
-                props = self.devices[key]['properties']
-                self.hkid = props['id']
-                self.model = props['md']
-                return await self.async_step_pair()
-
-            errors['device'] = 'unknown_device'
+            props = self.devices[key]['properties']
+            self.hkid = props['id']
+            self.model = props['md']
+            return await self.async_step_pair()
 
         controller = homekit.Controller()
         all_hosts = await self.hass.async_add_executor_job(
@@ -115,27 +109,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 vol.Required('device'): vol.In(self.devices.keys()),
             })
         )
-
-    async def async_import_legacy_pairing(self, discovery_props, pairing_data):
-        """Migrate a legacy pairing to config entries."""
-        from homekit.controller import Pairing
-
-        hkid = discovery_props['id']
-
-        existing = find_existing_host(self.hass, hkid)
-        if existing:
-            _LOGGER.info(
-                ("Legacy configuration for homekit accessory %s"
-                 "not loaded as already migrated"), hkid)
-            return self.async_abort(reason='already_configured')
-
-        _LOGGER.info(
-            ("Legacy configuration %s for homekit"
-             "accessory migrated to config entries"), hkid)
-
-        pairing = Pairing(pairing_data)
-
-        return await self._entry_from_accessory(pairing)
 
     async def async_step_discovery(self, discovery_info):
         """Handle a discovered HomeKit accessory.
@@ -183,7 +156,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                         conn.async_config_num_changed(config_num))
                 return self.async_abort(reason='already_configured')
 
-            old_pairings = load_old_pairings(self.hass)
+            old_pairings = await self.hass.async_add_executor_job(
+                load_old_pairings,
+                self.hass
+            )
+
             if hkid in old_pairings:
                 return await self.async_import_legacy_pairing(
                     properties,
@@ -211,13 +188,34 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         self.hkid = hkid
         return await self.async_step_pair()
 
+    async def async_import_legacy_pairing(self, discovery_props, pairing_data):
+        """Migrate a legacy pairing to config entries."""
+        from homekit.controller import Pairing
+
+        hkid = discovery_props['id']
+
+        existing = find_existing_host(self.hass, hkid)
+        if existing:
+            _LOGGER.info(
+                ("Legacy configuration for homekit accessory %s"
+                 "not loaded as already migrated"), hkid)
+            return self.async_abort(reason='already_configured')
+
+        _LOGGER.info(
+            ("Legacy configuration %s for homekit"
+             "accessory migrated to config entries"), hkid)
+
+        pairing = Pairing(pairing_data)
+
+        return await self._entry_from_accessory(pairing)
+
     async def async_step_pair(self, pair_info=None):
         """Pair with a new HomeKit accessory."""
         import homekit  # pylint: disable=import-error
 
         errors = {}
 
-        if pair_info and 'pairing_code' in pair_info:
+        if pair_info:
             code = pair_info['pairing_code'].strip()
             controller = homekit.Controller()
             try:
@@ -245,7 +243,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             },
             errors=errors,
             data_schema=vol.Schema({
-                vol.Required("pairing_code"): str,
+                vol.Required('pairing_code'):  vol.All(cv.string, vol.Strip),
             })
         )
 
