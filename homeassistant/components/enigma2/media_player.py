@@ -7,16 +7,21 @@ from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.helpers.config_validation import (PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_STEP, MEDIA_TYPE_TVSHOW)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_SSL,
-    STATE_OFF, STATE_ON, CONF_PORT)
+    STATE_OFF, STATE_ON, STATE_PLAYING, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['openwebifpy==1.1.0']
+REQUIREMENTS = ['openwebifpy==1.1.5']
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_MEDIA_CURRENTLY_RECORDING = 'media_currently_recording'
+ATTR_MEDIA_DESCRIPTION = 'media_description'
+ATTR_MEDIA_END_TIME = 'media_end_time'
+ATTR_MEDIA_START_TIME = 'media_start_time'
 
 DEFAULT_NAME = 'Enigma2 Media Player'
 DEFAULT_PORT = 80
@@ -25,7 +30,7 @@ DEFAULT_USERNAME = 'root'
 DEFAULT_PASSWORD = 'dreambox'
 
 SUPPORTED_ENIGMA2 = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                    SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | \
+                    SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | SUPPORT_STOP | \
                     SUPPORT_PREVIOUS_TRACK | SUPPORT_VOLUME_STEP | \
                     SUPPORT_TURN_ON | SUPPORT_PAUSE | SUPPORT_SELECT_SOURCE
 
@@ -80,6 +85,7 @@ class Enigma2Device(MediaPlayerDevice):
         self.current_service_ref = None
         self.muted = False
         self.picon_url = None
+        self.status_info = {}
         self.sources = self.e2_box.sources
 
     @property
@@ -108,13 +114,14 @@ class Enigma2Device(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self.current_service_ref.startswith('1:0:0'):
-            return "[Recording Playback] - {}".format(
-                self.current_programme_name)
-        if self.current_service_channel_name:
-            return "{} - {}".format(self.current_programme_name,
-                                    self.current_service_channel_name)
+        return self.current_service_channel_name
 
+    @property
+    def media_series_title(self):
+        """Return the title of current episode of TV show."""
+        if self.current_service_ref.startswith('1:0:0'):
+            return "🔴 {}".\
+                format(self.current_programme_name)
         return self.current_programme_name
 
     @property
@@ -159,9 +166,9 @@ class Enigma2Device(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         return self.volume / 100
 
-    def media_play_pause(self):
-        """Pause media on media player."""
-        self.e2_box.toggle_play_pause()
+    def media_stop(self):
+        """Send stop command."""
+        self.e2_box.set_stop()
 
     def media_play(self):
         """Play media."""
@@ -204,15 +211,35 @@ class Enigma2Device(MediaPlayerDevice):
         if self.e2_box.is_box_in_standby():
             self._state = STATE_OFF
             return
-        self._state = STATE_ON
         self.current_service_channel_name = \
             status_info['currservice_station']
         pname = status_info['currservice_name']
         self.current_programme_name = pname if pname != "N/A" else ""
         self.current_service_ref = status_info['currservice_serviceref']
+        self.status_info = status_info
+        if self.current_service_ref.startswith('1:0:0'):
+            self._state = STATE_PLAYING
+        else:
+            self._state = STATE_ON
         self.muted = status_info['muted']
         self.volume = status_info['volume']
         self.picon_url = \
             self.e2_box.get_current_playing_picon_url(
                 channel_name=self.current_service_channel_name,
                 currservice_serviceref=self.current_service_ref)
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attributes = {}
+        if not self.e2_box.is_box_in_standby():
+            attributes[ATTR_MEDIA_CURRENTLY_RECORDING] = \
+                self.status_info['isRecording']
+            attributes[ATTR_MEDIA_DESCRIPTION] = \
+                self.status_info['currservice_fulldescription']
+            attributes[ATTR_MEDIA_START_TIME] = \
+                self.status_info['currservice_begin']
+            attributes[ATTR_MEDIA_END_TIME] = \
+                self.status_info['currservice_end']
+
+        return attributes
