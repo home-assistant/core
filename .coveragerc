@@ -138,6 +138,7 @@ omit =
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubee.py
     homeassistant/components/device_tracker/ubus.py
+    homeassistant/components/device_tracker/xfinity.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/dominos/*
     homeassistant/components/doorbird/*
