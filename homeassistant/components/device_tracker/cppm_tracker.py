@@ -30,22 +30,21 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_scanner(hass, config):
     """Initialize Scanner."""
-    client_id = config[DOMAIN].get('client_id')
     grant_type = 'client_credentials'
-    new_scan = CPPMDeviceScanner(config[DOMAIN], client_id, grant_type)
+    new_scan = CPPMDeviceScanner(config[DOMAIN], grant_type)
     return new_scan if new_scan.success_init else None
 
 
 class CPPMDeviceScanner(DeviceScanner):
     """Initialize class."""
 
-    def __init__(self, config, client_id, grant_type):
+    def __init__(self, config, grant_type):
         """Initialize class."""
         _LOGGER.debug("-------------INIT CALLED--------------")
         self._cppm_host = config[CONF_HOST]
         self._api_key = config[CONF_API_KEY]
         self._grant_type = grant_type
-        self._client_id = client_id
+        self._client_id = config['client_id']
         self.success_init = self.get_cppm_data()
 
     async def async_scan_devices(self):
