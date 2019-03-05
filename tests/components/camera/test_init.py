@@ -226,15 +226,15 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
         camera.ATTR_MEDIA_PLAYER: 'media_player.test'
     }
     with patch('homeassistant.components.stream.request_stream'), \
-        pytest.raises(HomeAssistantError):
+            pytest.raises(HomeAssistantError):
         # Call service
         await hass.services.async_call(
             camera.DOMAIN, camera.SERVICE_PLAY_STREAM, data, blocking=True)
 
 
 async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
-    await async_setup_component(hass, 'media_player')
     """Test camera play_stream service."""
+    await async_setup_component(hass, 'media_player')
     data = {
         ATTR_ENTITY_ID: 'camera.demo_camera',
         camera.ATTR_MEDIA_PLAYER: 'media_player.test'
