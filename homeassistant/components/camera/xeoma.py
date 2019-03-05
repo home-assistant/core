@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pyxeoma==1.4.0']
+REQUIREMENTS = ['pyxeoma==1.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 

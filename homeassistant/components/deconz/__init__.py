@@ -68,10 +68,10 @@ async def async_setup_entry(hass, config_entry):
 
     gateway = DeconzGateway(hass, config_entry)
 
-    hass.data[DOMAIN] = gateway
-
     if not await gateway.async_setup():
         return False
+
+    hass.data[DOMAIN] = gateway
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()

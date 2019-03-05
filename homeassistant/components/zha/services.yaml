@@ -29,9 +29,12 @@ set_zigbee_cluster_attribute:
   description: >- 
     Set attribute value for the specified cluster on the specified entity. 
   fields:
-    entity_id:
-      description: Entity id
-      example: "binary_sensor.centralite_3130_00e8fb4e_1"
+    ieee:
+      description: IEEE address for the device
+      example: "00:0d:6f:00:05:7d:2d:34"
+    endpoint_id:
+      description: Endpoint id for the cluster
+      example: 1
     cluster_id:
       description: ZCL cluster to retrieve attributes for
       example: 6
@@ -52,9 +55,12 @@ issue_zigbee_cluster_command:
   description: >- 
     Issue command on the specified cluster on the specified entity. 
   fields:
-    entity_id:
-      description: Entity id
-      example: "binary_sensor.centralite_3130_00e8fb4e_1"
+    ieee:
+      description: IEEE address for the device
+      example: "00:0d:6f:00:05:7d:2d:34"
+    endpoint_id:
+      description: Endpoint id for the cluster
+      example: 1
     cluster_id:
       description: ZCL cluster to retrieve attributes for
       example: 6

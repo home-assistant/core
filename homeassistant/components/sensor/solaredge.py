@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME)
+    CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME, POWER_WATT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -36,7 +36,7 @@ SENSOR_TYPES = {
                           'mdi:solar-power'],
     'energy_today': ['lastDayData', "Energy today", 'Wh',
                      'mdi:solar-power'],
-    'current_power': ['currentPower', "Current Power", 'W',
+    'current_power': ['currentPower', "Current Power", POWER_WATT,
                       'mdi:solar-power']
 }
 

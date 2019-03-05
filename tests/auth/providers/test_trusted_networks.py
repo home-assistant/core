@@ -1,5 +1,5 @@
 """Test the Trusted Networks auth provider."""
-from unittest.mock import Mock
+from ipaddress import ip_address
 
 import pytest
 import voluptuous as vol
@@ -18,9 +18,17 @@ def store(hass):
 @pytest.fixture
 def provider(hass, store):
     """Mock provider."""
-    return tn_auth.TrustedNetworksAuthProvider(hass, store, {
-        'type': 'trusted_networks'
-    })
+    return tn_auth.TrustedNetworksAuthProvider(
+        hass, store, tn_auth.CONFIG_SCHEMA({
+            'type': 'trusted_networks',
+            'trusted_networks': [
+                '192.168.0.1',
+                '192.168.128.0/24',
+                '::1',
+                'fd00::/8'
+            ]
+        })
+    )
 
 
 @pytest.fixture
@@ -56,14 +64,17 @@ async def test_trusted_networks_credentials(manager, provider):
 
 async def test_validate_access(provider):
     """Test validate access from trusted networks."""
-    with pytest.raises(tn_auth.InvalidAuthError):
-        provider.async_validate_access('192.168.0.1')
+    provider.async_validate_access(ip_address('192.168.0.1'))
+    provider.async_validate_access(ip_address('192.168.128.10'))
+    provider.async_validate_access(ip_address('::1'))
+    provider.async_validate_access(ip_address('fd01:db8::ff00:42:8329'))
 
-    provider.hass.http = Mock(trusted_networks=['192.168.0.1'])
-    provider.async_validate_access('192.168.0.1')
-
     with pytest.raises(tn_auth.InvalidAuthError):
-        provider.async_validate_access('127.0.0.1')
+        provider.async_validate_access(ip_address('192.168.0.2'))
+    with pytest.raises(tn_auth.InvalidAuthError):
+        provider.async_validate_access(ip_address('127.0.0.1'))
+    with pytest.raises(tn_auth.InvalidAuthError):
+        provider.async_validate_access(ip_address('2001:db8::ff00:42:8329'))
 
 
 async def test_login_flow(manager, provider):
@@ -71,22 +82,16 @@ async def test_login_flow(manager, provider):
     owner = await manager.async_create_user("test-owner")
     user = await manager.async_create_user("test-user")
 
-    # trusted network didn't loaded
-    flow = await provider.async_login_flow({'ip_address': '127.0.0.1'})
-    step = await flow.async_step_init()
-    assert step['type'] == 'abort'
-    assert step['reason'] == 'not_whitelisted'
-
-    provider.hass.http = Mock(trusted_networks=['192.168.0.1'])
-
     # not from trusted network
-    flow = await provider.async_login_flow({'ip_address': '127.0.0.1'})
+    flow = await provider.async_login_flow(
+        {'ip_address': ip_address('127.0.0.1')})
     step = await flow.async_step_init()
     assert step['type'] == 'abort'
     assert step['reason'] == 'not_whitelisted'
 
     # from trusted network, list users
-    flow = await provider.async_login_flow({'ip_address': '192.168.0.1'})
+    flow = await provider.async_login_flow(
+        {'ip_address': ip_address('192.168.0.1')})
     step = await flow.async_step_init()
     assert step['step_id'] == 'init'
 

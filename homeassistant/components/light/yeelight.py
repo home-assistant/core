@@ -46,7 +46,12 @@ DATA_KEY = 'light.yeelight'
 
 ATTR_MODE = 'mode'
 ATTR_COUNT = 'count'
+ATTR_ACTION = 'action'
 ATTR_TRANSITIONS = 'transitions'
+
+ACTION_RECOVER = 'recover'
+ACTION_STAY = 'stay'
+ACTION_OFF = 'off'
 
 YEELIGHT_RGB_TRANSITION = 'RGBTransition'
 YEELIGHT_HSV_TRANSACTION = 'HSVTransition'
@@ -59,6 +64,8 @@ YEELIGHT_SERVICE_SCHEMA = vol.Schema({
 
 YEELIGHT_FLOW_TRANSITION_SCHEMA = {
     vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
+    vol.Optional(ATTR_ACTION, default=ACTION_RECOVER):
+        vol.Any(ACTION_RECOVER, ACTION_OFF, ACTION_STAY),
     vol.Required(ATTR_TRANSITIONS): [{
         vol.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION):
             vol.All(cv.ensure_list, [cv.positive_int]),
@@ -77,14 +84,15 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
     vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
     vol.Optional(CONF_MODEL): cv.string,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
     vol.Optional(CONF_CUSTOM_EFFECTS): [{
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_FLOW_PARAMS): YEELIGHT_FLOW_TRANSITION_SCHEMA
     }]
 })
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}, })
 
 SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_TRANSITION |
@@ -604,13 +612,14 @@ class YeelightLight(Light):
 
         return transition_objects
 
-    def start_flow(self, transitions, count=0):
+    def start_flow(self, transitions, count=0, action=ACTION_RECOVER):
         """Start flow."""
         import yeelight
 
         try:
             flow = yeelight.Flow(
                 count=count,
+                action=yeelight.Flow.actions[action],
                 transitions=self.transitions_config_parser(transitions))
 
             self._bulb.start_flow(flow)

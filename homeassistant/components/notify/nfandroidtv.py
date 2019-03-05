@@ -248,7 +248,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     req = requests.get(url, timeout=DEFAULT_TIMEOUT)
                 return req.content
 
-            elif local_path is not None:
+            if local_path is not None:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
                     return open(local_path, "rb")

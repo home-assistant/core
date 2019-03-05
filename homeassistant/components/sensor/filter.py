@@ -313,6 +313,7 @@ class Filter:
         self._entity = entity
         self._skip_processing = False
         self._window_size = window_size
+        self._store_raw = False
 
     @property
     def window_size(self):
@@ -337,7 +338,10 @@ class Filter:
         """Implement a common interface for filters."""
         filtered = self._filter_state(FilterState(new_state))
         filtered.set_precision(self.precision)
-        self.states.append(copy(filtered))
+        if self._store_raw:
+            self.states.append(copy(FilterState(new_state)))
+        else:
+            self.states.append(copy(filtered))
         new_state.state = filtered.state
         return new_state
 
@@ -402,12 +406,14 @@ class OutlierFilter(Filter):
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
         self._stats_internal = Counter()
+        self._store_raw = True
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
+        median = statistics.median([s.state for s in self.states]) \
+            if self.states else 0
         if (len(self.states) == self.states.maxlen and
-                abs(new_state.state -
-                    statistics.median([s.state for s in self.states])) >
+                abs(new_state.state - median) >
                 self._radius):
 
             self._stats_internal['erasures'] += 1
@@ -415,7 +421,7 @@ class OutlierFilter(Filter):
             _LOGGER.debug("Outlier nr. %s in %s: %s",
                           self._stats_internal['erasures'],
                           self._entity, new_state)
-            return self.states[-1]
+            new_state.state = median
         return new_state
 
 

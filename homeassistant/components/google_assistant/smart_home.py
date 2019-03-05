@@ -1,4 +1,5 @@
 """Support for Google Assistant Smart Home API."""
+from asyncio import gather
 from collections.abc import Mapping
 from itertools import product
 import logging
@@ -8,7 +9,7 @@ from homeassistant.util.decorator import Registry
 from homeassistant.core import callback
 from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES, CONF_NAME, STATE_UNAVAILABLE,
-    ATTR_SUPPORTED_FEATURES
+    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
 )
 from homeassistant.components import (
     climate,
@@ -32,7 +33,8 @@ from .const import (
     TYPE_THERMOSTAT, TYPE_FAN,
     CONF_ALIASES, CONF_ROOM_HINT,
     ERR_FUNCTION_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
-    ERR_UNKNOWN_ERROR
+    ERR_UNKNOWN_ERROR,
+    EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED, EVENT_QUERY_RECEIVED
 )
 from .helpers import SmartHomeError
 
@@ -88,8 +90,7 @@ class _GoogleEntity:
         return [Trait(self.hass, state, self.config) for Trait in trait.TRAITS
                 if Trait.supported(domain, features)]
 
-    @callback
-    def sync_serialize(self):
+    async def sync_serialize(self):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
@@ -131,13 +132,31 @@ class _GoogleEntity:
         if aliases:
             device['name']['nicknames'] = aliases
 
-        # add room hint if annotated
+        for trt in traits:
+            device['attributes'].update(trt.sync_attributes())
+
         room = entity_config.get(CONF_ROOM_HINT)
         if room:
             device['roomHint'] = room
+            return device
 
-        for trt in traits:
-            device['attributes'].update(trt.sync_attributes())
+        dev_reg, ent_reg, area_reg = await gather(
+            self.hass.helpers.device_registry.async_get_registry(),
+            self.hass.helpers.entity_registry.async_get_registry(),
+            self.hass.helpers.area_registry.async_get_registry(),
+        )
+
+        entity_entry = ent_reg.async_get(state.entity_id)
+        if not (entity_entry and entity_entry.device_id):
+            return device
+
+        device_entry = dev_reg.devices.get(entity_entry.device_id)
+        if not (device_entry and device_entry.area_id):
+            return device
+
+        area_entry = area_reg.areas.get(device_entry.area_id)
+        if area_entry and area_entry.name:
+            device['roomHint'] = area_entry.name
 
         return device
 
@@ -187,7 +206,7 @@ async def async_handle_message(hass, config, message):
     """Handle incoming API messages."""
     response = await _process(hass, config, message)
 
-    if 'errorCode' in response['payload']:
+    if response and 'errorCode' in response['payload']:
         _LOGGER.error('Error handling message %s: %s',
                       message, response['payload'])
 
@@ -214,8 +233,8 @@ async def _process(hass, config, message):
         }
 
     try:
-        result = await handler(hass, config, inputs[0].get('payload'))
-        return {'requestId': request_id, 'payload': result}
+        result = await handler(hass, config, request_id,
+                               inputs[0].get('payload'))
     except SmartHomeError as err:
         return {
             'requestId': request_id,
@@ -228,13 +247,21 @@ async def _process(hass, config, message):
             'payload': {'errorCode': ERR_UNKNOWN_ERROR}
         }
 
+    if result is None:
+        return None
+    return {'requestId': request_id, 'payload': result}
+
 
 @HANDLERS.register('action.devices.SYNC')
-async def async_devices_sync(hass, config, payload):
+async def async_devices_sync(hass, config, request_id, payload):
     """Handle action.devices.SYNC request.
 
     https://developers.google.com/actions/smarthome/create-app#actiondevicessync
     """
+    hass.bus.async_fire(EVENT_SYNC_RECEIVED, {
+        'request_id': request_id
+    })
+
     devices = []
     for state in hass.states.async_all():
         if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
@@ -244,7 +271,7 @@ async def async_devices_sync(hass, config, payload):
             continue
 
         entity = _GoogleEntity(hass, config, state)
-        serialized = entity.sync_serialize()
+        serialized = await entity.sync_serialize()
 
         if serialized is None:
             _LOGGER.debug("No mapping for %s domain", entity.state)
@@ -252,14 +279,16 @@ async def async_devices_sync(hass, config, payload):
 
         devices.append(serialized)
 
-    return {
+    response = {
         'agentUserId': config.agent_user_id,
         'devices': devices,
     }
 
+    return response
+
 
 @HANDLERS.register('action.devices.QUERY')
-async def async_devices_query(hass, config, payload):
+async def async_devices_query(hass, config, request_id, payload):
     """Handle action.devices.QUERY request.
 
     https://developers.google.com/actions/smarthome/create-app#actiondevicesquery
@@ -268,6 +297,11 @@ async def async_devices_query(hass, config, payload):
     for device in payload.get('devices', []):
         devid = device['id']
         state = hass.states.get(devid)
+
+        hass.bus.async_fire(EVENT_QUERY_RECEIVED, {
+            'request_id': request_id,
+            ATTR_ENTITY_ID: devid,
+        })
 
         if not state:
             # If we can't find a state, the device is offline
@@ -280,7 +314,7 @@ async def async_devices_query(hass, config, payload):
 
 
 @HANDLERS.register('action.devices.EXECUTE')
-async def handle_devices_execute(hass, config, payload):
+async def handle_devices_execute(hass, config, request_id, payload):
     """Handle action.devices.EXECUTE request.
 
     https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
@@ -292,6 +326,12 @@ async def handle_devices_execute(hass, config, payload):
         for device, execution in product(command['devices'],
                                          command['execution']):
             entity_id = device['id']
+
+            hass.bus.async_fire(EVENT_COMMAND_RECEIVED, {
+                'request_id': request_id,
+                ATTR_ENTITY_ID: entity_id,
+                'execution': execution
+            })
 
             # Happens if error occurred. Skip entity for further processing
             if entity_id in results:
@@ -335,6 +375,15 @@ async def handle_devices_execute(hass, config, payload):
         })
 
     return {'commands': final_results}
+
+
+@HANDLERS.register('action.devices.DISCONNECT')
+async def async_devices_disconnect(hass, config, request_id, payload):
+    """Handle action.devices.DISCONNECT request.
+
+    https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
+    """
+    return None
 
 
 def turned_off_response(message):

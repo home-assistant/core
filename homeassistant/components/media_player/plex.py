@@ -47,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False): cv.boolean,
     vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
     vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False): cv.boolean,
+    vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
     vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True): cv.boolean,
     vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=600)):
         vol.All(cv.time_period, cv.positive_timedelta),

@@ -11,7 +11,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PORT, POWER_WATT)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -46,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     dev = []
     for mtu in gateway.data:
-        dev.append(Ted5000Sensor(gateway, name, mtu, 'W'))
+        dev.append(Ted5000Sensor(gateway, name, mtu, POWER_WATT))
         dev.append(Ted5000Sensor(gateway, name, mtu, 'V'))
 
     add_entities(dev)
@@ -58,7 +59,7 @@ class Ted5000Sensor(Entity):
 
     def __init__(self, gateway, name, mtu, unit):
         """Initialize the sensor."""
-        units = {'W': 'power', 'V': 'voltage'}
+        units = {POWER_WATT: 'power', 'V': 'voltage'}
         self._gateway = gateway
         self._name = '{} mtu{} {}'.format(name, mtu, units[unit])
         self._mtu = mtu
@@ -114,4 +115,4 @@ class Ted5000Gateway:
                 voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]
                               ["VoltageNow"])
 
-                self.data[mtu] = {'W': power, 'V': voltage / 10}
+                self.data[mtu] = {POWER_WATT: power, 'V': voltage / 10}

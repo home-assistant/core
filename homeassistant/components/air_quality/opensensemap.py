@@ -1,9 +1,4 @@
-"""
-Support for openSenseMap Air Quality data.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_quality.opensensemap/
-"""
+"""Support for openSenseMap Air Quality data."""
 from datetime import timedelta
 import logging
 
@@ -16,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['opensensemap-api==0.1.3']
+REQUIREMENTS = ['opensensemap-api==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 

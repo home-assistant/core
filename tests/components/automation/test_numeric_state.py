@@ -45,7 +45,7 @@ async def test_if_fires_on_entity_change_below(hass, calls):
     hass.states.async_set('test.entity', 9, context=context)
     await hass.async_block_till_done()
     assert 1 == len(calls)
-    assert calls[0].context is context
+    assert calls[0].context.parent_id == context.id
 
     # Set above 12 so the automation will fire again
     hass.states.async_set('test.entity', 12)
@@ -134,7 +134,7 @@ async def test_if_not_fires_on_entity_change_below_to_below(hass, calls):
     hass.states.async_set('test.entity', 9, context=context)
     await hass.async_block_till_done()
     assert 1 == len(calls)
-    assert calls[0].context is context
+    assert calls[0].context.parent_id == context.id
 
     # already below so should not fire again
     hass.states.async_set('test.entity', 5)

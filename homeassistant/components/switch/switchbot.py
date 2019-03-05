@@ -36,6 +36,7 @@ class SwitchBot(SwitchDevice):
 
     def __init__(self, mac, name) -> None:
         """Initialize the Switchbot."""
+        # pylint: disable=import-error, no-member
         import switchbot
         self._state = False
         self._name = name
