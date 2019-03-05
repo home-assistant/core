@@ -27,6 +27,7 @@ omit =
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
     homeassistant/components/android_ip_webcam/*
+    homeassistant/components/androidtv/*
     homeassistant/components/apcupsd/*
     homeassistant/components/apiai/*
     homeassistant/components/apple_tv/*
