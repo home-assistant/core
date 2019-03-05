@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['env_canada==0.0.6']
+REQUIREMENTS = ['env_canada==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
