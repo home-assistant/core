@@ -56,7 +56,7 @@ def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
     for idx in range(10):
         yield from websocket_client.send_json({
             'id': idx + 1,
-            'type': commands.TYPE_PING,
+            'type': 'ping',
         })
     msg = yield from websocket_client.receive()
     assert msg.type == WSMsgType.close
