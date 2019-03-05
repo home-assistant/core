@@ -2,7 +2,7 @@
 Support for functionality to interact with FireTV devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.firetv/
+https://home-assistant.io/components/media_player.androidtv/
 """
 import functools
 import logging
@@ -18,9 +18,9 @@ from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 
-FIRETV_DOMAIN = 'firetv'
+FIRETV_DOMAIN = 'androidtv'
 
-REQUIREMENTS = ['firetv==1.0.9']
+REQUIREMENTS = ['androidtv==1.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ FIRETV_STATES = {'off': STATE_OFF,
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FireTV platform."""
-    from firetv import FireTV
+    from androidtv import FireTV
 
     hass.data.setdefault(FIRETV_DOMAIN, {})
 
@@ -88,19 +88,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if CONF_ADB_SERVER_IP not in config:
         # Use "python-adb" (Python ADB implementation)
         if CONF_ADBKEY in config:
-            ftv = FireTV(host, config[CONF_ADBKEY])
+            atv = FireTV(host, config[CONF_ADBKEY])
             adb_log = " using adbkey='{0}'".format(config[CONF_ADBKEY])
         else:
-            ftv = FireTV(host)
+            atv = FireTV(host)
             adb_log = ""
     else:
         # Use "pure-python-adb" (communicate with ADB server)
-        ftv = FireTV(host, adb_server_ip=config[CONF_ADB_SERVER_IP],
+        atv = FireTV(host, adb_server_ip=config[CONF_ADB_SERVER_IP],
                      adb_server_port=config[CONF_ADB_SERVER_PORT])
         adb_log = " using ADB server at {0}:{1}".format(
             config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT])
 
-    if not ftv.available:
+    if not atv.available:
         _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
         return
 
@@ -111,7 +111,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if host in hass.data[FIRETV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", host)
     else:
-        device = FireTVDevice(ftv, name, get_sources, apps)
+        device = FireTVDevice(atv, name, get_sources, apps)
         add_entities([device])
         _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
         hass.data[FIRETV_DOMAIN][host] = device
@@ -166,21 +166,21 @@ def adb_decorator(override_available=False):
 class FireTVDevice(MediaPlayerDevice):
     """Representation of an Amazon Fire TV device on the network."""
 
-    def __init__(self, ftv, name, get_sources, apps):
+    def __init__(self, atv, name, get_sources, apps):
         """Initialize the FireTV device."""
-        from firetv import APPS, KEYS
+        from androidtv import APPS, KEYS
         self.apps = APPS
         self.keys = KEYS
 
         self.apps.update(apps)
 
-        self.firetv = ftv
+        self.androidtv = atv
 
         self._name = name
         self._get_sources = get_sources
 
         # ADB exceptions to catch
-        if not self.firetv.adb_server_ip:
+        if not self.androidtv.adb_server_ip:
             # Using "python-adb" (Python ADB implementation)
             from adb.adb_protocol import (InvalidChecksumError,
                                           InvalidCommandError,
@@ -196,7 +196,7 @@ class FireTVDevice(MediaPlayerDevice):
             self.exceptions = (ConnectionResetError,)
 
         self._state = None
-        self._available = self.firetv.available
+        self._available = self.androidtv.available
         self._current_app = None
         self._running_apps = None
 
@@ -251,7 +251,7 @@ class FireTVDevice(MediaPlayerDevice):
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
-            self._available = self.firetv.connect()
+            self._available = self.androidtv.connect()
 
             # To be safe, wait until the next update to run ADB commands.
             return
@@ -261,60 +261,60 @@ class FireTVDevice(MediaPlayerDevice):
             return
 
         # Get the `state`, `current_app`, and `running_apps`.
-        ftv_state, self._current_app, self._running_apps = \
-            self.firetv.update(self._get_sources)
+        atv_state, self._current_app, self._running_apps = \
+            self.androidtv.update(self._get_sources)
 
-        self._state = FIRETV_STATES[ftv_state]
+        self._state = FIRETV_STATES[atv_state]
 
     @adb_decorator()
     def turn_on(self):
         """Turn on the device."""
-        self.firetv.turn_on()
+        self.androidtv.turn_on()
 
     @adb_decorator()
     def turn_off(self):
         """Turn off the device."""
-        self.firetv.turn_off()
+        self.androidtv.turn_off()
 
     @adb_decorator()
     def media_play(self):
         """Send play command."""
-        self.firetv.media_play()
+        self.androidtv.media_play()
 
     @adb_decorator()
     def media_pause(self):
         """Send pause command."""
-        self.firetv.media_pause()
+        self.androidtv.media_pause()
 
     @adb_decorator()
     def media_play_pause(self):
         """Send play/pause command."""
-        self.firetv.media_play_pause()
+        self.androidtv.media_play_pause()
 
     @adb_decorator()
     def media_stop(self):
         """Send stop (back) command."""
-        self.firetv.back()
+        self.androidtv.back()
 
     @adb_decorator()
     def volume_up(self):
         """Send volume up command."""
-        self.firetv.volume_up()
+        self.androidtv.volume_up()
 
     @adb_decorator()
     def volume_down(self):
         """Send volume down command."""
-        self.firetv.volume_down()
+        self.androidtv.volume_down()
 
     @adb_decorator()
     def media_previous_track(self):
         """Send previous track command (results in rewind)."""
-        self.firetv.media_previous()
+        self.androidtv.media_previous()
 
     @adb_decorator()
     def media_next_track(self):
         """Send next track command (results in fast-forward)."""
-        self.firetv.media_next()
+        self.androidtv.media_next()
 
     @adb_decorator()
     def select_source(self, source):
@@ -325,14 +325,14 @@ class FireTVDevice(MediaPlayerDevice):
         """
         if isinstance(source, str):
             if not source.startswith('!'):
-                self.firetv.launch_app(source)
+                self.androidtv.launch_app(source)
             else:
-                self.firetv.stop_app(source[1:].lstrip())
+                self.androidtv.stop_app(source[1:].lstrip())
 
     @adb_decorator()
     def adb_command(self, cmd):
         """Send an ADB command to a Fire TV device."""
         key = self.keys.get(cmd)
         if key:
-            return self.firetv.adb_shell('input keyevent {}'.format(key))
-        return self.firetv.adb_shell(cmd)
+            return self.androidtv.adb_shell('input keyevent {}'.format(key))
+        return self.androidtv.adb_shell(cmd)
