@@ -1673,6 +1673,9 @@ tank_utility==1.4.0
 # homeassistant.components.tapsaff.binary_sensor
 tapsaff==0.2.0
 
+# homeassistant.components.sensor.oasa_telematics
+telematics==0.0.1
+
 # homeassistant.components.tellstick
 tellcore-net==0.4
 

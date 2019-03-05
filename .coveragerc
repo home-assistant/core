@@ -512,6 +512,7 @@ omit =
     homeassistant/components/nsw_fuel_station/sensor.py
     homeassistant/components/nut/sensor.py
     homeassistant/components/nzbget/sensor.py
+    homeassistant/components/oasa_telematics/sensor.py
     homeassistant/components/ohmconnect/sensor.py
     homeassistant/components/onewire/sensor.py
     homeassistant/components/openevse/sensor.py
