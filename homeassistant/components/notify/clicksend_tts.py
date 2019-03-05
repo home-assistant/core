@@ -31,7 +31,6 @@ CONF_CALLER = 'caller'
 
 DEFAULT_LANGUAGE = 'en-us'
 DEFAULT_VOICE = 'female'
-DEFAULT_CALLER = ''
 TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -40,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RECIPIENT): cv.string,
     vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
     vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
-    vol.Optional(CONF_CALLER, default=DEFAULT_CALLER): cv.string,
+    vol.Optional(CONF_CALLER): cv.string,
 })
 
 
@@ -64,7 +63,7 @@ class ClicksendNotificationService(BaseNotificationService):
         self.language = config.get(CONF_LANGUAGE)
         self.voice = config.get(CONF_VOICE)
         self.caller = config.get(CONF_CALLER)
-        if self.caller == '':
+        if self.caller is None:
             self.caller = self.recipient
 
     def send_message(self, message="", **kwargs):
