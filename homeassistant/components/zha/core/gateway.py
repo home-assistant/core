@@ -160,10 +160,12 @@ class ZHAGateway:
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
         zha_device = self._async_get_or_create_device(device)
-        entry = (await async_get_registry(self._hass)).async_get_or_create(
-            zha_device
-        )
-        zha_device.async_update_last_seen(entry.last_seen)
+        if not is_new_join:
+            entry = (await async_get_registry(self._hass)).async_get_or_create(
+                zha_device
+            )
+            zha_device.async_update_last_seen(entry.last_seen)
+            zha_device.set_power_source(entry.power_source)
         discovery_infos = []
         for endpoint_id, endpoint in device.endpoints.items():
             self._async_process_endpoint(
@@ -174,10 +176,10 @@ class ZHAGateway:
         if is_new_join:
             # configure the device
             await zha_device.async_configure()
-        elif not zha_device.available and zha_device.power_source is not None\
+        elif zha_device.power_source is not None\
                 and zha_device.power_source == MAINS_POWERED:
-            # the device is currently marked unavailable and it isn't a battery
-            # powered device so we should be able to update it now
+            # the device isn't a battery powered device so we should be able
+            # to update it now
             _LOGGER.debug(
                 "attempting to request fresh state for %s %s",
                 zha_device.name,

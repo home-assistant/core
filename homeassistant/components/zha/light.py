@@ -8,6 +8,8 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components import light
+from homeassistant.const import STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 from .const import (
@@ -155,6 +157,11 @@ class Light(ZhaEntity, light.Light):
         if self._level_channel:
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level)
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = last_state.state == STATE_ON
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""

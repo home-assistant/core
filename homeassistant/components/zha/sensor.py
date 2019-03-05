@@ -6,6 +6,7 @@ at https://home-assistant.io/components/sensor.zha/
 """
 import logging
 
+from homeassistant.core import callback
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import TEMP_CELSIUS, POWER_WATT
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -178,3 +179,8 @@ class Sensor(ZhaEntity):
         """Handle state update from channel."""
         self._state = self._formatter_function(state)
         self.async_schedule_update_ha_state()
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = last_state.state

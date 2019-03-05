@@ -69,6 +69,7 @@ class ZHADevice:
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__
         )
+        self._power_source = None
         self.status = DeviceStatus.CREATED
 
     @property
@@ -120,7 +121,9 @@ class ZHADevice:
 
     @property
     def power_source(self):
-        """Return True if sensor is available."""
+        """Return the power source for the device."""
+        if self._power_source is not None:
+            return self._power_source
         if ZDO_CHANNEL in self.cluster_channels:
             return self.cluster_channels.get(ZDO_CHANNEL).power_source
         return None
@@ -148,6 +151,10 @@ class ZHADevice:
     def set_available(self, available):
         """Set availability from restore and prevent signals."""
         self._available = available
+
+    def set_power_source(self, power_source):
+        """Set the power source."""
+        self._power_source = power_source
 
     def update_available(self, available):
         """Set sensor availability."""
