@@ -271,6 +271,9 @@ ciscomobilityexpress==0.1.2
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
 
+# homeassistant.components.device_tracker.cppm_tracker
+clearpasspy==1.0.2
+
 # homeassistant.components.sensor.co2signal
 co2signal==0.4.2
 
