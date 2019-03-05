@@ -503,13 +503,19 @@ async def ws_camera_stream(hass, connection, msg):
 
     Async friendly.
     """
-    from homeassistant.components.stream import async_request_stream
+    from homeassistant.components.stream import request_stream
     try:
         fmt = msg['format']
         camera = _get_camera_from_entity_id(hass, msg['entity_id'])
-        url = await async_request_stream(hass, camera.stream_source, fmt=fmt)
+
+        if not camera.stream_source:
+            raise HomeAssistantError("{} does not support play stream service"
+                                     .format(camera.entity_id))
+
+        url = request_stream(hass, camera.stream_source, fmt=fmt)
         connection.send_result(msg['id'], {'url': url})
-    except HomeAssistantError:
+    except HomeAssistantError as ex:
+        _LOGGER.error(ex)
         connection.send_error(
             msg['id'], 'start_stream_failed', 'Unable to start stream.')
 
@@ -548,22 +554,24 @@ async def async_handle_play_stream_service(camera, service):
     from homeassistant.components.media_player.const import (
         ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
         SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
-    from homeassistant.components.stream import async_request_stream
+    from homeassistant.components.stream import request_stream
+
+    if not camera.stream_source:
+        raise HomeAssistantError("{} does not support play stream service"
+                                 .format(camera.entity_id))
+
     hass = camera.hass
-    try:
-        fmt = service.data.get(ATTR_FORMAT)
-        entity_ids = service.data.get(ATTR_MEDIA_PLAYER)
+    fmt = service.data[ATTR_FORMAT]
+    entity_ids = service.data[ATTR_MEDIA_PLAYER]
 
-        url = await async_request_stream(hass, camera.stream_source, fmt=fmt)
-        data = {
-            ATTR_MEDIA_CONTENT_ID: url,
-            ATTR_MEDIA_CONTENT_TYPE: 'application/vnd.apple.mpegurl'
-        }
+    url = request_stream(hass, camera.stream_source, fmt=fmt)
+    data = {
+        ATTR_MEDIA_CONTENT_ID: url,
+        ATTR_MEDIA_CONTENT_TYPE: 'application/vnd.apple.mpegurl'
+    }
 
-        if entity_ids:
-            data[ATTR_ENTITY_ID] = entity_ids
+    if entity_ids:
+        data[ATTR_ENTITY_ID] = entity_ids
 
-        await hass.services.async_call(
-            DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True)
-    except HomeAssistantError:
-        pass
+    await hass.services.async_call(
+        DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True)

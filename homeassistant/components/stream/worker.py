@@ -50,8 +50,9 @@ def create_stream_buffer(stream_output, video_stream, audio_frame):
 def stream_worker(hass, stream, quit_event):
     """Handle consuming streams."""
     import av
+    container = av.open(stream.source, options=stream.options)
     try:
-        video_stream = stream.container.streams.video[0]
+        video_stream = container.streams.video[0]
     except (KeyError, IndexError):
         _LOGGER.error("Stream has no video")
         return
@@ -65,7 +66,7 @@ def stream_worker(hass, stream, quit_event):
 
     while not quit_event.is_set():
         try:
-            packet = next(stream.container.demux(video_stream))
+            packet = next(container.demux(video_stream))
             if packet.dts is None:
                 # If we get a "flushing" packet, the stream is done
                 raise StopIteration

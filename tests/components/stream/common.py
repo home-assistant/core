@@ -1,7 +1,7 @@
 """Collection of test helpers."""
 import io
 
-from homeassistant.components.stream import async_request_stream, get_stream
+from homeassistant.components.stream import request_stream, get_stream
 from homeassistant.loader import bind_hass
 
 
@@ -56,7 +56,7 @@ def generate_h264_video():
 
 
 @bind_hass
-async def async_preload_stream(hass, stream_source):
+def preload_stream(hass, stream_source):
     """Preload a stream for use in tests."""
-    await async_request_stream(hass, stream_source, preload=True)
+    request_stream(hass, stream_source, preload=True)
     return get_stream(hass, stream_source)

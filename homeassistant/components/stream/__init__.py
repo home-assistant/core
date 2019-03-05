@@ -35,14 +35,11 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 @bind_hass
-async def async_request_stream(hass, stream_source, fmt='hls',
-                               options=None, preload=False):
+def request_stream(hass, stream_source, *, fmt='hls',
+                   options=None, preload=False):
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream component is not set up.")
-
-    if not stream_source:
-        raise HomeAssistantError("Invalid stream source.")
 
     if options is None:
         options = {}
@@ -108,15 +105,9 @@ class Stream:
         self.options = options
         self.keepalive = keepalive
         self.access_token = None
-        self._container = None
         self._thread = None
         self._thread_quit = None
         self._outputs = {}
-
-    @property
-    def container(self):
-        """Return container."""
-        return self._container
 
     @property
     def outputs(self):
@@ -131,9 +122,7 @@ class Stream:
 
     def start(self):
         """Start a stream."""
-        import av
         if self._thread is None or not self._thread.isAlive():
-            self._container = av.open(self.source, options=self.options)
             self._thread_quit = threading.Event()
             self._thread = threading.Thread(
                 name='stream_worker',
@@ -157,5 +146,4 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            self._container = None
             _LOGGER.info("Stopped stream: %s", self.source)

@@ -19,7 +19,7 @@ from tests.common import (
     mock_coro)
 from tests.components.camera import common
 from tests.components.stream.common import (
-    generate_h264_video, async_preload_stream)
+    generate_h264_video, preload_stream)
 
 
 @pytest.fixture
@@ -179,7 +179,7 @@ async def test_webocket_camera_stream(hass, hass_ws_client,
     await async_setup_component(hass, 'camera')
 
     demo_camera = camera._get_camera_from_entity_id(hass, 'camera.demo_camera')
-    stream = await async_preload_stream(hass, demo_camera.stream_source)
+    stream = preload_stream(hass, demo_camera.stream_source)
     track = stream.add_provider(HlsStreamOutput())
 
     client = await hass_ws_client(hass)
