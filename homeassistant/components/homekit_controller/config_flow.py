@@ -216,7 +216,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         errors = {}
 
         if pair_info:
-            code = pair_info['pairing_code'].strip()
+            code = pair_info['pairing_code']
             controller = homekit.Controller()
             try:
                 await self.hass.async_add_executor_job(
