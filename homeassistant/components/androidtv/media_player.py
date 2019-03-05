@@ -1,5 +1,5 @@
 """
-Support for functionality to interact with FireTV devices.
+Support for functionality to interact with Android TV devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.androidtv/
@@ -12,32 +12,32 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE,
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 
-FIRETV_DOMAIN = 'androidtv'
+ANDROIDTV_DOMAIN = 'androidtv'
 
-REQUIREMENTS = ['androidtv==1.0.9']
+REQUIREMENTS = ['androidtv==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FIRETV = SUPPORT_PAUSE | SUPPORT_PLAY | \
+SUPPORT_ANDROIDTV = SUPPORT_PAUSE | SUPPORT_PLAY | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_SELECT_SOURCE | SUPPORT_STOP
+    SUPPORT_NEXT_TRACK | SUPPORT_STOP | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_VOLUME_STEP
 
 CONF_ADBKEY = 'adbkey'
 CONF_ADB_SERVER_IP = 'adb_server_ip'
 CONF_ADB_SERVER_PORT = 'adb_server_port'
 CONF_APPS = 'apps'
-CONF_GET_SOURCES = 'get_sources'
 
-DEFAULT_NAME = 'Amazon Fire TV'
+DEFAULT_NAME = 'Android TV'
 DEFAULT_PORT = 5555
 DEFAULT_ADB_SERVER_PORT = 5037
-DEFAULT_GET_SOURCES = True
 DEFAULT_APPS = {}
 
 SERVICE_ADB_COMMAND = 'adb_command'
@@ -64,66 +64,65 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADB_SERVER_IP): cv.string,
     vol.Optional(
         CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
-    vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
     vol.Optional(
         CONF_APPS, default=DEFAULT_APPS): vol.Schema({cv.string: cv.string})
 })
 
-# Translate from `FireTV` reported state to HA state.
-FIRETV_STATES = {'off': STATE_OFF,
-                 'idle': STATE_IDLE,
-                 'standby': STATE_STANDBY,
-                 'playing': STATE_PLAYING,
-                 'paused': STATE_PAUSED}
+# Translate from `AndroidTV` reported state to HA state.
+ANDROIDTV_STATES = {'off': STATE_OFF,
+                    'idle': STATE_IDLE,
+                    'standby': STATE_STANDBY,
+                    'playing': STATE_PLAYING,
+                    'paused': STATE_PAUSED}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the FireTV platform."""
-    from androidtv import FireTV
+    """Set up the Android TV platform."""
+    from androidtv import AndroidTV
 
-    hass.data.setdefault(FIRETV_DOMAIN, {})
+    hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
 
     if CONF_ADB_SERVER_IP not in config:
         # Use "python-adb" (Python ADB implementation)
         if CONF_ADBKEY in config:
-            atv = FireTV(host, config[CONF_ADBKEY])
+            atv = AndroidTV(host, config[CONF_ADBKEY])
             adb_log = " using adbkey='{0}'".format(config[CONF_ADBKEY])
         else:
-            atv = FireTV(host)
+            atv = AndroidTV(host)
             adb_log = ""
     else:
         # Use "pure-python-adb" (communicate with ADB server)
-        atv = FireTV(host, adb_server_ip=config[CONF_ADB_SERVER_IP],
-                     adb_server_port=config[CONF_ADB_SERVER_PORT])
+        atv = AndroidTV(host, adb_server_ip=config[CONF_ADB_SERVER_IP],
+                        adb_server_port=config[CONF_ADB_SERVER_PORT])
         adb_log = " using ADB server at {0}:{1}".format(
             config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT])
 
     if not atv.available:
-        _LOGGER.warning("Could not connect to Fire TV at %s%s", host, adb_log)
+        _LOGGER.warning("Could not connect to Android TV at %s%s",
+                        host, adb_log)
         return
 
     name = config[CONF_NAME]
-    get_sources = config[CONF_GET_SOURCES]
     apps = config[CONF_APPS]
 
-    if host in hass.data[FIRETV_DOMAIN]:
+    if host in hass.data[ANDROIDTV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", host)
     else:
-        device = FireTVDevice(atv, name, get_sources, apps)
+        device = AndroidTVDevice(atv, name, apps)
         add_entities([device])
-        _LOGGER.debug("Setup Fire TV at %s%s", host, adb_log)
-        hass.data[FIRETV_DOMAIN][host] = device
+        _LOGGER.debug("Setup Android TV at %s%s", host, adb_log)
+        hass.data[ANDROIDTV_DOMAIN][host] = device
 
-    if hass.services.has_service(FIRETV_DOMAIN, SERVICE_ADB_COMMAND):
+    if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
         return
 
     def service_adb_command(service):
         """Dispatch service calls to target entities."""
         cmd = service.data.get(ATTR_COMMAND)
         entity_id = service.data.get(ATTR_ENTITY_ID)
-        target_devices = [dev for dev in hass.data[FIRETV_DOMAIN].values()
+        target_devices = [dev for dev in hass.data[ANDROIDTV_DOMAIN].values()
                           if dev.entity_id in entity_id]
 
         for target_device in target_devices:
@@ -134,7 +133,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 _LOGGER.info("Output of command '%s' from '%s': %s",
                              cmd, target_device.entity_id, repr(output))
 
-    hass.services.register(FIRETV_DOMAIN, SERVICE_ADB_COMMAND,
+    hass.services.register(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND,
                            service_adb_command,
                            schema=SERVICE_ADB_COMMAND_SCHEMA)
 
@@ -163,21 +162,18 @@ def adb_decorator(override_available=False):
     return _adb_decorator
 
 
-class FireTVDevice(MediaPlayerDevice):
-    """Representation of an Amazon Fire TV device on the network."""
+class AndroidTVDevice(MediaPlayerDevice):
+    """Representation of an Android TV device on the network."""
 
-    def __init__(self, atv, name, get_sources, apps):
-        """Initialize the FireTV device."""
-        from androidtv import APPS, KEYS
-        self.apps = APPS
-        self.keys = KEYS
-
-        self.apps.update(apps)
+    def __init__(self, atv, name, apps):
+        """Initialize the Android TV device."""
+        from androidtv import ACTIONS
+        self.actions = ACTIONS
+        self.apps = apps
 
         self.androidtv = atv
 
         self._name = name
-        self._get_sources = get_sources
 
         # ADB exceptions to catch
         if not self.androidtv.adb_server_ip:
@@ -198,7 +194,12 @@ class FireTVDevice(MediaPlayerDevice):
         self._state = None
         self._available = self.androidtv.available
         self._current_app = None
-        self._running_apps = None
+        self._device = None
+        self._muted = None
+        self._properties = self.androidtv.properties
+        self._unique_id = 'androidtv-{}-{}'.format(
+            name, self._properties['serialno'])
+        self._volume = None
 
     @property
     def name(self):
@@ -213,7 +214,7 @@ class FireTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_FIRETV
+        return SUPPORT_ANDROIDTV
 
     @property
     def state(self):
@@ -237,13 +238,18 @@ class FireTVDevice(MediaPlayerDevice):
 
     @property
     def source(self):
-        """Return the current app."""
-        return self._current_app
+        """Return the current playback device."""
+        return self._device
 
     @property
-    def source_list(self):
-        """Return a list of running apps."""
-        return self._running_apps
+    def is_volume_muted(self):
+        """Boolean if volume is currently muted."""
+        return self._muted
+
+    @property
+    def volume_level(self):
+        """Return the volume level."""
+        return self._volume
 
     @adb_decorator(override_available=True)
     def update(self):
@@ -261,10 +267,10 @@ class FireTVDevice(MediaPlayerDevice):
             return
 
         # Get the `state`, `current_app`, and `running_apps`.
-        atv_state, self._current_app, self._running_apps = \
-            self.androidtv.update(self._get_sources)
+        state, self._current_app, self._device, self._muted, self._volume = \
+            self.androidtv.update()
 
-        self._state = FIRETV_STATES[atv_state]
+        self._state = ANDROIDTV_STATES[state]
 
     @adb_decorator()
     def turn_on(self):
@@ -297,6 +303,11 @@ class FireTVDevice(MediaPlayerDevice):
         self.androidtv.back()
 
     @adb_decorator()
+    def mute_volume(self, mute):
+        """Mute the volume."""
+        self.androidtv.mute_volume()
+
+    @adb_decorator()
     def volume_up(self):
         """Send volume up command."""
         self.androidtv.volume_up()
@@ -317,22 +328,9 @@ class FireTVDevice(MediaPlayerDevice):
         self.androidtv.media_next()
 
     @adb_decorator()
-    def select_source(self, source):
-        """Select input source.
-
-        If the source starts with a '!', then it will close the app instead of
-        opening it.
-        """
-        if isinstance(source, str):
-            if not source.startswith('!'):
-                self.androidtv.launch_app(source)
-            else:
-                self.androidtv.stop_app(source[1:].lstrip())
-
-    @adb_decorator()
     def adb_command(self, cmd):
-        """Send an ADB command to a Fire TV device."""
-        key = self.keys.get(cmd)
-        if key:
-            return self.androidtv.adb_shell('input keyevent {}'.format(key))
+        """Send an ADB command to an Android TV device."""
+        action = self.actions.get(cmd)
+        if action:
+            return self.androidtv.adb_shell('input keyevent {}'.format(action))
         return self.androidtv.adb_shell(cmd)
