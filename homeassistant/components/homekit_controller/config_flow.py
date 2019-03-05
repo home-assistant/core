@@ -242,7 +242,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             },
             errors=errors,
             data_schema=vol.Schema({
-                vol.Required('pairing_code'):  vol.Strip,
+                vol.Required('pairing_code'):  vol.All(str, vol.Strip),
             })
         )
 
