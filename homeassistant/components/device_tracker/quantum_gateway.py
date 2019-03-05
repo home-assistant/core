@@ -14,14 +14,16 @@ from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['quantum-gateway==0.0.3']
+REQUIREMENTS = ['quantum-gateway==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = 'myfiosgateway.com'
+USE_HTTPS = 'use_https'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(USE_HTTPS, default=True): cv.boolean,
     vol.Required(CONF_PASSWORD): cv.string
 })
 
@@ -42,10 +44,12 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
 
         self.host = config[CONF_HOST]
         self.password = config[CONF_PASSWORD]
+        self.use_https = config[USE_HTTPS]
         _LOGGER.debug('Initializing')
 
         try:
-            self.quantum = QuantumGatewayScanner(self.host, self.password)
+            self.quantum = QuantumGatewayScanner(self.host, self.password,
+                                                 self.use_https)
             self.success_init = self.quantum.success_init
         except RequestException:
             self.success_init = False

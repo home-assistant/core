@@ -1466,7 +1466,7 @@ pyzbar==0.1.7
 qnapstats==0.2.7
 
 # homeassistant.components.device_tracker.quantum_gateway
-quantum-gateway==0.0.3
+quantum-gateway==0.0.5
 
 # homeassistant.components.rachio
 rachiopy==0.1.3
