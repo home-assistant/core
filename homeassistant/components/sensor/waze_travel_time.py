@@ -33,11 +33,14 @@ CONF_ORIGIN = 'origin'
 CONF_INCL_FILTER = 'incl_filter'
 CONF_EXCL_FILTER = 'excl_filter'
 CONF_REALTIME = 'realtime'
+CONF_UNITS = 'units'
 
 DEFAULT_NAME = 'Waze Travel Time'
 DEFAULT_REALTIME = True
 
 ICON = 'mdi:car'
+
+UNITS = ['metric', 'imperial']
 
 REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 
@@ -51,6 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCL_FILTER): cv.string,
     vol.Optional(CONF_EXCL_FILTER): cv.string,
     vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
+    vol.Optional(CONF_UNITS): vol.In(UNITS)
 })
 
 
@@ -63,9 +67,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     incl_filter = config.get(CONF_INCL_FILTER)
     excl_filter = config.get(CONF_EXCL_FILTER)
     realtime = config.get(CONF_REALTIME)
+    units = config.get(CONF_UNITS)
+
+    if units is None:
+        units = hass.config.units.name
 
     data = WazeTravelTimeData(None, None, region, incl_filter,
-                              excl_filter, realtime)
+                              excl_filter, realtime, units)
 
     sensor = WazeTravelTime(name, origin, destination, data)
 
@@ -209,7 +217,7 @@ class WazeTravelTimeData():
     """WazeTravelTime Data object."""
 
     def __init__(self, origin, destination, region, include, exclude,
-                 realtime):
+                 realtime, units):
         """Set up WazeRouteCalculator."""
         import WazeRouteCalculator
 
@@ -221,6 +229,7 @@ class WazeTravelTimeData():
         self.include = include
         self.exclude = exclude
         self.realtime = realtime
+        self.units = units
         self.duration = None
         self.distance = None
         self.route = None
@@ -246,7 +255,7 @@ class WazeTravelTimeData():
 
                 self.duration, distance = routes[route]
 
-                if self.region in ['US', 'NA']:
+                if self.units == 'imperial':
                     # Convert to miles.
                     self.distance = distance / 1.609
                 else:
