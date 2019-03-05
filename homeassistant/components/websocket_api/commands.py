@@ -24,15 +24,6 @@ def async_register_commands(hass):
     async_reg(handle_ping)
 
 
-def event_message(iden, event):
-    """Return an event message."""
-    return {
-        'id': iden,
-        'type': 'event',
-        'event': event.as_dict(),
-    }
-
-
 def pong_message(iden):
     """Return a pong message."""
     return {
@@ -59,7 +50,9 @@ def handle_subscribe_events(hass, connection, msg):
         if event.event_type == EVENT_TIME_CHANGED:
             return
 
-        connection.send_message(event_message(msg['id'], event))
+        connection.send_message(messages.event_message(
+            msg['id'], event.as_dict()
+        ))
 
     connection.event_listeners[msg['id']] = hass.bus.async_listen(
         msg['event_type'], forward_events)

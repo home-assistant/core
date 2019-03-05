@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_PROTOCOL, CONF_USERNAME, CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import Event, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
@@ -35,6 +35,7 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 from homeassistant.util.logging import catch_log_exception
+from homeassistant.components import websocket_api
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa pylint: disable=unused-import
@@ -390,6 +391,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     # otherwise it will not load the users config.
     # This needs a better solution.
     hass.data[DATA_MQTT_HASS_CONFIG] = config
+
+    websocket_api.async_register_command(hass, websocket_subscribe)
 
     if conf is None:
         # If we have a config entry, setup is done by that config entry.
@@ -1048,3 +1051,27 @@ class MqttEntityDeviceInfo(Entity):
             info['via_hub'] = (DOMAIN, self._device_config[CONF_VIA_HUB])
 
         return info
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command({
+    vol.Required('type'): 'mqtt/subscribe',
+    vol.Required('topic'): valid_subscribe_topic,
+})
+async def websocket_subscribe(hass, connection, msg):
+    """Subscribe to a MQTT topic."""
+    if not connection.user.is_admin:
+        raise Unauthorized
+
+    async def forward_messages(topic: str, payload: str, qos: int):
+        """Forward events to websocket."""
+        connection.send_message(websocket_api.event_message(msg['id'], {
+            'topic': topic,
+            'payload': payload,
+            'qos': qos,
+        }))
+
+    connection.event_listeners[msg['id']] = await async_subscribe(
+        hass, msg['topic'], forward_messages)
+
+    connection.send_message(websocket_api.result_message(msg['id']))
