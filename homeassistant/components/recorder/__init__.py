@@ -318,6 +318,10 @@ class Recorder(threading.Thread):
                                   CONNECT_RETRY_WAIT)
                     tries += 1
 
+                except exc.SQLAlchemyError:
+                    updated = True
+                    _LOGGER.exception("Error saving event: %s", event)
+
             if not updated:
                 _LOGGER.error("Error in database update. Could not save "
                               "after %d tries. Giving up", tries)
