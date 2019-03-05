@@ -152,7 +152,7 @@ alarmdecoder==1.13.2
 alpha_vantage==2.1.0
 
 # homeassistant.components.amcrest
-amcrest==1.2.3
+amcrest==1.2.4
 
 # homeassistant.components.switch.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
