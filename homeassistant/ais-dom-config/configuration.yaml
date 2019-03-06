@@ -16,6 +16,10 @@ homeassistant:
   - type: legacy_api_password
   whitelist_external_dirs:
   - /data/data/pl.sviete.dom/files/home/AIS/
+
+#
+system_health:
+
 # Track the sun
 sun:
 
@@ -30,9 +34,6 @@ ais_updater:
   include_used_components: false
 ais_drives_service:
 conversation:
-
-system_health:
-
 
 # Show links to resources in log and frontend
 introduction:
@@ -125,7 +126,7 @@ ais_bookmarks:
 ais_mdns:
 
 #
-ais_gm_service:
+# ais_gm_service:
 
 #
 ais_spotify_service:

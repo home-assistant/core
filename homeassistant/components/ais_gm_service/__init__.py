@@ -11,7 +11,6 @@ import json
 import os.path
 from operator import itemgetter
 
-from homeassistant.ais_dom.ais_global import G_AIS_SECURE_ANDROID_ID_DOM
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()

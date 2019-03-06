@@ -52,6 +52,22 @@ G_BOOKMARK_MEDIA_CONTENT_ID = ""
 G_AIS_SECURE_ANDROID_ID_DOM = None
 
 
+def get_sercure_android_id_dom():
+    global G_AIS_SECURE_ANDROID_ID_DOM
+    if G_AIS_SECURE_ANDROID_ID_DOM is None:
+        import subprocess
+        try:
+            android_id = subprocess.check_output('su -c "settings get secure android_id"', shell=True, timeout=5)
+            android_id = android_id.decode("utf-8").replace('\n', '')
+        except Exception:
+            _LOGGER.error("Can't get secure gate id for the device!")
+            from uuid import getnode as get_mac
+            android_id = get_mac()
+
+        G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
+    return G_AIS_SECURE_ANDROID_ID_DOM
+
+
 def set_media_bookmark(media_content_id, position):
     global G_BOOKMARK_MEDIA_POSITION
     global G_BOOKMARK_MEDIA_CONTENT_ID

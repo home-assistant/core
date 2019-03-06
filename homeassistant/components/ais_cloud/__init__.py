@@ -248,7 +248,7 @@ class AisCloudWS:
         # take the token from secrets
         global CLOUD_WS_TOKEN, CLOUD_WS_HEADER
         if CLOUD_WS_TOKEN is None:
-            CLOUD_WS_TOKEN = ais_global.G_AIS_SECURE_ANDROID_ID_DOM
+            CLOUD_WS_TOKEN = ais_global.get_sercure_android_id_dom()
             CLOUD_WS_HEADER = {'Authorization': '{}'.format(CLOUD_WS_TOKEN)}
 
     def ask(self, question, org_answer):
