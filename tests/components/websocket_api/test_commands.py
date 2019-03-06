@@ -6,7 +6,7 @@ from homeassistant.components.websocket_api.const import URL
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED
 )
-from homeassistant.components.websocket_api import const, commands
+from homeassistant.components.websocket_api import const
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 

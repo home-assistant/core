@@ -5,7 +5,6 @@ from homeassistant.components.websocket_api.const import URL
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_INVALID, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED)
 
-from homeassistant.components.websocket_api import commands
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro

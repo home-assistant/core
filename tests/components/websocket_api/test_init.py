@@ -5,7 +5,7 @@ from unittest.mock import patch, Mock
 from aiohttp import WSMsgType
 import pytest
 
-from homeassistant.components.websocket_api import const, commands, messages
+from homeassistant.components.websocket_api import const, messages
 
 
 @pytest.fixture
