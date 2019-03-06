@@ -138,6 +138,7 @@ class OASATelematicsData():
         return [{ATTR_DUE_IN: 'n/a',
                  ATTR_ROUTE_ID: self.route_id}]
 
+    @staticmethod
     def empty_name_data(self):
         """Object returned when no stop/route name data are found."""
         return [{ATTR_STOP_NAME: 'n/a',
