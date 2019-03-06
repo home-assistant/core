@@ -102,7 +102,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             )
 
         return self.async_show_form(
-            step_id='init',
+            step_id='user',
             errors=errors,
             data_schema=vol.Schema({
                 vol.Required('device'): vol.In(self.devices.keys()),
@@ -178,10 +178,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         # Device isn't paired with us or anyone else.
         # But we have a 'complete' config entry for it - that is probably
-        # invalid.
+        # invalid. Remove it automatically.
         existing = find_existing_host(self.hass, hkid)
         if existing:
-            return self.async_abort(reason='invalid_config_entry')
+            await self.hass.config_entries.async_remove(existing.entry_id)
 
         self.model = model
         self.hkid = hkid

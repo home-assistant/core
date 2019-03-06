@@ -207,10 +207,13 @@ async def test_discovery_ignored_model(hass):
 
 
 async def test_discovery_invalid_config_entry(hass):
-    """Already configured."""
+    """There is already a config entry for the pairing id but its invalid."""
     MockConfigEntry(domain='homekit_controller', data={
         'AccessoryPairingID': '00:00:00:00:00:00'
     }).add_to_hass(hass)
+
+    # We just added a mock config entry so it must be visible in hass
+    assert len(hass.config_entries.async_entries()) == 1
 
     discovery_info = {
         'host': '127.0.0.1',
@@ -227,8 +230,14 @@ async def test_discovery_invalid_config_entry(hass):
     flow.hass = hass
 
     result = await flow.async_step_discovery(discovery_info)
-    assert result['type'] == 'abort'
-    assert result['reason'] == 'invalid_config_entry'
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+
+    # Discovery of a HKID that is in a pairable state but for which there is
+    # already a config entry - in that case the stale config entry is
+    # automatically removed.
+    config_entry_count = len(hass.config_entries.async_entries())
+    assert config_entry_count == 0
 
 
 async def test_discovery_already_configured(hass):
@@ -257,7 +266,7 @@ async def test_discovery_already_configured(hass):
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
 
-    conn.async_config_num_changed.assert_not_called()
+    assert conn.async_config_num_changed.call_count == 0
 
 
 async def test_discovery_already_configured_config_change(hass):
@@ -286,7 +295,7 @@ async def test_discovery_already_configured_config_change(hass):
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
 
-    conn.async_config_num_changed.assert_called_once_with(2)
+    assert conn.async_config_num_changed.call_args == mock.call(2)
 
 
 async def test_pair_unable_to_pair(hass):
@@ -546,7 +555,7 @@ async def test_user_works(hass):
         controller_cls.return_value = controller
         result = await flow.async_step_user()
     assert result['type'] == 'form'
-    assert result['step_id'] == 'init'
+    assert result['step_id'] == 'user'
 
     result = await flow.async_step_user({
         'device': '00:00:00:00:00:00',
