@@ -153,27 +153,28 @@ class TfiacClimate(ClimateDevice):
         """List of available swing modes."""
         return SWING_LIST
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._client.set_state(TARGET_TEMP, kwargs.get(ATTR_TEMPERATURE))
+            await self._client.set_state(TARGET_TEMP,
+                                         kwargs.get(ATTR_TEMPERATURE))
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        self._client.set_state(OPERATION_MODE, operation_mode)
+        await self._client.set_state(OPERATION_MODE, operation_mode)
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        self._client.set_state(FAN_MODE, fan_mode)
+        await self._client.set_state(FAN_MODE, fan_mode)
 
-    def set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
-        self._client.set_swing(swing_mode)
+        await self._client.set_swing(swing_mode)
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn device on."""
-        self._client.set_state(ON_MODE, 'on')
+        await self._client.set_state(ON_MODE, 'on')
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn device off."""
-        self._client.set_state(ON_MODE, 'off')
+        await self._client.set_state(ON_MODE, 'off')
