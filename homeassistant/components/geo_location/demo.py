@@ -1,9 +1,4 @@
-"""
-Demo platform for the geolocation component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform for the geolocation component."""
 from datetime import timedelta
 import logging
 from math import cos, pi, radians, sin

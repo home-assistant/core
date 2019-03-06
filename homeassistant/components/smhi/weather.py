@@ -218,7 +218,7 @@ class SmhiWeather(WeatherEntity):
                 ATTR_FORECAST_TEMP: forecast.temperature_max,
                 ATTR_FORECAST_TEMP_LOW: forecast.temperature_min,
                 ATTR_FORECAST_PRECIPITATION:
-                    round(forecast.total_precipitation),
+                    round(forecast.total_precipitation, 1),
                 ATTR_FORECAST_CONDITION: condition,
             })
 

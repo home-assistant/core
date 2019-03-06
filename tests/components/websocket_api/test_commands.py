@@ -7,6 +7,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED
 )
 from homeassistant.components.websocket_api import const, commands
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -64,6 +65,51 @@ async def test_call_service_not_found(hass, websocket_client):
     assert msg['type'] == const.TYPE_RESULT
     assert not msg['success']
     assert msg['error']['code'] == const.ERR_NOT_FOUND
+
+
+async def test_call_service_error(hass, websocket_client):
+    """Test call service command with error."""
+    @callback
+    def ha_error_call(_):
+        raise HomeAssistantError('error_message')
+
+    hass.services.async_register('domain_test', 'ha_error', ha_error_call)
+
+    async def unknown_error_call(_):
+        raise ValueError('value_error')
+
+    hass.services.async_register(
+        'domain_test', 'unknown_error', unknown_error_call)
+
+    await websocket_client.send_json({
+        'id': 5,
+        'type': commands.TYPE_CALL_SERVICE,
+        'domain': 'domain_test',
+        'service': 'ha_error',
+    })
+
+    msg = await websocket_client.receive_json()
+    print(msg)
+    assert msg['id'] == 5
+    assert msg['type'] == const.TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'home_assistant_error'
+    assert msg['error']['message'] == 'error_message'
+
+    await websocket_client.send_json({
+        'id': 6,
+        'type': commands.TYPE_CALL_SERVICE,
+        'domain': 'domain_test',
+        'service': 'unknown_error',
+    })
+
+    msg = await websocket_client.receive_json()
+    print(msg)
+    assert msg['id'] == 6
+    assert msg['type'] == const.TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'unknown_error'
+    assert msg['error']['message'] == 'value_error'
 
 
 async def test_subscribe_unsubscribe_events(hass, websocket_client):

@@ -1,9 +1,4 @@
-"""
-This module provides WSGI application to serve the Home Assistant API.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/http/
-"""
+"""Support to serve the Home Assistant API as WSGI application."""
 from ipaddress import ip_network
 import logging
 import os
@@ -18,17 +13,15 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, SERVER_PORT)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as hass_util
-from homeassistant.util.logging import HideSensitiveDataFilter
 from homeassistant.util import ssl as ssl_util
+from homeassistant.util.logging import HideSensitiveDataFilter
 
 from .auth import setup_auth
 from .ban import setup_bans
+from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
 from .cors import setup_cors
 from .real_ip import setup_real_ip
-from .static import CachingFileResponse, CachingStaticResource
-
-# Import as alias
-from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
+from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa
 
 REQUIREMENTS = ['aiohttp_cors==0.7.0']
@@ -59,6 +52,20 @@ DEFAULT_SERVER_HOST = '0.0.0.0'
 DEFAULT_DEVELOPMENT = '0'
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
+
+def trusted_networks_deprecated(value):
+    """Warn user trusted_networks config is deprecated."""
+    if not value:
+        return value
+
+    _LOGGER.warning(
+        "Configuring trusted_networks via the http component has been"
+        " deprecated. Use the trusted networks auth provider instead."
+        " For instructions, see https://www.home-assistant.io/docs/"
+        "authentication/providers/#trusted-networks")
+    return value
+
+
 HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_API_PASSWORD): cv.string,
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
@@ -73,7 +80,7 @@ HTTP_SCHEMA = vol.Schema({
     vol.Inclusive(CONF_TRUSTED_PROXIES, 'proxy'):
         vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
-        vol.All(cv.ensure_list, [ip_network]),
+        vol.All(cv.ensure_list, [ip_network], trusted_networks_deprecated),
     vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
                  default=NO_LOGIN_ATTEMPT_THRESHOLD):
         vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
@@ -278,25 +285,13 @@ class HomeAssistantHTTP:
         if cache_headers:
             async def serve_file(request):
                 """Serve file from disk."""
-                return CachingFileResponse(path)
+                return web.FileResponse(path, headers=CACHE_HEADERS)
         else:
             async def serve_file(request):
                 """Serve file from disk."""
                 return web.FileResponse(path)
 
-        # aiohttp supports regex matching for variables. Using that as temp
-        # to work around cache busting MD5.
-        # Turns something like /static/dev-panel.html into
-        # /static/{filename:dev-panel(-[a-z0-9]{32}|)\.html}
-        base, ext = os.path.splitext(url_path)
-        if ext:
-            base, file = base.rsplit('/', 1)
-            regex = r"{}(-[a-z0-9]{{32}}|){}".format(file, ext)
-            url_pattern = "{}/{{filename:{}}}".format(base, regex)
-        else:
-            url_pattern = url_path
-
-        self.app.router.add_route('GET', url_pattern, serve_file)
+        self.app.router.add_route('GET', url_path, serve_file)
 
     async def start(self):
         """Start the aiohttp server."""

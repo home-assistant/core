@@ -1,9 +1,4 @@
-"""
-Support for HomematicIP Cloud lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud lights."""
 import logging
 
 from homeassistant.components.homematicip_cloud import (

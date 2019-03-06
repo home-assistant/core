@@ -170,8 +170,7 @@ class AuthManager:
             user = await self.async_get_user_by_credentials(credentials)
             if user is None:
                 raise ValueError('Unable to find the user.')
-            else:
-                return user
+            return user
 
         auth_provider = self._async_get_auth_provider(credentials)
 

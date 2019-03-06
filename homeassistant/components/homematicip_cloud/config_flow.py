@@ -4,9 +4,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import DOMAIN as HMIPC_DOMAIN
-from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
-from .const import _LOGGER
+from .const import (
+    _LOGGER, DOMAIN as HMIPC_DOMAIN, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME,
+    HMIPC_PIN)
 from .hap import HomematicipAuth
 
 

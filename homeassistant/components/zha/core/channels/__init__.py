@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import asyncio
+from concurrent.futures import TimeoutError as Timeout
 from enum import Enum
 from functools import wraps
 import logging
@@ -55,9 +56,13 @@ def decorate_command(channel, command):
             if isinstance(result, bool):
                 return result
             return result[1] is Status.SUCCESS
-        except DeliveryError:
-            _LOGGER.debug("%s: command failed: %s", channel.unique_id,
-                          command.__name__)
+        except (DeliveryError, Timeout) as ex:
+            _LOGGER.debug(
+                "%s: command failed: %s exception: %s",
+                channel.unique_id,
+                command.__name__,
+                str(ex)
+            )
             return False
     return wrapper
 

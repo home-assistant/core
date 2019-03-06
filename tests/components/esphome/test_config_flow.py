@@ -203,6 +203,11 @@ async def test_discovery_initiation(hass, mock_client):
         MockDeviceInfo(False, "test8266"))
 
     result = await flow.async_step_discovery(user_input=service_info)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'discovery_confirm'
+    assert result['description_placeholders']['name'] == 'test8266'
+
+    result = await flow.async_step_discovery_confirm(user_input={})
     assert result['type'] == 'create_entry'
     assert result['title'] == 'test8266'
     assert result['data']['host'] == 'test8266.local'

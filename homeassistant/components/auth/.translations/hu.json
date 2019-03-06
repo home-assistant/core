@@ -9,7 +9,8 @@
             },
             "step": {
                 "init": {
-                    "description": "V\u00e1lassz \u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1st:"
+                    "description": "V\u00e1lassz \u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1st:",
+                    "title": "\u00c1ll\u00edtsa be az \u00e9rtes\u00edt\u00e9si \u00f6sszetev\u0151 \u00e1ltal megadott egyszeri jelsz\u00f3t"
                 },
                 "setup": {
                     "title": "Be\u00e1ll\u00edt\u00e1s ellen\u0151rz\u00e9se"

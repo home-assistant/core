@@ -1,6 +1,7 @@
 """Generic device for the HomematicIP Cloud component."""
 import logging
 
+from homeassistant.components import homematicip_cloud
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +32,25 @@ class HomematicipGenericDevice(Entity):
         self._device = device
         self.post = post
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        from homematicip.aio.device import AsyncDevice
+        # Only physical devices should be HA devices.
+        if isinstance(self._device, AsyncDevice):
+            return {
+                'identifiers': {
+                    # Serial numbers of Homematic IP device
+                    (homematicip_cloud.DOMAIN, self._device.id)
+                },
+                'name': self._device.label,
+                'manufacturer': self._device.oem,
+                'model': self._device.modelType,
+                'sw_version': self._device.firmwareVersion,
+                'via_hub': (homematicip_cloud.DOMAIN, self._device.homeId),
+            }
+        return None
 
     async def async_added_to_hass(self):
         """Register callbacks."""

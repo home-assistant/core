@@ -20,7 +20,8 @@ REQUIREMENTS = ['TravisPy==0.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Information provided by https://travis-ci.org/"
+ATTRIBUTION = "Information provided by https://travis-ci.org/"
+
 CONF_BRANCH = 'branch'
 CONF_REPOSITORY = 'repository'
 
@@ -130,7 +131,7 @@ class TravisCISensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         if self._build and self._state is not None:
             if self._user and self._sensor_type == 'state':

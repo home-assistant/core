@@ -1,15 +1,10 @@
-"""
-Support for UK Met Office weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/weather.metoffice/
-"""
+"""Support for UK Met Office weather service."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor.metoffice import (
-    CONDITION_CLASSES, CONF_ATTRIBUTION, MetOfficeCurrentData)
+    CONDITION_CLASSES, ATTRIBUTION, MetOfficeCurrentData)
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
 from homeassistant.const import (
     CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
@@ -123,4 +118,4 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def attribution(self):
         """Return the attribution."""
-        return CONF_ATTRIBUTION
+        return ATTRIBUTION
