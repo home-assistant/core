@@ -74,6 +74,8 @@ async def async_setup_platform(hass,
         partial(VL53L1X, bus_number)
     )
 
+    sensor.open()
+
     dev = [VL53L1XSensor(sensor, name, unit, i2c_address)]
 
     async_add_entities(dev, True)
@@ -89,24 +91,13 @@ class VL53L1XSensor(Entity):
         self.vl53l1x_sensor = vl53l1x_sensor
         self.i2c_address = i2c_address
         self._state = None
-        _LOGGER.info(
-            "Setup-1 of VL53L1X light sensor at %s is complete",
+        self.vl53l1x_sensor.add_sensor(
+            self.i2c_address,
             self.i2c_address
         )
-
-    def init(self):
-        """Create and initialize the sensor hardware."""
-        self.vl53l1x_sensor.open()
-        self.vl53l1x_sensor.add_sensor(self.i2c_address, self.i2c_address)
         _LOGGER.info(
-            "Setup-2 of VL53L1X light sensor at %s is complete",
+            "Setup of VL53L1X sensor at %s is complete",
             self.i2c_address
-        )
-
-    async def async_added_to_hass(self):
-        """Handle entity about to be added to hass event."""
-        await self.hass.async_add_executor_job(
-            self.init
         )
 
     @property
@@ -126,10 +117,6 @@ class VL53L1XSensor(Entity):
 
     def measure(self):
         """Get the latest measurement from VL53L1X."""
-        _LOGGER.info(
-            "Starting measure of VL53L1X light sensor at %s",
-            self.i2c_address
-        )
         self.vl53l1x_sensor.start_ranging(self.i2c_address, DEFAULT_RANGE)
         self.vl53l1x_sensor.update(self.i2c_address)
         self.vl53l1x_sensor.stop_ranging(self.i2c_address)
