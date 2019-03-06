@@ -1,7 +1,5 @@
-"""
-Platform for Time of Flight sensor VL53L1X.
+"""Platform for Time of Flight sensor VL53L1X."""
 
-"""
 import asyncio
 import logging
 from functools import partial
@@ -91,6 +89,24 @@ class VL53L1XSensor(Entity):
         self.vl53l1x_sensor = vl53l1x_sensor
         self.i2c_address = i2c_address
         self._state = None
+        _LOGGER.info(
+            "Setup-1 of VL53L1X light sensor at %s is complete",
+            self.i2c_address
+        )
+
+    def init(self):
+        self.vl53l1x_sensor.open()
+        self.vl53l1x_sensor.add_sensor(self.i2c_address, self.i2c_address)
+        _LOGGER.info(
+            "Setup-2 of VL53L1X light sensor at %s is complete",
+            self.i2c_address
+        )
+
+    async def async_added_to_hass(self):
+        """Handle entity about to be added to hass event."""
+        await self.hass.async_add_executor_job(
+            self.init
+        )
 
     @property
     def name(self) -> str:
@@ -109,8 +125,10 @@ class VL53L1XSensor(Entity):
 
     def measure(self):
         """Get the latest measurement from VL53L1X."""
-        self.vl53l1x_sensor.open()
-        self.vl53l1x_sensor.add_sensor(self.i2c_address, self.i2c_address)
+        _LOGGER.info(
+            "Starting measure of VL53L1X light sensor at %s",
+            self.i2c_address
+        )
         self.vl53l1x_sensor.start_ranging(self.i2c_address, DEFAULT_RANGE)
         self.vl53l1x_sensor.update(self.i2c_address)
         self.vl53l1x_sensor.stop_ranging(self.i2c_address)
