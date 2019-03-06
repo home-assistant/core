@@ -25,6 +25,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
 async def async_setup(hass, config):
     """Set up the Freebox component."""
     conf = config.get(DOMAIN)
