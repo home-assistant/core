@@ -334,7 +334,9 @@ def async_handle_google_actions(hass, cloud, payload):
         return ga.turned_off_response(payload)
 
     result = yield from ga.async_handle_message(
-        hass, cloud.gactions_config, payload)
+        hass, cloud.gactions_config,
+        cloud.claims['cognito:username'],
+        payload)
     return result
 
 
