@@ -8,8 +8,6 @@ from homeassistant.components.mopar import (
 )
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
-REQUIREMENTS = ['motorparts==1.1.0']
-
 DEPENDENCIES = ['mopar']
 
 _LOGGER = logging.getLogger(__name__)

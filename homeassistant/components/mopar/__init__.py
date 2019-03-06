@@ -7,11 +7,16 @@ import voluptuous as vol
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PIN
+from homeassistant.const import (
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_PIN,
+    CONF_SCAN_INTERVAL
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.util import Throttle
+from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['motorparts==1.1.0']
 
@@ -23,14 +28,17 @@ _LOGGER = logging.getLogger(__name__)
 COOKIE_FILE = 'mopar_cookies.pickle'
 SUCCESS_RESPONSE = 'completed'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(days=7)
 SUPPORTED_PLATFORMS = [LOCK, SENSOR, SWITCH]
+
+DEFAULT_INTERVAL = timedelta(days=7)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_PIN): cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
+            vol.All(cv.time_period, cv.positive_timedelta),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -60,10 +68,12 @@ def setup(hass, config):
     data = hass.data[DOMAIN] = MoparData(hass, session)
     data.update()
 
+    track_time_interval(
+        hass, data.update, config[CONF_SCAN_INTERVAL]
+    )
+
     def handle_horn(call):
         """Enable the horn on the Mopar vehicle."""
-        import motorparts
-
         try:
             motorparts.remote_command(
                 data.session,
@@ -103,7 +113,6 @@ class MoparData:
         self.vhrs = {}
         self.tow_guides = {}
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
         """Update data."""
         import motorparts

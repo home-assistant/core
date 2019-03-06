@@ -35,27 +35,6 @@ class MoparSensor(Entity):
         self._data = data
         self._name = self._data.get_vehicle_name(self._index)
 
-    async def async_added_to_hass(self):
-        """Handle entity which will be added."""
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
-        )
-
-    def update(self):
-        """Update device state."""
-        self._data.update()
-        self._vehicle = self._data.vehicles[self._index]
-        self._vhr = self._data.vhrs.get(self._index, {})
-        self._tow_guide = self._data.tow_guides.get(self._index, {})
-        if 'odometer' in self._vhr:
-            odo = float(self._vhr['odometer'])
-            self._odometer = int(self.hass.config.units.length(
-                odo, LENGTH_KILOMETERS))
-
-    @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
-
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -92,3 +71,23 @@ class MoparSensor(Entity):
     def should_poll(self):
         """Return the polling requirement for this sensor."""
         return False
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
+    def update(self):
+        """Update device state."""
+        self._vehicle = self._data.vehicles[self._index]
+        self._vhr = self._data.vhrs.get(self._index, {})
+        self._tow_guide = self._data.tow_guides.get(self._index, {})
+        if 'odometer' in self._vhr:
+            odo = float(self._vhr['odometer'])
+            self._odometer = int(self.hass.config.units.length(
+                odo, LENGTH_KILOMETERS))
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)

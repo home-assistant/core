@@ -6,8 +6,6 @@ from homeassistant.components.mopar import DOMAIN as MOPAR_DOMAIN, \
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_ON, STATE_OFF
 
-REQUIREMENTS = ['motorparts==1.1.0']
-
 DEPENDENCIES = ['mopar']
 
 _LOGGER = logging.getLogger(__name__)

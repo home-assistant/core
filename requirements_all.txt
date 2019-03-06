@@ -710,8 +710,6 @@ millheater==0.3.4
 mitemp_bt==0.0.1
 
 # homeassistant.components.mopar
-# homeassistant.components.mopar.lock
-# homeassistant.components.mopar.switch
 motorparts==1.1.0
 
 # homeassistant.components.tts
