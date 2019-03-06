@@ -1,5 +1,9 @@
 """Support for the Mopar vehicle sensor platform."""
-from homeassistant.components.mopar import DOMAIN as MOPAR_DOMAIN, DATA_UPDATED
+from homeassistant.components.mopar import (
+    DOMAIN as MOPAR_DOMAIN,
+    DATA_UPDATED,
+    ATTR_VEHICLE_INDEX
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, LENGTH_KILOMETERS)
 from homeassistant.core import callback
@@ -7,8 +11,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['mopar']
-
-ATTR_VEHICLE_INDEX = 'vehicle_index'
 ICON = 'mdi:car'
 
 

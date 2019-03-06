@@ -4,14 +4,14 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.components.lock import DOMAIN as LOCK
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PIN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import Throttle
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
 
 REQUIREMENTS = ['motorparts==1.1.0']
 
@@ -20,7 +20,6 @@ DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_VEHICLE_INDEX = 'vehicle_index'
 COOKIE_FILE = 'mopar_cookies.pickle'
 SUCCESS_RESPONSE = 'completed'
 
@@ -35,10 +34,17 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_HORN = 'sound_horn'
+ATTR_VEHICLE_INDEX = 'vehicle_index'
+SERVICE_HORN_SCHEMA = vol.Schema({
+    vol.Required(ATTR_VEHICLE_INDEX): cv.positive_int
+})
+
 
 def setup(hass, config):
     """Set up the Mopar component."""
     import motorparts
+
     cookie = hass.config.path(COOKIE_FILE)
     try:
         session = motorparts.get_session(
@@ -53,6 +59,26 @@ def setup(hass, config):
 
     data = hass.data[DOMAIN] = MoparData(hass, session)
     data.update()
+
+    def handle_horn(call):
+        """Enable the horn on the Mopar vehicle."""
+        import motorparts
+
+        try:
+            motorparts.remote_command(
+                data.session,
+                motorparts.COMMAND_HORN,
+                call.data[ATTR_VEHICLE_INDEX]
+            )
+        except motorparts.MoparError as error:
+            _LOGGER.error(error)
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_HORN,
+        handle_horn,
+        schema=SERVICE_HORN_SCHEMA
+    )
 
     for platform in SUPPORTED_PLATFORMS:
         hass.async_create_task(
