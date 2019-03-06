@@ -1,7 +1,7 @@
 """Test Google Smart Home."""
 import pytest
 
-from homeassistant.core import State
+from homeassistant.core import State, EVENT_CALL_SERVICE
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 from homeassistant.setup import async_setup_component
@@ -19,8 +19,7 @@ from tests.common import (mock_device_registry, mock_registry,
 
 BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
-    allow_unlock=False,
-    agent_user_id='test-agent',
+    allow_unlock=False
 )
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
 
@@ -56,7 +55,6 @@ async def test_sync_message(hass):
     config = helpers.Config(
         should_expose=lambda state: state.entity_id != 'light.not_expose',
         allow_unlock=False,
-        agent_user_id='test-agent',
         entity_config={
             'light.demo_light': {
                 const.CONF_ROOM_HINT: 'Living Room',
@@ -68,12 +66,14 @@ async def test_sync_message(hass):
     events = []
     hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
 
-    result = await sh.async_handle_message(hass, config, {
-        "requestId": REQ_ID,
-        "inputs": [{
-            "intent": "action.devices.SYNC"
-        }]
-    })
+    result = await sh.async_handle_message(
+        hass, config, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.SYNC"
+            }]
+        })
 
     assert result == {
         'requestId': REQ_ID,
@@ -114,6 +114,7 @@ async def test_sync_message(hass):
     }
 
 
+# pylint: disable=redefined-outer-name
 async def test_sync_in_area(hass, registries):
     """Test a sync message where room hint comes from area."""
     area = registries.area.async_create("Living Room")
@@ -142,19 +143,20 @@ async def test_sync_in_area(hass, registries):
     config = helpers.Config(
         should_expose=lambda _: True,
         allow_unlock=False,
-        agent_user_id='test-agent',
         entity_config={}
     )
 
     events = []
     hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
 
-    result = await sh.async_handle_message(hass, config, {
-        "requestId": REQ_ID,
-        "inputs": [{
-            "intent": "action.devices.SYNC"
-        }]
-    })
+    result = await sh.async_handle_message(
+        hass, config, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.SYNC"
+            }]
+        })
 
     assert result == {
         'requestId': REQ_ID,
@@ -216,21 +218,23 @@ async def test_query_message(hass):
     events = []
     hass.bus.async_listen(EVENT_QUERY_RECEIVED, events.append)
 
-    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
-        "requestId": REQ_ID,
-        "inputs": [{
-            "intent": "action.devices.QUERY",
-            "payload": {
-                "devices": [{
-                    "id": "light.demo_light",
-                }, {
-                    "id": "light.another_light",
-                }, {
-                    "id": "light.non_existing",
-                }]
-            }
-        }]
-    })
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.QUERY",
+                "payload": {
+                    "devices": [{
+                        "id": "light.demo_light",
+                    }, {
+                        "id": "light.another_light",
+                    }, {
+                        "id": "light.non_existing",
+                    }]
+                }
+            }]
+        })
 
     assert result == {
         'requestId': REQ_ID,
@@ -280,39 +284,44 @@ async def test_execute(hass):
         'light': {'platform': 'demo'}
     })
 
-    events = []
-    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
-
     await hass.services.async_call(
         'light', 'turn_off', {'entity_id': 'light.ceiling_lights'},
         blocking=True)
 
-    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
-        "requestId": REQ_ID,
-        "inputs": [{
-            "intent": "action.devices.EXECUTE",
-            "payload": {
-                "commands": [{
-                    "devices": [
-                        {"id": "light.non_existing"},
-                        {"id": "light.ceiling_lights"},
-                    ],
-                    "execution": [{
-                        "command": "action.devices.commands.OnOff",
-                        "params": {
-                            "on": True
-                        }
-                    }, {
-                        "command":
-                            "action.devices.commands.BrightnessAbsolute",
-                        "params": {
-                            "brightness": 20
-                        }
+    events = []
+    hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
+
+    service_events = []
+    hass.bus.async_listen(EVENT_CALL_SERVICE, service_events.append)
+
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, None,
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.EXECUTE",
+                "payload": {
+                    "commands": [{
+                        "devices": [
+                            {"id": "light.non_existing"},
+                            {"id": "light.ceiling_lights"},
+                        ],
+                        "execution": [{
+                            "command": "action.devices.commands.OnOff",
+                            "params": {
+                                "on": True
+                            }
+                        }, {
+                            "command":
+                                "action.devices.commands.BrightnessAbsolute",
+                            "params": {
+                                "brightness": 20
+                            }
+                        }]
                     }]
-                }]
-            }
-        }]
-    })
+                }
+            }]
+        })
 
     assert result == {
         "requestId": REQ_ID,
@@ -383,6 +392,24 @@ async def test_execute(hass):
         }
     }
 
+    assert len(service_events) == 2
+    assert service_events[0].data == {
+        'domain': 'light',
+        'service': 'turn_on',
+        'service_data': {'entity_id': 'light.ceiling_lights'}
+    }
+    assert service_events[0].context == events[2].context
+    assert service_events[1].data == {
+        'domain': 'light',
+        'service': 'turn_on',
+        'service_data': {
+            'brightness_pct': 20,
+            'entity_id': 'light.ceiling_lights'
+        }
+    }
+    assert service_events[1].context == events[2].context
+    assert service_events[1].context == events[3].context
+
 
 async def test_raising_error_trait(hass):
     """Test raising an error while executing a trait command."""
@@ -397,26 +424,28 @@ async def test_raising_error_trait(hass):
     hass.bus.async_listen(EVENT_COMMAND_RECEIVED, events.append)
     await hass.async_block_till_done()
 
-    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
-        "requestId": REQ_ID,
-        "inputs": [{
-            "intent": "action.devices.EXECUTE",
-            "payload": {
-                "commands": [{
-                    "devices": [
-                        {"id": "climate.bla"},
-                    ],
-                    "execution": [{
-                        "command": "action.devices.commands."
-                                   "ThermostatTemperatureSetpoint",
-                        "params": {
-                            "thermostatTemperatureSetpoint": 10
-                        }
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.EXECUTE",
+                "payload": {
+                    "commands": [{
+                        "devices": [
+                            {"id": "climate.bla"},
+                        ],
+                        "execution": [{
+                            "command": "action.devices.commands."
+                                       "ThermostatTemperatureSetpoint",
+                            "params": {
+                                "thermostatTemperatureSetpoint": 10
+                            }
+                        }]
                     }]
-                }]
-            }
-        }]
-    })
+                }
+            }]
+        })
 
     assert result == {
         "requestId": REQ_ID,
@@ -446,6 +475,7 @@ async def test_raising_error_trait(hass):
 async def test_serialize_input_boolean(hass):
     """Test serializing an input boolean entity."""
     state = State('input_boolean.bla', 'on')
+    # pylint: disable=protected-access
     entity = sh._GoogleEntity(hass, BASIC_CONFIG, state)
     result = await entity.sync_serialize()
     assert result == {
@@ -466,15 +496,17 @@ async def test_unavailable_state_doesnt_sync(hass):
     )
     light.hass = hass
     light.entity_id = 'light.demo_light'
-    light._available = False
+    light._available = False    # pylint: disable=protected-access
     await light.async_update_ha_state()
 
-    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
-        "requestId": REQ_ID,
-        "inputs": [{
-            "intent": "action.devices.SYNC"
-        }]
-    })
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.SYNC"
+            }]
+        })
 
     assert result == {
         'requestId': REQ_ID,
@@ -495,12 +527,14 @@ async def test_empty_name_doesnt_sync(hass):
     light.entity_id = 'light.demo_light'
     await light.async_update_ha_state()
 
-    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
-        "requestId": REQ_ID,
-        "inputs": [{
-            "intent": "action.devices.SYNC"
-        }]
-    })
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.SYNC"
+            }]
+        })
 
     assert result == {
         'requestId': REQ_ID,
@@ -513,11 +547,13 @@ async def test_empty_name_doesnt_sync(hass):
 
 async def test_query_disconnect(hass):
     """Test a disconnect message."""
-    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
-        'inputs': [
-            {'intent': 'action.devices.DISCONNECT'}
-        ],
-        'requestId': REQ_ID
-    })
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, 'test-agent',
+        {
+            'inputs': [
+                {'intent': 'action.devices.DISCONNECT'}
+            ],
+            'requestId': REQ_ID
+        })
 
     assert result is None
