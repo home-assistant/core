@@ -62,7 +62,7 @@ async def async_setup_entry(hass, entry):
     home = hap.home
     # Add the HAP name from config if set.
     hapname = home.label \
-        if home.name == '' else "{} {}".format(home.label, home.name)
+        if not home.name else "{} {}".format(home.label, home.name)
     device_registry.async_get_or_create(
         config_entry_id=home.id,
         identifiers={(DOMAIN, home.id)},
