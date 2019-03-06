@@ -95,6 +95,7 @@ class VL53L1XSensor(Entity):
         )
 
     def init(self):
+        """Create and initialize the sensor hardware."""
         self.vl53l1x_sensor.open()
         self.vl53l1x_sensor.add_sensor(self.i2c_address, self.i2c_address)
         _LOGGER.info(
