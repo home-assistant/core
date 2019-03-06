@@ -75,7 +75,7 @@ class NordpoolAPI(Entity):
 
         get_date = datetime.now()
         area = self._region
-        price_list = nordpool_api.hourly(end_date=get_date,areas=[area])
+        price_list = nordpool_api.hourly(end_date=get_date, areas=[area])
 
         hour = get_date.hour
         price = (price_list['areas'][area]['values'][hour]['value']/10)
@@ -112,7 +112,9 @@ class NordpoolAPI(Entity):
     @property
     def device_state_attributes(self):
         """Device attributes."""
-        return {'Min': round(self._price_min, 3),
-                'Avarage': round(self._price_average, 3),
-                'Max': round(self._price_max, 3),
-                ATTR_ATTRIBUTION: "For details, see https://nordpoolgroup.com/"}
+        a = {'Min': round(self._price_min, 3),
+             'Avarage': round(self._price_average, 3),
+             'Max': round(self._price_max, 3),
+             ATTR_ATTRIBUTION: "For details, see https://nordpoolgroup.com/"}
+
+        return a
