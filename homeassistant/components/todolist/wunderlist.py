@@ -105,6 +105,24 @@ class Wunderlist(TodoListBase):
         """Return the name of the device."""
         return self._list_info["name"]
 
+    def map_from_todo_item(self, todo_item):
+        """Converts todo item -> source."""
+        source_item = {
+            'id': todo_item.get('id'),
+            'title': todo_item.get('name'),
+            'completed': todo_item.get('complete'),
+        }
+        return source_item
+
+    def map_to_todo_item(self, source_item):
+        """Converts source -> todo item."""
+        todo_item = {
+            'id': source_item.get('id'),
+            'name': source_item.get('title'),
+            'complete': source_item.get('completed'),
+        }
+        return todo_item
+
     def _list_by_name(self, name):
         """Return a list ID by name."""
         lists = self._client.get_lists()

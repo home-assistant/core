@@ -26,8 +26,8 @@ SCAN_INTERVAL = timedelta(seconds=300)
 ATTR_LIST_ID = 'list_id'
 ATTR_TASK_ID = 'task_id'
 ATTR_STARRED = 'starred'
-ATTR_COMPLETED = 'completed'
-ATTR_TITLE = 'title'
+ATTR_COMPLETE = 'complete'
+ATTR_NAME = 'name'
 ATTR_TASK = 'task'
 ATTR_SHOW_COMPLETED = 'show_completed'
 
@@ -58,10 +58,9 @@ SCHEMA_WEBSOCKET_LIST_TASKS = TODO_LIST_SERVICE_SCHEMA.extend({
 
 SCHEMA_WEBSOCKET_ADD_TASK = TODO_LIST_SERVICE_SCHEMA.extend({
     vol.Required(CONF_TYPE): WS_TYPE_CREATE_TASK,
-    vol.Required(ATTR_LIST_ID): cv.string,
     vol.Required(ATTR_TASK): vol.Schema({
-        vol.Required(ATTR_TITLE): cv.string,
-        vol.Optional(ATTR_COMPLETED): cv.boolean,
+        vol.Required(ATTR_NAME): cv.string,
+        vol.Optional(ATTR_COMPLETE): cv.boolean,
     }, extra=vol.ALLOW_EXTRA)
 })
 
@@ -69,8 +68,8 @@ SCHEMA_WEBSOCKET_UPDATE_TASK = TODO_LIST_SERVICE_SCHEMA.extend({
     vol.Required(CONF_TYPE): WS_TYPE_UPDATE_TASK,
     vol.Required(ATTR_TASK_ID): cv.string,
     vol.Required(ATTR_TASK): vol.Schema({
-        vol.Optional(ATTR_TITLE): cv.string,
-        vol.Optional(ATTR_COMPLETED): cv.boolean,
+        vol.Optional(ATTR_NAME): cv.string,
+        vol.Optional(ATTR_COMPLETE): cv.boolean,
     }, extra=vol.ALLOW_EXTRA)
 })
 
@@ -96,29 +95,37 @@ async def websocket_list_tasks(hass, connection, msg):
 
     Async friendly.
     """
-    _LOGGER.warning('rcvd msg: '+str(msg))
     component = hass.data[DOMAIN]
     todolist = component.get_entity(msg['entity_id'])
-
 
     if todolist is None:
         connection.send_message(websocket_api.error_message(
             msg['id'], 'entity_not_found', 'Entity not found'))
         return
 
-    data = await todolist.async_list_tasks()
+    source_items = await todolist.async_list_tasks()
 
-    if data is None:
+    if source_items is None:
         connection.send_message(websocket_api.error_message(
             msg['id'], 'list_tasks_failed',
             'Failed to list tasks'))
         return
 
+    todo_items = list(map(todolist.map_to_todo_item, source_items))
+
     connection.send_message(websocket_api.result_message(
-        msg['id'], data))
+        msg['id'], todo_items))
 
 class TodoListBase(Entity):
     """Representation of a todo list."""
+
+    def map_from_todo_item(self, todo_item):
+        """Converts todo item -> source."""
+        raise NotImplementedError()
+
+    def map_to_todo_item(self, source):
+        """Converts source -> todo item."""
+        raise NotImplementedError()
 
     def list_tasks(self, source):
         """List tasks."""
