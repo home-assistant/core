@@ -20,7 +20,7 @@ G_AN_MUSIC = "Music"
 G_AN_AUDIOBOOK = "AudioBook"
 G_AN_NEWS = "News"
 G_AN_LOCAL = "Local"
-
+G_AN_SPOTIFY = "Spotify"
 
 # tokens
 G_OFFLINE_MODE = False

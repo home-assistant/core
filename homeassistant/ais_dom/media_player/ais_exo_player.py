@@ -87,7 +87,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
                            ais_global.G_AN_MUSIC,
                            ais_global.G_AN_AUDIOBOOK,
                            ais_global.G_AN_NEWS,
-                           ais_global.G_AN_LOCAL]
+                           ais_global.G_AN_LOCAL,
+                           ais_global.G_AN_SPOTIFY]
         self._currentplaylist = None
         self._media_status_received_time = None
         self._media_position = 0
@@ -384,7 +385,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         elif self._media_source == ais_global.G_AN_PODCAST:
             entity_id = "input_select.podcast_track"
         elif self._media_source == ais_global.G_AN_MUSIC:
-            entity_id = "input_select.ais_youtube_track_name"
+            entity_id = "input_select.ais_music_track_name"
         elif self._media_source == ais_global.G_AN_AUDIOBOOK:
             entity_id = "input_select.book_chapter"
         elif self._media_source == ais_global.G_AN_LOCAL:
@@ -420,7 +421,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         elif self._media_source == ais_global.G_AN_PODCAST:
             entity_id = "input_select.podcast_track"
         elif self._media_source == ais_global.G_AN_MUSIC:
-            entity_id = "input_select.ais_youtube_track_name"
+            entity_id = "input_select.ais_music_track_name"
         elif self._media_source == ais_global.G_AN_AUDIOBOOK:
             entity_id = "input_select.book_chapter"
         elif self._media_source == ais_global.G_AN_LOCAL:

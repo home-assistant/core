@@ -119,7 +119,7 @@ class YouTubeData:
         yield from self.hass.services.async_call(
                 'input_select',
                 'set_options', {
-                    "entity_id": "input_select.ais_youtube_track_name",
+                    "entity_id": "input_select.ais_music_track_name",
                     "options": titles})
 
         text = "Znaleziono: %s, włączam pierwszy: %s" % (

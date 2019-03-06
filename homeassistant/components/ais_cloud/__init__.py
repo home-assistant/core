@@ -797,7 +797,7 @@ class AisColudData:
             self.hass.services.call(
                 'input_text',
                 'set_value', {
-                    "entity_id": "input_text.ais_youtube_query",
+                    "entity_id": "input_text.ais_music_query",
                     "value": call.data["text"]})
 
     def select_media_player(self, call):
@@ -841,7 +841,7 @@ class AisColudData:
                         _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_PODCAST
         if media_player_type == "Music":
             track_name = self.hass.states.get(
-                'input_select.ais_youtube_track_name').state
+                'input_select.ais_music_track_name').state
             if track_name == ais_global.G_EMPTY_OPTION:
                 return
             player_name = self.hass.states.get(

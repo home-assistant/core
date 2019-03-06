@@ -191,25 +191,47 @@
       data_template:
         text: "{{ states('input_text.ais_knowledge_query') }}"
 
-
 - id: '201807081905012'
   alias: 'Search YouTube Tracks'
   initial_state: True
   hide_entity: True
   trigger:
     platform: state
-    entity_id: input_text.ais_youtube_query
+    entity_id: input_text.ais_music_query
   condition:
     condition: and
     conditions:
       - condition: template
-        value_template: "{{ states.input_text.ais_youtube_query.state != '' }}"
+        value_template: "{{ states.input_text.ais_music_query.state != '' }}"
       - condition: template
-        value_template: "{{ states.input_text.ais_youtube_query.state != ' ' }}"
+        value_template: "{{ states.input_text.ais_music_query.state != ' ' }}"
+      - condition: template
+        value_template: "{{ states.input_select.ais_music_service.state == 'YouTube' }}"
   action:
     - service: ais_yt_service.search
       data_template:
-        query: "{{ states('input_text.ais_youtube_query') }}"
+        query: "{{ states('input_text.ais_music_query') }}"
+
+- id: '2018070819050123'
+  alias: 'Search Spotify Tracks'
+  initial_state: True
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_text.ais_music_query
+  condition:
+    condition: and
+    conditions:
+      - condition: template
+        value_template: "{{ states.input_text.ais_music_query.state != '' }}"
+      - condition: template
+        value_template: "{{ states.input_text.ais_music_query.state != ' ' }}"
+      - condition: template
+        value_template: "{{ states.input_select.ais_music_service.state == 'Spotify' }}"
+  action:
+    - service: ais_spotify_service.search
+      data_template:
+        query: "{{ states('input_text.ais_music_query') }}"
 
 - id: '201807081905013'
   alias: 'Select YouTube Track Name'
@@ -217,14 +239,37 @@
   hide_entity: True
   trigger:
     platform: state
-    entity_id: input_select.ais_youtube_track_name
+    entity_id: input_select.ais_music_track_name
   condition:
-    condition: template
-    value_template: "{{ states.input_select.ais_youtube_track_name.state != '-' }}"
+    condition: and
+    conditions:
+      - condition: template
+        value_template: "{{ states.input_select.ais_youtube_music_name.state != '-' }}"
+      - condition: template
+        value_template: "{{ states.input_select.ais_music_service.state == 'YouTube' }}"
   action:
     - service: ais_yt_service.select_track_name
       data_template:
-        name: "{{ states('input_select.ais_youtube_track_name') }}"
+        name: "{{ states('input_select.ais_music_track_name') }}"
+
+- id: '2018070819050134'
+  alias: 'Select Spotify Track Name'
+  initial_state: True
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.ais_music_track_name
+  condition:
+    condition: and
+    conditions:
+      - condition: template
+        value_template: "{{ states.input_select.ais_youtube_music_name.state != '-' }}"
+      - condition: template
+        value_template: "{{ states.input_select.ais_music_service.state == 'Spotify' }}"
+  action:
+    - service: ais_spotify_service.select_track_name
+      data_template:
+        name: "{{ states('input_select.ais_music_track_name') }}"
 
 - id: '201807081905014'
   alias: 'Select Music Player'

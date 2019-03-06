@@ -1,9 +1,9 @@
 input_text:
-  ais_youtube_query:
+  ais_music_query:
     name: Szukaj
     initial: " "
 input_select:
-  ais_youtube_track_name:
+  ais_music_track_name:
     name: 'Utwór:'
     options:
       - "-"
@@ -14,29 +14,20 @@ input_select:
     options:
      - Podłączony głośnik
     icon: mdi:speaker-wireless
-#  ais_music_service:
-#    name: 'Serwis muzyczny:'
-#    options:
-#      - "-"
-#      - "YouTube"
-#      - "Spotify"
-#      - "Deezer"
-#      - "Soundcloud"
-#    initial: "-"
-#    icon: mdi:shopping-music
+  ais_music_service:
+    name: 'Serwis muzyczny:'
+    options:
+      - "YouTube"
+      - "Spotify"
+    initial: "YouTube"
+    icon: mdi:shopping-music
 
 group:
   music_player:
     control: hidden
     name: Muzyka z YouTube
     entities:
-#      - input_select.ais_music_service
-      - input_text.ais_youtube_query
-      - input_select.ais_youtube_track_name
+      - input_select.ais_music_service
+      - input_text.ais_music_query
+      - input_select.ais_music_track_name
       - input_select.ais_music_player
-
-
-#media_player:
-#  - platform: spotify
-#    client_id: a4411ad8e40a479fbf8c58082e5dbe94
-#    client_secret:

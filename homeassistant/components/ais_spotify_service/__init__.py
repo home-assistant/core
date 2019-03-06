@@ -39,7 +39,7 @@ DOMAIN = 'ais_spotify_service'
 ICON = 'mdi:spotify'
 
 SCOPE = 'app-remote-control streaming user-read-email'
-
+G_SPOTIFY_FOUND = []
 
 def request_configuration(hass, config, oauth):
     """Request Spotify authorization."""
@@ -101,16 +101,27 @@ def async_setup(hass, config):
     # register services
     data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
 
-    def get_album(call):
-        _LOGGER.info("get_album")
-        data.get_album(call)
+    @asyncio.coroutine
+    def search(call):
+        _LOGGER.info("search")
+        yield from data.process_search_async(call)
 
-    def get_playlist(call):
-        _LOGGER.info("get_playlist")
-        data.get_playlist(call)
+    def select_track_name(call):
+        _LOGGER.info("select_track_name")
+        data.process_select_track_name(call)
 
-    hass.services.async_register(DOMAIN, 'get_album', get_album)
-    hass.services.async_register(DOMAIN, 'get_playlist', get_playlist)
+    hass.services.async_register(DOMAIN, 'search', search)
+    hass.services.async_register(DOMAIN, 'select_track_name', select_track_name)
+
+    # add spotify to service list
+    # hass.async_add_job(
+    #     hass.services.async_call(
+    #         'input_select',
+    #         'set_options', {
+    #             "entity_id": "input_select.ais_music_service",
+    #             "options": ["YouTube", "Spotify"]}
+    #     )
+    # )
 
     return True
 
@@ -167,12 +178,14 @@ class SpotifyData:
             self._spotify = spotipy.Spotify(auth=self._token_info.get('access_token'))
             self._user = self._spotify.me()
 
-    def get_album(self, call):
+    @asyncio.coroutine
+    def process_search_async(self, call):
         """Search album on Spotify."""
-        if "text" not in call.data:
+        if "query" not in call.data:
             _LOGGER.error("No text to search")
             return
-        search_text = call.data["text"]
+        global G_SPOTIFY_FOUND
+        search_text = call.data["query"]
 
         self.refresh_spotify_instance()
 
@@ -183,19 +196,66 @@ class SpotifyData:
 
         results = self._spotify.search(q='artist:' + search_text, type='artist')
         items = results['artists']['items']
-        if len(items) > 0:
-            artist = items[0]
-            _LOGGER.info(artist['name'] + " " + artist['images'][0]['url'])
 
-    def get_playlist(self, call):
-        if "text" not in call.data:
-            _LOGGER.error("No text to search")
-            return
-        """Search playlist on Spotify."""
-        self.refresh_spotify_instance()
+        found = []
+        titles = []
+        for item in items:
+            i = {}
+            i["id"] = item['id']
+            i["title"] = item['name']
+            if len(item['images']) > 0:
+                i["thumbnail"] = item['images'][0]['url']
+            else:
+                i["thumbnail"] = ""
+            titles.append(item['name'])
+            found.append(i)
+        G_SPOTIFY_FOUND = found
+        _LOGGER.debug('found' + str(found))
+        # Update input_select values:
+        yield from self.hass.services.async_call(
+            'input_select',
+            'set_options', {
+                "entity_id": "input_select.ais_music_track_name",
+                "options": titles})
 
-        # Don't true search when token is expired
-        if self._oauth.is_token_expired(self._token_info):
-            _LOGGER.warning("Spotify failed to update, token expired.")
-            return
+        text = "Znaleziono: %s, włączam pierwszy: %s" % (
+            str(len(G_SPOTIFY_FOUND)), G_SPOTIFY_FOUND[0]["title"])
+        _LOGGER.debug("text: " + text)
+        yield from self.hass.services.async_call(
+            'ais_ai_service', 'say_it', {
+                "text": text
+            })
+
+    def process_select_track_name(self, call):
+        _LOGGER.info("process_select_track_name")
+        import json
+        # """Search in last search return."""
+        name = call.data["name"]
+        for item in G_SPOTIFY_FOUND:
+            if item["title"] == name:
+                item_id = item["id"]
+                _audio_info = json.dumps(
+                    {"IMAGE_URL": item["thumbnail"], "NAME": item["title"], "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY}
+                )
+
+        player_name = self.hass.states.get(
+            'input_select.ais_music_player').state
+        player = ais_cloud.get_player_data(player_name)
+        self.hass.services.call(
+            'media_player',
+            'play_media', {
+                "entity_id": player["entity_id"],
+                "media_content_type": "audio/mp4",
+                "media_content_id": "spotify:album:" + item_id
+            })
+
+        # set stream image and title
+        # if entity_id == 'media_player.wbudowany_glosnik':
+        self.hass.services.call(
+            'media_player',
+            'play_media', {
+                "entity_id": player["entity_id"],
+                "media_content_type": "ais_info",
+                "media_content_id": _audio_info
+            })
 
