@@ -44,7 +44,9 @@ class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.device.turn_on()
+        self._update_callback()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.device.turn_off()
+        self._update_callback()
