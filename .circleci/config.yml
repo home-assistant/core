@@ -62,9 +62,16 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            pytest --timeout=9 --duration=10 --cov --cov-report html:test-reports
+            pytest --timeout=9 --duration=10 --junitxml=test-reports --nosugar --cov --cov-report html:htmlcov
             script/check_dirty
           when: always
+
+      - store_test_results:
+          path: test-reports
+
+      - store_artifacts:
+          path: htmlcov
+          destination: cov-reports
 
       - store_artifacts:
           path: test-reports
