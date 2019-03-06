@@ -37,12 +37,18 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -r requirements_all.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
+            pip install --progress-bar off -r requirements_all.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
 
       - save_cache:
           paths:
             - ./venv
           key: v1-dependencies-{{ checksum "requirements_all.txt" }}
+
+      - run:
+          name: install
+          command: |
+            . venv/bin/activate
+            pip install --progress-bar off -e .
 
       - run:
           name: run lint
@@ -58,6 +64,7 @@ jobs:
             . venv/bin/activate
             pytest --timeout=9 --duration=10 --cov --cov-report html:test-reports
             script/check_dirty
+          when: always
 
       - store_artifacts:
           path: test-reports
