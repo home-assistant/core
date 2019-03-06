@@ -160,7 +160,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
                 self._device.windowState != WindowState.CLOSED:
             attr.update({ATTR_WINDOWSTATE: str(self._device.windowState)})
         if self._device.unreach:
-            attr.update({ATTR_GROUP_MEMBER_UNREACHABLE: True})
+            attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
         return attr
 
     @property
