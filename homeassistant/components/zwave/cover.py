@@ -4,10 +4,9 @@ from homeassistant.core import callback
 from homeassistant.components.cover import (
     DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION)
 from homeassistant.components import zwave
-from homeassistant.components.zwave import (
-    ZWaveDeviceEntity, workaround)
 from homeassistant.components.cover import CoverDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from . import ZWaveDeviceEntity, workaround
 
 _LOGGER = logging.getLogger(__name__)
 
