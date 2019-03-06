@@ -1,0 +1,60 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+      - image: circleci/python:3.7.2
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements_all.txt" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements_all.txt
+            pip install -r requirements_test.txt
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements_all.txt" }}
+
+      - run:
+          name: run lint
+          command: |
+            . venv/bin/activate
+            python script/gen_requirements_all.py validate
+            flake8
+            pylint homeassistant
+
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            pytest --timeout=9 --duration=10 --cov --cov-report html:test-reports
+            script/check_dirty
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
