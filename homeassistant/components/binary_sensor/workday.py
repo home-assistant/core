@@ -42,6 +42,7 @@ CONF_PROVINCE = 'province'
 CONF_WORKDAYS = 'workdays'
 CONF_EXCLUDES = 'excludes'
 CONF_OFFSET = 'days_offset'
+CONF_ADDHOLIDAYS = 'add_holidays'
 
 # By default, Monday - Friday are workdays
 DEFAULT_WORKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri']
@@ -59,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PROVINCE): cv.string,
     vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS):
         vol.All(cv.ensure_list, [vol.In(ALLOWED_DAYS)]),
-	vol.Optional(CONF_ADDHOLIDAYS): vol.All(cv.ensure_list),
+    vol.Optional(CONF_ADDHOLIDAYS): vol.All(cv.ensure_list),
 })
 
 
@@ -93,7 +94,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error("There is no province/state %s in country %s",
                           province, country)
             return
-    
+
     #add custom holidays
     obj_holidays.append(add_holidays)
 
