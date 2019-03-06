@@ -45,7 +45,7 @@ SENSOR_TYPES = {
 SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 
 
-async def async_setup_platform(hass, config, async_add_entities, 
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Sense sensor."""
     data = hass.data[SENSE_DATA]
