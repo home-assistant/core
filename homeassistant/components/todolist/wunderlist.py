@@ -9,7 +9,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_NAME, CONF_ACCESS_TOKEN, CONF_TYPE)
+    CONF_ACCESS_TOKEN, ATTR_ID)
 
 from homeassistant.components.todolist import (
     TodoListBase,
@@ -22,14 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CLIENT_ID = 'client_id'
 CONF_LISTS = 'lists'
-CONF_LIST_NAME = 'list_name'
-CONF_LIST_ID = 'list_id'
-CONF_TASK_ID = 'task_id'
-CONF_STARRED = 'starred'
-CONF_COMPLETED = 'completed'
-CONF_TITLE = 'title'
-CONF_TASK = 'task'
-CONF_SHOW_COMPLETED = 'show_completed'
+
+ATTR_STARRED = 'starred'
+ATTR_COMPLETED = 'completed'
+ATTR_TITLE = 'title'
 
 WUNDERLIST_LISTS = "wunderlist_lists"
 
@@ -106,20 +102,20 @@ class Wunderlist(TodoListBase):
         return self._list_info["name"]
 
     def map_from_todo_item(self, todo_item):
-        """Converts todo item -> source."""
-        source_item = {
+        """Converts todo item -> platform item."""
+        platform_item = {
             'id': todo_item.get('id'),
             'title': todo_item.get('name'),
             'completed': todo_item.get('complete'),
         }
-        return source_item
+        return platform_item
 
-    def map_to_todo_item(self, source_item):
-        """Converts source -> todo item."""
+    def map_to_todo_item(self, platform_item):
+        """Converts platform item -> todo item."""
         todo_item = {
-            'id': source_item.get('id'),
-            'name': source_item.get('title'),
-            'complete': source_item.get('completed'),
+            'id': platform_item.get('id'),
+            'name': platform_item.get('title'),
+            'complete': platform_item.get('completed'),
         }
         return todo_item
 
@@ -169,22 +165,23 @@ class Wunderlist(TodoListBase):
             task_id=task_id)
         return task
 
-    def update_task(self, task_id, task):
-        """Update a task by id."""
+    def update_task(self, task):
+        """Update a task."""
+        task_id = task.get(ATTR_ID)
         existing_task = self._fetch_task(task_id)
         # define which revision of the object we would like to edit
         rev = existing_task.get("revision", 1)
         updated_task = self._client.update_task(
             task_id=task_id,
             revision=rev,
-            title=task.get(CONF_TITLE),
-            completed=task.get(CONF_COMPLETED))
+            title=task.get(ATTR_TITLE),
+            completed=task.get(ATTR_COMPLETED))
         return updated_task
 
-    def create_task(self, new_source_item):
+    def create_task(self, new_task):
         """Add a new task to a list."""
         added_task = self._client.create_task(
             list_id=self._list_id,
-            title=new_source_item.get(CONF_TITLE),
-            starred=new_source_item.get(CONF_STARRED))
+            title=new_task.get(ATTR_TITLE),
+            completed=new_task.get(ATTR_COMPLETED))
         return added_task
