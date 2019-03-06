@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
-    ATTR_LATITUDE, ATTR_LONGITUDE)
+    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_UNIT_SYSTEM_METRIC,
+    CONF_UNIT_SYSTEM_IMPERIAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
@@ -40,7 +41,7 @@ DEFAULT_REALTIME = True
 
 ICON = 'mdi:car'
 
-UNITS = ['metric', 'imperial']
+UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 
 REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 
@@ -255,7 +256,7 @@ class WazeTravelTimeData():
 
                 self.duration, distance = routes[route]
 
-                if self.units == 'imperial':
+                if self.units == CONF_UNIT_SYSTEM_IMPERIAL:
                     # Convert to miles.
                     self.distance = distance / 1.609
                 else:
