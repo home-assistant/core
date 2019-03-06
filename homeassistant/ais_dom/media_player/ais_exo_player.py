@@ -15,6 +15,8 @@ from homeassistant.components.media_player import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, MediaPlayerDevice, SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE, ATTR_MEDIA_DURATION, ATTR_MEDIA_SEEK_POSITION)
+from homeassistant.components.media_player.const import (
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from typing import Optional
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
@@ -24,7 +26,7 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_EXO = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | \
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
     SUPPORT_SEEK | SUPPORT_SELECT_SOURCE
 
 SUBSCTRIBE_TOPIC = 'ais/player_status'

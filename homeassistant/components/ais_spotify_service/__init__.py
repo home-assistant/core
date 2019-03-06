@@ -15,17 +15,13 @@ from homeassistant.ais_dom.ais_global import G_AIS_SECURE_ANDROID_ID_DOM
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
-REQUIREMENTS = ['gmusicapi==12.0.0']
+REQUIREMENTS = ['spotipy-homeassistant==2.4.4.dev1']
 
-DOMAIN = 'ais_gm_service'
+DOMAIN = 'ais_spotify_service'
 PERSISTENCE_GM_SONGS = '/.dom/gm_songs.json'
 _LOGGER = logging.getLogger(__name__)
-GM_URL = 'https://kgsearch.googleapis.com/v1/entities:search'
-GM_USER = None
-GM_PASS = None
-GM_DEV_KEY = None
-G_SELECTED_TRACKS = []
-G_GM_MOBILE_CLIENT_API = None
+SPOTIFY_TOKEN = None
+SPOTIFY_REFRESH_TOKEN = None
 
 
 @asyncio.coroutine
@@ -34,61 +30,78 @@ def async_setup(hass, config):
     config = config.get(DOMAIN, {})
     yield from get_keys_async(hass)
     # TODO
-    if GM_USER is None:
+    if SPOTIFY_TOKEN is None:
         return True
 
     _LOGGER.info("Initialize the authors list.")
-    data = hass.data[DOMAIN] = GMusicData(hass, config)
+    data = hass.data[DOMAIN] = SpotifyData(hass, config)
     yield from data.async_load_all_songs()
 
     # register services
-    def get_books(call):
-        _LOGGER.info("get_books")
-        data.get_books(call)
+    def get_album(call):
+        _LOGGER.info("get_album")
+        data.get_album(call)
 
-    def get_chapters(call):
-        _LOGGER.info("get_chapters")
-        data.get_chapters(call)
+    def get_playlist(call):
+        _LOGGER.info("get_playlist")
+        data.get_playlist(call)
 
-    def select_chapter(call):
-        _LOGGER.info("select_chapter")
-        data.select_chapter(call)
+    def select_track(call):
+        _LOGGER.info("select_track")
+        data.select_track(call)
 
     hass.services.async_register(
-        DOMAIN, 'get_books', get_books)
+        DOMAIN, 'get_album', get_album)
     hass.services.async_register(
-        DOMAIN, 'get_chapters', get_chapters)
+        DOMAIN, 'get_playlist', get_playlist)
     hass.services.async_register(
-        DOMAIN, 'select_chapter', select_chapter)
+        DOMAIN, 'select_track', select_track)
 
     return True
 
 
 @asyncio.coroutine
 def get_keys_async(hass):
-    def load():
-        global GM_DEV_KEY, GM_USER, GM_PASS
+    def load_token():
+        global SPOTIFY_TOKEN, SPOTIFY_REFRESH_TOKEN
         try:
-            ws_resp = aisCloud.key("gm_user_key")
+            ws_resp = aisCloud.key("spotify_token")
             json_ws_resp = ws_resp.json()
-            GM_USER = json_ws_resp["key"]
-            ws_resp = aisCloud.key("gm_pass_key")
+            SPOTIFY_TOKEN = json_ws_resp["key"]
+            ws_resp = aisCloud.key("spotify_refresh_token")
             json_ws_resp = ws_resp.json()
-            GM_PASS = json_ws_resp["key"]
-            try:
-                ws_resp = aisCloud.key("gm_dev_key")
-                json_ws_resp = ws_resp.json()
-                GM_DEV_KEY = json_ws_resp["key"]
-            except:
-                GM_DEV_KEY = None
-                _LOGGER.warning("No GM device key we will use MAC address of gate.")
+            SPOTIFY_REFRESH_TOKEN = json_ws_resp["key"]
         except Exception as e:
-            _LOGGER.error("No credentials to Google Music: " + str(e))
+            _LOGGER.error("No credentials to Spotify: " + str(e))
 
-    yield from hass.async_add_job(load)
+        """Set up the Spotify platform."""
+        import spotipy.oauth2
+
+        callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
+        cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
+        oauth = spotipy.oauth2.SpotifyOAuth(
+            config.get(CONF_CLIENT_ID), config.get(CONF_CLIENT_SECRET),
+            callback_url, scope=SCOPE,
+            cache_path=cache)
+        token_info = oauth.get_cached_token()
+        if not token_info:
+            _LOGGER.info("no token; requesting authorization")
+            hass.http.register_view(SpotifyAuthCallbackView(
+                config, add_entities, oauth))
+            request_configuration(hass, config, add_entities, oauth)
+            return
+        if hass.data.get(DOMAIN):
+            configurator = hass.components.configurator
+            configurator.request_done(hass.data.get(DOMAIN))
+            del hass.data[DOMAIN]
+        player = SpotifyMediaPlayer(
+            oauth, config.get(CONF_NAME, DEFAULT_NAME), config[CONF_ALIASES])
+        add_entities([player], True)
+
+    yield from hass.async_add_job(load_token)
 
 
-class GMusicData:
+class SpotifyData:
     """Class to hold audiobooks data."""
 
     def __init__(self, hass, config):
@@ -98,56 +111,12 @@ class GMusicData:
         self.hass = hass
         self.all_gm_tracks = []
         self.selected_books = []
-        _LOGGER.info("GM_USER: " + GM_USER + " GM_PASS: *******" + " GM_DEV_KEY: " + str(GM_DEV_KEY))
-        from gmusicapi import Mobileclient
-        G_GM_MOBILE_CLIENT_API = Mobileclient()
+        import spotipy
+        self.sp = spotipy.Spotify()
 
-        # if GM_DEV_KEY is None:
-        #     G_GM_MOBILE_CLIENT_API.login(GM_USER, GM_PASS, Mobileclient.FROM_MAC_ADDRESS)
-        # else:
-        #     G_GM_MOBILE_CLIENT_API.login(GM_USER, GM_PASS, GM_DEV_KEY)
-        #
-        G_GM_MOBILE_CLIENT_API.oauth_login('3cf7d4cc166ab0ee')
-        if not G_GM_MOBILE_CLIENT_API.is_authenticated():
-            _LOGGER.error("Failed to log in, check Google Music api")
-            return False
-        else:
-            _LOGGER.info("OK - we are in Google Music")
-            registered_devices = G_GM_MOBILE_CLIENT_API.get_registered_devices()
-            # for d in registered_devices:
-            #     if d['id'].startswith('0x'):
-            #         _LOGGER.warning("Your device ID in Google Music: " + str(d['id'][2:]) + " " + str(d))
-            #     else:
-            #         _LOGGER.warning("Your device ID in Google Music: " + str(d['id'].replace(':', '')) + " " + str(d))
-            #
-            # # trying to find first android device
-            # if GM_DEV_KEY is None:
-            #     for device in registered_devices:
-            #         if device['type'] == 'ANDROID':
-            #             GM_DEV_KEY = device['id'][2:]
-            #             break
-            # # try to find gate id in devices or take the last one
-            # if GM_DEV_KEY is None:
-            #     for device in registered_devices:
-            #         if device['id'].startswith('0x'):
-            #             d = device['id'][2:]
-            #         else:
-            #             d = device['id'].replace(':', '')
-            #
-            #         GM_DEV_KEY = d
-            #         if d == G_AIS_SECURE_ANDROID_ID_DOM.replace('dom-', ''):
-            #             break
-            # # try to register the gate id - Providing an unregistered mobile device id will register it to your account
-            # if GM_DEV_KEY is None:
-            #     GM_DEV_KEY = G_AIS_SECURE_ANDROID_ID_DOM.replace('dom-', '')
-            #G_GM_MOBILE_CLIENT_API.logout()
-            #G_GM_MOBILE_CLIENT_API = None
-            #G_GM_MOBILE_CLIENT_API = Mobileclient()
-            #G_GM_MOBILE_CLIENT_API.login(GM_USER, GM_PASS, GM_DEV_KEY)
-            #_LOGGER.info("GM_USER: " + GM_USER + " GM_PASS: *******" + " GM_DEV_KEY: " + str(GM_DEV_KEY))
 
-    def get_books(self, call):
-        """Load books for the selected author."""
+    def get_album(self, call):
+        """Load album for the selected author."""
         if ("author" not in call.data):
             _LOGGER.error("No author")
             return []

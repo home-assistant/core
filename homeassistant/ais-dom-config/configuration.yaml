@@ -34,7 +34,6 @@ conversation:
 system_health:
 
 
-
 # Show links to resources in log and frontend
 introduction:
 
@@ -126,4 +125,7 @@ ais_bookmarks:
 ais_mdns:
 
 #
-# ais_gm_service:
+ais_gm_service:
+
+#
+ais_spotify_service:
