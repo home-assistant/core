@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "El nombre ya existe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nombre"
+                },
+                "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+                "title": "Ubicaci\u00f3n"
+            }
+        },
+        "title": "Servicio meteorol\u00f3gico portugu\u00e9s (IPMA)"
+    }
+}

@@ -1,19 +1,15 @@
-"""
-Support for Geofency.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/geofency/
-"""
+"""Support for Geofency."""
 import logging
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME, \
-    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID, HTTP_OK, ATTR_NAME
+from homeassistant.const import (
+    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_NAME, CONF_WEBHOOK_ID, HTTP_OK,
+    HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME)
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import slugify
 
@@ -27,9 +23,7 @@ CONF_MOBILE_BEACONS = 'mobile_beacons'
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): vol.Schema({
         vol.Optional(CONF_MOBILE_BEACONS, default=[]): vol.All(
-            cv.ensure_list,
-            [cv.string]
-        ),
+            cv.ensure_list, [cv.string]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -62,7 +56,7 @@ WEBHOOK_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): vol.All(cv.string, slugify),
     vol.Optional(ATTR_CURRENT_LATITUDE): cv.latitude,
     vol.Optional(ATTR_CURRENT_LONGITUDE): cv.longitude,
-    vol.Optional(ATTR_BEACON_ID): cv.string
+    vol.Optional(ATTR_BEACON_ID): cv.string,
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -114,18 +108,11 @@ def _set_location(hass, data, location_name):
     device = _device_name(data)
 
     async_dispatcher_send(
-        hass,
-        TRACKER_UPDATE,
-        device,
-        (data[ATTR_LATITUDE], data[ATTR_LONGITUDE]),
-        location_name,
-        data
-    )
+        hass, TRACKER_UPDATE, device,
+        (data[ATTR_LATITUDE], data[ATTR_LONGITUDE]), location_name, data)
 
     return web.Response(
-        text="Setting location for {}".format(device),
-        status=HTTP_OK
-    )
+        text="Setting location for {}".format(device), status=HTTP_OK)
 
 
 async def async_setup_entry(hass, entry):

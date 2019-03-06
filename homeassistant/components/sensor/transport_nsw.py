@@ -1,9 +1,4 @@
-"""
-Transport NSW (AU) sensor to query next leave event for a specified stop.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.transport_nsw/
-"""
+"""Support for Transport NSW (AU) to query next leave event."""
 from datetime import timedelta
 import logging
 
@@ -26,7 +21,8 @@ ATTR_REAL_TIME = 'real_time'
 ATTR_DESTINATION = 'destination'
 ATTR_MODE = 'mode'
 
-CONF_ATTRIBUTION = "Data provided by Transport NSW"
+ATTRIBUTION = "Data provided by Transport NSW"
+
 CONF_STOP_ID = 'stop_id'
 CONF_ROUTE = 'route'
 CONF_DESTINATION = 'destination'
@@ -40,7 +36,7 @@ ICONS = {
     'Ferry': 'mdi:ferry',
     'Schoolbus': 'mdi:bus',
     'n/a': 'mdi:clock',
-    None: 'mdi:clock'
+    None: 'mdi:clock',
 }
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -99,7 +95,7 @@ class TransportNSWSensor(Entity):
                 ATTR_REAL_TIME: self._times[ATTR_REAL_TIME],
                 ATTR_DESTINATION: self._times[ATTR_DESTINATION],
                 ATTR_MODE: self._times[ATTR_MODE],
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+                ATTR_ATTRIBUTION: ATTRIBUTION
             }
 
     @property

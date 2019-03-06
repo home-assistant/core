@@ -1,9 +1,4 @@
-"""
-This component provides light support for the Philips Hue system.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.hue/
-"""
+"""Support for the Philips Hue lights."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -37,8 +32,8 @@ SUPPORT_HUE = {
     'Color light': SUPPORT_HUE_COLOR,
     'Dimmable light': SUPPORT_HUE_DIMMABLE,
     'On/Off plug-in unit': SUPPORT_HUE_ON_OFF,
-    'Color temperature light': SUPPORT_HUE_COLOR_TEMP
-    }
+    'Color temperature light': SUPPORT_HUE_COLOR_TEMP,
+}
 
 ATTR_IS_HUE_GROUP = 'is_hue_group'
 GAMUT_TYPE_UNAVAILABLE = 'None'
@@ -49,8 +44,8 @@ GAMUT_TYPE_UNAVAILABLE = 'None'
 GROUP_MIN_API_VERSION = (1, 13, 0)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up Hue lights.
 
     Can only be called when a user accidentally mentions hue platform in their
@@ -232,8 +227,8 @@ class HueLight(Light):
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
             if self.light.swupdatestate == "readytoinstall":
                 err = (
-                    "Please check for software updates of the bridge "
-                    "and/or the bulb: %s, in the Philips Hue App."
+                    "Please check for software updates of the %s "
+                    "bulb in the Philips Hue App."
                 )
                 _LOGGER.warning(err, self.name)
             if self.gamut:

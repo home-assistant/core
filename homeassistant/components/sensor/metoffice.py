@@ -26,7 +26,7 @@ ATTR_SENSOR_ID = 'sensor_id'
 ATTR_SITE_ID = 'site_id'
 ATTR_SITE_NAME = 'site_name'
 
-CONF_ATTRIBUTION = "Data provided by the Met Office"
+ATTRIBUTION = "Data provided by the Met Office"
 
 CONDITION_CLASSES = {
     'cloudy': ['7', '8'],
@@ -162,7 +162,7 @@ class MetOfficeCurrentSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attr[ATTR_ATTRIBUTION] = ATTRIBUTION
         attr[ATTR_LAST_UPDATE] = self.data.data.date
         attr[ATTR_SENSOR_ID] = self._condition
         attr[ATTR_SITE_ID] = self.site.id

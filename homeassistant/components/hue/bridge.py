@@ -46,7 +46,7 @@ class HueBridge:
             self.api = await get_bridge(
                 hass, host, self.config_entry.data['username'])
         except AuthenticationRequired:
-            # usernames can become invalid if hub is reset or user removed.
+            # Usernames can become invalid if hub is reset or user removed.
             # We are going to fail the config entry setup and initiate a new
             # linking procedure. When linking succeeds, it will remove the
             # old config entry.

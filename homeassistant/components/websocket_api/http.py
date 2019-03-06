@@ -130,7 +130,7 @@ class WebSocketHandler:
             if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
                 raise Disconnect
 
-            elif msg.type != WSMsgType.TEXT:
+            if msg.type != WSMsgType.TEXT:
                 disconnect_warn = 'Received non-Text message.'
                 raise Disconnect
 

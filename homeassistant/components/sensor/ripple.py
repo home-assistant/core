@@ -1,22 +1,16 @@
-"""
-Support for Ripple sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ripple/
-"""
+"""Support for Ripple sensors."""
 from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-ripple-api==0.0.3']
 
-CONF_ADDRESS = 'address'
-CONF_ATTRIBUTION = "Data provided by ripple.com"
+ATTRIBUTION = "Data provided by ripple.com"
 
 DEFAULT_NAME = 'Ripple Balance'
 
@@ -65,7 +59,7 @@ class RippleSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):

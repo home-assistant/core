@@ -6,7 +6,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
 from .const import (
-    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN)
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DECONZ_DOMAIN,
+    NEW_SENSOR)
 from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
@@ -29,7 +30,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_sensor(sensors):
         """Add sensors from deCONZ."""
-        from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
+        from pydeconz.sensor import (
+            DECONZ_SENSOR, SWITCH as DECONZ_REMOTE)
         entities = []
         allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
         for sensor in sensors:
@@ -43,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities, True)
 
     gateway.listeners.append(
-        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
+        async_dispatcher_connect(hass, NEW_SENSOR, async_add_sensor))
 
     async_add_sensor(gateway.api.sensors.values())
 

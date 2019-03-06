@@ -4,13 +4,13 @@ import logging
 
 from requests.exceptions import HTTPError
 
-from homeassistant.components.climate import (
-    STATE_AUTO, STATE_ECO, STATE_MANUAL, STATE_OFF,
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_ECO, STATE_MANUAL,
     SUPPORT_AWAY_MODE,
     SUPPORT_ON_OFF,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    ClimateDevice
 )
 from homeassistant.components.evohome import (
     DATA_EVOHOME, DISPATCHER_EVOHOME,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     HTTP_TOO_MANY_REQUESTS,
     PRECISION_HALVES,
+    STATE_OFF,
     TEMP_CELSIUS
 )
 from homeassistant.core import callback

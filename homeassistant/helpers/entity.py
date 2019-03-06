@@ -28,11 +28,10 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
     if current_ids is None:
         if hass is None:
             raise ValueError("Missing required parameter currentids or hass")
-        else:
-            return run_callback_threadsafe(
-                hass.loop, async_generate_entity_id, entity_id_format, name,
-                current_ids, hass
-            ).result()
+        return run_callback_threadsafe(
+            hass.loop, async_generate_entity_id, entity_id_format, name,
+            current_ids, hass
+        ).result()
 
     name = (slugify(name) or slugify(DEVICE_DEFAULT_NAME)).lower()
 
