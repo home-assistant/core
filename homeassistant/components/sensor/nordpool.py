@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from datetime import timedelta
 
-REQUIREMENTS = ['nordpool']
+REQUIREMENTS = ['nordpool==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
