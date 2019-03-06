@@ -1,5 +1,6 @@
 """
-Support for OASA Telematics from telematics.oasa.gr:
+Support for OASA Telematics from telematics.oasa.gr.
+
 Real-time Information for Buses and Trolleys
 For more info on the API see:
 https://oasa-telematics-api.readthedocs.io/en/latest/
@@ -184,7 +185,7 @@ class OASATelematicsData():
         for result in results:
             due_in_minutes = result.btime2
 
-            if (due_in_minutes is not None):
+            if due_in_minutes is not None:
                 arrival_data = {ATTR_DUE_IN: due_in_minutes,
                                 ATTR_ROUTE_ID: self.route_id}
                 self.info.append(arrival_data)
