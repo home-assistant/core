@@ -442,10 +442,10 @@ class TemplateMethods:
         return None
 
 
-def forgiving_round(value, precision=0):
+def forgiving_round(value, precision=0, method='common'):
     """Round accepted strings."""
     try:
-        value = round(float(value), precision)
+        value = round(float(value), precision, method)
         return int(value) if precision == 0 else value
     except (ValueError, TypeError):
         # If value can't be converted to float
