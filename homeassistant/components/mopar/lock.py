@@ -1,12 +1,12 @@
 """Support for the Mopar vehicle lock."""
 import logging
 
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
-
 from homeassistant.components.lock import LockDevice
-
-from homeassistant.components.mopar import DOMAIN as MOPAR_DOMAIN, \
+from homeassistant.components.mopar import (
+    DOMAIN as MOPAR_DOMAIN,
     SUCCESS_RESPONSE
+)
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 REQUIREMENTS = ['motorparts==1.1.0']
 
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Mopar Switch platform."""
+    """Set up the Mopar lock platform."""
     data = hass.data[MOPAR_DOMAIN]
     add_entities([MoparLock(data, index)
                   for index, _ in enumerate(data.vehicles)], True)
@@ -54,7 +54,7 @@ class MoparLock(LockDevice):
         try:
             response = motorparts.lock(self._session, self._index)
         except motorparts.MoparError as error:
-            _LOGGER.error(str(error))
+            _LOGGER.error(error)
             return
 
         if response == SUCCESS_RESPONSE:
@@ -65,9 +65,9 @@ class MoparLock(LockDevice):
         import motorparts
 
         try:
-            response = motorparts.lock(self._session, self._index)
+            response = motorparts.unlock(self._session, self._index)
         except motorparts.MoparError as error:
-            _LOGGER.error(str(error))
+            _LOGGER.error(error)
             return
 
         if response == SUCCESS_RESPONSE:

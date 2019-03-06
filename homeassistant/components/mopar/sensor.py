@@ -1,10 +1,4 @@
-"""
-Support for the Mopar vehicle sensor platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mopar/
-"""
-
+"""Support for the Mopar vehicle sensor platform."""
 from homeassistant.components.mopar import DOMAIN as MOPAR_DOMAIN, DATA_UPDATED
 from homeassistant.const import (
     ATTR_ATTRIBUTION, LENGTH_KILOMETERS)

@@ -6,8 +6,12 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PIN
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import Throttle
+from homeassistant.components.lock import DOMAIN as LOCK
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
 
 REQUIREMENTS = ['motorparts==1.1.0']
 
@@ -21,6 +25,7 @@ COOKIE_FILE = 'mopar_cookies.pickle'
 SUCCESS_RESPONSE = 'completed'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(days=7)
+SUPPORTED_PLATFORMS = [LOCK, SENSOR, SWITCH]
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -37,13 +42,23 @@ def setup(hass, config):
     cookie = hass.config.path(COOKIE_FILE)
     try:
         session = motorparts.get_session(
-            config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
-            config.get(CONF_PIN), cookie_path=cookie)
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
+            config[CONF_PIN],
+            cookie_path=cookie
+        )
     except motorparts.MoparError:
         _LOGGER.error("Failed to login")
         return False
 
-    hass.data[DOMAIN] = MoparData(hass, session)
+    data = hass.data[DOMAIN] = MoparData(hass, session)
+    data.update()
+
+    for platform in SUPPORTED_PLATFORMS:
+        hass.async_create_task(
+            async_load_platform(hass, platform, DOMAIN, {}, config)
+        )
+
     return True
 
 
@@ -61,7 +76,6 @@ class MoparData:
         self.vehicles = []
         self.vhrs = {}
         self.tow_guides = {}
-        self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
