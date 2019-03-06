@@ -217,6 +217,11 @@ class AndroidTVDevice(MediaPlayerDevice):
         return SUPPORT_ANDROIDTV
 
     @property
+    def unique_id(self):
+        """Return the device unique id."""
+        return self._unique_id
+
+    @property
     def state(self):
         """Return the state of the player."""
         return self._state
