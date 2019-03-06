@@ -123,14 +123,6 @@ class Wunderlist(TodoListBase):
         }
         return todo_item
 
-    def _list_by_name(self, name):
-        """Return a list ID by name."""
-        lists = self._client.get_lists()
-        tmp = [l for l in lists if l["title"] == name]
-        if tmp:
-            return tmp[0]
-        return None
-
     def _fetch_tasks(self, list_id, show_completed):
         """Return the tasks of a list, unordered."""
         incomplete_tasks = self._client.get_tasks(list_id, False)
@@ -189,10 +181,10 @@ class Wunderlist(TodoListBase):
             completed=task.get(CONF_COMPLETED))
         return updated_task
 
-    def add_task(self, list_id, task):
+    def create_task(self, new_source_item):
         """Add a new task to a list."""
         added_task = self._client.create_task(
-            list_id=list_id,
-            title=task.get(CONF_TITLE),
-            starred=task.get(CONF_STARRED))
+            list_id=self._list_id,
+            title=new_source_item.get(CONF_TITLE),
+            starred=new_source_item.get(CONF_STARRED))
         return added_task

@@ -6,6 +6,7 @@ https://home-assistant.io/components/todolist/
 """
 from datetime import timedelta
 import logging
+from functools import partial
 
 import voluptuous as vol
 
@@ -56,7 +57,7 @@ SCHEMA_WEBSOCKET_LIST_TASKS = TODO_LIST_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_SHOW_COMPLETED): cv.boolean,
 })
 
-SCHEMA_WEBSOCKET_ADD_TASK = TODO_LIST_SERVICE_SCHEMA.extend({
+SCHEMA_WEBSOCKET_CREATE_TASK = TODO_LIST_SERVICE_SCHEMA.extend({
     vol.Required(CONF_TYPE): WS_TYPE_CREATE_TASK,
     vol.Required(ATTR_TASK): vol.Schema({
         vol.Required(ATTR_NAME): cv.string,
@@ -86,8 +87,23 @@ async def async_setup(hass, config):
         websocket_list_tasks,
         SCHEMA_WEBSOCKET_LIST_TASKS)
 
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_CREATE_TASK,
+        websocket_create_task,
+        SCHEMA_WEBSOCKET_CREATE_TASK)
+
     return True
 
+def get_todolist_instance(hass, connection, entity_id):
+    component = hass.data[DOMAIN]
+    todolist = component.get_entity(entity_id)
+
+    if todolist is None:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'entity_not_found', 'Entity not found'))
+        return
+
+    return todolist
 
 @websocket_api.async_response
 async def websocket_list_tasks(hass, connection, msg):
@@ -95,15 +111,10 @@ async def websocket_list_tasks(hass, connection, msg):
 
     Async friendly.
     """
-    component = hass.data[DOMAIN]
-    todolist = component.get_entity(msg['entity_id'])
+    todolist = get_todolist_instance(hass, connection, msg['entity_id'])
 
-    if todolist is None:
-        connection.send_message(websocket_api.error_message(
-            msg['id'], 'entity_not_found', 'Entity not found'))
-        return
-
-    source_items = await todolist.async_list_tasks()
+    show_completed = msg.get('show_completed')
+    source_items = await todolist.async_list_tasks(show_completed)
 
     if source_items is None:
         connection.send_message(websocket_api.error_message(
@@ -116,6 +127,30 @@ async def websocket_list_tasks(hass, connection, msg):
     connection.send_message(websocket_api.result_message(
         msg['id'], todo_items))
 
+
+@websocket_api.async_response
+async def websocket_create_task(hass, connection, msg):
+    """Dispatch add task service call to entity.
+
+    Async friendly.
+    """
+    todolist = get_todolist_instance(hass, connection, msg['entity_id'])
+
+    new_todo_item = msg['task']
+    new_source_item = todolist.map_from_todo_item(new_todo_item)
+    source_created_item = await todolist.async_create_task(new_source_item)
+
+    if source_created_item is None:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'create_task_failed',
+            'Failed to create new task'))
+        return
+
+    todo_created_item = todolist.map_to_todo_item(source_created_item)
+
+    connection.send_message(websocket_api.result_message(
+        msg['id'], todo_created_item))
+
 class TodoListBase(Entity):
     """Representation of a todo list."""
 
@@ -123,17 +158,30 @@ class TodoListBase(Entity):
         """Converts todo item -> source."""
         raise NotImplementedError()
 
-    def map_to_todo_item(self, source):
+    def map_to_todo_item(self, source_item):
         """Converts source -> todo item."""
         raise NotImplementedError()
 
-    def list_tasks(self, source):
+    def list_tasks(self, show_completed=True):
         """List tasks."""
         raise NotImplementedError()
 
-    def async_list_tasks(self):
+    def async_list_tasks(self, show_completed=True):
         """List tasks.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.list_tasks)
+        fn_list_tasks = partial(self.list_tasks, show_completed=show_completed)
+        return self.hass.async_add_job(fn_list_tasks)
+
+    def create_task(self, new_source_item):
+        """Create a new task."""
+        raise NotImplementedError()
+
+    def async_create_task(self, new_source_item):
+        """Create a new task.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        fn_create_task = partial(self.create_task, new_source_item=new_source_item)
+        return self.hass.async_add_job(fn_create_task)
