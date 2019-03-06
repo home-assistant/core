@@ -25,8 +25,6 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-SCAN_INTERVAL = timedelta(minutes=1)
-
 async def async_setup(hass, config):
     """Set up the Freebox component."""
     conf = config.get(DOMAIN)
