@@ -93,7 +93,7 @@ class Sense(Entity):
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
         else:
-            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR 
+            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     @property
     def name(self):

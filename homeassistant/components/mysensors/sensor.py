@@ -2,7 +2,7 @@
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, POWER_WATT,
-    ENERGY_KILO_WATT_HOUR)
+                                 ENERGY_KILO_WATT_HOUR)
 
 SENSORS = {
     'V_TEMP': [None, 'mdi:thermometer'],

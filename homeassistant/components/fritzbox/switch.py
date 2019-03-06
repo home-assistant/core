@@ -8,7 +8,7 @@ from homeassistant.components.fritzbox import (
     ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (ATTR_TEMPERATURE, TEMP_CELSIUS,
-    ENERGY_KILO_WATT_HOUR)
+                                 ENERGY_KILO_WATT_HOUR)
 
 DEPENDENCIES = ['fritzbox']
 
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_TOTAL_CONSUMPTION_UNIT = 'total_consumption_unit'
-ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR 
+ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 
 ATTR_TEMPERATURE_UNIT = 'temperature_unit'
 

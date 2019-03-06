@@ -11,8 +11,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (TEMP_CELSIUS, CONF_HOST,
-    ENERGY_KILO_WATT_HOUR, CONF_MONITORED_VARIABLES)
+from homeassistant.const import (
+    TEMP_CELSIUS, CONF_HOST, ENERGY_KILO_WATT_HOUR,
+    CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['openevsewifi==0.4']
