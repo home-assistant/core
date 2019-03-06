@@ -202,7 +202,7 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
                 self._device.smokeDetectorAlarmType != \
                 SmokeDetectorAlarmType.IDLE_OFF:
             attr[ATTR_SMOKEDETECTORALARM] = \
-                self._device.smokeDetectorAlarmType
+                str(self._device.smokeDetectorAlarmType)
 
         return attr
 
