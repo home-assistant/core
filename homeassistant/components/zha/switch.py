@@ -107,3 +107,10 @@ class Switch(ZhaEntity, SwitchDevice):
     def async_restore_last_state(self, last_state):
         """Restore previous state."""
         self._state = last_state.state == STATE_ON
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the switch."""
+        if self._on_off_channel:
+            await self._on_off_channel.async_update()
+            self._state = await self._on_off_channel.get_attribute_value(
+                'on_off')

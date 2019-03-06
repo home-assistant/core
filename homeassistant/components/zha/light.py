@@ -236,3 +236,9 @@ class Light(ZhaEntity, light.Light):
         """Attempt to retrieve on off state from the light."""
         if self._on_off_channel:
             await self._on_off_channel.async_update()
+            self._state = await self._on_off_channel.get_attribute_value(
+                'on_off')
+        if self._level_channel:
+            await self._level_channel.async_update()
+            self._brightness = await self._level_channel.get_attribute_value(
+                'current_level')

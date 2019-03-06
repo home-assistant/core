@@ -125,13 +125,18 @@ class ZHAGateway:
             )
         )
 
-    @callback
-    def _async_get_or_create_device(self, zigpy_device):
+    async def _async_get_or_create_device(self, zigpy_device, is_new_join):
         """Get or create a ZHA device."""
         zha_device = self._devices.get(zigpy_device.ieee)
         if zha_device is None:
             zha_device = ZHADevice(self._hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device
+        if not is_new_join:
+            entry = (await async_get_registry(self._hass)).async_get_or_create(
+                zha_device
+            )
+            zha_device.async_update_last_seen(entry.last_seen)
+            zha_device.set_power_source(entry.power_source)
         return zha_device
 
     @callback
@@ -159,13 +164,11 @@ class ZHAGateway:
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
-        zha_device = self._async_get_or_create_device(device)
-        if not is_new_join:
-            entry = (await async_get_registry(self._hass)).async_get_or_create(
-                zha_device
-            )
-            zha_device.async_update_last_seen(entry.last_seen)
-            zha_device.set_power_source(entry.power_source)
+        zha_device = await self._async_get_or_create_device(
+            device,
+            is_new_join
+        )
+
         discovery_infos = []
         for endpoint_id, endpoint in device.endpoints.items():
             self._async_process_endpoint(
@@ -176,6 +179,7 @@ class ZHAGateway:
         if is_new_join:
             # configure the device
             await zha_device.async_configure()
+            zha_device.update_available(True)
         elif zha_device.power_source is not None\
                 and zha_device.power_source == MAINS_POWERED:
             # the device isn't a battery powered device so we should be able
@@ -200,11 +204,6 @@ class ZHAGateway:
 
         device_entity = _async_create_device_entity(zha_device)
         await self._component.async_add_entities([device_entity])
-
-        if is_new_join:
-            # because it's a new join we can immediately mark the device as
-            # available. We do it here because the entities didn't exist above
-            zha_device.update_available(True)
 
     @callback
     def _async_process_endpoint(
