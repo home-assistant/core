@@ -7,13 +7,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.oasa_telematics/
 """
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 from operator import itemgetter
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
@@ -111,7 +110,7 @@ class OASATelematicsSensor(Entity):
         return ICON
 
     def update(self):
-        """Get the latest data from telematics.oasa.gr and update the states."""
+        """Get the latest data from OASA API and update the states."""
         self.data.update()
         self._times = self.data.info
         self._name_data = self.data.name_data
@@ -156,9 +155,9 @@ class OASATelematicsData():
     def get_stop_name(self):
         """Get the stop name from the API."""
         try:
-            stop_name_data = self.oasa_api.raw_api.getStopNameAndXY(self.stop_id)
-            if stop_name_data:
-                return stop_name_data[0].get('stop_descr_matrix_eng')
+            name_data = self.oasa_api.raw_api.getStopNameAndXY(self.stop_id)
+            if name_data:
+                return name_data[0].get('stop_descr_matrix_eng')
         except TypeError:
             _LOGGER.debug("Cannot get  stop name from OASA API")
         return 'n/a'
