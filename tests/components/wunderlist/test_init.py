@@ -98,7 +98,6 @@ async def test_list_tasks(hass, hass_ws_client):
         })
         msg = await ws_client.receive_json()
 
-
         assert len(msg['result']) == 2
         assert msg['result'][0]['id'] == 123892713
         assert msg['result'][1]['id'] == 409233670
