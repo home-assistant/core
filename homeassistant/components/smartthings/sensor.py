@@ -5,7 +5,7 @@ from typing import Optional, Sequence
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, MASS_KILOGRAMS,
-    POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ENERGY_KILO_WATT_HOUR, POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -54,7 +54,7 @@ CAPABILITY_TO_SENSORS = {
         Map('fineDustLevel', "Fine Dust Level", None, None),
         Map('dustLevel', "Dust Level", None, None)],
     'energyMeter': [
-        Map('energy', "Energy Meter", 'kWh', None)],
+        Map('energy', "Energy Meter", ENERGY_KILO_WATT_HOUR, None)],
     'equivalentCarbonDioxideMeasurement': [
         Map('equivalentCarbonDioxideMeasurement',
             'Equivalent Carbon Dioxide Measurement', 'ppm', None)],

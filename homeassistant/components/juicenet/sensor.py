@@ -1,7 +1,7 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
 import logging
 
-from homeassistant.const import TEMP_CELSIUS, POWER_WATT
+from homeassistant.const import TEMP_CELSIUS, POWER_WATT, ENERGY_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.juicenet import JuicenetDevice, DOMAIN
 
@@ -16,7 +16,7 @@ SENSOR_TYPES = {
     'amps': ['Amps', 'A'],
     'watts': ['Watts', POWER_WATT],
     'charge_time': ['Charge time', 's'],
-    'energy_added': ['Energy added', 'Wh']
+    'energy_added': ['Energy added', ENERGY_WATT_HOUR]
 }
 
 

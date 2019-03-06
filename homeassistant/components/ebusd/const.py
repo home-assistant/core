@@ -1,4 +1,6 @@
 """Constants for ebus component."""
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
+
 DOMAIN = 'ebusd'
 
 #  SensorTypes:
@@ -67,9 +69,9 @@ SENSOR_TYPES = {
         'ContinuosHeating':
             ['ContinuosHeating', '°C', 'mdi:weather-snowy', 0],
         'PowerEnergyConsumptionLastMonth':
-            ['PrEnergySumHcLastMonth', 'kWh', 'mdi:flash', 0],
+            ['PrEnergySumHcLastMonth', ENERGY_KILO_WATT_HOUR, 'mdi:flash', 0],
         'PowerEnergyConsumptionThisMonth':
-            ['PrEnergySumHcThisMonth', 'kWh', 'mdi:flash', 0]
+            ['PrEnergySumHcThisMonth', ENERGY_KILO_WATT_HOUR, 'mdi:flash', 0]
     },
     'ehp': {
         'HWTemperature':
@@ -89,12 +91,12 @@ SENSOR_TYPES = {
         'Flame':
             ['Flame', None, 'mdi:toggle-switch', 2],
         'PowerEnergyConsumptionHeatingCircuit':
-            ['PrEnergySumHc1', 'kWh', 'mdi:flash', 0],
+            ['PrEnergySumHc1', ENERGY_KILO_WATT_HOUR, 'mdi:flash', 0],
         'PowerEnergyConsumptionHotWaterCircuit':
-            ['PrEnergySumHwc1', 'kWh', 'mdi:flash', 0],
+            ['PrEnergySumHwc1', ENERGY_KILO_WATT_HOUR, 'mdi:flash', 0],
         'RoomThermostat':
             ['DCRoomthermostat', None, 'mdi:toggle-switch', 2],
         'HeatingPartLoad':
-            ['PartloadHcKW', 'kWh', 'mdi:flash', 0]
+            ['PartloadHcKW', ENERGY_KILO_WATT_HOUR, 'mdi:flash', 0]
     }
 }
