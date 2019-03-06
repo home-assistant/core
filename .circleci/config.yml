@@ -62,7 +62,7 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            pytest --timeout=9 --duration=10 --junitxml=test-reports -p no:sugar --cov --cov-report html:htmlcov
+            pytest --timeout=9 --duration=10 --junitxml=test-reports -qq -o console_output_style=count -p no:sugar --cov --cov-report html:htmlcov
             script/check_dirty
           when: always
 
