@@ -1,6 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
-from datetime import timedelta
 import socket
 
 import voluptuous as vol
