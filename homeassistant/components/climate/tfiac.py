@@ -50,23 +50,25 @@ SWING_MODE = 'swing_mode'
 ON_MODE = 'is_on'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the TFIAC climate device."""
-    _LOGGER.info(discovery_info)
+    from pytfiac import Tfiac
 
     host = config.get(CONF_HOST)
     if host is not None:
-        add_devices([TfiacClimate(hass, host)])
+        tfiac_client = Tfiac(host)
+        await tfiac_client.update()
+        async_add_devices([TfiacClimate(hass, tfiac_client)])
 
 
 class TfiacClimate(ClimateDevice):
     """TFIAC class."""
 
-    def __init__(self, hass, host):
+    def __init__(self, hass, client):
         """Init class."""
-        from pytfiac import Tfiac
         hass.data[DOMAIN] = self
-        self._client = Tfiac(host)
+        self._client = client
 
     @property
     def available(self):
