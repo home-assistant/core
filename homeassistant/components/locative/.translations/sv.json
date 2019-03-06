@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Din Home Assistant instans m\u00e5ste vara \u00e5tkomlig ifr\u00e5n internet f\u00f6r att ta emot meddelanden ifr\u00e5n Geofency.",
+            "one_instance_allowed": "Endast en enda instans \u00e4r n\u00f6dv\u00e4ndig."
+        },
+        "create_entry": {
+            "default": "F\u00f6r att skicka h\u00e4ndelser till Home Assistant m\u00e5ste du konfigurera webhook funktionen i Locative appen.\n\n Fyll i f\u00f6ljande information:\n \n- URL: `{webhook_url}`\n- Method: POST\n\nSe [dokumentation]({docs_url}) om hur du konfigurerar detta f\u00f6r mer information."
+        },
+        "step": {
+            "user": {
+                "description": "\u00c4r du s\u00e4ker p\u00e5 att du vill konfigurera Locative Webhook?",
+                "title": "Konfigurera Locative Webhook"
+            }
+        },
+        "title": "Locative Webhook"
+    }
+}

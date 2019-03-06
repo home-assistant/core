@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keng TP-Link Apparater am Netzwierk fonnt.",
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun ass n\u00e9ideg."
+        },
+        "step": {
+            "confirm": {
+                "description": "Soll TP-Link Smart Home konfigur\u00e9iert ginn?",
+                "title": "TP-Link Smart Home"
+            }
+        },
+        "title": "TP-Link Smart Home"
+    }
+}

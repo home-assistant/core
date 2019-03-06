@@ -3,8 +3,9 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.climate import (
-    _LOGGER, ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_FAN_MODE, ATTR_HOLD_MODE,
+from homeassistant.components.climate import _LOGGER
+from homeassistant.components.climate.const import (
+    ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_FAN_MODE, ATTR_HOLD_MODE,
     ATTR_HUMIDITY, ATTR_OPERATION_MODE, ATTR_SWING_MODE, ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW, DOMAIN, SERVICE_SET_AWAY_MODE, SERVICE_SET_HOLD_MODE,
     SERVICE_SET_AUX_HEAT, SERVICE_SET_TEMPERATURE, SERVICE_SET_HUMIDITY,

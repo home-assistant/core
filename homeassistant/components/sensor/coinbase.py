@@ -16,9 +16,10 @@ CURRENCY_ICONS = {
     'LTC': 'mdi:litecoin',
     'USD': 'mdi:currency-usd'
 }
+
 DEFAULT_COIN_ICON = 'mdi:coin'
 
-CONF_ATTRIBUTION = "Data provided by coinbase.com"
+ATTRIBUTION = "Data provided by coinbase.com"
 
 DATA_COINBASE = 'coinbase_cache'
 DEPENDENCIES = ['coinbase']
@@ -77,7 +78,7 @@ class AccountSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_NATIVE_BALANCE: "{} {}".format(
                 self._native_balance, self._native_currency),
         }
@@ -127,7 +128,7 @@ class ExchangeRateSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+            ATTR_ATTRIBUTION: ATTRIBUTION
         }
 
     def update(self):

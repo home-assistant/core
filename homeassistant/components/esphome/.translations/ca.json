@@ -16,6 +16,10 @@
                 "description": "Introdueix la contrasenya que has posat en la teva configuraci\u00f3.",
                 "title": "Introdueix la contrasenya"
             },
+            "discovery_confirm": {
+                "description": "Vols afegir el node `{name}` d'ESPHome a Home Assistant?",
+                "title": "Node d'ESPHome descobert"
+            },
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",

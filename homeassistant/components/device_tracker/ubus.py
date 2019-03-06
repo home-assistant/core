@@ -216,8 +216,7 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
             if 'message' in response['error'] and \
                     response['error']['message'] == "Access denied":
                 raise PermissionError(response['error']['message'])
-            else:
-                raise HomeAssistantError(response['error']['message'])
+            raise HomeAssistantError(response['error']['message'])
 
         if rpcmethod == "call":
             try:

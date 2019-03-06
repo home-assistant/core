@@ -6,31 +6,15 @@ real HTTP calls are not initiated during testing.
 """
 from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES
-from homeassistant.components.smartthings import DeviceBroker, binary_sensor
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES, DOMAIN as BINARY_SENSOR_DOMAIN)
+from homeassistant.components.smartthings import binary_sensor
 from homeassistant.components.smartthings.const import (
-    DATA_BROKERS, DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
+    DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-
-async def _setup_platform(hass, *devices):
-    """Set up the SmartThings binary_sensor platform and prerequisites."""
-    hass.config.components.add(DOMAIN)
-    broker = DeviceBroker(hass, devices, '')
-    config_entry = ConfigEntry("1", DOMAIN, "Test", {},
-                               SOURCE_USER, CONN_CLASS_CLOUD_PUSH)
-    hass.data[DOMAIN] = {
-        DATA_BROKERS: {
-            config_entry.entry_id: broker
-        }
-    }
-    await hass.config_entries.async_forward_entry_setup(
-        config_entry, 'binary_sensor')
-    await hass.async_block_till_done()
-    return config_entry
+from .conftest import setup_platform
 
 
 async def test_mapping_integrity():
@@ -56,7 +40,7 @@ async def test_entity_state(hass, device_factory):
     """Tests the state attributes properly match the light types."""
     device = device_factory('Motion Sensor 1', [Capability.motion_sensor],
                             {Attribute.motion: 'inactive'})
-    await _setup_platform(hass, device)
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     state = hass.states.get('binary_sensor.motion_sensor_1_motion')
     assert state.state == 'off'
     assert state.attributes[ATTR_FRIENDLY_NAME] ==\
@@ -71,7 +55,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     device_registry = await hass.helpers.device_registry.async_get_registry()
     # Act
-    await _setup_platform(hass, device)
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get('binary_sensor.motion_sensor_1_motion')
     assert entry
@@ -89,7 +73,7 @@ async def test_update_from_signal(hass, device_factory):
     # Arrange
     device = device_factory('Motion Sensor 1', [Capability.motion_sensor],
                             {Attribute.motion: 'inactive'})
-    await _setup_platform(hass, device)
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     device.status.apply_attribute_update(
         'main', Capability.motion_sensor, Attribute.motion, 'active')
     # Act
@@ -107,7 +91,8 @@ async def test_unload_config_entry(hass, device_factory):
     # Arrange
     device = device_factory('Motion Sensor 1', [Capability.motion_sensor],
                             {Attribute.motion: 'inactive'})
-    config_entry = await _setup_platform(hass, device)
+    config_entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN,
+                                        devices=[device])
     # Act
     await hass.config_entries.async_forward_entry_unload(
         config_entry, 'binary_sensor')

@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://apilayer.net/api/live'
 
-CONF_ATTRIBUTION = "Data provided by currencylayer.com"
+ATTRIBUTION = "Data provided by currencylayer.com"
 
 DEFAULT_BASE = 'USD'
 DEFAULT_NAME = 'CurrencyLayer Sensor'
@@ -91,7 +91,7 @@ class CurrencylayerSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):
@@ -119,10 +119,9 @@ class CurrencylayerData:
                 self._resource, params=self._parameters, timeout=10)
             if 'error' in result.json():
                 raise ValueError(result.json()['error']['info'])
-            else:
-                self.data = result.json()['quotes']
-                _LOGGER.debug("Currencylayer data updated: %s",
-                              result.json()['timestamp'])
+            self.data = result.json()['quotes']
+            _LOGGER.debug("Currencylayer data updated: %s",
+                          result.json()['timestamp'])
         except ValueError as err:
             _LOGGER.error("Check Currencylayer API %s", err.args)
             self.data = None
