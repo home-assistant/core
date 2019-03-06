@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_PLAYING, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['openwebifpy==1.1.8']
+REQUIREMENTS = ['openwebifpy==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,9 +23,12 @@ ATTR_MEDIA_DESCRIPTION = 'media_description'
 ATTR_MEDIA_END_TIME = 'media_end_time'
 ATTR_MEDIA_START_TIME = 'media_start_time'
 
+CONF_PREFER_PICON = "prefer_picon"
+
 DEFAULT_NAME = 'Enigma2 Media Player'
 DEFAULT_PORT = 80
 DEFAULT_SSL = False
+DEFAULT_PREFER_PICON = False
 DEFAULT_USERNAME = 'root'
 DEFAULT_PASSWORD = 'dreambox'
 
@@ -41,6 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_PREFER_PICON, default=DEFAULT_PREFER_PICON): cv.boolean,
 })
 
 
@@ -56,6 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_USERNAME: DEFAULT_USERNAME,
             CONF_PASSWORD: DEFAULT_PASSWORD,
             CONF_SSL: DEFAULT_SSL,
+            CONF_PREFER_PICON: DEFAULT_PREFER_PICON,
         }
         add_devices([Enigma2Device(discovery_info['hostname'],
                                    discovered_config)], True)
@@ -77,7 +82,8 @@ class Enigma2Device(MediaPlayerDevice):
                                        port=config[CONF_PORT],
                                        username=config[CONF_USERNAME],
                                        password=config[CONF_PASSWORD],
-                                       is_https=config[CONF_SSL])
+                                       is_https=config[CONF_SSL],
+                                       prefer_picon=config[CONF_PREFER_PICON])
 
         self.volume = 10
         self.current_service_channel_name = None

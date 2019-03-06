@@ -777,7 +777,7 @@ openhomedevice==0.4.2
 opensensemap-api==0.1.5
 
 # homeassistant.components.enigma2.media_player
-openwebifpy==1.1.8
+openwebifpy==1.2.0
 
 # homeassistant.components.device_tracker.luci
 openwrt-luci-rpc==1.0.5
