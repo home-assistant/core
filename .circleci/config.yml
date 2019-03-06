@@ -21,6 +21,10 @@ jobs:
     steps:
       - checkout
 
+      - run:
+          name: setup docker prereqs
+          command: apt-get update && apt-get install -y --no-install-recommends libudev-dev
+
       # Download and cache dependencies
       - restore_cache:
           keys:
@@ -33,8 +37,7 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -r requirements_all.txt
-            pip install -r requirements_test.txt
+            pip install -r requirements_all.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
 
       - save_cache:
           paths:
