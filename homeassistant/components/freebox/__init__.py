@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_FREEBOX
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import config_validation as cv, discovery, dispatcher
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.discovery import async_load_platform
 
 REQUIREMENTS = ['aiofreepybox==0.0.7']
