@@ -23,7 +23,7 @@ jobs:
 
       - run:
           name: setup docker prereqs
-          command: apt-get update && apt-get install -y --no-install-recommends libudev-dev
+          command: sudo apt-get update && sudo apt-get install -y --no-install-recommends libudev-dev
 
       # Download and cache dependencies
       - restore_cache:
