@@ -166,7 +166,7 @@ def isdir(value: Any) -> str:
 
 def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     """Wrap value in list if it is not one."""
-    if value is None:
+    if value is None or (isinstance(value, dict) and not value):
         return []
     return value if isinstance(value, list) else [value]
 
