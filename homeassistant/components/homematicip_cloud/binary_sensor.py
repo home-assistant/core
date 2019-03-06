@@ -152,13 +152,13 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
         attr = super().device_state_attributes
 
         if self._device.motionDetected:
-            attr.update({ATTR_MOTIONDETECTED: True})
+            attr[ATTR_MOTIONDETECTED] = True
         if self._device.presenceDetected:
-            attr.update({ATTR_PRESENCEDETECTED: True})
+            attr[ATTR_PRESENCEDETECTED] = True
         from homematicip.base.enums import WindowState
         if self._device.windowState is not None and \
                 self._device.windowState != WindowState.CLOSED:
-            attr.update({ATTR_WINDOWSTATE: str(self._device.windowState)})
+            attr[ATTR_WINDOWSTATE] = str(self._device.windowState)
         if self._device.unreach:
             attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
         return attr
@@ -192,17 +192,17 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
         attr = super().device_state_attributes
 
         if self._device.powerMainsFailure:
-            attr.update({ATTR_POWERMAINSFAILURE: True})
+            attr[ATTR_POWERMAINSFAILURE] = True
         if self._device.moistureDetected:
-            attr.update({ATTR_MOISTUREDETECTED: True})
+            attr[ATTR_MOISTUREDETECTED] = True
         if self._device.waterlevelDetected:
-            attr.update({ATTR_WATERLEVELDETECTED: True})
+            attr[ATTR_WATERLEVELDETECTED] = True
         from homematicip.base.enums import SmokeDetectorAlarmType
         if self._device.smokeDetectorAlarmType is not None and \
                 self._device.smokeDetectorAlarmType != \
                 SmokeDetectorAlarmType.IDLE_OFF:
-            attr.update({ATTR_SMOKEDETECTORALARM: str(
-                self._device.smokeDetectorAlarmType)})
+            attr[ATTR_SMOKEDETECTORALARM] = \
+                self._device.smokeDetectorAlarmType
 
         return attr
 
