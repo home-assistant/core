@@ -27,6 +27,7 @@ from .core.const import (
     DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
 from .core.gateway import establish_device_mappings
 from .core.channels.registry import populate_channel_registry
+from .core.store import async_get_registry
 
 REQUIREMENTS = [
     'bellows-homeassistant==0.7.1',
@@ -146,7 +147,8 @@ async def async_setup_entry(hass, config_entry):
         ClusterPersistingListener
     )
 
-    zha_gateway = ZHAGateway(hass, config)
+    zha_storage = await async_get_registry(hass)
+    zha_gateway = ZHAGateway(hass, config, zha_storage)
 
     # Patch handle_message until zigpy can provide an event here
     def handle_message(sender, is_reply, profile, cluster,

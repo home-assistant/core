@@ -20,7 +20,6 @@ from .const import (
     QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE
 )
 from .channels import EventRelayChannel, ZDOChannel
-from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -206,8 +205,7 @@ class ZHADevice:
         _LOGGER.debug('%s: started configuration', self.name)
         await self._execute_channel_tasks('async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
-        entry = (await async_get_registry(
-            self.hass)).async_create_or_update(self)
+        entry = self.gateway.zha_storage.async_create_or_update(self)
         _LOGGER.debug('%s: stored in registry: %s', self.name, entry)
 
     async def async_initialize(self, from_cache=False):

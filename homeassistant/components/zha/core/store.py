@@ -70,10 +70,13 @@ class ZhaDeviceStorage:
             return self.async_update(device)
         return self.async_create(device)
 
-    async def async_delete(self, ieee: str) -> None:
+    @callback
+    def async_delete(self, device) -> None:
         """Delete ZhaDeviceEntry."""
-        del self.devices[ieee]
-        self.async_schedule_save()
+        ieee_str = str(device.ieee)
+        if ieee_str in self.devices:
+            del self.devices[ieee_str]
+            self.async_schedule_save()
 
     @callback
     def async_update(self, device) -> ZhaDeviceEntry:

@@ -31,7 +31,6 @@ from .channels import (
 )
 from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .helpers import convert_ieee
-from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,13 +45,14 @@ EntityReference = collections.namedtuple(
 class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, config, zha_storage):
         """Initialize the gateway."""
         self._hass = hass
         self._config = config
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._devices = {}
         self._device_registry = collections.defaultdict(list)
+        self.zha_storage = zha_storage
         hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
 
@@ -125,16 +125,15 @@ class ZHAGateway:
             )
         )
 
-    async def _async_get_or_create_device(self, zigpy_device, is_new_join):
+    @callback
+    def _async_get_or_create_device(self, zigpy_device, is_new_join):
         """Get or create a ZHA device."""
         zha_device = self._devices.get(zigpy_device.ieee)
         if zha_device is None:
             zha_device = ZHADevice(self._hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device
         if not is_new_join:
-            entry = (await async_get_registry(self._hass)).async_get_or_create(
-                zha_device
-            )
+            entry = self.zha_storage.async_get_or_create(zha_device)
             zha_device.async_update_last_seen(entry.last_seen)
             zha_device.set_power_source(entry.power_source)
         return zha_device
@@ -157,17 +156,13 @@ class ZHAGateway:
 
     async def async_update_device_storage(self):
         """Update the devices in the store."""
-        storage = await async_get_registry(self._hass)
         for device in self.devices.values():
-            storage.async_update(device)
-        await storage.async_save()
+            self.zha_storage.async_update(device)
+        await self.zha_storage.async_save()
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
-        zha_device = await self._async_get_or_create_device(
-            device,
-            is_new_join
-        )
+        zha_device = self._async_get_or_create_device(device, is_new_join)
 
         discovery_infos = []
         for endpoint_id, endpoint in device.endpoints.items():
