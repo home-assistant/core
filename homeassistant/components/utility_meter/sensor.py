@@ -1,6 +1,6 @@
 """Utility meter from sensors providing raw data."""
 import logging
-
+from datetime import date, timedelta
 from decimal import Decimal, DecimalException
 
 import homeassistant.util.dt as dt_util
@@ -128,15 +128,17 @@ class UtilityMeterSensor(RestoreEntity):
         self.async_schedule_update_ha_state()
 
     async def _async_reset_meter(self, event):
-        """Determine cycle - Helper function for larger then daily cycles."""
-        now = dt_util.now()
-        if self._period == WEEKLY and now.weekday() != self._period_offset:
+        """Determine cycle - Helper function for larger than daily cycles."""
+        now = dt_util.now().date()
+        if self._period == WEEKLY and\
+                now != now - timedelta(days=now.weekday())\
+                + self._period_offset:
             return
         if self._period == MONTHLY and\
-                now.day != (1 + self._period_offset):
+                now != date(now.year, now.month, 1) + self._period_offset:
             return
         if self._period == YEARLY and\
-                (now.month != (1 + self._period_offset) or now.day != 1):
+                now != date(now.year, 1, 1) + self._period_offset:
             return
         await self.async_reset_meter(self._tariff_entity)
 
@@ -155,15 +157,16 @@ class UtilityMeterSensor(RestoreEntity):
         await super().async_added_to_hass()
 
         if self._period == HOURLY:
-            async_track_time_change(self.hass, self._async_reset_meter,
-                                    minute=self._period_offset, second=0)
-        elif self._period == DAILY:
-            async_track_time_change(self.hass, self._async_reset_meter,
-                                    hour=self._period_offset, minute=0,
-                                    second=0)
-        elif self._period in [WEEKLY, MONTHLY, YEARLY]:
-            async_track_time_change(self.hass, self._async_reset_meter,
-                                    hour=0, minute=0, second=0)
+            async_track_time_change(
+                self.hass, self._async_reset_meter,
+                minute=self._period_offset.seconds // 60,
+                second=self._period_offset.seconds % 60)
+        elif self._period in [DAILY, WEEKLY, MONTHLY, YEARLY]:
+            async_track_time_change(
+                self.hass, self._async_reset_meter,
+                hour=self._period_offset.seconds // 3600,
+                minute=self._period_offset.seconds % 3600 // 60,
+                second=self._period_offset.seconds % 3600 % 60)
 
         async_dispatcher_connect(
             self.hass, SIGNAL_RESET_METER, self.async_reset_meter)
