@@ -1,6 +1,4 @@
-"""
-Support for Freebox devices (Freebox Delta, Freebox v6 and Freebox mini 4K).
-"""
+"""Support for Freebox Delta, Revolution and Mini 4K."""
 import logging
 
 from homeassistant.components.freebox import DATA_FREEBOX
