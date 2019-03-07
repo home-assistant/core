@@ -200,8 +200,33 @@ class Entity:
         self._context = context
         self._context_set = dt_util.utcnow()
 
-    def _get_state_and_attributes(self):
-        """Get state and attributes."""
+    async def async_update_ha_state(self, force_refresh=False):
+        """Update Home Assistant with current state of entity.
+
+        If force_refresh == True will update entity before setting state.
+
+        This method must be run in the event loop.
+        """
+        # update entity data
+        if force_refresh:
+            try:
+                await self.async_device_update()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Update for %s fails", self.entity_id)
+                return
+
+        self.async_write_ha_state()
+
+    @callback
+    def async_write_ha_state(self):
+        """Write the state to the state machine."""
+        if self.hass is None:
+            raise RuntimeError("Attribute hass is None for {}".format(self))
+
+        if self.entity_id is None:
+            raise NoEntitySpecifiedError(
+                "No entity id specified for entity {}".format(self.name))
+
         start = timer()
 
         if not self.available:
@@ -261,13 +286,6 @@ class Entity:
                             "https://goo.gl/Nvioub", self.entity_id,
                             type(self), end - start)
 
-        return (state, attr)
-
-    def _async_update_ha_state(self, state, attr):
-        """Update Home Assistant with state of entity.
-
-        This method must be run in the event loop.
-        """
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
@@ -295,63 +313,16 @@ class Entity:
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update, self._context)
 
-    @callback
-    def update_ha_state(self):
-        """Update Home Assistant with current state of entity.
-
-        This method must be run in the event loop.
-        """
-        if self.hass is None:
-            raise RuntimeError("Attribute hass is None for {}".format(self))
-
-        if self.entity_id is None:
-            raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name))
-
-        state, attr = self._get_state_and_attributes()
-        self._async_update_ha_state(state, attr)
-
-    async def async_update_ha_state(self, force_refresh=False):
-        """Update Home Assistant with current state of entity.
-
-        This method must be run in the event loop.
-        """
-        if self.hass is None:
-            raise RuntimeError("Attribute hass is None for {}".format(self))
-
-        if self.entity_id is None:
-            raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name))
-
-        # update entity data
-        if force_refresh:
-            try:
-                await self.async_device_update()
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Update for %s fails", self.entity_id)
-                return
-
-        state, attr = self._get_state_and_attributes()
-        self._async_update_ha_state(state, attr)
-
     def schedule_update_ha_state(self, force_refresh=False):
-        """Schedule an update ha state change task from other thread.
+        """Schedule an update ha state change task.
 
-        If state is changed again before the ha state change task has been
-        executed, state transitions will be missed.
+        That avoid executor dead looks.
         """
         self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh=False):
-        """Schedule an update ha state change task.
-
-        Scheduling the update avoids executor dead looks.
-        If state is changed again before the ha state change task has been
-        executed, state transitions will be missed.
-
-        This method must be run in the event loop.
-        """
+        """Schedule an update ha state change task."""
         self.hass.async_create_task(self.async_update_ha_state(force_refresh))
 
     async def async_device_update(self, warning=True):
