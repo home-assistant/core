@@ -186,10 +186,11 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._battery_level = self._state['details']['charge']
 
         if self._robot_has_map:
-            robot_map_id = self._robot_maps[self._robot_serial][0]['id']
+            if self._state['availableServices']['maps'] != "basic-1":
+                robot_map_id = self._robot_maps[self._robot_serial][0]['id']
 
-            self._robot_boundaries = self.robot.get_map_boundaries(
-                robot_map_id).json()
+                self._robot_boundaries = self.robot.get_map_boundaries(
+                    robot_map_id).json()
 
     @property
     def name(self):
