@@ -272,6 +272,11 @@ class HoneywellUSThermostat(ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         return self._device.current_temperature
+    
+    @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return self._device.current_humidity
 
     @property
     def target_temperature(self):
