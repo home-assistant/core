@@ -20,9 +20,7 @@ action "Python 3.6 - tests" {
 
 workflow "Python 3.5 - tox" {
   on = "push"
-  resolves = [
-    "Pyton 3.5 - typing,cov",
-  ]
+  resolves = ["Pyton 3.5 - typing"]
 }
 
 action "Python 3.5 - tests" {
@@ -33,11 +31,11 @@ action "Python 3.5 - tests" {
 action "Python 3.5 - lints" {
   uses = "home-assistant/actions/py35-tox@master"
   needs = ["Python 3.5 - tests"]
-  args = "-e lint,pylint -p auto --parallel-live"
+  args = "-e lint"
 }
 
-action "Pyton 3.5 - typing,cov" {
+action "Pyton 3.5 - typing" {
   uses = "home-assistant/actions/py35-tox@master"
-  args = "-e typing,cov -p auto --parallel-live"
+  args = "-e typing"
   needs = ["Python 3.5 - lints"]
 }
