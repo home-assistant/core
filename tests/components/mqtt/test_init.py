@@ -780,7 +780,6 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client):
         'topic': 'test-topic',
     })
     response = await client.receive_json()
-
     assert response['success']
 
     async_fire_mqtt_message(hass, 'test-topic', 'test1')

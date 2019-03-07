@@ -1080,7 +1080,7 @@ async def websocket_subscribe(hass, connection, msg):
             'qos': qos,
         }))
 
-    connection.event_listeners[msg['id']] = await async_subscribe(
+    connection.subscriptions[msg['id']] = await async_subscribe(
         hass, msg['topic'], forward_messages)
 
     connection.send_message(websocket_api.result_message(msg['id']))
