@@ -262,7 +262,7 @@ class AndroidTVDevice(MediaPlayerDevice):
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
-            self._available = self.androidtv.connect()
+            self._available = self.androidtv.connect(always_log_errors=False)
 
             # To be safe, wait until the next update to run ADB commands.
             return
