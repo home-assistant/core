@@ -1,6 +1,6 @@
 workflow "Python 3.7 - tox" {
-  on = "push"
   resolves = ["Python 3.7 - tests"]
+  on = "pull_request"
 }
 
 action "Python 3.7 - tests" {
@@ -9,8 +9,8 @@ action "Python 3.7 - tests" {
 }
 
 workflow "Python 3.6 - tox" {
-  on = "push"
   resolves = ["Python 3.6 - tests"]
+  on = "pull_request"
 }
 
 action "Python 3.6 - tests" {
@@ -19,8 +19,8 @@ action "Python 3.6 - tests" {
 }
 
 workflow "Python 3.5 - tox" {
-  on = "push"
   resolves = ["Pyton 3.5 - typing"]
+  on = "pull_request"
 }
 
 action "Python 3.5 - tests" {
