@@ -113,7 +113,8 @@ async def async_setup_entry(hass, config_entry):
                     else:
                         switches.append(dev)
                 except SmartDeviceException as ex:
-                    _LOGGER.error("Unable to connect to device %s: %s", dev.host, ex)
+                    _LOGGER.error("Unable to connect to device %s: %s",
+                                  dev.host, ex)
 
             elif isinstance(dev, SmartBulb):
                 lights.append(dev)
