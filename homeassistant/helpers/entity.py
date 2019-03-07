@@ -328,13 +328,27 @@ class Entity:
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
 
-        That avoid executor dead looks.
+        Scheduling the update avoids executor dead looks.
+
+        Entity state and attributes are read when the update ha state change
+        task is executed.
+        If state is changed more than once before the ha state change task has
+        been executed, the intermediate state transitions will be missed.
         """
         self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh=False):
-        """Schedule an update ha state change task."""
+        """Schedule an update ha state change task.
+
+        This method must be run in the event loop.
+        Scheduling the update avoids executor dead looks.
+
+        Entity state and attributes are read when the update ha state change
+        task is executed.
+        If state is changed more than once before the ha state change task has
+        been executed, the intermediate state transitions will be missed.
+        """
         self.hass.async_create_task(self.async_update_ha_state(force_refresh))
 
     async def async_device_update(self, warning=True):
