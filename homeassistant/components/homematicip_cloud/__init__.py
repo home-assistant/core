@@ -60,7 +60,7 @@ async def async_setup_entry(hass, entry):
     # Register hap as device in registry.
     device_registry = await dr.async_get_registry(hass)
     home = hap.home
-    # Add the HAP name from config if set.
+    # Add the HAP name from configuration if set.
     hapname = home.label \
         if not home.name else "{} {}".format(home.label, home.name)
     device_registry.async_get_or_create(
