@@ -1,4 +1,4 @@
-"""Platform for Time of Flight sensor VL53L1X."""
+"""Platform for Time of Flight sensor VL53L1X from STMicroelectronics."""
 
 import asyncio
 import logging
