@@ -1,10 +1,8 @@
 """Home Assistant Switcher Component.
 
 For controlling the Switcher Boiler Device (https://www.switcher.co.il/).
-Please follow configuring instryctuins here: fill-in-here.
-
-For pylint's incorrectly reports of no 'getLogger' in module 'logging':
-- Disabled pylint's 'E0611' (no-name-in-module) warning.
+Please follow configuring instructions here:
+    https://www.home-assistant.io/components/switcher_kis/
 
 Author: Tomer Figenblat
 
@@ -12,7 +10,6 @@ This cannot be configured as a sensor platform,
 Please follow the instruction of configuring the switcher_kis component.
 """
 
-# pylint: disable=no-name-in-module
 from asyncio import TimeoutError as AsyncioTimeoutError
 from asyncio import wait_for
 from datetime import datetime
@@ -20,24 +17,23 @@ from functools import partial
 from logging import getLogger
 from typing import Any, Awaitable, Callable, Dict, Optional
 
-from aioswitcher.consts import COMMAND_OFF, COMMAND_ON
-from aioswitcher.consts import STATE_OFF as SWITCHER_STATE_OFF
-from aioswitcher.consts import STATE_ON as SWITCHER_STATE_ON
+from aioswitcher.consts import (
+    COMMAND_OFF, COMMAND_ON, STATE_OFF as SWITCHER_STATE_OFF,
+    STATE_ON as SWITCHER_STATE_ON)
 from aioswitcher.devices import SwitcherV2Device
 from aioswitcher.swapi import send_command_to_device
 
 from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_ICON, CONF_NAME,
                                  STATE_OFF, STATE_ON, STATE_UNKNOWN)
+from homeassistant.components.switch import (
+    ATTR_CURRENT_POWER_W, ENTITY_ID_FORMAT as SWITCH_FORMAT, SwitchDevice)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import async_generate_entity_id
 
-from ..switch import (ATTR_CURRENT_POWER_W,
-                      ENTITY_ID_FORMAT as SWITCH_FORMAT, SwitchDevice)
-
-from . import (DISCOVERY_CONFIG, DISCOVERY_DEVICE,
-               ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT,
-               async_register_switch_entity)
+from . import ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT
+from ._service_registration import (DISCOVERY_CONFIG, DISCOVERY_DEVICE,
+                                    async_register_switch_entity)
 
 DEPENDENCIES = ['switcher_kis']
 

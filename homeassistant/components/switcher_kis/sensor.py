@@ -1,17 +1,8 @@
 """Home Assistant Switcher Component.
 
 For controlling the Switcher Boiler Device (https://www.switcher.co.il/).
-Please follow configuring instructions.
-
-For use of type hints in comments for mypy checker:
-- Disabled pylint's 'W0611' (unused-import) warning.
-- Noqa'd flake8's 'F401' error (imported but unused).
-
-For pylint's incorrectly reports of no 'getLogger' in module 'logging':
-- Disabled pylint's 'E0611' (no-name-in-module) warning.
-
-Disabled pylint's 'C0326' (bad-whitespace).
-It contradicts flake8's 'E252'(missing whitespace around parameter equals).
+Please follow configuring instructions here:
+    https://www.home-assistant.io/components/switcher_kis/
 
 Author: Tomer Figenblat
 
@@ -19,14 +10,12 @@ This cannot be configured as a sensor platform,
 Please follow the instruction of configuring the switcher_kis component.
 """
 
-# pylint: disable=bad-whitespace,unused-import,no-name-in-module
-from asyncio import TimeoutError as AsyncioTimeoutError
-from asyncio import wait_for
+from asyncio import wait_for, TimeoutError as AsyncioTimeoutError
 from logging import getLogger
-from typing import Any, Awaitable, Callable, Dict, List, Optional  # noqa F401
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 from aioswitcher.consts import DISABLE_SCHEDULE, ENABLE_SCHEDULE
-from aioswitcher.devices import SwitcherV2Device  # noqa F401
+from aioswitcher.devices import SwitcherV2Device
 from aioswitcher.schedules import (SwitcherV2Schedule,
                                    calc_next_run_for_schedule)
 from aioswitcher.swapi import delete_schedule, disable_enable_schedule
@@ -37,9 +26,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
-from . import (DISCOVERY_CONFIG, DISCOVERY_DEVICE, DISCOVERY_SCHEDULES,
-               ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT,
-               async_register_sensor_entities)
+from . import ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT
+from ._service_registration import (
+    DISCOVERY_CONFIG, DISCOVERY_DEVICE, DISCOVERY_SCHEDULES,
+    async_register_sensor_entities)
 
 DEPENDENCIES = ['switcher_kis']
 
