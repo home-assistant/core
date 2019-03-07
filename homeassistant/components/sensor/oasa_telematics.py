@@ -194,6 +194,8 @@ class OASATelematicsData():
         if not self.info:
             _LOGGER.debug("No arrivals with given parameters")
             self.info = self.empty_result()
+            return
 
         # Sort the data by time
-        self.info = sorted(self.info, key=itemgetter(ATTR_DUE_IN))
+        sort = sorted(self.info, key=lambda x: int(itemgetter(ATTR_DUE_IN)(x)))
+        self.info = sort
