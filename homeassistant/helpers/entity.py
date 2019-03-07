@@ -222,10 +222,10 @@ class Entity:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
 
-        self._async_write_hass_state()
+        self._async_write_ha_state()
 
     @callback
-    def async_write_hass_state(self):
+    def async_write_ha_state(self):
         """Write the state to the state machine."""
         if self.hass is None:
             raise RuntimeError("Attribute hass is None for {}".format(self))
@@ -237,7 +237,7 @@ class Entity:
         self._async_write_hass_state()
 
     @callback
-    def _async_write_hass_state(self):
+    def _async_write_ha_state(self):
         """Write the state to the state machine."""
         start = timer()
 
