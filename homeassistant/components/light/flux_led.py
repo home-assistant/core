@@ -192,7 +192,7 @@ class FluxLight(Light):
         if self._mode == MODE_WHITE:
             return self._white_value
 
-        return self._color[2] / 100 * 255
+        return int(self._color[2] / 100 * 255)
 
     @property
     def hs_color(self):
@@ -223,6 +223,8 @@ class FluxLight(Light):
     async def async_turn_on(self, **kwargs):
         await self.hass.async_add_executor_job(partial(self._turn_on,
                                                        **kwargs))
+        # The bulb needs a second to tell its new values,
+        # so we wait 2 seconds before updating
         await sleep(2)
 
     def _turn_on(self, **kwargs):
