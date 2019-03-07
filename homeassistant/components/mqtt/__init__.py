@@ -613,6 +613,7 @@ class MQTT:
         self.keepalive = keepalive
         self.subscriptions = []  # type: List[Subscription]
         self.birth_message = birth_message
+        self.connected = False
         self._mqttc = None  # type: mqtt.Client
         self._paho_lock = asyncio.Lock(loop=hass.loop)
 
@@ -714,7 +715,10 @@ class MQTT:
             if any(other.topic == topic for other in self.subscriptions):
                 # Other subscriptions on topic remaining - don't unsubscribe.
                 return
-            self.hass.async_create_task(self._async_unsubscribe(topic))
+
+            # Only unsubscribe if currently connected.
+            if self.connected:
+                self.hass.async_create_task(self._async_unsubscribe(topic))
 
         return async_remove
 
@@ -753,6 +757,8 @@ class MQTT:
                           mqtt.connack_string(result_code))
             self._mqttc.disconnect()
             return
+
+        self.connected = True
 
         # Group subscriptions to only re-subscribe once for each topic.
         keyfunc = attrgetter('topic')
@@ -793,6 +799,8 @@ class MQTT:
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
+        self.connected = False
+
         # When disconnected because of calling disconnect()
         if result_code == 0:
             return
@@ -802,6 +810,7 @@ class MQTT:
         while True:
             try:
                 if self._mqttc.reconnect() == 0:
+                    self.connected = True
                     _LOGGER.info("Successfully reconnected to the MQTT server")
                     break
             except socket.error:
