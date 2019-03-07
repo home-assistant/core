@@ -15,7 +15,7 @@ from asyncio import wait_for
 from datetime import datetime, timedelta
 from logging import getLogger
 from traceback import format_exc
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional  # noqa F401
 
 import voluptuous as vol
 from aioswitcher.bridge import SwitcherV2Thread
@@ -23,7 +23,7 @@ from aioswitcher.consts import (COMMAND_ON, DAYS_INT_DICT, FRIDAY, MONDAY,
                                 SATURDAY, SCHEDULE_CREATE_DATA_FORMAT, SUNDAY,
                                 THURSDAY, TUESDAY, WEDNESDAY)
 from aioswitcher.devices import SwitcherV2Device
-from aioswitcher.schedules import SwitcherV2Schedule
+from aioswitcher.schedules import SwitcherV2Schedule  # noqa F401
 from aioswitcher.swapi import (create_schedule, get_schedules,
                                send_command_to_device, set_auto_off_to_device,
                                update_name_of_device)

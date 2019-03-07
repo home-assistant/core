@@ -13,10 +13,10 @@ Please follow the instruction of configuring the switcher_kis component.
 from asyncio import TimeoutError as AsyncioTimeoutError
 from asyncio import wait_for
 from logging import getLogger
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional  # noqa F401
 
 from aioswitcher.consts import DISABLE_SCHEDULE, ENABLE_SCHEDULE
-from aioswitcher.devices import SwitcherV2Device
+from aioswitcher.devices import SwitcherV2Device  # noqa F401
 from aioswitcher.schedules import (SwitcherV2Schedule,
                                    calc_next_run_for_schedule)
 from aioswitcher.swapi import delete_schedule, disable_enable_schedule
