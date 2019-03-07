@@ -764,6 +764,9 @@ nuheat==0.3.0
 # homeassistant.components.trend.binary_sensor
 numpy==1.16.2
 
+# homeassistant.components.sensor.oasa_telematics
+oasatelematics==0.1
+
 # homeassistant.components.google
 oauth2client==4.0.0
 
@@ -1672,9 +1675,6 @@ tank_utility==1.4.0
 
 # homeassistant.components.tapsaff.binary_sensor
 tapsaff==0.2.0
-
-# homeassistant.components.sensor.oasa_telematics
-telematics==0.0.1
 
 # homeassistant.components.tellstick
 tellcore-net==0.4

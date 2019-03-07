@@ -18,7 +18,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['telematics==0.0.1']
+REQUIREMENTS = ['oasatelematics==0.1']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_STOP_ID = 'Stop ID'
@@ -126,12 +126,12 @@ class OASATelematicsData():
 
     def __init__(self, stop_id, route_id):
         """Initialize the data object."""
-        import telematics
+        import oasatelematics
         self.stop_id = stop_id
         self.route_id = route_id
         self.info = self.empty_result()
         self.name_data = self.empty_name_data()
-        self.oasa_api = telematics
+        self.oasa_api = oasatelematics
 
     def empty_result(self):
         """Object returned when no arrivals are found."""
@@ -148,8 +148,8 @@ class OASATelematicsData():
         """Get the route name from the API."""
         try:
             route = self.oasa_api.getRouteName(self.route_id)
-            if route is not None:
-                return route.descr_eng
+            if route:
+                return route[0].get('route_departure_eng')
         except TypeError:
             _LOGGER.debug("Cannot get route name from OASA API")
         return 'n/a'
@@ -157,7 +157,7 @@ class OASATelematicsData():
     def get_stop_name(self):
         """Get the stop name from the API."""
         try:
-            name_data = self.oasa_api.raw_api.getStopNameAndXY(self.stop_id)
+            name_data = self.oasa_api.getStopNameAndXY(self.stop_id)
             if name_data:
                 return name_data[0].get('stop_descr_matrix_eng')
         except TypeError:
@@ -176,15 +176,15 @@ class OASATelematicsData():
 
         results = self.oasa_api.getStopArrivals(self.stop_id)
 
-        if results is None:
+        if not results:
             self.info = self.empty_result()
             return
 
         # Parse results
-        results = [r for r in results if str(r.route_code) in self.route_id]
+        results = [r for r in results if r.get('route_code') in self.route_id]
 
         for result in results:
-            due_in_minutes = result.btime2
+            due_in_minutes = result.get('btime2')
 
             if due_in_minutes is not None:
                 arrival_data = {ATTR_DUE_IN: due_in_minutes,
