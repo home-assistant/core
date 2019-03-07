@@ -5,11 +5,10 @@ from homeassistant.helpers import discovery
 
 DOMAIN = 'enigma2'
 
-DEPENDENCIES = ['http']
-
 
 def setup(hass, config):
     """Set up the Enigma2 platform."""
+
     def device_discovered(service, info):
         """Handle when an Enigma2 device has been discovered."""
         load_platform(hass, 'media_player', DOMAIN, info, config)

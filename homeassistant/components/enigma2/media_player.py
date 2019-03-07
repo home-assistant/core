@@ -23,12 +23,12 @@ ATTR_MEDIA_DESCRIPTION = 'media_description'
 ATTR_MEDIA_END_TIME = 'media_end_time'
 ATTR_MEDIA_START_TIME = 'media_start_time'
 
-CONF_PREFER_PICON = "prefer_picon"
+CONF_USE_CHANNEL_ICON = "use_channel_icon"
 
 DEFAULT_NAME = 'Enigma2 Media Player'
 DEFAULT_PORT = 80
 DEFAULT_SSL = False
-DEFAULT_PREFER_PICON = False
+DEFAULT_USE_CHANNEL_ICON = False
 DEFAULT_USERNAME = 'root'
 DEFAULT_PASSWORD = 'dreambox'
 
@@ -44,7 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_PREFER_PICON, default=DEFAULT_PREFER_PICON): cv.boolean,
+    vol.Optional(CONF_USE_CHANNEL_ICON,
+                 default=DEFAULT_USE_CHANNEL_ICON): cv.boolean,
 })
 
 
@@ -60,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_USERNAME: DEFAULT_USERNAME,
             CONF_PASSWORD: DEFAULT_PASSWORD,
             CONF_SSL: DEFAULT_SSL,
-            CONF_PREFER_PICON: DEFAULT_PREFER_PICON,
+            CONF_USE_CHANNEL_ICON: DEFAULT_USE_CHANNEL_ICON,
         }
         add_devices([Enigma2Device(discovery_info['hostname'],
                                    discovered_config)], True)
@@ -82,7 +83,8 @@ class Enigma2Device(MediaPlayerDevice):
                                        username=config[CONF_USERNAME],
                                        password=config[CONF_PASSWORD],
                                        is_https=config[CONF_SSL],
-                                       prefer_picon=config[CONF_PREFER_PICON])
+                                       prefer_picon=config[
+                                           CONF_USE_CHANNEL_ICON])
 
     @property
     def name(self):
@@ -150,11 +152,11 @@ class Enigma2Device(MediaPlayerDevice):
 
     def volume_up(self):
         """Volume up the media player."""
-        self.e2_box.set_volume(self.e2_box.volume + 5)
+        self.e2_box.set_volume(int(self.e2_box.volume * 100) + 5)
 
     def volume_down(self):
         """Volume down media player."""
-        self.e2_box.set_volume(self.e2_box.volume - 5)
+        self.e2_box.set_volume(int(self.e2_box.volume * 100) - 5)
 
     @property
     def volume_level(self):
