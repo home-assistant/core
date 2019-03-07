@@ -5,7 +5,6 @@ from random import choice, randint, sample
 from string import ascii_lowercase, digits
 from traceback import format_exc
 from typing import Dict, List, Tuple
-
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -13,13 +12,12 @@ from aioswitcher.consts import DAYS_INT_DICT, WEEKDAY_TUP
 from aioswitcher.schedules import calc_next_run_for_schedule
 from aioswitcher.tools import (create_weekdays_value,
                                timedelta_str_to_schedule_time)
-from tests.common import assert_setup_component, get_test_home_assistant
-
 from homeassistant.components.switcher_kis import (
     CONF_DEVICE_ID, CONF_DEVICE_PASSWORD, CONF_INCLUDE_SCHEDULE_SENSORS,
     CONF_PHONE_ID, CONF_SCHEDULE_SCAN_INTERVAL, DOMAIN)
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_ICON, CONF_NAME
 from homeassistant.setup import setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 def create_configuration() -> Tuple[Dict, Dict]:

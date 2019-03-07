@@ -17,16 +17,16 @@ from functools import partial
 from logging import getLogger
 from typing import Any, Awaitable, Callable, Dict, Optional
 
-from aioswitcher.consts import (
-    COMMAND_OFF, COMMAND_ON, STATE_OFF as SWITCHER_STATE_OFF,
-    STATE_ON as SWITCHER_STATE_ON)
+from aioswitcher.consts import COMMAND_OFF, COMMAND_ON
+from aioswitcher.consts import STATE_OFF as SWITCHER_STATE_OFF
+from aioswitcher.consts import STATE_ON as SWITCHER_STATE_ON
 from aioswitcher.devices import SwitcherV2Device
 from aioswitcher.swapi import send_command_to_device
-
+from homeassistant.components.switch import ATTR_CURRENT_POWER_W
+from homeassistant.components.switch import ENTITY_ID_FORMAT as SWITCH_FORMAT
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_ICON, CONF_NAME,
                                  STATE_OFF, STATE_ON, STATE_UNKNOWN)
-from homeassistant.components.switch import (
-    ATTR_CURRENT_POWER_W, ENTITY_ID_FORMAT as SWITCH_FORMAT, SwitchDevice)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import async_generate_entity_id

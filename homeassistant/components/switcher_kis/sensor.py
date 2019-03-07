@@ -10,7 +10,8 @@ This cannot be configured as a sensor platform,
 Please follow the instruction of configuring the switcher_kis component.
 """
 
-from asyncio import wait_for, TimeoutError as AsyncioTimeoutError
+from asyncio import TimeoutError as AsyncioTimeoutError
+from asyncio import wait_for
 from logging import getLogger
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
@@ -19,7 +20,6 @@ from aioswitcher.devices import SwitcherV2Device
 from aioswitcher.schedules import (SwitcherV2Schedule,
                                    calc_next_run_for_schedule)
 from aioswitcher.swapi import delete_schedule, disable_enable_schedule
-
 from homeassistant.components.sensor import ENTITY_ID_FORMAT as SENSOR_FORMAT
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_ICON, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -27,9 +27,9 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
 from . import ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT
-from ._service_registration import (
-    DISCOVERY_CONFIG, DISCOVERY_DEVICE, DISCOVERY_SCHEDULES,
-    async_register_sensor_entities)
+from ._service_registration import (DISCOVERY_CONFIG, DISCOVERY_DEVICE,
+                                    DISCOVERY_SCHEDULES,
+                                    async_register_sensor_entities)
 
 DEPENDENCIES = ['switcher_kis']
 

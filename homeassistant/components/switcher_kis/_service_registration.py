@@ -10,40 +10,38 @@ This script is meant for internal use only.
 Use it for creating and configuring the component.
 """
 
-from logging import getLogger
-from typing import Dict, Optional, Any, List
-from asyncio import wait_for, TimeoutError as AsyncioTimeoutError
+from asyncio import TimeoutError as AsyncioTimeoutError
+from asyncio import wait_for
 from datetime import datetime, timedelta
+from logging import getLogger
 from traceback import format_exc
+from typing import Any, Dict, List, Optional
 
 import voluptuous as vol
-
-from aioswitcher.schedules import SwitcherV2Schedule
 from aioswitcher.bridge import SwitcherV2Thread
-from aioswitcher.consts import (MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY,
-                                SATURDAY, SUNDAY, COMMAND_ON, DAYS_INT_DICT,
-                                SCHEDULE_CREATE_DATA_FORMAT)
+from aioswitcher.consts import (COMMAND_ON, DAYS_INT_DICT, FRIDAY, MONDAY,
+                                SATURDAY, SCHEDULE_CREATE_DATA_FORMAT, SUNDAY,
+                                THURSDAY, TUESDAY, WEDNESDAY)
 from aioswitcher.devices import SwitcherV2Device
-from aioswitcher.swapi import (
-    update_name_of_device, set_auto_off_to_device,
-    send_command_to_device, get_schedules, create_schedule)
-from aioswitcher.tools import (timedelta_str_to_schedule_time,
-                               create_weekdays_value)
-
-from homeassistant.core import HomeAssistant, Event, ServiceCall
-from homeassistant.const import (CONF_NAME, EVENT_HOMEASSISTANT_STOP,
-                                 SERVICE_TURN_ON, SERVICE_TURN_OFF)
+from aioswitcher.schedules import SwitcherV2Schedule
+from aioswitcher.swapi import (create_schedule, get_schedules,
+                               send_command_to_device, set_auto_off_to_device,
+                               update_name_of_device)
+from aioswitcher.tools import (create_weekdays_value,
+                               timedelta_str_to_schedule_time)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import (DOMAIN as SWITCH_DOMAIN,
-                                             SwitchDevice)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import (CONF_NAME, EVENT_HOMEASSISTANT_STOP,
+                                 SERVICE_TURN_OFF, SERVICE_TURN_ON)
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import (async_load_platform,
-                                             async_listen_platform)
+from homeassistant.helpers.discovery import (async_listen_platform,
+                                             async_load_platform)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import DOMAIN, CONF_SCHEDULE_SCAN_INTERVAL
-
+from . import CONF_SCHEDULE_SCAN_INTERVAL, DOMAIN
 
 DEPENDENCIES = ['switcher_kis']
 
