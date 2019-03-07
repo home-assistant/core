@@ -565,7 +565,6 @@ omit =
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/thermoworks_smoke.py
     homeassistant/components/sensor/time_date.py
-    homeassistant/components/sensor/tof.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/trafikverket_weatherstation.py
     homeassistant/components/sensor/travisci.py
@@ -632,6 +631,7 @@ omit =
     homeassistant/components/thingspeak/*
     homeassistant/components/thinkingcleaner/*
     homeassistant/components/tibber/*
+    homeassistant/components/tof/sensor.py
     homeassistant/components/toon/*
     homeassistant/components/tplink_lte/*
     homeassistant/components/tradfri/*
