@@ -242,7 +242,6 @@ homeassistant/components/simplisafe/* @bachya
 homeassistant/components/smartthings/* @andrewsayre
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/switcher_kis/* @tomerfi
-homeassistant/components/*/switcher_kis.py @tomerfi
 
 # T
 homeassistant/components/tahoma/* @philklei

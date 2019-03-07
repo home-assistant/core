@@ -32,17 +32,14 @@ from aioswitcher.schedules import (SwitcherV2Schedule,
 from aioswitcher.swapi import delete_schedule, disable_enable_schedule
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT as SENSOR_FORMAT
-from homeassistant.components.switcher_kis import (DISCOVERY_CONFIG,
-                                                   DISCOVERY_DEVICE,
-                                                   DISCOVERY_SCHEDULES)
-from homeassistant.components.switcher_kis import \
-    ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT
-from homeassistant.components.switcher_kis import \
-    async_register_sensor_entities
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_ICON, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+
+from . import (DISCOVERY_CONFIG, DISCOVERY_DEVICE, DISCOVERY_SCHEDULES,
+               ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT,
+               async_register_sensor_entities)
 
 DEPENDENCIES = ['switcher_kis']
 

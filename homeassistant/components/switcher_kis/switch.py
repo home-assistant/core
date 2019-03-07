@@ -26,19 +26,18 @@ from aioswitcher.consts import STATE_ON as SWITCHER_STATE_ON
 from aioswitcher.devices import SwitcherV2Device
 from aioswitcher.swapi import send_command_to_device
 
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W
-from homeassistant.components.switch import ENTITY_ID_FORMAT as SWITCH_FORMAT
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.switcher_kis import (DISCOVERY_CONFIG,
-                                                   DISCOVERY_DEVICE)
-from homeassistant.components.switcher_kis import \
-    ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT
-from homeassistant.components.switcher_kis import async_register_switch_entity
 from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_ICON, CONF_NAME,
                                  STATE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import async_generate_entity_id
+
+from ..switch import (ATTR_CURRENT_POWER_W,
+                      ENTITY_ID_FORMAT as SWITCH_FORMAT, SwitchDevice)
+
+from . import (DISCOVERY_CONFIG, DISCOVERY_DEVICE,
+               ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT,
+               async_register_switch_entity)
 
 DEPENDENCIES = ['switcher_kis']
 
