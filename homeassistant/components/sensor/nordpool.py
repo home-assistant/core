@@ -1,6 +1,4 @@
-"""
-Support for Nordpool electrical prices sensors.
-"""
+"""Support for Nordpool electrical prices sensors."""
 import logging
 
 from datetime import datetime
