@@ -3,7 +3,7 @@ Support for Nordpool electrical prices sensors.
 """
 import logging
 
-from datetime import timedelta, datetime
+from datetime import datetime
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
