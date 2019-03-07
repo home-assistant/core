@@ -13,15 +13,14 @@ from homeassistant import util
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
-    # SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
-    SUPPORT_PLAY,SUPPORT_PAUSE)
+    SUPPORT_PLAY, SUPPORT_PAUSE)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pyviziosoundbar>=0.0.1']
+REQUIREMENTS = ['pyviziosoundbar==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,14 +161,6 @@ class VizioSoundBarDevice(MediaPlayerDevice):
             self._device.mute_on()
         else:
             self._device.mute_off()
-
-    # def media_previous_track(self):
-    #     """Send previous channel command."""
-    #     self._device.ch_down()
-
-    # def media_next_track(self):
-    #     """Send next channel command."""
-    #     self._device.ch_up()
 
     def select_source(self, source):
         """Select input source."""
