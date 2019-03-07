@@ -328,7 +328,7 @@ class Entity:
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
 
-        Scheduling the update avoids executor dead looks.
+        Scheduling the update avoids executor deadlocks.
 
         Entity state and attributes are read when the update ha state change
         task is executed.
@@ -342,7 +342,7 @@ class Entity:
         """Schedule an update ha state change task.
 
         This method must be run in the event loop.
-        Scheduling the update avoids executor dead looks.
+        Scheduling the update avoids executor deadlocks.
 
         Entity state and attributes are read when the update ha state change
         task is executed.
