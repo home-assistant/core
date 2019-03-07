@@ -50,7 +50,7 @@ PERSON_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    vol.Optional(DOMAIN): vol.All(cv.ensure_list, vol.Any([PERSON_SCHEMA], []))
+    vol.Optional(DOMAIN): vol.All(cv.ensure_list, vol.Any([PERSON_SCHEMA], [{}]))
 }, extra=vol.ALLOW_EXTRA)
 
 _UNDEF = object()
@@ -80,6 +80,8 @@ class PersonManager:
 
         config_data = self.config_data = OrderedDict()
         for conf in config_persons:
+            if not conf:
+                continue
             person_id = conf[CONF_ID]
 
             if person_id in config_data:
