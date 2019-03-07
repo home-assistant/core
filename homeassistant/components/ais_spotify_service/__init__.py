@@ -8,7 +8,6 @@ import logging
 import asyncio
 from homeassistant.ais_dom import ais_global
 from homeassistant.components import ais_cloud
-from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 
 aisCloud = ais_cloud.AisCloudWS()
@@ -26,10 +25,9 @@ CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 AIS_SPOTIFY_TOKEN = None
 
-CONFIGURATOR_DESCRIPTION = 'Aby połączyć swoje konto Spotify, ' \
-                           'kliknij link, zaloguj się i autoryzuj:'
+CONFIGURATOR_DESCRIPTION = 'Aby połączyć swoje konto Spotify, kliknij link:'
 CONFIGURATOR_LINK_NAME = 'Połącz konto Spotify'
-CONFIGURATOR_SUBMIT_CAPTION = 'OK wykonane. Synchronizuj!'
+CONFIGURATOR_SUBMIT_CAPTION = 'OK, dostęp dodany!'
 
 DEFAULT_CACHE_PATH = '.dom/.ais-dom-spotify-token-cache'
 DEFAULT_NAME = 'Spotify'
@@ -40,17 +38,67 @@ ICON = 'mdi:spotify'
 
 SCOPE = 'app-remote-control streaming user-read-email'
 G_SPOTIFY_FOUND = []
+_CONFIGURING = {}
 
-def request_configuration(hass, config, oauth):
-    """Request Spotify authorization."""
-    configurator = hass.components.configurator
-    hass.data[DOMAIN] = configurator.request_config(
-        DEFAULT_NAME, lambda _: None,
-        link_name=CONFIGURATOR_LINK_NAME,
-        link_url=oauth.get_authorize_url(),
-        description=CONFIGURATOR_DESCRIPTION,
-        submit_caption=CONFIGURATOR_SUBMIT_CAPTION)
 
+def async_setup_spotify(hass, config, configurator):
+    """Set up the Spotify platform."""
+    import spotipy.oauth2
+    import json
+    global AIS_SPOTIFY_TOKEN, CONFIGURATOR_DESCRIPTION
+
+    # CONFIGURATOR_DESCRIPTION = 'Niestety coś poszło nie tak. Aby połączyć swoje konto Spotify, kliknij link:'
+
+    try:
+        ws_resp = aisCloud.key("spotify_oauth")
+        json_ws_resp = ws_resp.json()
+        spotify_redirect_url = json_ws_resp["SPOTIFY_REDIRECT_URL"]
+        spotify_client_id = json_ws_resp["SPOTIFY_CLIENT_ID"]
+        spotify_client_secret = json_ws_resp["SPOTIFY_CLIENT_SECRET"]
+        spotify_scope = json_ws_resp["SPOTIFY_SCOPE"]
+        try:
+            ws_resp = aisCloud.key("spotify_token")
+            key = ws_resp.json()["key"]
+            AIS_SPOTIFY_TOKEN = json.loads(key)
+        except:
+            AIS_SPOTIFY_TOKEN = None
+            _LOGGER.info("No AIS_SPOTIFY_TOKEN")
+    except Exception as e:
+        _LOGGER.error("No spotify oauth info: " + str(e))
+        return False
+
+    cache = hass.config.path(DEFAULT_CACHE_PATH)
+    gate_id = ais_global.get_sercure_android_id_dom()
+    oauth = spotipy.oauth2.SpotifyOAuth(spotify_client_id, spotify_client_secret, spotify_redirect_url,
+                                        scope=spotify_scope, cache_path=cache, state=gate_id)
+    token_info = oauth.get_cached_token()
+    if not token_info:
+        _LOGGER.info("no spotify token in cache;")
+        if AIS_SPOTIFY_TOKEN is not None:
+            with open(cache, 'w') as outfile:
+                json.dump(AIS_SPOTIFY_TOKEN, outfile)
+            token_info = oauth.get_cached_token()
+        if not token_info:
+            _LOGGER.info("no spotify token; run configurator")
+            async_request_configuration(hass, config, oauth)
+            return
+
+    # register services
+    data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
+
+    @asyncio.coroutine
+    def search(call):
+        _LOGGER.info("search")
+        yield from data.process_search_async(call)
+
+    def select_track_name(call):
+        _LOGGER.info("select_track_name")
+        data.process_select_track_name(call)
+
+    hass.services.async_register(DOMAIN, 'search', search)
+    hass.services.async_register(DOMAIN, 'select_track_name', select_track_name)
+
+    return True
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -90,7 +138,7 @@ def async_setup(hass, config):
             token_info = oauth.get_cached_token()
         if not token_info:
             _LOGGER.info("no spotify token; run configurator")
-            request_configuration(hass, config, oauth)
+            async_request_configuration(hass, config, oauth)
             return True
 
     if hass.data.get(DOMAIN):
@@ -113,37 +161,34 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'search', search)
     hass.services.async_register(DOMAIN, 'select_track_name', select_track_name)
 
-    # add spotify to service list
-    # hass.async_add_job(
-    #     hass.services.async_call(
-    #         'input_select',
-    #         'set_options', {
-    #             "entity_id": "input_select.ais_music_service",
-    #             "options": ["YouTube", "Spotify"]}
-    #     )
-    # )
-
     return True
 
 
-class SpotifyAuthCallbackView(HomeAssistantView):
-    """Spotify Authorization Callback View."""
+@callback
+def async_request_configuration(hass, config, oauth):
+    """Request configuration steps from the user."""
+    configurator = hass.components.configurator
 
-    requires_auth = False
-    url = AUTH_CALLBACK_PATH
-    name = AUTH_CALLBACK_NAME
+    async def async_configuration_callback(data):
+        """Handle configuration changes."""
+        _LOGGER.info('Spotify async_configuration_callback')
 
-    def __init__(self, config, add_entities, oauth):
-        """Initialize."""
-        self.config = config
-        self.add_entities = add_entities
-        self.oauth = oauth
+        def success():
+            """Signal successful setup."""
+            req_config = _CONFIGURING.pop(oauth.client_id)
+            configurator.request_done(req_config)
 
-    @callback
-    def get(self, request):
-        """Receive authorization token."""
-        hass = request.app['hass']
-        self.oauth.get_access_token(request.query['code'])
+        hass.async_add_job(success)
+        async_setup_spotify(hass, config, configurator)
+
+    _CONFIGURING[oauth.client_id] = configurator.async_request_config(
+        DEFAULT_NAME,
+        async_configuration_callback,
+        link_name=CONFIGURATOR_LINK_NAME,
+        link_url=oauth.get_authorize_url(),
+        description=CONFIGURATOR_DESCRIPTION,
+        submit_caption=CONFIGURATOR_SUBMIT_CAPTION
+    )
 
 
 class SpotifyData:
@@ -202,19 +247,15 @@ class SpotifyData:
         for item in items:
             i = {}
             i["uri"] = item['uri']
-            i["title"] = "Wykonawca " + item['name']
+            i["title"] = "Wykonawca: " + item['name']
             if len(item['images']) > 0:
                 i["thumbnail"] = item['images'][0]['url']
             else:
                 i["thumbnail"] = ""
-            titles.append(item['name'])
+            titles.append("Wykonawca: " + item['name'])
             found.append(i)
         G_SPOTIFY_FOUND = found
         _LOGGER.debug('found artist' + str(found))
-
-
-
-
 
         # Update input_select values:
         yield from self.hass.services.async_call(
