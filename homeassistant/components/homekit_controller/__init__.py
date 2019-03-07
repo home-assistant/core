@@ -8,37 +8,21 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 
+from .const import (
+    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_ACCESSORIES,
+    KNOWN_DEVICES
+)
+
+
 REQUIREMENTS = ['homekit==0.12.2']
 
-DOMAIN = 'homekit_controller'
 HOMEKIT_DIR = '.homekit'
-
-# Mapping from Homekit type to component.
-HOMEKIT_ACCESSORY_DISPATCH = {
-    'lightbulb': 'light',
-    'outlet': 'switch',
-    'switch': 'switch',
-    'thermostat': 'climate',
-    'security-system': 'alarm_control_panel',
-    'garage-door-opener': 'cover',
-    'window': 'cover',
-    'window-covering': 'cover',
-    'lock-mechanism': 'lock',
-    'motion': 'binary_sensor',
-    'humidity': 'sensor',
-    'light': 'sensor',
-    'temperature': 'sensor'
-}
 
 HOMEKIT_IGNORE = [
     'BSB002',
     'Home Assistant Bridge',
     'TRADFRI gateway',
 ]
-
-KNOWN_ACCESSORIES = "{}-accessories".format(DOMAIN)
-KNOWN_DEVICES = "{}-devices".format(DOMAIN)
-CONTROLLER = "{}-controller".format(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
