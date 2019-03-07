@@ -463,8 +463,8 @@ class CastDevice(MediaPlayerDevice):
             chromecast = await self.hass.async_add_job(
                 pychromecast._get_chromecast_from_host, (
                     cast_info.host, cast_info.port, cast_info.uuid,
-                    cast_info.model_name, cast_info.friendly_name,
-                ), None, None, None, True, True)
+                    cast_info.model_name, cast_info.friendly_name
+                ))
         else:
             _LOGGER.debug(
                 "[%s %s (%s:%s)] Connecting to cast device by service %s",
@@ -477,6 +477,7 @@ class CastDevice(MediaPlayerDevice):
                     cast_info.friendly_name
                 ))
         self._chromecast = chromecast
+        self._chromecast.start()
         self._status_listener = CastStatusListener(self, chromecast)
         # Initialise connection status as connected because we can only
         # register the connection listener *after* the initial connection
