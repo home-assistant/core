@@ -234,7 +234,7 @@ class Entity:
             raise NoEntitySpecifiedError(
                 "No entity id specified for entity {}".format(self.name))
 
-        self._async_write_hass_state()
+        self._async_write_ha_state()
 
     @callback
     def _async_write_ha_state(self):
