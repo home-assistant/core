@@ -91,7 +91,8 @@ class NetdataSensor(Entity):
     """Implementation of a Netdata sensor."""
 
     def __init__(
-            self, netdata, name, sensor, sensor_name, element, icon, unit, invert):
+            self, netdata, name, sensor, sensor_name, element, icon, unit,
+            invert):
         """Initialize the Netdata sensor."""
         self.netdata = netdata
         self._state = None
