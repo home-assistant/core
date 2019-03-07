@@ -1,5 +1,6 @@
 """Tests for async util methods from Python source."""
 import asyncio
+import sys
 from unittest.mock import MagicMock, patch
 from unittest import TestCase
 
@@ -144,7 +145,11 @@ class RunThreadsafeTests(TestCase):
         """Wait 0.05 second and return a + b."""
         yield from asyncio.sleep(0.05, loop=self.loop)
         if cancel:
-            asyncio.tasks.Task.current_task(self.loop).cancel()
+            if sys.version_info[:2] >= (3, 7):
+                current_task = asyncio.current_task
+            else:
+                current_task = asyncio.tasks.Task.current_task
+            current_task(self.loop).cancel()
             yield
         return self.add_callback(a, b, fail, invalid)
 
@@ -205,7 +210,11 @@ class RunThreadsafeTests(TestCase):
             self.loop.run_until_complete(future)
         self.run_briefly(self.loop)
         # Check that there's no pending task (add has been cancelled)
-        for task in asyncio.Task.all_tasks(self.loop):
+        if sys.version_info[:2] >= (3, 7):
+            all_tasks = asyncio.all_tasks
+        else:
+            all_tasks = asyncio.Task.all_tasks
+        for task in all_tasks(self.loop):
             self.assertTrue(task.done())
 
     def test_run_coroutine_threadsafe_task_cancelled(self):
