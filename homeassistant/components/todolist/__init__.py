@@ -44,6 +44,7 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 WS_TYPE_LIST_TASKS = 'todolist/tasks/list'
 WS_TYPE_CREATE_TASK = 'todolist/tasks/create'
 WS_TYPE_UPDATE_TASK = 'todolist/tasks/update'
+WS_TYPE_CLEAR_COMPLETED = 'todolist/tasks/clear'
 
 TODO_LIST_SERVICE_SCHEMA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required(ATTR_ENTITY_ID): cv.string,
@@ -71,6 +72,10 @@ SCHEMA_WEBSOCKET_UPDATE_TASK = TODO_LIST_SERVICE_SCHEMA.extend({
     }, extra=vol.ALLOW_EXTRA)
 })
 
+SCHEMA_WEBSOCKET_CLEAR_COMPLETED = TODO_LIST_SERVICE_SCHEMA.extend({
+    vol.Required(CONF_TYPE): WS_TYPE_CLEAR_COMPLETED,
+})
+
 async def async_setup(hass, config):
     """Offer web services for todo lists."""
     component = EntityComponent(
@@ -93,6 +98,11 @@ async def async_setup(hass, config):
         WS_TYPE_UPDATE_TASK,
         websocket_update_task,
         SCHEMA_WEBSOCKET_UPDATE_TASK)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_CLEAR_COMPLETED,
+        websocket_clear_completed,
+        SCHEMA_WEBSOCKET_CLEAR_COMPLETED)
 
     return True
 
@@ -155,7 +165,7 @@ async def websocket_create_task(hass, connection, msg):
 
 @websocket_api.async_response
 async def websocket_update_task(hass, connection, msg):
-    """Dispatch add task service call to entity.
+    """Dispatch update task service call to entity.
 
     Async friendly.
     """
@@ -176,15 +186,28 @@ async def websocket_update_task(hass, connection, msg):
     connection.send_message(websocket_api.result_message(
         msg.get(ATTR_ID), updated_todo_item))
 
+@websocket_api.async_response
+async def websocket_clear_completed(hass, connection, msg):
+    """Dispatch clear completed tasks service call to entity.
+
+    Async friendly.
+    """
+    todolist = get_todolist_instance(hass, connection, msg.get(ATTR_ENTITY_ID))
+
+    await todolist.async_clear_completed()
+
+    connection.send_message(websocket_api.result_message(
+        msg.get(ATTR_ID), True))
+
 class TodoListBase(Entity):
     """Representation of a todo list."""
 
     def map_from_todo_item(self, todo_item):
-        """Converts todo item -> platform item."""
+        """Converts todo item -> platform todo item."""
         raise NotImplementedError()
 
     def map_to_todo_item(self, platform_item):
-        """Converts platform item -> todo item."""
+        """Converts platform todo item -> todo item."""
         raise NotImplementedError()
 
     def list_tasks(self, show_completed=True):
@@ -225,3 +248,15 @@ class TodoListBase(Entity):
         """
         fn_update_task = partial(self.update_task, updated_task)
         return self.hass.async_add_job(fn_update_task)
+
+    def clear_completed(self):
+        """Clear completed tasks."""
+        raise NotImplementedError()
+
+    def async_clear_completed(self):
+        """Clear completed.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        fn_clear_completed = self.clear_completed
+        return self.hass.async_add_job(fn_clear_completed)

@@ -185,3 +185,21 @@ class Wunderlist(TodoListBase):
             title=new_task.get(ATTR_TITLE),
             completed=new_task.get(ATTR_COMPLETED))
         return added_task
+
+    def _delete_task(self, task_id):
+        """Delete a task by id."""
+        existing_task = self._fetch_task(task_id)
+        # define which revision of the object we would like to delete
+        rev = existing_task.get("revision", 1)
+        self._client.delete_task(
+            task_id=task_id,
+            revision=rev)
+        return task_id
+
+    def clear_completed(self):
+        """Clear all the completed tasks from a list."""
+        completed_tasks = self._client.get_tasks(self._list_id, True)
+        for task in completed_tasks:
+            task_id = task.get(ATTR_ID)
+            self._delete_task(task_id)
+        return True
