@@ -48,10 +48,12 @@ def init_tof_0(xshut, sensor):
     rpi_gpio.setup_output(xshut)
     rpi_gpio.write_output(xshut, 0)
 
+
 def init_tof_1(xshut):
     """XSHUT port HIGH enables the device"""
     rpi_gpio.setup_output(xshut)
     rpi_gpio.write_output(xshut, 1)
+
 
 async def async_setup_platform(hass,
                                config,
