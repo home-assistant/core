@@ -123,10 +123,7 @@ LIGHT_TURN_OFF_SCHEMA = vol.Schema({
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
-LIGHT_TOGGLE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
-    ATTR_TRANSITION: VALID_TRANSITION,
-})
+LIGHT_TOGGLE_SCHEMA = LIGHT_TURN_ON_SCHEMA
 
 PROFILE_SCHEMA = vol.Schema(
     vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
