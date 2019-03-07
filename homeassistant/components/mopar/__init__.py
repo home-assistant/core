@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.discovery import async_load_platform, load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
@@ -91,9 +91,7 @@ def setup(hass, config):
     )
 
     for platform in SUPPORTED_PLATFORMS:
-        hass.async_create_task(
-            async_load_platform(hass, platform, DOMAIN, {}, config)
-        )
+        load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 
@@ -113,7 +111,7 @@ class MoparData:
         self.vhrs = {}
         self.tow_guides = {}
 
-    def update(self, **kwargs):
+    def update(self, now=None, **kwargs):
         """Update data."""
         import motorparts
 

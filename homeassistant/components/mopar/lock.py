@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class MoparLock(LockDevice):
-    """"Representation of a Mopar vehicle lock."""
+    """Representation of a Mopar vehicle lock."""
 
     def __init__(self, data, index):
         """Initialize the Mopar lock."""
