@@ -84,20 +84,18 @@ class PioneerDevice(MediaPlayerDevice):
             telnet, "?RGB01", "RGB")
 
         if check:
-          for i in range(MAX_SOURCE_NUMBERS):
-              result = self.telnet_request(
-                  telnet, "?RGB" + str(i).zfill(2), "RGB")
-
-              if not result:
-                  continue
-
-              source_name = result[6:]
-              source_number = str(i).zfill(2)
-
-              #_LOGGER.debug("source_name is %s", source_name)
-
-              self._source_name_to_number[source_name] = source_number
-              self._source_number_to_name[source_number] = source_name
+            for i in range(MAX_SOURCE_NUMBERS):
+                result = self.telnet_request(
+                    telnet, "?RGB" + str(i).zfill(2), "RGB")
+  
+                if not result:
+                    continue
+  
+                source_name = result[6:]
+                source_number = str(i).zfill(2)
+  
+                self._source_name_to_number[source_name] = source_number
+                self._source_number_to_name[source_number] = source_name
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
@@ -155,18 +153,17 @@ class PioneerDevice(MediaPlayerDevice):
         self._volume = int(volume_str[3:]) / self._max_volume if volume_str else None
 
         if self._should_check_set_volume_feature:
-          self._should_check_set_volume_feature = False
-          set_volume_feature_check = self.telnet_request(
-              telnet,(str(round(self._volume * self._max_volume)).zfill(3) + "VL"), "VOL")
-          if set_volume_feature_check:
-            self._set_volume_feature = True
-          else:
-#            self._max_volume = LIMITED_MAX_VOLUME
-            vol1 = self._volume
-            self.telnet_request(telnet, "VU", "VOL")
-            vol2 = int(self.telnet_request(telnet, "?V", "VOL")[3:]) / self._max_volume
-            self.telnet_request(telnet, "VD", "VOL")
-            self._volume_steps = abs(vol1 - vol2)
+            self._should_check_set_volume_feature = False
+            set_volume_feature_check = self.telnet_request(
+                telnet,(str(round(self._volume * self._max_volume)).zfill(3) + "VL"), "VOL")
+            if set_volume_feature_check:
+                self._set_volume_feature = True
+            else:
+                vol1 = self._volume
+                self.telnet_request(telnet, "VU", "VOL")
+                vol2 = int(self.telnet_request(telnet, "?V", "VOL")[3:]) / self._max_volume
+                self.telnet_request(telnet, "VD", "VOL")
+                self._volume_steps = abs(vol1 - vol2)
 
         muted_value = self.telnet_request(telnet, "?M", "MUT")
         self._muted = (muted_value == "MUT0") if muted_value else None
@@ -243,24 +240,24 @@ class PioneerDevice(MediaPlayerDevice):
         """Set volume level, range 0..1."""
 
         if self._set_volume_feature:
-          self.telnet_command(str(round(volume * self._max_volume)).zfill(3) + "VL")
+            self.telnet_command(str(round(volume * self._max_volume)).zfill(3) + "VL")
         else:
-          current_vol = self._volume
+            current_vol = self._volume
 
-          diff = current_vol - volume
-          steps = int(diff / self._volume_steps)
+            diff = current_vol - volume
+            steps = int(diff / self._volume_steps)
 
-          i = 0
-          if steps < 0:
-            while (i > steps):
-              self.volume_up()
-              time.sleep(0.15)
-              i = i - 1
-          else:
-            while (i < steps):
-              self.volume_down()
-              time.sleep(0.15)
-              i = i + 1
+            i = 0
+            if steps < 0:
+                while (i > steps):
+                self.volume_up()
+                time.sleep(0.15)
+                i = i - 1
+            else:
+                while (i < steps):
+                    self.volume_down()
+                    time.sleep(0.15)
+                    i = i + 1
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
