@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform, load_platform
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
