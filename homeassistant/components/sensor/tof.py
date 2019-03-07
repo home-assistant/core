@@ -91,14 +91,7 @@ class VL53L1XSensor(Entity):
         self.vl53l1x_sensor = vl53l1x_sensor
         self.i2c_address = i2c_address
         self._state = None
-        self.vl53l1x_sensor.add_sensor(
-            self.i2c_address,
-            self.i2c_address
-        )
-        _LOGGER.info(
-            "Setup of VL53L1X sensor at %s is complete",
-            self.i2c_address
-        )
+        self.init = True
 
     @property
     def name(self) -> str:
@@ -115,15 +108,14 @@ class VL53L1XSensor(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-    def measure(self):
-        """Get the latest measurement from VL53L1X."""
-        self.vl53l1x_sensor.start_ranging(self.i2c_address, DEFAULT_RANGE)
+    def update(self):
+        """Get the latest measurement and update state."""
+        if self.init
+            self.vl53l1x_sensor.add_sensor(
+                self.i2c_address, self.i2c_address)
+            self.init = False
+        self.vl53l1x_sensor.start_ranging(
+            self.i2c_address, DEFAULT_RANGE)
         self.vl53l1x_sensor.update(self.i2c_address)
         self.vl53l1x_sensor.stop_ranging(self.i2c_address)
-
-    async def async_update(self):
-        """Get the latest measurement and update state."""
-        await self.hass.async_add_executor_job(
-            self.measure
-        )
         self._state = self.vl53l1x_sensor.distance
