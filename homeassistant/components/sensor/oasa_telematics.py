@@ -199,3 +199,4 @@ class OASATelematicsData():
         # Sort the data by time
         sort = sorted(self.info, key=lambda x: int(itemgetter(ATTR_DUE_IN)(x)))
         self.info = sort
+        
