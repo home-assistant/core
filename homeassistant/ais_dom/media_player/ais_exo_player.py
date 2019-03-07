@@ -101,12 +101,22 @@ class ExoPlayerDevice(MediaPlayerDevice):
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
+            _LOGGER.info("payload: " + str(payload))
             self._media_status_received_time = dt_util.utcnow()
-            message = json.loads(payload.decode('utf8').replace("'", '"'))
+            try:
+                message = json.loads(payload.decode('utf8').replace("'", '"'))
+            except Exception as e:
+                _LOGGER.info("problem to json.loads: " + str(e))
+                message = json.loads(payload)
+
             self._status = message.get("currentStatus", 0)
             self._playing = message.get("playing", False)
             self._media_position = message.get("currentPosition", 0)
             self._duration = message.get("duration", 0)
+            self._stream_image = message.get("media_stream_image", None)
+            self._media_title = message.get("currentMedia", "")
+            self._media_source = message.get("media_source", self._media_source)
+            self._album_name = message.get("media_album_name", "")
             _LOGGER.debug(str.format("message_received: {0}", message))
             if "giveMeNextOne" in message:
                 play_next = message.get("giveMeNextOne", False)
@@ -386,6 +396,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
             entity_id = "input_select.podcast_track"
         elif self._media_source == ais_global.G_AN_MUSIC:
             entity_id = "input_select.ais_music_track_name"
+        elif self._media_source == ais_global.G_AN_SPOTIFY:
+            entity_id = "input_select.ais_music_track_name"
         elif self._media_source == ais_global.G_AN_AUDIOBOOK:
             entity_id = "input_select.book_chapter"
         elif self._media_source == ais_global.G_AN_LOCAL:
@@ -421,6 +433,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
         elif self._media_source == ais_global.G_AN_PODCAST:
             entity_id = "input_select.podcast_track"
         elif self._media_source == ais_global.G_AN_MUSIC:
+            entity_id = "input_select.ais_music_track_name"
+        elif self._media_source == ais_global.G_AN_SPOTIFY:
             entity_id = "input_select.ais_music_track_name"
         elif self._media_source == ais_global.G_AN_AUDIOBOOK:
             entity_id = "input_select.book_chapter"

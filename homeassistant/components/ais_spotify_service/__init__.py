@@ -201,8 +201,8 @@ class SpotifyData:
         titles = []
         for item in items:
             i = {}
-            i["id"] = item['id']
-            i["title"] = item['name']
+            i["uri"] = item['uri']
+            i["title"] = "Wykonawca " + item['name']
             if len(item['images']) > 0:
                 i["thumbnail"] = item['images'][0]['url']
             else:
@@ -210,7 +210,12 @@ class SpotifyData:
             titles.append(item['name'])
             found.append(i)
         G_SPOTIFY_FOUND = found
-        _LOGGER.debug('found' + str(found))
+        _LOGGER.debug('found artist' + str(found))
+
+
+
+
+
         # Update input_select values:
         yield from self.hass.services.async_call(
             'input_select',
@@ -233,7 +238,7 @@ class SpotifyData:
         name = call.data["name"]
         for item in G_SPOTIFY_FOUND:
             if item["title"] == name:
-                item_id = item["id"]
+                item_uri = item["uri"]
                 _audio_info = json.dumps(
                     {"IMAGE_URL": item["thumbnail"], "NAME": item["title"], "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY}
                 )
@@ -246,8 +251,10 @@ class SpotifyData:
             'play_media', {
                 "entity_id": player["entity_id"],
                 "media_content_type": "audio/mp4",
-                "media_content_id": "spotify:album:" + item_id
+                "media_content_id": item_uri
             })
+        _LOGGER.info(
+            "player: " + str(player["entity_id"]) + " " + "media_content_id: " + "spotify:album:" + str(item_uri))
 
         # set stream image and title
         # if entity_id == 'media_player.wbudowany_glosnik':
