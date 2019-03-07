@@ -208,7 +208,7 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
 
     @property
     def is_on(self):
-        """Return true if security issue detected."""
+        """Return true if safety issue detected."""
         parent_is_on = super().is_on
         from homematicip.base.enums import SmokeDetectorAlarmType
         if parent_is_on or \
