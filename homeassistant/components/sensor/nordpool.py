@@ -1,11 +1,9 @@
 """
 Support for Nordpool electrical prices sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nordpool/
 """
 import logging
 
+from datetime import timedelta, datetime
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -15,14 +13,13 @@ from homeassistant.const import (ATTR_ATTRIBUTION,
                                  CONF_CURRENCY,
                                  CONF_REGION)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-from datetime import timedelta
 
 REQUIREMENTS = ['nordpool==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=60)
+ICON = 'mdi:cash-usd'
+ATTRIB = "For details, see https://nordpoolgroup.com/"
 
 CURRENCY_FRACTION = {
     'DKK': 'Øre',
@@ -31,15 +28,33 @@ CURRENCY_FRACTION = {
     'SEK': 'Øre'
 }
 
+VALID_REGION = ['DK1',
+                'DK2',
+                'EE',
+                'FI',
+                'LT',
+                'LV',
+                'Oslo',
+                'Kr.sand',
+                'Bergen',
+                'Molde',
+                'Tr.heim',
+                'Tromsø',
+                'SE1',
+                'SE2',
+                'SE3',
+                'SE4',
+                'SYS']
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_CURRENCY): cv.string,
-    vol.Required(CONF_REGION): cv.string,
+    vol.Required(CONF_CURRENCY): vol.All(cv.string, vol.In(CURRENCY_FRACTION)),
+    vol.Required(CONF_REGION): vol.All(cv.string, vol.In(VALID_REGION)),
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup Nordpool sensor."""
+    """Set up the Nordpool sensor platform."""
     sens_name = config[CONF_NAME]
     sens_currency = config[CONF_CURRENCY]
     sens_region = config[CONF_REGION]
@@ -53,41 +68,46 @@ class NordpoolAPI(Entity):
 
     def __init__(self, sens_name, sens_currency, sens_region):
         """Init new sensor."""
-        _LOGGER.debug("Init sensor")
         self._name = sens_name
         self._unit_of_measurement = CURRENCY_FRACTION[sens_currency]
         self._region = sens_region
-        self._icon = 'mdi:cash-usd'
+        self._icon = ICON
         self._state = None
         self._currency = sens_currency
-        self._price_min = None
-        self._price_average = None
-        self._price_max = None
+        self._day = None
+        self._data = None
+        self._device_state_attributes = {}
 
-    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Update sensor values."""
         from nordpool import elspot
-        from datetime import datetime
-
-        nordpool_api = elspot.Prices()
-        nordpool_api.currency = self._currency
 
         get_date = datetime.now()
-        area = self._region
-        price_list = nordpool_api.hourly(end_date=get_date, areas=[area])
+
+        if get_date.day != self._day:
+            nordpool_api = elspot.Prices(self._currency)
+
+            area = self._region
+            self._data = nordpool_api.hourly(end_date=get_date, areas=[area])
+            self._day = get_date.day
+
+        price_list = self._data
 
         hour = get_date.hour
         price = (price_list['areas'][area]['values'][hour]['value']/10)
-        self._price_min = (price_list['areas'][area]['Min']/10)
-        self._price_average = (price_list['areas'][area]['Average']/10)
-        self._price_max = (price_list['areas'][area]['Max']/10)
-        _LOGGER.debug("Nordpool hour: %s", hour)
+        price_min = (price_list['areas'][area]['Min']/10)
+        price_average = (price_list['areas'][area]['Average']/10)
+        price_max = (price_list['areas'][area]['Max']/10)
+        _LOGGER.debug("Nordpool day %s, hour %s", self._day, hour)
         _LOGGER.debug("Nordpool price: %s", price)
-        _LOGGER.debug("Nordpool min: %s", self._price_min)
-        _LOGGER.debug("Nordpool average: %s", self._price_average)
-        _LOGGER.debug("Nordpool max: %s", self._price_max)
+        _LOGGER.debug("Nordpool min: %s", price_min)
+        _LOGGER.debug("Nordpool average: %s", price_average)
+        _LOGGER.debug("Nordpool max: %s", price_max)
         self._state = round(price, 3)
+        self._device_state_attributes = {'Min': round(price_min, 3),
+                                         'Average': round(price_average, 3),
+                                         'Max': round(price_max, 3),
+                                         ATTR_ATTRIBUTION: ATTRIB}
 
     @property
     def name(self):
@@ -112,9 +132,4 @@ class NordpoolAPI(Entity):
     @property
     def device_state_attributes(self):
         """Device attributes."""
-        a = {'Min': round(self._price_min, 3),
-             'Avarage': round(self._price_average, 3),
-             'Max': round(self._price_max, 3),
-             ATTR_ATTRIBUTION: "For details, see https://nordpoolgroup.com/"}
-
-        return a
+        return self._device_state_attributes
