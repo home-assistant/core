@@ -47,7 +47,7 @@ def get_scanner(hass, config):
 class CiscoMEDeviceScanner(DeviceScanner):
     """This class scans for devices associated to a Cisco ME controller."""
 
-    def __init__(self, config):
+    def __init__(self, controller):
         """Initialize the scanner."""
         self.controller = None
         self.last_results = {}
