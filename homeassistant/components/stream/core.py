@@ -1,11 +1,13 @@
 """Provides core stream functionality."""
 import asyncio
+from collections import deque
 import io
 from typing import List, Any
 
 import attr
 from aiohttp import web
 
+from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.event import async_call_later
 
@@ -40,7 +42,7 @@ class StreamOutput:
         """Initialize a stream output."""
         self._cursor = None
         self._event = asyncio.Event()
-        self._segments = []
+        self._segments = deque(maxlen=self.num_segments)
 
     @property
     def format(self) -> str:
@@ -91,7 +93,8 @@ class StreamOutput:
         self._cursor = segment.sequence
         return segment
 
-    async def put(self, segment: Segment) -> None:
+    @callback
+    def put(self, segment: Segment) -> None:
         """Store output."""
         if segment is None:
             self._segments = []
@@ -99,8 +102,6 @@ class StreamOutput:
             return
 
         self._segments.append(segment)
-        if len(self._segments) > self.num_segments:
-            self._segments = self._segments[-self.num_segments:]
         self._event.set()
         self._event.clear()
 

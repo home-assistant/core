@@ -1,5 +1,4 @@
-"""Proides the worker thread needed for processing streams."""
-import asyncio
+"""Provides the worker thread needed for processing streams."""
 from fractions import Fraction
 import io
 import logging
@@ -14,8 +13,9 @@ def generate_audio_frame():
     """Generate a blank audio frame."""
     from av import AudioFrame
     audio_frame = AudioFrame(format='dbl', layout='mono', samples=1024)
-    audio_bytes = b''.join(b'\x00\x00\x00\x00\x00\x00\x00\x00'
-                           for i in range(0, 1024))
+    # audio_bytes = b''.join(b'\x00\x00\x00\x00\x00\x00\x00\x00'
+    #                        for i in range(0, 1024))
+    audio_bytes = b'\x00\x00\x00\x00\x00\x00\x00\x00' * 1024
     audio_frame.planes[0].update(audio_bytes)
     audio_frame.sample_rate = AUDIO_SAMPLE_RATE
     audio_frame.time_base = Fraction(1, AUDIO_SAMPLE_RATE)
@@ -70,11 +70,12 @@ def stream_worker(hass, stream, quit_event):
             if packet.dts is None:
                 # If we get a "flushing" packet, the stream is done
                 raise StopIteration
-        except (av.AVError, StopIteration):
+        except (av.AVError, StopIteration) as ex:
             # End of stream, clear listeners and stop thread
             for fmt, _ in outputs.items():
-                asyncio.run_coroutine_threadsafe(
-                    stream.outputs[fmt].put(None), hass.loop)
+                hass.loop.call_soon_threadsafe(
+                    stream.outputs[fmt].put, None)
+            _LOGGER.error("Error demuxing stream: %s", ex)
             break
 
         # Reset segment on every keyframe
@@ -85,10 +86,10 @@ def stream_worker(hass, stream, quit_event):
                 buffer.output.close()
                 del audio_packets[buffer.astream]
                 if stream.outputs.get(fmt):
-                    asyncio.run_coroutine_threadsafe(
-                        stream.outputs[fmt].put(Segment(
+                    hass.loop.call_soon_threadsafe(
+                        stream.outputs[fmt].put, Segment(
                             sequence, buffer.segment, segment_duration
-                        )), hass.loop)
+                        ))
 
             # Clear outputs and increment sequence
             outputs = {}

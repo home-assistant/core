@@ -13,11 +13,9 @@ from homeassistant.auth.util import generate_secret
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 
-from .const import (
-    DOMAIN, CONF_KEEPALIVE, ATTR_STREAMS, ATTR_ENDPOINTS)
+from .const import DOMAIN, ATTR_STREAMS, ATTR_ENDPOINTS
 from .worker import stream_worker
 from .hls import async_setup_hls
 
@@ -28,15 +26,13 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['http']
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_KEEPALIVE, default=False): cv.boolean,
-    }),
+    DOMAIN: vol.Schema({}),
 }, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
 def request_stream(hass, stream_source, *, fmt='hls',
-                   options=None, preload=False):
+                   keepalive=False, options=None):
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream component is not set up.")
@@ -44,7 +40,6 @@ def request_stream(hass, stream_source, *, fmt='hls',
     if options is None:
         options = {}
 
-    keepalive = hass.data[DOMAIN][CONF_KEEPALIVE]
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]
         stream = streams.get(stream_source)
@@ -52,7 +47,7 @@ def request_stream(hass, stream_source, *, fmt='hls',
             stream = Stream(hass, stream_source,
                             options=options, keepalive=keepalive)
             streams[stream_source] = stream
-        if not preload and not stream.access_token:
+        if not stream.access_token:
             stream.access_token = generate_secret()
             stream.start()
         return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(
@@ -61,24 +56,14 @@ def request_stream(hass, stream_source, *, fmt='hls',
         raise HomeAssistantError('Unable to get stream')
 
 
-@bind_hass
-def get_stream(hass, stream_source):
-    """Return available stream."""
-    streams = hass.data[DOMAIN][ATTR_STREAMS]
-    return streams.get(stream_source)
-
-
 async def async_setup(hass, config):
     """Set up stream."""
-    conf = config[DOMAIN] if config.get(DOMAIN, {}) else {}
-
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][CONF_KEEPALIVE] = conf.get(CONF_KEEPALIVE)
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = {}
 
     # Setup HLS
-    hls_endpoint = await async_setup_hls(hass)
+    hls_endpoint = async_setup_hls(hass)
     hass.data[DOMAIN][ATTR_ENDPOINTS]['hls'] = hls_endpoint
 
     @callback

@@ -28,7 +28,11 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
-from homeassistant.components.stream.const import OUTPUT_FORMATS
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
+    SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
+from homeassistant.components.stream.const import (
+    OUTPUT_FORMATS, FORMAT_CONTENT_TYPE, ATTR_KEEPALIVE)
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
@@ -74,7 +78,7 @@ CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
 })
 
 CAMERA_SERVICE_PLAY_STREAM = CAMERA_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_PLAYER): cv.comp_entity_ids,
+    vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
     vol.Optional(ATTR_FORMAT, default='hls'): vol.In(OUTPUT_FORMATS)
 })
 
@@ -497,6 +501,7 @@ async def websocket_camera_thumbnail(hass, connection, msg):
     vol.Required('type'): 'camera/stream',
     vol.Required('entity_id'): cv.entity_id,
     vol.Optional('format', default='hls'): cv.string,
+    vol.Optional('keepalive', default=False): cv.boolean,
 })
 async def ws_camera_stream(hass, connection, msg):
     """Handle get camera stream websocket command.
@@ -505,14 +510,16 @@ async def ws_camera_stream(hass, connection, msg):
     """
     from homeassistant.components.stream import request_stream
     try:
-        fmt = msg['format']
         camera = _get_camera_from_entity_id(hass, msg['entity_id'])
 
         if not camera.stream_source:
             raise HomeAssistantError("{} does not support play stream service"
                                      .format(camera.entity_id))
 
-        url = request_stream(hass, camera.stream_source, fmt=fmt)
+        fmt = msg['format']
+        keepalive = msg['keepalive']
+        url = request_stream(hass, camera.stream_source,
+                             fmt=fmt, keepalive=keepalive)
         connection.send_result(msg['id'], {'url': url})
     except HomeAssistantError as ex:
         _LOGGER.error(ex)
@@ -549,11 +556,8 @@ async def async_handle_snapshot_service(camera, service):
         _LOGGER.error("Can't write image to file: %s", err)
 
 
-async def async_handle_play_stream_service(camera, service):
+async def async_handle_play_stream_service(camera, service_call):
     """Handle play stream services calls."""
-    from homeassistant.components.media_player.const import (
-        ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
-        SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
     from homeassistant.components.stream import request_stream
 
     if not camera.stream_source:
@@ -561,17 +565,18 @@ async def async_handle_play_stream_service(camera, service):
                                  .format(camera.entity_id))
 
     hass = camera.hass
-    fmt = service.data[ATTR_FORMAT]
-    entity_ids = service.data[ATTR_MEDIA_PLAYER]
+    fmt = service_call.data[ATTR_FORMAT]
+    entity_ids = service_call.data[ATTR_MEDIA_PLAYER]
+    keepalive = service_call.data.get(ATTR_KEEPALIVE, False)
 
-    url = request_stream(hass, camera.stream_source, fmt=fmt)
+    url = request_stream(hass, camera.stream_source,
+                         fmt=fmt, keepalive=keepalive)
     data = {
+        ATTR_ENTITY_ID: entity_ids,
         ATTR_MEDIA_CONTENT_ID: url,
-        ATTR_MEDIA_CONTENT_TYPE: 'application/vnd.apple.mpegurl'
+        ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt]
     }
 
-    if entity_ids:
-        data[ATTR_ENTITY_ID] = entity_ids
-
     await hass.services.async_call(
-        DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True)
+        DOMAIN_MP, SERVICE_PLAY_MEDIA, data,
+        blocking=True, context=service_call.context)

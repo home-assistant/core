@@ -4,14 +4,17 @@ Provide functionality to stream HLS.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/stream/hls
 """
-import datetime
-
 from aiohttp import web
 
+from homeassistant.core import callback
+from homeassistant.util.dt import utcnow
+
+from .const import FORMAT_CONTENT_TYPE
 from .core import StreamView, StreamOutput
 
 
-async def async_setup_hls(hass):
+@callback
+def async_setup_hls(hass):
     """Set up api endpoints."""
     hass.http.register_view(HlsPlaylistView())
     hass.http.register_view(HlsSegmentView())
@@ -34,11 +37,10 @@ class HlsPlaylistView(StreamView):
         if not track.segments:
             await track.recv()
         headers = {
-            'Content-Type': 'application/vnd.apple.mpegurl'
+            'Content-Type': FORMAT_CONTENT_TYPE['hls']
         }
         return web.Response(body=renderer.render(
-            track, datetime.datetime.utcnow()
-            ).encode("utf-8"), headers=headers)
+            track, utcnow()).encode("utf-8"), headers=headers)
 
 
 class HlsSegmentView(StreamView):
@@ -63,28 +65,20 @@ class HlsSegmentView(StreamView):
 class M3U8Renderer:
     """M3U8 Render Helper."""
 
-    def __init__(self, stream, version=3):
+    def __init__(self, stream):
         """Initialize renderer."""
         self.stream = stream
-        self.version = version
 
-    def render_preamble(self, track):
+    @staticmethod
+    def render_preamble(track):
         """Render preamble."""
         return [
-            "#EXT-X-VERSION:{}".format(self.version),
+            "#EXT-X-VERSION:3",
             "#EXT-X-TARGETDURATION:{}".format(track.target_duration),
         ]
 
-    def render_segment(self, segment):
-        """Render segment."""
-        return [
-            "#EXTINF:{:.04},".format(float(segment.duration)),
-            "/api/hls/{}/segment/{}.ts".format(
-                self.stream.access_token,
-                segment.sequence),
-        ]
-
-    def render_playlist(self, track, start_time):
+    @staticmethod
+    def render_playlist(track, start_time):
         """Render playlist."""
         segments = track.segments
 
@@ -95,7 +89,10 @@ class M3U8Renderer:
 
         for sequence in segments:
             segment = track.get_segment(sequence)
-            playlist.extend(self.render_segment(segment))
+            playlist.extend([
+                "#EXTINF:{:.04},".format(float(segment.duration)),
+                "./segment/{}.ts".format(segment.sequence),
+            ])
 
         return playlist
 
