@@ -38,10 +38,9 @@ def get_scanner(hass, config):
         config[CONF_PASSWORD],
         config.get(CONF_SSL),
         config.get(CONF_VERIFY_SSL))
-    success_init = controller.is_logged_in()
-    scanner = CiscoMEDeviceScanner(controller)
-
-    return scanner if success_init else None
+    if not controller.is_logged_in():
+        return None
+    return CiscoMEDeviceScanner(controller)
 
 
 class CiscoMEDeviceScanner(DeviceScanner):
