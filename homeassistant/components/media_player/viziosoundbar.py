@@ -77,7 +77,8 @@ class VizioSoundBarDevice(MediaPlayerDevice):
     def __init__(self, host, name, volume_step):
         """Initialize Vizio device."""
         import pyviziosoundbar
-        self._device = pyviziosoundbar.VizioSoundBar(DEVICE_ID, host, DEFAULT_NAME)
+        self._device = pyviziosoundbar.VizioSoundBar(
+            DEVICE_ID, host, DEFAULT_NAME)
         self._name = name
         self._state = None
         self._volume_level = None
