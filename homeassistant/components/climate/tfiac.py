@@ -6,8 +6,7 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, STATE_OFF,
-                                 STATE_ON, TEMP_FAHRENHEIT)
+from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -125,8 +124,8 @@ class TfiacClimate(ClimateDevice):
     @property
     def is_on(self):
         """Return true if on."""
-        return STATE_ON if self._client.status[
-            'current_temp'] == 'on' else STATE_OFF
+        return True if self._client.status[
+            'current_temp'] == 'on' else False
 
     @property
     def operation_list(self):
