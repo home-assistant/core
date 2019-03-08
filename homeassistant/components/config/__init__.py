@@ -24,7 +24,6 @@ SECTIONS = (
     'device_registry',
     'entity_registry',
     'group',
-    'hassbian',
     'script',
 )
 ON_DEMAND = ('zwave',)
