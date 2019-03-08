@@ -24,6 +24,7 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'opencv-python',
     'py_noaa',
+    'VL53L1X2',
     'pybluez',
     'pycups',
     'PySwitchbot',
