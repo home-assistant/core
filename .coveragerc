@@ -155,6 +155,7 @@ omit =
     homeassistant/components/elkm1/*
     homeassistant/components/emoncms_history/*
     homeassistant/components/emulated_hue/upnp.py
+    homeassistant/components/enigma2/media_player.py
     homeassistant/components/enocean/*
     homeassistant/components/envisalink/*
     homeassistant/components/esphome/__init__.py
