@@ -32,14 +32,14 @@ def get_scanner(hass, config):
     from ciscomobilityexpress.ciscome import CiscoMobilityExpress
     config = config[DOMAIN]
 
-    scanner = CiscoMEDeviceScanner(controller)
     controller = CiscoMobilityExpress(
         config[CONF_HOST],
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
         config.get(CONF_SSL),
         config.get(CONF_VERIFY_SSL))
-    success_init = scanner.controller.is_logged_in()
+    success_init = controller.is_logged_in()
+    scanner = CiscoMEDeviceScanner(controller)
 
     return scanner if success_init else None
 
