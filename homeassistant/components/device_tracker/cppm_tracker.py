@@ -38,6 +38,7 @@ def get_scanner(hass, config):
     new_scan = CPPMDeviceScanner(config[DOMAIN], GRANT_TYPE)
     return new_scan if new_scan.success_init else None
 
+
 class CPPMDeviceScanner(DeviceScanner):
     """Initialize class."""
 
@@ -85,4 +86,3 @@ class CPPMDeviceScanner(DeviceScanner):
             return False
         else:
             return True
-
