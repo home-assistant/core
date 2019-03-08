@@ -56,7 +56,7 @@ class CPPMDeviceScanner(DeviceScanner):
     def __init__(self, config, cppm):
         """Initialize class."""
         self._cppm = cppm
-        
+
     def scan_devices(self):
         """Initialize scanner."""
         self.get_cppm_data()
