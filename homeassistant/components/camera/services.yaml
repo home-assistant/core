@@ -48,8 +48,11 @@ play_stream:
       description: Name(s) of media player to stream to.
       example: 'media_player.living_room_tv'
     format:
-      description: Stream format supported by media player.
+      description: (Optional) Stream format supported by media player.
       example: 'hls'
+    keepalive:
+      description: (Optional) Keep the stream worker alive for fast access.
+      example: 'true'
 
 local_file_update_file_path:
   description: Update the file_path for a local_file camera.

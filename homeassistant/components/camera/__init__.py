@@ -79,7 +79,8 @@ CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
 
 CAMERA_SERVICE_PLAY_STREAM = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
-    vol.Optional(ATTR_FORMAT, default='hls'): vol.In(OUTPUT_FORMATS)
+    vol.Optional(ATTR_FORMAT, default='hls'): vol.In(OUTPUT_FORMATS),
+    vol.Optional(ATTR_KEEPALIVE, default=False): cv.boolean,
 })
 
 WS_TYPE_CAMERA_THUMBNAIL = 'camera_thumbnail'
