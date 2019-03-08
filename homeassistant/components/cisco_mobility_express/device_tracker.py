@@ -49,7 +49,7 @@ class CiscoMEDeviceScanner(DeviceScanner):
 
     def __init__(self, controller):
         """Initialize the scanner."""
-        self.controller = None
+        self.controller = controller
         self.last_results = {}
 
     def scan_devices(self):
