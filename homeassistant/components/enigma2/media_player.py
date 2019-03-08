@@ -1,6 +1,7 @@
 """Support for Enigma2 media players."""
 import logging
 import asyncio
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice
@@ -14,7 +15,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_PLAYING, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['openwebifpy==1.2.6']
+REQUIREMENTS = ['openwebifpy==1.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,39 +53,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up of an enigma2 media player."""
     if discovery_info:
-        discovered_config = {
-            CONF_NAME: DEFAULT_NAME,
-            # Do not use the discovered port, as it is the streaming
-            # service port (8001) which is not what we want.
-            CONF_PORT: DEFAULT_PORT,
-            CONF_HOST: discovery_info['host'],
-            CONF_USERNAME: DEFAULT_USERNAME,
-            CONF_PASSWORD: DEFAULT_PASSWORD,
-            CONF_SSL: DEFAULT_SSL,
-            CONF_USE_CHANNEL_ICON: DEFAULT_USE_CHANNEL_ICON,
-        }
-        add_devices([Enigma2Device(discovery_info['hostname'],
-                                   discovered_config)], True)
-        return
+        # Discovery gives us the streaming service port (8001)
+        # which is not useful as OpenWebif never runs on that port.
+        # So use the default port instead.
+        config[CONF_PORT] = DEFAULT_PORT
+        config[CONF_NAME] = discovery_info['hostname']
+        config[CONF_HOST] = discovery_info['host']
+        config[CONF_USERNAME] = DEFAULT_USERNAME
+        config[CONF_PASSWORD] = DEFAULT_PASSWORD
+        config[CONF_SSL] = DEFAULT_SSL
+        config[CONF_USE_CHANNEL_ICON] = DEFAULT_USE_CHANNEL_ICON
 
-    add_devices([Enigma2Device(config[CONF_NAME], config)], True)
+    from openwebif.api import CreateDevice
+    device = \
+        CreateDevice(host=config[CONF_HOST],
+                     port=config.get(CONF_PORT),
+                     username=config.get(CONF_USERNAME),
+                     password=config.get(CONF_PASSWORD),
+                     is_https=config.get(CONF_SSL),
+                     prefer_picon=config.get(CONF_USE_CHANNEL_ICON))
+
+    add_devices([Enigma2Device(config[CONF_NAME], device)], True)
 
 
 class Enigma2Device(MediaPlayerDevice):
     """Representation of an Enigma2 box."""
 
-    def __init__(self, name, config):
+    def __init__(self, name, device):
         """Initialize the Enigma2 device."""
-        import openwebif.api
         self._name = name
-        self.e2_box = \
-            openwebif.api.CreateDevice(host=config[CONF_HOST],
-                                       port=config[CONF_PORT],
-                                       username=config[CONF_USERNAME],
-                                       password=config[CONF_PASSWORD],
-                                       is_https=config[CONF_SSL],
-                                       prefer_picon=config[
-                                           CONF_USE_CHANNEL_ICON])
+        self.e2_box = device
 
     @property
     def name(self):
