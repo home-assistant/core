@@ -1,7 +1,7 @@
 """Offer state listening automation rules."""
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import callback, Context
 from homeassistant.const import MATCH_ALL, CONF_PLATFORM, CONF_FOR
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_same_state)
@@ -36,6 +36,16 @@ async def async_trigger(hass, config, action, automation_info):
         @callback
         def call_action():
             """Call action with right context."""
+            if to_s is not None:
+                context = to_s.context
+            elif from_s is not None:
+                context = Context(
+                    user_id=from_s.context.user_id,
+                    parent_id=from_s.context.id,
+                )
+            else:
+                context = Context()
+
             hass.async_run_job(action({
                 'trigger': {
                     'platform': 'state',
@@ -44,7 +54,7 @@ async def async_trigger(hass, config, action, automation_info):
                     'to_state': to_s,
                     'for': time_delta,
                 }
-            }, context=to_s.context))
+            }, context=context))
 
         # Ignore changes to state attributes if from/to is in use
         if (not match_all and from_s is not None and to_s is not None and

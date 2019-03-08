@@ -59,11 +59,19 @@ async def test_if_fires_on_entity_change(hass, calls):
     assert 'state - test.entity - hello - world - None' == \
         calls[0].data['some']
 
+    # reload a group will set state to None, is that a bug in group reload?
+    hass.states.async_set('test.entity', None, context=calls[0].context)
+    await hass.async_block_till_done()
+    assert 2 == len(calls)
+    assert calls[1].context.parent_id == calls[0].context.id
+    assert 'state - test.entity - world - None - None' == \
+        calls[1].data['some']
+
     await common.async_turn_off(hass)
     await hass.async_block_till_done()
     hass.states.async_set('test.entity', 'planet')
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert 2 == len(calls)
 
 
 async def test_if_fires_on_entity_change_with_from_filter(hass, calls):
