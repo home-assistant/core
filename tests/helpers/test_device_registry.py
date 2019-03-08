@@ -1,6 +1,8 @@
 """Tests for the Device Registry."""
+import asyncio
 from unittest.mock import patch
 
+import asynctest
 import pytest
 
 from homeassistant.helpers import device_registry
@@ -370,3 +372,17 @@ async def test_update(registry):
     assert updated_entry != entry
     assert updated_entry.area_id == '12345A'
     assert updated_entry.name_by_user == 'Test Friendly Name'
+
+
+async def test_loading_race_condition(hass):
+    """Test only one storage load called when concurrent loading occurred ."""
+    with asynctest.patch(
+        'homeassistant.helpers.device_registry.DeviceRegistry.async_load',
+    ) as mock_load:
+        results = await asyncio.gather(
+            device_registry.async_get_registry(hass),
+            device_registry.async_get_registry(hass),
+        )
+
+        mock_load.assert_called_once_with()
+        assert results[0] == results[1]

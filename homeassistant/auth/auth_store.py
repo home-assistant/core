@@ -38,6 +38,7 @@ class AuthStore:
         self._perm_lookup = None  # type: Optional[PermissionLookup]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY,
                                                  private=True)
+        self._lock = asyncio.Lock()
 
     async def async_get_groups(self) -> List[models.Group]:
         """Retrieve all users."""
@@ -271,6 +272,13 @@ class AuthStore:
         self._async_schedule_save()
 
     async def _async_load(self) -> None:
+        """Load the users."""
+        async with self._lock:
+            if self._users is not None:
+                return
+            await self._async_load_task()
+
+    async def _async_load_task(self) -> None:
         """Load the users."""
         [ent_reg, data] = await asyncio.gather(
             self.hass.helpers.entity_registry.async_get_registry(),

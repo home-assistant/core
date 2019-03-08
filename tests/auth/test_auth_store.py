@@ -1,4 +1,8 @@
 """Tests for the auth store."""
+import asyncio
+
+import asynctest
+
 from homeassistant.auth import auth_store
 
 
@@ -218,3 +222,21 @@ async def test_system_groups_store_id_and_name(hass, hass_storage):
             'name': auth_store.GROUP_NAME_READ_ONLY,
         },
     ]
+
+
+async def test_loading_race_condition(hass):
+    """Test only one storage load called when concurrent loading occurred ."""
+    store = auth_store.AuthStore(hass)
+    with asynctest.patch(
+        'homeassistant.helpers.entity_registry.async_get_registry',
+    ) as mock_registry, asynctest.patch(
+        'homeassistant.helpers.storage.Store.async_load',
+    ) as mock_load:
+        results = await asyncio.gather(
+            store.async_get_users(),
+            store.async_get_users(),
+        )
+
+        mock_registry.assert_called_once_with(hass)
+        mock_load.assert_called_once_with()
+        assert results[0] == results[1]
