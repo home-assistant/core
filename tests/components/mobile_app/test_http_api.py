@@ -6,10 +6,10 @@ from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.const import CONF_WEBHOOK_ID
 
 from .const import REGISTER
-from . import authed_api_client
+from . import authed_api_client  # noqa: F401
 
 
-async def test_register_device(hass_client, authed_api_client):
+async def test_register_device(hass_client, authed_api_client):  # noqa: F811
     """Test that a device can be registered."""
     try:
         # pylint: disable=unused-import

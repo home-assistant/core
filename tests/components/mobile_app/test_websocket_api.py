@@ -5,11 +5,11 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
-from . import authed_api_client, webhook_client
+from . import authed_api_client, webhook_client  # noqa: F401
 from .const import (CALL_SERVICE, REGISTER)
 
 
-async def test_webocket_get_registration(hass, authed_api_client,
+async def test_webocket_get_registration(hass, authed_api_client,  # noqa: F811
                                          hass_ws_client):
     """Test get_registration websocket command."""
     register_resp = await authed_api_client.post(
@@ -72,9 +72,9 @@ async def test_webocket_get_user_registrations(hass, aiohttp_client,
 
 
 async def test_webocket_delete_registration(hass, hass_client,
-                                            hass_ws_client, webhook_client):
+                                            hass_ws_client, webhook_client):  # noqa: E501 F811
     """Test delete_registration websocket command."""
-    authed_api_client = await hass_client()
+    authed_api_client = await hass_client()  # noqa: F811
     register_resp = await authed_api_client.post(
         '/api/mobile_app/devices', json=REGISTER
     )

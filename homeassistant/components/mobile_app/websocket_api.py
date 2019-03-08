@@ -13,12 +13,13 @@ from homeassistant.components.websocket_api import (ActiveConnection,
 from homeassistant.components.websocket_api.const import (ERR_INVALID_FORMAT,
                                                           ERR_NOT_FOUND,
                                                           ERR_UNAUTHORIZED)
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (DATA_DELETED_IDS, DATA_REGISTRATIONS, DATA_STORE,
-                    CONF_USER_ID, CONF_WEBHOOK_ID, DOMAIN)
+                    CONF_USER_ID, DOMAIN)
 
 from .helpers import safe_device, savable_state
 

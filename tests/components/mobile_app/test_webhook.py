@@ -14,13 +14,13 @@ from homeassistant.core import callback
 
 from tests.common import async_mock_service
 
-from . import authed_api_client, webhook_client
+from . import authed_api_client, webhook_client  # noqa: F401
 
 from .const import (CALL_SERVICE, FIRE_EVENT, REGISTER, RENDER_TEMPLATE,
                     UPDATE)
 
 
-async def test_webhook_handle_render_template(webhook_client):
+async def test_webhook_handle_render_template(webhook_client):  # noqa: F811
     """Test that we render templates properly."""
     resp = await webhook_client.post(
         '/api/webhook/mobile_app_test',
@@ -33,7 +33,7 @@ async def test_webhook_handle_render_template(webhook_client):
     assert json == {'rendered': 'Hello world'}
 
 
-async def test_webhook_handle_call_services(hass, webhook_client):
+async def test_webhook_handle_call_services(hass, webhook_client):  # noqa: E501 F811
     """Test that we call services properly."""
     calls = async_mock_service(hass, 'test', 'mobile_app')
 
@@ -47,7 +47,7 @@ async def test_webhook_handle_call_services(hass, webhook_client):
     assert len(calls) == 1
 
 
-async def test_webhook_handle_fire_event(hass, webhook_client):
+async def test_webhook_handle_fire_event(hass, webhook_client):  # noqa: F811
     """Test that we can fire events."""
     events = []
 
@@ -71,9 +71,9 @@ async def test_webhook_handle_fire_event(hass, webhook_client):
     assert events[0].data['hello'] == 'yo world'
 
 
-async def test_webhook_update_registration(webhook_client, hass_client):
+async def test_webhook_update_registration(webhook_client, hass_client):  # noqa: E501 F811
     """Test that a we can update an existing registration via webhook."""
-    authed_api_client = await hass_client()
+    authed_api_client = await hass_client()  # noqa: F811
     register_resp = await authed_api_client.post(
         '/api/mobile_app/devices', json=REGISTER
     )
@@ -99,7 +99,7 @@ async def test_webhook_update_registration(webhook_client, hass_client):
     assert CONF_SECRET not in update_json
 
 
-async def test_webhook_returns_error_incorrect_json(webhook_client, caplog):
+async def test_webhook_returns_error_incorrect_json(webhook_client, caplog):  # noqa: E501 F811
     """Test that an error is returned when JSON is invalid."""
     resp = await webhook_client.post(
         '/api/webhook/mobile_app_test',
@@ -112,7 +112,7 @@ async def test_webhook_returns_error_incorrect_json(webhook_client, caplog):
     assert 'invalid JSON' in caplog.text
 
 
-async def test_webhook_handle_decryption(webhook_client):
+async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
     """Test that we can encrypt/decrypt properly."""
     try:
         # pylint: disable=unused-import
@@ -168,7 +168,7 @@ def mock_cloud_logged_in(hass):
        mock_create_cloudhook)
 @patch('homeassistant.components.mobile_app.webhook.async_is_logged_in',
        mock_cloud_logged_in)
-async def test_cloud_forwarding(hass, hass_client, authed_api_client):
+async def test_cloud_forwarding(hass, hass_client, authed_api_client):  # noqa: E501 F811
     """Test that a local webhook provides a cloud URL in responses."""
     resp = await authed_api_client.post(
         '/api/mobile_app/devices', json=REGISTER
@@ -183,7 +183,7 @@ async def test_cloud_forwarding(hass, hass_client, authed_api_client):
 
     local_url = register_json[CONF_WEBHOOK_ID]
 
-    webhook_client = await hass_client()
+    webhook_client = await hass_client()  # noqa: F811
 
     resp = await webhook_client.post(
         '/api/webhook/{}'.format(local_url),
