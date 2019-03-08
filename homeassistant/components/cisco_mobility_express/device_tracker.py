@@ -1,5 +1,6 @@
 """Support for Cisco Mobility Express."""
 import logging
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -28,9 +29,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Cisco ME scanner."""
-    scanner = CiscoMEDeviceScanner(config[DOMAIN])
+    from ciscomobilityexpress.ciscome import CiscoMobilityExpress
+    config = config[DOMAIN]
 
-    return scanner if scanner.success_init else None
+    scanner = CiscoMEDeviceScanner(config)
+    scanner.controller = CiscoMobilityExpress(
+        config[CONF_HOST],
+        config[CONF_USERNAME],
+        config[CONF_PASSWORD],
+        config.get(CONF_SSL),
+        config.get(CONF_VERIFY_SSL))
+    success_init = scanner.controller.is_logged_in()
+
+    return scanner if success_init else None
 
 
 class CiscoMEDeviceScanner(DeviceScanner):
@@ -38,17 +49,8 @@ class CiscoMEDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        from ciscomobilityexpress.ciscome import CiscoMobilityExpress
-
-        self.controller = CiscoMobilityExpress(
-            config[CONF_HOST],
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_SSL],
-            config[CONF_VERIFY_SSL])
-
+        self.controller = None
         self.last_results = {}
-        self.success_init = self.controller.is_logged_in()
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
