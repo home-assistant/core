@@ -108,19 +108,19 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
 
     if webhook_type not in WEBHOOK_TYPES:
 
-        if ATTR_APP_COMPONENT in device:
-            # Unknown webhook type, check if there's a component
-            platform_name = device[ATTR_APP_COMPONENT]
+        if ATTR_APP_COMPONENT not in device:
+            _LOGGER.error("Unknown mobile_app webhook type: %s", webhook_type)
+            return empty_okay_response(headers=headers)
 
-            plat = get_platform(hass, platform_name, DOMAIN)
+        # Unknown webhook type, check if there's a component
+        platform_name = device[ATTR_APP_COMPONENT]
 
-            if webhook_type in plat.WEBHOOK_TYPES:
-                return await plat.async_handle_webhook_message(hass, device,
-                                                               webhook_type,
-                                                               webhook_payload)
-        _LOGGER.error("Unknown mobile_app webhook type: %s",
-                      webhook_type)
-        return empty_okay_response(headers=headers)
+        plat = get_platform(hass, platform_name, DOMAIN)
+
+        if webhook_type in plat.WEBHOOK_TYPES:
+            return await plat.async_handle_webhook_message(hass, device,
+                                                           webhook_type,
+                                                           webhook_payload)
 
     try:
         data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
