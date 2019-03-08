@@ -82,7 +82,7 @@ async def fetch_redirect_uris(hass, url):
                         break
 
     except (asyncio.TimeoutError, ClientError) as ex:
-        _LOGGER.error("Error while looking up redirect_uri: %s", ex)
+        _LOGGER.error("Error while looking up redirect_uri %s: %s", url, ex)
         pass
 
     # Authorization endpoints verifying that a redirect_uri is allowed for use
