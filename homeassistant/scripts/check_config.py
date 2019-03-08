@@ -41,20 +41,15 @@ ERROR_STR = 'General Errors'
 
 def color(the_color, *args, reset=None):
     """Color helper."""
+    from colorlog.escape_codes import escape_codes, parse_colors
     try:
-        from colorlog.escape_codes import escape_codes, parse_colors
-        try:
-            if not args:
-                assert reset is None, "Cannot reset if nothing being printed"
-                return parse_colors(the_color)
-            return parse_colors(the_color) + ' '.join(args) + \
-                escape_codes[reset or 'reset']
-        except KeyError as k:
-            raise ValueError(
-                "Invalid color {} in {}".format(str(k), the_color))
-    except ImportError:
-        # We should fallback to black-and-white if colorlog is not installed
-        return ' '.join(args)
+        if not args:
+            assert reset is None, "You cannot reset if nothing being printed"
+            return parse_colors(the_color)
+        return parse_colors(the_color) + ' '.join(args) + \
+            escape_codes[reset or 'reset']
+    except KeyError as k:
+        raise ValueError("Invalid color {} in {}".format(str(k), the_color))
 
 
 def run(script_args: List) -> int:
