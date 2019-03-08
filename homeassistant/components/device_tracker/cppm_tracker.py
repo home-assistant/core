@@ -35,27 +35,28 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_scanner(hass, config):
     """Initialize Scanner."""
-    new_scan = CPPMDeviceScanner(config[DOMAIN], GRANT_TYPE)
-    return new_scan if new_scan.success_init else None
+    from clearpasspy import ClearPass
+    data = {
+        'server': config[DOMAIN][CONF_HOST],
+        'grant_type': GRANT_TYPE,
+        'secret': config[DOMAIN][CONF_API_KEY],
+        'client': config[DOMAIN][CLIENT_ID]
+    }
+    cppm = ClearPass(data)
+    if cppm.access_token is not None:
+        new_scan = CPPMDeviceScanner(config[DOMAIN], cppm)
+        return new_scan
+    else:
+        return None
 
 
 class CPPMDeviceScanner(DeviceScanner):
     """Initialize class."""
 
-    def __init__(self, config, grant_type):
+    def __init__(self, config, cppm):
         """Initialize class."""
-        from clearpasspy import ClearPass
-
-        data = {
-            'server': config[CONF_HOST],
-            'grant_type': grant_type,
-            'secret': config[CONF_API_KEY],
-            'client': config[CLIENT_ID]
-        }
-        self.cppm = ClearPass(data)
-
-        self.success_init = self.get_cppm_data()
-
+        self._cppm = cppm
+        
     def scan_devices(self):
         """Initialize scanner."""
         self.get_cppm_data()
@@ -68,12 +69,12 @@ class CPPMDeviceScanner(DeviceScanner):
     @Throttle(SCAN_INTERVAL)
     def get_cppm_data(self):
         """Retrieve data from Aruba Clearpass and return parsed result."""
-        _LOGGER.debug("Access Token: %s", self.cppm.access_token)
+        _LOGGER.debug("Access Token: %s", self._cppm.access_token)
 
-        endpoints = self.cppm.get_endpoints(100)['_embedded']['items']
+        endpoints = self._cppm.get_endpoints(100)['_embedded']['items']
         devices = []
         for item in endpoints:
-            if self.cppm.online_status(item['mac_address']):
+            if self._cppm.online_status(item['mac_address']):
                 device = {
                     'mac': item['mac_address'],
                     'name': item['mac_address']
@@ -82,7 +83,3 @@ class CPPMDeviceScanner(DeviceScanner):
             else:
                 continue
         self.results = devices
-        if self.results is None:
-            return False
-        else:
-            return True
