@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.dsmr/
 """
 import asyncio
 from datetime import timedelta
+from decimal import Decimal
 from functools import partial
 import logging
 
@@ -351,7 +352,7 @@ class DerivativeDSMREntity(DSMREntity):
                 # Recalculate the rate
                 diff = current_reading - self._previous_reading
                 timediff = timestamp - self._previous_timestamp
-                self._state = diff / timediff.total_seconds() * 3600
+                self._state = round(diff / Decimal(timediff.total_seconds()) * 3600, 3)
 
             self._previous_reading = current_reading
             self._previous_timestamp = timestamp

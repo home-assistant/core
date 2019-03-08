@@ -6,13 +6,13 @@ Entity to be updated with new values.
 """
 
 import asyncio
+import datetime
 from decimal import Decimal
 from unittest.mock import Mock
 
 import asynctest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.sensor.dsmr import DerivativeDSMREntity
-import datetime
 import pytest
 from tests.common import assert_setup_component
 
@@ -106,7 +106,7 @@ def test_derivative():
     entity.telegram = {
         '1.0.0': MBusObject([
             {'value': datetime.datetime.fromtimestamp(1551642213)},
-            {'value': 745.695, 'unit': 'm3'},
+            {'value': Decimal(745.695), 'unit': 'm3'},
         ])
     }
     yield from entity.async_update()
@@ -117,12 +117,12 @@ def test_derivative():
     entity.telegram = {
         '1.0.0': MBusObject([
             {'value': datetime.datetime.fromtimestamp(1551642543)},
-            {'value': 745.698, 'unit': 'm3'},
+            {'value': Decimal(745.698), 'unit': 'm3'},
         ])
     }
     yield from entity.async_update()
 
-    assert abs(entity.state - 0.03272) < 0.00001, \
+    assert abs(entity.state - Decimal(0.033)) < 0.00001, \
         'state should be hourly usage calculated from first and second update'
 
     assert entity.unit_of_measurement == 'm3/h'
