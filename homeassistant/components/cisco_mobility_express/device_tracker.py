@@ -32,7 +32,7 @@ def get_scanner(hass, config):
     from ciscomobilityexpress.ciscome import CiscoMobilityExpress
     config = config[DOMAIN]
 
-    scanner = CiscoMEDeviceScanner(config)
+    scanner = CiscoMEDeviceScanner(controller)
     scanner.controller = CiscoMobilityExpress(
         config[CONF_HOST],
         config[CONF_USERNAME],
