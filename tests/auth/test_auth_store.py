@@ -237,6 +237,6 @@ async def test_loading_race_condition(hass):
             store.async_get_users(),
         )
 
-        mock_registry.assert_called_once()
-        mock_load.assert_called_once()
+        mock_registry.assert_called_once_with(hass)
+        mock_load.assert_called_once_with()
         assert results[0] == results[1]

@@ -140,5 +140,5 @@ async def test_loading_race_condition(hass):
             area_registry.async_get_registry(hass),
         )
 
-        mock_load.assert_called_once()
+        mock_load.assert_called_once_with()
         assert results[0] == results[1]
