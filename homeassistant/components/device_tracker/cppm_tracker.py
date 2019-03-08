@@ -13,12 +13,12 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, DeviceScanner, DOMAIN
 )
 from homeassistant.const import (
-    CONF_HOST, CONF_API_KEY, CONF_SCAN_INTERVAL
+    CONF_HOST, CONF_API_KEY
 )
 
 REQUIREMENTS = ['clearpasspy==1.0.2']
 
-CONF_SCAN_INTERVAL = timedelta(seconds=120)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 CLIENT_ID = 'client_id'
 
@@ -38,44 +38,41 @@ def get_scanner(hass, config):
     new_scan = CPPMDeviceScanner(config[DOMAIN], GRANT_TYPE)
     return new_scan if new_scan.success_init else None
 
-
 class CPPMDeviceScanner(DeviceScanner):
     """Initialize class."""
 
     def __init__(self, config, grant_type):
         """Initialize class."""
-        self._cppm_host = config[CONF_HOST]
-        self._api_key = config[CONF_API_KEY]
-        self._grant_type = grant_type
-        self._client_id = config[CLIENT_ID]
+        from clearpasspy import ClearPass
+
+        data = {
+            'server': config[CONF_HOST],
+            'grant_type': grant_type,
+            'secret': config[CONF_API_KEY],
+            'client': config[CLIENT_ID]
+        }
+        self.cppm = ClearPass(data)
+
         self.success_init = self.get_cppm_data()
 
-    async def async_scan_devices(self):
+    def scan_devices(self):
         """Initialize scanner."""
         self.get_cppm_data()
         return [device['mac'] for device in self.results]
 
-    async def async_get_device_name(self, device):
+    def get_device_name(self, device):
         """Retrieve device name."""
         return [device['name'] for device in self.results]
 
-    @Throttle(CONF_SCAN_INTERVAL)
+    @Throttle(SCAN_INTERVAL)
     def get_cppm_data(self):
         """Retrieve data from Aruba Clearpass and return parsed result."""
-        from clearpasspy import ClearPass
-        data = {
-            'server': self._cppm_host,
-            'grant_type': self._grant_type,
-            'secret': self._api_key,
-            'client': self._client_id
-        }
-        _LOGGER.debug("DATA: %s", data)
+        _LOGGER.debug("Access Token: %s", self.cppm.access_token)
 
-        cppm = ClearPass(data)
-        endpoints = cppm.get_endpoints(100)['_embedded']['items']
+        endpoints = self.cppm.get_endpoints(100)['_embedded']['items']
         devices = []
         for item in endpoints:
-            if cppm.online_status(item['mac_address']):
+            if self.cppm.online_status(item['mac_address']):
                 device = {
                     'mac': item['mac_address'],
                     'name': item['mac_address']
@@ -84,4 +81,8 @@ class CPPMDeviceScanner(DeviceScanner):
             else:
                 continue
         self.results = devices
-        return True
+        if self.results is None:
+            return False
+        else:
+            return True
+
