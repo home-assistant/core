@@ -31,6 +31,7 @@ SERVICE_AXIS = 'axis'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DLNA_DMR = 'dlna_dmr'
+SERVICE_ENIGMA2 = 'enigma2'
 SERVICE_FREEBOX = 'freebox'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
@@ -68,6 +69,7 @@ SERVICE_HANDLERS = {
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
+    SERVICE_ENIGMA2: ('enigma2', None),
     SERVICE_ROKU: ('roku', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
