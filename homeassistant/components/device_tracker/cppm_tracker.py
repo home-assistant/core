@@ -47,7 +47,7 @@ def get_scanner(hass, config):
         new_scan = CPPMDeviceScanner(config[DOMAIN], cppm)
         return new_scan
     else:
-        return None
+        None
 
 
 class CPPMDeviceScanner(DeviceScanner):
