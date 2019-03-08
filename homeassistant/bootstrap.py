@@ -28,8 +28,16 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
-FIRST_INIT_COMPONENT = {'system_log', 'recorder', 'mqtt', 'mqtt_eventstream',
-                        'logger', 'introduction', 'frontend', 'history'}
+LOGGING_COMPONENT = {'logger', 'system_log'}
+
+FIRST_INIT_COMPONENT = {
+    'recorder',
+    'mqtt',
+    'mqtt_eventstream',
+    'introduction',
+    'frontend',
+    'history',
+}
 
 
 def from_config_dict(config: Dict[str, Any],
@@ -144,17 +152,25 @@ async def async_from_config_dict(config: Dict[str, Any],
 
     _LOGGER.info("Home Assistant core initialized")
 
+    # stage 0, load logging components
+    for component in components:
+        if component in LOGGING_COMPONENT:
+            hass.async_create_task(
+                async_setup_component(hass, component, config))
+
+    await hass.async_block_till_done()
+
     # stage 1
     for component in components:
-        if component not in FIRST_INIT_COMPONENT:
-            continue
-        hass.async_create_task(async_setup_component(hass, component, config))
+        if component in FIRST_INIT_COMPONENT:
+            hass.async_create_task(
+                async_setup_component(hass, component, config))
 
     await hass.async_block_till_done()
 
     # stage 2
     for component in components:
-        if component in FIRST_INIT_COMPONENT:
+        if component in FIRST_INIT_COMPONENT or component in LOGGING_COMPONENT:
             continue
         hass.async_create_task(async_setup_component(hass, component, config))
 
