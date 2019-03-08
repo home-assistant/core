@@ -46,8 +46,7 @@ def get_scanner(hass, config):
     if cppm.access_token is not None:
         new_scan = CPPMDeviceScanner(config[DOMAIN], cppm)
         return new_scan
-    else:
-        None
+    return None
 
 
 class CPPMDeviceScanner(DeviceScanner):
