@@ -33,7 +33,7 @@ def get_scanner(hass, config):
     config = config[DOMAIN]
 
     scanner = CiscoMEDeviceScanner(controller)
-    scanner.controller = CiscoMobilityExpress(
+    controller = CiscoMobilityExpress(
         config[CONF_HOST],
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
