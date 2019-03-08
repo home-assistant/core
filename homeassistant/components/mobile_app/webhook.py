@@ -25,9 +25,9 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import get_platform
 
-from .const import (ATTR_APP_COMPONENT, ATTR_DELETED_IDS,
+from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS,
                     ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
-                    ATTR_REGISTRATIONS, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
+                    DATA_REGISTRATIONS, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
                     CONF_CLOUDHOOK_ID, CONF_CLOUDHOOK_URL, CONF_SECRET,
@@ -60,10 +60,10 @@ def setup_device(hass: HomeAssistantType, store: Store, device: Dict) -> None:
 async def handle_webhook(store: Store, hass: HomeAssistantType,
                          webhook_id: str, request: Request) -> Response:
     """Handle webhook callback."""
-    if webhook_id in hass.data[DOMAIN][ATTR_DELETED_IDS]:
+    if webhook_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
         return Response(status=410)
 
-    device = hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id]
+    device = hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id]
 
     try:
         req_data = await request.json()
@@ -181,7 +181,7 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
     if webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
         new_device = {**device, **data}
 
-        hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id] = new_device
+        hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id] = new_device
 
         try:
             await store.async_save(savable_state(hass))

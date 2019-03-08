@@ -4,8 +4,8 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 
-from homeassistant.components.mobile_app.const import (ATTR_DELETED_IDS,
-                                                       ATTR_REGISTRATIONS,
+from homeassistant.components.mobile_app.const import (DATA_DELETED_IDS,
+                                                       DATA_REGISTRATIONS,
                                                        CONF_SECRET,
                                                        CONF_USER_ID, DOMAIN,
                                                        STORAGE_KEY,
@@ -19,7 +19,7 @@ def webhook_client(hass, aiohttp_client, hass_storage, hass_admin_user):
     hass_storage[STORAGE_KEY] = {
         'version': STORAGE_VERSION,
         'data': {
-            ATTR_REGISTRATIONS: {
+            DATA_REGISTRATIONS: {
                 'mobile_app_test': {
                     CONF_SECRET: '58eb127991594dad934d1584bdee5f27',
                     'supports_encryption': True,
@@ -28,7 +28,7 @@ def webhook_client(hass, aiohttp_client, hass_storage, hass_admin_user):
                     CONF_USER_ID: hass_admin_user.id,
                 }
             },
-            ATTR_DELETED_IDS: [],
+            DATA_DELETED_IDS: [],
         }
     }
 

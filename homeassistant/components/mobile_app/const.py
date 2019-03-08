@@ -15,9 +15,9 @@ CONF_CLOUDHOOK_URL = 'cloudhook_url'
 CONF_SECRET = 'secret'
 CONF_USER_ID = 'user_id'
 
-ATTR_DELETED_IDS = 'deleted_ids'
-ATTR_REGISTRATIONS = 'registrations'
-ATTR_STORE = 'store'
+DATA_DELETED_IDS = 'deleted_ids'
+DATA_REGISTRATIONS = 'registrations'
+DATA_STORE = 'store'
 
 ATTR_APP_COMPONENT = 'app_component'
 ATTR_APP_DATA = 'app_data'

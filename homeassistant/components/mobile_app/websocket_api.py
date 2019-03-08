@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (ATTR_DELETED_IDS, ATTR_REGISTRATIONS, ATTR_STORE,
+from .const import (DATA_DELETED_IDS, DATA_REGISTRATIONS, DATA_STORE,
                     CONF_USER_ID, CONF_WEBHOOK_ID, DOMAIN)
 
 from .helpers import safe_device, savable_state
@@ -52,7 +52,7 @@ async def websocket_get_registration(
                               "Webhook ID not provided")
         return
 
-    device = hass.data[DOMAIN][ATTR_REGISTRATIONS].get(webhook_id)
+    device = hass.data[DOMAIN][DATA_REGISTRATIONS].get(webhook_id)
 
     if device is None:
         connection.send_error(msg['id'], ERR_NOT_FOUND,
@@ -87,7 +87,7 @@ async def websocket_get_user_registrations(
 
     user_devices = []
 
-    for device in hass.data[DOMAIN][ATTR_REGISTRATIONS].values():
+    for device in hass.data[DOMAIN][DATA_REGISTRATIONS].values():
         if connection.user.is_admin or device[CONF_USER_ID] is user_id:
             user_devices.append(safe_device(device))
 
@@ -113,7 +113,7 @@ async def websocket_delete_registration(hass: HomeAssistantType,
                               "Webhook ID not provided")
         return
 
-    device = hass.data[DOMAIN][ATTR_REGISTRATIONS].get(webhook_id)
+    device = hass.data[DOMAIN][DATA_REGISTRATIONS].get(webhook_id)
 
     if device is None:
         connection.send_error(msg['id'], ERR_NOT_FOUND,
@@ -124,11 +124,11 @@ async def websocket_delete_registration(hass: HomeAssistantType,
         return error_message(
             msg['id'], ERR_UNAUTHORIZED, 'User is not registration owner')
 
-    del hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id]
+    del hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id]
 
-    hass.data[DOMAIN][ATTR_DELETED_IDS].append(webhook_id)
+    hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
 
-    store = hass.data[DOMAIN][ATTR_STORE]
+    store = hass.data[DOMAIN][DATA_STORE]
 
     try:
         await store.async_save(savable_state(hass))

@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (ATTR_REGISTRATIONS, ATTR_SUPPORTS_ENCRYPTION,
+from .const import (DATA_REGISTRATIONS, ATTR_SUPPORTS_ENCRYPTION,
                     CONF_CLOUDHOOK_ID, CONF_CLOUDHOOK_URL, CONF_SECRET,
                     CONF_USER_ID, DOMAIN, REGISTER_DEVICE_SCHEMA)
 
@@ -63,7 +63,7 @@ class DevicesView(HomeAssistantView):
 
         data[CONF_USER_ID] = request['hass_user'].id
 
-        hass.data[DOMAIN][ATTR_REGISTRATIONS][webhook_id] = data
+        hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id] = data
 
         try:
             await self._store.async_save(savable_state(hass))

@@ -2,8 +2,8 @@
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import bind_hass
 
-from .const import (ATTR_APP_COMPONENT, ATTR_DELETED_IDS, ATTR_REGISTRATIONS,
-                    ATTR_STORE, DOMAIN, STORAGE_KEY, STORAGE_VERSION)
+from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS, DATA_REGISTRATIONS,
+                    DATA_STORE, DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import register_http_handlers
 from .webhook import setup_device
@@ -19,16 +19,16 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()
     if app_config is None:
-        app_config = {ATTR_DELETED_IDS: [], ATTR_REGISTRATIONS: {}}
+        app_config = {DATA_DELETED_IDS: [], DATA_REGISTRATIONS: {}}
 
     if hass.data.get(DOMAIN) is None:
-        hass.data[DOMAIN] = {ATTR_DELETED_IDS: [], ATTR_REGISTRATIONS: {}}
+        hass.data[DOMAIN] = {DATA_DELETED_IDS: [], DATA_REGISTRATIONS: {}}
 
-    hass.data[DOMAIN][ATTR_DELETED_IDS] = app_config[ATTR_DELETED_IDS]
-    hass.data[DOMAIN][ATTR_REGISTRATIONS] = app_config[ATTR_REGISTRATIONS]
-    hass.data[DOMAIN][ATTR_STORE] = store
+    hass.data[DOMAIN][DATA_DELETED_IDS] = app_config[DATA_DELETED_IDS]
+    hass.data[DOMAIN][DATA_REGISTRATIONS] = app_config[DATA_REGISTRATIONS]
+    hass.data[DOMAIN][DATA_STORE] = store
 
-    for device in app_config[ATTR_REGISTRATIONS].values():
+    for device in app_config[DATA_REGISTRATIONS].values():
         setup_device(hass, store, device)
 
     register_http_handlers(hass, store)
@@ -45,7 +45,7 @@ def async_devices(hass: HomeAssistantType, component: str) -> list:
     if DOMAIN not in hass.data:
         return devices
 
-    for device in hass.data[DOMAIN][ATTR_REGISTRATIONS].values():
+    for device in hass.data[DOMAIN][DATA_REGISTRATIONS].values():
         if device.get(ATTR_APP_COMPONENT) == component:
             devices.append(device)
 
@@ -59,4 +59,4 @@ def async_device_for_webhook_id(hass: HomeAssistantType,
     if DOMAIN not in hass.data:
         return None
 
-    return hass.data[DOMAIN][ATTR_REGISTRATIONS].get(webhook_id)
+    return hass.data[DOMAIN][DATA_REGISTRATIONS].get(webhook_id)
