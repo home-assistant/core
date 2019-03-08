@@ -1,4 +1,6 @@
 """Websocket API for mobile_app."""
+import voluptuous as vol
+
 from homeassistant.components.cloud import (async_delete_cloudhook,
                                             async_is_logged_in)
 from homeassistant.components.websocket_api import (ActiveConnection,
@@ -12,12 +14,11 @@ from homeassistant.components.websocket_api.const import (ERR_INVALID_FORMAT,
                                                           ERR_NOT_FOUND,
                                                           ERR_UNAUTHORIZED)
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (ATTR_DELETED_IDS, ATTR_REGISTRATIONS, ATTR_STORE,
-                    CONF_USER_ID, CONF_WEBHOOK_ID, DOMAIN,
-                    SCHEMA_WS_DELETE_REGISTRATION, SCHEMA_WS_GET_REGISTRATION,
-                    SCHEMA_WS_GET_USER_REGISTRATIONS)
+                    CONF_USER_ID, CONF_WEBHOOK_ID, DOMAIN)
 
 from .helpers import safe_device, savable_state
 
@@ -35,7 +36,10 @@ def register_websocket_handlers(hass: HomeAssistantType) -> bool:
 
 @ws_require_user()
 @async_response
-@websocket_command(SCHEMA_WS_GET_REGISTRATION)
+@websocket_command({
+    vol.Required('type'): 'mobile_app/get_registration',
+    vol.Required(CONF_WEBHOOK_ID): cv.string,
+})
 async def websocket_get_registration(
         hass: HomeAssistantType, connection: ActiveConnection,
         msg: dict) -> None:
@@ -65,7 +69,10 @@ async def websocket_get_registration(
 
 @ws_require_user()
 @async_response
-@websocket_command(SCHEMA_WS_GET_USER_REGISTRATIONS)
+@websocket_command({
+    vol.Required('type'): 'mobile_app/get_user_registrations',
+    vol.Optional(CONF_USER_ID): cv.string,
+})
 async def websocket_get_user_registrations(
         hass: HomeAssistantType, connection: ActiveConnection,
         msg: dict) -> None:
@@ -90,7 +97,10 @@ async def websocket_get_user_registrations(
 
 @ws_require_user()
 @async_response
-@websocket_command(SCHEMA_WS_DELETE_REGISTRATION)
+@websocket_command({
+    vol.Required('type'): 'mobile_app/delete_registration',
+    vol.Required(CONF_WEBHOOK_ID): cv.string,
+})
 async def websocket_delete_registration(hass: HomeAssistantType,
                                         connection: ActiveConnection,
                                         msg: dict) -> None:
