@@ -20,6 +20,7 @@ VALID_CONFIG_MINIMAL = {
         'platform': 'darksky',
         'api_key': 'foo',
         'forecast': [1, 2],
+        'hourly_forecast': [1, 2],
         'monitored_conditions': ['summary', 'icon', 'temperature_high'],
         'scan_interval': timedelta(seconds=120),
     }
@@ -30,6 +31,7 @@ INVALID_CONFIG_MINIMAL = {
         'platform': 'darksky',
         'api_key': 'foo',
         'forecast': [1, 2],
+        'hourly_forecast': [1, 2],
         'monitored_conditions': ['sumary', 'iocn', 'temperature_high'],
         'scan_interval': timedelta(seconds=120),
     }
@@ -40,6 +42,7 @@ VALID_CONFIG_LANG_DE = {
         'platform': 'darksky',
         'api_key': 'foo',
         'forecast': [1, 2],
+        'hourly_forecast': [1, 2],
         'units': 'us',
         'language': 'de',
         'monitored_conditions': ['summary', 'icon', 'temperature_high',
@@ -54,6 +57,7 @@ INVALID_CONFIG_LANG = {
         'platform': 'darksky',
         'api_key': 'foo',
         'forecast': [1, 2],
+        'hourly_forecast': [1, 2],
         'language': 'yz',
         'monitored_conditions': ['summary', 'icon', 'temperature_high'],
         'scan_interval': timedelta(seconds=120),
@@ -157,7 +161,7 @@ class TestDarkSkySetup(unittest.TestCase):
 
         assert mock_get_forecast.called
         assert mock_get_forecast.call_count == 1
-        assert len(self.hass.states.entity_ids()) == 8
+        assert len(self.hass.states.entity_ids()) == 12
 
         state = self.hass.states.get('sensor.dark_sky_summary')
         assert state is not None
