@@ -2,9 +2,8 @@
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import bind_hass
 
-from .const import (ATTR_APP_COMPONENT, ATTR_APP_DATA, ATTR_DELETED_IDS,
-                    ATTR_REGISTRATIONS, ATTR_STORE, DOMAIN, STORAGE_KEY,
-                    STORAGE_VERSION)
+from .const import (ATTR_APP_COMPONENT, ATTR_DELETED_IDS, ATTR_REGISTRATIONS,
+                    ATTR_STORE, DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import register_http_handlers
 from .webhook import setup_device
@@ -48,23 +47,6 @@ def async_devices(hass: HomeAssistantType, component: str) -> list:
 
     for device in hass.data[DOMAIN][ATTR_REGISTRATIONS].values():
         if device.get(ATTR_APP_COMPONENT) == component:
-            devices.append(device)
-
-    return devices
-
-
-@bind_hass
-def async_devices_with_key(hass: HomeAssistantType, component: str,
-                           key: str) -> list:
-    """Return devices for the given component that has the key in app_data."""
-    devices = []
-
-    if DOMAIN not in hass.data:
-        return devices
-
-    for device in hass.data[DOMAIN][ATTR_REGISTRATIONS].values():
-        if (ATTR_APP_COMPONENT in device and key in device[ATTR_APP_DATA] and
-                device[ATTR_APP_COMPONENT] == component):
             devices.append(device)
 
     return devices
