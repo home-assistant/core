@@ -1126,7 +1126,7 @@ pylinky==0.3.0
 pylitejet==0.1
 
 # homeassistant.components.sensor.loopenergy
-pyloopenergy==0.0.18
+pyloopenergy==0.1.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.5.0
