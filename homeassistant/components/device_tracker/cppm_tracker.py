@@ -7,7 +7,6 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, DeviceScanner, DOMAIN
