@@ -146,7 +146,7 @@ class ZhaDeviceEntity(ZhaEntity):
         """Get the latest battery reading from channels cache."""
         battery = await self._battery_channel.get_attribute_value(
             'battery_percentage_remaining')
-        # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
-        battery = battery / 2
         if battery is not None:
+            # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
+            battery = battery / 2
             self._device_state_attributes['battery_level'] = battery
