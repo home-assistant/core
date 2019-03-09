@@ -211,6 +211,14 @@ class HomeAssistantHTTP:
                 "legacy_api_password support has been enabled. If you don't "
                 "require it, remove the 'api_password' from your http config.")
 
+        for prv in hass.auth.auth_providers:
+            if prv.type == 'trusted_networks':
+                # auth_provider.trusted_networks will override
+                # http.trusted_networks, http.trusted_networks will be
+                # removed from future release
+                trusted_networks = prv.trusted_networks
+                break
+
         setup_auth(app, trusted_networks,
                    api_password if hass.auth.support_legacy else None)
 
