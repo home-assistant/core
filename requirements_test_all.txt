@@ -245,9 +245,6 @@ python-nest==4.1.0
 # homeassistant.components.sensor.awair
 python_awair==0.0.3
 
-# homeassistant.components.sensor.whois
-pythonwhois==2.4.3
-
 # homeassistant.components.tradfri
 pytradfri[async]==6.0.1
 

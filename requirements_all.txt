@@ -1399,6 +1399,9 @@ python-velbus==2.0.22
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
 
+# homeassistant.components.sensor.whois
+python-whois==0.7.1
+
 # homeassistant.components.wink
 python-wink==1.10.3
 
@@ -1410,9 +1413,6 @@ python_opendata_transport==0.1.4
 
 # homeassistant.components.egardia
 pythonegardia==1.0.39
-
-# homeassistant.components.sensor.whois
-pythonwhois==2.4.3
 
 # homeassistant.components.device_tracker.tile
 pytile==2.0.6
