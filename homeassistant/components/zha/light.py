@@ -76,6 +76,7 @@ class Light(ZhaEntity, light.Light):
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
+        self._can_set_temp_via_color = None
         self._on_off_channel = self.cluster_channels.get(ON_OFF_CHANNEL)
         self._level_channel = self.cluster_channels.get(LEVEL_CHANNEL)
         self._color_channel = self.cluster_channels.get(COLOR_CHANNEL)
@@ -93,6 +94,8 @@ class Light(ZhaEntity, light.Light):
             if color_capabilities & CAPABILITIES_COLOR_XY:
                 self._supported_features |= light.SUPPORT_COLOR
                 self._hs_color = (0, 0)
+                self._supported_features |= light.SUPPORT_COLOR_TEMP
+                self._can_set_temp_via_color = True
 
     @property
     def should_poll(self) -> bool:
@@ -185,6 +188,7 @@ class Light(ZhaEntity, light.Light):
             self._state = True
 
         if light.ATTR_COLOR_TEMP in kwargs and \
+                self._can_set_temp_via_color is None and \
                 self.supported_features & light.SUPPORT_COLOR_TEMP:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             success = await self._color_channel.move_to_color_temp(
@@ -192,6 +196,23 @@ class Light(ZhaEntity, light.Light):
             if not success:
                 return
             self._color_temp = temperature
+
+        if light.ATTR_COLOR_TEMP in kwargs and \
+                self._can_set_temp_via_color and \
+                self.supported_features & light.SUPPORT_COLOR:
+            temp = kwargs[light.ATTR_COLOR_TEMP]
+            temp_k = color_util.color_temperature_mired_to_kelvin(temp)
+            hs_color = color_util.color_temperature_to_hs(temp_k)
+            xy_color = color_util.color_hs_to_xy(*hs_color)
+            success = await self._color_channel.move_to_color(
+                int(xy_color[0] * 65535),
+                int(xy_color[1] * 65535),
+                duration
+            )
+            if not success:
+                return
+            self._hs_color = hs_color
+            self._color_temp = temp
 
         if light.ATTR_HS_COLOR in kwargs and \
                 self.supported_features & light.SUPPORT_COLOR:
