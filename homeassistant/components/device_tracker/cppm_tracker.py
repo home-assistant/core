@@ -44,7 +44,7 @@ def get_scanner(hass, config):
     cppm = ClearPass(data)
     if cppm.access_token is None:
         return None
-    _LOGGER.debug("Successfully received Access Token.")
+    _LOGGER.debug("Successfully received Access Token")
     return CPPMDeviceScanner(cppm)
 
 
