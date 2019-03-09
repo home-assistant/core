@@ -157,6 +157,9 @@ alpha_vantage==2.1.0
 # homeassistant.components.amcrest
 amcrest==1.2.5
 
+# homeassistant.components.firetv.media_player
+androidtv==0.0.10
+
 # homeassistant.components.switch.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
@@ -425,9 +428,6 @@ fiblary3==0.1.7
 
 # homeassistant.components.sensor.fints
 fints==1.0.1
-
-# homeassistant.components.firetv.media_player
-firetv==1.0.9
 
 # homeassistant.components.sensor.fitbit
 fitbit==0.3.0
