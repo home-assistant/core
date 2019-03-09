@@ -312,9 +312,9 @@ class AndroidTVDevice(ADBDevice):
 
         self._device = None
         self._muted = None
-        self._properties = self.aftv.properties
+        self._device_properties = self.aftv.device_properties
         self._unique_id = 'androidtv-{}-{}'.format(
-            name, self._properties['serialno'])
+            name, self._device_properties['serialno'])
         self._volume = None
 
     @adb_decorator(override_available=True)
