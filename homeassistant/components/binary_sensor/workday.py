@@ -98,8 +98,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # add custom holidays
     try:
         obj_holidays.append(add_holidays)
-    except:
-        _LOGGER.debug("No custom holidays or custom holidays were improperly formatted")
+    except TypeError:
+        _LOGGER.debug("No custom holidays or invalid holidays")
 
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
