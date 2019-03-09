@@ -16,20 +16,23 @@ from homeassistant.core import EventOrigin
 from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
                                       TemplateError)
 from homeassistant.helpers import template
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform, load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS,
-                    ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
-                    DATA_REGISTRATIONS, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
-                    ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
-                    ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
-                    CONF_SECRET, DOMAIN, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
+from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_NAME, ATTR_EVENT_DATA,
+                    ATTR_EVENT_TYPE, ATTR_SENSOR_TYPE, ATTR_SENSOR_UNIQUE_ID,
+                    ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES, ATTR_WEBHOOK_DATA,
+                    ATTR_WEBHOOK_ENCRYPTED, ATTR_WEBHOOK_ENCRYPTED_DATA,
+                    ATTR_WEBHOOK_TYPE, CONF_SECRET, DATA_DELETED_IDS,
+                    DATA_REGISTRATIONS, DOMAIN, SIGNAL_SENSOR_UPDATE,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
+                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                    WEBHOOK_TYPE_REGISTER_SENSOR, WEBHOOK_TYPE_RENDER_TEMPLATE,
                     WEBHOOK_TYPE_UPDATE_LOCATION,
-                    WEBHOOK_TYPE_UPDATE_REGISTRATION)
+                    WEBHOOK_TYPE_UPDATE_REGISTRATION,
+                    WEBHOOK_TYPE_UPDATE_SENSOR_STATES)
 
 from .helpers import (_decrypt_payload, empty_okay_response,
                       registration_context, safe_registration, savable_state)
@@ -160,3 +163,67 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             return empty_okay_response()
 
         return json_response(safe_registration(new_registration))
+
+    if webhook_type == WEBHOOK_TYPE_REGISTER_SENSOR:
+        entity_type = data[ATTR_SENSOR_TYPE]
+
+        unique_id = data[ATTR_SENSOR_UNIQUE_ID]
+
+        unique_store_key = "{}_{}".format(webhook_id, unique_id)
+
+        if unique_store_key in hass.data[DOMAIN][entity_type]:
+            _LOGGER.error("Refusing to re-register existing sensor %s!",
+                          unique_id)
+            return empty_okay_response()
+
+        data[CONF_WEBHOOK_ID] = webhook_id
+
+        hass.data[DOMAIN][entity_type][unique_store_key] = data
+
+        try:
+            await store.async_save(savable_state(hass))
+        except HomeAssistantError as ex:
+            _LOGGER.error("Error updating mobile_app registration: %s", ex)
+            return empty_okay_response()
+
+        hass.async_create_task(async_load_platform(hass,
+                                                   data[ATTR_SENSOR_TYPE],
+                                                   DOMAIN, data, {DOMAIN: {}}))
+
+        return json_response({"status": "registered"})
+
+    if webhook_type == WEBHOOK_TYPE_UPDATE_SENSOR_STATES:
+        resp = {}
+        for sensor in data:
+            entity_type = sensor[ATTR_SENSOR_TYPE]
+
+            unique_id = sensor[ATTR_SENSOR_UNIQUE_ID]
+
+            unique_store_key = "{}_{}".format(webhook_id, unique_id)
+
+            if unique_store_key not in hass.data[DOMAIN][entity_type]:
+                _LOGGER.error("Refusing to update non-registered sensor: %s",
+                              unique_store_key)
+                resp[unique_id] = {
+                    "status": "error",
+                    "message": "not_registered"
+                }
+                continue
+
+            entry = hass.data[DOMAIN][entity_type][unique_store_key]
+
+            new_state = {**entry, **sensor}
+
+            hass.data[DOMAIN][entity_type][unique_store_key] = new_state
+
+            try:
+                await store.async_save(savable_state(hass))
+            except HomeAssistantError as ex:
+                _LOGGER.error("Error updating mobile_app registration: %s", ex)
+                return empty_okay_response()
+
+            async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
+
+            resp[unique_id] = {"status": "okay"}
+
+        return json_response(resp)

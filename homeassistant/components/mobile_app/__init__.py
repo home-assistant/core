@@ -1,7 +1,9 @@
 """Integrates Native Apps to Home Assistant."""
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import (DATA_DELETED_IDS, DATA_REGISTRATIONS, DATA_STORE, DOMAIN,
+from .const import (DATA_DELETED_IDS, DATA_REGISTRATIONS,
+                    DATA_BINARY_SENSOR, DATA_SENSOR, DATA_STORE, DOMAIN,
                     STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import register_http_handlers
@@ -18,17 +20,26 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()
     if app_config is None:
-        app_config = {DATA_DELETED_IDS: [], DATA_REGISTRATIONS: {}}
+        app_config = {
+            DATA_BINARY_SENSOR: {},
+            DATA_DELETED_IDS: [],
+            DATA_REGISTRATIONS: {},
+            DATA_SENSOR: {}
+        }
 
-    if hass.data.get(DOMAIN) is None:
-        hass.data[DOMAIN] = {DATA_DELETED_IDS: [], DATA_REGISTRATIONS: {}}
-
-    hass.data[DOMAIN][DATA_DELETED_IDS] = app_config[DATA_DELETED_IDS]
-    hass.data[DOMAIN][DATA_REGISTRATIONS] = app_config[DATA_REGISTRATIONS]
+    hass.data[DOMAIN] = app_config
     hass.data[DOMAIN][DATA_STORE] = store
 
     for registration in app_config[DATA_REGISTRATIONS].values():
         setup_registration(hass, store, registration)
+
+    if app_config[DATA_SENSOR]:
+        hass.async_create_task(async_load_platform(hass, DATA_SENSOR, DOMAIN,
+                                                   None, config))
+
+    if app_config[DATA_BINARY_SENSOR]:
+        hass.async_create_task(async_load_platform(hass, DATA_BINARY_SENSOR,
+                                                   DOMAIN, None, config))
 
     register_http_handlers(hass, store)
     register_websocket_handlers(hass)
