@@ -133,7 +133,7 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             _LOGGER.error("Error when rendering template during mobile_app "
                           "webhook (device name: %s): %s",
                           registration[ATTR_DEVICE_NAME], ex)
-            return json_response(({"error": ex}), status=HTTP_BAD_REQUEST,
+            return json_response(({"error": str(ex)}), status=HTTP_BAD_REQUEST,
                                  headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
