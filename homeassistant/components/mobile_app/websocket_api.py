@@ -1,8 +1,7 @@
 """Websocket API for mobile_app."""
 import voluptuous as vol
 
-from homeassistant.components.cloud import (async_delete_cloudhook,
-                                            async_is_logged_in)
+from homeassistant.components.cloud import async_delete_cloudhook
 from homeassistant.components.websocket_api import (ActiveConnection,
                                                     async_register_command,
                                                     async_response,
@@ -18,8 +17,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (DATA_DELETED_IDS, DATA_REGISTRATIONS, DATA_STORE,
-                    CONF_USER_ID, DOMAIN)
+from .const import (CONF_CLOUDHOOK_URL, CONF_USER_ID, DATA_DELETED_IDS,
+                    DATA_REGISTRATIONS, DATA_STORE, DOMAIN)
 
 from .helpers import safe_registration, savable_state
 
@@ -137,7 +136,8 @@ async def websocket_delete_registration(hass: HomeAssistantType,
         return error_message(
             msg['id'], 'internal_error', 'Error deleting registration')
 
-    if async_is_logged_in(hass):
+    if (CONF_CLOUDHOOK_URL in registration and
+            "cloud" in hass.config.components):
         await async_delete_cloudhook(hass, webhook_id)
 
     connection.send_message(result_message(msg['id'], 'ok'))

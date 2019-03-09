@@ -4,8 +4,7 @@ from typing import Dict
 from aiohttp.web import Response, Request
 
 from homeassistant.auth.util import generate_secret
-from homeassistant.components.cloud import (async_create_cloudhook,
-                                            async_is_logged_in)
+from homeassistant.components.cloud import async_create_cloudhook
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import (HTTP_CREATED, HTTP_INTERNAL_SERVER_ERROR,
@@ -47,7 +46,7 @@ class RegistrationsView(HomeAssistantView):
 
         webhook_id = generate_secret()
 
-        if async_is_logged_in(hass):
+        if "cloud" in hass.config.components:
             cloudhook = await async_create_cloudhook(hass, webhook_id)
 
             if cloudhook is not None:
