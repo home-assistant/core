@@ -386,7 +386,7 @@ async def test_set_turn_off(hass, air_conditioner):
 
 
 async def test_set_turn_on(hass, air_conditioner):
-    """Test the a/c is turned off successfully."""
+    """Test the a/c is turned on successfully."""
     air_conditioner.status.update_attribute_value(Attribute.switch, 'off')
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[air_conditioner])
     state = hass.states.get('climate.air_conditioner')

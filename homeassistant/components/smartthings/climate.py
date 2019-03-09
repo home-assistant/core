@@ -399,7 +399,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     @property
     def fan_list(self):
         """Return the list of available fan modes."""
-        return list(FAN_MODE_TO_SPEED.keys())
+        return list(FAN_MODE_TO_SPEED)
 
     @property
     def is_on(self):
@@ -409,7 +409,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return list(STATE_TO_AC_MODE.keys())
+        return list(STATE_TO_AC_MODE)
 
     @property
     def supported_features(self):
