@@ -280,8 +280,9 @@ class AuthStore:
 
     async def _async_load_task(self) -> None:
         """Load the users."""
-        [ent_reg, data] = await asyncio.gather(
+        [ent_reg, dev_reg, data] = await asyncio.gather(
             self.hass.helpers.entity_registry.async_get_registry(),
+            self.hass.helpers.device_registry.async_get_registry(),
             self._store.async_load(),
         )
 
@@ -290,7 +291,9 @@ class AuthStore:
         if self._users is not None:
             return
 
-        self._perm_lookup = perm_lookup = PermissionLookup(ent_reg)
+        self._perm_lookup = perm_lookup = PermissionLookup(
+            ent_reg, dev_reg
+        )
 
         if data is None:
             self._set_defaults()
