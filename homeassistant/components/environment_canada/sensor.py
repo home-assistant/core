@@ -170,4 +170,3 @@ class ECSensor(Entity):
             ATTR_STATION: self.ec_data.conditions.get('station'),
             ATTR_HIDDEN: hidden
         }
-
