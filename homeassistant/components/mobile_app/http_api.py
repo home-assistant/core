@@ -46,11 +46,9 @@ class RegistrationsView(HomeAssistantView):
 
         webhook_id = generate_secret()
 
-        if "cloud" in hass.config.components:
-            cloudhook = await async_create_cloudhook(hass, webhook_id)
-
-            if cloudhook is not None:
-                data[CONF_CLOUDHOOK_URL] = cloudhook[CONF_CLOUDHOOK_URL]
+        if hass.components.cloud.async_active_subscription():
+            data[CONF_CLOUDHOOK_URL] = \
+                await async_create_cloudhook(hass, webhook_id)
 
         data[CONF_WEBHOOK_ID] = webhook_id
 

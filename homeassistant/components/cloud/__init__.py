@@ -91,27 +91,36 @@ class CloudNotAvailable(HomeAssistantError):
 
 @bind_hass
 @callback
-def async_is_logged_in(hass):
+def async_is_logged_in(hass) -> bool:
     """Test if user is logged in."""
     return DOMAIN in hass.data and hass.data[DOMAIN].is_logged_in
 
 
 @bind_hass
-async def async_create_cloudhook(hass, webhook_id):
+@callback
+def async_active_subscription(hass) -> bool:
+    """Test if user has an active subscription."""
+    return \
+        async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
+
+
+@bind_hass
+async def async_create_cloudhook(hass, webhook_id: str) -> str:
     """Create a cloudhook."""
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
-    return await hass.data[DOMAIN].cloudhooks.async_create(webhook_id)
+    hook = await hass.data[DOMAIN].cloudhooks.async_create(webhook_id, True)
+    return hook['cloudhook_url']
 
 
 @bind_hass
-async def async_delete_cloudhook(hass, webhook_id):
+async def async_delete_cloudhook(hass, webhook_id: str) -> None:
     """Delete a cloudhook."""
-    if not async_is_logged_in(hass):
+    if DOMAIN not in hass.data:
         raise CloudNotAvailable
 
-    return await hass.data[DOMAIN].cloudhooks.async_delete(webhook_id)
+    await hass.data[DOMAIN].cloudhooks.async_delete(webhook_id)
 
 
 def is_cloudhook_request(request):
