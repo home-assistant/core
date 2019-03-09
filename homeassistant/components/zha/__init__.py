@@ -32,7 +32,7 @@ REQUIREMENTS = [
     'bellows-homeassistant==0.7.1',
     'zigpy-homeassistant==0.3.0',
     'zigpy-xbee-homeassistant==0.1.2',
-    'zha-quirks==0.0.6',
+    'zha-quirks==0.0.7',
     'zigpy-deconz==0.1.2'
 ]
 
