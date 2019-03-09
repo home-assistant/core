@@ -122,7 +122,7 @@ def test_derivative():
     }
     yield from entity.async_update()
 
-    assert abs(entity.state - Decimal(0.033)) < 0.00001, \
+    assert abs(entity.state - 0.033) < 0.00001, \
         'state should be hourly usage calculated from first and second update'
 
     assert entity.unit_of_measurement == 'm3/h'
