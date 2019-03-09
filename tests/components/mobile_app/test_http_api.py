@@ -5,7 +5,7 @@ import pytest
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.const import CONF_WEBHOOK_ID
 
-from .const import REGISTER
+from .const import REGISTER, REGISTER_BAD_COMPONENT
 from . import authed_api_client  # noqa: F401
 
 
@@ -57,3 +57,14 @@ async def test_registration(hass_client, authed_api_client):  # noqa: F811
 
     webhook_json = await resp.json()
     assert webhook_json == {'rendered': 'Hello world'}
+
+
+async def test_register_invalid_component(authed_api_client):  # noqa: F811
+    """Test that registration with invalid component fails."""
+    resp = await authed_api_client.post(
+        '/api/mobile_app/registrations', json=REGISTER_BAD_COMPONENT
+    )
+
+    assert resp.status == 400
+    register_json = await resp.json()
+    assert 'message' in register_json

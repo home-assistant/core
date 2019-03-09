@@ -23,6 +23,7 @@ from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
+from homeassistant.loader import get_component
 from homeassistant.util import slugify as util_slugify
 
 # pylint: disable=invalid-name

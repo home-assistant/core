@@ -7,16 +7,17 @@ from homeassistant.auth.util import generate_secret
 from homeassistant.components.cloud import async_create_cloudhook
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import (HTTP_CREATED, HTTP_INTERNAL_SERVER_ERROR,
-                                 CONF_WEBHOOK_ID)
+from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_CREATED,
+                                 HTTP_INTERNAL_SERVER_ERROR, CONF_WEBHOOK_ID)
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.loader import get_component
 
-from .const import (DATA_REGISTRATIONS, ATTR_SUPPORTS_ENCRYPTION,
+from .const import (ATTR_APP_COMPONENT, ATTR_SUPPORTS_ENCRYPTION,
                     CONF_CLOUDHOOK_URL, CONF_SECRET, CONF_USER_ID,
-                    DOMAIN, REGISTRATION_SCHEMA)
+                    DATA_REGISTRATIONS, DOMAIN, REGISTRATION_SCHEMA)
 
 from .helpers import supports_encryption, savable_state
 
@@ -43,6 +44,11 @@ class RegistrationsView(HomeAssistantView):
     async def post(self, request: Request, data: Dict) -> Response:
         """Handle the POST request for registration."""
         hass = request.app['hass']
+
+        if (ATTR_APP_COMPONENT in data and
+                get_component(hass, data[ATTR_APP_COMPONENT]) is None):
+            msg = "{} is not a component".format(data[ATTR_APP_COMPONENT])
+            return self.json_message(msg, HTTP_BAD_REQUEST)
 
         webhook_id = generate_secret()
 
