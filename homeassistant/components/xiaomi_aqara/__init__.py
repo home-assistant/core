@@ -89,7 +89,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_GATEWAYS, default={}):
             vol.All(cv.ensure_list, vol.Any(
-                vol.All([{vol.Optional(CONF_MAC, default=None): vol.Any(GW_MAC, None)}], vol.Length(max=1)),
+                vol.All([{vol.Optional(CONF_MAC, default=None): 
+                          vol.Any(GW_MAC, None)}], vol.Length(max=1)),
                 vol.All([{vol.Required(CONF_MAC): GW_MAC}], vol.Length(min=2))
             ), [GATEWAY_CONFIG], [_fix_conf_defaults]),
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
