@@ -239,11 +239,11 @@ async def test_air_conditioner_entity_state(hass, air_conditioner):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
         SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | \
         SUPPORT_TARGET_TEMPERATURE | SUPPORT_ON_OFF
-    assert state.attributes[ATTR_OPERATION_LIST] == [
-        STATE_AUTO, STATE_COOL, STATE_DRY, STATE_HEAT, STATE_FAN_ONLY]
+    assert sorted(state.attributes[ATTR_OPERATION_LIST]) == [
+        STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT]
     assert state.attributes[ATTR_FAN_MODE] == 'medium'
-    assert state.attributes[ATTR_FAN_LIST] == \
-        ['auto', 'low', 'medium', 'high', 'turbo']
+    assert sorted(state.attributes[ATTR_FAN_LIST]) == \
+        ['auto', 'high', 'low', 'medium', 'turbo']
     assert state.attributes[ATTR_TEMPERATURE] == 23
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 24
     assert state.attributes['drlc_status_duration'] == 0
