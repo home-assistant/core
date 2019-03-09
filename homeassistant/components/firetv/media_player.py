@@ -252,6 +252,7 @@ class ADBDevice(MediaPlayerDevice):
     @property
     def should_poll(self):
         """Device should be polled."""
+        return True
 
     @property
     def state(self):
