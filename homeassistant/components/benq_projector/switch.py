@@ -1,9 +1,9 @@
 """
-Use serial protocol of Acer projector to obtain state of the projector.
 
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/switch.acer_projector/
+Obtain and set state of a Benq projector over telnet-to-serial gateway
+
 """
+
 import logging
 import threading
 
@@ -21,14 +21,10 @@ DEFAULT_TIMEOUT = None
 DEFAULT_WRITE_TIMEOUT = None
 
 LAMP_MODE = 'Lamp Mode'
-
 ICON = 'mdi:projector'
-
 INPUT_SOURCE = 'Input Source'
-
 POWER = 'Power'
 LAMP_HOURS = 'Lamp Hours'
-
 MODEL = 'Model'
 
 # Commands known to the projector
@@ -50,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Connect with serial port and return Acer Projector."""
+    """Connect with telnet host and return Benq Projector."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
@@ -58,14 +54,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class BenqSwitch(SwitchDevice):
-    """Represents an Acer Projector as a switch."""
+    """Represents an Benq Projector as a switch."""
 
     def __init__(self, host, name, **kwargs):
         """Init of the Benq projector."""
         import telnetlib
 
-        self.telnet = telnetlib.Telnet() #host, timeout=5)
-#       self.telnet.set_debuglevel(100)
+        self.telnet = telnetlib.Telnet()
         self._host = host
         self._name = name
         self._unique_id = host
@@ -90,7 +85,7 @@ class BenqSwitch(SwitchDevice):
     def _write_read(self, msg):
         """Write to the projector and read the return."""
 
-        for x in range(1, 5):
+        for _ in range(1, 5):
             ready = self._handshake()
             if ready:
                 break
@@ -134,7 +129,7 @@ class BenqSwitch(SwitchDevice):
             self._block = False
         elif awns == '*Block item#':
             self._block = True
-        else:    
+        else:
             self._available = False
 
     @property
@@ -177,7 +172,7 @@ class BenqSwitch(SwitchDevice):
 
             self._update_state(awns)
 
-            if self._state and self._block == False:
+            if self._state and not self._block:
                 for key in self._attributes:
                     msg = CMD_DICT.get(key, None)
                     if msg:
@@ -201,5 +196,5 @@ class BenqSwitch(SwitchDevice):
             self._open()
             self._update_state(self._write_read_format(CMD_DICT[STATE_OFF]))
             self._close()
-                
+
         self.schedule_update_ha_state(True)
