@@ -70,7 +70,6 @@ class CPPMDeviceScanner(DeviceScanner):
 
     def get_cppm_data(self):
         """Retrieve data from Aruba Clearpass and return parsed result."""
-
         endpoints = self._cppm.get_endpoints(100)['_embedded']['items']
         devices = []
         for item in endpoints:
