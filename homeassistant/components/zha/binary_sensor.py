@@ -176,3 +176,21 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
                 ATTR_LEVEL: self._state and self._level or 0
             })
         return self._device_state_attributes
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the binary sensor."""
+        await super().async_update()
+        if self._level_channel:
+            self._level = await self._level_channel.get_attribute_value(
+                'current_level')
+        if self._on_off_channel:
+            self._state = await self._on_off_channel.get_attribute_value(
+                'on_off')
+        if self._zone_channel:
+            value = await self._zone_channel.get_attribute_value(
+                'zone_status')
+            if value is not None:
+                self._state = value & 3
+        if self._attr_channel:
+            self._state = await self._attr_channel.get_attribute_value(
+                self._attr_channel.value_attribute)

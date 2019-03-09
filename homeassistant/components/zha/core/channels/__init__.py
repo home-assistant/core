@@ -220,14 +220,14 @@ class AttributeListeningChannel(ZigbeeChannel):
         self.name = ATTRIBUTE_CHANNEL
         attr = self._report_config[0].get('attr')
         if isinstance(attr, str):
-            self._value_attribute = get_attr_id_by_name(self.cluster, attr)
+            self.value_attribute = get_attr_id_by_name(self.cluster, attr)
         else:
-            self._value_attribute = attr
+            self.value_attribute = attr
 
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
-        if attrid == self._value_attribute:
+        if attrid == self.value_attribute:
             async_dispatcher_send(
                 self._zha_device.hass,
                 "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
