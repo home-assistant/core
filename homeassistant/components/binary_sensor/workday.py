@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PROVINCE): cv.string,
     vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS):
         vol.All(cv.ensure_list, [vol.In(ALLOWED_DAYS)]),
-	vol.Optional(CONF_ADD_HOLIDAYS): vol.All(cv.ensure_list, cv.string),
+    vol.Optional(CONF_ADD_HOLIDAYS): vol.All(cv.ensure_list, cv.string),
 })
 
 
