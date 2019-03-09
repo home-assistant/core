@@ -81,7 +81,7 @@ def supports_encryption() -> bool:
 
 def safe_registration(registration: Dict) -> Dict:
     """Return a registration without sensitive values."""
-    # Sensitive values: webhook_id, secret, cloudhook_id, cloudhook_url
+    # Sensitive values: webhook_id, secret, cloudhook_url
     return {
         ATTR_APP_DATA: registration[ATTR_APP_DATA],
         ATTR_APP_ID: registration[ATTR_APP_ID],

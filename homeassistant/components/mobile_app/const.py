@@ -10,7 +10,6 @@ DOMAIN = 'mobile_app'
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-CONF_CLOUDHOOK_ID = 'cloudhook_id'
 CONF_CLOUDHOOK_URL = 'cloudhook_url'
 CONF_SECRET = 'secret'
 CONF_USER_ID = 'user_id'

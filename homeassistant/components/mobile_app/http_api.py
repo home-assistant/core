@@ -15,8 +15,8 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (DATA_REGISTRATIONS, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_CLOUDHOOK_ID, CONF_CLOUDHOOK_URL, CONF_SECRET,
-                    CONF_USER_ID, DOMAIN, REGISTRATION_SCHEMA)
+                    CONF_CLOUDHOOK_URL, CONF_SECRET, CONF_USER_ID,
+                    DOMAIN, REGISTRATION_SCHEMA)
 
 from .helpers import supports_encryption, savable_state
 
@@ -50,7 +50,6 @@ class RegistrationsView(HomeAssistantView):
             cloudhook = await async_create_cloudhook(hass, webhook_id)
 
             if cloudhook is not None:
-                data[CONF_CLOUDHOOK_ID] = cloudhook[CONF_CLOUDHOOK_ID]
                 data[CONF_CLOUDHOOK_URL] = cloudhook[CONF_CLOUDHOOK_URL]
 
         data[CONF_WEBHOOK_ID] = webhook_id
@@ -73,7 +72,6 @@ class RegistrationsView(HomeAssistantView):
         setup_registration(hass, self._store, data)
 
         return self.json({
-            CONF_CLOUDHOOK_ID: data.get(CONF_CLOUDHOOK_ID),
             CONF_CLOUDHOOK_URL: data.get(CONF_CLOUDHOOK_URL),
             CONF_SECRET: data.get(CONF_SECRET),
             CONF_WEBHOOK_ID: data[CONF_WEBHOOK_ID],
