@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 FIRETV_DOMAIN = 'firetv'
 
-REQUIREMENTS = ['androidtv==0.0.9']
+REQUIREMENTS = ['https://github.com/JeffLIrion/python-androidtv/zipball/firetv#androidtv==0.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
