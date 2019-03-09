@@ -408,44 +408,9 @@ async def test_onoff_media_player(hass):
 
 
 async def test_onoff_climate(hass):
-    """Test OnOff trait support for climate domain."""
-    assert trait.OnOffTrait.supported(climate.DOMAIN, climate.SUPPORT_ON_OFF)
-
-    trt_on = trait.OnOffTrait(hass, State('climate.bla', STATE_ON),
-                              BASIC_CONFIG)
-
-    assert trt_on.sync_attributes() == {}
-
-    assert trt_on.query_attributes() == {
-        'on': True
-    }
-
-    trt_off = trait.OnOffTrait(hass, State('climate.bla', STATE_OFF),
-                               BASIC_CONFIG)
-
-    assert trt_off.query_attributes() == {
-        'on': False
-    }
-
-    on_calls = async_mock_service(hass, climate.DOMAIN, SERVICE_TURN_ON)
-    await trt_on.execute(
-        trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': True})
-    assert len(on_calls) == 1
-    assert on_calls[0].data == {
-        ATTR_ENTITY_ID: 'climate.bla',
-    }
-
-    off_calls = async_mock_service(hass, climate.DOMAIN,
-                                   SERVICE_TURN_OFF)
-
-    await trt_on.execute(
-        trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': False})
-    assert len(off_calls) == 1
-    assert off_calls[0].data == {
-        ATTR_ENTITY_ID: 'climate.bla',
-    }
+    """Test OnOff trait not supported for climate domain."""
+    assert not trait.OnOffTrait.supported(
+        climate.DOMAIN, climate.SUPPORT_ON_OFF)
 
 
 async def test_dock_vacuum(hass):
@@ -673,6 +638,48 @@ async def test_scene_script(hass):
     }
 
 
+async def test_temperature_setting_climate_onoff(hass):
+    """Test TemperatureSetting trait support for climate domain - range."""
+    assert not trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0)
+    assert trait.TemperatureSettingTrait.supported(
+        climate.DOMAIN, climate.SUPPORT_OPERATION_MODE)
+
+    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+
+    trt = trait.TemperatureSettingTrait(hass, State(
+        'climate.bla', climate.STATE_AUTO, {
+            ATTR_SUPPORTED_FEATURES: (
+                climate.SUPPORT_OPERATION_MODE | climate.SUPPORT_ON_OFF),
+            climate.ATTR_OPERATION_MODE: climate.STATE_COOL,
+            climate.ATTR_OPERATION_LIST: [
+                climate.STATE_COOL,
+                climate.STATE_HEAT,
+                climate.STATE_AUTO,
+            ],
+            climate.ATTR_MIN_TEMP: None,
+            climate.ATTR_MAX_TEMP: None,
+        }), BASIC_CONFIG)
+    assert trt.sync_attributes() == {
+        'availableThermostatModes': 'off,on,cool,heat,heatcool',
+        'thermostatTemperatureUnit': 'F',
+    }
+    assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
+
+    calls = async_mock_service(
+        hass, climate.DOMAIN, SERVICE_TURN_ON)
+    await trt.execute(trait.COMMAND_THERMOSTAT_SET_MODE, BASIC_DATA, {
+        'thermostatMode': 'on',
+    })
+    assert len(calls) == 1
+
+    calls = async_mock_service(
+        hass, climate.DOMAIN, SERVICE_TURN_OFF)
+    await trt.execute(trait.COMMAND_THERMOSTAT_SET_MODE, BASIC_DATA, {
+        'thermostatMode': 'off',
+    })
+    assert len(calls) == 1
+
+
 async def test_temperature_setting_climate_range(hass):
     """Test TemperatureSetting trait support for climate domain - range."""
     assert not trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0)
@@ -685,6 +692,7 @@ async def test_temperature_setting_climate_range(hass):
         'climate.bla', climate.STATE_AUTO, {
             climate.ATTR_CURRENT_TEMPERATURE: 70,
             climate.ATTR_CURRENT_HUMIDITY: 25,
+            ATTR_SUPPORTED_FEATURES: climate.SUPPORT_OPERATION_MODE,
             climate.ATTR_OPERATION_MODE: climate.STATE_AUTO,
             climate.ATTR_OPERATION_LIST: [
                 STATE_OFF,
@@ -755,6 +763,8 @@ async def test_temperature_setting_climate_setpoint(hass):
 
     trt = trait.TemperatureSettingTrait(hass, State(
         'climate.bla', climate.STATE_AUTO, {
+            ATTR_SUPPORTED_FEATURES: (
+                climate.SUPPORT_OPERATION_MODE | climate.SUPPORT_ON_OFF),
             climate.ATTR_OPERATION_MODE: climate.STATE_COOL,
             climate.ATTR_OPERATION_LIST: [
                 STATE_OFF,
@@ -766,7 +776,7 @@ async def test_temperature_setting_climate_setpoint(hass):
             climate.ATTR_CURRENT_TEMPERATURE: 20
         }), BASIC_CONFIG)
     assert trt.sync_attributes() == {
-        'availableThermostatModes': 'off,cool',
+        'availableThermostatModes': 'off,on,cool',
         'thermostatTemperatureUnit': 'C',
     }
     assert trt.query_attributes() == {
