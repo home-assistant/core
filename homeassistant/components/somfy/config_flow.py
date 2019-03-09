@@ -60,7 +60,7 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
 
         try:
             with async_timeout.timeout(10):
-                url = await self._get_authorization_url()
+                url, _ = await self._get_authorization_url()
         except asyncio.TimeoutError:
             return self.async_abort(reason='authorize_url_timeout')
         except Exception:  # pylint: disable=broad-except
