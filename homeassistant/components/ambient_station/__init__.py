@@ -364,7 +364,7 @@ class AmbientStation:
                 }
 
             # If the websocket disconnects and reconnects, the on_subscribed
-            # hanlder will get called again; in that case, we don't want to
+            # handler will get called again; in that case, we don't want to
             # attempt forward setup of the config entry (because it will have
             # already been done):
             if not self._entry_setup_complete:
