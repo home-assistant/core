@@ -167,9 +167,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for capability in broker.get_assigned(device.device_id, 'sensor'):
             if capability == Capability.three_axis:
                 sensors.extend(
-                    [SmartThingsThreeAxisSensor(
-                        device, index) for index
-                        in range(len(THREE_AXIS_NAMES))])
+                    [SmartThingsThreeAxisSensor(device, index)
+                     for index in range(len(THREE_AXIS_NAMES))])
             else:
                 maps = CAPABILITY_TO_SENSORS[capability]
                 sensors.extend([
