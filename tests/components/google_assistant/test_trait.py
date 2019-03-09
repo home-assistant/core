@@ -649,7 +649,9 @@ async def test_temperature_setting_climate_onoff(hass):
     trt = trait.TemperatureSettingTrait(hass, State(
         'climate.bla', climate.STATE_AUTO, {
             ATTR_SUPPORTED_FEATURES: (
-                climate.SUPPORT_OPERATION_MODE | climate.SUPPORT_ON_OFF),
+                climate.SUPPORT_OPERATION_MODE | climate.SUPPORT_ON_OFF |
+                climate.SUPPORT_TARGET_TEMPERATURE_HIGH |
+                climate.SUPPORT_TARGET_TEMPERATURE_LOW),
             climate.ATTR_OPERATION_MODE: climate.STATE_COOL,
             climate.ATTR_OPERATION_LIST: [
                 climate.STATE_COOL,
@@ -692,7 +694,10 @@ async def test_temperature_setting_climate_range(hass):
         'climate.bla', climate.STATE_AUTO, {
             climate.ATTR_CURRENT_TEMPERATURE: 70,
             climate.ATTR_CURRENT_HUMIDITY: 25,
-            ATTR_SUPPORTED_FEATURES: climate.SUPPORT_OPERATION_MODE,
+            ATTR_SUPPORTED_FEATURES:
+                climate.SUPPORT_OPERATION_MODE |
+                climate.SUPPORT_TARGET_TEMPERATURE_HIGH |
+                climate.SUPPORT_TARGET_TEMPERATURE_LOW,
             climate.ATTR_OPERATION_MODE: climate.STATE_AUTO,
             climate.ATTR_OPERATION_LIST: [
                 STATE_OFF,
@@ -716,7 +721,6 @@ async def test_temperature_setting_climate_range(hass):
         'thermostatTemperatureSetpointLow': 18.3,
         'thermostatTemperatureSetpointHigh': 23.9,
     }
-    assert trt.can_execute(trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, {})
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, {})
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
 
@@ -785,7 +789,6 @@ async def test_temperature_setting_climate_setpoint(hass):
         'thermostatTemperatureSetpoint': 18,
     }
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, {})
-    assert trt.can_execute(trait.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, {})
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
 
     calls = async_mock_service(
@@ -795,6 +798,54 @@ async def test_temperature_setting_climate_setpoint(hass):
         await trt.execute(
             trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, BASIC_DATA,
             {'thermostatTemperatureSetpoint': -100})
+
+    await trt.execute(
+        trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, BASIC_DATA,
+        {'thermostatTemperatureSetpoint': 19})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'climate.bla',
+        ATTR_TEMPERATURE: 19
+    }
+
+
+async def test_temperature_setting_climate_setpoint_auto(hass):
+    """
+    Test TemperatureSetting trait support for climate domain.
+
+    Setpoint in auto mode.
+    """
+    hass.config.units.temperature_unit = TEMP_CELSIUS
+
+    trt = trait.TemperatureSettingTrait(hass, State(
+        'climate.bla', climate.STATE_AUTO, {
+            ATTR_SUPPORTED_FEATURES: (
+                climate.SUPPORT_OPERATION_MODE | climate.SUPPORT_ON_OFF),
+            climate.ATTR_OPERATION_MODE: climate.STATE_AUTO,
+            climate.ATTR_OPERATION_LIST: [
+                STATE_OFF,
+                climate.STATE_AUTO,
+            ],
+            climate.ATTR_MIN_TEMP: 10,
+            climate.ATTR_MAX_TEMP: 30,
+            ATTR_TEMPERATURE: 18,
+            climate.ATTR_CURRENT_TEMPERATURE: 20
+        }), BASIC_CONFIG)
+    assert trt.sync_attributes() == {
+        'availableThermostatModes': 'off,on,heatcool',
+        'thermostatTemperatureUnit': 'C',
+    }
+    assert trt.query_attributes() == {
+        'thermostatMode': 'heatcool',
+        'thermostatTemperatureAmbient': 20,
+        'thermostatTemperatureSetpointHigh': 18,
+        'thermostatTemperatureSetpointLow': 18,
+    }
+    assert trt.can_execute(trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, {})
+    assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
+
+    calls = async_mock_service(
+        hass, climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE)
 
     await trt.execute(
         trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, BASIC_DATA,

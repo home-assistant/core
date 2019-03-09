@@ -583,15 +583,24 @@ class TemperatureSettingTrait(_Trait):
         if current_humidity is not None:
             response['thermostatHumidityAmbient'] = current_humidity
 
-        if (operation == climate.STATE_AUTO and
-                climate.ATTR_TARGET_TEMP_HIGH in attrs and
-                climate.ATTR_TARGET_TEMP_LOW in attrs):
-            response['thermostatTemperatureSetpointHigh'] = \
-                round(temp_util.convert(attrs[climate.ATTR_TARGET_TEMP_HIGH],
-                                        unit, TEMP_CELSIUS), 1)
-            response['thermostatTemperatureSetpointLow'] = \
-                round(temp_util.convert(attrs[climate.ATTR_TARGET_TEMP_LOW],
-                                        unit, TEMP_CELSIUS), 1)
+        if operation == climate.STATE_AUTO:
+            if (supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
+                    supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+                response['thermostatTemperatureSetpointHigh'] = \
+                    round(temp_util.convert(
+                        attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                        unit, TEMP_CELSIUS), 1)
+                response['thermostatTemperatureSetpointLow'] = \
+                    round(temp_util.convert(
+                        attrs[climate.ATTR_TARGET_TEMP_LOW],
+                        unit, TEMP_CELSIUS), 1)
+            else:
+                target_temp = attrs.get(ATTR_TEMPERATURE)
+                if target_temp is not None:
+                    target_temp = round(
+                        temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
+                    response['thermostatTemperatureSetpointHigh'] = target_temp
+                    response['thermostatTemperatureSetpointLow'] = target_temp
         else:
             target_temp = attrs.get(ATTR_TEMPERATURE)
             if target_temp is not None:
@@ -651,12 +660,21 @@ class TemperatureSettingTrait(_Trait):
                     "Lower bound for temperature range should be between "
                     "{} and {}".format(min_temp, max_temp))
 
+            supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+            svc_data = {
+                ATTR_ENTITY_ID: self.state.entity_id,
+            }
+
+            if(supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
+               supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+                svc_data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
+                svc_data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
+            else:
+                svc_data[ATTR_TEMPERATURE] = (temp_high + temp_low) / 2
+
             await self.hass.services.async_call(
-                climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    climate.ATTR_TARGET_TEMP_HIGH: temp_high,
-                    climate.ATTR_TARGET_TEMP_LOW: temp_low,
-                }, blocking=True, context=data.context)
+                climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, svc_data,
+                blocking=True, context=data.context)
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
             target_mode = params['thermostatMode']
@@ -669,10 +687,8 @@ class TemperatureSettingTrait(_Trait):
                     (SERVICE_TURN_ON
                      if target_mode == STATE_ON
                      else SERVICE_TURN_OFF),
-                    {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        climate.ATTR_OPERATION_MODE: target_mode,
-                    }, blocking=True, context=data.context)
+                    {ATTR_ENTITY_ID: self.state.entity_id},
+                    blocking=True, context=data.context)
             elif supported & climate.SUPPORT_OPERATION_MODE:
                 await self.hass.services.async_call(
                     climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE, {
