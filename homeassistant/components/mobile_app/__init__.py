@@ -6,7 +6,7 @@ from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS, DATA_REGISTRATIONS,
                     DATA_STORE, DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import register_http_handlers
-from .webhook import setup_device
+from .webhook import register_deleted_webhooks, setup_device
 from .websocket_api import register_websocket_handlers
 
 DEPENDENCIES = ['device_tracker', 'http', 'webhook']
@@ -33,6 +33,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     register_http_handlers(hass, store)
     register_websocket_handlers(hass)
+    register_deleted_webhooks(hass, store)
 
     return True
 

@@ -45,6 +45,16 @@ from .helpers import (device_context, _decrypt_payload, empty_okay_response,
 _LOGGER = logging.getLogger(__name__)
 
 
+def register_deleted_webhooks(hass: HomeAssistantType, store: Store):
+    """Register previously deleted webhook IDs so we can return 410."""
+    for deleted_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
+        try:
+            webhook_register(hass, DOMAIN, "Deleted Webhook", deleted_id,
+                             partial(handle_webhook, store))
+        except ValueError:
+            pass
+
+
 def setup_device(hass: HomeAssistantType, store: Store, device: Dict) -> None:
     """Register the webhook for a device and loads the app component."""
     device_name = 'Mobile App: {}'.format(device[ATTR_DEVICE_NAME])
