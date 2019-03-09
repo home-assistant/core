@@ -149,4 +149,5 @@ class ZhaDeviceEntity(ZhaEntity):
         if battery is not None:
             # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
             battery = battery / 2
+            battery = int(round(battery))
             self._device_state_attributes['battery_level'] = battery
