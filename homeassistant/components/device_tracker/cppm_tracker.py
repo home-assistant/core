@@ -43,16 +43,15 @@ def get_scanner(hass, config):
         'client': config[DOMAIN][CLIENT_ID]
     }
     cppm = ClearPass(data)
-    if cppm.access_token is not None:
-        new_scan = CPPMDeviceScanner(config[DOMAIN], cppm)
-        return new_scan
-    return None
+    if cppm.access_token is None:
+        return None
+    return CPPMDeviceScanner(cppm)
 
 
 class CPPMDeviceScanner(DeviceScanner):
     """Initialize class."""
 
-    def __init__(self, config, cppm):
+    def __init__(self, cppm):
         """Initialize class."""
         self._cppm = cppm
         self.results = None
@@ -64,9 +63,11 @@ class CPPMDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Retrieve device name."""
-        return [device['name'] for device in self.results]
+        name = next((
+            result['name'] for result in self.results
+            if result['mac'] == device), None)
+        return name
 
-    @Throttle(SCAN_INTERVAL)
     def get_cppm_data(self):
         """Retrieve data from Aruba Clearpass and return parsed result."""
         _LOGGER.debug("Access Token: %s", self._cppm.access_token)
@@ -82,4 +83,5 @@ class CPPMDeviceScanner(DeviceScanner):
                 devices.append(device)
             else:
                 continue
+        _LOGGER.debug("Devices: %s", devices)
         self.results = devices
