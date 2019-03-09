@@ -1013,7 +1013,7 @@ pydukeenergy==0.0.6
 pyebox==1.1.4
 
 # homeassistant.components.water_heater.econet
-pyeconet==0.0.9
+pyeconet==0.0.10
 
 # homeassistant.components.switch.edimax
 pyedimax==0.1
