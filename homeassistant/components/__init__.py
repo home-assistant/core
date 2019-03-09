@@ -166,6 +166,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             _LOGGER.error(err)
             return
 
+        # auth only processed during startup
         await conf_util.async_process_ha_core_config(
             hass, conf.get(ha.DOMAIN) or {})
 
