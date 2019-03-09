@@ -84,7 +84,6 @@ class BenqSwitch(SwitchDevice):
 
     def _write_read(self, msg):
         """Write to the projector and read the return."""
-
         for _ in range(1, 5):
             ready = self._handshake()
             if ready:
