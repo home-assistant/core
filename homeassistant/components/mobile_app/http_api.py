@@ -1,4 +1,5 @@
 """Provides an HTTP API for mobile_app."""
+import uuid
 from typing import Dict
 
 from aiohttp.web import Response, Request
@@ -14,9 +15,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (DATA_REGISTRATIONS, ATTR_SUPPORTS_ENCRYPTION,
+from .const import (ATTR_DEVICE_ID, ATTR_SUPPORTS_ENCRYPTION,
                     CONF_CLOUDHOOK_URL, CONF_SECRET, CONF_USER_ID,
-                    DOMAIN, REGISTRATION_SCHEMA)
+                    DATA_REGISTRATIONS, DOMAIN, REGISTRATION_SCHEMA)
 
 from .helpers import supports_encryption, savable_state
 
@@ -51,6 +52,8 @@ class RegistrationsView(HomeAssistantView):
 
             if cloudhook is not None:
                 data[CONF_CLOUDHOOK_URL] = cloudhook[CONF_CLOUDHOOK_URL]
+
+        data[ATTR_DEVICE_ID] = str(uuid.uuid4()).replace("-", "")
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
