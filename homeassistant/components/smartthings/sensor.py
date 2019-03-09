@@ -252,5 +252,5 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity):
         three_axis = self._device.status.attributes[Attribute.three_axis].value
         try:
             return three_axis[self._index]
-        except (TypeError, KeyError, IndexError):
+        except (TypeError, IndexError):
             return None
