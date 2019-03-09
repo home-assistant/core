@@ -45,6 +45,7 @@ def get_scanner(hass, config):
     cppm = ClearPass(data)
     if cppm.access_token is None:
         return None
+    _LOGGER.debug("Successfully received Access Token.")
     return CPPMDeviceScanner(cppm)
 
 
@@ -70,7 +71,6 @@ class CPPMDeviceScanner(DeviceScanner):
 
     def get_cppm_data(self):
         """Retrieve data from Aruba Clearpass and return parsed result."""
-        _LOGGER.debug("Access Token: %s", self._cppm.access_token)
 
         endpoints = self._cppm.get_endpoints(100)['_embedded']['items']
         devices = []
