@@ -108,7 +108,7 @@ async def test_webhook_returns_error_incorrect_json(webhook_client, caplog):  # 
 
     assert resp.status == 400
     json = await resp.json()
-    assert json == []
+    assert json == {}
     assert 'invalid JSON' in caplog.text
 
 

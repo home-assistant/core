@@ -64,9 +64,9 @@ def device_context(device: Dict) -> Context:
     return Context(user_id=device[CONF_USER_ID])
 
 
-def empty_okay_response(headers: Dict = None) -> Response:
+def empty_okay_response(headers: Dict = None, status: int = 200) -> Response:
     """Return a Response with empty JSON object and a 200."""
-    return Response(body='{}', status=200, content_type='application/json',
+    return Response(body='{}', status=status, content_type='application/json',
                     headers=headers)
 
 

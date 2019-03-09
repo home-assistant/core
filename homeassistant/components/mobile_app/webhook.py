@@ -63,13 +63,15 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
     if webhook_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
         return Response(status=410)
 
+    headers = {}
+
     device = hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id]
 
     try:
         req_data = await request.json()
     except ValueError:
         _LOGGER.warning('Received invalid JSON from mobile_app')
-        return json_response([], status=HTTP_BAD_REQUEST)
+        return empty_okay_response(status=HTTP_BAD_REQUEST)
 
     try:
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
@@ -77,8 +79,6 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         err = vol.humanize.humanize_error(req_data, ex)
         _LOGGER.error('Received invalid webhook payload: %s', err)
         return empty_okay_response()
-
-    headers = {}
 
     via_cloud = is_cloudhook_request(request)
 
