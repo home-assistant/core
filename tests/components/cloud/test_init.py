@@ -190,10 +190,9 @@ async def test_create_cloudhook_no_login(hass):
     assert len(mock_create.mock_calls) == 0
 
 
-async def test_delete_cloudhook_no_login(hass):
+async def test_delete_cloudhook_no_setup(hass):
     """Test delete cloudhook when not logged in."""
-    assert await async_setup_component(hass, 'cloud', {})
-    coro = mock_coro({'yo': 'hey'})
+    coro = mock_coro()
     with patch('homeassistant.components.cloud.cloudhooks.'
                'Cloudhooks.async_delete', return_value=coro) as mock_delete, \
             pytest.raises(cloud.CloudNotAvailable):
@@ -205,28 +204,27 @@ async def test_delete_cloudhook_no_login(hass):
 async def test_create_cloudhook(hass):
     """Test create cloudhook."""
     assert await async_setup_component(hass, 'cloud', {})
-    coro = mock_coro({'yo': 'hey'})
+    coro = mock_coro({'cloudhook_url': 'hello'})
     with patch('homeassistant.components.cloud.cloudhooks.'
                'Cloudhooks.async_create', return_value=coro) as mock_create, \
             patch('homeassistant.components.cloud.async_is_logged_in',
                   return_value=True):
         result = await hass.components.cloud.async_create_cloudhook('hello')
 
-    assert result == {'yo': 'hey'}
+    assert result == 'hello'
     assert len(mock_create.mock_calls) == 1
 
 
 async def test_delete_cloudhook(hass):
     """Test delete cloudhook."""
     assert await async_setup_component(hass, 'cloud', {})
-    coro = mock_coro({'yo': 'hey'})
+    coro = mock_coro()
     with patch('homeassistant.components.cloud.cloudhooks.'
                'Cloudhooks.async_delete', return_value=coro) as mock_delete, \
             patch('homeassistant.components.cloud.async_is_logged_in',
                   return_value=True):
-        result = await hass.components.cloud.async_delete_cloudhook('hello')
+        await hass.components.cloud.async_delete_cloudhook('hello')
 
-    assert result == {'yo': 'hey'}
     assert len(mock_delete.mock_calls) == 1
 
 
@@ -244,3 +242,28 @@ async def test_async_logged_in(hass):
 
     # Cloud loaded, logged in
     assert hass.components.cloud.async_is_logged_in() is True
+
+
+async def test_async_active_subscription(hass):
+    """Test if is_logged_in works."""
+    # Cloud not loaded
+    assert hass.components.cloud.async_active_subscription() is False
+
+    assert await async_setup_component(hass, 'cloud', {})
+
+    # Cloud loaded, not logged in
+    assert hass.components.cloud.async_active_subscription() is False
+
+    hass.data['cloud'].id_token = "some token"
+
+    # Cloud loaded, logged in, invalid sub
+    with patch('jose.jwt.get_unverified_claims', return_value={
+            'custom:sub-exp': '{}-12-31'.format(utcnow().year - 1)
+    }):
+        assert hass.components.cloud.async_active_subscription() is False
+
+    # Cloud loaded, logged in, valid sub
+    with patch('jose.jwt.get_unverified_claims', return_value={
+            'custom:sub-exp': '{}-01-01'.format(utcnow().year + 1)
+    }):
+        assert hass.components.cloud.async_active_subscription() is True
