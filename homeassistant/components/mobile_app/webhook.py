@@ -15,7 +15,7 @@ from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
 from homeassistant.core import EventOrigin
 from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
                                       TemplateError)
-from homeassistant.helpers import template
+from homeassistant.helpers.template import attach
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
@@ -124,17 +124,20 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         return empty_okay_response(headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
-        try:
-            tpl = template.Template(data[ATTR_TEMPLATE], hass)
-            rendered = tpl.async_render(data.get(ATTR_TEMPLATE_VARIABLES))
-            return json_response({"rendered": rendered}, headers=headers)
-        # noqa: E722 pylint: disable=broad-except
-        except (ValueError, TemplateError, Exception) as ex:
-            _LOGGER.error("Error when rendering template during mobile_app "
-                          "webhook (device name: %s): %s",
-                          registration[ATTR_DEVICE_NAME], ex)
-            return json_response(({"error": str(ex)}), status=HTTP_BAD_REQUEST,
-                                 headers=headers)
+        resp = {}
+        for key, item in data.items():
+            try:
+                tpl = item[ATTR_TEMPLATE]
+                attach(hass, tpl)
+                resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
+            # noqa: E722 pylint: disable=broad-except
+            except (ValueError, TemplateError, Exception) as ex:
+                _LOGGER.error("Error when rendering template "
+                              "(device name: %s): %s",
+                              registration[ATTR_DEVICE_NAME], ex)
+                resp[key] = {"error": str(ex)}
+
+        return json_response(resp, headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         try:

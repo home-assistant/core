@@ -35,7 +35,9 @@ REGISTER = {
 RENDER_TEMPLATE = {
     'type': 'render_template',
     'data': {
-        'template': 'Hello world'
+        'one': {
+            'template': 'Hello world'
+        }
     }
 }
 
