@@ -19,7 +19,6 @@ from homeassistant.helpers import template
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.loader import get_platform
 
 from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS,
                     ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
@@ -27,7 +26,7 @@ from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
                     CONF_SECRET, DOMAIN, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPES, WEBHOOK_TYPE_CALL_SERVICE,
+                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
                     WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
                     WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
@@ -92,22 +91,6 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
     if req_data[ATTR_WEBHOOK_ENCRYPTED]:
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
         webhook_payload = _decrypt_payload(registration[CONF_SECRET], enc_data)
-
-    if webhook_type not in WEBHOOK_TYPES:
-
-        if ATTR_APP_COMPONENT not in registration:
-            _LOGGER.error("Unknown mobile_app webhook type: %s", webhook_type)
-            return empty_okay_response(headers=headers)
-
-        # Unknown webhook type, check if there's a component
-        platform_name = registration[ATTR_APP_COMPONENT]
-
-        plat = get_platform(hass, platform_name, DOMAIN)
-
-        if webhook_type in plat.WEBHOOK_TYPES:
-            return await plat.async_handle_webhook_message(hass, registration,
-                                                           webhook_type,
-                                                           webhook_payload)
 
     try:
         data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
