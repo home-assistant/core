@@ -477,18 +477,11 @@ class CastDevice(MediaPlayerDevice):
                     cast_info.friendly_name
                 ))
         self._chromecast = chromecast
-        self._chromecast.start()
         self._status_listener = CastStatusListener(self, chromecast)
-        # Initialise connection status as connected because we can only
-        # register the connection listener *after* the initial connection
-        # attempt. If the initial connection failed, we would never reach
-        # this code anyway.
-        self._available = True
+        self._available = False
         self.cast_status = chromecast.status
         self.media_status = chromecast.media_controller.status
-        _LOGGER.debug("[%s %s (%s:%s)] Connection successful!",
-                      self.entity_id, self._cast_info.friendly_name,
-                      self._cast_info.host, self._cast_info.port)
+        self._chromecast.start()
         self.async_schedule_update_ha_state()
 
     async def async_del_cast_info(self, cast_info):
