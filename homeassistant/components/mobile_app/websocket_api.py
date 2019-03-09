@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (DATA_DELETED_IDS, DATA_REGISTRATIONS, DATA_STORE,
                     CONF_USER_ID, DOMAIN)
 
-from .helpers import safe_device, savable_state
+from .helpers import safe_registration, savable_state
 
 
 def register_websocket_handlers(hass: HomeAssistantType) -> bool:
@@ -53,19 +53,19 @@ async def websocket_get_registration(
                               "Webhook ID not provided")
         return
 
-    device = hass.data[DOMAIN][DATA_REGISTRATIONS].get(webhook_id)
+    registration = hass.data[DOMAIN][DATA_REGISTRATIONS].get(webhook_id)
 
-    if device is None:
+    if registration is None:
         connection.send_error(msg['id'], ERR_NOT_FOUND,
                               "Webhook ID not found in storage")
         return
 
-    if device[CONF_USER_ID] != user.id and not user.is_admin:
+    if registration[CONF_USER_ID] != user.id and not user.is_admin:
         return error_message(
             msg['id'], ERR_UNAUTHORIZED, 'User is not registration owner')
 
     connection.send_message(
-        result_message(msg['id'], safe_device(device)))
+        result_message(msg['id'], safe_registration(registration)))
 
 
 @ws_require_user()
@@ -86,14 +86,14 @@ async def websocket_get_user_registrations(
         connection.send_error(msg['id'], ERR_UNAUTHORIZED, "Unauthorized")
         return
 
-    user_devices = []
+    user_registrations = []
 
-    for device in hass.data[DOMAIN][DATA_REGISTRATIONS].values():
-        if connection.user.is_admin or device[CONF_USER_ID] is user_id:
-            user_devices.append(safe_device(device))
+    for registration in hass.data[DOMAIN][DATA_REGISTRATIONS].values():
+        if connection.user.is_admin or registration[CONF_USER_ID] is user_id:
+            user_registrations.append(safe_registration(registration))
 
     connection.send_message(
-        result_message(msg['id'], user_devices))
+        result_message(msg['id'], user_registrations))
 
 
 @ws_require_user()
@@ -114,14 +114,14 @@ async def websocket_delete_registration(hass: HomeAssistantType,
                               "Webhook ID not provided")
         return
 
-    device = hass.data[DOMAIN][DATA_REGISTRATIONS].get(webhook_id)
+    registration = hass.data[DOMAIN][DATA_REGISTRATIONS].get(webhook_id)
 
-    if device is None:
+    if registration is None:
         connection.send_error(msg['id'], ERR_NOT_FOUND,
                               "Webhook ID not found in storage")
         return
 
-    if device[CONF_USER_ID] != user.id and not user.is_admin:
+    if registration[CONF_USER_ID] != user.id and not user.is_admin:
         return error_message(
             msg['id'], ERR_UNAUTHORIZED, 'User is not registration owner')
 
@@ -135,7 +135,7 @@ async def websocket_delete_registration(hass: HomeAssistantType,
         await store.async_save(savable_state(hass))
     except HomeAssistantError:
         return error_message(
-            msg['id'], 'internal_error', 'Error deleting device')
+            msg['id'], 'internal_error', 'Error deleting registration')
 
     if async_is_logged_in(hass):
         await async_delete_cloudhook(hass, webhook_id)

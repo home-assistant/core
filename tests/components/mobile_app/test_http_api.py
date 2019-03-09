@@ -9,8 +9,8 @@ from .const import REGISTER
 from . import authed_api_client  # noqa: F401
 
 
-async def test_register_device(hass_client, authed_api_client):  # noqa: F811
-    """Test that a device can be registered."""
+async def test_registration(hass_client, authed_api_client):  # noqa: F811
+    """Test that registrations happen."""
     try:
         # pylint: disable=unused-import
         from nacl.secret import SecretBox  # noqa: F401
@@ -22,7 +22,7 @@ async def test_register_device(hass_client, authed_api_client):  # noqa: F811
     import json
 
     resp = await authed_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
+        '/api/mobile_app/registrations', json=REGISTER
     )
 
     assert resp.status == 201

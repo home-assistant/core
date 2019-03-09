@@ -17,32 +17,32 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (DATA_REGISTRATIONS, ATTR_SUPPORTS_ENCRYPTION,
                     CONF_CLOUDHOOK_ID, CONF_CLOUDHOOK_URL, CONF_SECRET,
-                    CONF_USER_ID, DOMAIN, REGISTER_DEVICE_SCHEMA)
+                    CONF_USER_ID, DOMAIN, REGISTRATION_SCHEMA)
 
 from .helpers import supports_encryption, savable_state
 
-from .webhook import setup_device
+from .webhook import setup_registration
 
 
 def register_http_handlers(hass: HomeAssistantType, store: Store) -> bool:
     """Register the HTTP handlers/views."""
-    hass.http.register_view(DevicesView(store))
+    hass.http.register_view(RegistrationsView(store))
     return True
 
 
-class DevicesView(HomeAssistantView):
-    """A view that accepts device registration requests."""
+class RegistrationsView(HomeAssistantView):
+    """A view that accepts registration requests."""
 
-    url = '/api/mobile_app/devices'
-    name = 'api:mobile_app:register-device'
+    url = '/api/mobile_app/registrations'
+    name = 'api:mobile_app:register'
 
     def __init__(self, store: Store) -> None:
         """Initialize the view."""
         self._store = store
 
-    @RequestDataValidator(REGISTER_DEVICE_SCHEMA)
+    @RequestDataValidator(REGISTRATION_SCHEMA)
     async def post(self, request: Request, data: Dict) -> Response:
-        """Handle the POST request for device registration."""
+        """Handle the POST request for registration."""
         hass = request.app['hass']
 
         webhook_id = generate_secret()
@@ -68,10 +68,10 @@ class DevicesView(HomeAssistantView):
         try:
             await self._store.async_save(savable_state(hass))
         except HomeAssistantError:
-            return self.json_message("Error saving device.",
+            return self.json_message("Error saving registration.",
                                      HTTP_INTERNAL_SERVER_ERROR)
 
-        setup_device(hass, self._store, data)
+        setup_registration(hass, self._store, data)
 
         return self.json({
             CONF_CLOUDHOOK_ID: data.get(CONF_CLOUDHOOK_ID),

@@ -69,7 +69,7 @@ async def test_webhook_update_registration(webhook_client, hass_client):  # noqa
     """Test that a we can update an existing registration via webhook."""
     authed_api_client = await hass_client()  # noqa: F811
     register_resp = await authed_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
+        '/api/mobile_app/registrations', json=REGISTER
     )
 
     assert register_resp.status == 201

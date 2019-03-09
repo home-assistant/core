@@ -32,8 +32,8 @@ from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS,
                     WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
-from .helpers import (device_context, _decrypt_payload, empty_okay_response,
-                      safe_device, savable_state)
+from .helpers import (_decrypt_payload, empty_okay_response,
+                      registration_context, safe_registration, savable_state)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,15 +49,16 @@ def register_deleted_webhooks(hass: HomeAssistantType, store: Store):
             pass
 
 
-def setup_device(hass: HomeAssistantType, store: Store, device: Dict) -> None:
-    """Register the webhook for a device and loads the app component."""
-    device_name = 'Mobile App: {}'.format(device[ATTR_DEVICE_NAME])
-    webhook_id = device[CONF_WEBHOOK_ID]
-    webhook_register(hass, DOMAIN, device_name, webhook_id,
+def setup_registration(hass: HomeAssistantType, store: Store,
+                       registration: Dict) -> None:
+    """Register the webhook for a registration and loads the app component."""
+    registration_name = 'Mobile App: {}'.format(registration[ATTR_DEVICE_NAME])
+    webhook_id = registration[CONF_WEBHOOK_ID]
+    webhook_register(hass, DOMAIN, registration_name, webhook_id,
                      partial(handle_webhook, store))
 
-    if ATTR_APP_COMPONENT in device:
-        load_platform(hass, device[ATTR_APP_COMPONENT], DOMAIN, {},
+    if ATTR_APP_COMPONENT in registration:
+        load_platform(hass, registration[ATTR_APP_COMPONENT], DOMAIN, {},
                       {DOMAIN: {}})
 
 
@@ -69,7 +70,7 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
 
     headers = {}
 
-    device = hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id]
+    registration = hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id]
 
     try:
         req_data = await request.json()
@@ -90,21 +91,21 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
 
     if req_data[ATTR_WEBHOOK_ENCRYPTED]:
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
-        webhook_payload = _decrypt_payload(device[CONF_SECRET], enc_data)
+        webhook_payload = _decrypt_payload(registration[CONF_SECRET], enc_data)
 
     if webhook_type not in WEBHOOK_TYPES:
 
-        if ATTR_APP_COMPONENT not in device:
+        if ATTR_APP_COMPONENT not in registration:
             _LOGGER.error("Unknown mobile_app webhook type: %s", webhook_type)
             return empty_okay_response(headers=headers)
 
         # Unknown webhook type, check if there's a component
-        platform_name = device[ATTR_APP_COMPONENT]
+        platform_name = registration[ATTR_APP_COMPONENT]
 
         plat = get_platform(hass, platform_name, DOMAIN)
 
         if webhook_type in plat.WEBHOOK_TYPES:
-            return await plat.async_handle_webhook_message(hass, device,
+            return await plat.async_handle_webhook_message(hass, registration,
                                                            webhook_type,
                                                            webhook_payload)
 
@@ -115,18 +116,19 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         _LOGGER.error('Received invalid webhook payload: %s', err)
         return empty_okay_response(headers=headers)
 
+    context = registration_context(registration)
+
     if webhook_type == WEBHOOK_TYPE_CALL_SERVICE:
         try:
             await hass.services.async_call(data[ATTR_DOMAIN],
                                            data[ATTR_SERVICE],
                                            data[ATTR_SERVICE_DATA],
-                                           blocking=True,
-                                           context=device_context(device))
+                                           blocking=True, context=context)
         # noqa: E722 pylint: disable=broad-except
         except (vol.Invalid, ServiceNotFound, Exception) as ex:
             _LOGGER.error("Error when calling service during mobile_app "
                           "webhook (device name: %s): %s",
-                          device[ATTR_DEVICE_NAME], ex)
+                          registration[ATTR_DEVICE_NAME], ex)
             raise HTTPBadRequest()
 
         return empty_okay_response(headers=headers)
@@ -135,7 +137,7 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         event_type = data[ATTR_EVENT_TYPE]
         hass.bus.async_fire(event_type, data[ATTR_EVENT_DATA],
                             EventOrigin.remote,
-                            context=device_context(device))
+                            context=context)
         return empty_okay_response(headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
@@ -147,7 +149,7 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         except (ValueError, TemplateError, Exception) as ex:
             _LOGGER.error("Error when rendering template during mobile_app "
                           "webhook (device name: %s): %s",
-                          device[ATTR_DEVICE_NAME], ex)
+                          registration[ATTR_DEVICE_NAME], ex)
             return json_response(({"error": ex}), status=HTTP_BAD_REQUEST,
                                  headers=headers)
 
@@ -155,19 +157,18 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         try:
             await hass.services.async_call(DT_DOMAIN,
                                            DT_SEE, data,
-                                           blocking=True,
-                                           context=device_context(device))
+                                           blocking=True, context=context)
         # noqa: E722 pylint: disable=broad-except
         except (vol.Invalid, ServiceNotFound, Exception) as ex:
             _LOGGER.error("Error when updating location during mobile_app "
                           "webhook (device name: %s): %s",
-                          device[ATTR_DEVICE_NAME], ex)
+                          registration[ATTR_DEVICE_NAME], ex)
         return empty_okay_response(headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
-        new_device = {**device, **data}
+        new_registration = {**registration, **data}
 
-        hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id] = new_device
+        hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id] = new_registration
 
         try:
             await store.async_save(savable_state(hass))
@@ -175,4 +176,4 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             _LOGGER.error("Error updating mobile_app registration: %s", ex)
             return empty_okay_response()
 
-        return json_response(safe_device(new_device))
+        return json_response(safe_registration(new_registration))

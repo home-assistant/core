@@ -6,7 +6,7 @@ from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS, DATA_REGISTRATIONS,
                     DATA_STORE, DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import register_http_handlers
-from .webhook import register_deleted_webhooks, setup_device
+from .webhook import register_deleted_webhooks, setup_registration
 from .websocket_api import register_websocket_handlers
 
 DEPENDENCIES = ['device_tracker', 'http', 'webhook']
@@ -28,8 +28,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     hass.data[DOMAIN][DATA_REGISTRATIONS] = app_config[DATA_REGISTRATIONS]
     hass.data[DOMAIN][DATA_STORE] = store
 
-    for device in app_config[DATA_REGISTRATIONS].values():
-        setup_device(hass, store, device)
+    for registration in app_config[DATA_REGISTRATIONS].values():
+        setup_registration(hass, store, registration)
 
     register_http_handlers(hass, store)
     register_websocket_handlers(hass)
@@ -39,24 +39,24 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 
 @bind_hass
-def async_devices(hass: HomeAssistantType, component: str) -> list:
-    """Return all devices with the given domain set for app_component."""
-    devices = []
+def async_registrations(hass: HomeAssistantType, component: str) -> list:
+    """Return all registrations with the given domain set for app_component."""
+    registrations = []
 
     if DOMAIN not in hass.data:
-        return devices
+        return registrations
 
-    for device in hass.data[DOMAIN][DATA_REGISTRATIONS].values():
-        if device.get(ATTR_APP_COMPONENT) == component:
-            devices.append(device)
+    for registration in hass.data[DOMAIN][DATA_REGISTRATIONS].values():
+        if registration.get(ATTR_APP_COMPONENT) == component:
+            registrations.append(registration)
 
-    return devices
+    return registrations
 
 
 @bind_hass
-def async_device_for_webhook_id(hass: HomeAssistantType,
-                                webhook_id: str) -> dict:
-    """Return devices for the given webhook ID."""
+def async_registration_for_webhook_id(hass: HomeAssistantType,
+                                      webhook_id: str) -> dict:
+    """Return registrations for the given webhook ID."""
     if DOMAIN not in hass.data:
         return None
 

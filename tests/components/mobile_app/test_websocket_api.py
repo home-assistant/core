@@ -13,7 +13,7 @@ async def test_webocket_get_registration(hass, setup_ws, authed_api_client,  # n
                                          hass_ws_client):
     """Test get_registration websocket command."""
     register_resp = await authed_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
+        '/api/mobile_app/registrations', json=REGISTER
     )
 
     assert register_resp.status == 201
@@ -46,9 +46,9 @@ async def test_webocket_get_user_registrations(hass, aiohttp_client,
         'Authorization': "Bearer {}".format(hass_read_only_access_token)
     })
 
-    # First a read only user registers a device.
+    # First a read only user registers.
     register_resp = await user_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
+        '/api/mobile_app/registrations', json=REGISTER
     )
 
     assert register_resp.status == 201
@@ -76,7 +76,7 @@ async def test_webocket_delete_registration(hass, hass_client,
     """Test delete_registration websocket command."""
     authed_api_client = await hass_client()  # noqa: F811
     register_resp = await authed_api_client.post(
-        '/api/mobile_app/devices', json=REGISTER
+        '/api/mobile_app/registrations', json=REGISTER
     )
 
     assert register_resp.status == 201

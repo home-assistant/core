@@ -59,9 +59,9 @@ def _decrypt_payload(key: str, ciphertext: str) -> Dict[str, str]:
         return None
 
 
-def device_context(device: Dict) -> Context:
+def registration_context(registration: Dict) -> Context:
     """Generate a context from a request."""
-    return Context(user_id=device[CONF_USER_ID])
+    return Context(user_id=registration[CONF_USER_ID])
 
 
 def empty_okay_response(headers: Dict = None, status: int = 200) -> Response:
@@ -79,19 +79,19 @@ def supports_encryption() -> bool:
         return False
 
 
-def safe_device(device: Dict) -> Dict:
-    """Return a device without sensitive values."""
+def safe_registration(registration: Dict) -> Dict:
+    """Return a registration without sensitive values."""
     # Sensitive values: webhook_id, secret, cloudhook_id, cloudhook_url
     return {
-        ATTR_APP_DATA: device[ATTR_APP_DATA],
-        ATTR_APP_ID: device[ATTR_APP_ID],
-        ATTR_APP_NAME: device[ATTR_APP_NAME],
-        ATTR_APP_VERSION: device[ATTR_APP_VERSION],
-        ATTR_DEVICE_NAME: device[ATTR_DEVICE_NAME],
-        ATTR_MANUFACTURER: device[ATTR_MANUFACTURER],
-        ATTR_MODEL: device[ATTR_MODEL],
-        ATTR_OS_VERSION: device[ATTR_OS_VERSION],
-        ATTR_SUPPORTS_ENCRYPTION: device[ATTR_SUPPORTS_ENCRYPTION],
+        ATTR_APP_DATA: registration[ATTR_APP_DATA],
+        ATTR_APP_ID: registration[ATTR_APP_ID],
+        ATTR_APP_NAME: registration[ATTR_APP_NAME],
+        ATTR_APP_VERSION: registration[ATTR_APP_VERSION],
+        ATTR_DEVICE_NAME: registration[ATTR_DEVICE_NAME],
+        ATTR_MANUFACTURER: registration[ATTR_MANUFACTURER],
+        ATTR_MODEL: registration[ATTR_MODEL],
+        ATTR_OS_VERSION: registration[ATTR_OS_VERSION],
+        ATTR_SUPPORTS_ENCRYPTION: registration[ATTR_SUPPORTS_ENCRYPTION],
     }
 
 
