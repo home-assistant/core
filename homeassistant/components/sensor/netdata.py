@@ -134,8 +134,9 @@ class NetdataSensor(Entity):
         """Get the latest data from Netdata REST API."""
         await self.netdata.async_update()
         resource_data = self.netdata.api.metrics.get(self._sensor)
-        self._state = -1 if self._invert else 1 * round(
-            resource_data['dimensions'][self._element]['value'], 2)
+        self._state = round(
+            resource_data['dimensions'][self._element]['value'], 2) \
+            * (-1 if self._invert else 1)
 
 
 class NetdataData:
