@@ -6,7 +6,8 @@ from typing import Dict
 from aiohttp.web import HTTPBadRequest, json_response, Response, Request
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import (DOMAIN as DT_DOMAIN,
+from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
+                                                     DOMAIN as DT_DOMAIN,
                                                      SERVICE_SEE as DT_SEE)
 from homeassistant.components.webhook import async_register as webhook_register
 
@@ -20,12 +21,15 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS,
-                    ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
-                    DATA_REGISTRATIONS, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
-                    ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
-                    ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
-                    CONF_SECRET, DOMAIN, WEBHOOK_PAYLOAD_SCHEMA,
+from .const import (ATTR_ALTITUDE, ATTR_APP_COMPONENT, ATTR_BATTERY,
+                    ATTR_CONSIDER_HOME, ATTR_COURSE, ATTR_DEVICE_NAME,
+                    ATTR_EVENT_DATA, ATTR_EVENT_TYPE, ATTR_GPS,
+                    ATTR_GPS_ACCURACY, ATTR_LOCATION_NAME, ATTR_SOURCE_TYPE,
+                    ATTR_SPEED, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
+                    ATTR_VERTICAL_ACCURACY, ATTR_WEBHOOK_DATA,
+                    ATTR_WEBHOOK_ENCRYPTED, ATTR_WEBHOOK_ENCRYPTED_DATA,
+                    ATTR_WEBHOOK_TYPE, CONF_SECRET, DATA_DELETED_IDS,
+                    DATA_REGISTRATIONS, DOMAIN, WEBHOOK_PAYLOAD_SCHEMA,
                     WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
                     WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
                     WEBHOOK_TYPE_UPDATE_LOCATION,
@@ -137,9 +141,24 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
                                  headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
+        see_payload = {
+            ATTR_LOCATION_NAME: data.get(ATTR_LOCATION_NAME),
+            ATTR_GPS: data.get(ATTR_GPS),
+            ATTR_GPS_ACCURACY: data.get(ATTR_GPS_ACCURACY),
+            ATTR_BATTERY: data.get(ATTR_BATTERY),
+            ATTR_SOURCE_TYPE: data.get(ATTR_SOURCE_TYPE),
+            ATTR_CONSIDER_HOME: data.get(ATTR_CONSIDER_HOME),
+            ATTR_ATTRIBUTES: {
+                ATTR_SPEED: data.get(ATTR_SPEED),
+                ATTR_ALTITUDE: data.get(ATTR_ALTITUDE),
+                ATTR_COURSE: data.get(ATTR_COURSE),
+                ATTR_VERTICAL_ACCURACY: data.get(ATTR_VERTICAL_ACCURACY),
+            }
+        }
+
         try:
             await hass.services.async_call(DT_DOMAIN,
-                                           DT_SEE, data,
+                                           DT_SEE, see_payload,
                                            blocking=True, context=context)
         # noqa: E722 pylint: disable=broad-except
         except (vol.Invalid, ServiceNotFound, Exception) as ex:
