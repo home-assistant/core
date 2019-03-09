@@ -6,10 +6,6 @@ from typing import Dict
 from aiohttp.web import HTTPBadRequest, json_response, Response, Request
 import voluptuous as vol
 
-from homeassistant.components.cloud import (async_create_cloudhook,
-                                            async_is_logged_in,
-                                            CloudNotAvailable,
-                                            is_cloudhook_request)
 from homeassistant.components.device_tracker import (DOMAIN as DT_DOMAIN,
                                                      SERVICE_SEE as DT_SEE)
 from homeassistant.components.webhook import async_register as webhook_register
@@ -30,10 +26,8 @@ from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS,
                     DATA_REGISTRATIONS, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
-                    CONF_CLOUDHOOK_ID, CONF_CLOUDHOOK_URL, CONF_SECRET,
-                    DOMAIN, HTTP_X_CLOUD_HOOK_ID, HTTP_X_CLOUD_HOOK_URL,
-                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
-                    WEBHOOK_TYPES, WEBHOOK_TYPE_CALL_SERVICE,
+                    CONF_SECRET, DOMAIN, WEBHOOK_PAYLOAD_SCHEMA,
+                    WEBHOOK_SCHEMAS, WEBHOOK_TYPES, WEBHOOK_TYPE_CALL_SERVICE,
                     WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
                     WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
@@ -89,24 +83,6 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         err = vol.humanize.humanize_error(req_data, ex)
         _LOGGER.error('Received invalid webhook payload: %s', err)
         return empty_okay_response()
-
-    via_cloud = is_cloudhook_request(request)
-
-    logged_in = async_is_logged_in(hass)
-
-    if via_cloud is False and logged_in is True:
-        cloud_id = device.get(CONF_CLOUDHOOK_ID)
-        cloud_url = device.get(CONF_CLOUDHOOK_URL)
-        if cloud_url is None:
-            try:
-                hook = await async_create_cloudhook(hass, webhook_id)
-                cloud_id = hook[CONF_CLOUDHOOK_ID]
-                cloud_url = hook[CONF_CLOUDHOOK_URL]
-            except CloudNotAvailable:
-                _LOGGER.error("Error creating cloudhook during local call")
-
-        headers[HTTP_X_CLOUD_HOOK_ID] = cloud_id
-        headers[HTTP_X_CLOUD_HOOK_URL] = cloud_url
 
     webhook_type = req_data[ATTR_WEBHOOK_TYPE]
 
