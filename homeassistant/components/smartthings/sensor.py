@@ -149,11 +149,7 @@ UNITS = {
     'F': TEMP_FAHRENHEIT
 }
 
-THREE_AXIS_NAMES = {
-    0: 'X Coordinate',
-    1: 'Y Coordinate',
-    2: 'Z Coordinate'
-}
+THREE_AXIS_NAMES = ['X Coordinate', 'Y Coordinate', 'Z Coordinate']
 
 
 async def async_setup_platform(
@@ -172,7 +168,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if capability == Capability.three_axis:
                 sensors.extend(
                     [SmartThingsThreeAxisSensor(
-                        device, index) for index in range(0, 3)])
+                        device, index) for index
+                        in range(len(THREE_AXIS_NAMES))])
             else:
                 maps = CAPABILITY_TO_SENSORS[capability]
                 sensors.extend([
@@ -255,5 +252,5 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity):
         three_axis = self._device.status.attributes[Attribute.three_axis].value
         try:
             return three_axis[self._index]
-        except Exception:  # pylint:disable=broad-except
+        except (TypeError, KeyError, IndexError):
             return None
