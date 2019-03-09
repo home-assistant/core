@@ -27,7 +27,7 @@ from .smartapp import (
     setup_smartapp, setup_smartapp_endpoint, smartapp_sync_subscriptions,
     validate_installed_app)
 
-REQUIREMENTS = ['pysmartapp==0.3.0', 'pysmartthings==0.6.3']
+REQUIREMENTS = ['pysmartapp==0.3.1', 'pysmartthings==0.6.7']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
@@ -290,7 +290,8 @@ class DeviceBroker:
             if not device:
                 continue
             device.status.apply_attribute_update(
-                evt.component_id, evt.capability, evt.attribute, evt.value)
+                evt.component_id, evt.capability, evt.attribute, evt.value,
+                data=evt.data)
 
             # Fire events for buttons
             if evt.capability == Capability.button and \
@@ -300,7 +301,8 @@ class DeviceBroker:
                     'device_id': evt.device_id,
                     'location_id': evt.location_id,
                     'value': evt.value,
-                    'name': device.label
+                    'name': device.label,
+                    'data': evt.data
                 }
                 self._hass.bus.async_fire(EVENT_BUTTON, data)
                 _LOGGER.debug("Fired button event: %s", data)
@@ -312,6 +314,7 @@ class DeviceBroker:
                     'capability': evt.capability,
                     'attribute': evt.attribute,
                     'value': evt.value,
+                    'data': evt.data
                 }
                 _LOGGER.debug("Push update received: %s", data)
 
