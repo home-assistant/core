@@ -1,7 +1,5 @@
 """
-
-Obtain and set state of a Benq projector over telnet-to-serial gateway
-
+Obtain and set state of a Benq projector over telnet-to-serial gateway.
 """
 
 import logging
@@ -176,8 +174,8 @@ class BenqSwitch(SwitchDevice):
                 for key in self._attributes:
                     msg = CMD_DICT.get(key, None)
                     if msg:
-                        awns = self._write_read_format(msg).split("=")[1].split("#")[0]
-                        self._attributes[key] = awns
+                        awns = self._write_read_format(msg).split("=")[1]
+                        self._attributes[key] = awns.split("#")[0]
 
             self._close()
 
