@@ -15,20 +15,20 @@ from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
 from homeassistant.core import EventOrigin
 from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
                                       TemplateError)
-from homeassistant.helpers import template
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS,
-                    ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
-                    DATA_REGISTRATIONS, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
+from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_NAME, ATTR_EVENT_DATA,
+                    ATTR_EVENT_TYPE, ATTR_MANUFACTURER, ATTR_MODEL,
+                    ATTR_OS_VERSION, ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
-                    CONF_SECRET, DOMAIN, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
-                    WEBHOOK_TYPE_UPDATE_LOCATION,
+                    CONF_SECRET, DATA_DELETED_IDS, DATA_REGISTRATIONS, DOMAIN,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
+                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                    WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
 from .helpers import (_decrypt_payload, empty_okay_response,
@@ -48,13 +48,25 @@ def register_deleted_webhooks(hass: HomeAssistantType, store: Store):
             pass
 
 
-def setup_registration(hass: HomeAssistantType, store: Store,
-                       registration: Dict) -> None:
+async def setup_registration(hass: HomeAssistantType, store: Store,
+                             registration: Dict) -> None:
     """Register the webhook for a registration and loads the app component."""
     registration_name = 'Mobile App: {}'.format(registration[ATTR_DEVICE_NAME])
     webhook_id = registration[CONF_WEBHOOK_ID]
     webhook_register(hass, DOMAIN, registration_name, webhook_id,
                      partial(handle_webhook, store))
+
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=webhook_id,
+        identifiers={
+            (DOMAIN, webhook_id),
+        },
+        manufacturer=registration[ATTR_MANUFACTURER],
+        model=registration[ATTR_MODEL],
+        name=registration[ATTR_DEVICE_NAME],
+        sw_version=registration[ATTR_OS_VERSION]
+    )
 
     if ATTR_APP_COMPONENT in registration:
         load_platform(hass, registration[ATTR_APP_COMPONENT], DOMAIN, {},

@@ -69,7 +69,7 @@ class RegistrationsView(HomeAssistantView):
             return self.json_message("Error saving registration.",
                                      HTTP_INTERNAL_SERVER_ERROR)
 
-        setup_registration(hass, self._store, data)
+        await setup_registration(hass, self._store, data)
 
         return self.json({
             CONF_CLOUDHOOK_URL: data.get(CONF_CLOUDHOOK_URL),

@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     hass.data[DOMAIN][DATA_STORE] = store
 
     for registration in app_config[DATA_REGISTRATIONS].values():
-        setup_registration(hass, store, registration)
+        await setup_registration(hass, store, registration)
 
     register_http_handlers(hass, store)
     register_websocket_handlers(hass)
