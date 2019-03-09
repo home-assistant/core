@@ -45,3 +45,9 @@ async def authed_api_client(hass, hass_client):
     """Provide an authenticated client for mobile_app to use."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     return await hass_client()
+
+
+@pytest.fixture(autouse=True)
+async def setup_ws(hass):
+    """Configure the websocket_api component."""
+    assert await async_setup_component(hass, 'websocket_api', {})

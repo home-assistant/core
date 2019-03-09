@@ -5,11 +5,11 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
-from . import authed_api_client, webhook_client  # noqa: F401
+from . import authed_api_client, setup_ws, webhook_client  # noqa: F401
 from .const import (CALL_SERVICE, REGISTER)
 
 
-async def test_webocket_get_registration(hass, authed_api_client,  # noqa: F811
+async def test_webocket_get_registration(hass, setup_ws, authed_api_client,  # noqa: E501 F811
                                          hass_ws_client):
     """Test get_registration websocket command."""
     register_resp = await authed_api_client.post(

@@ -9,7 +9,7 @@ from .http_api import register_http_handlers
 from .webhook import setup_device
 from .websocket_api import register_websocket_handlers
 
-DEPENDENCIES = ['device_tracker', 'http', 'webhook', 'websocket_api']
+DEPENDENCIES = ['device_tracker', 'http', 'webhook']
 
 REQUIREMENTS = ['PyNaCl==1.3.0']
 
