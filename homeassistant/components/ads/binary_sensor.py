@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.ads import CONF_ADS_VAR, DATA_ADS
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, STATE_UNKNOWN
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ class AdsBinarySensor(BinarySensorDevice):
         """Initialize ADS binary sensor."""
         self._name = name
         self._unique_id = ads_var
-        self._state = False
+        self._state = STATE_UNKNOWN
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
         self.ads_var = ads_var

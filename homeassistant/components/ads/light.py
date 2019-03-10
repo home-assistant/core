@@ -3,7 +3,7 @@ import logging
 import voluptuous as vol
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR, \
     CONF_ADS_VAR_BRIGHTNESS
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +37,7 @@ class AdsLight(Light):
     def __init__(self, ads_hub, ads_var_enable, ads_var_brightness, name):
         """Initialize AdsLight entity."""
         self._ads_hub = ads_hub
-        self._on_state = False
+        self._on_state = STATE_UNKNOWN
         self._brightness = None
         self._name = name
         self._unique_id = ads_var_enable
