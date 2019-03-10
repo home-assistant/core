@@ -100,7 +100,7 @@ class AdsLight(Light):
     @property
     def available(self):
         """Return False because entity pushes its state to HA."""
-        return False if self._on_state is None else True
+        return not self._on_state is None
 
     @property
     def should_poll(self):
