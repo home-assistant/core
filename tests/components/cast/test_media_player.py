@@ -7,6 +7,7 @@ from uuid import UUID
 
 import attr
 import pytest
+from pychromecast.socket_client import CONNECTION_STATUS_CONNECTED
 
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
@@ -222,13 +223,6 @@ async def test_normal_chromecast_not_starting_discovery(hass):
         assert setup_discovery.call_count == 1
 
 
-async def test_normal_raises_platform_not_ready(hass):
-    """Test cast platform raises PlatformNotReady if HTTP dial fails."""
-    with patch('pychromecast.dial.get_device_status', return_value=None):
-        with pytest.raises(PlatformNotReady):
-            await async_setup_cast(hass, {'host': 'host1'})
-
-
 async def test_replay_past_chromecasts(hass):
     """Test cast platform re-playing past chromecasts when adding new one."""
     cast_group1 = get_fake_chromecast_info(host='host1', port=42)
@@ -261,6 +255,11 @@ async def test_entity_media_states(hass: HomeAssistantType):
     with patch('pychromecast.dial.get_device_status',
                return_value=full_info):
         chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    connection_status = MagicMock()
+    connection_status.status = CONNECTION_STATUS_CONNECTED
+    entity.new_connection_status(connection_status)
+    await hass.async_block_till_done()
 
     state = hass.states.get('media_player.speaker')
     assert state is not None

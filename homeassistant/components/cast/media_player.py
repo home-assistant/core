@@ -292,7 +292,7 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         if cast_device is not None:
             async_add_entities([cast_device])
 
-    remove_handler = async_dispatcher_connect(
+    async_dispatcher_connect(
         hass, SIGNAL_CAST_DISCOVERED, async_cast_discovered)
     # Re-play the callback for all past chromecasts, store the objects in
     # a list to avoid concurrent modification resulting in exception.
