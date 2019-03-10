@@ -20,7 +20,6 @@ from .const import (
     QUIRK_CLASS, ZDO_CHANNEL, MANUFACTURER_CODE, POWER_SOURCE
 )
 from .channels import EventRelayChannel, ZDOChannel
-from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +68,7 @@ class ZHADevice:
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__
         )
+        self._power_source = None
         self.status = DeviceStatus.CREATED
 
     @property
@@ -120,7 +120,9 @@ class ZHADevice:
 
     @property
     def power_source(self):
-        """Return True if sensor is available."""
+        """Return the power source for the device."""
+        if self._power_source is not None:
+            return self._power_source
         if ZDO_CHANNEL in self.cluster_channels:
             return self.cluster_channels.get(ZDO_CHANNEL).power_source
         return None
@@ -144,6 +146,14 @@ class ZHADevice:
     def available(self):
         """Return True if sensor is available."""
         return self._available
+
+    def set_available(self, available):
+        """Set availability from restore and prevent signals."""
+        self._available = available
+
+    def set_power_source(self, power_source):
+        """Set the power source."""
+        self._power_source = power_source
 
     def update_available(self, available):
         """Set sensor availability."""
@@ -195,8 +205,7 @@ class ZHADevice:
         _LOGGER.debug('%s: started configuration', self.name)
         await self._execute_channel_tasks('async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
-        entry = (await async_get_registry(
-            self.hass)).async_create_or_update(self)
+        entry = self.gateway.zha_storage.async_create_or_update(self)
         _LOGGER.debug('%s: stored in registry: %s', self.name, entry)
 
     async def async_initialize(self, from_cache=False):
@@ -252,6 +261,11 @@ class ZHADevice:
         """Unsubscribe the dispatcher."""
         if self._unsub:
             self._unsub()
+
+    @callback
+    def async_update_last_seen(self, last_seen):
+        """Set last seen on the zigpy device."""
+        self._zigpy_device.last_seen = last_seen
 
     @callback
     def async_get_clusters(self):
