@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 FIRETV_DOMAIN = 'firetv'
 
-REQUIREMENTS = ['https://github.com/JeffLIrion/python-androidtv/zipball/firetv#androidtv==0.0.10']
+REQUIREMENTS = ['androidtv==0.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,6 +118,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT])
 
     if not aftv.available:
+        # Determine the name that will be used for the device in the log
         if CONF_NAME in config:
             device_name = config[CONF_NAME]
         elif config[CONF_DEVICE_CLASS] == DEVICE_ANDROIDTV:
@@ -126,6 +127,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_name = 'Fire TV device'
         else:
             device_name = 'Android TV / Fire TV device'
+
         _LOGGER.warning("Could not connect to %s at %s%s",
                         device_name, host, adb_log)
         return
@@ -300,6 +302,10 @@ class ADBDevice(MediaPlayerDevice):
         key = self._keys.get(cmd)
         if key:
             return self.aftv.adb_shell('input keyevent {}'.format(key))
+
+        if cmd == 'GET_PROPERTIES':
+            return self.aftv.get_properties_dict()
+
         return self.aftv.adb_shell(cmd)
 
 
@@ -438,6 +444,7 @@ class FireTVDevice(ADBDevice):
     @adb_decorator()
     def select_source(self, source):
         """Select input source.
+
         If the source starts with a '!', then it will close the app instead of
         opening it.
         """
