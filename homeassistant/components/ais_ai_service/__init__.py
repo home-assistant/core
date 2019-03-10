@@ -52,6 +52,7 @@ INTENT_GET_DATE = 'AisGetDate'
 INTENT_PLAY_RADIO = 'AisPlayRadio'
 INTENT_PLAY_PODCAST = 'AisPlayPodcast'
 INTENT_PLAY_YT_MUSIC = 'AisPlayYtMusic'
+INTENT_PLAY_SPOTIFY = 'AisPlaySpotify'
 INTENT_ASK_QUESTION = 'AisAskQuestion'
 INTENT_CHANGE_CONTEXT = 'AisChangeContext'
 INTENT_GET_WEATHER = 'AisGetWeather'
@@ -1341,6 +1342,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(PlayRadioIntent())
     hass.helpers.intent.async_register(AisPlayPodcastIntent())
     hass.helpers.intent.async_register(AisPlayYtMusicIntent())
+    hass.helpers.intent.async_register(AisPlaySpotifyIntent())
     hass.helpers.intent.async_register(AskQuestionIntent())
     hass.helpers.intent.async_register(ChangeContextIntent())
     hass.helpers.intent.async_register(AisGetWeather())
@@ -1445,6 +1447,9 @@ async def async_setup(hass, config):
         'Posłuchał bym muzykę {item}',
         'Włącz [z] [na] YouTube {item}',
         'YouTube {item}'
+    ])
+    async_register(hass, INTENT_PLAY_SPOTIFY, [
+        'Spotify {item}'
     ])
     async_register(hass, INTENT_TURN_ON,
                    ['Włącz {item}', 'Zapal światło w {item}'])
@@ -2389,6 +2394,34 @@ class AisPlayYtMusicIntent(intent.IntentHandler):
                  'ais_cloud', 'play_audio',
                  yt_query, blocking=False)
             message = "OK, szukam na YouTube " + item
+            success = True
+        return message, success
+
+
+class AisPlaySpotifyIntent(intent.IntentHandler):
+    """Handle Music intents."""
+
+    intent_type = INTENT_PLAY_SPOTIFY
+    slot_schema = {
+        'item': cv.string
+    }
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        item = slots['item']['value']
+        success = False
+
+        if not item:
+            message = 'Nie wiem jaką muzykę mam szukać '
+        else:
+            _query = {"audio_type": ais_global.G_AN_SPOTIFY, "text": item}
+            yield from hass.services.async_call(
+                'ais_cloud', 'play_audio',
+                _query, blocking=False)
+            message = "OK, szukam na Spotify " + item
             success = True
         return message, success
 

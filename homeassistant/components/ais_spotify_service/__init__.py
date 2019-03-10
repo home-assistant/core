@@ -151,7 +151,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def search(call):
-        _LOGGER.info("search")
+        _LOGGER.info("search " + str(call))
         yield from data.process_search_async(call)
 
     def select_track_name(call):
@@ -223,6 +223,38 @@ class SpotifyData:
             self._spotify = spotipy.Spotify(auth=self._token_info.get('access_token'))
             self._user = self._spotify.me()
 
+    def get_list_from_results(self, results, type):
+        global G_SPOTIFY_FOUND
+        items = []
+        title_prefix = ''
+        titles = []
+        prev_name = ""
+        if type == 'album':
+            items = results['albums']['items']
+            title_prefix = 'Album: '
+        elif type == 'artist':
+            items = results['artists']['items']
+            title_prefix = 'Wykonawca: '
+        elif type == 'playlist':
+            items = results['playlists']['items']
+            title_prefix = 'Playlista: '
+
+        for item in items:
+            if prev_name == item['name']:
+                name = item['name'] + " 2"
+            else:
+                name = item['name']
+            prev_name = name
+            i = {"uri": item['uri'], "title": title_prefix + name}
+            if len(item['images']) > 0:
+                i["thumbnail"] = item['images'][0]['url']
+            else:
+                i["thumbnail"] = ""
+            titles.append(title_prefix + name)
+            G_SPOTIFY_FOUND.append(i)
+        return titles
+
+
     @asyncio.coroutine
     def process_search_async(self, call):
         """Search album on Spotify."""
@@ -230,6 +262,7 @@ class SpotifyData:
             _LOGGER.error("No text to search")
             return
         global G_SPOTIFY_FOUND
+        G_SPOTIFY_FOUND = []
         search_text = call.data["query"]
 
         self.refresh_spotify_instance()
@@ -239,44 +272,15 @@ class SpotifyData:
             _LOGGER.warning("Spotify failed to update, token expired.")
             return
 
+        # album
+        results = self._spotify.search(q='album:' + search_text, type='album')
+        titles = self.get_list_from_results(results, 'album')
         # artist
         results = self._spotify.search(q='artist:' + search_text, type='artist')
-        items = results['artists']['items']
-
-        found = []
-        titles = []
-        for item in items:
-            i = {}
-            i["uri"] = item['uri']
-            i["title"] = "Wykonawca: " + item['name']
-            if len(item['images']) > 0:
-                i["thumbnail"] = item['images'][0]['url']
-            else:
-                i["thumbnail"] = ""
-            titles.append("Wykonawca: " + item['name'])
-            found.append(i)
-        G_SPOTIFY_FOUND = found
-        _LOGGER.debug('found artist' + str(found))
-
-        #
-        results = self._spotify.search(q='artist:' + search_text, type='artist')
-        items = results['artists']['items']
-
-        found = []
-        titles = []
-        for item in items:
-            i = {}
-            i["uri"] = item['uri']
-            i["title"] = "Wykonawca: " + item['name']
-            if len(item['images']) > 0:
-                i["thumbnail"] = item['images'][0]['url']
-            else:
-                i["thumbnail"] = ""
-            titles.append("Wykonawca: " + item['name'])
-            found.append(i)
-        G_SPOTIFY_FOUND = found
-        _LOGGER.debug('found artist' + str(found))
-
+        titles.extend(self.get_list_from_results(results, 'artist'))
+        # playlist
+        results = self._spotify.search(q='playlist:' + search_text, type='playlist')
+        titles.extend(self.get_list_from_results(results, 'playlist'))
 
         # Update input_select values:
         yield from self.hass.services.async_call(
@@ -285,9 +289,11 @@ class SpotifyData:
                 "entity_id": "input_select.ais_music_track_name",
                 "options": titles})
 
-        text = "Znaleziono: %s, włączam pierwszy: %s" % (
-            str(len(G_SPOTIFY_FOUND)), G_SPOTIFY_FOUND[0]["title"])
-        _LOGGER.debug("text: " + text)
+        if len(G_SPOTIFY_FOUND) > 0:
+            text = "Znaleziono: %s, włączam pierwszy: %s" % (
+                str(len(G_SPOTIFY_FOUND)), G_SPOTIFY_FOUND[0]["title"])
+        else:
+            text = "%s brak wnyników na Spotify" % search_text
         yield from self.hass.services.async_call(
             'ais_ai_service', 'say_it', {
                 "text": text

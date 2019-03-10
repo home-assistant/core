@@ -772,7 +772,7 @@ class AisColudData:
                         "media_content_type": "ais_info",
                         "media_content_id": _audio_info
                     })
-        if audio_type == ais_global.G_AN_PODCAST:
+        elif audio_type == ais_global.G_AN_PODCAST:
             self.hass.services.call(
                 'input_select',
                 'select_option', {
@@ -793,7 +793,25 @@ class AisColudData:
                     "entity_id": "input_select.podcast_name",
                     "option": call.data["name"]})
 
-        if audio_type == ais_global.G_AN_MUSIC:
+        elif audio_type == ais_global.G_AN_MUSIC:
+            self.hass.services.call(
+                'input_select',
+                'select_option', {
+                    "entity_id": "input_select.ais_music_service",
+                    "option": "YouTube"})
+            # self.hass.block_till_done()
+            self.hass.services.call(
+                'input_text',
+                'set_value', {
+                    "entity_id": "input_text.ais_music_query",
+                    "value": call.data["text"]})
+        elif audio_type == ais_global.G_AN_SPOTIFY:
+            self.hass.services.call(
+                'input_select',
+                'select_option', {
+                    "entity_id": "input_select.ais_music_service",
+                    "option": ais_global.G_AN_SPOTIFY})
+            # self.hass.block_till_done()
             self.hass.services.call(
                 'input_text',
                 'set_value', {

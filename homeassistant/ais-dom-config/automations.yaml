@@ -249,7 +249,7 @@
     condition: and
     conditions:
       - condition: template
-        value_template: "{{ states.input_select.ais_youtube_music_name.state != '-' }}"
+        value_template: "{{ states.input_select.ais_music_name.state != '-' }}"
       - condition: template
         value_template: "{{ states.input_select.ais_music_service.state == 'YouTube' }}"
   action:
@@ -268,7 +268,7 @@
     condition: and
     conditions:
       - condition: template
-        value_template: "{{ states.input_select.ais_youtube_music_name.state != '-' }}"
+        value_template: "{{ states.input_select.ais_music_name.state != '-' }}"
       - condition: template
         value_template: "{{ states.input_select.ais_music_service.state == 'Spotify' }}"
   action:
