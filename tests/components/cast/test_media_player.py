@@ -7,7 +7,6 @@ from uuid import UUID
 
 import attr
 import pytest
-from pychromecast.socket_client import CONNECTION_STATUS_CONNECTED
 
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
@@ -256,9 +255,8 @@ async def test_entity_media_states(hass: HomeAssistantType):
                return_value=full_info):
         chromecast, entity = await async_setup_media_player_cast(hass, info)
 
-    connection_status = MagicMock()
-    connection_status.status = CONNECTION_STATUS_CONNECTED
-    entity.new_connection_status(connection_status)
+    entity._available = True
+    entity.schedule_update_ha_state()
     await hass.async_block_till_done()
 
     state = hass.states.get('media_player.speaker')
