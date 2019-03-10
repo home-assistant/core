@@ -76,7 +76,7 @@ class AdsSwitch(ToggleEntity):
     @property
     def available(self):
         """Return False because entity pushes its state to HA."""
-        return not self._on_state is None
+        return self._on_state is not None
 
     @property
     def should_poll(self):
