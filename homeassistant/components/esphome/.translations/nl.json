@@ -16,6 +16,10 @@
                 "description": "Voer het wachtwoord in dat u in uw configuratie hebt ingesteld.",
                 "title": "Voer wachtwoord in"
             },
+            "discovery_confirm": {
+                "description": "Wil je de ESPHome-node `{name}` toevoegen aan Home Assistant?",
+                "title": "Ontdekte ESPHome node"
+            },
             "user": {
                 "data": {
                     "host": "Host",
