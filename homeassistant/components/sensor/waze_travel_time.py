@@ -48,7 +48,7 @@ UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 VEHICLE_TYPES = ['car', 'taxi', 'motorcycle']
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
