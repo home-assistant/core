@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PROVINCE): cv.string,
     vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS):
         vol.All(cv.ensure_list, [vol.In(ALLOWED_DAYS)]),
-    vol.Optional(CONF_ADD_HOLIDAYS): vol.All(cv.ensure_list, cv.string),
+    vol.Optional(CONF_ADD_HOLIDAYS): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -95,7 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                           province, country)
             return
 
-    # add custom holidays
+    # Add custom holidays
     try:
         obj_holidays.append(add_holidays)
     except TypeError:
