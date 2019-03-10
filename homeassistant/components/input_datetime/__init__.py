@@ -120,13 +120,15 @@ class InputDatetime(RestoreEntity):
             if old_state is not None:
                 restore_val = old_state.state
 
-        if restore_val is not None:
-            if not self.has_date:
-                self._current_datetime = dt_util.parse_time(restore_val)
-            elif not self.has_time:
-                self._current_datetime = dt_util.parse_date(restore_val)
-            else:
-                self._current_datetime = dt_util.parse_datetime(restore_val)
+        if not self.has_date:
+            restore_val = restore_val if not None else '00:00:00'
+            self._current_datetime = dt_util.parse_time(restore_val)
+        elif not self.has_time:
+            restore_val = restore_val if not None else '1970-01-01'
+            self._current_datetime = dt_util.parse_date(restore_val)
+        else:
+            restore_val = restore_val if not None else '1970-01-01 00:00:00'
+            self._current_datetime = dt_util.parse_datetime(restore_val)
 
     @property
     def should_poll(self):
