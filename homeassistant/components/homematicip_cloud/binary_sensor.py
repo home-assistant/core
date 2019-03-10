@@ -142,6 +142,11 @@ class HomematicipStormSensor(HomematicipGenericDevice, BinarySensorDevice):
         super().__init__(home, device, "Storm")
 
     @property
+    def icon(self):
+        """Return the icon."""
+        return 'mdi:weather-windy' if self.is_on else 'mdi:pinwheel-outline'
+
+    @property
     def is_on(self):
         """Return true if storm is detected."""
         return self._device.storm
