@@ -1,6 +1,4 @@
-"""
-Obtain and set state of a Benq projector over telnet-to-serial gateway.
-"""
+"""Obtain and set state of a Benq projector over telnet-to-serial gateway."""
 import logging
 import threading
 
@@ -83,7 +81,7 @@ class BenqSwitch(SwitchDevice):
         }
 
     def _handshake(self):
-        """Initialization of communication with projector"""
+        """Initialize communication with projector."""
         self.telnet.write(b'\r')
         answer = self.telnet.read_until(b">", timeout=1)
         return answer == b'>'
@@ -181,8 +179,11 @@ class BenqSwitch(SwitchDevice):
                 for key in self._attributes:
                     msg = CMD_DICT.get(key, None)
                     if msg:
-                        awns = self._write_read_format(msg).split("=")[1]
-                        self._attributes[key] = awns.split("#")[0]
+                        try:
+                            awns = self._write_read_format(msg)
+                            self._attributes[key] = awns.split("=")[1].split("#")[0]
+                        except AttributeError:
+                            _LOGGER.error("Malformed answer received: %s", awns)
 
             self._close()
 
