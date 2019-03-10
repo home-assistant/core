@@ -69,11 +69,14 @@ def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
 
 
 def get_webhook_url(hass: HomeAssistantType) -> str:
-    """Get the URL of the webhook."""
+    """
+    Get the URL of the webhook.
+
+    Return the cloudhook if available, otherwise local webhook.
+    """
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
     if cloud.async_active_subscription(hass) and cloudhook_url is not None:
         return cloudhook_url
-
     return webhook.async_generate_url(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
 
 
@@ -194,9 +197,11 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
     webhook.async_register(hass, DOMAIN, 'SmartApp',
                            config[CONF_WEBHOOK_ID], smartapp_webhook)
 
-    # Register cloudhook if active subscription
+    # Create webhook if eligible
     cloudhook_url = config.get(CONF_CLOUDHOOK_URL)
-    if cloudhook_url is None and cloud.async_active_subscription(hass):
+    if cloudhook_url is None \
+            and cloud.async_active_subscription(hass) \
+            and not hass.config_entries.async_entries(DOMAIN):
         cloudhook_url = await cloud.async_create_cloudhook(
             hass, config[CONF_WEBHOOK_ID])
         config[CONF_CLOUDHOOK_URL] = cloudhook_url
@@ -209,10 +214,9 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         signal_prefix=SIGNAL_SMARTAPP_PREFIX,
         connect=functools.partial(async_dispatcher_connect, hass),
         send=functools.partial(async_dispatcher_send, hass))
-    # Path is used in signature validation
-    path = webhook.async_generate_path(config[CONF_WEBHOOK_ID])
-    if cloudhook_url:
-        path = urlparse(cloudhook_url).path
+    # Path is used in digital signature validation
+    path = urlparse(cloudhook_url).path if cloudhook_url else \
+        webhook.async_generate_path(config[CONF_WEBHOOK_ID])
     manager = SmartAppManager(path, dispatcher=dispatcher)
     manager.connect_install(functools.partial(smartapp_install, hass))
     manager.connect_update(functools.partial(smartapp_update, hass))
@@ -223,10 +227,13 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         CONF_INSTANCE_ID: config[CONF_INSTANCE_ID],
         DATA_BROKERS: {},
         CONF_WEBHOOK_ID: config[CONF_WEBHOOK_ID],
-        # May not be present prior to v0.90.0
+        # Will not be present if not enabled
         CONF_CLOUDHOOK_URL: config.get(CONF_CLOUDHOOK_URL),
         CONF_INSTALLED_APPS: []
     }
+    _LOGGER.debug("Setup endpoint for %s",
+                  cloudhook_url if cloudhook_url else
+                  webhook.async_generate_url(hass, config[CONF_WEBHOOK_ID]))
 
 
 async def unload_smartapp_endpoint(hass: HomeAssistantType):
