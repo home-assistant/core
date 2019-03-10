@@ -237,12 +237,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         return self.async_show_form(
             step_id='pair',
-            description_placeholders={
-                'model': self.model,
-            },
             errors=errors,
             data_schema=vol.Schema({
-                vol.Required('pairing_code'):  vol.All(str, vol.Strip),
+                vol.Required('pairing_code'):  str,
             })
         )
 
