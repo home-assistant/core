@@ -90,7 +90,7 @@ class KodiNotificationService(BaseNotificationService):
         try:
             data = kwargs.get(ATTR_DATA) or {}
 
-            displaytime = data.get(ATTR_DISPLAYTIME, 10000)
+            displaytime = int(data.get(ATTR_DISPLAYTIME, 10000))
             icon = data.get(ATTR_ICON, "info")
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
             await self._server.GUI.ShowNotification(

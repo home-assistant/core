@@ -6,11 +6,12 @@ https://home-assistant.io/components/climate.proliphix/
 """
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PRECISION_TENTHS, STATE_COOL, STATE_HEAT, STATE_IDLE,
-    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, PRECISION_TENTHS, TEMP_FAHRENHEIT,
+    ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['proliphix==0.4.1']

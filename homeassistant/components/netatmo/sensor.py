@@ -47,6 +47,7 @@ SENSOR_TYPES = {
     'rf_status_lvl': ['Radio_lvl', '', 'mdi:signal', None],
     'wifi_status': ['Wifi', '', 'mdi:wifi', None],
     'wifi_status_lvl': ['Wifi_lvl', 'dBm', 'mdi:wifi', None],
+    'health_idx': ['Health', '', 'mdi:cloud', None],
 }
 
 MODULE_SCHEMA = vol.Schema({
@@ -67,23 +68,55 @@ MODULE_TYPE_INDOOR = 'NAModule4'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
     netatmo = hass.components.netatmo
-    data = NetAtmoData(netatmo.NETATMO_AUTH, config.get(CONF_STATION, None))
 
     dev = []
+    if CONF_MODULES in config:
+        manual_config(netatmo, config, dev)
+    else:
+        auto_config(netatmo, config, dev)
+
+    if dev:
+        add_entities(dev, True)
+
+
+def manual_config(netatmo, config, dev):
+    """Handle manual configuration."""
     import pyatmo
-    try:
-        if CONF_MODULES in config:
+
+    all_classes = all_product_classes()
+    not_handled = {}
+    for data_class in all_classes:
+        data = NetAtmoData(netatmo.NETATMO_AUTH, data_class,
+                           config.get(CONF_STATION))
+        try:
             # Iterate each module
             for module_name, monitored_conditions in \
                     config[CONF_MODULES].items():
                 # Test if module exists
                 if module_name not in data.get_module_names():
-                    _LOGGER.error('Module name: "%s" not found', module_name)
-                    continue
-                # Only create sensors for monitored properties
-                for variable in monitored_conditions:
-                    dev.append(NetAtmoSensor(data, module_name, variable))
-        else:
+                    not_handled[module_name] = \
+                        not_handled[module_name]+1 \
+                        if module_name in not_handled else 1
+                else:
+                    # Only create sensors for monitored properties
+                    for variable in monitored_conditions:
+                        dev.append(NetAtmoSensor(data, module_name, variable))
+        except pyatmo.NoDevice:
+            continue
+
+    for module_name, count in not_handled.items():
+        if count == len(all_classes):
+            _LOGGER.error('Module name: "%s" not found', module_name)
+
+
+def auto_config(netatmo, config, dev):
+    """Handle auto configuration."""
+    import pyatmo
+
+    for data_class in all_product_classes():
+        data = NetAtmoData(netatmo.NETATMO_AUTH, data_class,
+                           config.get(CONF_STATION))
+        try:
             for module_name in data.get_module_names():
                 for variable in \
                         data.station_data.monitoredConditions(module_name):
@@ -92,10 +125,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     else:
                         _LOGGER.warning("Ignoring unknown var %s for mod %s",
                                         variable, module_name)
-    except pyatmo.NoDevice:
-        return None
+        except pyatmo.NoDevice:
+            continue
 
-    add_entities(dev, True)
+
+def all_product_classes():
+    """Provide all handled Netatmo product classes."""
+    import pyatmo
+
+    return [pyatmo.WeatherStationData, pyatmo.HomeCoachData]
 
 
 class NetAtmoSensor(Entity):
@@ -151,6 +189,13 @@ class NetAtmoSensor(Entity):
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
         self.netatmo_data.update()
+        if self.netatmo_data.data is None:
+            if self._state is None:
+                return
+            _LOGGER.warning("No data found for %s", self.module_name)
+            self._state = None
+            return
+
         data = self.netatmo_data.data.get(self.module_name)
 
         if data is None:
@@ -299,6 +344,17 @@ class NetAtmoSensor(Entity):
                     self._state = "High"
                 elif data['wifi_status'] <= 55:
                     self._state = "Full"
+            elif self.type == 'health_idx':
+                if data['health_idx'] == 0:
+                    self._state = "Healthy"
+                elif data['health_idx'] == 1:
+                    self._state = "Fine"
+                elif data['health_idx'] == 2:
+                    self._state = "Fair"
+                elif data['health_idx'] == 3:
+                    self._state = "Poor"
+                elif data['health_idx'] == 4:
+                    self._state = "Unhealthy"
         except KeyError:
             _LOGGER.error("No %s data found for %s", self.type,
                           self.module_name)
@@ -309,9 +365,10 @@ class NetAtmoSensor(Entity):
 class NetAtmoData:
     """Get the latest data from NetAtmo."""
 
-    def __init__(self, auth, station):
+    def __init__(self, auth, data_class, station):
         """Initialize the data object."""
         self.auth = auth
+        self.data_class = data_class
         self.data = None
         self.station_data = None
         self.station = station
@@ -321,6 +378,8 @@ class NetAtmoData:
     def get_module_names(self):
         """Return all module available on the API as a list."""
         self.update()
+        if not self.data:
+            return []
         return self.data.keys()
 
     def _detect_platform_type(self):
@@ -328,14 +387,12 @@ class NetAtmoData:
 
         The return can be a WeatherStationData or a HomeCoachData.
         """
-        import pyatmo
-        for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
-            try:
-                station_data = data_class(self.auth)
-                _LOGGER.debug("%s detected!", str(data_class.__name__))
-                return station_data
-            except TypeError:
-                continue
+        try:
+            station_data = self.data_class(self.auth)
+            _LOGGER.debug("%s detected!", str(self.data_class.__name__))
+            return station_data
+        except TypeError:
+            return
 
     def update(self):
         """Call the Netatmo API to update the data.
@@ -366,7 +423,7 @@ class NetAtmoData:
                         newinterval = self.data[module]['When']
                         break
             except TypeError:
-                _LOGGER.error("No modules found!")
+                _LOGGER.debug("No %s modules found", self.data_class.__name__)
 
             if newinterval:
                 # Try and estimate when fresh data will be available

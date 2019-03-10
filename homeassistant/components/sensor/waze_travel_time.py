@@ -18,7 +18,7 @@ from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['WazeRouteCalculator==0.6']
+REQUIREMENTS = ['WazeRouteCalculator==0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,8 @@ ATTR_DURATION = 'duration'
 ATTR_DISTANCE = 'distance'
 ATTR_ROUTE = 'route'
 
-CONF_ATTRIBUTION = "Powered by Waze"
+ATTRIBUTION = "Powered by Waze"
+
 CONF_DESTINATION = 'destination'
 CONF_ORIGIN = 'origin'
 CONF_INCL_FILTER = 'incl_filter'
@@ -43,7 +44,7 @@ REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
 SCAN_INTERVAL = timedelta(minutes=5)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
+TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
@@ -69,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor = WazeTravelTime(name, origin, destination, region,
                             incl_filter, excl_filter, realtime)
 
-    add_entities([sensor], True)
+    add_entities([sensor])
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(
@@ -138,7 +139,7 @@ class WazeTravelTime(Entity):
         if self._state is None:
             return None
 
-        res = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+        res = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if 'duration' in self._state:
             res[ATTR_DURATION] = self._state['duration']
         if 'distance' in self._state:
@@ -203,7 +204,8 @@ class WazeTravelTime(Entity):
         if self._destination is not None and self._origin is not None:
             try:
                 params = WazeRouteCalculator.WazeRouteCalculator(
-                    self._origin, self._destination, self._region)
+                    self._origin, self._destination, self._region,
+                    log_lvl=logging.DEBUG)
                 routes = params.calc_all_routes_info(real_time=self._realtime)
 
                 if self._incl_filter is not None:

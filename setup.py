@@ -41,10 +41,10 @@ PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
     'aiohttp==3.5.4',
-    'astral==1.9.2',
+    'astral==1.10.1',
     'async_timeout==3.0.1',
     'attrs==18.2.0',
-    'bcrypt==3.1.5',
+    'bcrypt==3.1.6',
     'certifi>=2018.04.16',
     'jinja2>=2.10',
     'PyJWT==1.6.4',
@@ -57,7 +57,7 @@ REQUIRES = [
     'requests==2.21.0',
     'ruamel.yaml==0.15.88',
     'voluptuous==0.11.5',
-    'voluptuous-serialize==2.0.0', 'markdown', 'pyqrcode', 'gmusicapi'
+    'voluptuous-serialize==2.1.0', 'markdown', 'pyqrcode', 'gmusicapi'
 ]
 
 MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))

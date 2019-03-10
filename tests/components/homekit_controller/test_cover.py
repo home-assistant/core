@@ -70,6 +70,20 @@ def create_window_covering_service_with_v_tilt():
     return service
 
 
+async def test_accept_capitalized_property_names(hass, utcnow):
+    """Test that we can handle a device with capitalized property names."""
+    window_cover = create_window_covering_service()
+    helper = await setup_test_component(hass, [window_cover], capitalize=True)
+
+    # The specific interaction we do here doesn't matter; we just need
+    # to do *something* to ensure that discovery properly dealt with the
+    # capitalized property names.
+    await hass.services.async_call('cover', 'open_cover', {
+        'entity_id': helper.entity_id,
+    }, blocking=True)
+    assert helper.characteristics[POSITION_TARGET].value == 100
+
+
 async def test_change_window_cover_state(hass, utcnow):
     """Test that we can turn a HomeKit alarm on and off again."""
     window_cover = create_window_covering_service()

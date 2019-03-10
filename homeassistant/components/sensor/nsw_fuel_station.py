@@ -28,7 +28,8 @@ CONF_FUEL_TYPES = 'fuel_types'
 CONF_ALLOWED_FUEL_TYPES = ["E10", "U91", "E85", "P95", "P98", "DL",
                            "PDL", "B20", "LPG", "CNG", "EV"]
 CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
-CONF_ATTRIBUTION = "Data provided by NSW Government FuelCheck"
+
+ATTRIBUTION = "Data provided by NSW Government FuelCheck"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_ID): cv.positive_int,
@@ -161,7 +162,7 @@ class StationPriceSensor(Entity):
         return {
             ATTR_STATION_ID: self._station_data.station_id,
             ATTR_STATION_NAME: self._station_data.get_station_name(),
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+            ATTR_ATTRIBUTION: ATTRIBUTION
         }
 
     @property

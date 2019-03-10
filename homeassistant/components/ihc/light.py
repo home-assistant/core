@@ -1,14 +1,8 @@
-"""IHC light platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.ihc/
-"""
+"""Support for IHC lights."""
 import logging
 
-from homeassistant.components.ihc import (
-    IHC_DATA, IHC_CONTROLLER, IHC_INFO)
-from homeassistant.components.ihc.const import (
-    CONF_DIMMABLE)
+from homeassistant.components.ihc import IHC_CONTROLLER, IHC_DATA, IHC_INFO
+from homeassistant.components.ihc.const import CONF_DIMMABLE
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
