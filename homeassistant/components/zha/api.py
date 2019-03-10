@@ -10,8 +10,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DOMAIN, ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, ATTR_ATTRIBUTE, ATTR_VALUE,
     ATTR_MANUFACTURER, ATTR_COMMAND, ATTR_COMMAND_TYPE, ATTR_ARGS, IN, OUT,
@@ -77,6 +79,25 @@ SERVICE_SCHEMAS = {
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
+    vol.Required('type'): 'zha/gateway/messages'
+})
+async def websocket_subscribe(hass, connection, msg):
+    """Subscribe to ZHA gateway messages."""
+    async def forward_messages(data):
+        """Forward events to websocket."""
+        connection.send_message(websocket_api.event_message(msg['id'], data))
+
+    connection.subscriptions[msg['id']] = async_dispatcher_connect(
+        hass,
+        "zha_gateway_message",
+        forward_messages
+    )
+
+    connection.send_message(websocket_api.result_message(msg['id']))
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices'
 })
 async def websocket_get_devices(hass, connection, msg):
@@ -86,22 +107,32 @@ async def websocket_get_devices(hass, connection, msg):
 
     devices = []
     for device in zha_gateway.devices.values():
-        ret_device = {}
-        ret_device.update(device.device_info)
-        ret_device['entities'] = [{
-            'entity_id': entity_ref.reference_id,
-            NAME: entity_ref.device_info[NAME]
-        } for entity_ref in zha_gateway.device_registry[device.ieee]]
+        devices.append(
+            async_get_device_info(
+                hass, device, ha_device_registry=ha_device_registry
+            )
+        )
+    connection.send_result(msg[ID], devices)
 
+
+@callback
+def async_get_device_info(hass, device, ha_device_registry=None):
+    """Get ZHA device."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ret_device = {}
+    ret_device.update(device.device_info)
+    ret_device['entities'] = [{
+        'entity_id': entity_ref.reference_id,
+        NAME: entity_ref.device_info[NAME]
+    } for entity_ref in zha_gateway.device_registry[device.ieee]]
+
+    if ha_device_registry is not None:
         reg_device = ha_device_registry.async_get_device(
             {(DOMAIN, str(device.ieee))}, set())
         if reg_device is not None:
             ret_device['user_given_name'] = reg_device.name_by_user
             ret_device['device_reg_id'] = reg_device.id
-
-        devices.append(ret_device)
-
-    connection.send_result(msg[ID], devices)
+    return ret_device
 
 
 @websocket_api.require_admin
@@ -497,6 +528,7 @@ def async_load_api(hass):
             SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND
         ])
 
+    websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)

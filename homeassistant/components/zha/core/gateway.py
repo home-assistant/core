@@ -32,6 +32,7 @@ from .discovery import (
 from .store import async_get_registry
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
+from ..api import async_get_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,13 +95,37 @@ class ZHAGateway:
         At this point, no information about the device is known other than its
         address
         """
-        # Wait for device_initialized, instead
-        pass
+        async_dispatcher_send(
+            self._hass,
+            "zha_gateway_message",
+            {
+                'type': 'device_joined',
+                'nwk': device.nwk,
+                'ieee': str(device.ieee)
+            }
+        )
 
     def raw_device_initialized(self, device):
         """Handle a device initialization without quirks loaded."""
-        # Wait for device_initialized, instead
-        pass
+        endpoint_ids = device.endpoints.keys()
+        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
+        manufacturer = 'Unknown'
+        model = 'Unknown'
+        if ept_id is not None:
+            manufacturer = device.endpoints[ept_id].manufacturer
+            model = device.endpoints[ept_id].model
+        async_dispatcher_send(
+            self._hass,
+            "zha_gateway_message",
+            {
+                'type': 'raw_device_initialized',
+                'nwk': device.nwk,
+                'ieee': str(device.ieee),
+                'model': model,
+                'manufacturer': manufacturer,
+                'signature': device.get_signature()
+            }
+        )
 
     def device_initialized(self, device):
         """Handle device joined and basic information discovered."""
@@ -116,11 +141,21 @@ class ZHAGateway:
         device = self._devices.pop(device.ieee, None)
         self._device_registry.pop(device.ieee, None)
         if device is not None:
+            device_info = async_get_device_info(self._hass, device)
             self._hass.async_create_task(device.async_unsub_dispatcher())
             async_dispatcher_send(
                 self._hass,
                 "{}_{}".format(SIGNAL_REMOVE, str(device.ieee))
             )
+            if device_info is not None:
+                async_dispatcher_send(
+                    self._hass,
+                    "zha_gateway_message",
+                    {
+                        'type': 'device_removed',
+                        'device_info': device_info
+                    }
+                )
 
     def get_device(self, ieee_str):
         """Return ZHADevice for given ieee."""
@@ -231,3 +266,14 @@ class ZHAGateway:
 
         device_entity = async_create_device_entity(zha_device)
         await self._component.async_add_entities([device_entity])
+
+        if is_new_join:
+            device_info = async_get_device_info(self._hass, zha_device)
+            async_dispatcher_send(
+                self._hass,
+                "zha_gateway_message",
+                {
+                    'type': 'device_fully_initialized',
+                    'device_info': device_info
+                }
+            )
