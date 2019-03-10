@@ -14,7 +14,7 @@ from .const import (
 )
 
 
-REQUIREMENTS = ['homekit==0.12.2']
+REQUIREMENTS = ['homekit==0.12.3']
 
 HOMEKIT_DIR = '.homekit'
 
