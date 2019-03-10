@@ -2,12 +2,12 @@
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import __version__
+from homeassistant.auth.providers import legacy_api_password
 from homeassistant.components.http.ban import (
     process_wrong_login,
     process_success_login,
 )
-from homeassistant.auth.providers import legacy_api_password
+from homeassistant.const import __version__
 
 from .connection import ActiveConnection
 from .error import Disconnect
