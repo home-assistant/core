@@ -242,13 +242,12 @@ class WazeTravelTimeData():
         self.distance = None
         self.route = None
 
-        #Currently WazeRouteCalc only supports PRIVATE, TAXI, MOTORCYCLE.
+        # Currently WazeRouteCalc only supports PRIVATE, TAXI, MOTORCYCLE.
         if vehicle_type.upper() == 'CAR':
             # Empty means PRIVATE for waze which translates to car.
             self.vehicle_type = ''
         else:
             self.vehicle_type = vehicle_type.upper()
-
 
     def update(self):
         """Update WazeRouteCalculator Sensor."""
