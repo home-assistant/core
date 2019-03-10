@@ -11,7 +11,8 @@ from homeassistant.components.sensor import (
 from homeassistant.components.smartthings import sensor
 from homeassistant.components.smartthings.const import (
     DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -34,7 +35,7 @@ async def test_async_setup_platform():
 
 
 async def test_entity_state(hass, device_factory):
-    """Tests the state attributes properly match the light types."""
+    """Tests the state attributes properly match the sensor types."""
     device = device_factory('Sensor 1', [Capability.battery],
                             {Attribute.battery: 100})
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
@@ -43,6 +44,38 @@ async def test_entity_state(hass, device_factory):
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == '%'
     assert state.attributes[ATTR_FRIENDLY_NAME] ==\
         device.label + " Battery"
+
+
+async def test_entity_three_axis_state(hass, device_factory):
+    """Tests the state attributes properly match the three axis types."""
+    device = device_factory('Three Axis', [Capability.three_axis],
+                            {Attribute.three_axis: [100, 75, 25]})
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    state = hass.states.get('sensor.three_axis_x_coordinate')
+    assert state.state == '100'
+    assert state.attributes[ATTR_FRIENDLY_NAME] ==\
+        device.label + " X Coordinate"
+    state = hass.states.get('sensor.three_axis_y_coordinate')
+    assert state.state == '75'
+    assert state.attributes[ATTR_FRIENDLY_NAME] ==\
+        device.label + " Y Coordinate"
+    state = hass.states.get('sensor.three_axis_z_coordinate')
+    assert state.state == '25'
+    assert state.attributes[ATTR_FRIENDLY_NAME] ==\
+        device.label + " Z Coordinate"
+
+
+async def test_entity_three_axis_invalid_state(hass, device_factory):
+    """Tests the state attributes properly match the three axis types."""
+    device = device_factory('Three Axis', [Capability.three_axis],
+                            {Attribute.three_axis: []})
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    state = hass.states.get('sensor.three_axis_x_coordinate')
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get('sensor.three_axis_y_coordinate')
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get('sensor.three_axis_z_coordinate')
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_entity_and_device_attributes(hass, device_factory):
