@@ -113,7 +113,10 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._playing = message.get("playing", False)
             self._media_position = message.get("currentPosition", 0)
             self._duration = message.get("duration", 0)
-            self._stream_image = message.get("media_stream_image", None)
+            temp_stream_image = message.get("media_stream_image", None)
+            if temp_stream_image.startswith("spotify:image:"):
+                temp_stream_image = temp_stream_image.replace("spotify:image:", "")
+                self._stream_image = self._stream_image.rsplit('/', 1)[0] + "/" + temp_stream_image
             self._media_title = message.get("currentMedia", "")
             self._media_source = message.get("media_source", self._media_source)
             self._album_name = message.get("media_album_name", "")
