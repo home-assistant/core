@@ -349,7 +349,8 @@ class EntityPlatform:
 
         await entity.async_added_to_hass()
 
-        await entity.async_update_ha_state()
+        if entity.should_poll:
+            await entity.async_update_ha_state()
 
     async def async_reset(self):
         """Remove all entities and reset data.
