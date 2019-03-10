@@ -1,0 +1,4 @@
+found_calendar:
+  description: Check if we know about a calendar and generate PLATFORM_DISCOVER.
+scan_for_calendars:
+  description: Scan for new calendars.
