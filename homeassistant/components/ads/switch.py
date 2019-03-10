@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.ads import CONF_ADS_VAR, DATA_ADS
 from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 
@@ -37,7 +37,7 @@ class AdsSwitch(ToggleEntity):
     def __init__(self, ads_hub, name, ads_var):
         """Initialize the AdsSwitch entity."""
         self._ads_hub = ads_hub
-        self._on_state = STATE_UNKNOWN
+        self._on_state = None
         self._name = name
         self._unique_id = ads_var
         self.ads_var = ads_var
@@ -68,6 +68,11 @@ class AdsSwitch(ToggleEntity):
     def unique_id(self):
         """Return an unique identifier for this entity."""
         return self._unique_id
+
+    @property
+    def available(self):
+        """Return False because entity pushes its state to HA."""
+        return False if self._on_state is None else True
 
     @property
     def should_poll(self):
