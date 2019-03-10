@@ -1,8 +1,5 @@
 """
 Obtain and set state of a Benq projector over telnet-to-serial gateway.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/switch.benq_projector/
 """
 import logging
 import threading
@@ -11,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, CONF_NAME, CONF_HOST)
+    STATE_ON, STATE_OFF, CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,20 +44,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Connect with telnet host and return Benq Projector."""
+    import telnetlib
+
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
+    telnet = telnetlib.Telnet()
 
-    add_entities([BenqSwitch(host, name)], True)
+    add_entities([BenqSwitch(telnet, host, name)], True)
 
 
 class BenqSwitch(SwitchDevice):
-    """Represents an Benq Projector as a switch."""
+    """Representation of a Benq Projector as a switch."""
 
-    def __init__(self, host, name, **kwargs):
+    def __init__(self, telnet, host, name, **kwargs):
         """Init of the Benq projector."""
-        import telnetlib
-
-        self.telnet = telnetlib.Telnet()
+        self.telnet = telnet
         self._host = host
         self._name = name
         self._unique_id = host
@@ -70,14 +68,14 @@ class BenqSwitch(SwitchDevice):
         self._block = False
         self._lock = threading.Lock()
         self._attributes = {
-            LAMP_HOURS: STATE_UNKNOWN,
-            INPUT_SOURCE: STATE_UNKNOWN,
-            LAMP_MODE: STATE_UNKNOWN,
-            MODEL: STATE_UNKNOWN
+            LAMP_HOURS: None,
+            INPUT_SOURCE: None,
+            LAMP_MODE: None,
+            MODEL: None
         }
 
     def _handshake(self):
-
+        """Initialization of communication with projector"""
         self.telnet.write(b'\r')
         answer = self.telnet.read_until(b">", timeout=1)
         return answer == b'>'
@@ -104,10 +102,10 @@ class BenqSwitch(SwitchDevice):
         """Write msg, obtain answer and format output."""
         cmd = msg + '\r'
 
-        _LOGGER.debug('Comand send: %s', cmd)
+        _LOGGER.debug("Command send: %s", cmd)
         awns = self._write_read(cmd)
 
-        _LOGGER.debug('Answer received: %s', awns)
+        _LOGGER.debug("Answer received: %s", awns)
 
         return awns
 
