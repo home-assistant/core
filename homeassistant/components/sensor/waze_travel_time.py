@@ -35,17 +35,20 @@ CONF_INCL_FILTER = 'incl_filter'
 CONF_EXCL_FILTER = 'excl_filter'
 CONF_REALTIME = 'realtime'
 CONF_UNITS = 'units'
+CONF_VEHICLE_TYPE = 'vehicle_type'
 
 DEFAULT_NAME = 'Waze Travel Time'
-DEFAULT_REALTIME = True
+DEFAULT_REALTIME = False
+DEFAULT_VEHICLE_TYPE = 'car'
 
 ICON = 'mdi:car'
 
 UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 
 REGIONS = ['US', 'NA', 'EU', 'IL', 'AU']
+VEHICLE_TYPES = ['car', 'taxi', 'motorcycle']
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
@@ -55,6 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCL_FILTER): cv.string,
     vol.Optional(CONF_EXCL_FILTER): cv.string,
     vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
+    vol.Optional(CONF_VEHICLE_TYPE,
+                 default=DEFAULT_VEHICLE_TYPE): vol.In(VEHICLE_TYPES),
     vol.Optional(CONF_UNITS): vol.In(UNITS)
 })
 
@@ -68,13 +73,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     incl_filter = config.get(CONF_INCL_FILTER)
     excl_filter = config.get(CONF_EXCL_FILTER)
     realtime = config.get(CONF_REALTIME)
+    vehicle_type = config.get(CONF_VEHICLE_TYPE)
     units = config.get(CONF_UNITS)
 
     if units is None:
         units = hass.config.units.name
 
     data = WazeTravelTimeData(None, None, region, incl_filter,
-                              excl_filter, realtime, units)
+                              excl_filter, realtime, units,
+                              vehicle_type)
 
     sensor = WazeTravelTime(name, origin, destination, data)
 
@@ -218,7 +225,7 @@ class WazeTravelTimeData():
     """WazeTravelTime Data object."""
 
     def __init__(self, origin, destination, region, include, exclude,
-                 realtime, units):
+                 realtime, units, vehicle_type):
         """Set up WazeRouteCalculator."""
         import WazeRouteCalculator
 
@@ -235,13 +242,21 @@ class WazeTravelTimeData():
         self.distance = None
         self.route = None
 
+        #Currently WazeRouteCalc only supports PRIVATE, TAXI, MOTORCYCLE.
+        if vehicle_type.upper() == 'CAR':
+            # Empty means PRIVATE for waze which translates to car.
+            self.vehicle_type = ''
+        else:
+            self.vehicle_type = vehicle_type.upper()
+
+
     def update(self):
         """Update WazeRouteCalculator Sensor."""
         if self.origin is not None and self.destination is not None:
             try:
                 params = self._calc.WazeRouteCalculator(
                     self.origin, self.destination, self.region,
-                    log_lvl=logging.DEBUG)
+                    self.vehicle_type, log_lvl=logging.DEBUG)
                 routes = params.calc_all_routes_info(real_time=self.realtime)
 
                 if self.include is not None:
@@ -262,7 +277,7 @@ class WazeTravelTimeData():
                 else:
                     self.distance = distance
 
-                self.route = bytes(route, 'ISO-8859-1').decode('UTF-8')
+                self.route = route
             except self._calc.WRCError as exp:
                 _LOGGER.warning("Error on retrieving data: %s", exp)
                 return
