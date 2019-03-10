@@ -1,20 +1,20 @@
 """Implement the auth feature from Hass.io for Add-ons."""
-import logging
 from ipaddress import ip_address
+import logging
 import os
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
-from .const import ATTR_USERNAME, ATTR_PASSWORD, ATTR_ADDON
+from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -134,11 +134,11 @@ class GMusicData:
             #             d = device['id'].replace(':', '')
             #
             #         GM_DEV_KEY = d
-            #         if d == G_AIS_SECURE_ANDROID_ID_DOM.replace('dom-', ''):
+            #         if d == get_sercure_android_id_dom.replace('dom-', ''):
             #             break
             # # try to register the gate id - Providing an unregistered mobile device id will register it to your account
             # if GM_DEV_KEY is None:
-            #     GM_DEV_KEY = G_AIS_SECURE_ANDROID_ID_DOM.replace('dom-', '')
+            #     GM_DEV_KEY = get_sercure_android_id_dom.replace('dom-', '')
             #G_GM_MOBILE_CLIENT_API.logout()
             #G_GM_MOBILE_CLIENT_API = None
             #G_GM_MOBILE_CLIENT_API = Mobileclient()

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "creds": {
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "name": "Nome",
+                    "region": "Regi\u00e3o"
+                },
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

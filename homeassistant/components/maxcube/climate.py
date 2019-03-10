@@ -2,8 +2,9 @@
 import socket
 import logging
 
-from homeassistant.components.climate import (
-    ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE)
 from homeassistant.components.maxcube import DATA_KEY
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE

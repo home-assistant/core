@@ -1,4 +1,5 @@
 """Test the Home Assistant local auth provider."""
+import asyncio
 from unittest.mock import Mock, patch
 
 import pytest
@@ -288,3 +289,29 @@ async def test_legacy_get_or_create_credentials(hass, legacy_data):
             'username': 'hello '
         })
     assert credentials1 is not credentials3
+
+
+async def test_race_condition_in_data_loading(hass):
+    """Test race condition in the hass_auth.Data loading.
+
+    Ref issue: https://github.com/home-assistant/home-assistant/issues/21569
+    """
+    counter = 0
+
+    async def mock_load(_):
+        """Mock of homeassistant.helpers.storage.Store.async_load."""
+        nonlocal counter
+        counter += 1
+        await asyncio.sleep(0)
+
+    provider = hass_auth.HassAuthProvider(hass, auth_store.AuthStore(hass),
+                                          {'type': 'homeassistant'})
+    with patch('homeassistant.helpers.storage.Store.async_load',
+               new=mock_load):
+        task1 = provider.async_validate_login('user', 'pass')
+        task2 = provider.async_validate_login('user', 'pass')
+        results = await asyncio.gather(task1, task2, return_exceptions=True)
+        assert counter == 1
+        assert isinstance(results[0], hass_auth.InvalidAuth)
+        # results[1] will be a TypeError if race condition occurred
+        assert isinstance(results[1], hass_auth.InvalidAuth)

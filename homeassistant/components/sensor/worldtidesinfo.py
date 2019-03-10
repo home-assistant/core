@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by WorldTides"
+ATTRIBUTION = "Data provided by WorldTides"
 
 DEFAULT_NAME = 'WorldTidesInfo'
 
@@ -72,7 +72,7 @@ class WorldTidesInfoSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of this device."""
-        attr = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+        attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
         if 'High' in str(self.data['extremes'][0]['type']):
             attr['high_tide_time_utc'] = self.data['extremes'][0]['date']

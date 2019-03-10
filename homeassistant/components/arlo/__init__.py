@@ -15,7 +15,7 @@ REQUIREMENTS = ['pyarlo==0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by arlo.netgear.com"
+ATTRIBUTION = "Data provided by arlo.netgear.com"
 
 DATA_ARLO = 'data_arlo'
 DEFAULT_BRAND = 'Netgear Arlo'

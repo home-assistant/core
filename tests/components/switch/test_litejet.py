@@ -53,9 +53,9 @@ class TestLiteJetSwitch(unittest.TestCase):
                 'port': '/tmp/this_will_be_mocked',
             }
         }
-        if method == self.test_include_switches_False:
+        if method == self.__class__.test_include_switches_False:
             config['litejet']['include_switches'] = False
-        elif method != self.test_include_switches_unspecified:
+        elif method != self.__class__.test_include_switches_unspecified:
             config['litejet']['include_switches'] = True
 
         assert setup.setup_component(self.hass, litejet.DOMAIN, config)

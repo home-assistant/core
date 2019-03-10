@@ -17,7 +17,7 @@ from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE,
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
-REQUIREMENTS = ['pyMetno==0.4.5']
+REQUIREMENTS = ['pyMetno==0.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +91,9 @@ class AirSensor(AirQualityEntity):
     @property
     def device_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
-        return {'level': self._api.data.get('level')}
+        return {'level': self._api.data.get('level'),
+                'location': self._api.data.get('location'),
+                }
 
     @property
     def name(self) -> str:

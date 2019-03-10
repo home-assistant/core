@@ -10,14 +10,17 @@ DEPENDENCIES = ['smartthings']
 
 ST_STATE_LOCKED = 'locked'
 ST_LOCK_ATTR_MAP = {
-    'method': 'method',
     'codeId': 'code_id',
-    'timeout': 'timeout'
+    'codeName': 'code_name',
+    'lockName': 'lock_name',
+    'method': 'method',
+    'timeout': 'timeout',
+    'usedCode': 'used_code'
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Platform uses config entry setup."""
     pass
 

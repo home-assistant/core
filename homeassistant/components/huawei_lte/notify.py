@@ -1,9 +1,4 @@
-"""Huawei LTE router platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.huawei_lte/
-"""
-
+"""Support for Huawei LTE router notifications."""
 import logging
 
 import voluptuous as vol
@@ -15,7 +10,6 @@ from homeassistant.const import CONF_RECIPIENT, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
 from ..huawei_lte import DATA_KEY
-
 
 DEPENDENCIES = ['huawei_lte']
 

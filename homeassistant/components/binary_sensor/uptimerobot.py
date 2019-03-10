@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_TARGET = 'target'
 
-CONF_ATTRIBUTION = "Data provided by Uptime Robot"
+ATTRIBUTION = "Data provided by Uptime Robot"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -78,7 +78,7 @@ class UptimeRobotBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_TARGET: self._target,
         }
 

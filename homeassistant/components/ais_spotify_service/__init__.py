@@ -239,6 +239,7 @@ class SpotifyData:
             _LOGGER.warning("Spotify failed to update, token expired.")
             return
 
+        # artist
         results = self._spotify.search(q='artist:' + search_text, type='artist')
         items = results['artists']['items']
 
@@ -256,6 +257,26 @@ class SpotifyData:
             found.append(i)
         G_SPOTIFY_FOUND = found
         _LOGGER.debug('found artist' + str(found))
+
+        #
+        results = self._spotify.search(q='artist:' + search_text, type='artist')
+        items = results['artists']['items']
+
+        found = []
+        titles = []
+        for item in items:
+            i = {}
+            i["uri"] = item['uri']
+            i["title"] = "Wykonawca: " + item['name']
+            if len(item['images']) > 0:
+                i["thumbnail"] = item['images'][0]['url']
+            else:
+                i["thumbnail"] = ""
+            titles.append("Wykonawca: " + item['name'])
+            found.append(i)
+        G_SPOTIFY_FOUND = found
+        _LOGGER.debug('found artist' + str(found))
+
 
         # Update input_select values:
         yield from self.hass.services.async_call(

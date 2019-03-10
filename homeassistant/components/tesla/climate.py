@@ -1,9 +1,9 @@
 """Support for Tesla HVAC system."""
 import logging
 
-from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    ClimateDevice)
+from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.climate.const import (
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
 from homeassistant.components.tesla import TeslaDevice
 from homeassistant.const import (

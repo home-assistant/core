@@ -1,9 +1,4 @@
-"""
-Sensor for displaying the number of result on Shodan.io.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.shodan/
-"""
+"""Sensor for displaying the number of result on Shodan.io."""
 import logging
 from datetime import timedelta
 
@@ -14,7 +9,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['shodan==1.10.4']
+REQUIREMENTS = ['shodan==1.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
