@@ -1,25 +1,21 @@
 """Light platform support for yeelight."""
 import logging
 
-import voluptuous as vol
-
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired)
-from homeassistant.const import CONF_NAME, CONF_DEVICES, CONF_LIGHTS, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_DEVICES, CONF_LIGHTS
 from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
     ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
-    SUPPORT_EFFECT, Light, ATTR_ENTITY_ID, DOMAIN)
-import homeassistant.helpers.config_validation as cv
+    SUPPORT_EFFECT, Light)
 import homeassistant.util.color as color_util
 from homeassistant.components.yeelight import (
-    CONF_TRANSITION, CONF_FLOW_PARAMS, DATA_YEELIGHT, CONF_MODE_MUSIC,
-    CONF_SAVE_ON_CHANGE, ACTION_RECOVER, ATTR_TRANSITIONS, ATTR_COUNT,
-    CONF_CUSTOM_EFFECTS, YEELIGHT_FLOW_TRANSITION_SCHEMA, DATA_UPDATED)
+    CONF_TRANSITION, DATA_YEELIGHT, CONF_MODE_MUSIC,
+    CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED)
 
 DEPENDENCIES = ['yeelight']
 
@@ -36,10 +32,6 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_COLOR |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
-
-YEELIGHT_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-})
 
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
@@ -78,8 +70,6 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_TWITTER,
     EFFECT_STOP]
 
-SERVICE_START_FLOW = 'yeelight_start_flow'
-
 
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
@@ -94,37 +84,6 @@ def _cmd(func):
     return _wrap
 
 
-def _transitions_config_parser(transitions):
-    """Parse transitions config into initialized objects."""
-    import yeelight
-
-    transition_objects = []
-    for transition_config in transitions:
-        transition, params = list(transition_config.items())[0]
-        transition_objects.append(getattr(yeelight, transition)(*params))
-
-    return transition_objects
-
-
-def _parse_custom_effects(effects_config):
-    import yeelight
-
-    effects = {}
-    for config in effects_config:
-        params = config[CONF_FLOW_PARAMS]
-        action = yeelight.Flow.actions[params[ATTR_ACTION]]
-        transitions = _transitions_config_parser(
-            params[ATTR_TRANSITIONS])
-
-        effects[config[CONF_NAME]] = {
-            ATTR_COUNT: params[ATTR_COUNT],
-            ATTR_ACTION: action,
-            ATTR_TRANSITIONS: transitions
-        }
-
-    return effects
-
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
     if not discovery_info:
@@ -135,32 +94,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device = yeelight_data[CONF_DEVICES][ipaddr]
     _LOGGER.debug("Adding %s", device.name)
 
-    custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
+    custom_effects = discovery_info[CONF_CUSTOM_EFFECTS]
     light = YeelightLight(device, custom_effects=custom_effects)
 
     yeelight_data[CONF_LIGHTS][ipaddr] = light
     add_entities([light], True)
-
-    def service_handler(service):
-        """Dispatch service calls to target entities."""
-        params = {key: value for key, value in service.data.items()
-                  if key != ATTR_ENTITY_ID}
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        target_devices = [dev for dev in yeelight_data[CONF_LIGHTS].values()
-                          if dev.entity_id in entity_ids]
-
-        for target_device in target_devices:
-            if service.service == SERVICE_START_FLOW:
-                params[ATTR_TRANSITIONS] = \
-                    _transitions_config_parser(params[ATTR_TRANSITIONS])
-                target_device.start_flow(**params)
-
-    service_schema_start_flow = YEELIGHT_SERVICE_SCHEMA.extend(
-        YEELIGHT_FLOW_TRANSITION_SCHEMA
-    )
-    hass.services.register(
-        DOMAIN, SERVICE_START_FLOW, service_handler,
-        schema=service_schema_start_flow)
 
 
 class YeelightLight(Light):
@@ -189,7 +127,7 @@ class YeelightLight(Light):
 
     @callback
     def _schedule_immediate_update(self, ipaddr):
-        if ipaddr == self._device.ipaddr:
+        if ipaddr == self.device.ipaddr:
             self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
@@ -226,7 +164,7 @@ class YeelightLight(Light):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return self._device.name
+        return self.device.name
 
     @property
     def is_on(self) -> bool:
@@ -291,10 +229,15 @@ class YeelightLight(Light):
             return {}
         return self._bulb.last_properties
 
+    @property
+    def device(self):
+        """Return yeelight device."""
+        return self._device
+
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
     def _bulb(self) -> 'yeelight.Bulb':  # noqa: F821
-        bulb = self._device.bulb
+        bulb = self.device.bulb
 
         if bulb:
             self._available = True
@@ -475,7 +418,7 @@ class YeelightLight(Light):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self._device.turn_on(duration=duration)
+        self.device.turn_on(duration=duration)
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
@@ -511,18 +454,4 @@ class YeelightLight(Light):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self._device.turn_off(duration=duration)
-
-    def start_flow(self, transitions, count=0, action=ACTION_RECOVER):
-        """Start flow."""
-        import yeelight
-
-        try:
-            flow = yeelight.Flow(
-                count=count,
-                action=yeelight.Flow.actions[action],
-                transitions=transitions)
-
-            self._bulb.start_flow(flow)
-        except yeelight.BulbException as ex:
-            _LOGGER.error("Unable to set effect: %s", ex)
+        self.device.turn_off(duration=duration)
