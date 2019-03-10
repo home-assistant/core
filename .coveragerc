@@ -37,6 +37,7 @@ omit =
     homeassistant/components/august/*
     homeassistant/components/axis/*
     homeassistant/components/bbb_gpio/*
+    homeassistant/components/benq_projector/*
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/flic.py

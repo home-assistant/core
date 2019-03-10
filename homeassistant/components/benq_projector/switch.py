@@ -64,7 +64,7 @@ class BenqSwitch(SwitchDevice):
         self._host = host
         self._name = name
         self._unique_id = host
-        self._state = False
+        self._state = STATE_UNKNOWN
         self._available = False
         self._icon = ICON
         self._block = False
