@@ -11,13 +11,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
-from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
+from .const import GROUP_ID_ADMIN, GROUP_ID_USER, GROUP_ID_READ_ONLY
 from .permissions import PermissionLookup, system_policies
 from .permissions.types import PolicyType  # noqa: F401
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
 GROUP_NAME_ADMIN = 'Administrators'
+GROUP_NAME_USER = "Users"
 GROUP_NAME_READ_ONLY = 'Read Only'
 
 
@@ -305,6 +306,7 @@ class AuthStore:
         # 1. Data from a recent version which has a single group without policy
         # 2. Data from old version which has no groups
         has_admin_group = False
+        has_user_group = False
         has_read_only_group = False
         group_without_policy = None
 
@@ -320,6 +322,13 @@ class AuthStore:
 
                 name = GROUP_NAME_ADMIN
                 policy = system_policies.ADMIN_POLICY
+                system_generated = True
+
+            elif group_dict['id'] == GROUP_ID_USER:
+                has_user_group = True
+
+                name = GROUP_NAME_USER
+                policy = system_policies.USER_POLICY
                 system_generated = True
 
             elif group_dict['id'] == GROUP_ID_READ_ONLY:
@@ -368,6 +377,10 @@ class AuthStore:
         if not has_read_only_group:
             read_only_group = _system_read_only_group()
             groups[read_only_group.id] = read_only_group
+
+        if not has_user_group:
+            user_group = _system_user_group()
+            groups[user_group.id] = user_group
 
         for user_dict in data['users']:
             # Collect the users group.
@@ -483,7 +496,7 @@ class AuthStore:
                 'name': group.name
             }  # type: Dict[str, Any]
 
-            if group.id not in (GROUP_ID_READ_ONLY, GROUP_ID_ADMIN):
+            if not group.system_generated:
                 g_dict['policy'] = group.policy
 
             groups.append(g_dict)
@@ -536,6 +549,8 @@ class AuthStore:
         groups = OrderedDict()  # type: Dict[str, models.Group]
         admin_group = _system_admin_group()
         groups[admin_group.id] = admin_group
+        user_group = _system_user_group()
+        groups[user_group.id] = user_group
         read_only_group = _system_read_only_group()
         groups[read_only_group.id] = read_only_group
         self._groups = groups
@@ -547,6 +562,16 @@ def _system_admin_group() -> models.Group:
         name=GROUP_NAME_ADMIN,
         id=GROUP_ID_ADMIN,
         policy=system_policies.ADMIN_POLICY,
+        system_generated=True,
+    )
+
+
+def _system_user_group() -> models.Group:
+    """Create system user group."""
+    return models.Group(
+        name=GROUP_NAME_USER,
+        id=GROUP_ID_USER,
+        policy=system_policies.USER_POLICY,
         system_generated=True,
     )
 
