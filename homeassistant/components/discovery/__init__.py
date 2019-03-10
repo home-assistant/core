@@ -69,7 +69,7 @@ SERVICE_HANDLERS = {
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
-    SERVICE_ENIGMA2: ('enigma2', None),
+    SERVICE_ENIGMA2: ('media_player', 'enigma2'),
     SERVICE_ROKU: ('roku', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
