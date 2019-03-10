@@ -10,6 +10,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +50,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     telnet = telnetlib.Telnet()
+    try:
+        telnet.open(host, timeout=5)
+    except IOError as err:
+        _LOGGER.error(err)
+        raise PlatformNotReady
+    finally:
+        telnet.close()
 
     add_entities([BenqSwitch(telnet, host, name)], True)
 
