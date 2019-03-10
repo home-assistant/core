@@ -120,7 +120,7 @@ hdate==0.8.7
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190305.0
+home-assistant-frontend==20190309.0
 
 # homeassistant.components.homekit_controller
 homekit==0.12.2
