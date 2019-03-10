@@ -203,6 +203,7 @@ class HomeKitEntity(Entity):
 
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
+        self._available = True
         self._name = accessory.model
         self._accessory = accessory
         self._aid = devinfo['aid']
@@ -270,14 +271,24 @@ class HomeKitEntity(Entity):
     async def async_update(self):
         """Obtain a HomeKit device's state."""
         # pylint: disable=import-error
-        from homekit.exceptions import AccessoryDisconnectedError
+        from homekit.exceptions import (
+            AccessoryDisconnectedError, AccessoryNotFoundError)
 
         try:
             new_values_dict = await self._accessory.get_characteristics(
                 self._chars_to_poll
             )
-        except AccessoryDisconnectedError:
+        except AccessoryNotFoundError:
+            # Not only did the connection fail, but also the accessory is not
+            # visible on the network.
+            self._available = False
             return
+        except AccessoryDisconnectedError:
+            # Temporary connection failure. Device is still available but our
+            # connection was dropped.
+            return
+
+        self._available = True
 
         for (_, iid), result in new_values_dict.items():
             if 'value' not in result:
@@ -303,7 +314,7 @@ class HomeKitEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._accessory.pairing is not None
+        return self._available
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
