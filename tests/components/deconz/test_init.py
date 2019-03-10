@@ -1,6 +1,7 @@
 """Test deCONZ component setup process."""
 from unittest.mock import Mock, patch
 
+import asyncio
 import pytest
 import voluptuous as vol
 
@@ -76,13 +77,23 @@ async def test_setup_entry_already_registered_bridge(hass):
     assert await deconz.async_setup_entry(hass, {}) is False
 
 
+async def test_setup_entry_fails(hass):
+    """Test setup entry fails if deCONZ is not available."""
+    entry = Mock()
+    entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
+    with patch(
+        'pydeconz.DeconzSession.async_load_parameters',
+        side_effect=Exception):
+        await deconz.async_setup_entry(hass, entry)
+
+
 async def test_setup_entry_no_available_bridge(hass):
     """Test setup entry fails if deCONZ is not available."""
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
     with patch(
         'pydeconz.DeconzSession.async_load_parameters',
-        return_value=mock_coro(False)
+        side_effect=asyncio.TimeoutError
     ), pytest.raises(ConfigEntryNotReady):
         await deconz.async_setup_entry(hass, entry)
 
