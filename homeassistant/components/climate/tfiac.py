@@ -10,19 +10,9 @@ from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import convert as convert_temperature
 
-# Description of how the platform is defined
-# climate:
-#   platform: tfiac
-#   host: 192.168.10.26
-
-# Debug by adding this
-# logger:
-#   logs:
-#     homeassistant.components.climate.tfiac: debug
-
 DOMAIN = 'tfiac'
 
-REQUIREMENTS = ['tfiac==0.0.1alpha']
+REQUIREMENTS = ['tfiac==0.1']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
