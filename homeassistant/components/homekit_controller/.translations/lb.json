@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Accessoire ass schon mat d\u00ebsem Kontroller konfigur\u00e9iert.",
+            "no_devices": "Keng net verbonnen Apparater fonnt"
+        },
+        "error": {
+            "authentication_error": "Ong\u00ebltege HomeKit Code. Iwwerpr\u00e9ift d\u00ebsen an prob\u00e9iert w.e.g. nach emol.",
+            "unable_to_pair": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
+            "unknown_error": "Apparat mellt een onbekannte Feeler. Verbindung net m\u00e9iglech."
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Pairing Code"
+                },
+                "description": "Gitt \u00e4ren HomeKit pairing Code an fir d\u00ebsen Accessoire ze benotzen",
+                "title": "Mat {{ model }} verbannen"
+            },
+            "user": {
+                "data": {
+                    "device": "Apparat"
+                },
+                "description": "Wielt den Apparat aus dee soll verbonne ginn",
+                "title": "Mam HomeKit Accessoire verbannen"
+            }
+        },
+        "title": "HomeKit Accessoire"
+    }
+}
