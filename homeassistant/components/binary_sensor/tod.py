@@ -134,9 +134,9 @@ class TodSensor(BinarySensorDevice):
             # datetime.combine(date, time, tzinfo) is not supported
             # in python 3.5. The self._after is provided
             # with hass configured TZ not system wide
-            after_event_date = datetime.combine(
-                nowutc, self._after.replace(
-                    tzinfo=self.hass.config.time_zone)).astimezone(tz=pytz.UTC)
+            after_event_date = self.hass.config.time_zone.localize(
+                datetime.datetime.combine(
+                    nowutc, self._after)).astimezone(tz=pytz.UTC)
 
         self._time_after = after_event_date
 
@@ -154,9 +154,9 @@ class TodSensor(BinarySensorDevice):
                     self.hass, self._before, after_event_date)
         else:
             # Convert local time provided to UTC today, see above
-            before_event_date = datetime.combine(
-                nowutc, self._before.replace(
-                    tzinfo=self.hass.config.time_zone)).astimezone(tz=pytz.UTC)
+            before_event_date = self.hass.config.time_zone.localize(
+                datetime.datetime.combine(
+                    nowutc, self._before)).astimezone(tz=pytz.UTC)
 
             # It is safe to add timedelta days=1 to UTC as there is no DST
             if before_event_date < after_event_date + self._after_offset:
