@@ -117,12 +117,10 @@ class ApiConfig:
     """Configuration settings for API server."""
 
     def __init__(self, host: str, port: Optional[int] = SERVER_PORT,
-                 use_ssl: bool = False,
-                 api_password: Optional[str] = None) -> None:
+                 use_ssl: bool = False) -> None:
         """Initialize a new API config object."""
         self.host = host
         self.port = port
-        self.api_password = api_password
 
         host = host.rstrip('/')
         if host.startswith(("http://", "https://")):
@@ -199,8 +197,7 @@ async def async_setup(hass, config):
         host = hass_util.get_local_ip()
         port = server_port
 
-    hass.config.api = ApiConfig(host, port, ssl_certificate is not None,
-                                api_password)
+    hass.config.api = ApiConfig(host, port, ssl_certificate is not None)
 
     return True
 

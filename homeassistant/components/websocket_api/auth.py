@@ -88,7 +88,7 @@ class AuthPhase:
                 ".html#authentication-phase"
             )
             user = await legacy_api_password.async_validate_password(
-                    self._hass, msg['api_password'])
+                self._hass, msg['api_password'])
             if user is not None:
                 return await self._async_finish_auth(user, None)
 
