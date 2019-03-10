@@ -114,7 +114,7 @@ homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
 homeassistant/components/sensor/min_max.py @fabaff
 homeassistant/components/sensor/moon.py @fabaff
 homeassistant/components/sensor/netdata.py @fabaff
-homeassistant/components/sensor/nmbs.py. @thibmaek
+homeassistant/components/sensor/nmbs.py @thibmaek
 homeassistant/components/sensor/nsw_fuel_station.py @nickw444
 homeassistant/components/sensor/pi_hole.py @fabaff
 homeassistant/components/sensor/pollen.py @bachya
