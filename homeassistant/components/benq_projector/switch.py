@@ -181,9 +181,11 @@ class BenqSwitch(SwitchDevice):
                     if msg:
                         try:
                             awns = self._write_read_format(msg)
-                            self._attributes[key] = awns.split("=")[1].split("#")[0]
+                            self._attributes[key] = awns.split("=")[1]\
+                                .split("#")[0]
                         except AttributeError:
-                            _LOGGER.error("Malformed answer received: %s", awns)
+                            _LOGGER.error("Malformed answer received: %s"\
+                                , awns)
 
             self._close()
 
