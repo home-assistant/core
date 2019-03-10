@@ -117,4 +117,4 @@ async def test_hap_reset_unloads_entry_if_setup():
         mock_coro(True)
     await hap.async_reset()
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 7
+    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 8
