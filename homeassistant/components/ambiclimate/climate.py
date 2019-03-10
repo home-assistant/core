@@ -18,8 +18,6 @@ from .const import (ATTR_VALUE, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
                     DOMAIN, SERVICE_COMFORT_FEEDBACK, SERVICE_COMFORT_MODE,
                     SERVICE_TEMPERATURE_MODE, STORAGE_KEY, STORAGE_VERSION)
 
-REQUIREMENTS = ['ambiclimate==0.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -42,7 +40,7 @@ SET_TEMPERATURE_MODE_SCHEMA = vol.Schema({
 })
 
 
-async def setup_platform(hass, config, async_add_entities,
+async def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Set up the Ambicliamte device."""
 
@@ -59,19 +57,27 @@ async def async_setup_entry(hass, entry, async_add_entities):
                                          config[CONF_CLIENT_SECRET],
                                          config['callback_url'],
                                          websession)
+
     data_connection = ambiclimate.AmbiclimateConnection(oauth,
                                                         token_info=token_info,
                                                         websession=websession)
+    try:
+        token_info = await data_connection.refresh_access_token()
+        if token_info:
+            await store.async_save(token_info)
+    except ambiclimate.AmbiclimateOauthError:
+        _LOGGER.error("Failed to refresh access token")
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     if not await data_connection.find_devices():
+        _LOGGER.error("No devices found")
         return
 
     tasks = []
     for heater in data_connection.get_devices():
         tasks.append(heater.update_device_info())
-    await asyncio.wait(tasks, loop=hass.loop)
+    await asyncio.wait(tasks)
 
     devs = []
     for heater in data_connection.get_devices():
@@ -81,7 +87,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async def send_comfort_feedback(service):
         """Send comfort feedback."""
-        device_name = service.data.get(ATTR_NAME)
+        device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)
         if device:
             await device.set_comfort_feedback(service.data.get(ATTR_VALUE))
@@ -122,7 +128,7 @@ class AmbiclimateEntity(ClimateDevice):
     def __init__(self, heater, store):
         """Initialize the thermostat."""
         self._heater = heater
-        self._data = dict()
+        self._data = {}
         self._store = store
 
     @property

@@ -11,7 +11,6 @@ from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, DOMAIN
 
 REQUIREMENTS = ['ambiclimate==0.1.1']
 
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(

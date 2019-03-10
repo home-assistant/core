@@ -163,7 +163,6 @@ alpha_vantage==2.1.0
 <<<<<<< HEAD
 =======
 # homeassistant.components.ambiclimate
-# homeassistant.components.ambiclimate.climate
 ambiclimate==0.1.1
 
 >>>>>>> update requirements_all.txt
