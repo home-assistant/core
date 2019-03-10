@@ -85,7 +85,7 @@ def app_fixture(hass, config_file):
         'appType': 'WEBHOOK_SMART_APP',
         'classifications': [CLASSIFICATION_AUTOMATION],
         'displayName': 'Home Assistant',
-        'description': "Home Assistant at " + hass.config.api.base_url,
+        'description': "test home at " + hass.config.api.base_url,
         'singleInstance': True,
         'webhookSmartApp': {
             'targetUrl': webhook.async_generate_url(

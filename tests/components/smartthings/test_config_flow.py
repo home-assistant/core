@@ -41,7 +41,7 @@ async def test_base_url_not_https(hass):
     hass.config.api.base_url = 'http://0.0.0.0'
     flow = SmartThingsFlowHandler()
     flow.hass = hass
-    result = await flow.async_step_import()
+    result = await flow.async_step_user({'access_token': str(uuid4())})
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
