@@ -135,7 +135,7 @@ class TodSensor(BinarySensorDevice):
             # in python 3.5. The self._after is provided
             # with hass configured TZ not system wide
             after_event_date = self.hass.config.time_zone.localize(
-                datetime.datetime.combine(
+                datetime.combine(
                     nowutc, self._after)).astimezone(tz=pytz.UTC)
 
         self._time_after = after_event_date
@@ -155,7 +155,7 @@ class TodSensor(BinarySensorDevice):
         else:
             # Convert local time provided to UTC today, see above
             before_event_date = self.hass.config.time_zone.localize(
-                datetime.datetime.combine(
+                datetime.combine(
                     nowutc, self._before)).astimezone(tz=pytz.UTC)
 
             # It is safe to add timedelta days=1 to UTC as there is no DST
