@@ -657,6 +657,7 @@ ENV.filters['sin'] = sine
 ENV.filters['cos'] = cosine
 ENV.filters['tan'] = tangent
 ENV.filters['sqrt'] = square_root
+ENV.filters['as_timestamp'] = forgiving_as_timestamp
 ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc
