@@ -5,6 +5,10 @@ ADMIN_POLICY = {
     CAT_ENTITIES: True,
 }
 
+USER_POLICY = {
+    CAT_ENTITIES: True,
+}
+
 READ_ONLY_POLICY = {
     CAT_ENTITIES: {
         SUBCAT_ALL: {
