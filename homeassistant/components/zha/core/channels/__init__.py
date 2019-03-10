@@ -20,7 +20,6 @@ from ..const import (
     CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED,
     ATTRIBUTE_CHANNEL, EVENT_RELAY_CHANNEL, ZDO_CHANNEL
 )
-from ..store import async_get_registry
 
 NODE_DESCRIPTOR_REQUEST = 0x0002
 MAINS_POWERED = 1
@@ -221,14 +220,14 @@ class AttributeListeningChannel(ZigbeeChannel):
         self.name = ATTRIBUTE_CHANNEL
         attr = self._report_config[0].get('attr')
         if isinstance(attr, str):
-            self._value_attribute = get_attr_id_by_name(self.cluster, attr)
+            self.value_attribute = get_attr_id_by_name(self.cluster, attr)
         else:
-            self._value_attribute = attr
+            self.value_attribute = attr
 
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
-        if attrid == self._value_attribute:
+        if attrid == self.value_attribute:
             async_dispatcher_send(
                 self._zha_device.hass,
                 "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
@@ -288,8 +287,8 @@ class ZDOChannel:
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        entry = (await async_get_registry(
-            self._zha_device.hass)).async_get_or_create(self._zha_device)
+        entry = self._zha_device.gateway.zha_storage.async_get_or_create(
+            self._zha_device)
         _LOGGER.debug("entry loaded from storage: %s", entry)
         if entry is not None:
             self.power_source = entry.power_source
@@ -303,8 +302,8 @@ class ZDOChannel:
             # this previously so lets set it up so users don't have
             # to reconfigure every device.
             await self.async_get_node_descriptor(False)
-            entry = (await async_get_registry(
-                self._zha_device.hass)).async_update(self._zha_device)
+            entry = self._zha_device.gateway.zha_storage.async_update(
+                self._zha_device)
             _LOGGER.debug("entry after getting node desc in init: %s", entry)
         self._status = ChannelStatus.INITIALIZED
 
