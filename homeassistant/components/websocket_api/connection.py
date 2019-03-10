@@ -95,9 +95,9 @@ class ActiveConnection:
             code = const.ERR_INVALID_FORMAT
             err_message = str(err)
         else:
-            self.logger.exception('Error handling message: %s', msg)
             code = const.ERR_UNKNOWN_ERROR
             err_message = 'Unknown error'
-
+        
+        self.logger.exception('Error handling message: %s', msg)
         self.send_message(
             messages.error_message(msg['id'], code, err_message))
