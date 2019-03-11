@@ -62,9 +62,6 @@ def setup_auth(hass, app):
 
         Basic auth_type is legacy code, should be removed with api_password.
         """
-        if hdrs.AUTHORIZATION not in request.headers:
-            return False
-
         try:
             auth_type, auth_val = \
                 request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
@@ -138,7 +135,31 @@ def setup_auth(hass, app):
             return False
 
         request[KEY_HASS_USER] = refresh_token.user
+        return True
 
+    async def async_validate_trusted_networks(request):
+        """Test if request is from a trusted ip."""
+        ip_addr = request[KEY_REAL_IP]
+
+        if not any(ip_addr in trusted_network
+                   for trusted_network in trusted_networks):
+            return False
+
+        user = await hass.auth.async_get_owner()
+        if user is None:
+            return False
+
+        request[KEY_HASS_USER] = user
+        return True
+
+    async def async_validate_legacy_api_password(request, password):
+        """Validate api_password."""
+        user = await legacy_api_password.async_validate_password(
+            hass, password)
+        if user is None:
+            return False
+
+        request[KEY_HASS_USER] = user
         return True
 
     @middleware
@@ -167,36 +188,21 @@ def setup_auth(hass, app):
               await async_validate_signed_request(request)):
             authenticated = True
 
-        elif support_legacy and HTTP_HEADER_HA_AUTH in request.headers:
-            user = await legacy_api_password.async_validate_password(
-                hass, request.headers[HTTP_HEADER_HA_AUTH])
-            if user is not None:
-                authenticated = True
-                request[KEY_HASS_USER] = user
+        elif (trusted_networks and
+              await async_validate_trusted_networks(request)):
+            authenticated = True
 
-        elif support_legacy and DATA_API_PASSWORD in request.query:
-            user = await legacy_api_password.async_validate_password(
-                hass, request.query[DATA_API_PASSWORD])
-            if user is not None:
-                authenticated = True
-                request[KEY_HASS_USER] = user
+        elif (support_legacy and HTTP_HEADER_HA_AUTH in request.headers and
+              await async_validate_legacy_api_password(
+                  request, request.headers[HTTP_HEADER_HA_AUTH])):
+            authenticated = True
 
-        elif _is_trusted_ip(request, trusted_networks):
-            user = await hass.auth.async_get_owner()
-            if user is not None:
-                authenticated = True
-                request[KEY_HASS_USER] = user
+        elif (support_legacy and DATA_API_PASSWORD in request.query and
+              await async_validate_legacy_api_password(
+                  request, request.query[DATA_API_PASSWORD])):
+            authenticated = True
 
         request[KEY_AUTHENTICATED] = authenticated
         return await handler(request)
 
     app.middlewares.append(auth_middleware)
-
-
-def _is_trusted_ip(request, trusted_networks):
-    """Test if request is from a trusted ip."""
-    ip_addr = request[KEY_REAL_IP]
-
-    return any(
-        ip_addr in trusted_network for trusted_network
-        in trusted_networks)
