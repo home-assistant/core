@@ -1,9 +1,4 @@
-"""
-Support for ADS binary sensors.
-
-For more details about this platform, please refer to the documentation.
-https://home-assistant.io/components/binary_sensor.ads/
-"""
+"""Support for ADS binary sensors."""
 import logging
 
 import voluptuous as vol
@@ -44,6 +39,7 @@ class AdsBinarySensor(BinarySensorDevice):
     def __init__(self, ads_hub, name, ads_var, device_class):
         """Initialize ADS binary sensor."""
         self._name = name
+        self._unique_id = ads_var
         self._state = False
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
@@ -65,6 +61,11 @@ class AdsBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the default name of the binary sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return an unique identifier for this entity."""
+        return self._unique_id
 
     @property
     def device_class(self):

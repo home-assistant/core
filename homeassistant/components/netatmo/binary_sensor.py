@@ -1,11 +1,4 @@
-"""
-Support for the Netatmo binary sensors.
-
-The binary sensors based on events seen by the Netatmo cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.netatmo/.
-"""
+"""Support for the Netatmo binary sensors."""
 import logging
 
 import voluptuous as vol
@@ -69,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     import pyatmo
     try:
-        data = CameraData(netatmo.NETATMO_AUTH, home)
+        data = CameraData(hass, netatmo.NETATMO_AUTH, home)
         if not data.get_camera_names():
             return None
     except pyatmo.NoDevice:

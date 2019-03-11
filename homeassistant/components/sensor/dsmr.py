@@ -147,6 +147,18 @@ async def async_setup_platform(hass, config, async_add_entities,
             'Voltage Swells Phase L3',
             obis_ref.VOLTAGE_SWELL_L3_COUNT
         ],
+        [
+            'Voltage Phase L1',
+            obis_ref.INSTANTANEOUS_VOLTAGE_L1
+        ],
+        [
+            'Voltage Phase L2',
+            obis_ref.INSTANTANEOUS_VOLTAGE_L2
+        ],
+        [
+            'Voltage Phase L3',
+            obis_ref.INSTANTANEOUS_VOLTAGE_L3
+        ],
     ]
 
     # Generate device entities
@@ -338,7 +350,9 @@ class DerivativeDSMREntity(DSMREntity):
             else:
                 # Recalculate the rate
                 diff = current_reading - self._previous_reading
-                self._state = diff
+                timediff = timestamp - self._previous_timestamp
+                total_seconds = timediff.total_seconds()
+                self._state = round(float(diff) / total_seconds * 3600, 3)
 
             self._previous_reading = current_reading
             self._previous_timestamp = timestamp

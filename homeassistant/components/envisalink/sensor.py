@@ -1,9 +1,4 @@
-"""
-Support for Envisalink sensors (shows panel info).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.envisalink/
-"""
+"""Support for Envisalink sensors (shows panel info)."""
 import logging
 
 from homeassistant.core import callback
@@ -18,8 +13,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['envisalink']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     configured_partitions = discovery_info['partitions']
 
@@ -27,11 +22,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     for part_num in configured_partitions:
         device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
         device = EnvisalinkSensor(
-            hass,
-            device_config_data[CONF_PARTITIONNAME],
-            part_num,
+            hass, device_config_data[CONF_PARTITIONNAME], part_num,
             hass.data[DATA_EVL].alarm_state['partition'][part_num],
             hass.data[DATA_EVL])
+
         devices.append(device)
 
     async_add_entities(devices)

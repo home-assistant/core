@@ -1,22 +1,16 @@
-"""
-Support for deCONZ switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.deconz/
-"""
+"""Support for deCONZ switches."""
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS, SIRENS
+from .const import DOMAIN as DECONZ_DOMAIN, NEW_LIGHT, POWER_PLUGS, SIRENS
 from .deconz_device import DeconzDevice
-
 
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ switches."""
     pass
 
@@ -40,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities, True)
 
     gateway.listeners.append(
-        async_dispatcher_connect(hass, 'deconz_new_light', async_add_switch))
+        async_dispatcher_connect(hass, NEW_LIGHT, async_add_switch))
 
     async_add_switch(gateway.api.lights.values())
 

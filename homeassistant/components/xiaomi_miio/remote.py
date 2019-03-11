@@ -1,9 +1,4 @@
-"""
-Support for the Xiaomi IR Remote (Chuangmi IR).
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/remote.xiaomi_miio/
-"""
+"""Support for the Xiaomi IR Remote (Chuangmi IR)."""
 import asyncio
 import logging
 import time
@@ -37,8 +32,7 @@ DEFAULT_SLOT = 1
 
 LEARN_COMMAND_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): vol.All(str),
-    vol.Optional(CONF_TIMEOUT, default=10):
-        vol.All(int, vol.Range(min=0)),
+    vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
     vol.Optional(CONF_SLOT, default=1):
         vol.All(int, vol.Range(min=1, max=1000000)),
 })

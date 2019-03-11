@@ -1,9 +1,4 @@
-"""
-Support for AlarmDecoder-based alarm control panels (Honeywell/DSC).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
-"""
+"""Support for AlarmDecoder-based alarm control panels (Honeywell/DSC)."""
 import logging
 
 import voluptuous as vol
@@ -135,6 +130,11 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         """Send arm home command."""
         if code:
             self.hass.data[DATA_AD].send("{!s}3".format(code))
+
+    def alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        if code:
+            self.hass.data[DATA_AD].send("{!s}33".format(code))
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""

@@ -1,9 +1,4 @@
-"""
-Interfaces with Verisure sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.verisure/
-"""
+"""Support for Verisure binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice

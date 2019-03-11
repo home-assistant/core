@@ -1,9 +1,4 @@
-"""
-Support for IOTA wallets.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/iota
-"""
+"""Support for IOTA wallet sensors."""
 import logging
 from datetime import timedelta
 
@@ -26,12 +21,10 @@ SCAN_INTERVAL = timedelta(minutes=3)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IOTA sensor."""
-    # Add sensors for wallet balance
     iota_config = discovery_info
     sensors = [IotaBalanceSensor(wallet, iota_config)
                for wallet in iota_config[CONF_WALLETS]]
 
-    # Add sensor for node information
     sensors.append(IotaNodeSensor(iota_config=iota_config))
 
     add_entities(sensors)

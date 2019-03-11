@@ -1,16 +1,14 @@
-"""
-Support for monitoring the Transmission BitTorrent client API.
+"""Support for monitoring the Transmission BitTorrent client API."""
+from datetime import timedelta
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.transmission/
-"""
 import logging
 
 from homeassistant.components.transmission import (
-    DATA_TRANSMISSION, SENSOR_TYPES, SCAN_INTERVAL)
+    DATA_TRANSMISSION, SENSOR_TYPES, DATA_UPDATED)
 from homeassistant.const import STATE_IDLE
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 DEPENDENCIES = ['transmission']
 
@@ -18,8 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission'
 
+SCAN_INTERVAL = timedelta(seconds=120)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Transmission sensors."""
     if discovery_info is None:
         return
@@ -31,24 +32,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     for sensor_type in monitored_variables:
         dev.append(TransmissionSensor(
-            sensor_type,
-            transmission_api,
-            name,
-            SENSOR_TYPES[sensor_type][0],
-            SENSOR_TYPES[sensor_type][1]))
+            sensor_type, transmission_api, name,
+            SENSOR_TYPES[sensor_type][0], SENSOR_TYPES[sensor_type][1]))
 
-    add_entities(dev, True)
+    async_add_entities(dev, True)
 
 
 class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
 
     def __init__(
-            self,
-            sensor_type,
-            transmission_api,
-            client_name,
-            sensor_name,
+            self, sensor_type, transmission_api, client_name, sensor_name,
             unit_of_measurement):
         """Initialize the sensor."""
         self._name = sensor_name
@@ -70,6 +64,11 @@ class TransmissionSensor(Entity):
         return self._state
 
     @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
@@ -79,10 +78,17 @@ class TransmissionSensor(Entity):
         """Could the device be accessed during the last update call."""
         return self._transmission_api.available
 
-    @Throttle(SCAN_INTERVAL)
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update)
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        self._transmission_api.update()
         self._data = self._transmission_api.data
 
         if self.type == 'completed_torrents':

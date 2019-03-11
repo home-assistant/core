@@ -28,8 +28,8 @@ ATTR_BUILD_FINISHED = 'build_finished'
 ATTR_BUILD_ID = 'build id'
 ATTR_BUILD_STARTED = 'build_started'
 ATTR_BUILD_STATUS = 'build_status'
+ATTRIBUTION = "Information provided by https://gitlab.com/"
 
-CONF_ATTRIBUTION = "Information provided by https://gitlab.com/"
 CONF_GITLAB_ID = 'gitlab_id'
 
 DEFAULT_NAME = 'GitLab CI Status'
@@ -101,7 +101,7 @@ class GitLabSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_BUILD_STATUS: self._state,
             ATTR_BUILD_STARTED: self._started_at,
             ATTR_BUILD_FINISHED: self._finished_at,

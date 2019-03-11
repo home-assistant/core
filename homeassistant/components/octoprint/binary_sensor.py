@@ -1,9 +1,4 @@
-"""
-Support for monitoring OctoPrint binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.octoprint/
-"""
+"""Support for monitoring OctoPrint binary sensors."""
 import logging
 
 import requests

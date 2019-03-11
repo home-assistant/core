@@ -1,9 +1,4 @@
-"""
-Platform for the Daikin AC.
-
-For more details about this component, please refer to the documentation
-https://home-assistant.io/components/daikin/
-"""
+"""Platform for the Daikin AC."""
 import asyncio
 from datetime import timedelta
 import logging

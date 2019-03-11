@@ -1,10 +1,4 @@
-"""
-Wireless Sensor Tags platform support.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/wirelesstag/
-"""
-
+"""Support for Wireless Sensor Tags."""
 import logging
 
 from requests.exceptions import HTTPError, ConnectTimeout
@@ -22,11 +16,11 @@ REQUIREMENTS = ['wirelesstagpy==0.4.0']
 _LOGGER = logging.getLogger(__name__)
 
 
-# strength of signal in dBm
+# Strength of signal in dBm
 ATTR_TAG_SIGNAL_STRENGTH = 'signal_strength'
-# indicates if tag is out of range or not
+# Indicates if tag is out of range or not
 ATTR_TAG_OUT_OF_RANGE = 'out_of_range'
-# number in percents from max power of tag receiver
+# Number in percents from max power of tag receiver
 ATTR_TAG_POWER_CONSUMPTION = 'power_consumption'
 
 
@@ -36,11 +30,11 @@ NOTIFICATION_TITLE = "Wireless Sensor Tag Setup"
 DOMAIN = 'wirelesstag'
 DEFAULT_ENTITY_NAMESPACE = 'wirelesstag'
 
-# template for signal - first parameter is tag_id,
+# Template for signal - first parameter is tag_id,
 # second, tag manager mac address
 SIGNAL_TAG_UPDATE = 'wirelesstag.tag_info_updated_{}_{}'
 
-# template for signal - tag_id, sensor type and
+# Template for signal - tag_id, sensor type and
 # tag manager mac address
 SIGNAL_BINARY_EVENT_UPDATE = 'wirelesstag.binary_event_updated_{}_{}_{}'
 

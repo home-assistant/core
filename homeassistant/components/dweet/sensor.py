@@ -1,9 +1,4 @@
-"""
-Support for showing values from Dweet.io.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dweet/
-"""
+"""Support for showing values from Dweet.io."""
 import json
 import logging
 from datetime import timedelta
@@ -13,14 +8,12 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT)
+    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_DEVICE)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['dweepy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DEVICE = 'device'
 
 DEFAULT_NAME = 'Dweet.io Sensor'
 
@@ -49,11 +42,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         content = json.dumps(dweepy.get_latest_dweet_for(device)[0]['content'])
     except dweepy.DweepyError:
         _LOGGER.error("Device/thing %s could not be found", device)
-        return False
+        return
 
     if value_template.render_with_possible_json_value(content) == '':
         _LOGGER.error("%s was not found", value_template)
-        return False
+        return
 
     dweet = DweetData(device)
 

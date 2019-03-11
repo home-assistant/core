@@ -1,4 +1,5 @@
 """Home Assistant auth provider."""
+import asyncio
 import base64
 from collections import OrderedDict
 import logging
@@ -204,15 +205,21 @@ class HassAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = 'Home Assistant Local'
 
-    data = None
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize an Home Assistant auth provider."""
+        super().__init__(*args, **kwargs)
+        self.data = None  # type: Optional[Data]
+        self._init_lock = asyncio.Lock()
 
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
-        if self.data is not None:
-            return
+        async with self._init_lock:
+            if self.data is not None:
+                return
 
-        self.data = Data(self.hass)
-        await self.data.async_load()
+            data = Data(self.hass)
+            await data.async_load()
+            self.data = data
 
     async def async_login_flow(
             self, context: Optional[Dict]) -> LoginFlow:

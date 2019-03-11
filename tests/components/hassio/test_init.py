@@ -51,7 +51,6 @@ def test_setup_api_push_api_data(hass, aioclient_mock):
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = yield from async_setup_component(hass, 'hassio', {
             'http': {
-                'api_password': "123456",
                 'server_port': 9999
             },
             'hassio': {}
@@ -60,7 +59,6 @@ def test_setup_api_push_api_data(hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 3
     assert not aioclient_mock.mock_calls[1][2]['ssl']
-    assert aioclient_mock.mock_calls[1][2]['password'] == "123456"
     assert aioclient_mock.mock_calls[1][2]['port'] == 9999
     assert aioclient_mock.mock_calls[1][2]['watchdog']
 
@@ -71,7 +69,6 @@ def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = yield from async_setup_component(hass, 'hassio', {
             'http': {
-                'api_password': "123456",
                 'server_port': 9999,
                 'server_host': "127.0.0.1"
             },
@@ -81,7 +78,6 @@ def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 3
     assert not aioclient_mock.mock_calls[1][2]['ssl']
-    assert aioclient_mock.mock_calls[1][2]['password'] == "123456"
     assert aioclient_mock.mock_calls[1][2]['port'] == 9999
     assert not aioclient_mock.mock_calls[1][2]['watchdog']
 
@@ -98,7 +94,6 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock,
 
     assert aioclient_mock.call_count == 3
     assert not aioclient_mock.mock_calls[1][2]['ssl']
-    assert aioclient_mock.mock_calls[1][2]['password'] is None
     assert aioclient_mock.mock_calls[1][2]['port'] == 8123
     refresh_token = aioclient_mock.mock_calls[1][2]['refresh_token']
     hassio_user = await hass.auth.async_get_user(
@@ -159,7 +154,6 @@ async def test_setup_api_existing_hassio_user(hass, aioclient_mock,
 
     assert aioclient_mock.call_count == 3
     assert not aioclient_mock.mock_calls[1][2]['ssl']
-    assert aioclient_mock.mock_calls[1][2]['password'] is None
     assert aioclient_mock.mock_calls[1][2]['port'] == 8123
     assert aioclient_mock.mock_calls[1][2]['refresh_token'] == token.token
 

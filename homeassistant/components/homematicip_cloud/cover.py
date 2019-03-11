@@ -1,19 +1,16 @@
-"""
-Support for HomematicIP Cloud cover devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud cover devices."""
 import logging
 
-from homeassistant.components.cover import (
-    ATTR_POSITION, CoverDevice)
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.components.homematicip_cloud import (
-    HMIPC_HAPID, HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN)
+    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 
 DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
+
+HMIP_COVER_OPEN = 0
+HMIP_COVER_CLOSED = 1
 
 
 async def async_setup_platform(
@@ -42,28 +39,29 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
     @property
     def current_cover_position(self):
         """Return current position of cover."""
-        return int(self._device.shutterLevel * 100)
+        return int((1 - self._device.shutterLevel) * 100)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
-        level = position / 100.0
+        # HmIP cover is closed:1 -> open:0
+        level = 1 - position / 100.0
         await self._device.set_shutter_level(level)
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
         if self._device.shutterLevel is not None:
-            return self._device.shutterLevel == 0
+            return self._device.shutterLevel == HMIP_COVER_CLOSED
         return None
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self._device.set_shutter_level(1)
+        await self._device.set_shutter_level(HMIP_COVER_OPEN)
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        await self._device.set_shutter_level(0)
+        await self._device.set_shutter_level(HMIP_COVER_CLOSED)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the device if in motion."""

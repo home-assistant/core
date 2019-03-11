@@ -14,6 +14,7 @@ DATA_ZHA_RADIO = 'zha_radio'
 DATA_ZHA_DISPATCHERS = 'zha_dispatchers'
 DATA_ZHA_CORE_COMPONENT = 'zha_core_component'
 DATA_ZHA_CORE_EVENTS = 'zha_core_events'
+DATA_ZHA_GATEWAY = 'zha_gateway'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
 COMPONENTS = [
@@ -55,10 +56,45 @@ IEEE = 'ieee'
 MODEL = 'model'
 NAME = 'name'
 
-LISTENER_BATTERY = 'battery'
+SENSOR_TYPE = 'sensor_type'
+HUMIDITY = 'humidity'
+TEMPERATURE = 'temperature'
+ILLUMINANCE = 'illuminance'
+PRESSURE = 'pressure'
+METERING = 'metering'
+ELECTRICAL_MEASUREMENT = 'electrical_measurement'
+GENERIC = 'generic'
+UNKNOWN = 'unknown'
+OPENING = 'opening'
+ZONE = 'zone'
+OCCUPANCY = 'occupancy'
+ACCELERATION = 'acceleration'
+
+ATTR_LEVEL = 'level'
+
+ZDO_CHANNEL = 'zdo'
+ON_OFF_CHANNEL = 'on_off'
+ATTRIBUTE_CHANNEL = 'attribute'
+BASIC_CHANNEL = 'basic'
+COLOR_CHANNEL = 'color'
+FAN_CHANNEL = 'fan'
+LEVEL_CHANNEL = ATTR_LEVEL
+ZONE_CHANNEL = 'zone'
+ELECTRICAL_MEASUREMENT_CHANNEL = 'active_power'
+POWER_CONFIGURATION_CHANNEL = 'battery'
+EVENT_RELAY_CHANNEL = 'event_relay'
 
 SIGNAL_ATTR_UPDATED = 'attribute_updated'
+SIGNAL_MOVE_LEVEL = "move_level"
+SIGNAL_SET_LEVEL = "set_level"
+SIGNAL_STATE_ATTR = "update_state_attribute"
 SIGNAL_AVAILABLE = 'available'
+SIGNAL_REMOVE = 'remove'
+
+QUIRK_APPLIED = 'quirk_applied'
+QUIRK_CLASS = 'quirk_class'
+MANUFACTURER_CODE = 'manufacturer_code'
+POWER_SOURCE = 'power_source'
 
 
 class RadioType(enum.Enum):
@@ -78,9 +114,12 @@ DISCOVERY_KEY = 'zha_discovery_info'
 DEVICE_CLASS = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
+CLUSTER_REPORT_CONFIGS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
 COMPONENT_CLUSTERS = {}
-EVENTABLE_CLUSTERS = []
+EVENT_RELAY_CLUSTERS = []
+NO_SENSOR_CLUSTERS = []
+BINDABLE_CLUSTERS = []
 
 REPORT_CONFIG_MAX_INT = 900
 REPORT_CONFIG_MAX_INT_BATTERY_SAVE = 10800

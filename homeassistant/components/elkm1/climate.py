@@ -1,17 +1,14 @@
-"""
-Support for control of Elk-M1 connected thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.elkm1/
-"""
-from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, PRECISION_WHOLE, STATE_AUTO,
+"""Support for control of Elk-M1 connected thermostats."""
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, STATE_AUTO,
     STATE_COOL, STATE_FAN_ONLY, STATE_HEAT, STATE_IDLE, SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW, ClimateDevice)
+    SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.components.elkm1 import (
     DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities)
-from homeassistant.const import STATE_ON
+from homeassistant.const import (
+    STATE_ON, PRECISION_WHOLE)
 
 DEPENDENCIES = [ELK_DOMAIN]
 

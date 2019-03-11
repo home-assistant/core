@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.ring import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DATA_RING)
+    ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DATA_RING)
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
@@ -47,18 +47,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for device in ring.doorbells:  # ring.doorbells is doing I/O
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass,
-                                                device,
-                                                sensor_type))
+                sensors.append(RingBinarySensor(hass, device, sensor_type))
 
     for device in ring.stickup_cams:  # ring.stickup_cams is doing I/O
         for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass,
-                                                device,
-                                                sensor_type))
+                sensors.append(RingBinarySensor(hass, device, sensor_type))
+
     add_entities(sensors, True)
-    return True
 
 
 class RingBinarySensor(BinarySensorDevice):
@@ -69,8 +65,8 @@ class RingBinarySensor(BinarySensorDevice):
         super(RingBinarySensor, self).__init__()
         self._sensor_type = sensor_type
         self._data = data
-        self._name = "{0} {1}".format(self._data.name,
-                                      SENSOR_TYPES.get(self._sensor_type)[0])
+        self._name = "{0} {1}".format(
+            self._data.name, SENSOR_TYPES.get(self._sensor_type)[0])
         self._device_class = SENSOR_TYPES.get(self._sensor_type)[2]
         self._state = None
         self._unique_id = '{}-{}'.format(self._data.id, self._sensor_type)
@@ -99,7 +95,7 @@ class RingBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         attrs['device_id'] = self._data.id
         attrs['firmware'] = self._data.firmware

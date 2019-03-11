@@ -1,9 +1,4 @@
-"""
-Support for August binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.august/
-"""
+"""Support for August binary sensors."""
 import logging
 from datetime import timedelta, datetime
 
@@ -144,6 +139,13 @@ class AugustDoorBinarySensor(BinarySensorDevice):
         from august.lock import LockDoorStatus
         self._state = self._state == LockDoorStatus.OPEN
 
+    @property
+    def unique_id(self) -> str:
+        """Get the unique of the door open binary sensor."""
+        return '{:s}_{:s}'.format(self._door.device_id,
+                                  SENSOR_TYPES_DOOR[self._sensor_type][0]
+                                  .lower())
+
 
 class AugustDoorbellBinarySensor(BinarySensorDevice):
     """Representation of an August binary sensor."""
@@ -181,4 +183,11 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         """Get the latest state of the sensor."""
         state_provider = SENSOR_TYPES_DOORBELL[self._sensor_type][2]
         self._state = state_provider(self._data, self._doorbell)
-        self._available = self._state is not None
+        self._available = self._doorbell.is_online
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id of the doorbell sensor."""
+        return '{:s}_{:s}'.format(self._doorbell.device_id,
+                                  SENSOR_TYPES_DOORBELL[self._sensor_type][0]
+                                  .lower())

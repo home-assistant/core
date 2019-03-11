@@ -1,11 +1,4 @@
-"""
-Support for Xiaomi Philips Lights.
-
-LED Ball, Candle, Downlight, Ceiling, Eyecare 2, Bedside & Desklamp Lamp.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/light.xiaomi_miio/
-"""
+"""Support for Xiaomi Philips Lights."""
 import asyncio
 import datetime
 from datetime import timedelta

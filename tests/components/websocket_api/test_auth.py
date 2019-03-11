@@ -5,7 +5,6 @@ from homeassistant.components.websocket_api.const import URL
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_INVALID, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED)
 
-from homeassistant.components.websocket_api import commands
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
@@ -45,7 +44,7 @@ async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
 async def test_pre_auth_only_auth_allowed(no_auth_websocket_client):
     """Verify that before authentication, only auth messages are allowed."""
     await no_auth_websocket_client.send_json({
-        'type': commands.TYPE_CALL_SERVICE,
+        'type': 'call_service',
         'domain': 'domain_test',
         'service': 'test_service',
         'service_data': {

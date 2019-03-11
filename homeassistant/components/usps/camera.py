@@ -1,9 +1,4 @@
-"""
-Support for a camera made up of usps mail images.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/camera.usps/
-"""
+"""Support for a camera made up of USPS mail images."""
 from datetime import timedelta
 import logging
 

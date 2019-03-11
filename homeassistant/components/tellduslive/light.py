@@ -1,11 +1,4 @@
-"""
-Support for Tellstick switches using Tellstick Net.
-
-This platform uses the Telldus Live online service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.tellduslive/
-"""
+"""Support for Tellstick lights using Tellstick Net."""
 import logging
 
 from homeassistant.components import light, tellduslive
@@ -52,6 +45,7 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
     def changed(self):
         """Define a property of the device that might have changed."""
         self._last_brightness = self.brightness
+        self._update_callback()
 
     @property
     def brightness(self):

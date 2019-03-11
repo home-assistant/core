@@ -1,9 +1,4 @@
-"""
-Connects to VELUX KLF 200 interface.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/velux/
-"""
+"""Support for VELUX KLF 200 devices."""
 import logging
 
 import voluptuous as vol
@@ -17,7 +12,7 @@ DATA_VELUX = "data_velux"
 SUPPORTED_DOMAINS = ['cover', 'scene']
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyvlx==0.2.8']
+REQUIREMENTS = ['pyvlx==0.2.10']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

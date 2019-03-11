@@ -1,9 +1,4 @@
-"""
-Support for BloomSky weather station.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/bloomsky/
-"""
+"""Support for BloomSky weather station."""
 from datetime import timedelta
 import logging
 
@@ -71,7 +66,7 @@ class BloomSky:
             self.API_URL, headers={AUTHORIZATION: self._api_key}, timeout=10)
         if response.status_code == 401:
             raise RuntimeError("Invalid API_KEY")
-        elif response.status_code != 200:
+        if response.status_code != 200:
             _LOGGER.error("Invalid HTTP response: %s", response.status_code)
             return
         # Create dictionary keyed off of the device unique id

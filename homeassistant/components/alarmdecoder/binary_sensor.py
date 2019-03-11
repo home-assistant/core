@@ -1,9 +1,4 @@
-"""
-Support for AlarmDecoder zone states- represented as binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.alarmdecoder/
-"""
+"""Support for AlarmDecoder zone states- represented as binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice

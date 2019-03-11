@@ -1,4 +1,5 @@
 """Test the HMAC-based One Time Password (MFA) auth module."""
+import asyncio
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
@@ -395,3 +396,26 @@ async def test_not_raise_exception_when_service_not_exist(hass):
 
     # wait service call finished
     await hass.async_block_till_done()
+
+
+async def test_race_condition_in_data_loading(hass):
+    """Test race condition in the data loading."""
+    counter = 0
+
+    async def mock_load(_):
+        """Mock homeassistant.helpers.storage.Store.async_load."""
+        nonlocal counter
+        counter += 1
+        await asyncio.sleep(0)
+
+    notify_auth_module = await auth_mfa_module_from_config(hass, {
+        'type': 'notify'
+    })
+    with patch('homeassistant.helpers.storage.Store.async_load',
+               new=mock_load):
+        task1 = notify_auth_module.async_validate('user', {'code': 'value'})
+        task2 = notify_auth_module.async_validate('user', {'code': 'value'})
+        results = await asyncio.gather(task1, task2, return_exceptions=True)
+        assert counter == 1
+        assert results[0] is False
+        assert results[1] is False

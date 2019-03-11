@@ -1,14 +1,8 @@
-"""
-This component provides HA cover support for Abode Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.abode/
-"""
+"""Support for Abode Security System covers."""
 import logging
 
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.cover import CoverDevice
-
 
 DEPENDENCIES = ['abode']
 

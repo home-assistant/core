@@ -9,14 +9,15 @@ import pytest
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_TRANSITION)
-from homeassistant.components.smartthings import DeviceBroker, light
+    DOMAIN as LIGHT_DOMAIN, SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP, SUPPORT_TRANSITION)
+from homeassistant.components.smartthings import light
 from homeassistant.components.smartthings.const import (
-    DATA_BROKERS, DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
+    DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from .conftest import setup_platform
 
 
 @pytest.fixture(name="light_devices")
@@ -44,49 +45,14 @@ def light_devices_fixture(device_factory):
     ]
 
 
-async def _setup_platform(hass, *devices):
-    """Set up the SmartThings light platform and prerequisites."""
-    hass.config.components.add(DOMAIN)
-    broker = DeviceBroker(hass, devices, '')
-    config_entry = ConfigEntry("1", DOMAIN, "Test", {},
-                               SOURCE_USER, CONN_CLASS_CLOUD_PUSH)
-    hass.data[DOMAIN] = {
-        DATA_BROKERS: {
-            config_entry.entry_id: broker
-        }
-    }
-    await hass.config_entries.async_forward_entry_setup(config_entry, 'light')
-    await hass.async_block_till_done()
-    return config_entry
-
-
 async def test_async_setup_platform():
     """Test setup platform does nothing (it uses config entries)."""
     await light.async_setup_platform(None, None, None)
 
 
-def test_is_light(device_factory, light_devices):
-    """Test lights are correctly identified."""
-    non_lights = [
-        device_factory('Unknown', ['Unknown']),
-        device_factory("Fan 1",
-                       [Capability.switch, Capability.switch_level,
-                        Capability.fan_speed]),
-        device_factory("Switch 1", [Capability.switch]),
-        device_factory("Can't be turned off",
-                       [Capability.switch_level, Capability.color_control,
-                        Capability.color_temperature])
-    ]
-
-    for device in light_devices:
-        assert light.is_light(device), device.name
-    for device in non_lights:
-        assert not light.is_light(device), device.name
-
-
 async def test_entity_state(hass, light_devices):
     """Tests the state attributes properly match the light types."""
-    await _setup_platform(hass, *light_devices)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=light_devices)
 
     # Dimmer 1
     state = hass.states.get('light.dimmer_1')
@@ -120,7 +86,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     device_registry = await hass.helpers.device_registry.async_get_registry()
     # Act
-    await _setup_platform(hass, device)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get("light.light_1")
     assert entry
@@ -137,7 +103,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
 async def test_turn_off(hass, light_devices):
     """Test the light turns of successfully."""
     # Arrange
-    await _setup_platform(hass, *light_devices)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=light_devices)
     # Act
     await hass.services.async_call(
         'light', 'turn_off', {'entity_id': 'light.color_dimmer_2'},
@@ -151,7 +117,7 @@ async def test_turn_off(hass, light_devices):
 async def test_turn_off_with_transition(hass, light_devices):
     """Test the light turns of successfully with transition."""
     # Arrange
-    await _setup_platform(hass, *light_devices)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=light_devices)
     # Act
     await hass.services.async_call(
         'light', 'turn_off',
@@ -166,7 +132,7 @@ async def test_turn_off_with_transition(hass, light_devices):
 async def test_turn_on(hass, light_devices):
     """Test the light turns of successfully."""
     # Arrange
-    await _setup_platform(hass, *light_devices)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=light_devices)
     # Act
     await hass.services.async_call(
         'light', 'turn_on', {ATTR_ENTITY_ID: "light.color_dimmer_1"},
@@ -180,7 +146,7 @@ async def test_turn_on(hass, light_devices):
 async def test_turn_on_with_brightness(hass, light_devices):
     """Test the light turns on to the specified brightness."""
     # Arrange
-    await _setup_platform(hass, *light_devices)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=light_devices)
     # Act
     await hass.services.async_call(
         'light', 'turn_on',
@@ -204,7 +170,7 @@ async def test_turn_on_with_minimal_brightness(hass, light_devices):
     set the level to zero, which turns off the lights in SmartThings.
     """
     # Arrange
-    await _setup_platform(hass, *light_devices)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=light_devices)
     # Act
     await hass.services.async_call(
         'light', 'turn_on',
@@ -222,7 +188,7 @@ async def test_turn_on_with_minimal_brightness(hass, light_devices):
 async def test_turn_on_with_color(hass, light_devices):
     """Test the light turns on with color."""
     # Arrange
-    await _setup_platform(hass, *light_devices)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=light_devices)
     # Act
     await hass.services.async_call(
         'light', 'turn_on',
@@ -239,7 +205,7 @@ async def test_turn_on_with_color(hass, light_devices):
 async def test_turn_on_with_color_temp(hass, light_devices):
     """Test the light turns on with color temp."""
     # Arrange
-    await _setup_platform(hass, *light_devices)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=light_devices)
     # Act
     await hass.services.async_call(
         'light', 'turn_on',
@@ -263,7 +229,7 @@ async def test_update_from_signal(hass, device_factory):
         status={Attribute.switch: 'off', Attribute.level: 100,
                 Attribute.hue: 76.0, Attribute.saturation: 55.0,
                 Attribute.color_temperature: 4500})
-    await _setup_platform(hass, device)
+    await setup_platform(hass, LIGHT_DOMAIN, devices=[device])
     await device.switch_on(True)
     # Act
     async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE,
@@ -285,7 +251,7 @@ async def test_unload_config_entry(hass, device_factory):
         status={Attribute.switch: 'off', Attribute.level: 100,
                 Attribute.hue: 76.0, Attribute.saturation: 55.0,
                 Attribute.color_temperature: 4500})
-    config_entry = await _setup_platform(hass, device)
+    config_entry = await setup_platform(hass, LIGHT_DOMAIN, devices=[device])
     # Act
     await hass.config_entries.async_forward_entry_unload(
         config_entry, 'light')

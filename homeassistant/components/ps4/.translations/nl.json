@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "IP-adres",
+                    "name": "Naam",
+                    "region": "Regio"
+                },
+                "description": "Voer je PlayStation 4 informatie in. Voor 'PIN', blader naar 'Instellingen' op je PlayStation 4. Blader dan naar 'Mobiele App verbindingsinstellingen' en kies 'Apparaat toevoegen'. Voer de weergegeven PIN-code in.",
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

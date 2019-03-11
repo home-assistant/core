@@ -767,3 +767,37 @@ async def test_message_callback_exception_gets_logged(hass, caplog):
     assert \
         "Exception in bad_handler when handling msg on 'test-topic':" \
         " 'test'" in caplog.text
+
+
+async def test_mqtt_ws_subscription(hass, hass_ws_client):
+    """Test MQTT websocket subscription."""
+    await async_mock_mqtt_component(hass)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'mqtt/subscribe',
+        'topic': 'test-topic',
+    })
+    response = await client.receive_json()
+    assert response['success']
+
+    async_fire_mqtt_message(hass, 'test-topic', 'test1')
+    async_fire_mqtt_message(hass, 'test-topic', 'test2')
+
+    response = await client.receive_json()
+    assert response['event']['topic'] == 'test-topic'
+    assert response['event']['payload'] == 'test1'
+
+    response = await client.receive_json()
+    assert response['event']['topic'] == 'test-topic'
+    assert response['event']['payload'] == 'test2'
+
+    # Unsubscribe
+    await client.send_json({
+        'id': 8,
+        'type': 'unsubscribe_events',
+        'subscription': 5,
+    })
+    response = await client.receive_json()
+    assert response['success']

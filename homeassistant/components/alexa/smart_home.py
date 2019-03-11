@@ -1,10 +1,4 @@
-"""Support for alexa Smart Home Skill API.
-
-API documentation:
-https://developer.amazon.com/docs/smarthome/understand-the-smart-home-skill-api.html
-https://developer.amazon.com/docs/device-apis/message-guide.html
-"""
-
+"""Support for alexa Smart Home Skill API."""
 import asyncio
 from collections import OrderedDict
 from datetime import datetime
@@ -17,8 +11,9 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components import (
-    alert, automation, binary_sensor, climate, cover, fan, group, http,
+    alert, automation, binary_sensor, cover, fan, group, http,
     input_boolean, light, lock, media_player, scene, script, sensor, switch)
+from homeassistant.components.climate import const as climate
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.const import (
@@ -27,9 +22,9 @@ from homeassistant.const import (
     CONF_NAME, SERVICE_LOCK, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_UNLOCK, SERVICE_VOLUME_SET, STATE_LOCKED, STATE_ON,
-    STATE_UNAVAILABLE, STATE_UNLOCKED, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    MATCH_ALL)
+    SERVICE_UNLOCK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_MUTE, STATE_LOCKED, STATE_ON, STATE_OFF, STATE_UNAVAILABLE,
+    STATE_UNLOCKED, TEMP_CELSIUS, TEMP_FAHRENHEIT, MATCH_ALL)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
@@ -63,10 +58,11 @@ API_THERMOSTAT_MODES = OrderedDict([
     (climate.STATE_COOL, 'COOL'),
     (climate.STATE_AUTO, 'AUTO'),
     (climate.STATE_ECO, 'ECO'),
-    (climate.STATE_OFF, 'OFF'),
+    (climate.STATE_MANUAL, 'AUTO'),
+    (STATE_OFF, 'OFF'),
     (climate.STATE_IDLE, 'OFF'),
     (climate.STATE_FAN_ONLY, 'OFF'),
-    (climate.STATE_DRY, 'OFF')
+    (climate.STATE_DRY, 'OFF'),
 ])
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
@@ -770,7 +766,7 @@ class _AlexaThermostatController(_AlexaInterface):
 
         unit = self.hass.config.units.temperature_unit
         if name == 'targetSetpoint':
-            temp = self.entity.attributes.get(climate.ATTR_TEMPERATURE)
+            temp = self.entity.attributes.get(ATTR_TEMPERATURE)
         elif name == 'lowerSetpoint':
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
         elif name == 'upperSetpoint':
@@ -883,7 +879,7 @@ class _LockCapabilities(_AlexaEntity):
                 _AlexaEndpointHealth(self.hass, self.entity)]
 
 
-@ENTITY_ADAPTERS.register(media_player.DOMAIN)
+@ENTITY_ADAPTERS.register(media_player.const.DOMAIN)
 class _MediaPlayerCapabilities(_AlexaEntity):
     def default_display_categories(self):
         return [_DisplayCategory.TV]
@@ -893,19 +889,19 @@ class _MediaPlayerCapabilities(_AlexaEntity):
         yield _AlexaEndpointHealth(self.hass, self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & media_player.SUPPORT_VOLUME_SET:
+        if supported & media_player.const.SUPPORT_VOLUME_SET:
             yield _AlexaSpeaker(self.entity)
 
-        step_volume_features = (media_player.SUPPORT_VOLUME_MUTE |
-                                media_player.SUPPORT_VOLUME_STEP)
+        step_volume_features = (media_player.const.SUPPORT_VOLUME_MUTE |
+                                media_player.const.SUPPORT_VOLUME_STEP)
         if supported & step_volume_features:
             yield _AlexaStepSpeaker(self.entity)
 
-        playback_features = (media_player.SUPPORT_PLAY |
-                             media_player.SUPPORT_PAUSE |
-                             media_player.SUPPORT_STOP |
-                             media_player.SUPPORT_NEXT_TRACK |
-                             media_player.SUPPORT_PREVIOUS_TRACK)
+        playback_features = (media_player.const.SUPPORT_PLAY |
+                             media_player.const.SUPPORT_PAUSE |
+                             media_player.const.SUPPORT_STOP |
+                             media_player.const.SUPPORT_NEXT_TRACK |
+                             media_player.const.SUPPORT_PREVIOUS_TRACK)
         if supported & playback_features:
             yield _AlexaPlaybackController(self.entity)
 
@@ -1792,7 +1788,7 @@ async def async_api_set_volume(hass, config, directive, context):
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
+        media_player.const.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
     await hass.services.async_call(
@@ -1809,7 +1805,8 @@ async def async_api_select_input(hass, config, directive, context):
     entity = directive.entity
 
     # attempt to map the ALL UPPERCASE payload name to a source
-    source_list = entity.attributes[media_player.ATTR_INPUT_SOURCE_LIST] or []
+    source_list = entity.attributes[
+        media_player.const.ATTR_INPUT_SOURCE_LIST] or []
     for source in source_list:
         # response will always be space separated, so format the source in the
         # most likely way to find a match
@@ -1824,7 +1821,7 @@ async def async_api_select_input(hass, config, directive, context):
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.ATTR_INPUT_SOURCE: media_input,
+        media_player.const.ATTR_INPUT_SOURCE: media_input,
     }
 
     await hass.services.async_call(
@@ -1840,7 +1837,8 @@ async def async_api_adjust_volume(hass, config, directive, context):
     volume_delta = int(directive.payload['volume'])
 
     entity = directive.entity
-    current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
+    current_level = entity.attributes.get(
+        media_player.const.ATTR_MEDIA_VOLUME_LEVEL)
 
     # read current state
     try:
@@ -1852,11 +1850,11 @@ async def async_api_adjust_volume(hass, config, directive, context):
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
+        media_player.const.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
     await hass.services.async_call(
-        entity.domain, media_player.SERVICE_VOLUME_SET,
+        entity.domain, SERVICE_VOLUME_SET,
         data, blocking=False, context=context)
 
     return directive.response()
@@ -1878,11 +1876,11 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
 
     if volume_step > 0:
         await hass.services.async_call(
-            entity.domain, media_player.SERVICE_VOLUME_UP,
+            entity.domain, SERVICE_VOLUME_UP,
             data, blocking=False, context=context)
     elif volume_step < 0:
         await hass.services.async_call(
-            entity.domain, media_player.SERVICE_VOLUME_DOWN,
+            entity.domain, SERVICE_VOLUME_DOWN,
             data, blocking=False, context=context)
 
     return directive.response()
@@ -1897,11 +1895,11 @@ async def async_api_set_mute(hass, config, directive, context):
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
+        media_player.const.ATTR_MEDIA_VOLUME_MUTED: mute,
     }
 
     await hass.services.async_call(
-        entity.domain, media_player.SERVICE_VOLUME_MUTE,
+        entity.domain, SERVICE_VOLUME_MUTE,
         data, blocking=False, context=context)
 
     return directive.response()

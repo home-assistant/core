@@ -1,9 +1,4 @@
-"""
-Camera that loads a picture from a local file.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.verisure/
-"""
+"""Support for Verisure cameras."""
 import errno
 import logging
 import os

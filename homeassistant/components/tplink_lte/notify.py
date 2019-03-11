@@ -1,15 +1,11 @@
-"""TP-Link LTE platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.tplink_lte/
-"""
-
+"""Support for TP-Link LTE notifications."""
 import logging
 
 import attr
 
 from homeassistant.components.notify import (
     ATTR_TARGET, BaseNotificationService)
+from homeassistant.const import CONF_RECIPIENT
 
 from ..tplink_lte import DATA_KEY
 
@@ -40,7 +36,7 @@ class TplinkNotifyService(BaseNotificationService):
             _LOGGER.error("No modem available")
             return
 
-        phone = self.config[ATTR_TARGET]
+        phone = self.config[CONF_RECIPIENT]
         targets = kwargs.get(ATTR_TARGET, phone)
         if targets and message:
             for target in targets:

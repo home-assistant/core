@@ -1,9 +1,4 @@
-"""
-Support for the (unofficial) Tado api.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tado/
-"""
+"""Support for the (unofficial) Tado API."""
 import logging
 import urllib
 from datetime import timedelta
@@ -31,7 +26,7 @@ TADO_COMPONENTS = [
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string
+        vol.Required(CONF_PASSWORD): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 

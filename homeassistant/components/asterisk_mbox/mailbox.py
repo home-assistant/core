@@ -1,9 +1,4 @@
-"""
-Asterisk Voicemail interface.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/mailbox.asteriskvm/
-"""
+"""Support for the Asterisk Voicemail interface."""
 import logging
 
 from homeassistant.components.asterisk_mbox import DOMAIN as ASTERISK_DOMAIN

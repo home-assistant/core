@@ -1,12 +1,4 @@
-"""
-Support for Tahoma Switch - those are push buttons for garage door etc.
-
-Those buttons are implemented as switches that are never on. They only
-receive the turn_on action, perform the relay click, and stay in OFF state
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.tahoma/
-"""
+"""Support for Tahoma switches."""
 import logging
 
 from homeassistant.components.switch import SwitchDevice

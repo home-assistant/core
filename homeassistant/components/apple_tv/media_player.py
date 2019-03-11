@@ -1,18 +1,13 @@
-"""
-Support for Apple TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.apple_tv/
-"""
+"""Support for Apple TV media player."""
 import logging
 
 from homeassistant.components.apple_tv import (
     ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES)
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    MediaPlayerDevice)
+    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
     STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)

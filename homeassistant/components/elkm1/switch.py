@@ -1,11 +1,4 @@
-"""
-Support for control of ElkM1 outputs (relays).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.elkm1/
-"""
-
-
+"""Support for control of ElkM1 outputs (relays)."""
 from homeassistant.components.elkm1 import (
     DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities)
 from homeassistant.components.switch import SwitchDevice
@@ -13,8 +6,8 @@ from homeassistant.components.switch import SwitchDevice
 DEPENDENCIES = [ELK_DOMAIN]
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Create the Elk-M1 switch platform."""
     if discovery_info is None:
         return

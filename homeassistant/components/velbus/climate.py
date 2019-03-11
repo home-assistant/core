@@ -1,13 +1,9 @@
-"""
-Support for Velbus thermostat.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.velbus/
-"""
+"""Support for Velbus thermostat."""
 import logging
 
-from homeassistant.components.climate import (
-    STATE_HEAT, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_HEAT, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.velbus import (
     DOMAIN as VELBUS_DOMAIN, VelbusEntity)
 from homeassistant.const import (

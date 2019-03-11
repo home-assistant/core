@@ -1,13 +1,8 @@
-"""
-Support for LCN lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lcn/
-"""
-
-from homeassistant.components.lcn import (
+"""Support for LCN lights."""
+from homeassistant.components.lcn import LcnDevice, get_connection
+from homeassistant.components.lcn.const import (
     CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
-    OUTPUT_PORTS, LcnDevice, get_connection)
+    OUTPUT_PORTS)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION,
     Light)
@@ -16,8 +11,8 @@ from homeassistant.const import CONF_ADDRESS
 DEPENDENCIES = ['lcn']
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, hass_config, async_add_entities, discovery_info=None):
     """Set up the LCN light platform."""
     if discovery_info is None:
         return

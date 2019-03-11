@@ -1,14 +1,9 @@
-"""
-Support for OpenTherm Gateway climate devices.
-
-For more details about this platform, please refer to the documentation at
-http://home-assistant.io/components/climate.opentherm_gw/
-"""
+"""Support for OpenTherm Gateway climate devices."""
 import logging
 
-from homeassistant.components.climate import (ClimateDevice, STATE_IDLE,
-                                              STATE_HEAT, STATE_COOL,
-                                              SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_IDLE, STATE_HEAT, STATE_COOL, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.opentherm_gw import (
     CONF_FLOOR_TEMP, CONF_PRECISION, DATA_DEVICE, DATA_GW_VARS,
     DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE)
@@ -17,14 +12,15 @@ from homeassistant.const import (ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES,
                                  TEMP_CELSIUS)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-DEPENDENCIES = ['opentherm_gw']
-
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['opentherm_gw']
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
+
+
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the opentherm_gw device."""
     gateway = OpenThermGateway(hass, discovery_info)
     async_add_entities([gateway])

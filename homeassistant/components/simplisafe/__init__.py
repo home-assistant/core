@@ -1,9 +1,4 @@
-"""
-Support for SimpliSafe alarm systems.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/simplisafe/
-"""
+"""Support for SimpliSafe alarm systems."""
 import logging
 from datetime import timedelta
 
@@ -23,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
 
-REQUIREMENTS = ['simplisafe-python==3.1.14']
+REQUIREMENTS = ['simplisafe-python==3.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +31,7 @@ ACCOUNT_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_CODE): cv.string,
     vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        cv.time_period
+        cv.time_period,
 })
 
 CONFIG_SCHEMA = vol.Schema({

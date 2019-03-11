@@ -1,9 +1,4 @@
-"""
-Sensors for the Tesla sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tesla/
-"""
+"""Support for the Tesla sensors."""
 from datetime import timedelta
 import logging
 

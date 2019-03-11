@@ -1,9 +1,4 @@
-"""
-This component provides basic support for Amcrest IP cameras.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/amcrest/
-"""
+"""Support for Amcrest IP cameras."""
 import logging
 from datetime import timedelta
 
@@ -18,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['amcrest==1.2.3']
+REQUIREMENTS = ['amcrest==1.2.5']
 DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)

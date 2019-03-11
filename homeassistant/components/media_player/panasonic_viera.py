@@ -9,10 +9,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_URL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_URL, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
@@ -57,20 +59,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             uuid = None
         remote = RemoteControl(host, port)
-        add_entities([PanasonicVieraTVDevice(mac, name, remote, uuid)])
+        add_entities([PanasonicVieraTVDevice(mac, name, remote, host, uuid)])
         return True
 
     host = config.get(CONF_HOST)
     remote = RemoteControl(host, port)
 
-    add_entities([PanasonicVieraTVDevice(mac, name, remote)])
+    add_entities([PanasonicVieraTVDevice(mac, name, remote, host)])
     return True
 
 
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, mac, name, remote, uuid=None):
+    def __init__(self, mac, name, remote, host, uuid=None):
         """Initialize the Panasonic device."""
         import wakeonlan
         # Save a reference to the imported class
@@ -82,6 +84,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self._playing = True
         self._state = None
         self._remote = remote
+        self._host = host
         self._volume = 0
 
     @property
@@ -138,7 +141,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn on the media player."""
         if self._mac:
-            self._wol.send_magic_packet(self._mac)
+            self._wol.send_magic_packet(self._mac, ip_address=self._host)
             self._state = STATE_ON
 
     def turn_off(self):

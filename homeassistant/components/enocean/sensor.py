@@ -1,15 +1,10 @@
-"""
-Support for EnOcean sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.enocean/
-"""
+"""Support for EnOcean sensors."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_ID)
+from homeassistant.const import (CONF_NAME, CONF_ID, POWER_WATT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import enocean
@@ -64,4 +59,4 @@ class EnOceanSensor(enocean.EnOceanDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return 'W'
+        return POWER_WATT

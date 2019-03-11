@@ -1,9 +1,4 @@
-"""
-Support for RFXtrx cover components.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.rfxtrx/
-"""
+"""Support for RFXtrx covers."""
 import voluptuous as vol
 
 from homeassistant.components import rfxtrx

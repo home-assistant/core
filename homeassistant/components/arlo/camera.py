@@ -1,9 +1,4 @@
-"""
-Support for Netgear Arlo IP cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.arlo/
-"""
+"""Support for Netgear Arlo IP cameras."""
 import logging
 
 import voluptuous as vol
@@ -104,7 +99,7 @@ class ArloCam(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                'multipart/x-mixed-replace;boundary=ffserver')
+                self._ffmpeg.ffmpeg_stream_content_type)
         finally:
             await stream.close()
 

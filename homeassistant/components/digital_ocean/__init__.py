@@ -1,9 +1,4 @@
-"""
-Support for Digital Ocean.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/digital_ocean/
-"""
+"""Support for Digital Ocean."""
 import logging
 from datetime import timedelta
 
@@ -27,7 +22,8 @@ ATTR_MEMORY = 'memory'
 ATTR_REGION = 'region'
 ATTR_VCPUS = 'vcpus'
 
-CONF_ATTRIBUTION = 'Data provided by Digital Ocean'
+ATTRIBUTION = 'Data provided by Digital Ocean'
+
 CONF_DROPLETS = 'droplets'
 
 DATA_DIGITAL_OCEAN = 'data_do'

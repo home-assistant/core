@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "external_setup": "Punto configurado con \u00e9xito desde otro flujo."
+        },
+        "error": {
+            "follow_link": "Por favor, siga el enlace y autent\u00edquese antes de presionar Enviar",
+            "no_token": "No autenticado con Minut"
+        },
+        "step": {
+            "auth": {
+                "description": "Siga el enlace a continuaci\u00f3n y <b> Aceptar </b> acceso a su cuenta de Minut, luego vuelva y presione <b> Enviar </b> continuaci\u00f3n. \n\n [Enlace] ( {authorization_url} )"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Proveedor"
+                },
+                "description": "Elija a trav\u00e9s de qu\u00e9 proveedor de autenticaci\u00f3n desea autenticarse con Point.",
+                "title": "Proveedor de autenticaci\u00f3n"
+            }
+        },
+        "title": "Minut Point"
+    }
+}

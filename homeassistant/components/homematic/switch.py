@@ -1,9 +1,4 @@
-"""
-Support for HomeMatic switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.homematic/
-"""
+"""Support for HomeMatic switches."""
 import logging
 
 from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice

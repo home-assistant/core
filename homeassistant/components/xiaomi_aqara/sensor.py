@@ -1,4 +1,4 @@
-"""Support for Xiaomi aqara sensors."""
+"""Support for Xiaomi Aqara sensors."""
 import logging
 
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,

@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Smart WiFi Socket and Smart Power Strip.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/switch.xiaomi_miio/
-"""
+"""Support for Xiaomi Smart WiFi Socket and Smart Power Strip."""
 import asyncio
 from functools import partial
 import logging

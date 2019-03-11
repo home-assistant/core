@@ -17,7 +17,7 @@ import voluptuous as vol
 import homeassistant.core as ha
 import homeassistant.config as conf_util
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers import intent
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -70,7 +70,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up general services related to Home Assistant."""
     async def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
-        entity_ids = extract_entity_ids(hass, service)
+        entity_ids = await async_extract_entity_ids(hass, service)
 
         # Generic turn on/off method requires entity id
         if not entity_ids:
@@ -166,6 +166,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             _LOGGER.error(err)
             return
 
+        # auth only processed during startup
         await conf_util.async_process_ha_core_config(
             hass, conf.get(ha.DOMAIN) or {})
 

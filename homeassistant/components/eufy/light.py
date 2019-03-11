@@ -1,9 +1,4 @@
-"""
-Support for Eufy lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.eufy/
-"""
+"""Support for Eufy lights."""
 import logging
 
 from homeassistant.components.light import (

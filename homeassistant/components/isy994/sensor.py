@@ -1,17 +1,12 @@
-"""
-Support for ISY994 sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.isy994/
-"""
+"""Support for ISY994 sensors."""
 import logging
 from typing import Callable
 
+from homeassistant.components.isy994 import (
+    ISY994_NODES, ISY994_WEATHER, ISYDevice)
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.components.isy994 import (ISY994_NODES, ISY994_WEATHER,
-                                             ISYDevice)
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX, POWER_WATT)
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +76,7 @@ UOM_FRIENDLY_NAME = {
     '69': 'gal',
     '71': UNIT_UV_INDEX,
     '72': 'V',
-    '73': 'W',
+    '73': POWER_WATT,
     '74': 'W/m²',
     '75': 'weekday',
     '76': 'Wind Direction (°)',

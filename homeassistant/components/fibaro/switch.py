@@ -1,9 +1,4 @@
-"""
-Support for Fibaro switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.fibaro/
-"""
+"""Support for Fibaro switches."""
 import logging
 
 from homeassistant.util import convert

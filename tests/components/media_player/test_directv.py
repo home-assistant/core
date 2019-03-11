@@ -5,10 +5,14 @@ from datetime import datetime, timedelta
 import requests
 import pytest
 
-import homeassistant.components.media_player as mp
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_ENQUEUE, DOMAIN,
-    SERVICE_PLAY_MEDIA)
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, MEDIA_TYPE_TVSHOW,
+    ATTR_MEDIA_ENQUEUE, ATTR_MEDIA_DURATION, ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_POSITION, ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_CHANNEL,
+    ATTR_INPUT_SOURCE, ATTR_MEDIA_POSITION_UPDATED_AT, DOMAIN,
+    SERVICE_PLAY_MEDIA, SUPPORT_PAUSE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
+    SUPPORT_PLAY_MEDIA, SUPPORT_STOP, SUPPORT_NEXT_TRACK,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY)
 from homeassistant.components.media_player.directv import (
     ATTR_MEDIA_CURRENTLY_RECORDING, ATTR_MEDIA_RATING, ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME, DEFAULT_DEVICE, DEFAULT_PORT)
@@ -149,7 +153,7 @@ def platforms(hass, dtv_side_effect, mock_now):
             patch('DirectPy.DIRECTV', side_effect=dtv_side_effect), \
             patch('homeassistant.util.dt.utcnow', return_value=mock_now):
         hass.loop.run_until_complete(async_setup_component(
-            hass, mp.DOMAIN, config))
+            hass, DOMAIN, config))
         hass.loop.run_until_complete(hass.async_block_till_done())
         yield
 
@@ -281,7 +285,7 @@ async def test_setup_platform_config(hass):
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
-        await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
+        await async_setup_component(hass, DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
 
     state = hass.states.get(MAIN_ENTITY_ID)
@@ -295,7 +299,7 @@ async def test_setup_platform_discover(hass):
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
         hass.async_create_task(
-            async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
+            async_load_platform(hass, DOMAIN, 'directv', DISCOVERY_INFO,
                                 {'media_player': {}})
         )
         await hass.async_block_till_done()
@@ -310,10 +314,10 @@ async def test_setup_platform_discover_duplicate(hass):
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
-        await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
+        await async_setup_component(hass, DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
         hass.async_create_task(
-            async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
+            async_load_platform(hass, DOMAIN, 'directv', DISCOVERY_INFO,
                                 {'media_player': {}})
         )
         await hass.async_block_till_done()
@@ -337,11 +341,11 @@ async def test_setup_platform_discover_client(hass):
     with MockDependency('DirectPy'), \
             patch('DirectPy.DIRECTV', new=MockDirectvClass):
 
-        await async_setup_component(hass, mp.DOMAIN, WORKING_CONFIG)
+        await async_setup_component(hass, DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
 
         hass.async_create_task(
-            async_load_platform(hass, mp.DOMAIN, 'directv', DISCOVERY_INFO,
+            async_load_platform(hass, DOMAIN, 'directv', DISCOVERY_INFO,
                                 {'media_player': {}})
         )
         await hass.async_block_till_done()
@@ -362,16 +366,16 @@ async def test_supported_features(hass, platforms):
     """Test supported features."""
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
-    assert mp.SUPPORT_PAUSE | mp.SUPPORT_TURN_ON | mp.SUPPORT_TURN_OFF |\
-        mp.SUPPORT_PLAY_MEDIA | mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
-        mp.SUPPORT_PREVIOUS_TRACK | mp.SUPPORT_PLAY ==\
+    assert SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF |\
+        SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK |\
+        SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY ==\
         state.attributes.get('supported_features')
 
     # Feature supported for clients.
     state = hass.states.get(CLIENT_ENTITY_ID)
-    assert mp.SUPPORT_PAUSE |\
-        mp.SUPPORT_PLAY_MEDIA | mp.SUPPORT_STOP | mp.SUPPORT_NEXT_TRACK |\
-        mp.SUPPORT_PREVIOUS_TRACK | mp.SUPPORT_PLAY ==\
+    assert SUPPORT_PAUSE |\
+        SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK |\
+        SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY ==\
         state.attributes.get('supported_features')
 
 
@@ -391,21 +395,21 @@ async def test_check_attributes(hass, platforms, mock_now):
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
-    assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_ID) == \
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == \
         RECORDING['programId']
-    assert state.attributes.get(mp.ATTR_MEDIA_CONTENT_TYPE) == \
-        mp.MEDIA_TYPE_TVSHOW
-    assert state.attributes.get(mp.ATTR_MEDIA_DURATION) == \
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == \
+        MEDIA_TYPE_TVSHOW
+    assert state.attributes.get(ATTR_MEDIA_DURATION) == \
         RECORDING['duration']
-    assert state.attributes.get(mp.ATTR_MEDIA_POSITION) == 2
+    assert state.attributes.get(ATTR_MEDIA_POSITION) == 2
     assert state.attributes.get(
-        mp.ATTR_MEDIA_POSITION_UPDATED_AT) == next_update
-    assert state.attributes.get(mp.ATTR_MEDIA_TITLE) == RECORDING['title']
-    assert state.attributes.get(mp.ATTR_MEDIA_SERIES_TITLE) == \
+        ATTR_MEDIA_POSITION_UPDATED_AT) == next_update
+    assert state.attributes.get(ATTR_MEDIA_TITLE) == RECORDING['title']
+    assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) == \
         RECORDING['episodeTitle']
-    assert state.attributes.get(mp.ATTR_MEDIA_CHANNEL) == \
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == \
         "{} ({})".format(RECORDING['callsign'], RECORDING['major'])
-    assert state.attributes.get(mp.ATTR_INPUT_SOURCE) == RECORDING['major']
+    assert state.attributes.get(ATTR_INPUT_SOURCE) == RECORDING['major']
     assert state.attributes.get(ATTR_MEDIA_CURRENTLY_RECORDING) == \
         RECORDING['isRecording']
     assert state.attributes.get(ATTR_MEDIA_RATING) == RECORDING['rating']
@@ -423,7 +427,7 @@ async def test_check_attributes(hass, platforms, mock_now):
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PAUSED
     assert state.attributes.get(
-        mp.ATTR_MEDIA_POSITION_UPDATED_AT) == next_update
+        ATTR_MEDIA_POSITION_UPDATED_AT) == next_update
 
 
 async def test_main_services(hass, platforms, main_dtv, mock_now):

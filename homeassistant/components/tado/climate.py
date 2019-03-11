@@ -1,14 +1,10 @@
-"""
-Tado component to create a climate device for each zone.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.tado/
-"""
+"""Support for Tado to create a climate device for each zone."""
 import logging
 
 from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
-from homeassistant.components.climate import (
-    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.components.tado import DATA_TADO

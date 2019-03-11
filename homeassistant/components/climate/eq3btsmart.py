@@ -8,13 +8,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    STATE_ON, STATE_OFF, STATE_HEAT, STATE_MANUAL, STATE_ECO, PLATFORM_SCHEMA,
-    ClimateDevice,
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate.const import (
+    STATE_HEAT, STATE_MANUAL, STATE_ECO,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE,
     SUPPORT_ON_OFF)
 from homeassistant.const import (
-    CONF_MAC, CONF_DEVICES, TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_HALVES)
+    ATTR_TEMPERATURE, CONF_MAC, CONF_DEVICES, STATE_ON, STATE_OFF,
+    TEMP_CELSIUS, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-eq3bt==0.1.9', 'construct==2.9.45']
@@ -183,7 +184,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
-        from bluepy.btle import BTLEException  # pylint: disable=import-error
+        # pylint: disable=import-error,no-name-in-module
+        from bluepy.btle import BTLEException
         try:
             self._thermostat.update()
         except BTLEException as ex:

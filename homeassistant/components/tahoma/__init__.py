@@ -1,9 +1,4 @@
-"""
-Support for Tahoma devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tahoma/
-"""
+"""Support for Tahoma devices."""
 from collections import defaultdict
 import logging
 import voluptuous as vol
@@ -48,6 +43,7 @@ TAHOMA_TYPES = {
     'io:SomfyContactIOSystemSensor': 'sensor',
     'io:VerticalExteriorAwningIOComponent': 'cover',
     'io:WindowOpenerVeluxIOComponent': 'cover',
+    'io:GarageOpenerIOComponent': 'cover',
     'rtds:RTDSContactSensor': 'sensor',
     'rtds:RTDSMotionSensor': 'sensor',
     'rtds:RTDSSmokeSensor': 'smoke',

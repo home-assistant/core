@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyloopenergy==0.0.18']
+REQUIREMENTS = ['pyloopenergy==0.1.0']
 
 CONF_ELEC = 'electricity'
 CONF_GAS = 'gas'

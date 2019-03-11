@@ -1,13 +1,9 @@
-"""
-Support for monitoring a Sense energy sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sense/
-"""
+"""Support for monitoring a Sense energy sensor."""
 from datetime import timedelta
 import logging
 
 from homeassistant.components.sense import SENSE_DATA
+from homeassistant.const import POWER_WATT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -95,7 +91,7 @@ class Sense(Entity):
         self._state = None
 
         if sensor_type == ACTIVE_TYPE:
-            self._unit_of_measurement = 'W'
+            self._unit_of_measurement = POWER_WATT
         else:
             self._unit_of_measurement = 'kWh'
 

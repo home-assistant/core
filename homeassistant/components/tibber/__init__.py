@@ -1,9 +1,4 @@
-"""
-Support for Tibber.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/tibber/
-"""
+"""Support for Tibber."""
 import asyncio
 import logging
 
@@ -16,7 +11,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN,
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pyTibber==0.9.4']
+REQUIREMENTS = ['pyTibber==0.9.6']
 
 DOMAIN = 'tibber'
 

@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components import cover, mqtt
 from homeassistant.components.cover import (
-    ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
+    ATTR_POSITION, ATTR_TILT_POSITION, DEVICE_CLASSES_SCHEMA, SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT, SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION, SUPPORT_STOP, SUPPORT_STOP_TILT, CoverDevice)
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
@@ -20,8 +20,8 @@ from homeassistant.components.mqtt import (
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import (
-    CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, STATE_CLOSED,
-    STATE_OPEN, STATE_UNKNOWN)
+    CONF_DEVICE, CONF_DEVICE_CLASS, CONF_NAME, CONF_OPTIMISTIC,
+    CONF_VALUE_TEMPLATE, STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN)
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -120,6 +120,7 @@ PLATFORM_SCHEMA = vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
                  default=DEFAULT_TILT_INVERT_STATE): cv.boolean,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema), validate_options)
 
@@ -327,6 +328,11 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def current_cover_tilt_position(self):
         """Return current position of cover tilt."""
         return self._tilt_value
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return self._config.get(CONF_DEVICE_CLASS)
 
     @property
     def supported_features(self):

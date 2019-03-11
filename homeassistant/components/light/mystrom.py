@@ -1,9 +1,4 @@
-"""
-Support for myStrom Wifi bulbs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mystrom/
-"""
+"""Support for myStrom Wifi bulbs."""
 import logging
 
 import voluptuous as vol
@@ -15,7 +10,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 
-REQUIREMENTS = ['python-mystrom==0.4.4']
+REQUIREMENTS = ['python-mystrom==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 

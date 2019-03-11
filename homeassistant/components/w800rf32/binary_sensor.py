@@ -1,10 +1,4 @@
-"""
-Support for w800rf32 binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.w800rf32/
-
-"""
+"""Support for w800rf32 binary sensors."""
 import logging
 
 import voluptuous as vol
@@ -30,14 +24,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_OFF_DELAY):
-            vol.All(cv.time_period, cv.positive_timedelta)
+            vol.All(cv.time_period, cv.positive_timedelta),
         })
     },
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup_platform(hass, config,
-                               add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to w800rf32."""
     binary_sensors = []
     # device_id --> "c1 or a3" X10 device. entity (type dictionary)

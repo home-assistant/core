@@ -1,10 +1,9 @@
-"""
-This component provides basic support for Amcrest IP cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.amcrest/
-"""
+"""Support for Amcrest IP cameras."""
+import asyncio
 import logging
+
+from requests import RequestException
+from urllib3.exceptions import ReadTimeoutError
 
 from homeassistant.components.amcrest import (
     DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT)
@@ -48,12 +47,20 @@ class AmcrestCam(Camera):
         self._stream_source = amcrest.stream_source
         self._resolution = amcrest.resolution
         self._token = self._auth = amcrest.authentication
+        self._snapshot_lock = asyncio.Lock()
 
-    def camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
-        # Send the request to snap a picture and return raw jpg data
-        response = self._camera.snapshot(channel=self._resolution)
-        return response.data
+        async with self._snapshot_lock:
+            try:
+                # Send the request to snap a picture and return raw jpg data
+                response = await self.hass.async_add_executor_job(
+                    self._camera.snapshot, self._resolution)
+                return response.data
+            except (RequestException, ReadTimeoutError, ValueError) as error:
+                _LOGGER.error(
+                    'Could not get camera image due to error %s', error)
+                return None
 
     async def handle_async_mjpeg_stream(self, request):
         """Return an MJPEG stream."""
@@ -82,7 +89,7 @@ class AmcrestCam(Camera):
         try:
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
-                'multipart/x-mixed-replace;boundary=ffserver')
+                self._ffmpeg.ffmpeg_stream_content_type)
         finally:
             await stream.close()
 

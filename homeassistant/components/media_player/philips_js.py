@@ -10,21 +10,21 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_TRACK, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['ha-philipsjs==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
                      SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -71,8 +71,6 @@ class PhilipsTV(MediaPlayerDevice):
         self._tv = tv
         self._name = name
         self._state = None
-        self._min_volume = None
-        self._max_volume = None
         self._volume = None
         self._muted = False
         self._program_name = None
@@ -122,10 +120,6 @@ class PhilipsTV(MediaPlayerDevice):
         """Set the input source."""
         if source in self._source_mapping:
             self._tv.setSource(self._source_mapping.get(source))
-            self._source = source
-            if not self._tv.on:
-                self._state = STATE_OFF
-            self._watching_tv = bool(self._tv.source_id == 'tv')
 
     @property
     def volume_level(self):
@@ -145,26 +139,20 @@ class PhilipsTV(MediaPlayerDevice):
     def turn_off(self):
         """Turn off the device."""
         self._tv.sendKey('Standby')
-        if not self._tv.on:
-            self._state = STATE_OFF
 
     def volume_up(self):
         """Send volume up command."""
         self._tv.sendKey('VolumeUp')
-        if not self._tv.on:
-            self._state = STATE_OFF
 
     def volume_down(self):
         """Send volume down command."""
         self._tv.sendKey('VolumeDown')
-        if not self._tv.on:
-            self._state = STATE_OFF
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self._tv.sendKey('Mute')
-        if not self._tv.on:
-            self._state = STATE_OFF
+        if self._muted != mute:
+            self._tv.sendKey('Mute')
+            self._muted = mute
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -185,12 +173,9 @@ class PhilipsTV(MediaPlayerDevice):
             return '{} - {}'.format(self._source, self._channel_name)
         return self._source
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and update device state."""
         self._tv.update()
-        self._min_volume = self._tv.min_volume
-        self._max_volume = self._tv.max_volume
         self._volume = self._tv.volume
         self._muted = self._tv.muted
         if self._tv.source_id:

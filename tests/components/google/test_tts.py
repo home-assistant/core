@@ -5,7 +5,7 @@ import shutil
 from unittest.mock import patch
 
 import homeassistant.components.tts as tts
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA, ATTR_MEDIA_CONTENT_ID, DOMAIN as DOMAIN_MP)
 from homeassistant.setup import setup_component
 

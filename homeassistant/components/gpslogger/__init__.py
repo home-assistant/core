@@ -1,9 +1,4 @@
-"""
-Support for GPSLogger.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/gpslogger/
-"""
+"""Support for GPSLogger."""
 import logging
 
 import voluptuous as vol
@@ -42,16 +37,16 @@ def _id(value: str) -> str:
 
 
 WEBHOOK_SCHEMA = vol.Schema({
+    vol.Required(ATTR_DEVICE): _id,
     vol.Required(ATTR_LATITUDE): cv.latitude,
     vol.Required(ATTR_LONGITUDE): cv.longitude,
-    vol.Required(ATTR_DEVICE): _id,
     vol.Optional(ATTR_ACCURACY, default=DEFAULT_ACCURACY): vol.Coerce(float),
-    vol.Optional(ATTR_BATTERY, default=DEFAULT_BATTERY): vol.Coerce(float),
-    vol.Optional(ATTR_SPEED): vol.Coerce(float),
-    vol.Optional(ATTR_DIRECTION): vol.Coerce(float),
+    vol.Optional(ATTR_ACTIVITY): cv.string,
     vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
+    vol.Optional(ATTR_BATTERY, default=DEFAULT_BATTERY): vol.Coerce(float),
+    vol.Optional(ATTR_DIRECTION): vol.Coerce(float),
     vol.Optional(ATTR_PROVIDER): cv.string,
-    vol.Optional(ATTR_ACTIVITY): cv.string
+    vol.Optional(ATTR_SPEED): vol.Coerce(float),
 })
 
 
@@ -66,7 +61,7 @@ async def handle_webhook(hass, webhook_id, request):
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
         return web.Response(
-            body=error.error_message,
+            text=error.error_message,
             status=HTTP_UNPROCESSABLE_ENTITY
         )
 
@@ -81,17 +76,12 @@ async def handle_webhook(hass, webhook_id, request):
     device = data[ATTR_DEVICE]
 
     async_dispatcher_send(
-        hass,
-        TRACKER_UPDATE,
-        device,
+        hass, TRACKER_UPDATE, device,
         (data[ATTR_LATITUDE], data[ATTR_LONGITUDE]),
-        data[ATTR_BATTERY],
-        data[ATTR_ACCURACY],
-        attrs
-    )
+        data[ATTR_BATTERY], data[ATTR_ACCURACY], attrs)
 
     return web.Response(
-        body='Setting location for {}'.format(device),
+        text='Setting location for {}'.format(device),
         status=HTTP_OK
     )
 
