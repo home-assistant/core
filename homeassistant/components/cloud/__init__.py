@@ -1,8 +1,5 @@
 """Component to integrate the Home Assistant cloud."""
-from datetime import datetime, timedelta
-import json
 import logging
-import os
 
 import voluptuous as vol
 
@@ -149,27 +146,24 @@ async def async_setup(hass, config):
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
 
-    @callback
-    def _startup(event):
+    async def _startup(event):
         """Startup event."""
-        hass.async_create_task(cloud.start())
+        await cloud.start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _startup)
 
-    @callback
-    def _shutdown(event):
+    async def _shutdown(event):
         """Shutdown event."""
-        hass.async_create_task(cloud.stop())
+        await cloud.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
-    @callback
-    def _service_handler(service):
+    async def _service_handler(service):
         """Handle service for cloud."""
         if service.service == SERVICE_REMOTE_CONNECT:
-            hass.async_create_task(cloud.remote.connect())
+            await cloud.remote.connect()
         elif service.service == SERVICE_REMOTE_DISCONNECT:
-            hass.async_create_task(cloud.remote.disconnect())
+            await cloud.remote.disconnect()
 
     hass.services.async_register(
         DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
