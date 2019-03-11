@@ -19,7 +19,7 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pynanoleaf==0.0.2']
+REQUIREMENTS = ['pynanoleaf==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +78,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     nanoleaf_light.token = token
 
-    if nanoleaf_light.on is None:
+    try:
+       available = nanoleaf_light.available
+    except Exception as err:
         _LOGGER.error(
             "Could not connect to Nanoleaf Light: %s on %s", name, host)
         return
@@ -92,6 +94,7 @@ class NanoleafLight(Light):
 
     def __init__(self, light, name):
         """Initialize an Nanoleaf light."""
+        self._available = True
         self._brightness = None
         self._color_temp = None
         self._effect = None
@@ -100,6 +103,11 @@ class NanoleafLight(Light):
         self._name = name
         self._hs_color = None
         self._state = None
+
+    @property
+    def available(self):
+        """Return availability."""
+        return self._available
 
     @property
     def brightness(self):
@@ -187,9 +195,15 @@ class NanoleafLight(Light):
 
     def update(self):
         """Fetch new state data for this light."""
-        self._brightness = self._light.brightness
-        self._color_temp = self._light.color_temperature
-        self._effect = self._light.effect
-        self._effects_list = self._light.effects
-        self._hs_color = self._light.hue, self._light.saturation
-        self._state = self._light.on
+        try:
+            self._available = self._light.available
+            self._brightness = self._light.brightness
+            self._color_temp = self._light.color_temperature
+            self._effect = self._light.effect
+            self._effects_list = self._light.effects
+            self._hs_color = self._light.hue, self._light.saturation
+            self._state = self._light.on
+        except Exception as err:  # pylint:disable=broad-except
+            _LOGGER.error("Could not update status for %s (%s)",
+                            self.name, err)
+            self._available = False
