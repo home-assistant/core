@@ -95,7 +95,7 @@ SERVICE_HANDLERS = {
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
     'lg_smart_device': ('media_player', 'lg_soundbar'),
-    'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
+    'nanoleaf_aurora': ('light', 'nanoleaf'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
