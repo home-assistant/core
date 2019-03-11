@@ -1,5 +1,5 @@
 
-"""Support for HomematicIP Cloud weather."""
+"""Support for HomematicIP Cloud weather devices."""
 import logging
 
 from homeassistant.components.homematicip_cloud import (
@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):
-    """representation of a HomematicIP Cloud weather sensor."""
+    """representation of a HomematicIP Cloud weather sensor plus & basic."""
 
     def __init__(self, home, device):
         """Initialize the weather sensor."""

@@ -130,7 +130,7 @@ class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return true if moisture or waterlevel is detected."""
+        """Return true, if moisture or waterlevel is detected."""
         return self._device.moistureDetected or self._device.waterlevelDetected
 
 
@@ -148,7 +148,7 @@ class HomematicipStormSensor(HomematicipGenericDevice, BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return true if storm is detected."""
+        """Return true, if storm is detected."""
         return self._device.storm
 
 
@@ -166,7 +166,7 @@ class HomematicipRainSensor(HomematicipGenericDevice, BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return true if it is raining."""
+        """Return true, if it is raining."""
         return self._device.raining
 
 

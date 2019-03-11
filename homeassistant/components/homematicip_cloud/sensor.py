@@ -252,7 +252,7 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
 
 
 class HomematicipWindspeedSensor(HomematicipGenericDevice):
-    """Represenation of a HomematicIP windspeed sensor."""
+    """Represenation of a HomematicIP wind speed sensor."""
 
     def __init__(self, home, device):
         """Initialize the  device."""
@@ -260,7 +260,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
 
     @property
     def state(self):
-        """Represenation of the HomematicIP windspeed value."""
+        """Represenation of the HomematicIP wind speed value."""
         return self._device.windSpeed
 
     @property
@@ -270,7 +270,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the windspeed sensor."""
+        """Return the state attributes of the wind speed sensor."""
         attr = super().device_state_attributes
         if hasattr(self._device, 'windDirection') and \
                 self._device.windDirection:
@@ -284,7 +284,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
 
 
 class HomematicipTodayRainSensor(HomematicipGenericDevice):
-    """Represenation of a HomematicIP rain sensor."""
+    """Represenation of a HomematicIP rain counter of a day sensor."""
 
     def __init__(self, home, device):
         """Initialize the  device."""
