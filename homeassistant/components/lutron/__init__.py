@@ -124,7 +124,8 @@ class LutronButton:
         """Register callback for activity on the button."""
         name = '{}: {}'.format(keypad.name, button.name)
         self._hass = hass
-        self._has_release_event = 'RaiseLower' in button.button_type
+        self._has_release_event = (button.button_type is not None and
+                                   'RaiseLower' in button.button_type)
         self._id = slugify(name)
         self._event = 'lutron_event'
 
