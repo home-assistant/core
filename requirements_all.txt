@@ -520,6 +520,9 @@ habitipy==0.2.0
 # homeassistant.components.hangouts
 hangups==0.4.6
 
+# homeassistant.components.cloud
+hass-nabucasa==0.3
+
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
 
@@ -1762,9 +1765,6 @@ wakeonlan==1.1.6
 
 # homeassistant.components.sensor.waqi
 waqiasync==1.0.0
-
-# homeassistant.components.cloud
-warrant==0.6.1
 
 # homeassistant.components.folder_watcher
 watchdog==0.8.3
