@@ -194,7 +194,7 @@ pyHS100==0.3.4
 pyblackbird==0.5
 
 # homeassistant.components.deconz
-pydeconz==52
+pydeconz==53
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
