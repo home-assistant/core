@@ -10,9 +10,11 @@ ValueType = Union[
     None
 ]
 
+# Example: entities.domains = { light: … }
+SubCategoryDict = Mapping[str, ValueType]
+
 SubCategoryType = Union[
-    # Example: entities.domains = { light: … }
-    Mapping[str, ValueType],
+    SubCategoryDict,
     bool,
     None
 ]
