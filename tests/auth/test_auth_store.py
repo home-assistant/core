@@ -245,7 +245,9 @@ async def test_loading_race_condition(hass):
     store = auth_store.AuthStore(hass)
     with asynctest.patch(
         'homeassistant.helpers.entity_registry.async_get_registry',
-    ) as mock_registry, asynctest.patch(
+    ) as mock_ent_registry, asynctest.patch(
+        'homeassistant.helpers.device_registry.async_get_registry',
+    ) as mock_dev_registry, asynctest.patch(
         'homeassistant.helpers.storage.Store.async_load',
     ) as mock_load:
         results = await asyncio.gather(
@@ -253,6 +255,7 @@ async def test_loading_race_condition(hass):
             store.async_get_users(),
         )
 
-        mock_registry.assert_called_once_with(hass)
+        mock_ent_registry.assert_called_once_with(hass)
+        mock_dev_registry.assert_called_once_with(hass)
         mock_load.assert_called_once_with()
         assert results[0] == results[1]

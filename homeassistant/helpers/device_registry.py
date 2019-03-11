@@ -1,7 +1,7 @@
 """Provide a way to connect entities belonging to one device."""
 import logging
 import uuid
-from typing import List
+from typing import List, Optional
 
 from collections import OrderedDict
 
@@ -70,6 +70,11 @@ class DeviceRegistry:
         self.hass = hass
         self.devices = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+
+    @callback
+    def async_get(self, device_id: str) -> Optional[DeviceEntry]:
+        """Get device."""
+        return self.devices.get(device_id)
 
     @callback
     def async_get_device(self, identifiers: set, connections: set):
