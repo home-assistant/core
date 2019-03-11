@@ -12,7 +12,6 @@ from homeassistant.components.discovery import SERVICE_YEELIGHT
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_SCAN_INTERVAL, \
     CONF_HOST, ATTR_ENTITY_ID, CONF_LIGHTS
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
@@ -244,10 +243,6 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
 
     load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
 
-    if device.is_nightlight_supported:
-        load_platform(hass, SWITCH_DOMAIN, DOMAIN, platform_config,
-                      hass_config)
-
 
 class YeelightDevice:
     """Represents single Yeelight device."""
@@ -295,11 +290,6 @@ class YeelightDevice:
     def ipaddr(self):
         """Return ip address."""
         return self._ipaddr
-
-    @property
-    def is_nightlight_supported(self) -> bool:
-        """Return true / false if nightlight is supported."""
-        return self._model in NIGHTLIGHT_SUPPORTED_MODELS
 
     @property
     def is_nightlight_enabled(self) -> bool:
