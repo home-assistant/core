@@ -5,7 +5,7 @@ adb_command:
   fields:
     entity_id:
       description: Name(s) of Android TV / Fire TV entities.
-      example: 'media_player.fire_tv_living_room'
+      example: 'media_player.android_tv_living_room'
     command:
       description: Either a key command or an ADB shell command.
       example: 'HOME'
