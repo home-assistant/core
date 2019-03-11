@@ -80,11 +80,11 @@ class SmartPlugSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._pca.turn_on(self._device_id)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._pca.turn_off(self._device_id)
 
