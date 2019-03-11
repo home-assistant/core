@@ -197,7 +197,6 @@ class TodSensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
-        await super().async_added_to_hass()
         self._calculate_initial_boudary_time()
         self._calculate_next_update()
         self._point_in_time_listener(dt_util.now())
