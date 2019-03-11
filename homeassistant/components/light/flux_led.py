@@ -262,6 +262,7 @@ class FluxLight(Light):
         return None
 
     async def async_turn_on(self, **kwargs):
+        """Turn the specified or all lights on and wait for state."""
         await self.hass.async_add_executor_job(partial(self._turn_on,
                                                        **kwargs))
         # The bulb needs a second to tell its new values,
