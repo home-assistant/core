@@ -1,8 +1,7 @@
 """Test the cloud.iot module."""
-import asyncio
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock
 
-from aiohttp import WSMsgType, client_exceptions, web
+from aiohttp import web
 import pytest
 
 from homeassistant.setup import async_setup_component

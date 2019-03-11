@@ -92,11 +92,16 @@ async def async_setup(hass):
     from hass_nabucasa import auth
 
     _CLOUD_ERRORS.update({
-        auth.UserNotFound: (400, "User does not exist."),
-        auth.UserNotConfirmed: (400, 'Email not confirmed.'),
-        auth.Unauthenticated: (401, 'Authentication failed.'),
-        auth.PasswordChangeRequired: (400, 'Password change required.'),
-        asyncio.TimeoutError: (502, 'Unable to reach the Home Assistant cloud.')
+        auth.UserNotFound:
+            (400, "User does not exist."),
+        auth.UserNotConfirmed:
+            (400, 'Email not confirmed.'),
+        auth.Unauthenticated:
+            (401, 'Authentication failed.'),
+        auth.PasswordChangeRequired:
+            (400, 'Password change required.'),
+        asyncio.TimeoutError:
+            (502, 'Unable to reach the Home Assistant cloud.')
     })
 
 

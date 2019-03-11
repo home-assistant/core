@@ -8,8 +8,6 @@ from homeassistant.components.cloud.const import DOMAIN
 
 from tests.common import mock_coro
 
-from . import mock_cloud
-
 
 async def test_constructor_loads_info_from_config():
     """Test non-dev mode loads info from SERVERS constant."""

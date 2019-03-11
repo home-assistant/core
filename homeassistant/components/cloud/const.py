@@ -1,6 +1,5 @@
 """Constants for the cloud component."""
 DOMAIN = 'cloud'
-CONFIG_DIR = '.cloud'
 REQUEST_TIMEOUT = 10
 
 PREF_ENABLE_ALEXA = 'alexa_enabled'

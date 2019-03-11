@@ -263,7 +263,8 @@ async def test_forgot_password_view_bad_data(mock_cognito, cloud_client):
     assert len(mock_cognito.initiate_forgot_password.mock_calls) == 0
 
 
-async def test_forgot_password_view_request_timeout(mock_cognito, cloud_client):
+async def test_forgot_password_view_request_timeout(mock_cognito,
+                                                    cloud_client):
     """Test timeout while logging out."""
     mock_cognito.initiate_forgot_password.side_effect = asyncio.TimeoutError
     req = await cloud_client.post('/api/cloud/forgot_password', json={
