@@ -725,9 +725,6 @@ myusps==1.3.2
 # homeassistant.components.media_player.nad
 nad_receiver==0.0.11
 
-# homeassistant.components.light.nanoleaf_aurora
-nanoleaf==0.4.1
-
 # homeassistant.components.device_tracker.keenetic_ndms2
 ndms2_client==0.0.6
 
@@ -1169,6 +1166,9 @@ pymyq==1.1.0
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
+
+# homeassistant.components.light.nanoleaf
+pynanoleaf==0.0.2
 
 # homeassistant.components.lock.nello
 pynello==2.0.2
