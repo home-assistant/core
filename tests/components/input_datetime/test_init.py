@@ -221,12 +221,15 @@ def test_default_value(hass):
     dt_obj = datetime.datetime(1970, 1, 1, 0, 0)
     state_time = hass.states.get('input_datetime.test_time')
     assert state_time.state == str(dt_obj.time())
+    assert state_time.attributes.get('timestamp') is not None
 
     state_date = hass.states.get('input_datetime.test_date')
     assert state_date.state == str(dt_obj.date())
+    assert state_date.attributes.get('timestamp') is not None
 
     state_datetime = hass.states.get('input_datetime.test_datetime')
     assert state_datetime.state == str(dt_obj)
+    assert state_datetime.attributes.get('timestamp') is not None
 
 
 async def test_input_datetime_context(hass, hass_admin_user):
