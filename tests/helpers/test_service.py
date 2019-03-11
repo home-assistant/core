@@ -11,12 +11,12 @@ import pytest
 import homeassistant.components  # noqa
 from homeassistant import core as ha, loader, exceptions
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
-from homeassistant.helpers import service, template
 from homeassistant.setup import async_setup_component
+from homeassistant import exceptions
 import homeassistant.helpers.config_validation as cv
 from homeassistant.auth.permissions import PolicyPermissions
 from homeassistant.helpers import (
-    device_registry as dev_reg, entity_registry as ent_reg)
+    service, template, device_registry as dev_reg, entity_registry as ent_reg)
 from tests.common import (
     get_test_home_assistant, mock_service, mock_coro, mock_registry,
     mock_device_registry)
@@ -395,3 +395,36 @@ async def test_call_with_omit_entity_id(hass, mock_service_platform_call,
         mock_entities['light.kitchen'], mock_entities['light.living_room']]
     assert ('Not passing an entity ID to a service to target '
             'all entities is deprecated') in caplog.text
+
+
+async def test_require_admin_decorator(hass, hass_read_only_user,
+                                       hass_admin_user):
+    """Test the require_admin decorator."""
+    calls = []
+
+    async def mock_service(call):
+        calls.append(call)
+
+    hass.services.async_register(
+        'test', 'test', service.require_admin(hass, mock_service))
+
+    with pytest.raises(exceptions.UnknownUser):
+        await hass.services.async_call(
+            'test', 'test', {}, blocking=True, context=ha.Context(
+                user_id='non-existing'
+            ))
+    assert len(calls) == 0
+
+    with pytest.raises(exceptions.Unauthorized):
+        await hass.services.async_call(
+            'test', 'test', {}, blocking=True, context=ha.Context(
+                user_id=hass_read_only_user.id
+            ))
+    assert len(calls) == 0
+
+    await hass.services.async_call(
+        'test', 'test', {}, blocking=True, context=ha.Context(
+            user_id=hass_admin_user.id
+        ))
+    assert len(calls) == 1
+    assert calls[0].context.user_id == hass_admin_user.id

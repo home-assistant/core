@@ -1,5 +1,6 @@
 """Service calling related helpers."""
 import asyncio
+from functools import wraps
 import logging
 from os import path
 
@@ -335,3 +336,19 @@ async def _handle_service_platform_call(func, data, entities, context):
         assert not pending
         for future in done:
             future.result()  # pop exception if have
+
+
+def require_admin(hass, handler):
+    """Decorate a service handler to require an admin user."""
+    @wraps(handler)
+    async def admin_handler(call):
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(context=call.context)
+            if not user.is_admin:
+                raise Unauthorized(context=call.context)
+
+        await hass.async_add_job(handler, call)
+
+    return admin_handler
