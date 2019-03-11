@@ -124,7 +124,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         CONF_CLIP_SENSOR -- Allow user to choose if they want clip sensors.
         CONF_DECONZ_GROUPS -- Allow user to choose if they want deCONZ groups.
         """
-        from pydeconz.errors import ResponseError, RequestError
         from pydeconz.utils import async_get_bridgeid
 
         if user_input is not None:

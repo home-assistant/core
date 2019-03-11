@@ -196,6 +196,7 @@ async def test_service_refresh_devices(hass):
     })
     entry.add_to_hass(hass)
     mock_registry = Mock()
+
     with patch.object(deconz, 'DeconzGateway') as mock_gateway, \
         patch('homeassistant.helpers.device_registry.async_get_registry',
               return_value=mock_coro(mock_registry)):
@@ -207,6 +208,7 @@ async def test_service_refresh_devices(hass):
         await hass.services.async_call(
             'deconz', 'device_refresh', service_data={})
         await hass.async_block_till_done()
+
     with patch.object(hass.data[deconz.DOMAIN].api, 'async_load_parameters',
                       return_value=mock_coro(False)):
         await hass.services.async_call(
