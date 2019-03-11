@@ -1,6 +1,6 @@
 """Support for Logi Circle devices."""
-import logging
 import asyncio
+import logging
 
 import async_timeout
 import voluptuous as vol
@@ -9,15 +9,16 @@ from homeassistant import config_entries
 from homeassistant.components.camera import (
     ATTR_FILENAME, CAMERA_SERVICE_SCHEMA)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_MONITORED_CONDITIONS, CONF_SENSORS,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_MONITORED_CONDITIONS, CONF_SENSORS, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import config_flow
 from .const import (
-    ATTR_API, CONF_API_KEY, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
-    CONF_REDIRECT_URI, DATA_LOGI, DEFAULT_CACHEDB, DOMAIN, LED_MODE_KEY,
-    LOGI_SENSORS, RECORDING_MODE_KEY)
+    CONF_API_KEY, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_REDIRECT_URI,
+    DATA_LOGI, DEFAULT_CACHEDB, DOMAIN, LED_MODE_KEY, LOGI_SENSORS,
+    RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
+    SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
 
 REQUIREMENTS = ['logi_circle==0.2.2']
 
@@ -153,12 +154,7 @@ async def async_setup_entry(hass, entry):
             notification_id=NOTIFICATION_ID)
         return False
 
-    hass.data[DATA_LOGI] = {
-        ATTR_API: logi_circle,
-        'entities': {
-            'camera': []
-        }
-    }
+    hass.data[DATA_LOGI] = logi_circle
 
     for component in 'camera', 'sensor':
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
@@ -166,24 +162,14 @@ async def async_setup_entry(hass, entry):
 
     async def service_handler(service):
         """Dispatch service calls to target entities."""
-        cameras = hass.data[DATA_LOGI]['entities']['camera']
+        params = {key: value for key, value in service.data.items()}
 
-        params = {key: value for key, value in service.data.items()
-                  if key != ATTR_ENTITY_ID}
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
-            target_devices = [dev for dev in cameras
-                              if dev.entity_id in entity_ids]
-        else:
-            target_devices = cameras
-
-        for target_device in target_devices:
-            if service.service == SERVICE_SET_CONFIG:
-                await target_device.set_config(**params)
-            if service.service == SERVICE_LIVESTREAM_SNAPSHOT:
-                await target_device.livestream_snapshot(**params)
-            if service.service == SERVICE_LIVESTREAM_RECORD:
-                await target_device.download_livestream(**params)
+        if service.service == SERVICE_SET_CONFIG:
+            async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_RECONFIGURE, params)
+        if service.service == SERVICE_LIVESTREAM_SNAPSHOT:
+            async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_SNAPSHOT, params)
+        if service.service == SERVICE_LIVESTREAM_RECORD:
+            async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_RECORD, params)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_CONFIG, service_handler,
@@ -216,6 +202,6 @@ async def async_unload_entry(hass, entry):
 
     # Tell API wrapper to close all aiohttp sessions, invalidate WS connections
     # and clear all locally cached tokens
-    await logi_circle[ATTR_API].auth_provider.clear_authorization()
+    await logi_circle.auth_provider.clear_authorization()
 
     return True

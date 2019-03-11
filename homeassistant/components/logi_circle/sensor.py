@@ -2,8 +2,7 @@
 import logging
 
 from homeassistant.components.logi_circle.const import (
-    ATTR_API, ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN,
-    LOGI_SENSORS as SENSOR_TYPES)
+    ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LOGI_SENSORS as SENSOR_TYPES)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, CONF_MONITORED_CONDITIONS,
     CONF_SENSORS, STATE_OFF, STATE_ON)
@@ -25,7 +24,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle sensor based on a config entry."""
-    devices = await hass.data[LOGI_CIRCLE_DOMAIN][ATTR_API].cameras
+    devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
     time_zone = str(hass.config.time_zone)
 
     sensors = []

@@ -1,7 +1,5 @@
 """Constants in Logi Circle component."""
 
-ATTR_API = 'api'
-
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 CONF_API_KEY = 'api_key'
@@ -35,6 +33,10 @@ LOGI_SENSORS = {
     'streaming': [
         'Streaming Mode', None, 'camera'],
 }
+
+SIGNAL_LOGI_CIRCLE_RECONFIGURE = 'logi_circle_reconfigure'
+SIGNAL_LOGI_CIRCLE_SNAPSHOT = 'logi_circle_snapshot'
+SIGNAL_LOGI_CIRCLE_RECORD = 'logi_circle_record'
 
 # Attribution
 ATTRIBUTION = "Data provided by circle.logi.com"

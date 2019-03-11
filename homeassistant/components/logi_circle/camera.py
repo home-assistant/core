@@ -6,11 +6,13 @@ from homeassistant.components.camera import (
     ATTR_ENTITY_ID, SUPPORT_ON_OFF, Camera)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.components.logi_circle.const import (
-    ATTR_API, ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LED_MODE_KEY,
-    RECORDING_MODE_KEY)
+    ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LED_MODE_KEY,
+    RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
+    SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, STATE_OFF,
     STATE_ON)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['logi_circle', 'ffmpeg']
 
@@ -28,7 +30,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle Camera based on a config entry."""
-    devices = await hass.data[LOGI_CIRCLE_DOMAIN][ATTR_API].cameras
+    devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
     ffmpeg = hass.data[DATA_FFMPEG]
 
     cameras = [LogiCam(device, entry, ffmpeg)
@@ -48,10 +50,39 @@ class LogiCam(Camera):
         self._id = self._camera.mac_address
         self._has_battery = self._camera.supports_feature('battery_level')
         self._ffmpeg = ffmpeg
+        self._listeners = []
 
     async def async_added_to_hass(self):
-        """Make entity globally accessible for use in service handler."""
-        self.hass.data[LOGI_CIRCLE_DOMAIN]['entities']['camera'].append(self)
+        """Connect camera methods to signals."""
+        def _dispatch_proxy(method):
+            """Expand parameters & filter entity IDs."""
+            async def _call(params):
+                entity_ids = params.get(ATTR_ENTITY_ID)
+                filtered_params = {k: v for k,
+                                   v in params.items() if k != ATTR_ENTITY_ID}
+                if entity_ids is None or self.entity_id in entity_ids:
+                    await method(**filtered_params)
+            return _call
+
+        self._listeners.extend([
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_LOGI_CIRCLE_RECONFIGURE,
+                _dispatch_proxy(self.set_config)),
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_LOGI_CIRCLE_SNAPSHOT,
+                _dispatch_proxy(self.livestream_snapshot)),
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_LOGI_CIRCLE_RECORD,
+                _dispatch_proxy(self.download_livestream)),
+        ])
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listeners when removed."""
+        for detach in self._listeners:
+            detach()
 
     @property
     def unique_id(self):
