@@ -20,6 +20,8 @@ CONF_HAS_DATE = 'has_date'
 CONF_HAS_TIME = 'has_time'
 CONF_INITIAL = 'initial'
 
+DEFAULT_VALUE = '1970-01-01 00:00:00'
+
 ATTR_DATE = 'date'
 ATTR_TIME = 'time'
 
@@ -121,13 +123,16 @@ class InputDatetime(RestoreEntity):
                 restore_val = old_state.state
 
         if not self.has_date:
-            restore_val = restore_val if not None else '00:00:00'
+            if not restore_val:
+                restore_val = DEFAULT_VALUE.split()[0]
             self._current_datetime = dt_util.parse_time(restore_val)
         elif not self.has_time:
-            restore_val = restore_val if not None else '1970-01-01'
+            if not restore_val:
+                restore_val = DEFAULT_VALUE.split()[1]
             self._current_datetime = dt_util.parse_date(restore_val)
         else:
-            restore_val = restore_val if not None else '1970-01-01 00:00:00'
+            if not restore_val:
+                restore_val = DEFAULT_VALUE
             self._current_datetime = dt_util.parse_datetime(restore_val)
 
     @property
