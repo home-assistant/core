@@ -222,13 +222,6 @@ async def test_normal_chromecast_not_starting_discovery(hass):
         assert setup_discovery.call_count == 1
 
 
-async def test_normal_raises_platform_not_ready(hass):
-    """Test cast platform raises PlatformNotReady if HTTP dial fails."""
-    with patch('pychromecast.dial.get_device_status', return_value=None):
-        with pytest.raises(PlatformNotReady):
-            await async_setup_cast(hass, {'host': 'host1'})
-
-
 async def test_replay_past_chromecasts(hass):
     """Test cast platform re-playing past chromecasts when adding new one."""
     cast_group1 = get_fake_chromecast_info(host='host1', port=42)
@@ -261,6 +254,10 @@ async def test_entity_media_states(hass: HomeAssistantType):
     with patch('pychromecast.dial.get_device_status',
                return_value=full_info):
         chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.schedule_update_ha_state()
+    await hass.async_block_till_done()
 
     state = hass.states.get('media_player.speaker')
     assert state is not None
