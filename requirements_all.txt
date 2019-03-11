@@ -1171,7 +1171,7 @@ pymyq==1.1.0
 pymysensors==0.18.0
 
 # homeassistant.components.light.nanoleaf
-pynanoleaf==0.0.2
+pynanoleaf==0.0.5
 
 # homeassistant.components.lock.nello
 pynello==2.0.2
