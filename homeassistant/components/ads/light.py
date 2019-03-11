@@ -1,5 +1,6 @@
 """Support for ADS light sources."""
 import logging
+import threading
 import voluptuous as vol
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
@@ -43,6 +44,7 @@ class AdsLight(Light):
         self._unique_id = ads_var_enable
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
+        self._event = threading.Event()
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -50,6 +52,7 @@ class AdsLight(Light):
             """Handle device notifications for state."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._on_state = value
+            self._event.set()
             self.schedule_update_ha_state()
 
         def update_brightness(name, value):
@@ -68,6 +71,8 @@ class AdsLight(Light):
                 self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
                 update_brightness
             )
+        if not self._event.wait(timeout=30):
+            _LOGGER.debug('Timeout while waiting for first update')
 
     @property
     def name(self):

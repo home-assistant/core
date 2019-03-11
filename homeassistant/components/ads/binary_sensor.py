@@ -1,5 +1,6 @@
 """Support for ADS binary sensors."""
 import logging
+import threading
 
 import voluptuous as vol
 
@@ -44,6 +45,7 @@ class AdsBinarySensor(BinarySensorDevice):
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
         self.ads_var = ads_var
+        self._event = threading.Event()
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -51,11 +53,14 @@ class AdsBinarySensor(BinarySensorDevice):
             """Handle device notifications."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._state = value
+            self._event.set()
             self.schedule_update_ha_state()
 
         self.hass.async_add_job(
             self._ads_hub.add_device_notification,
             self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
+        if not self._event.wait(timeout=30):
+            _LOGGER.debug('Timeout while waiting for first update')
 
     @property
     def name(self):

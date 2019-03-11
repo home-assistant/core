@@ -1,5 +1,6 @@
 """Support for ADS switch platform."""
 import logging
+import threading
 
 import voluptuous as vol
 
@@ -41,6 +42,7 @@ class AdsSwitch(ToggleEntity):
         self._name = name
         self._unique_id = ads_var
         self.ads_var = ads_var
+        self._event = threading.Event()
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -48,11 +50,14 @@ class AdsSwitch(ToggleEntity):
             """Handle device notification."""
             _LOGGER.debug("Variable %s changed its value to %d", name, value)
             self._on_state = value
+            self._event.set()
             self.schedule_update_ha_state()
 
         self.hass.async_add_job(
             self._ads_hub.add_device_notification,
             self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
+        if not self._event.wait(timeout=30):
+            _LOGGER.debug('Timeout while waiting for first update')
 
     @property
     def is_on(self):
