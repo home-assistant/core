@@ -26,6 +26,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 CONF_DATA_GROUP = 'data_group'
 CONF_ELEMENT = 'element'
+CONF_INVERT = 'invert'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Netdata'
@@ -37,6 +38,7 @@ RESOURCE_SCHEMA = vol.Any({
     vol.Required(CONF_DATA_GROUP): cv.string,
     vol.Required(CONF_ELEMENT): cv.string,
     vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
+    vol.Optional(CONF_INVERT, default=False): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -69,6 +71,7 @@ async def async_setup_platform(
         icon = data[CONF_ICON]
         sensor = data[CONF_DATA_GROUP]
         element = data[CONF_ELEMENT]
+        invert = data[CONF_INVERT]
         sensor_name = entry
         try:
             resource_data = netdata.api.metrics[sensor]
@@ -79,7 +82,7 @@ async def async_setup_platform(
             continue
 
         dev.append(NetdataSensor(
-            netdata, name, sensor, sensor_name, element, icon, unit))
+            netdata, name, sensor, sensor_name, element, icon, unit, invert))
 
     async_add_entities(dev, True)
 
@@ -88,7 +91,8 @@ class NetdataSensor(Entity):
     """Implementation of a Netdata sensor."""
 
     def __init__(
-            self, netdata, name, sensor, sensor_name, element, icon, unit):
+            self, netdata, name, sensor, sensor_name, element, icon, unit,
+            invert):
         """Initialize the Netdata sensor."""
         self.netdata = netdata
         self._state = None
@@ -99,6 +103,7 @@ class NetdataSensor(Entity):
         self._name = name
         self._icon = icon
         self._unit_of_measurement = unit
+        self._invert = invert
 
     @property
     def name(self):
@@ -130,7 +135,8 @@ class NetdataSensor(Entity):
         await self.netdata.async_update()
         resource_data = self.netdata.api.metrics.get(self._sensor)
         self._state = round(
-            resource_data['dimensions'][self._element]['value'], 2)
+            resource_data['dimensions'][self._element]['value'], 2) \
+            * (-1 if self._invert else 1)
 
 
 class NetdataData:
