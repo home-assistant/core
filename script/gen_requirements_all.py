@@ -62,6 +62,7 @@ TEST_REQUIREMENTS = (
     'ha-ffmpeg',
     'hangups',
     'HAP-python',
+    'hass-nabucasa',
     'haversine',
     'hbmqtt',
     'hdate',
@@ -136,9 +137,10 @@ TEST_REQUIREMENTS = (
 )
 
 IGNORE_PACKAGES = (
-    'homeassistant.components.recorder.models',
+    'homeassistant.components.hangouts.hangups_utils',
+    'homeassistant.components.cloud.client',
     'homeassistant.components.homekit.*',
-    'homeassistant.components.hangouts.hangups_utils'
+    'homeassistant.components.recorder.models',
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
