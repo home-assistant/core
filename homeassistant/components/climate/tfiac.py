@@ -3,10 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    PLATFORM_SCHEMA, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
-    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT)
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT,
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -22,7 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TEMP = 61
 MAX_TEMP = 88
-OPERATION_LIST = ['heat', 'selfFeel', 'dehumi', 'fan', 'cool']
+OPERATION_LIST = {
+    STATE_HEAT: 'heat',
+    STATE_AUTO: 'selfFeel',
+    STATE_DRY: 'dehumi',
+    STATE_FAN_ONLY: 'fan',
+    STATE_COOL: 'cool',
+}
 FAN_LIST = ['Auto', 'Low', 'Middle', 'High']
 SWING_LIST = [
     'Off',
@@ -120,7 +128,7 @@ class TfiacClimate(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return OPERATION_LIST
+        return OPERATION_LIST.keys()
 
     @property
     def current_fan_mode(self):
@@ -150,7 +158,8 @@ class TfiacClimate(ClimateDevice):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        await self._client.set_state(OPERATION_MODE, operation_mode)
+        await self._client.set_state(OPERATION_MODE,
+                                     OPERATION_LIST[operation_mode])
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
