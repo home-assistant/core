@@ -1459,6 +1459,9 @@ pyvesync_v2==0.9.6
 # homeassistant.components.media_player.vizio
 pyvizio==0.0.4
 
+# homeassistant.components.media_player.viziosoundbar
+pyviziosoundbar==0.0.1
+
 # homeassistant.components.velux
 pyvlx==0.2.10
 
