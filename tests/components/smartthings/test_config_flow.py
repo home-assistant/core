@@ -6,6 +6,8 @@ from aiohttp import ClientResponseError
 from pysmartthings import APIResponseError
 
 from homeassistant import data_entry_flow
+from homeassistant.components import cloud
+from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.config_flow import (
     SmartThingsFlowHandler)
 from homeassistant.components.smartthings.const import (
@@ -41,7 +43,7 @@ async def test_base_url_not_https(hass):
     hass.config.api.base_url = 'http://0.0.0.0'
     flow = SmartThingsFlowHandler()
     flow.hass = hass
-    result = await flow.async_step_import()
+    result = await flow.async_step_user({'access_token': str(uuid4())})
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
@@ -191,6 +193,38 @@ async def test_app_created_then_show_wait_form(
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'wait_install'
+
+
+async def test_cloudhook_app_created_then_show_wait_form(
+        hass, app, app_oauth_client, smartthings_mock):
+    """Test SmartApp is created with a cloudhoko and shows wait form."""
+    # Unload the endpoint so we can reload it under the cloud.
+    await smartapp.unload_smartapp_endpoint(hass)
+
+    mock_async_active_subscription = Mock(return_value=True)
+    mock_create_cloudhook = Mock(return_value=mock_coro(
+        return_value="http://cloud.test"))
+    with patch.object(cloud, 'async_active_subscription',
+                      new=mock_async_active_subscription), \
+        patch.object(cloud, 'async_create_cloudhook',
+                     new=mock_create_cloudhook):
+
+        await smartapp.setup_smartapp_endpoint(hass)
+
+        flow = SmartThingsFlowHandler()
+        flow.hass = hass
+        smartthings = smartthings_mock.return_value
+        smartthings.apps.return_value = mock_coro(return_value=[])
+        smartthings.create_app.return_value = \
+            mock_coro(return_value=(app, app_oauth_client))
+        smartthings.update_app_settings.return_value = mock_coro()
+        smartthings.update_app_oauth.return_value = mock_coro()
+
+        result = await flow.async_step_user({'access_token': str(uuid4())})
+
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+        assert result['step_id'] == 'wait_install'
+        assert mock_create_cloudhook.call_count == 1
 
 
 async def test_app_updated_then_show_wait_form(
