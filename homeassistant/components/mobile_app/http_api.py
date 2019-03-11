@@ -53,9 +53,9 @@ class RegistrationsView(HomeAssistantView):
         data[CONF_WEBHOOK_ID] = webhook_id
 
         if data[ATTR_SUPPORTS_ENCRYPTION] and supports_encryption():
-            secret = generate_secret(16)
+            from nacl.secret import SecretBox
 
-            data[CONF_SECRET] = secret
+            data[CONF_SECRET] = generate_secret(SecretBox.KEY_SIZE)
 
         data[CONF_USER_ID] = request['hass_user'].id
 
