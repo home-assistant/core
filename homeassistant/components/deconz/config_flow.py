@@ -135,8 +135,14 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
             if CONF_BRIDGEID not in self.deconz_config:
                 session = aiohttp_client.async_get_clientsession(self.hass)
-                self.deconz_config[CONF_BRIDGEID] = await async_get_bridgeid(
-                    session, **self.deconz_config)
+                try:
+                    with async_timeout.timeout(10):
+                        self.deconz_config[CONF_BRIDGEID] = \
+                            await async_get_bridgeid(
+                                session, **self.deconz_config)
+
+                except asyncio.TimeoutError:
+                    return self.async_abort(reason='no_bridges')
 
             return self.async_create_entry(
                 title='deCONZ-' + self.deconz_config[CONF_BRIDGEID],
