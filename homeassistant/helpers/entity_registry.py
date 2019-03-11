@@ -10,7 +10,7 @@ timer.
 from collections import OrderedDict
 from itertools import chain
 import logging
-from typing import Optional
+from typing import Optional, List
 import weakref
 
 import attr
@@ -290,6 +290,14 @@ async def async_get_registry(hass) -> EntityRegistry:
         task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
 
     return await task
+
+
+@callback
+def async_entries_for_device(registry: EntityRegistry, device_id: str) \
+        -> List[RegistryEntry]:
+    """Return entries that match a device."""
+    return [entry for entry in registry.entities.values()
+            if entry.device_id == device_id]
 
 
 async def _async_migrate(entities):

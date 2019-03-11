@@ -15,7 +15,7 @@ from .const import (
 from .device import HomematicipGenericDevice  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
-REQUIREMENTS = ['homematicip==0.10.5']
+REQUIREMENTS = ['homematicip==0.10.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,11 +60,14 @@ async def async_setup_entry(hass, entry):
     # Register hap as device in registry.
     device_registry = await dr.async_get_registry(hass)
     home = hap.home
+    # Add the HAP name from configuration if set.
+    hapname = home.label \
+        if not home.name else "{} {}".format(home.label, home.name)
     device_registry.async_get_or_create(
         config_entry_id=home.id,
         identifiers={(DOMAIN, home.id)},
         manufacturer='eQ-3',
-        name=home.label,
+        name=hapname,
         model=home.modelType,
         sw_version=home.currentAPVersion,
     )

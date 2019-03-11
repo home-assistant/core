@@ -22,38 +22,47 @@ class FakePairing:
     class.
     """
 
-    def __init__(self, accessory):
+    def __init__(self, accessories):
         """Create a fake pairing from an accessory model."""
-        self.accessory = accessory
-        self.pairing_data = {
-            'accessories': self.list_accessories_and_characteristics()
-        }
+        self.accessories = accessories
+        self.pairing_data = {}
 
     def list_accessories_and_characteristics(self):
         """Fake implementation of list_accessories_and_characteristics."""
-        return [self.accessory.to_accessory_and_service_list()]
+        accessories = [
+            a.to_accessory_and_service_list() for a in self.accessories
+        ]
+        # replicate what happens upstream right now
+        self.pairing_data['accessories'] = accessories
+        return accessories
 
     def get_characteristics(self, characteristics):
         """Fake implementation of get_characteristics."""
         results = {}
         for aid, cid in characteristics:
-            for service in self.accessory.services:
-                for char in service.characteristics:
-                    if char.iid != cid:
-                        continue
-                    results[(aid, cid)] = {
-                        'value': char.get_value()
-                    }
+            for accessory in self.accessories:
+                if aid != accessory.aid:
+                    continue
+                for service in accessory.services:
+                    for char in service.characteristics:
+                        if char.iid != cid:
+                            continue
+                        results[(aid, cid)] = {
+                            'value': char.get_value()
+                        }
         return results
 
     def put_characteristics(self, characteristics):
         """Fake implementation of put_characteristics."""
-        for _, cid, new_val in characteristics:
-            for service in self.accessory.services:
-                for char in service.characteristics:
-                    if char.iid != cid:
-                        continue
-                    char.set_value(new_val)
+        for aid, cid, new_val in characteristics:
+            for accessory in self.accessories:
+                if aid != accessory.aid:
+                    continue
+                for service in accessory.services:
+                    for char in service.characteristics:
+                        if char.iid != cid:
+                            continue
+                        char.set_value(new_val)
 
 
 class FakeController:
@@ -68,9 +77,9 @@ class FakeController:
         """Create a Fake controller with no pairings."""
         self.pairings = {}
 
-    def add(self, accessory):
+    def add(self, accessories):
         """Create and register a fake pairing for a simulated accessory."""
-        pairing = FakePairing(accessory)
+        pairing = FakePairing(accessories)
         self.pairings['00:00:00:00:00:00'] = pairing
         return pairing
 
@@ -134,6 +143,20 @@ class FakeService(AbstractService):
         return char
 
 
+async def setup_platform(hass):
+    """Load the platform but with a fake Controller API."""
+    config = {
+        'discovery': {
+        }
+    }
+
+    with mock.patch('homekit.Controller') as controller:
+        fake_controller = controller.return_value = FakeController()
+        await async_setup_component(hass, DOMAIN, config)
+
+    return fake_controller
+
+
 async def setup_test_component(hass, services, capitalize=False, suffix=None):
     """Load a fake homekit accessory based on a homekit accessory model.
 
@@ -150,18 +173,11 @@ async def setup_test_component(hass, services, capitalize=False, suffix=None):
 
     assert domain, 'Cannot map test homekit services to homeassistant domain'
 
-    config = {
-        'discovery': {
-        }
-    }
-
-    with mock.patch('homekit.Controller') as controller:
-        fake_controller = controller.return_value = FakeController()
-        await async_setup_component(hass, DOMAIN, config)
+    fake_controller = await setup_platform(hass)
 
     accessory = Accessory('TestDevice', 'example.com', 'Test', '0001', '0.1')
     accessory.services.extend(services)
-    pairing = fake_controller.add(accessory)
+    pairing = fake_controller.add([accessory])
 
     discovery_info = {
         'host': '127.0.0.1',

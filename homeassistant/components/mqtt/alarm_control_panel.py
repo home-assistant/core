@@ -227,7 +227,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         This method is a coroutine.
         """
-        if not self._validate_code(code, 'arming night'):
+        code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
+        if code_required and not self._validate_code(code, 'arming night'):
             return
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),

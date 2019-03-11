@@ -18,7 +18,12 @@ from homeassistant.util.logging import HideSensitiveDataFilter
 
 from .auth import setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
+from .const import (  # noqa
+    KEY_AUTHENTICATED,
+    KEY_HASS,
+    KEY_HASS_USER,
+    KEY_REAL_IP,
+)
 from .cors import setup_cors
 from .real_ip import setup_real_ip
 from .static import CACHE_HEADERS, CachingStaticResource
@@ -66,8 +71,22 @@ def trusted_networks_deprecated(value):
     return value
 
 
+def api_password_deprecated(value):
+    """Warn user api_password config is deprecated."""
+    if not value:
+        return value
+
+    _LOGGER.warning(
+        "Configuring api_password via the http component has been"
+        " deprecated. Use the legacy api password auth provider instead."
+        " For instructions, see https://www.home-assistant.io/docs/"
+        "authentication/providers/#legacy-api-password")
+    return value
+
+
 HTTP_SCHEMA = vol.Schema({
-    vol.Optional(CONF_API_PASSWORD): cv.string,
+    vol.Optional(CONF_API_PASSWORD):
+        vol.All(cv.string, api_password_deprecated),
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
@@ -98,12 +117,10 @@ class ApiConfig:
     """Configuration settings for API server."""
 
     def __init__(self, host: str, port: Optional[int] = SERVER_PORT,
-                 use_ssl: bool = False,
-                 api_password: Optional[str] = None) -> None:
+                 use_ssl: bool = False) -> None:
         """Initialize a new API config object."""
         self.host = host
         self.port = port
-        self.api_password = api_password
 
         host = host.rstrip('/')
         if host.startswith(("http://", "https://")):
@@ -133,7 +150,6 @@ async def async_setup(hass, config):
     cors_origins = conf[CONF_CORS_ORIGINS]
     use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
     trusted_proxies = conf.get(CONF_TRUSTED_PROXIES, [])
-    trusted_networks = conf[CONF_TRUSTED_NETWORKS]
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
@@ -146,14 +162,12 @@ async def async_setup(hass, config):
         hass,
         server_host=server_host,
         server_port=server_port,
-        api_password=api_password,
         ssl_certificate=ssl_certificate,
         ssl_peer_certificate=ssl_peer_certificate,
         ssl_key=ssl_key,
         cors_origins=cors_origins,
         use_x_forwarded_for=use_x_forwarded_for,
         trusted_proxies=trusted_proxies,
-        trusted_networks=trusted_networks,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         ssl_profile=ssl_profile,
@@ -183,8 +197,7 @@ async def async_setup(hass, config):
         host = hass_util.get_local_ip()
         port = server_port
 
-    hass.config.api = ApiConfig(host, port, ssl_certificate is not None,
-                                api_password)
+    hass.config.api = ApiConfig(host, port, ssl_certificate is not None)
 
     return True
 
@@ -192,13 +205,14 @@ async def async_setup(hass, config):
 class HomeAssistantHTTP:
     """HTTP server for Home Assistant."""
 
-    def __init__(self, hass, api_password,
+    def __init__(self, hass,
                  ssl_certificate, ssl_peer_certificate,
                  ssl_key, server_host, server_port, cors_origins,
-                 use_x_forwarded_for, trusted_proxies, trusted_networks,
+                 use_x_forwarded_for, trusted_proxies,
                  login_threshold, is_ban_enabled, ssl_profile):
         """Initialize the HTTP Home Assistant server."""
         app = self.app = web.Application(middlewares=[])
+        app[KEY_HASS] = hass
 
         # This order matters
         setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
@@ -206,26 +220,16 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
 
-        if hass.auth.support_legacy:
-            _LOGGER.warning(
-                "legacy_api_password support has been enabled. If you don't "
-                "require it, remove the 'api_password' from your http config.")
-
-        setup_auth(app, trusted_networks,
-                   api_password if hass.auth.support_legacy else None)
+        setup_auth(hass, app)
 
         setup_cors(app, cors_origins)
 
-        app['hass'] = hass
-
         self.hass = hass
-        self.api_password = api_password
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
-        self.trusted_networks = trusted_networks
         self.is_ban_enabled = is_ban_enabled
         self.ssl_profile = ssl_profile
         self._handler = None

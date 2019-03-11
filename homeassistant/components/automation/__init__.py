@@ -120,7 +120,7 @@ async def async_setup(hass, config):
     async def trigger_service_handler(service_call):
         """Handle automation triggers."""
         tasks = []
-        for entity in component.async_extract_from_service(service_call):
+        for entity in await component.async_extract_from_service(service_call):
             tasks.append(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES),
                 skip_condition=True,
@@ -133,7 +133,7 @@ async def async_setup(hass, config):
         """Handle automation turn on/off service calls."""
         tasks = []
         method = 'async_{}'.format(service_call.service)
-        for entity in component.async_extract_from_service(service_call):
+        for entity in await component.async_extract_from_service(service_call):
             tasks.append(getattr(entity, method)())
 
         if tasks:
@@ -142,7 +142,7 @@ async def async_setup(hass, config):
     async def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
         tasks = []
-        for entity in component.async_extract_from_service(service_call):
+        for entity in await component.async_extract_from_service(service_call):
             if entity.is_on:
                 tasks.append(entity.async_turn_off())
             else:

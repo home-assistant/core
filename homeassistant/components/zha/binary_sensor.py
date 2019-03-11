@@ -7,12 +7,14 @@ at https://home-assistant.io/components/binary_sensor.zha/
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.const import STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, ON_OFF_CHANNEL,
     LEVEL_CHANNEL, ZONE_CHANNEL, SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL, ATTRIBUTE_CHANNEL, UNKNOWN, OPENING, ZONE, OCCUPANCY,
-    ATTR_LEVEL, SENSOR_TYPE)
+    ATTR_LEVEL, SENSOR_TYPE, ACCELERATION)
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +43,7 @@ DEVICE_CLASS_REGISTRY = {
     OPENING: OPENING,
     ZONE: get_ias_device_class,
     OCCUPANCY: OCCUPANCY,
+    ACCELERATION: 'moving',
 }
 
 
@@ -125,6 +128,14 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
             await self.async_accept_signal(
                 self._attr_channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
 
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        super().async_restore_last_state(last_state)
+        self._state = last_state.state == STATE_ON
+        if 'level' in last_state.attributes:
+            self._level = last_state.attributes['level']
+
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
@@ -165,3 +176,21 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
                 ATTR_LEVEL: self._state and self._level or 0
             })
         return self._device_state_attributes
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the binary sensor."""
+        await super().async_update()
+        if self._level_channel:
+            self._level = await self._level_channel.get_attribute_value(
+                'current_level')
+        if self._on_off_channel:
+            self._state = await self._on_off_channel.get_attribute_value(
+                'on_off')
+        if self._zone_channel:
+            value = await self._zone_channel.get_attribute_value(
+                'zone_status')
+            if value is not None:
+                self._state = value & 3
+        if self._attr_channel:
+            self._state = await self._attr_channel.get_attribute_value(
+                self._attr_channel.value_attribute)

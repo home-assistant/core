@@ -16,14 +16,13 @@ from homeassistant.util.aiohttp import MockRequest
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
 from . import utils
-from .const import MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL
+from .const import (
+    MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL, STATE_CONNECTED, STATE_CONNECTING,
+    STATE_DISCONNECTED
+)
 
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
-
-STATE_CONNECTING = 'connecting'
-STATE_CONNECTED = 'connected'
-STATE_DISCONNECTED = 'disconnected'
 
 
 class UnknownHandler(Exception):
@@ -335,7 +334,9 @@ def async_handle_google_actions(hass, cloud, payload):
         return ga.turned_off_response(payload)
 
     result = yield from ga.async_handle_message(
-        hass, cloud.gactions_config, payload)
+        hass, cloud.gactions_config,
+        cloud.claims['cognito:username'],
+        payload)
     return result
 
 

@@ -68,3 +68,29 @@ async def test_disable(mock_cloudhooks):
     assert publish_calls[0][1][1] == {
         'cloudhook_ids': []
     }
+
+
+async def test_create_without_connected(mock_cloudhooks, aioclient_mock):
+    """Test we don't publish a hook if not connected."""
+    mock_cloudhooks.cloud.is_connected = False
+    # Make sure we fail test when we send a message.
+    mock_cloudhooks.cloud.iot.async_send_message.side_effect = ValueError
+
+    aioclient_mock.post('https://webhook-create.url', json={
+        'cloudhook_id': 'mock-cloud-id',
+        'url': 'https://hooks.nabu.casa/ZXCZCXZ',
+    })
+
+    hook = {
+            'webhook_id': 'mock-webhook-id',
+            'cloudhook_id': 'mock-cloud-id',
+            'cloudhook_url': 'https://hooks.nabu.casa/ZXCZCXZ',
+        }
+
+    assert hook == await mock_cloudhooks.async_create('mock-webhook-id')
+
+    assert mock_cloudhooks.cloud.prefs.cloudhooks == {
+        'mock-webhook-id': hook
+    }
+
+    assert len(mock_cloudhooks.cloud.iot.async_send_message.mock_calls) == 0

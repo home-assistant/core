@@ -2,6 +2,7 @@
 
 Sending HOTP through notify service
 """
+import asyncio
 import logging
 from collections import OrderedDict
 from typing import Any, Dict, Optional, List
@@ -90,6 +91,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         self._include = config.get(CONF_INCLUDE, [])
         self._exclude = config.get(CONF_EXCLUDE, [])
         self._message_template = config[CONF_MESSAGE]
+        self._init_lock = asyncio.Lock()
 
     @property
     def input_schema(self) -> vol.Schema:
@@ -98,15 +100,19 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
     async def _async_load(self) -> None:
         """Load stored data."""
-        data = await self._user_store.async_load()
+        async with self._init_lock:
+            if self._user_settings is not None:
+                return
 
-        if data is None:
-            data = {STORAGE_USERS: {}}
+            data = await self._user_store.async_load()
 
-        self._user_settings = {
-            user_id: NotifySetting(**setting)
-            for user_id, setting in data.get(STORAGE_USERS, {}).items()
-        }
+            if data is None:
+                data = {STORAGE_USERS: {}}
+
+            self._user_settings = {
+                user_id: NotifySetting(**setting)
+                for user_id, setting in data.get(STORAGE_USERS, {}).items()
+            }
 
     async def _async_save(self) -> None:
         """Save data."""

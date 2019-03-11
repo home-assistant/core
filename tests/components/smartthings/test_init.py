@@ -13,7 +13,7 @@ from homeassistant.components.smartthings.const import (
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from tests.common import mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_migration_creates_new_flow(
@@ -22,12 +22,14 @@ async def test_migration_creates_new_flow(
     config_entry.version = 1
     setattr(hass.config_entries, '_entries', [config_entry])
     api = smartthings_mock.return_value
-    api.delete_installed_app.return_value = mock_coro()
+    api.delete_installed_app.side_effect = lambda _: mock_coro()
+    api.delete_app.side_effect = lambda _: mock_coro()
 
     await smartthings.async_migrate_entry(hass, config_entry)
+    await hass.async_block_till_done()
 
     assert api.delete_installed_app.call_count == 1
-    await hass.async_block_till_done()
+    assert api.delete_app.call_count == 1
     assert not hass.config_entries.async_entries(DOMAIN)
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -209,6 +211,113 @@ async def test_unload_entry(hass, config_entry):
         assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
 
 
+async def test_remove_entry(hass, config_entry, smartthings_mock):
+    """Test that the installed app and app are removed up."""
+    # Arrange
+    api = smartthings_mock.return_value
+    api.delete_installed_app.side_effect = lambda _: mock_coro()
+    api.delete_app.side_effect = lambda _: mock_coro()
+    # Act
+    await smartthings.async_remove_entry(hass, config_entry)
+    # Assert
+    assert api.delete_installed_app.call_count == 1
+    assert api.delete_app.call_count == 1
+
+
+async def test_remove_entry_app_in_use(hass, config_entry, smartthings_mock):
+    """Test app is not removed if in use by another config entry."""
+    # Arrange
+    data = config_entry.data.copy()
+    data[CONF_INSTALLED_APP_ID] = str(uuid4())
+    entry2 = MockConfigEntry(version=2, domain=DOMAIN, data=data)
+    setattr(hass.config_entries, '_entries', [config_entry, entry2])
+    api = smartthings_mock.return_value
+    api.delete_installed_app.side_effect = lambda _: mock_coro()
+    # Act
+    await smartthings.async_remove_entry(hass, config_entry)
+    # Assert
+    assert api.delete_installed_app.call_count == 1
+    assert api.delete_app.call_count == 0
+
+
+async def test_remove_entry_already_deleted(
+        hass, config_entry, smartthings_mock):
+    """Test handles when the apps have already been removed."""
+    # Arrange
+    api = smartthings_mock.return_value
+    api.delete_installed_app.side_effect = lambda _: mock_coro(
+        exception=ClientResponseError(None, None, status=403))
+    api.delete_app.side_effect = lambda _: mock_coro(
+        exception=ClientResponseError(None, None, status=403))
+    # Act
+    await smartthings.async_remove_entry(hass, config_entry)
+    # Assert
+    assert api.delete_installed_app.call_count == 1
+    assert api.delete_app.call_count == 1
+
+
+async def test_remove_entry_installedapp_api_error(
+        hass, config_entry, smartthings_mock):
+    """Test raises exceptions removing the installed app."""
+    # Arrange
+    api = smartthings_mock.return_value
+    api.delete_installed_app.side_effect = lambda _: mock_coro(
+        exception=ClientResponseError(None, None, status=500))
+    # Act
+    with pytest.raises(ClientResponseError):
+        await smartthings.async_remove_entry(hass, config_entry)
+    # Assert
+    assert api.delete_installed_app.call_count == 1
+    assert api.delete_app.call_count == 0
+
+
+async def test_remove_entry_installedapp_unknown_error(
+        hass, config_entry, smartthings_mock):
+    """Test raises exceptions removing the installed app."""
+    # Arrange
+    api = smartthings_mock.return_value
+    api.delete_installed_app.side_effect = lambda _: mock_coro(
+        exception=Exception)
+    # Act
+    with pytest.raises(Exception):
+        await smartthings.async_remove_entry(hass, config_entry)
+    # Assert
+    assert api.delete_installed_app.call_count == 1
+    assert api.delete_app.call_count == 0
+
+
+async def test_remove_entry_app_api_error(
+        hass, config_entry, smartthings_mock):
+    """Test raises exceptions removing the app."""
+    # Arrange
+    api = smartthings_mock.return_value
+    api.delete_installed_app.side_effect = lambda _: mock_coro()
+    api.delete_app.side_effect = lambda _: mock_coro(
+        exception=ClientResponseError(None, None, status=500))
+    # Act
+    with pytest.raises(ClientResponseError):
+        await smartthings.async_remove_entry(hass, config_entry)
+    # Assert
+    assert api.delete_installed_app.call_count == 1
+    assert api.delete_app.call_count == 1
+
+
+async def test_remove_entry_app_unknown_error(
+        hass, config_entry, smartthings_mock):
+    """Test raises exceptions removing the app."""
+    # Arrange
+    api = smartthings_mock.return_value
+    api.delete_installed_app.side_effect = lambda _: mock_coro()
+    api.delete_app.side_effect = lambda _: mock_coro(
+        exception=Exception)
+    # Act
+    with pytest.raises(Exception):
+        await smartthings.async_remove_entry(hass, config_entry)
+    # Assert
+    assert api.delete_installed_app.call_count == 1
+    assert api.delete_app.call_count == 1
+
+
 async def test_broker_regenerates_token(
         hass, config_entry):
     """Test the device broker regenerates the refresh token."""
@@ -235,16 +344,21 @@ async def test_broker_regenerates_token(
 
 
 async def test_event_handler_dispatches_updated_devices(
-        hass, config_entry, device_factory, event_request_factory):
+        hass, config_entry, device_factory, event_request_factory,
+        event_factory):
     """Test the event handler dispatches updated devices."""
     devices = [
         device_factory('Bedroom 1 Switch', ['switch']),
         device_factory('Bathroom 1', ['switch']),
         device_factory('Sensor', ['motionSensor']),
+        device_factory('Lock', ['lock'])
     ]
     device_ids = [devices[0].device_id, devices[1].device_id,
-                  devices[2].device_id]
-    request = event_request_factory(device_ids)
+                  devices[2].device_id, devices[3].device_id]
+    event = event_factory(devices[3].device_id, capability='lock',
+                          attribute='lock', value='locked',
+                          data={'codeId': '1'})
+    request = event_request_factory(device_ids=device_ids, events=[event])
     config_entry.data[CONF_INSTALLED_APP_ID] = request.installed_app_id
     called = False
 
@@ -265,6 +379,8 @@ async def test_event_handler_dispatches_updated_devices(
     assert called
     for device in devices:
         assert device.status.values['Updated'] == 'Value'
+    assert devices[3].status.attributes['lock'].value == 'locked'
+    assert devices[3].status.attributes['lock'].data == {'codeId': '1'}
 
 
 async def test_event_handler_ignores_other_installed_app(
@@ -308,7 +424,8 @@ async def test_event_handler_fires_button_events(
             'device_id': device.device_id,
             'location_id': event.location_id,
             'value': 'pushed',
-            'name': device.label
+            'name': device.label,
+            'data': None
         }
     hass.bus.async_listen(EVENT_BUTTON, handler)
     broker = smartthings.DeviceBroker(

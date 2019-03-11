@@ -1,19 +1,15 @@
 """Support for Satel Integra devices."""
-import asyncio
 import logging
-
 
 import voluptuous as vol
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['satel_integra==0.2.0']
+REQUIREMENTS = ['satel_integra==0.3.2']
 
 DEFAULT_ALARM_NAME = 'satel_integra'
 DEFAULT_PORT = 7094
@@ -76,7 +72,7 @@ async def async_setup(hass, config):
     port = conf.get(CONF_DEVICE_PORT)
     partition = conf.get(CONF_DEVICE_PARTITION)
 
-    from satel_integra.satel_integra import AsyncSatel, AlarmState
+    from satel_integra.satel_integra import AsyncSatel
 
     controller = AsyncSatel(host, port, hass.loop, zones, outputs, partition)
 
@@ -96,41 +92,19 @@ async def async_setup(hass, config):
                   conf,
                   conf.get(CONF_ARM_HOME_MODE))
 
-    task_control_panel = hass.async_create_task(
+    hass.async_create_task(
         async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf, config))
 
-    task_zones = hass.async_create_task(
+    hass.async_create_task(
         async_load_platform(hass, 'binary_sensor', DOMAIN,
                             {CONF_ZONES: zones, CONF_OUTPUTS: outputs}, config)
         )
 
-    await asyncio.wait([task_control_panel, task_zones], loop=hass.loop)
-
     @callback
-    def alarm_status_update_callback(status):
+    def alarm_status_update_callback():
         """Send status update received from alarm to home assistant."""
-        _LOGGER.debug("Alarm status callback, status: %s", status)
-        hass_alarm_status = STATE_ALARM_DISARMED
-
-        if status == AlarmState.ARMED_MODE0:
-            hass_alarm_status = STATE_ALARM_ARMED_AWAY
-
-        elif status in [
-                AlarmState.ARMED_MODE0,
-                AlarmState.ARMED_MODE1,
-                AlarmState.ARMED_MODE2,
-                AlarmState.ARMED_MODE3
-        ]:
-            hass_alarm_status = STATE_ALARM_ARMED_HOME
-
-        elif status in [AlarmState.TRIGGERED, AlarmState.TRIGGERED_FIRE]:
-            hass_alarm_status = STATE_ALARM_TRIGGERED
-
-        elif status == AlarmState.DISARMED:
-            hass_alarm_status = STATE_ALARM_DISARMED
-
-        _LOGGER.debug("Sending hass_alarm_status: %s...", hass_alarm_status)
-        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, hass_alarm_status)
+        _LOGGER.debug("Sending request to update panel state")
+        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE)
 
     @callback
     def zones_update_callback(status):

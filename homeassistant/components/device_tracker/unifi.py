@@ -43,6 +43,8 @@ AVAILABLE_ATTRS = [
     'uptime', 'user_id', 'usergroup_id', 'vlan'
 ]
 
+TIMESTAMP_ATTRS = ['first_seen', 'last_seen', 'latest_assoc_time']
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_SITE_ID, default='default'): cv.string,
@@ -149,7 +151,12 @@ class UnifiScanner(DeviceScanner):
         attributes = {}
         for variable in self._monitored_conditions:
             if variable in client:
-                attributes[variable] = client[variable]
+                if variable in TIMESTAMP_ATTRS:
+                    attributes[variable] = dt_util.utc_from_timestamp(
+                        float(client[variable])
+                    )
+                else:
+                    attributes[variable] = client[variable]
 
         _LOGGER.debug("Device mac %s attributes %s", device, attributes)
         return attributes

@@ -112,7 +112,7 @@ class RestNotificationService(BaseNotificationService):
             response = requests.get(self._resource, headers=self._headers,
                                     params=data, timeout=10)
 
-        if response.status_code not in (200, 201):
+        if response.status_code not in (200, 201, 202):
             _LOGGER.exception(
                 "Error sending message. Response %d: %s:",
                 response.status_code, response.reason)
