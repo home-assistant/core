@@ -271,7 +271,7 @@ group.podcast_player:
   remote_group_view: Audio
   order: 3
 group.music_player:
-  context_key_words: youtube,muzyka,yt,tuba
+  context_key_words: youtube,muzyka,yt,tuba,spotify
   context_answer: OK, powiedz jakiej muzyki chcesz posłuchać?
   context_suffix: Muzyka
   remote_group_view: Audio

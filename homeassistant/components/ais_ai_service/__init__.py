@@ -2011,6 +2011,13 @@ def _process_code(hass, data, callback):
         type_to_input_text(hass, code)
 
 
+def get_context_suffix(hass):
+    context_suffix = GROUP_ENTITIES[get_curr_group_idx()]['context_suffix']
+    if context_suffix == 'Muzyka':
+        context_suffix = hass.states.get("input_select.ais_music_service").state
+    return context_suffix
+
+
 @asyncio.coroutine
 def _process(hass, text, callback):
     """Process a line of text."""
@@ -2085,7 +2092,7 @@ def _process(hass, text, callback):
                 m = m_org
         # the was no match - try again but with current context
         if found_intent is None:
-            suffix = GROUP_ENTITIES[get_curr_group_idx()]['context_suffix']
+            suffix = get_context_suffix(hass)
             if suffix is not None:
                 for intent_type, matchers in intents.items():
                     if found_intent is not None:
@@ -2471,6 +2478,15 @@ class ChangeContextIntent(intent.IntentHandler):
                     set_curr_group(hass, menu)
                     set_curr_entity(hass, None)
                     message = menu['context_answer']
+                    # special case spotify and youtube
+                    if text == 'spotify':
+                        yield from hass.services.async_call(
+                            'input_select', 'select_option',
+                            {"entity_id": "input_select.ais_music_service", "option": "Spotify"})
+                    elif text == 'youtube':
+                        yield from hass.services.async_call(
+                            'input_select', 'select_option',
+                            {"entity_id": "input_select.ais_music_service", "option": "YouTube"})
                     return message, True
 
         message = 'Nie znajduję odpowiedzi do kontekstu ' + text

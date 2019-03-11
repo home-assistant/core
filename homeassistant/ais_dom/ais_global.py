@@ -57,7 +57,7 @@ def get_sercure_android_id_dom():
     if G_AIS_SECURE_ANDROID_ID_DOM is None:
         import subprocess
         try:
-            android_id = subprocess.check_output('su -c "settings get secure android_id"', shell=True, timeout=5)
+            android_id = subprocess.check_output('su -c "settings get secure android_id"', shell=True, timeout=15)
             android_id = android_id.decode("utf-8").replace('\n', '')
         except Exception:
             _LOGGER.warning("Can't get secure gate id for the device!")

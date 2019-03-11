@@ -272,12 +272,13 @@ class SpotifyData:
             _LOGGER.warning("Spotify failed to update, token expired.")
             return
 
-        # album
-        results = self._spotify.search(q='album:' + search_text, type='album')
-        titles = self.get_list_from_results(results, 'album')
+        titles = [ais_global.G_EMPTY_OPTION]
         # artist
         results = self._spotify.search(q='artist:' + search_text, type='artist')
         titles.extend(self.get_list_from_results(results, 'artist'))
+        # album
+        results = self._spotify.search(q='album:' + search_text, type='album')
+        titles.extend(self.get_list_from_results(results, 'album'))
         # playlist
         results = self._spotify.search(q='playlist:' + search_text, type='playlist')
         titles.extend(self.get_list_from_results(results, 'playlist'))
@@ -293,7 +294,7 @@ class SpotifyData:
             text = "Znaleziono: %s, włączam pierwszy: %s" % (
                 str(len(G_SPOTIFY_FOUND)), G_SPOTIFY_FOUND[0]["title"])
         else:
-            text = "%s brak wnyników na Spotify" % search_text
+            text = "Brak wnyników na Spotify dla zapytania %s" % search_text
         yield from self.hass.services.async_call(
             'ais_ai_service', 'say_it', {
                 "text": text
@@ -302,6 +303,7 @@ class SpotifyData:
     def process_select_track_name(self, call):
         _LOGGER.info("process_select_track_name")
         import json
+        item_uri = None
         # """Search in last search return."""
         name = call.data["name"]
         for item in G_SPOTIFY_FOUND:
@@ -311,26 +313,23 @@ class SpotifyData:
                     {"IMAGE_URL": item["thumbnail"], "NAME": item["title"], "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY}
                 )
 
-        player_name = self.hass.states.get(
-            'input_select.ais_music_player').state
-        player = ais_cloud.get_player_data(player_name)
-        self.hass.services.call(
-            'media_player',
-            'play_media', {
-                "entity_id": player["entity_id"],
-                "media_content_type": "audio/mp4",
-                "media_content_id": item_uri
-            })
-        _LOGGER.info(
-            "player: " + str(player["entity_id"]) + " " + "media_content_id: " + "spotify:album:" + str(item_uri))
-
-        # set stream image and title
-        # if entity_id == 'media_player.wbudowany_glosnik':
-        self.hass.services.call(
-            'media_player',
-            'play_media', {
-                "entity_id": player["entity_id"],
-                "media_content_type": "ais_info",
-                "media_content_id": _audio_info
-            })
+        if item_uri is not None:
+            player_name = self.hass.states.get(
+                'input_select.ais_music_player').state
+            player = ais_cloud.get_player_data(player_name)
+            self.hass.services.call(
+                'media_player',
+                'play_media', {
+                    "entity_id": player["entity_id"],
+                    "media_content_type": "audio/mp4",
+                    "media_content_id": item_uri
+                })
+            # set stream image and title
+            self.hass.services.call(
+                'media_player',
+                'play_media', {
+                    "entity_id": player["entity_id"],
+                    "media_content_type": "ais_info",
+                    "media_content_id": _audio_info
+                })
 
