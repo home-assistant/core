@@ -407,7 +407,7 @@ class IndexView(HomeAssistantView):
             })
 
         no_auth = '1'
-        if hass.config.api.api_password and not request[KEY_AUTHENTICATED]:
+        if not request[KEY_AUTHENTICATED]:
             # do not try to auto connect on load
             no_auth = '0'
 
