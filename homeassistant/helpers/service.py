@@ -340,6 +340,7 @@ async def _handle_service_platform_call(func, data, entities, context):
 
 def require_admin(handler, hass=None):
     """Decorate a service handler to require an admin user."""
+    # This will allow this function also to be used as a decorator.
     if hass is None:
         return lambda hass: require_admin(handler, hass)
 
