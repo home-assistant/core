@@ -422,8 +422,6 @@ class ToggleEntity(Entity):
     @property
     def state(self) -> str:
         """Return the state."""
-        if self.is_on is None:
-            return None
         return STATE_ON if self.is_on else STATE_OFF
 
     @property
