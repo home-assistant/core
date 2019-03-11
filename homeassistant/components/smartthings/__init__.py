@@ -29,7 +29,7 @@ from .smartapp import (
     validate_webhook_requirements)
 
 REQUIREMENTS = ['pysmartapp==0.3.2', 'pysmartthings==0.6.7']
-DEPENDENCIES = ['cloud', 'webhook']
+DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
 
