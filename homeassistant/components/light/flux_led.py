@@ -148,7 +148,7 @@ class FluxLight(Light):
         self._mode = device[ATTR_MODE]
         self._bulb = None
         self._error_reported = False
-        self._color = (255, 255, 255)
+        self._color = (0, 0, 100)
         self._white_value = 0
 
     def _connect(self):
