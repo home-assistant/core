@@ -19,7 +19,7 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pynanoleaf==0.0.4']
+REQUIREMENTS = ['pynanoleaf==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nanoleaf light."""
-    import pynanoleaf
+    from pynanoleaf import Nanoleaf, Unavailable
     if DATA_NANOLEAF not in hass.data:
         hass.data[DATA_NANOLEAF] = dict()
 
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         name = config[CONF_NAME]
         token = config[CONF_TOKEN]
 
-    nanoleaf_light = pynanoleaf.Nanoleaf(host)
+    nanoleaf_light = Nanoleaf(host)
 
     if not token:
         token = nanoleaf_light.request_token()
@@ -79,8 +79,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     nanoleaf_light.token = token
 
     try:
-       available = nanoleaf_light.available
-    except Exception as err:
+        nanoleaf_light.available
+    except Unavailable:
         _LOGGER.error(
             "Could not connect to Nanoleaf Light: %s on %s", name, host)
         return
@@ -205,5 +205,5 @@ class NanoleafLight(Light):
             self._state = self._light.on
         except Exception as err:  # pylint:disable=broad-except
             _LOGGER.error("Could not update status for %s (%s)",
-                            self.name, err)
+                          self.name, err)
             self._available = False
