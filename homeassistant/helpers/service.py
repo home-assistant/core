@@ -338,8 +338,11 @@ async def _handle_service_platform_call(func, data, entities, context):
             future.result()  # pop exception if have
 
 
-def require_admin(hass, handler):
+def require_admin(handler, hass=None):
     """Decorate a service handler to require an admin user."""
+    if hass is None:
+        return lambda hass: require_admin(handler, hass)
+
     @wraps(handler)
     async def admin_handler(call):
         if call.context.user_id:

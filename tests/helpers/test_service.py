@@ -402,11 +402,11 @@ async def test_require_admin_decorator(hass, hass_read_only_user,
     """Test the require_admin decorator."""
     calls = []
 
+    @service.require_admin
     async def mock_service(call):
         calls.append(call)
 
-    hass.services.async_register(
-        'test', 'test', service.require_admin(hass, mock_service))
+    hass.services.async_register('test', 'test', mock_service(hass))
 
     with pytest.raises(exceptions.UnknownUser):
         await hass.services.async_call(
