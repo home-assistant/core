@@ -1,9 +1,4 @@
-"""
-Cisco Spark platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.ciscospark/
-"""
+"""Cisco Webex Teams notify component."""
 import logging
 
 import voluptuous as vol
@@ -13,7 +8,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import (CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['ciscosparkapi==0.4.2']
+REQUIREMENTS = ['webexteamssdk==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,31 +21,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_service(hass, config, discovery_info=None):
-    """Get the CiscoSpark notification service."""
-    return CiscoSparkNotificationService(
+    """Get the CiscoWebexTeams notification service."""
+    return CiscoWebexTeamsNotificationService(
         config.get(CONF_TOKEN),
         config.get(CONF_ROOMID))
 
 
-class CiscoSparkNotificationService(BaseNotificationService):
-    """The Cisco Spark Notification Service."""
+class CiscoWebexTeamsNotificationService(BaseNotificationService):
+    """The Cisco Webex Teams Notification Service."""
 
     def __init__(self, token, default_room):
         """Initialize the service."""
-        from ciscosparkapi import CiscoSparkAPI
+        from webexteamssdk import WebexTeamsAPI
         self._default_room = default_room
         self._token = token
-        self._spark = CiscoSparkAPI(access_token=self._token)
+        self._client = WebexTeamsAPI(access_token=self._token)
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        from ciscosparkapi import SparkApiError
+        from webexteamssdk import ApiError
         try:
             title = ""
             if kwargs.get(ATTR_TITLE) is not None:
                 title = kwargs.get(ATTR_TITLE) + ": "
-            self._spark.messages.create(roomId=self._default_room,
-                                        text=title + message)
-        except SparkApiError as api_error:
-            _LOGGER.error("Could not send CiscoSpark notification. Error: %s",
+            self._client.messages.create(roomId=self._default_room,
+                                         text=title + message)
+        except ApiError as api_error:
+            _LOGGER.error("Could not send CiscoWebexTeams notification. "
+                          "Error: %s",
                           api_error)
