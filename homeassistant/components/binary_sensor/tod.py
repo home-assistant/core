@@ -1,5 +1,5 @@
 """Support for representing current time of the day as binary sensors."""
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 import logging
 
 import pytz
