@@ -1,4 +1,5 @@
 """Support for Homekit device discovery."""
+import asyncio
 import json
 import logging
 import os
@@ -73,6 +74,8 @@ class HKDevice():
         self.config = config
         self.configurator = hass.components.configurator
         self._connection_warning_logged = False
+
+        self.pairing_lock = asyncio.Lock(loop=hass.loop)
 
         self.pairing = self.controller.pairings.get(hkid)
 
@@ -168,6 +171,32 @@ class HKDevice():
                                                       'name': 'HomeKit code',
                                                       'type': 'string'}])
 
+    async def get_characteristics(self, *args, **kwargs):
+        """Read latest state from homekit accessory."""
+        async with self.pairing_lock:
+            chars = await self.hass.async_add_executor_job(
+                self.pairing.get_characteristics,
+                *args,
+                **kwargs,
+            )
+        return chars
+
+    async def put_characteristics(self, characteristics):
+        """Control a HomeKit device state from Home Assistant."""
+        chars = []
+        for row in characteristics:
+            chars.append((
+                row['aid'],
+                row['iid'],
+                row['value'],
+            ))
+
+        async with self.pairing_lock:
+            await self.hass.async_add_executor_job(
+                self.pairing.put_characteristics,
+                chars
+            )
+
 
 class HomeKitEntity(Entity):
     """Representation of a Home Assistant HomeKit device."""
@@ -238,15 +267,15 @@ class HomeKitEntity(Entity):
         # pylint: disable=not-callable
         setup_fn(char)
 
-    def update(self):
+    async def async_update(self):
         """Obtain a HomeKit device's state."""
         # pylint: disable=import-error
         from homekit.exceptions import AccessoryDisconnectedError
 
-        pairing = self._accessory.pairing
-
         try:
-            new_values_dict = pairing.get_characteristics(self._chars_to_poll)
+            new_values_dict = await self._accessory.get_characteristics(
+                self._chars_to_poll
+            )
         except AccessoryDisconnectedError:
             return
 
@@ -279,22 +308,6 @@ class HomeKitEntity(Entity):
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
-
-    def update_characteristics(self, characteristics):
-        """Synchronise a HomeKit device state with Home Assistant."""
-        pass
-
-    def put_characteristics(self, characteristics):
-        """Control a HomeKit device state from Home Assistant."""
-        chars = []
-        for row in characteristics:
-            chars.append((
-                row['aid'],
-                row['iid'],
-                row['value'],
-            ))
-
-        self._accessory.pairing.put_characteristics(chars)
 
 
 def setup(hass, config):
