@@ -2,7 +2,7 @@
 Support for functionality to interact with Android TV and Fire TV devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.firetv/
+https://home-assistant.io/components/media_player.androidtv/
 """
 import functools
 import logging
@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_STANDBY)
 import homeassistant.helpers.config_validation as cv
 
-FIRETV_DOMAIN = 'firetv'
+ANDROIDTV_DOMAIN = 'androidtv'
 
 REQUIREMENTS = ['androidtv==0.0.10']
 
@@ -84,18 +84,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
-FIRETV_STATES = {'off': STATE_OFF,
-                 'idle': STATE_IDLE,
-                 'standby': STATE_STANDBY,
-                 'playing': STATE_PLAYING,
-                 'paused': STATE_PAUSED}
+ANDROIDTV_STATES = {'off': STATE_OFF,
+                    'idle': STATE_IDLE,
+                    'standby': STATE_STANDBY,
+                    'playing': STATE_PLAYING,
+                    'paused': STATE_PAUSED}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     from androidtv import setup
 
-    hass.data.setdefault(FIRETV_DOMAIN, {})
+    hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
     host = '{0}:{1}'.format(config[CONF_HOST], config[CONF_PORT])
 
@@ -132,7 +132,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         device_name, host, adb_log)
         return
 
-    if host in hass.data[FIRETV_DOMAIN]:
+    if host in hass.data[ANDROIDTV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", host)
     else:
         if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
@@ -148,16 +148,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         add_entities([device])
         _LOGGER.debug("Setup %s at %s%s", device_name, host, adb_log)
-        hass.data[FIRETV_DOMAIN][host] = device
+        hass.data[ANDROIDTV_DOMAIN][host] = device
 
-    if hass.services.has_service(FIRETV_DOMAIN, SERVICE_ADB_COMMAND):
+    if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
         return
 
     def service_adb_command(service):
         """Dispatch service calls to target entities."""
         cmd = service.data.get(ATTR_COMMAND)
         entity_id = service.data.get(ATTR_ENTITY_ID)
-        target_devices = [dev for dev in hass.data[FIRETV_DOMAIN].values()
+        target_devices = [dev for dev in hass.data[ANDROIDTV_DOMAIN].values()
                           if dev.entity_id in entity_id]
 
         for target_device in target_devices:
@@ -168,7 +168,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 _LOGGER.info("Output of command '%s' from '%s': %s",
                              cmd, target_device.entity_id, repr(output))
 
-    hass.services.register(FIRETV_DOMAIN, SERVICE_ADB_COMMAND,
+    hass.services.register(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND,
                            service_adb_command,
                            schema=SERVICE_ADB_COMMAND_SCHEMA)
 
@@ -342,7 +342,7 @@ class AndroidTVDevice(ADBDevice):
         state, self._current_app, self._device, self._muted, self._volume = \
             self.aftv.update()
 
-        self._state = FIRETV_STATES[state]
+        self._state = ANDROIDTV_STATES[state]
 
     @property
     def is_volume_muted(self):
@@ -419,7 +419,7 @@ class FireTVDevice(ADBDevice):
         state, self._current_app, self._running_apps = \
             self.aftv.update(self._get_sources)
 
-        self._state = FIRETV_STATES[state]
+        self._state = ANDROIDTV_STATES[state]
 
     @property
     def source(self):
