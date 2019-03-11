@@ -44,7 +44,7 @@ class DeconzGateway:
             raise ConfigEntryNotReady
 
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.error('Unknown error connecting with deCONZ gateway.')
+            _LOGGER.error('Error connecting with deCONZ gateway.')
             return False
 
         for component in SUPPORTED_PLATFORMS:
@@ -142,7 +142,6 @@ async def get_gateway(hass, config, async_add_device_callback,
         _LOGGER.error(
             "Error connecting to deCONZ gateway at %s", config[CONF_HOST])
         raise CannotConnect
-
 
 
 

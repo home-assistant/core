@@ -48,7 +48,7 @@ async def test_flow_already_registered_bridge(hass):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
     assert result['type'] == 'abort'
 
 
@@ -59,10 +59,10 @@ async def test_flow_bridge_discovery_fails(hass, aioclient_mock):
 
     with patch('pydeconz.utils.async_discovery',
                side_effect=asyncio.TimeoutError):
-        result = await flow.async_step_init()
+        result = await flow.async_step_user()
 
     assert result['type'] == 'form'
-    assert result['step_id'] == 'user'
+    assert result['step_id'] == 'init'
 
 
 async def test_flow_no_discovered_bridges(hass, aioclient_mock):
@@ -73,9 +73,9 @@ async def test_flow_no_discovered_bridges(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
     assert result['type'] == 'form'
-    assert result['step_id'] == 'user'
+    assert result['step_id'] == 'init'
 
 
 async def test_flow_one_bridge_discovered(hass, aioclient_mock):
@@ -87,7 +87,7 @@ async def test_flow_one_bridge_discovered(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
     assert flow.deconz_config['host'] == '1.2.3.4'
@@ -103,7 +103,7 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
     assert result['data_schema']({'host': '1.2.3.4'})
     assert result['data_schema']({'host': '5.6.7.8'})
 
@@ -117,7 +117,7 @@ async def test_flow_two_bridges_selection(hass, aioclient_mock):
         {'bridgeid': 'id2', 'host': '5.6.7.8', 'port': 80}
     ]
 
-    result = await flow.async_step_init(user_input={'host': '1.2.3.4'})
+    result = await flow.async_step_user(user_input={'host': '1.2.3.4'})
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
     assert flow.deconz_config['host'] == '1.2.3.4'
@@ -132,7 +132,7 @@ async def test_flow_manual_configuration(hass, aioclient_mock):
 
     user_input = {'host': '1.2.3.4', 'port': 80}
 
-    result = await flow.async_step_init(user_input)
+    result = await flow.async_step_user(user_input)
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
     assert flow.deconz_config == user_input
