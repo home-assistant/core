@@ -24,12 +24,15 @@ DATA_SABNZBD = 'sabznbd'
 
 _CONFIGURING = {}
 
+CONF_URLBASE = 'urlbase'
+
 ATTR_SPEED = 'speed'
-BASE_URL_FORMAT = '{}://{}:{}/'
+BASE_URL_FORMAT = '{}://{}:{}/{}'
 CONFIG_FILE = 'sabnzbd.conf'
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'SABnzbd'
 DEFAULT_PORT = 8080
+DEFAULT_URLBASE = ''
 DEFAULT_SPEED_LIMIT = '100'
 DEFAULT_SSL = False
 
@@ -68,6 +71,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -91,8 +95,11 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
+    urlbase = config[CONF_URLBASE]
+    if urlbase:
+        urlbase = '{}/'.format(config[CONF_URLBASE].strip('/'))
     uri_scheme = 'https' if use_ssl else 'http'
-    base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
+    base_url = BASE_URL_FORMAT.format(uri_scheme, host, port, urlbase)
     if api_key is None:
         conf = await hass.async_add_job(load_json,
                                         hass.config.path(CONFIG_FILE))
