@@ -12,7 +12,6 @@ import homeassistant.components  # noqa
 from homeassistant import core as ha, loader, exceptions
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
-from homeassistant import exceptions
 import homeassistant.helpers.config_validation as cv
 from homeassistant.auth.permissions import PolicyPermissions
 from homeassistant.helpers import (
