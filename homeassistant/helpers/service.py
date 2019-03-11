@@ -339,7 +339,20 @@ async def _handle_service_platform_call(func, data, entities, context):
 
 
 def require_admin(handler, hass=None):
-    """Decorate a service handler to require an admin user."""
+    """Decorate a service handler to require an admin user.
+
+    # Pass in hass later
+    @require_admin
+    async def service_handler(call):
+
+    hass.services.async_register('domain', 'service', service_handler(hass))
+
+    # Pass in hass direct
+    async def service_handler(call):
+
+    hass.services.async_register('domain', 'service',
+                                 require_admin(service_handler, hass))
+    """
     # This will allow this function also to be used as a decorator.
     if hass is None:
         return lambda hass: require_admin(handler, hass)
