@@ -161,7 +161,7 @@ amcrest==1.2.5
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.media_player.anthemav
-anthemav==1.1.9
+anthemav==1.1.10
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
@@ -722,9 +722,6 @@ myusps==1.3.2
 # homeassistant.components.media_player.nad
 nad_receiver==0.0.11
 
-# homeassistant.components.light.nanoleaf_aurora
-nanoleaf==0.4.1
-
 # homeassistant.components.device_tracker.keenetic_ndms2
 ndms2_client==0.0.6
 
@@ -735,7 +732,7 @@ nessclient==0.9.14
 netdata==0.1.2
 
 # homeassistant.components.discovery
-netdisco==2.3.0
+netdisco==2.4.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -974,7 +971,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==2.5.2
+pychromecast==3.0.0
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.1
@@ -1167,6 +1164,9 @@ pymyq==1.1.0
 # homeassistant.components.mysensors
 pymysensors==0.18.0
 
+# homeassistant.components.light.nanoleaf
+pynanoleaf==0.0.2
+
 # homeassistant.components.lock.nello
 pynello==2.0.2
 
@@ -1265,7 +1265,7 @@ pysher==1.0.1
 pysma==0.3.1
 
 # homeassistant.components.smartthings
-pysmartapp==0.3.1
+pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
 pysmartthings==0.6.7
@@ -1475,7 +1475,7 @@ pyzbar==0.1.7
 qnapstats==0.2.7
 
 # homeassistant.components.device_tracker.quantum_gateway
-quantum-gateway==0.0.3
+quantum-gateway==0.0.5
 
 # homeassistant.components.rachio
 rachiopy==0.1.3

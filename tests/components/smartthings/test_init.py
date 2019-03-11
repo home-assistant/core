@@ -6,10 +6,11 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from pysmartthings import InstalledAppStatus
 import pytest
 
-from homeassistant.components import smartthings
+from homeassistant.components import cloud, smartthings
 from homeassistant.components.smartthings.const import (
-    CONF_INSTALLED_APP_ID, CONF_REFRESH_TOKEN, DATA_BROKERS, DOMAIN,
-    EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
+    CONF_CLOUDHOOK_URL, CONF_INSTALLED_APP_ID, CONF_REFRESH_TOKEN,
+    DATA_BROKERS, DOMAIN, EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE,
+    SUPPORTED_PLATFORMS)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -222,6 +223,29 @@ async def test_remove_entry(hass, config_entry, smartthings_mock):
     # Assert
     assert api.delete_installed_app.call_count == 1
     assert api.delete_app.call_count == 1
+
+
+async def test_remove_entry_cloudhook(hass, config_entry, smartthings_mock):
+    """Test that the installed app, app, and cloudhook are removed up."""
+    # Arrange
+    setattr(hass.config_entries, '_entries', [config_entry])
+    hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
+    api = smartthings_mock.return_value
+    api.delete_installed_app.side_effect = lambda _: mock_coro()
+    api.delete_app.side_effect = lambda _: mock_coro()
+    mock_async_is_logged_in = Mock(return_value=True)
+    mock_async_delete_cloudhook = Mock(return_value=mock_coro())
+    # Act
+    with patch.object(cloud, 'async_is_logged_in',
+                      new=mock_async_is_logged_in), \
+        patch.object(cloud, 'async_delete_cloudhook',
+                     new=mock_async_delete_cloudhook):
+        await smartthings.async_remove_entry(hass, config_entry)
+    # Assert
+    assert api.delete_installed_app.call_count == 1
+    assert api.delete_app.call_count == 1
+    assert mock_async_is_logged_in.call_count == 1
+    assert mock_async_delete_cloudhook.call_count == 1
 
 
 async def test_remove_entry_app_in_use(hass, config_entry, smartthings_mock):
