@@ -172,7 +172,7 @@ async def test_webocket_stream_no_source(hass, hass_ws_client,
     """Test camera/stream websocket command."""
     await async_setup_component(hass, 'camera')
 
-    with patch('homeassistant.components.stream.request_stream',
+    with patch('homeassistant.components.camera.request_stream',
                return_value='http://home.assistant/playlist.m3u8') \
             as mock_request_stream:
         # Request playlist through WebSocket
@@ -196,7 +196,7 @@ async def test_webocket_camera_stream(hass, hass_ws_client, hass_client,
     """Test camera/stream websocket command."""
     await async_setup_component(hass, 'camera')
 
-    with patch('homeassistant.components.stream.request_stream',
+    with patch('homeassistant.components.camera.request_stream',
                return_value='http://home.assistant/playlist.m3u8'
                ) as mock_request_stream, \
         patch('homeassistant.components.camera.demo.DemoCamera.stream_source',
@@ -225,7 +225,7 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
         ATTR_ENTITY_ID: 'camera.demo_camera',
         camera.ATTR_MEDIA_PLAYER: 'media_player.test'
     }
-    with patch('homeassistant.components.stream.request_stream'), \
+    with patch('homeassistant.components.camera.request_stream'), \
             pytest.raises(HomeAssistantError):
         # Call service
         await hass.services.async_call(
@@ -239,7 +239,7 @@ async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
         ATTR_ENTITY_ID: 'camera.demo_camera',
         camera.ATTR_MEDIA_PLAYER: 'media_player.test'
     }
-    with patch('homeassistant.components.stream.request_stream'
+    with patch('homeassistant.components.camera.request_stream'
                ) as mock_request_stream, \
         patch('homeassistant.components.camera.demo.DemoCamera.stream_source',
               new_callable=PropertyMock) as mock_stream_source:
