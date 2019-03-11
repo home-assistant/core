@@ -50,10 +50,6 @@ class AdsSwitch(ToggleEntity):
             self._on_state = value
             self.schedule_update_ha_state()
 
-        # Get initial state from device.
-        self._on_state = self._ads_hub.read_by_name(
-            self.ads_var, self._ads_hub.PLCTYPE_BOOL)
-        # Create device notification.
         self.hass.async_add_job(
             self._ads_hub.add_device_notification,
             self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
@@ -72,11 +68,6 @@ class AdsSwitch(ToggleEntity):
     def unique_id(self):
         """Return an unique identifier for this entity."""
         return self._unique_id
-
-    @property
-    def available(self):
-        """Return False because entity pushes its state to HA."""
-        return self._on_state is not None
 
     @property
     def should_poll(self):
