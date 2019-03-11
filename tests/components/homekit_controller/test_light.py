@@ -129,7 +129,7 @@ async def test_switch_read_light_state_color_temp(hass, utcnow):
 
 
 async def test_light_becomes_unavailable_but_recovers(hass, utcnow):
-    """Test that we can read the color_temp of a  light accessory."""
+    """Test transition to and from unavailable state."""
     bulb = create_lightbulb_service_with_color_temp()
     helper = await setup_test_component(hass, [bulb])
 
