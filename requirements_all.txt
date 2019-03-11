@@ -1198,7 +1198,7 @@ pyowlet==1.0.2
 pyowm==2.10.0
 
 # homeassistant.components.switch.pca
-pypca==0.0.2
+pypca==0.0.3
 
 # homeassistant.components.lcn
 pypck==0.5.9
