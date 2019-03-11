@@ -67,7 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         }))
 })
 
-TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
+TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone', 'person']
 DATA_KEY = 'google_travel_time'
 
 

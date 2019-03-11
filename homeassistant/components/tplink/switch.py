@@ -29,7 +29,7 @@ def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     Deprecated.
     """
-    _LOGGER.warning('Loading as a platform is deprecated, '
+    _LOGGER.warning('Loading as a platform is no longer supported, '
                     'convert to use the tplink component.')
 
 

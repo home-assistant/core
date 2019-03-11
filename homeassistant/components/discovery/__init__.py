@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.3.0']
+REQUIREMENTS = ['netdisco==2.4.0']
 
 DOMAIN = 'discovery'
 
@@ -31,6 +31,7 @@ SERVICE_AXIS = 'axis'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DLNA_DMR = 'dlna_dmr'
+SERVICE_ENIGMA2 = 'enigma2'
 SERVICE_FREEBOX = 'freebox'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
@@ -68,6 +69,7 @@ SERVICE_HANDLERS = {
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
+    SERVICE_ENIGMA2: ('media_player', 'enigma2'),
     SERVICE_ROKU: ('roku', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
@@ -93,7 +95,7 @@ SERVICE_HANDLERS = {
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
     'lg_smart_device': ('media_player', 'lg_soundbar'),
-    'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
+    'nanoleaf_aurora': ('light', 'nanoleaf'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {

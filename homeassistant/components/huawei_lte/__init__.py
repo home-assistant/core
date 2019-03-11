@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 # https://github.com/quandyfactory/dicttoxml/issues/60
 logging.getLogger('dicttoxml').setLevel(logging.WARNING)
 
-REQUIREMENTS = ['huawei-lte-api==1.1.3']
+REQUIREMENTS = ['huawei-lte-api==1.1.5']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 

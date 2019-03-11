@@ -32,7 +32,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     device_registry = await hass.helpers.device_registry.async_get_registry()
     # Act
-    await setup_platform(hass, COVER_DOMAIN, device)
+    await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get('cover.garage')
     assert entry
@@ -57,7 +57,7 @@ async def test_open(hass, device_factory):
         device_factory('Shade', [Capability.window_shade],
                        {Attribute.window_shade: 'closed'})
     }
-    await setup_platform(hass, COVER_DOMAIN, *devices)
+    await setup_platform(hass, COVER_DOMAIN, devices=devices)
     entity_ids = [
         'cover.door',
         'cover.garage',
@@ -86,7 +86,7 @@ async def test_close(hass, device_factory):
         device_factory('Shade', [Capability.window_shade],
                        {Attribute.window_shade: 'open'})
     }
-    await setup_platform(hass, COVER_DOMAIN, *devices)
+    await setup_platform(hass, COVER_DOMAIN, devices=devices)
     entity_ids = [
         'cover.door',
         'cover.garage',
@@ -113,7 +113,7 @@ async def test_set_cover_position(hass, device_factory):
          Capability.switch_level],
         {Attribute.window_shade: 'opening', Attribute.battery: 95,
          Attribute.level: 10})
-    await setup_platform(hass, COVER_DOMAIN, device)
+    await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
         COVER_DOMAIN, SERVICE_SET_COVER_POSITION,
@@ -136,7 +136,7 @@ async def test_set_cover_position_unsupported(hass, device_factory):
         'Shade',
         [Capability.window_shade],
         {Attribute.window_shade: 'opening'})
-    await setup_platform(hass, COVER_DOMAIN, device)
+    await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
         COVER_DOMAIN, SERVICE_SET_COVER_POSITION,
@@ -152,7 +152,7 @@ async def test_update_to_open_from_signal(hass, device_factory):
     # Arrange
     device = device_factory('Garage', [Capability.garage_door_control],
                             {Attribute.door: 'opening'})
-    await setup_platform(hass, COVER_DOMAIN, device)
+    await setup_platform(hass, COVER_DOMAIN, devices=[device])
     device.status.update_attribute_value(Attribute.door, 'open')
     assert hass.states.get('cover.garage').state == STATE_OPENING
     # Act
@@ -170,7 +170,7 @@ async def test_update_to_closed_from_signal(hass, device_factory):
     # Arrange
     device = device_factory('Garage', [Capability.garage_door_control],
                             {Attribute.door: 'closing'})
-    await setup_platform(hass, COVER_DOMAIN, device)
+    await setup_platform(hass, COVER_DOMAIN, devices=[device])
     device.status.update_attribute_value(Attribute.door, 'closed')
     assert hass.states.get('cover.garage').state == STATE_CLOSING
     # Act
@@ -188,7 +188,7 @@ async def test_unload_config_entry(hass, device_factory):
     # Arrange
     device = device_factory('Garage', [Capability.garage_door_control],
                             {Attribute.door: 'open'})
-    config_entry = await setup_platform(hass, COVER_DOMAIN, device)
+    config_entry = await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Act
     await hass.config_entries.async_forward_entry_unload(
         config_entry, COVER_DOMAIN)

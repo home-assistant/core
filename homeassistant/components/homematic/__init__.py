@@ -14,7 +14,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyhomematic==0.1.56']
+REQUIREMENTS = ['pyhomematic==0.1.57']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,11 +74,11 @@ HM_DEVICE_TYPES = {
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
         'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
         'IPWeatherSensorBasic', 'IPBrightnessSensor', 'IPGarage',
-        'UniversalSensor', 'MotionIPV2', 'IPMultiIO'],
+        'UniversalSensor', 'MotionIPV2', 'IPMultiIO', 'IPThermostatWall2'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
-        'ThermostatGroup', 'IPThermostatWall230V'],
+        'ThermostatGroup', 'IPThermostatWall230V', 'IPThermostatWall2'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
@@ -98,13 +98,14 @@ HM_IGNORE_DISCOVERY_NODE = [
 HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
     'ACTUAL_TEMPERATURE': [
         'IPAreaThermostat', 'IPWeatherSensor',
-        'IPWeatherSensorPlus', 'IPWeatherSensorBasic'],
+        'IPWeatherSensorPlus', 'IPWeatherSensorBasic',
+        'IPThermostatWall', 'IPThermostatWall2'],
 }
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
-    'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
+    'ERROR': ['error', {0: 'No'}],
     'ERROR_SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_PEER': ['rssi_peer', {}],

@@ -9,4 +9,4 @@ write_register:
   fields:
     address: {description: Address of the holding register to write to., example: 0}
     unit: {description: Address of the modbus unit., example: 21}
-    value: {description: Value to write., example: 0}
+    value: {description: Value (single value or array) to write., example: "0 or [4,0]"}

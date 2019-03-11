@@ -23,17 +23,18 @@ from .core.const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
     CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
-    DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
+    DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DATA_ZHA_GATEWAY,
     DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
 from .core.gateway import establish_device_mappings
 from .core.channels.registry import populate_channel_registry
+from .core.store import async_get_registry
 
 REQUIREMENTS = [
     'bellows-homeassistant==0.7.1',
     'zigpy-homeassistant==0.3.0',
     'zigpy-xbee-homeassistant==0.1.2',
-    'zha-quirks==0.0.6',
-    'zigpy-deconz==0.1.1'
+    'zha-quirks==0.0.7',
+    'zigpy-deconz==0.1.2'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
@@ -146,7 +147,8 @@ async def async_setup_entry(hass, config_entry):
         ClusterPersistingListener
     )
 
-    zha_gateway = ZHAGateway(hass, config)
+    zha_storage = await async_get_registry(hass)
+    zha_gateway = ZHAGateway(hass, config, zha_storage)
 
     # Patch handle_message until zigpy can provide an event here
     def handle_message(sender, is_reply, profile, cluster,
@@ -154,11 +156,9 @@ async def async_setup_entry(hass, config_entry):
         """Handle message from a device."""
         if not sender.initializing and sender.ieee in zha_gateway.devices and \
                 not zha_gateway.devices[sender.ieee].available:
-            hass.async_create_task(
-                zha_gateway.async_device_became_available(
-                    sender, is_reply, profile, cluster, src_ep, dst_ep, tsn,
-                    command_id, args
-                )
+            zha_gateway.async_device_became_available(
+                sender, is_reply, profile, cluster, src_ep, dst_ep, tsn,
+                command_id, args
             )
         return sender.handle_message(
             is_reply, profile, cluster, src_ep, dst_ep, tsn, command_id, args)
@@ -194,11 +194,14 @@ async def async_setup_entry(hass, config_entry):
 
     api.async_load_api(hass, application_controller, zha_gateway)
 
-    def zha_shutdown(event):
-        """Close radio."""
+    async def async_zha_shutdown(event):
+        """Handle shutdown tasks."""
+        await hass.data[DATA_ZHA][
+            DATA_ZHA_GATEWAY].async_update_device_storage()
         hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
 
-    hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, zha_shutdown)
+    hass.bus.async_listen_once(
+        ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
     return True
 
 

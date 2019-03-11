@@ -29,4 +29,4 @@ class VeluxScene(Scene):
 
     async def async_activate(self):
         """Activate the scene."""
-        await self.scene.run()
+        await self.scene.run(wait_for_completion=False)

@@ -5,9 +5,9 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.lock import DOMAIN, LockDevice
-from homeassistant.components import zwave
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.config_validation as cv
+from . import ZWaveDeviceEntity, const
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,14 +34,27 @@ DEVICE_MAPPINGS = {
     # Kwikset 914TRL ZW500
     (0x0090, 0x440): WORKAROUND_DEVICE_STATE,
     (0x0090, 0x446): WORKAROUND_DEVICE_STATE,
-    # Yale YRD210, Yale YRD240
-    (0x0129, 0x0209): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
-    (0x0129, 0xAA00): WORKAROUND_DEVICE_STATE,
-    # Yale YRL220/YRD220
+    # Yale Locks
+    # Yale YRD210, YRD220, YRL220
     (0x0129, 0x0000): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
-    # Yale YRD120
+    # Yale YRD210, YRD220
+    (0x0129, 0x0209): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
+    # Yale YRL210, YRL220
+    (0x0129, 0x0409): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
+    # Yale YRD256
+    (0x0129, 0x0600): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
+    # Yale YRD110, YRD120
     (0x0129, 0x0800): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
-    # Yale YRD220 (as reported by adrum in PR #17386)
+    # Yale YRD446
+    (0x0129, 0x1000): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
+    # Yale YRL220
+    (0x0129, 0x2132): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
+    (0x0129, 0x3CAC): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
+    # Yale YRD210, YRD220
+    (0x0129, 0xAA00): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
+    # Yale YRD220
+    (0x0129, 0xFFFF): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
+    # Yale YRD220 (Older Yale products with incorrect vendor ID)
     (0x0109, 0x0000): WORKAROUND_DEVICE_STATE | WORKAROUND_ALARM_TYPE,
     # Schlage BE469
     (0x003B, 0x5044): WORKAROUND_DEVICE_STATE | WORKAROUND_TRACK_MESSAGE,
@@ -122,18 +135,18 @@ ALARM_TYPE_STD = [
 ]
 
 SET_USERCODE_SCHEMA = vol.Schema({
-    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
     vol.Required(ATTR_USERCODE): cv.string,
 })
 
 GET_USERCODE_SCHEMA = vol.Schema({
-    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
 })
 
 CLEAR_USERCODE_SCHEMA = vol.Schema({
-    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
 })
 
@@ -153,17 +166,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_dispatcher_connect(hass, 'zwave_new_lock', async_add_lock)
 
-    network = hass.data[zwave.const.DATA_NETWORK]
+    network = hass.data[const.DATA_NETWORK]
 
     def set_usercode(service):
         """Set the usercode to index X on the lock."""
-        node_id = service.data.get(zwave.const.ATTR_NODE_ID)
+        node_id = service.data.get(const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
         usercode = service.data.get(ATTR_USERCODE)
 
         for value in lock_node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_USER_CODE).values():
+                class_id=const.COMMAND_CLASS_USER_CODE).values():
             if value.index != code_slot:
                 continue
             if len(str(usercode)) < 4:
@@ -177,12 +190,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_usercode(service):
         """Get a usercode at index X on the lock."""
-        node_id = service.data.get(zwave.const.ATTR_NODE_ID)
+        node_id = service.data.get(const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
 
         for value in lock_node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_USER_CODE).values():
+                class_id=const.COMMAND_CLASS_USER_CODE).values():
             if value.index != code_slot:
                 continue
             _LOGGER.info("Usercode at slot %s is: %s", value.index, value.data)
@@ -190,13 +203,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def clear_usercode(service):
         """Set usercode to slot X on the lock."""
-        node_id = service.data.get(zwave.const.ATTR_NODE_ID)
+        node_id = service.data.get(const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
         data = ''
 
         for value in lock_node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_USER_CODE).values():
+                class_id=const.COMMAND_CLASS_USER_CODE).values():
             if value.index != code_slot:
                 continue
             for i in range(len(value.data)):
@@ -223,12 +236,12 @@ def get_device(node, values, **kwargs):
     return ZwaveLock(values)
 
 
-class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
+class ZwaveLock(ZWaveDeviceEntity, LockDevice):
     """Representation of a Z-Wave Lock."""
 
     def __init__(self, values):
         """Initialize the Z-Wave lock device."""
-        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._state = None
         self._notification = None
         self._lock_status = None
@@ -284,12 +297,12 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         if self._track_message_workaround:
             this_message = self.node.stats['lastReceivedMessage'][5]
 
-            if this_message == zwave.const.COMMAND_CLASS_DOOR_LOCK:
+            if this_message == const.COMMAND_CLASS_DOOR_LOCK:
                 self._state = self.values.primary.data
                 _LOGGER.debug("set state to %s based on message tracking",
                               self._state)
                 if self._previous_message == \
-                        zwave.const.COMMAND_CLASS_DOOR_LOCK:
+                        const.COMMAND_CLASS_DOOR_LOCK:
                     if self._state:
                         self._notification = \
                             LOCK_NOTIFICATION[NOTIFICATION_RF_LOCK]

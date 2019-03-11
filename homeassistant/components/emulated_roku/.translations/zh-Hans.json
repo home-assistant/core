@@ -6,7 +6,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host_ip": "\u4e3b\u673aIP",
+                    "advertise_ip": "\u5e7f\u64ad IP",
+                    "advertise_port": "\u5e7f\u64ad\u7aef\u53e3",
+                    "host_ip": "\u4e3b\u673a IP",
                     "listen_port": "\u76d1\u542c\u7aef\u53e3",
                     "name": "\u59d3\u540d"
                 },

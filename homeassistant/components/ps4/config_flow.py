@@ -37,10 +37,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a user config flow."""
-        # Abort if device is configured.
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason='devices_configured')
-
         # Check if able to bind to ports: UDP 987, TCP 997.
         ports = PORT_MSG.keys()
         failed = await self.hass.async_add_executor_job(
@@ -48,6 +44,9 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if failed in ports:
             reason = PORT_MSG[failed]
             return self.async_abort(reason=reason)
+        # Skip Creds Step if a device is configured.
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return await self.async_step_link()
         return await self.async_step_creds()
 
     async def async_step_creds(self, user_input=None):
@@ -77,6 +76,18 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         device_list = [
             device['host-ip'] for device in devices]
+
+        # If entry exists check that devices found aren't configured.
+        if self.hass.config_entries.async_entries(DOMAIN):
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                conf_devices = entry.data['devices']
+                for c_device in conf_devices:
+                    if c_device['host'] in device_list:
+                        # Remove configured device from search list.
+                        device_list.remove(c_device['host'])
+            # If list is empty then all devices are configured.
+            if not device_list:
+                return self.async_abort(reason='devices_configured')
 
         # Login to PS4 with user data.
         if user_input is not None:

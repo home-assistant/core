@@ -1,6 +1,8 @@
 """deCONZ climate platform tests."""
 from unittest.mock import Mock, patch
 
+import asynctest
+
 from homeassistant import config_entries
 from homeassistant.components import deconz
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -43,8 +45,14 @@ ENTRY_CONFIG = {
 async def setup_gateway(hass, data, allow_clip_sensor=True):
     """Load the deCONZ sensor platform."""
     from pydeconz import DeconzSession
-    loop = Mock()
-    session = Mock()
+
+    session = Mock(put=asynctest.CoroutineMock(
+        return_value=Mock(status=200,
+                          json=asynctest.CoroutineMock(),
+                          text=asynctest.CoroutineMock(),
+                          )
+        )
+    )
 
     ENTRY_CONFIG[deconz.const.CONF_ALLOW_CLIP_SENSOR] = allow_clip_sensor
 
@@ -52,7 +60,7 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
         1, deconz.DOMAIN, 'Mock Title', ENTRY_CONFIG, 'test',
         config_entries.CONN_CLASS_LOCAL_PUSH)
     gateway = deconz.DeconzGateway(hass, config_entry)
-    gateway.api = DeconzSession(loop, session, **config_entry.data)
+    gateway.api = DeconzSession(hass.loop, session, **config_entry.data)
     gateway.api.config = Mock()
     hass.data[deconz.DOMAIN] = gateway
 

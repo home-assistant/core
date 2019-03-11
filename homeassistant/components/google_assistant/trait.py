@@ -102,7 +102,7 @@ class _Trait:
         """Test if command can be executed."""
         return command in self.commands
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a trait command."""
         raise NotImplementedError
 
@@ -159,7 +159,7 @@ class BrightnessTrait(_Trait):
 
         return response
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a brightness command."""
         domain = self.state.domain
 
@@ -168,20 +168,20 @@ class BrightnessTrait(_Trait):
                 light.DOMAIN, light.SERVICE_TURN_ON, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
-                }, blocking=True)
+                }, blocking=True, context=data.context)
         elif domain == cover.DOMAIN:
             await self.hass.services.async_call(
                 cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     cover.ATTR_POSITION: params['brightness']
-                }, blocking=True)
+                }, blocking=True, context=data.context)
         elif domain == media_player.DOMAIN:
             await self.hass.services.async_call(
                 media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     media_player.ATTR_MEDIA_VOLUME_LEVEL:
                     params['brightness'] / 100
-                }, blocking=True)
+                }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -221,7 +221,7 @@ class OnOffTrait(_Trait):
             return {'on': self.state.state != cover.STATE_CLOSED}
         return {'on': self.state.state != STATE_OFF}
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute an OnOff command."""
         domain = self.state.domain
 
@@ -242,7 +242,7 @@ class OnOffTrait(_Trait):
 
         await self.hass.services.async_call(service_domain, service, {
             ATTR_ENTITY_ID: self.state.entity_id
-        }, blocking=True)
+        }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -288,7 +288,7 @@ class ColorSpectrumTrait(_Trait):
         return (command in self.commands and
                 'spectrumRGB' in params.get('color', {}))
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a color spectrum command."""
         # Convert integer to hex format and left pad with 0's till length 6
         hex_value = "{0:06x}".format(params['color']['spectrumRGB'])
@@ -298,7 +298,7 @@ class ColorSpectrumTrait(_Trait):
         await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_HS_COLOR: color
-        }, blocking=True)
+        }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -355,7 +355,7 @@ class ColorTemperatureTrait(_Trait):
         return (command in self.commands and
                 'temperature' in params.get('color', {}))
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a color temperature command."""
         temp = color_util.color_temperature_kelvin_to_mired(
             params['color']['temperature'])
@@ -371,7 +371,7 @@ class ColorTemperatureTrait(_Trait):
         await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_COLOR_TEMP: temp,
-        }, blocking=True)
+        }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -400,13 +400,14 @@ class SceneTrait(_Trait):
         """Return scene query attributes."""
         return {}
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a scene command."""
         # Don't block for scripts as they can be slow.
         await self.hass.services.async_call(
             self.state.domain, SERVICE_TURN_ON, {
                 ATTR_ENTITY_ID: self.state.entity_id
-            }, blocking=self.state.domain != script.DOMAIN)
+            }, blocking=self.state.domain != script.DOMAIN,
+            context=data.context)
 
 
 @register_trait
@@ -434,12 +435,12 @@ class DockTrait(_Trait):
         """Return dock query attributes."""
         return {'isDocked': self.state.state == vacuum.STATE_DOCKED}
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a dock command."""
         await self.hass.services.async_call(
             self.state.domain, vacuum.SERVICE_RETURN_TO_BASE, {
                 ATTR_ENTITY_ID: self.state.entity_id
-            }, blocking=True)
+            }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -473,30 +474,30 @@ class StartStopTrait(_Trait):
             'isPaused': self.state.state == vacuum.STATE_PAUSED,
         }
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params['start']:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_START, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=data.context)
             else:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_STOP, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=data.context)
         elif command == COMMAND_PAUSEUNPAUSE:
             if params['pause']:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_PAUSE, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=data.context)
             else:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_START, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -584,7 +585,7 @@ class TemperatureSettingTrait(_Trait):
 
         return response
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
         unit = self.hass.config.units.temperature_unit
@@ -608,7 +609,7 @@ class TemperatureSettingTrait(_Trait):
                 climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     ATTR_TEMPERATURE: temp
-                }, blocking=True)
+                }, blocking=True, context=data.context)
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
             temp_high = temp_util.convert(
@@ -640,7 +641,7 @@ class TemperatureSettingTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_TARGET_TEMP_HIGH: temp_high,
                     climate.ATTR_TARGET_TEMP_LOW: temp_low,
-                }, blocking=True)
+                }, blocking=True, context=data.context)
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
             await self.hass.services.async_call(
@@ -648,7 +649,7 @@ class TemperatureSettingTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_OPERATION_MODE:
                         self.google_to_hass[params['thermostatMode']],
-                }, blocking=True)
+                }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -681,7 +682,7 @@ class LockUnlockTrait(_Trait):
         allowed_unlock = not params['lock'] and self.config.allow_unlock
         return params['lock'] or allowed_unlock
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute an LockUnlock command."""
         if params['lock']:
             service = lock.SERVICE_LOCK
@@ -690,7 +691,7 @@ class LockUnlockTrait(_Trait):
 
         await self.hass.services.async_call(lock.DOMAIN, service, {
             ATTR_ENTITY_ID: self.state.entity_id
-        }, blocking=True)
+        }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -760,13 +761,13 @@ class FanSpeedTrait(_Trait):
 
         return response
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute an SetFanSpeed command."""
         await self.hass.services.async_call(
             fan.DOMAIN, fan.SERVICE_SET_SPEED, {
                 ATTR_ENTITY_ID: self.state.entity_id,
                 fan.ATTR_SPEED: params['fanSpeed']
-            }, blocking=True)
+            }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -934,7 +935,7 @@ class ModesTrait(_Trait):
 
         return response
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute an SetModes command."""
         settings = params.get('updateModeSettings')
         requested_source = settings.get(
@@ -951,4 +952,4 @@ class ModesTrait(_Trait):
                         media_player.SERVICE_SELECT_SOURCE, {
                             ATTR_ENTITY_ID: self.state.entity_id,
                             media_player.ATTR_INPUT_SOURCE: source
-                        }, blocking=True)
+                        }, blocking=True, context=data.context)
