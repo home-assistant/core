@@ -2,6 +2,8 @@
 import unittest
 import statistics
 
+import pytest
+
 from homeassistant.setup import setup_component
 from homeassistant.components.sensor.statistics import StatisticsSensor
 from homeassistant.const import (
@@ -228,6 +230,7 @@ class TestStatisticsSensor(unittest.TestCase):
             state.attributes.get('max_age')
         assert self.change_rate == state.attributes.get('change_rate')
 
+    @pytest.mark.skip
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
         # enable the recorder
