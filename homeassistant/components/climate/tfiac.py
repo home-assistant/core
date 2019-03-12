@@ -1,4 +1,5 @@
 """Climate platform that offers a climate device for the TFIAC protocol."""
+from concurrent.futures import _base as futures
 import logging
 
 import voluptuous as vol
@@ -14,7 +15,7 @@ from homeassistant.util.temperature import convert as convert_temperature
 
 DOMAIN = 'tfiac'
 
-REQUIREMENTS = ['tfiac==0.1']
+REQUIREMENTS = ['pytfiac==0.2']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -66,15 +67,20 @@ class TfiacClimate(ClimateDevice):
         """Init class."""
         hass.data[DOMAIN] = self
         self._client = client
+        self._available = True
 
     @property
     def available(self):
         """Return if the device is available."""
-        return self._client.available
+        return self._available
 
     async def async_update(self):
         """Update status via socket polling."""
-        await self._client.update()
+        try:
+            await self._client.update()
+            self._available = True
+        except futures.TimeoutError:
+            self._available = False
 
     @property
     def supported_features(self):
@@ -117,18 +123,19 @@ class TfiacClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._client.status['operation']
+        operation = self._client.status['operation']
+        return {v: k
+                for k, v in OPERATION_LIST.items()}.get(operation, operation)
 
     @property
     def is_on(self):
         """Return true if on."""
-        return True if self._client.status[
-            'current_temp'] == 'on' else False
+        return True if self._client.status[ON_MODE] == 'on' else False
 
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return OPERATION_LIST.keys()
+        return sorted(OPERATION_LIST)
 
     @property
     def current_fan_mode(self):
