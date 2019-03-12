@@ -3,6 +3,7 @@ import asyncio
 from functools import wraps
 import logging
 
+import attr
 import aiohttp
 import async_timeout
 import voluptuous as vol
@@ -393,6 +394,12 @@ def _account_data(cloud):
     client = cloud.client
     remote = cloud.remote
 
+    # Load remote certificate
+    if remote.certificate:
+        certificate = attr.asdict(remote.certificate)
+    else:
+        certificate = None
+
     return {
         'logged_in': True,
         'email': claims['email'],
@@ -402,10 +409,9 @@ def _account_data(cloud):
         'google_domains': list(google_sh.DOMAIN_TO_GOOGLE_TYPES),
         'alexa_entities': client.alexa_config.should_expose.config,
         'alexa_domains': list(alexa_sh.ENTITY_ADAPTERS),
-        # pylint: disable=protected-access
-        'remote_domain': remote._instance_domain,
-        'remote_connected': bool(
-            remote._snitun and remote._snitun.is_connected)
+        'remote_domain': remote.instance_domain,
+        'remote_connected': remote.is_connected,
+        'remote_certificate': certificate,
     }
 
 
