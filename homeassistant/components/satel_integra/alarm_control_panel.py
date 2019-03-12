@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_ARM_HOME_MODE, CONF_DEVICE_PARTITION, DATA_SATEL,
+    CONF_ARM_HOME_MODE, CONF_DEVICE_PARTITIONS, DATA_SATEL, CONF_ZONE_NAME,
     SIGNAL_PANEL_MESSAGE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,12 +23,20 @@ async def async_setup_platform(
     if not discovery_info:
         return
 
-    device = SatelIntegraAlarmPanel(
-        "Alarm Panel",
-        discovery_info.get(CONF_ARM_HOME_MODE),
-        discovery_info.get(CONF_DEVICE_PARTITION))
+    configured_partitions = discovery_info[CONF_DEVICE_PARTITIONS]
 
-    async_add_entities([device])
+    devices = []
+
+    for partition_num, device_config_data in configured_partitions.items():
+        zone_name = device_config_data[CONF_ZONE_NAME]
+        arm_home_mode = device_config_data.get(CONF_ARM_HOME_MODE)
+        device = SatelIntegraAlarmPanel(
+            zone_name,
+            arm_home_mode,
+            partition_num)
+        devices.append(device)
+
+    async_add_entities(devices)
 
 
 class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
@@ -73,6 +81,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         state_map = OrderedDict([
             (AlarmState.TRIGGERED, STATE_ALARM_TRIGGERED),
             (AlarmState.TRIGGERED_FIRE, STATE_ALARM_TRIGGERED),
+            (AlarmState.ENTRY_TIME, STATE_ALARM_PENDING),
             (AlarmState.ARMED_MODE3, STATE_ALARM_ARMED_HOME),
             (AlarmState.ARMED_MODE2, STATE_ALARM_ARMED_HOME),
             (AlarmState.ARMED_MODE1, STATE_ALARM_ARMED_HOME),
@@ -122,24 +131,25 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
         _LOGGER.debug("Disarming, self._state: %s", self._state)
 
-        await self.hass.data[DATA_SATEL].disarm(code)
+        await self.hass.data[DATA_SATEL].disarm(code, [self._partition_id])
 
         if clear_alarm_necessary:
             # Wait 1s before clearing the alarm
             await asyncio.sleep(1)
-            await self.hass.data[DATA_SATEL].clear_alarm(code)
+            await self.hass.data[DATA_SATEL]\
+                      .clear_alarm(code, [self._partition_id])
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         _LOGGER.debug("Arming away")
 
         if code:
-            await self.hass.data[DATA_SATEL].arm(code)
+            await self.hass.data[DATA_SATEL].arm(code, [self._partition_id])
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         _LOGGER.debug("Arming home")
 
         if code:
-            await self.hass.data[DATA_SATEL].arm(
-                code, self._arm_home_mode)
+            await self.hass.data[DATA_SATEL]\
+                      .arm(code, [self._partition_id], self._arm_home_mode)
