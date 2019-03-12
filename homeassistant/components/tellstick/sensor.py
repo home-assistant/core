@@ -81,10 +81,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not config[CONF_ONLY_NAMED]:
             sensor_name = str(tellcore_sensor.id)
         else:
-            if not tellcore_sensor.id in named_sensors:
+            if tellcore_sensor.id not in named_sensors:
                 continue
             sensor_name = named_sensors[tellcore_sensor.id]
-            
+
         for datatype in sensor_value_descriptions:
             if datatype & datatype_mask and \
                tellcore_sensor.has_value(datatype):
