@@ -65,11 +65,6 @@
      data:
        entity_id: camera.remote_access
        filename: "/data/data/pl.sviete.dom/files/home/AIS/dom_access_code.png"
-   - service: ais_ai_service.publish_command_to_frame
-     data:
-       key: spotifyConnectToAppRemote
-       val: true
-       ip: 127.0.0.1
    - delay: '300'
    - service: ais_ai_service.prepare_remote_menu
 

@@ -118,9 +118,11 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 if temp_stream_image.startswith("spotify:image:"):
                     temp_stream_image = temp_stream_image.replace("spotify:image:", "")
                     self._stream_image = "https://i.scdn.co/image/" + temp_stream_image
-            self._media_title = message.get("currentMedia", "")
+                else:
+                    self._stream_image = temp_stream_image
+            self._media_title = message.get("currentMedia", "AI-Speaker")
             self._media_source = message.get("media_source", self._media_source)
-            self._album_name = message.get("media_album_name", "")
+            self._album_name = message.get("media_album_name", "AI-Speaker")
             _LOGGER.debug(str.format("message_received: {0}", message))
             if "giveMeNextOne" in message:
                 play_next = message.get("giveMeNextOne", False)
