@@ -104,7 +104,7 @@ TEST_REQUIREMENTS = (
     'python-forecastio',
     'python-nest',
     'python_awair',
-    'pytradfri\\[async\\]',
+    'pytradfri[async]',
     'pyunifi',
     'pyupnp-async',
     'pywebpush',
@@ -288,7 +288,7 @@ def requirements_test_output(reqs):
     output.append('\n')
     filtered = {key: value for key, value in reqs.items()
                 if any(
-                    re.search(r'(^|#){}($|[=><])'.format(ign),
+                    re.search(r'(^|#){}($|[=><])'.format(re.escape(ign)),
                               key) is not None for ign in TEST_REQUIREMENTS)}
     output.append(generate_requirements_list(filtered))
 
