@@ -224,10 +224,10 @@ pyps4-homeassistant==0.3.0
 pyqwikswitch==0.8
 
 # homeassistant.components.smartthings
-pysmartapp==0.3.0
+pysmartapp==0.3.1
 
 # homeassistant.components.smartthings
-pysmartthings==0.6.3
+pysmartthings==0.6.7
 
 # homeassistant.components.sonos
 pysonos==0.0.8
