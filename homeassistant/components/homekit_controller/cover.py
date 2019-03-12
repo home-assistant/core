@@ -236,7 +236,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
         """Send open command."""
         await self.async_set_cover_position(position=100)
 
-    async def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Send close command."""
         await self.async_set_cover_position(position=0)
 
