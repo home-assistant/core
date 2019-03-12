@@ -15,7 +15,7 @@ from .const import (
 )
 
 
-REQUIREMENTS = ['homekit==0.12.2']
+REQUIREMENTS = ['homekit[IP]==0.13.0']
 
 HOMEKIT_DIR = '.homekit'
 
@@ -314,7 +314,7 @@ def setup(hass, config):
     """Set up for Homekit devices."""
     # pylint: disable=import-error
     import homekit
-    from homekit.controller import Pairing
+    from homekit.controller.ip_implementation import IpPairing
 
     hass.data[CONTROLLER] = controller = homekit.Controller()
 
@@ -335,7 +335,7 @@ def setup(hass, config):
             continue
         with open(os.path.join(data_dir, device)) as pairing_data_fp:
             pairing_data = json.load(pairing_data_fp)
-        controller.pairings[alias] = Pairing(pairing_data)
+        controller.pairings[alias] = IpPairing(pairing_data)
         controller.save_data(pairing_file)
 
     def discovery_dispatch(service, discovery_info):
