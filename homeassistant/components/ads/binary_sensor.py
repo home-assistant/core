@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device_class = config.get(CONF_DEVICE_CLASS)
 
     ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)
-    add_entities([ads_sensor])
+    add_entities([ads_sensor], True)
 
 
 class AdsBinarySensor(BinarySensorDevice):
@@ -47,19 +47,19 @@ class AdsBinarySensor(BinarySensorDevice):
         self.ads_var = ads_var
         self._event = threading.Event()
 
-    async def async_added_to_hass(self):
+    def update(self):
         """Register device notification."""
-        def update(name, value):
+        def callback(name, value):
             """Handle device notifications."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._state = value
             self._event.set()
-            self.schedule_update_ha_state()
+            if self.entity_id is not None:
+                self.schedule_update_ha_state()
 
-        self.hass.async_add_job(
-            self._ads_hub.add_device_notification,
-            self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
-        if not self._event.wait(timeout=30):
+        self._ads_hub.add_device_notification(
+            self.ads_var, self._ads_hub.PLCTYPE_BOOL, callback)
+        if not self._event.wait(timeout=5):
             _LOGGER.debug('Timeout while waiting for first update')
 
     @property
