@@ -872,7 +872,7 @@ class MqttAttributes(Entity):
                 json_dict = json.loads(payload)
                 if isinstance(json_dict, dict):
                     self._attributes = json_dict
-                    self.async_schedule_update_ha_state()
+                    self.async_write_ha_state()
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
                     self._attributes = None
@@ -936,7 +936,7 @@ class MqttAvailability(Entity):
             elif payload == self._avail_config[CONF_PAYLOAD_NOT_AVAILABLE]:
                 self._available = False
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         self._availability_sub_state = await async_subscribe_topics(
             self.hass, self._availability_sub_state,

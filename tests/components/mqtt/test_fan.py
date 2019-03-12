@@ -105,6 +105,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, 'availability_topic', 'good')
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.state is not STATE_UNAVAILABLE
