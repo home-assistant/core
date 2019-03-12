@@ -174,7 +174,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -265,7 +265,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self._state = True
             elif payload == self._payload['off']:
                 self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -288,7 +288,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             percent_bright = \
                 device_value / self._config.get(CONF_BRIGHTNESS_SCALE)
             self._brightness = percent_bright * 255
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None:
             topics[CONF_BRIGHTNESS_STATE_TOPIC] = {
@@ -318,7 +318,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 percent_bright = \
                     float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
                 self._brightness = percent_bright * 255
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_RGB_STATE_TOPIC] is not None:
             topics[CONF_RGB_STATE_TOPIC] = {
@@ -342,7 +342,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 return
 
             self._color_temp = int(payload)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None:
             topics[CONF_COLOR_TEMP_STATE_TOPIC] = {
@@ -367,7 +367,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 return
 
             self._effect = payload
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_EFFECT_STATE_TOPIC] is not None:
             topics[CONF_EFFECT_STATE_TOPIC] = {
@@ -394,7 +394,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             try:
                 hs_color = [float(val) for val in payload.split(',', 2)]
                 self._hs = hs_color
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
             except ValueError:
                 _LOGGER.debug("Failed to parse hs state update: '%s'",
                               payload)
@@ -424,7 +424,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             percent_white = \
                 device_value / self._config.get(CONF_WHITE_VALUE_SCALE)
             self._white_value = percent_white * 255
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_WHITE_VALUE_STATE_TOPIC] is not None:
             topics[CONF_WHITE_VALUE_STATE_TOPIC] = {
@@ -451,7 +451,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
             xy_color = [float(val) for val in payload.split(',')]
             self._hs = color_util.color_xy_to_hs(*xy_color)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_XY_STATE_TOPIC] is not None:
             topics[CONF_XY_STATE_TOPIC] = {
@@ -742,7 +742,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             should_update = True
 
         if should_update:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off.
@@ -756,4 +756,4 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self._optimistic:
             # Optimistically assume that the light has changed state.
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
