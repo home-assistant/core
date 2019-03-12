@@ -64,9 +64,9 @@ async def test_gateway_retry():
 
     deconz_gateway = gateway.DeconzGateway(hass, entry)
 
-    with patch.object(gateway,
-                      'get_gateway', side_effect=errors.CannotConnect), \
-         pytest.raises(ConfigEntryNotReady):
+    with patch.object(
+        gateway, 'get_gateway', side_effect=errors.CannotConnect), \
+        pytest.raises(ConfigEntryNotReady):
         await deconz_gateway.async_setup()
 
 
@@ -189,18 +189,20 @@ async def test_get_gateway(hass):
 
 async def test_get_gateway_fails_unauthorized(hass):
     """Failed call."""
-    with patch('pydeconz.DeconzSession.async_load_parameters',
-               side_effect=pydeconz.errors.Unauthorized), \
-         pytest.raises(errors.AuthenticationRequired):
+    with patch(
+        'pydeconz.DeconzSession.async_load_parameters',
+        side_effect=pydeconz.errors.Unauthorized), \
+        pytest.raises(errors.AuthenticationRequired):
         assert await gateway.get_gateway(
             hass, ENTRY_CONFIG, Mock(), Mock()) is False
 
 
 async def test_get_gateway_fails_cannot_connect(hass):
     """Failed call."""
-    with patch('pydeconz.DeconzSession.async_load_parameters',
-               side_effect=pydeconz.errors.RequestError), \
-         pytest.raises(errors.CannotConnect):
+    with patch(
+        'pydeconz.DeconzSession.async_load_parameters',
+        side_effect=pydeconz.errors.RequestError), \
+        pytest.raises(errors.CannotConnect):
         assert await gateway.get_gateway(
             hass, ENTRY_CONFIG, Mock(), Mock()) is False
 

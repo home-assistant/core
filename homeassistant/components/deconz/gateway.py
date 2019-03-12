@@ -144,7 +144,6 @@ async def get_gateway(hass, config, async_add_device_callback,
         raise CannotConnect
 
 
-
 class DeconzEvent:
     """When you want signals instead of entities.
 
