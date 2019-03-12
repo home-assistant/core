@@ -264,7 +264,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Subscribe MQTT events."""
@@ -346,7 +346,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 if fan_speed is not None:
                     self._fan_speed = fan_speed
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         topics_list = {topic for topic in self._state_topics.values() if topic}
         self._sub_state = await subscription.async_subscribe_topics(
@@ -434,7 +434,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_TURN_ON],
                            self._qos, self._retain)
         self._status = 'Cleaning'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the vacuum off."""
@@ -445,7 +445,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_TURN_OFF],
                            self._qos, self._retain)
         self._status = 'Turning Off'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_stop(self, **kwargs):
         """Stop the vacuum."""
@@ -456,7 +456,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_STOP],
                            self._qos, self._retain)
         self._status = 'Stopping the current task'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
@@ -467,7 +467,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_CLEAN_SPOT],
                            self._qos, self._retain)
         self._status = "Cleaning spot"
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_locate(self, **kwargs):
         """Locate the vacuum (usually by playing a song)."""
@@ -478,7 +478,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_LOCATE],
                            self._qos, self._retain)
         self._status = "Hi, I'm over here!"
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
@@ -489,7 +489,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_START_PAUSE],
                            self._qos, self._retain)
         self._status = 'Pausing/Resuming cleaning...'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_return_to_base(self, **kwargs):
         """Tell the vacuum to return to its dock."""
@@ -500,7 +500,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_RETURN_TO_BASE],
                            self._qos, self._retain)
         self._status = 'Returning home...'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
@@ -512,7 +512,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         mqtt.async_publish(self.hass, self._set_fan_speed_topic,
                            fan_speed, self._qos, self._retain)
         self._status = "Setting fan to {}...".format(fan_speed)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
@@ -522,4 +522,4 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         mqtt.async_publish(self.hass, self._send_command_topic,
                            command, self._qos, self._retain)
         self._status = "Sending command {}...".format(command)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
