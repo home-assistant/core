@@ -18,7 +18,7 @@ def async_setup_hls(hass):
     """Set up api endpoints."""
     hass.http.register_view(HlsPlaylistView())
     hass.http.register_view(HlsSegmentView())
-    return '{}/api/hls/{}/playlist.m3u8'
+    return '/api/hls/{}/playlist.m3u8'
 
 
 class HlsPlaylistView(StreamView):
