@@ -554,6 +554,8 @@ async def test_enabling_remote(hass, hass_ws_client, setup_api,
                                mock_cloud_login):
     """Test we call right code to enable remote UI."""
     client = await hass_ws_client(hass)
+    cloud = hass.data[DOMAIN]
+
     with patch(
             'hass_nabucasa.remote.RemoteUI.connect',
             return_value=mock_coro()
@@ -564,6 +566,7 @@ async def test_enabling_remote(hass, hass_ws_client, setup_api,
         })
         response = await client.receive_json()
     assert response['success']
+    assert cloud.client.remote_autostart
 
     assert len(mock_connect.mock_calls) == 1
 
@@ -572,6 +575,8 @@ async def test_disabling_remote(hass, hass_ws_client, setup_api,
                                 mock_cloud_login):
     """Test we call right code to disable remote UI."""
     client = await hass_ws_client(hass)
+    cloud = hass.data[DOMAIN]
+
     with patch(
             'hass_nabucasa.remote.RemoteUI.disconnect',
             return_value=mock_coro()
@@ -582,5 +587,6 @@ async def test_disabling_remote(hass, hass_ws_client, setup_api,
         })
         response = await client.receive_json()
     assert response['success']
+    assert not cloud.client.remote_autostart
 
     assert len(mock_disconnect.mock_calls) == 1
