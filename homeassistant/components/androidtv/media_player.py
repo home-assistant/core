@@ -45,7 +45,6 @@ DEFAULT_NAME = 'Android TV'
 DEFAULT_PORT = 5555
 DEFAULT_ADB_SERVER_PORT = 5037
 DEFAULT_GET_SOURCES = True
-DEFAULT_APPS = {}
 DEFAULT_DEVICE_CLASS = 'auto'
 
 DEVICE_ANDROIDTV = 'androidtv'
@@ -79,7 +78,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT):
         cv.port,
     vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
-    vol.Optional(CONF_APPS, default=DEFAULT_APPS):
+    vol.Optional(CONF_APPS, default=dict()):
         vol.Schema({cv.string: cv.string})
 })
 
