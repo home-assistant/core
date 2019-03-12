@@ -130,7 +130,7 @@ class TfiacClimate(ClimateDevice):
     @property
     def is_on(self):
         """Return true if on."""
-        return True if self._client.status[ON_MODE] == 'on' else False
+        return self._client.status[ON_MODE] == 'on'
 
     @property
     def operation_list(self):
