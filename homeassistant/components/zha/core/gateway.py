@@ -11,6 +11,8 @@ import itertools
 import logging
 import os
 
+import traceback
+from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
@@ -39,6 +41,21 @@ _LOGGER = logging.getLogger(__name__)
 EntityReference = collections.namedtuple(
     'EntityReference', 'reference_id zha_device cluster_channels device_info')
 
+BELLOWS = 'bellows'
+ZHA = 'homeassistant.components.zha'
+ZIGPY = 'zigpy'
+ZIGPY_XBEE = 'zigpy_xbee'
+ZIGPY_DECONZ = 'zigpy_deconz'
+ORIGINAL = 'original'
+CURRENT = 'current'
+DEBUG_LEVELS = {
+    BELLOWS: logging.DEBUG,
+    ZHA: logging.DEBUG,
+    ZIGPY: logging.DEBUG,
+    ZIGPY_XBEE: logging.DEBUG,
+    ZIGPY_DECONZ: logging.DEBUG,
+}
+
 
 class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
@@ -55,6 +72,12 @@ class ZHAGateway:
         self.radio_description = None
         hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
+        self._log_levels = {
+            ORIGINAL: self.async_capture_log_levels(),
+            CURRENT: self.async_capture_log_levels()
+        }
+        self.debug_enabled = False
+        self._log_relay_handler = LogRelayHandler(hass, self)
 
     async def async_initialize(self, config_entry):
         """Initialize controller and connect radio."""
@@ -193,6 +216,27 @@ class ZHAGateway:
         )
 
     @callback
+    def async_enable_debug_mode(self):
+        """Enable debug mode for ZHA."""
+        self._log_levels[ORIGINAL] = async_capture_log_levels()
+        async_set_logger_levels(DEBUG_LEVELS)
+        self._log_levels[CURRENT] = async_capture_log_levels()
+
+        for logger_name in self._log_levels[CURRENT].keys():
+            logging.getLogger(logger_name).addHandler(self._log_relay_handler)
+
+        self.debug_enabled = True
+
+    @callback
+    def async_disable_debug_mode(self):
+        """Disable debug mode for ZHA."""
+        async_set_logger_levels(self._log_levels[ORIGINAL])
+        self._log_levels[CURRENT] = async_capture_log_levels()
+        for logger_name in self._log_levels[CURRENT].keys():
+            logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
+        self.debug_enabled = False
+
+    @callback
     def _async_get_or_create_device(self, zigpy_device, is_new_join):
         """Get or create a ZHA device."""
         zha_device = self._devices.get(zigpy_device.ieee)
@@ -275,5 +319,56 @@ class ZHAGateway:
                 {
                     'type': 'device_fully_initialized',
                     'device_info': device_info
+                }
+            )
+
+
+@callback
+def async_capture_log_levels():
+    """Capture current logger levels for ZHA."""
+    return {
+        BELLOWS: logging.getLogger(BELLOWS).getEffectiveLevel(),
+        ZHA: logging.getLogger(ZHA).getEffectiveLevel(),
+        ZIGPY: logging.getLogger(ZIGPY).getEffectiveLevel(),
+        ZIGPY_XBEE: logging.getLogger(ZIGPY_XBEE).getEffectiveLevel(),
+        ZIGPY_DECONZ: logging.getLogger(ZIGPY_DECONZ).getEffectiveLevel(),
+    }
+
+
+@callback
+def async_set_logger_levels(levels):
+    """Set logger levels for ZHA."""
+    logging.getLogger(BELLOWS).setLevel(levels[BELLOWS])
+    logging.getLogger(ZHA).setLevel(levels[ZHA])
+    logging.getLogger(ZIGPY).setLevel(levels[ZIGPY])
+    logging.getLogger(ZIGPY_XBEE).setLevel(levels[ZIGPY_XBEE])
+    logging.getLogger(ZIGPY_DECONZ).setLevel(levels[ZIGPY_DECONZ])
+
+
+class LogRelayHandler(logging.Handler):
+    """Log handler for error messages."""
+
+    def __init__(self, hass, gateway):
+        """Initialize a new LogErrorHandler."""
+        super().__init__()
+        self.hass = hass
+        self.gateway = gateway
+
+    def emit(self, record):
+        """Relay log message via dispatcher."""
+        if self.gateway.debug_enabled:
+            stack = []
+            if record.levelno >= logging.WARN:
+                if not record.exc_info:
+                    stack = [f for f, _, _, _ in traceback.extract_stack()]
+
+            entry = LogEntry(record, stack,
+                            _figure_out_source(record, stack, self.hass))
+            async_dispatcher_send(
+                self.hass,
+                "zha_gateway_message",
+                {
+                    'type': 'log_output',
+                    'log_entry': entry.to_dict()
                 }
             )

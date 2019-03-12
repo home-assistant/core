@@ -83,15 +83,26 @@ SERVICE_SCHEMAS = {
 })
 async def websocket_subscribe(hass, connection, msg):
     """Subscribe to ZHA gateway messages."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+
     async def forward_messages(data):
         """Forward events to websocket."""
         connection.send_message(websocket_api.event_message(msg['id'], data))
 
-    connection.subscriptions[msg['id']] = async_dispatcher_connect(
+    remove_dispatcher_function = async_dispatcher_connect(
         hass,
         "zha_gateway_message",
         forward_messages
     )
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listener and turn off debug mode."""
+        zha_gateway.async_disable_debug_mode()
+        remove_dispatcher_function()
+
+    connection.subscriptions[msg['id']] = async_cleanup
+    zha_gateway.async_enable_debug_mode()
 
     connection.send_message(websocket_api.result_message(msg['id']))
 
