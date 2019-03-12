@@ -51,3 +51,10 @@ class TeslaDeviceTracker:
                     dev_id=dev_id, host_name=name,
                     gps=(lat, lon), attributes=attrs
                 )
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        s = "-"
+        parts = ['device_tracker', 'tesla', self.tesla_id]
+        return s.join(parts)
