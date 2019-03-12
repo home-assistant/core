@@ -65,6 +65,11 @@ class CloudClient(Interface):
         return self._prefs.cloudhooks
 
     @property
+    def remote_autostart(self) -> bool:
+        """Return true if we want start a remote connection."""
+        return self._prefs.remote_enabled
+
+    @property
     def alexa_config(self) -> alexa_sh.Config:
         """Return Alexa config."""
         if not self._alexa_config:

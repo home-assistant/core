@@ -23,7 +23,7 @@ from .const import (
     CONF_USER_POOL_ID, DOMAIN, MODE_DEV, MODE_PROD)
 from .prefs import CloudPreferences
 
-REQUIREMENTS = ['hass-nabucasa==0.3']
+REQUIREMENTS = ['hass-nabucasa==0.4']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
@@ -162,8 +162,10 @@ async def async_setup(hass, config):
         """Handle service for cloud."""
         if service.service == SERVICE_REMOTE_CONNECT:
             await cloud.remote.connect()
+            await prefs.async_update(remote_enabled=True)
         elif service.service == SERVICE_REMOTE_DISCONNECT:
             await cloud.remote.disconnect()
+            await prefs.async_update(remote_enabled=False)
 
     hass.services.async_register(
         DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)

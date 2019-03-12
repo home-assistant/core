@@ -9,7 +9,6 @@ from hass_nabucasa.const import STATE_CONNECTED
 
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_ALLOW_UNLOCK, DOMAIN)
-from homeassistant.util import dt as dt_util
 
 from tests.common import mock_coro
 
@@ -24,6 +23,15 @@ def mock_auth():
     """Mock check token."""
     with patch('hass_nabucasa.auth.CognitoAuth.check_token'):
         yield
+
+
+@pytest.fixture()
+def mock_cloud_login(hass, setup_api):
+    """Mock cloud is logged in."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
 
 
 @pytest.fixture(autouse=True)
@@ -319,12 +327,9 @@ async def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client):
     assert req.status == 502
 
 
-async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture):
+async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
+                                mock_cloud_login):
     """Test querying the status."""
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03'
-    }, 'test')
     hass.data[DOMAIN].iot.state = STATE_CONNECTED
     client = await hass_ws_client(hass)
 
@@ -357,6 +362,9 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture):
             'exclude_entities': [],
         },
         'google_domains': ['light'],
+        'remote_domain': None,
+        'remote_connected': False,
+        'remote_certificate': None,
     }
 
 
@@ -375,13 +383,9 @@ async def test_websocket_status_not_logged_in(hass, hass_ws_client):
 
 
 async def test_websocket_subscription_reconnect(
-        hass, hass_ws_client, aioclient_mock, mock_auth):
+        hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login):
     """Test querying the status and connecting because valid account."""
     aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={'provider': 'stripe'})
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': dt_util.utcnow().date().isoformat()
-    }, 'test')
     client = await hass_ws_client(hass)
 
     with patch(
@@ -403,14 +407,10 @@ async def test_websocket_subscription_reconnect(
 
 
 async def test_websocket_subscription_no_reconnect_if_connected(
-        hass, hass_ws_client, aioclient_mock, mock_auth):
+        hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login):
     """Test querying the status and not reconnecting because still expired."""
     aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={'provider': 'stripe'})
     hass.data[DOMAIN].iot.state = STATE_CONNECTED
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': dt_util.utcnow().date().isoformat()
-    }, 'test')
     client = await hass_ws_client(hass)
 
     with patch(
@@ -432,13 +432,9 @@ async def test_websocket_subscription_no_reconnect_if_connected(
 
 
 async def test_websocket_subscription_no_reconnect_if_expired(
-        hass, hass_ws_client, aioclient_mock, mock_auth):
+        hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login):
     """Test querying the status and not reconnecting because still expired."""
     aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={'provider': 'stripe'})
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03'
-    }, 'test')
     client = await hass_ws_client(hass)
 
     with patch(
@@ -460,13 +456,10 @@ async def test_websocket_subscription_no_reconnect_if_expired(
 
 
 async def test_websocket_subscription_fail(hass, hass_ws_client,
-                                           aioclient_mock, mock_auth):
+                                           aioclient_mock, mock_auth,
+                                           mock_cloud_login):
     """Test querying the status."""
     aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=500)
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03'
-    }, 'test')
     client = await hass_ws_client(hass)
     await client.send_json({
         'id': 5,
@@ -494,15 +487,12 @@ async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
 
 
 async def test_websocket_update_preferences(hass, hass_ws_client,
-                                            aioclient_mock, setup_api):
+                                            aioclient_mock, setup_api,
+                                            mock_cloud_login):
     """Test updating preference."""
     assert setup_api[PREF_ENABLE_GOOGLE]
     assert setup_api[PREF_ENABLE_ALEXA]
     assert setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03'
-    }, 'test')
     client = await hass_ws_client(hass)
     await client.send_json({
         'id': 5,
@@ -519,12 +509,9 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
     assert not setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
 
 
-async def test_enabling_webhook(hass, hass_ws_client, setup_api):
+async def test_enabling_webhook(hass, hass_ws_client, setup_api,
+                                mock_cloud_login):
     """Test we call right code to enable webhooks."""
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03'
-    }, 'test')
     client = await hass_ws_client(hass)
     with patch(
         'hass_nabucasa.cloudhooks.Cloudhooks.async_create',
@@ -542,12 +529,9 @@ async def test_enabling_webhook(hass, hass_ws_client, setup_api):
     assert mock_enable.mock_calls[0][1][0] == 'mock-webhook-id'
 
 
-async def test_disabling_webhook(hass, hass_ws_client, setup_api):
+async def test_disabling_webhook(hass, hass_ws_client, setup_api,
+                                 mock_cloud_login):
     """Test we call right code to disable webhooks."""
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03'
-    }, 'test')
     client = await hass_ws_client(hass)
     with patch(
         'hass_nabucasa.cloudhooks.Cloudhooks.async_delete',
@@ -563,3 +547,45 @@ async def test_disabling_webhook(hass, hass_ws_client, setup_api):
 
     assert len(mock_disable.mock_calls) == 1
     assert mock_disable.mock_calls[0][1][0] == 'mock-webhook-id'
+
+
+async def test_enabling_remote(hass, hass_ws_client, setup_api,
+                               mock_cloud_login):
+    """Test we call right code to enable remote UI."""
+    client = await hass_ws_client(hass)
+    cloud = hass.data[DOMAIN]
+
+    with patch(
+            'hass_nabucasa.remote.RemoteUI.connect',
+            return_value=mock_coro()
+    ) as mock_connect:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/remote/connect',
+        })
+        response = await client.receive_json()
+    assert response['success']
+    assert cloud.client.remote_autostart
+
+    assert len(mock_connect.mock_calls) == 1
+
+
+async def test_disabling_remote(hass, hass_ws_client, setup_api,
+                                mock_cloud_login):
+    """Test we call right code to disable remote UI."""
+    client = await hass_ws_client(hass)
+    cloud = hass.data[DOMAIN]
+
+    with patch(
+            'hass_nabucasa.remote.RemoteUI.disconnect',
+            return_value=mock_coro()
+    ) as mock_disconnect:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/remote/disconnect',
+        })
+        response = await client.receive_json()
+    assert response['success']
+    assert not cloud.client.remote_autostart
+
+    assert len(mock_disconnect.mock_calls) == 1
