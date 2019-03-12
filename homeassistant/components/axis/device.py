@@ -7,6 +7,7 @@ from homeassistant.const import (
     CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_PORT,
     CONF_USERNAME)
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL_ID, LOGGER
@@ -21,9 +22,11 @@ class AxisNetworkDevice:
         self.hass = hass
         self.config_entry = config_entry
         self.available = True
+
         self.api = None
         self.fw_version = None
         self.product_type = None
+
         self._cancel_retry_setup = None
 
         self.listeners = []
@@ -60,13 +63,16 @@ class AxisNetworkDevice:
                 event_types=self.config_entry.data[CONF_EVENTS],
                 signal_callback=self.async_signal_callback)
 
-            self.fw_version = self.api.vapix.get_param(VAPIX_FW_VERSION)
-            self.product_type = self.api.vapix.get_param(VAPIX_PROD_TYPE)
+        except CannotConnect:
+            raise ConfigEntryNotReady
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.error(
                 'Unknown error connecting with Axis device on %s', self.host)
             return False
+
+        self.fw_version = self.api.vapix.get_param(VAPIX_FW_VERSION)
+        self.product_type = self.api.vapix.get_param(VAPIX_PROD_TYPE)
 
         if self.config_entry.data[CONF_CAMERA]:
             self.hass.async_create_task(
