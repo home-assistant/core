@@ -10,8 +10,11 @@ from aiohttp import web
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.decorator import Registry
 
 from .const import DOMAIN, ATTR_STREAMS
+
+PROVIDERS = Registry()
 
 
 @attr.s
@@ -38,11 +41,13 @@ class StreamOutput:
 
     num_segments = 3
 
-    def __init__(self) -> None:
+    def __init__(self, stream) -> None:
         """Initialize a stream output."""
+        self._stream = stream
         self._cursor = None
         self._event = asyncio.Event()
         self._segments = deque(maxlen=self.num_segments)
+        self._unsub = None
 
     @property
     def format(self) -> str:
@@ -72,6 +77,11 @@ class StreamOutput:
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""
+        # Reset idle timeout
+        if self._unsub is not None:
+            self._unsub()
+        self._unsub = async_call_later(self._stream.hass, 300, self._cleanup)
+
         if not sequence:
             return self._segments
 
@@ -89,21 +99,35 @@ class StreamOutput:
         if not self._segments:
             return None
 
-        segment = self._segments[-1]
+        segment = self.get_segment()[-1]
         self._cursor = segment.sequence
         return segment
 
     @callback
     def put(self, segment: Segment) -> None:
         """Store output."""
+        # Start idle timeout when we start recieving data
+        if self._unsub is None:
+            self._unsub = async_call_later(
+                self._stream.hass, 300, self._cleanup)
+
         if segment is None:
-            self._segments = []
             self._event.set()
+            # Cleanup provider
+            if self._unsub is not None:
+                self._unsub()
+            self._cleanup()
             return
 
         self._segments.append(segment)
         self._event.set()
         self._event.clear()
+
+    @callback
+    def _cleanup(self, _now=None):
+        """Remove provider."""
+        self._segments = []
+        self._stream.remove_provider(self)
 
 
 class StreamView(HomeAssistantView):
@@ -116,10 +140,6 @@ class StreamView(HomeAssistantView):
 
     requires_auth = False
     platform = None
-
-    def __init__(self):
-        """Initialize a basic stream view."""
-        self._unsub = None
 
     async def get(self, request, token, sequence=None):
         """Start a GET request."""
@@ -134,16 +154,6 @@ class StreamView(HomeAssistantView):
 
         # Start worker if not already started
         stream.start()
-
-        if self._unsub is not None:
-            self._unsub()
-
-        async def cleanup(_now):
-            """Stop the stream."""
-            stream.stop()
-            self._unsub = None
-
-        self._unsub = async_call_later(hass, 300, cleanup)
 
         return await self.handle(request, stream, sequence)
 

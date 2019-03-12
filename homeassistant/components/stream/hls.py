@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.util.dt import utcnow
 
 from .const import FORMAT_CONTENT_TYPE
-from .core import StreamView, StreamOutput
+from .core import StreamView, StreamOutput, PROVIDERS
 
 
 @callback
@@ -31,7 +31,7 @@ class HlsPlaylistView(StreamView):
     async def handle(self, request, stream, sequence):
         """Return m3u8 playlist."""
         renderer = M3U8Renderer(stream)
-        track = stream.add_provider(HlsStreamOutput())
+        track = stream.add_provider('hls')
         stream.start()
         # Wait for a segment to be ready
         if not track.segments:
@@ -52,7 +52,7 @@ class HlsSegmentView(StreamView):
 
     async def handle(self, request, stream, sequence):
         """Return mpegts segment."""
-        track = stream.add_provider(HlsStreamOutput())
+        track = stream.add_provider('hls')
         segment = track.get_segment(int(sequence))
         if not segment:
             return web.HTTPNotFound()
@@ -106,6 +106,7 @@ class M3U8Renderer:
         return "\n".join(lines) + "\n"
 
 
+@PROVIDERS.register('hls')
 class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
 

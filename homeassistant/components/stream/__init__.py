@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 
 from .const import DOMAIN, ATTR_STREAMS, ATTR_ENDPOINTS
+from .core import PROVIDERS
 from .worker import stream_worker
 from .hls import async_setup_hls
 
@@ -28,6 +29,9 @@ DEPENDENCIES = ['http']
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({}),
 }, extra=vol.ALLOW_EXTRA)
+
+# Set log level to error for libav
+logging.getLogger('libav').setLevel(logging.ERROR)
 
 
 @bind_hass
@@ -47,6 +51,10 @@ def request_stream(hass, stream_source, *, fmt='hls',
             stream = Stream(hass, stream_source,
                             options=options, keepalive=keepalive)
             streams[stream_source] = stream
+
+        # Add provider
+        stream.add_provider(fmt)
+
         if not stream.access_token:
             stream.access_token = generate_secret()
             stream.start()
@@ -82,8 +90,7 @@ async def async_setup(hass, config):
 class Stream:
     """Represents a single stream."""
 
-    # pylint: disable=dangerous-default-value
-    def __init__(self, hass, source, options={}, keepalive=False):
+    def __init__(self, hass, source, options=None, keepalive=False):
         """Initialize a stream."""
         self.hass = hass
         self.source = source
@@ -94,16 +101,28 @@ class Stream:
         self._thread_quit = None
         self._outputs = {}
 
+        if self.options is None:
+            self.options = {}
+
     @property
     def outputs(self):
         """Return stream outputs."""
         return self._outputs
 
-    def add_provider(self, provider):
+    def add_provider(self, fmt):
         """Add provider output stream."""
+        provider = PROVIDERS[fmt](self)
         if not self._outputs.get(provider.format):
             self._outputs[provider.format] = provider
         return self._outputs[provider.format]
+
+    def remove_provider(self, provider):
+        """Remove provider output stream."""
+        if provider.format in self._outputs:
+            del self._outputs[provider.format]
+
+        if not self._outputs:
+            self.stop()
 
     def start(self):
         """Start a stream."""

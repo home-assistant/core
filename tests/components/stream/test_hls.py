@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.stream import request_stream
-from homeassistant.components.stream.hls import HlsStreamOutput
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -26,7 +25,7 @@ async def test_hls_stream(hass, hass_client):
     # Setup demo HLS track
     source = generate_h264_video()
     stream = preload_stream(hass, source)
-    stream.add_provider(HlsStreamOutput())
+    stream.add_provider('hls')
 
     # Request stream
     url = request_stream(hass, source)
@@ -62,7 +61,7 @@ async def test_stream_timeout(hass, hass_client):
     # Setup demo HLS track
     source = generate_h264_video()
     stream = preload_stream(hass, source)
-    stream.add_provider(HlsStreamOutput())
+    stream.add_provider('hls')
 
     # Request stream
     url = request_stream(hass, source)
@@ -100,9 +99,8 @@ async def test_stream_ended(hass):
     # Setup demo HLS track
     source = generate_h264_video()
     stream = preload_stream(hass, source)
-    output = HlsStreamOutput()
-    output.num_segments = 2
-    track = stream.add_provider(output)
+    track = stream.add_provider('hls')
+    track.num_segments = 2
 
     # Request stream
     request_stream(hass, source)
