@@ -299,7 +299,6 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
         """Represenation of the HomematicIP wind speed value."""
         return self._device.windSpeed
 
-
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
