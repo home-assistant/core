@@ -3,7 +3,7 @@
         "abort": {
             "client_id": "De client ID uit de configuratie is ongeldig.",
             "client_secret": "De client secret uit de configuratie is ongeldig.",
-            "no_agreements": "Dit account heeft geen Toon-schermen.",
+            "no_agreements": "Dit account heeft geen Toon schermen.",
             "no_app": "Je moet Toon configureren voordat je ermee kunt aanmelden. [Lees de instructies](https://www.home-assistant.io/components/toon/).",
             "unknown_auth_fail": "Onverwachte fout tijdens het verifi\u00ebren."
         },
@@ -18,7 +18,7 @@
                     "tenant": "Huurder",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Verifieer met je Eneco Toon-account (niet het developer-account).",
+                "description": "Verifieer met je Eneco Toon account (niet het ontwikkelaars account).",
                 "title": "Link je Toon-account"
             },
             "display": {
