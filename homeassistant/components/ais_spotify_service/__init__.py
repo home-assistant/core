@@ -299,6 +299,11 @@ class SpotifyData:
             'ais_ai_service', 'say_it', {
                 "text": text
             })
+        yield from self.hass.services.async_call(
+            'input_select',
+            'select_option', {
+                "entity_id": "input_select.ais_music_track_name",
+                "option": G_SPOTIFY_FOUND[0]["title"]})
 
     def process_select_track_name(self, call):
         _LOGGER.info("process_select_track_name")

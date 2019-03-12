@@ -816,7 +816,7 @@ class AisColudData:
                 'input_text',
                 'set_value', {
                     "entity_id": "input_text.ais_music_query",
-                    "value": call.data["text"]})
+                    "value": call.data["text"] + " "})
 
     def select_media_player(self, call):
         if "media_player_type" not in call.data:

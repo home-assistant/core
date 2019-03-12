@@ -103,7 +103,7 @@ class YouTubeData:
         params.update({'q': query})
         data = requests.get(URL_BASE, params=params).json()
         found = []
-        titles = []
+        titles = [ais_global.G_EMPTY_OPTION]
         for item in data['items']:
             if item['id']['kind'] == 'youtube#video':
                 i = {}
@@ -122,13 +122,20 @@ class YouTubeData:
                     "entity_id": "input_select.ais_music_track_name",
                     "options": titles})
 
-        text = "Znaleziono: %s, włączam pierwszy: %s" % (
-            str(len(G_YT_FOUND)), G_YT_FOUND[0]["title"])
-        _LOGGER.debug("text: " + text)
+        if len(G_YT_FOUND) > 0:
+            text = "Znaleziono: %s, włączam pierwszy: %s" % (
+                str(len(G_YT_FOUND)), G_YT_FOUND[0]["title"])
+        else:
+            text = "Brak wnyników na YouTube dla zapytania %s" % query
         yield from self.hass.services.async_call(
             'ais_ai_service', 'say_it', {
                 "text": text
             })
+        yield from self.hass.services.async_call(
+            'input_select',
+            'select_option', {
+                "entity_id": "input_select.ais_music_track_name",
+                "option": G_YT_FOUND[0]["title"]})
 
     def process_select_track_name(self, call):
         _LOGGER.info("process_select_track_name")
