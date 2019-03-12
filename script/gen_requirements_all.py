@@ -67,7 +67,7 @@ TEST_REQUIREMENTS = (
     'hdate',
     'holidays',
     'home-assistant-frontend',
-    'homekit',
+    'homekit[IP]',
     'homematicip',
     'influxdb',
     'jsonpath',
