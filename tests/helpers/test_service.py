@@ -5,6 +5,7 @@ from copy import deepcopy
 import unittest
 from unittest.mock import Mock, patch
 
+import voluptuous as vol
 import pytest
 
 # To prevent circular import when running just this file
@@ -396,16 +397,17 @@ async def test_call_with_omit_entity_id(hass, mock_service_platform_call,
             'all entities is deprecated') in caplog.text
 
 
-async def test_require_admin_decorator(hass, hass_read_only_user,
-                                       hass_admin_user):
-    """Test the require_admin decorator."""
+async def test_register_admin_service(hass, hass_read_only_user,
+                                      hass_admin_user):
+    """Test the register admin service."""
     calls = []
 
-    @service.require_admin
     async def mock_service(call):
         calls.append(call)
 
-    hass.services.async_register('test', 'test', mock_service(hass))
+    hass.helpers.service.async_register_admin_service(
+        'test', 'test', mock_service, vol.Schema({})
+    )
 
     with pytest.raises(exceptions.UnknownUser):
         await hass.services.async_call(

@@ -3,6 +3,7 @@ import asyncio
 from functools import wraps
 import logging
 from os import path
+from typing import Callable
 
 import voluptuous as vol
 
@@ -11,7 +12,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ATTR_AREA_ID)
 import homeassistant.core as ha
 from homeassistant.exceptions import TemplateError, Unauthorized, UnknownUser
-from homeassistant.helpers import template
+from homeassistant.helpers import template, typing
 from homeassistant.loader import get_component, bind_hass
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
@@ -338,26 +339,13 @@ async def _handle_service_platform_call(func, data, entities, context):
             future.result()  # pop exception if have
 
 
-def require_admin(handler, hass=None):
-    """Decorate a service handler to require an admin user.
-
-    # Pass in hass later
-    @require_admin
-    async def service_handler(call):
-
-    hass.services.async_register('domain', 'service', service_handler(hass))
-
-    # Pass in hass direct
-    async def service_handler(call):
-
-    hass.services.async_register('domain', 'service',
-                                 require_admin(service_handler, hass))
-    """
-    # This will allow this function also to be used as a decorator.
-    if hass is None:
-        return lambda hass: require_admin(handler, hass)
-
-    @wraps(handler)
+@bind_hass
+@ha.callback
+def async_register_admin_service(hass: typing.HomeAssistantType, domain: str,
+                                 service: str, service_func: Callable,
+                                 schema: vol.Schema) -> None:
+    """Register a service that requires admin access."""
+    @wraps(service_func)
     async def admin_handler(call):
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
@@ -366,6 +354,8 @@ def require_admin(handler, hass=None):
             if not user.is_admin:
                 raise Unauthorized(context=call.context)
 
-        await hass.async_add_job(handler, call)
+        await hass.async_add_job(service_func, call)
 
-    return admin_handler
+    hass.services.async_register(
+        domain, service, admin_handler, schema
+    )
