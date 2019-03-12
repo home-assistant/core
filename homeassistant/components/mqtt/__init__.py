@@ -351,11 +351,13 @@ async def async_subscribe(hass: HomeAssistantType, topic: str,
         return wrapper_func
 
     # Count callback parameters which don't have a default value
-    non_default = sum(p.default == inspect.Parameter.empty for _, p in
-                      inspect.signature(msg_callback).parameters.items())
+    non_default = 0
+    if msg_callback:
+        non_default = sum(p.default == inspect.Parameter.empty for _, p in
+                          inspect.signature(msg_callback).parameters.items())
 
     # If we have 3 paramaters with no default value, wrap the callback
-    if msg_callback and non_default == 3:
+    if non_default == 3:
         _LOGGER.info(
             "Signature of MQTT msg_callback '%s.%s' is deprecated",
             inspect.getmodule(msg_callback).__name__, msg_callback.__name__)
