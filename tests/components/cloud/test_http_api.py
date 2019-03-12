@@ -9,7 +9,6 @@ from hass_nabucasa.const import STATE_CONNECTED
 
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_ALLOW_UNLOCK, DOMAIN)
-from homeassistant.util import dt as dt_util
 
 from tests.common import mock_coro
 
