@@ -86,3 +86,8 @@ class AdsBinarySensor(BinarySensorDevice):
     def should_poll(self):
         """Return False because entity pushes its state to HA."""
         return False
+
+    @property
+    def available(self):
+        """Return False if state has not been updated yet."""
+        return self._state is not None
