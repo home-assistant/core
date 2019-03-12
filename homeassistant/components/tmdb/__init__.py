@@ -1,0 +1,1 @@
+"""The Movie Database Component."""
