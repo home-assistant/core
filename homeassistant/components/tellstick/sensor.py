@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             if tellcore_sensor.id in named_sensors:
                 sensor_name = named_sensors[tellcore_sensor.id]
-            else: 
+            else:
                 continue
 
         for datatype in sensor_value_descriptions:
