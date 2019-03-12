@@ -73,8 +73,8 @@ class ZHAGateway:
         hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._log_levels = {
-            ORIGINAL: self.async_capture_log_levels(),
-            CURRENT: self.async_capture_log_levels()
+            ORIGINAL: async_capture_log_levels(),
+            CURRENT: async_capture_log_levels()
         }
         self.debug_enabled = False
         self._log_relay_handler = LogRelayHandler(hass, self)
