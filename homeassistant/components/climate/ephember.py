@@ -117,7 +117,8 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        mode = self._ember.get_zone_mode(self._zone_name)
+        from pyephember.pyephember import ZoneMode
+        mode = ZoneMode(self._zone['mode'])
         return self.map_mode_eph_hass(mode)
 
     @property
