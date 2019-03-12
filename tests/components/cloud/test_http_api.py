@@ -365,6 +365,7 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
         'google_domains': ['light'],
         'remote_domain': None,
         'remote_connected': False,
+        'remote_certificate': None,
     }
 
 
