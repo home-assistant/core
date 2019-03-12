@@ -1,8 +1,18 @@
 sudo: false
+dist: xenial
 addons:
   apt:
+    sources:
+      - sourceline: "ppa:jonathonf/ffmpeg-4"
     packages:
       - libudev-dev
+      - libavformat-dev
+      - libavcodec-dev
+      - libavdevice-dev
+      - libavutil-dev
+      - libswscale-dev
+      - libswresample-dev
+      - libavfilter-dev
 matrix:
   fast_finish: true
   include:
@@ -19,15 +29,12 @@ matrix:
       env: TOXENV=py36
     - python: "3.7"
       env: TOXENV=py37
-      dist: xenial
     - python: "3.8-dev"
       env: TOXENV=py38
-      dist: xenial
       if: branch = dev AND type = push
   allow_failures:
     - python: "3.8-dev"
       env: TOXENV=py38
-      dist: xenial
 
 cache:
   directories:
