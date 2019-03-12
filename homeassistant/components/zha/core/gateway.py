@@ -55,6 +55,7 @@ DEBUG_LEVELS = {
     ZIGPY_XBEE: logging.DEBUG,
     ZIGPY_DECONZ: logging.DEBUG,
 }
+RELAY_LOGGERS = [ZHA, ZIGPY]
 
 
 class ZHAGateway:
@@ -222,7 +223,7 @@ class ZHAGateway:
         async_set_logger_levels(DEBUG_LEVELS)
         self._log_levels[CURRENT] = async_capture_log_levels()
 
-        for logger_name in self._log_levels[CURRENT].keys():
+        for logger_name in RELAY_LOGGERS:
             logging.getLogger(logger_name).addHandler(self._log_relay_handler)
 
         self.debug_enabled = True
@@ -232,7 +233,7 @@ class ZHAGateway:
         """Disable debug mode for ZHA."""
         async_set_logger_levels(self._log_levels[ORIGINAL])
         self._log_levels[CURRENT] = async_capture_log_levels()
-        for logger_name in self._log_levels[CURRENT].keys():
+        for logger_name in RELAY_LOGGERS:
             logging.getLogger(logger_name).removeHandler(
                 self._log_relay_handler)
         self.debug_enabled = False
