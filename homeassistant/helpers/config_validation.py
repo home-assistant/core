@@ -1,6 +1,5 @@
 """Helpers for config validation using voluptuous."""
 import inspect
-import homeassistant.util.yaml
 import logging
 import os
 import re
@@ -690,7 +689,7 @@ class HASchema(vol.Schema):
                 if hasattr(data, '__config_file__'):
                     submsg += " (See {}, line {}). ".format(
                         data.__config_file__, data.__line__)
-                submsg += "\nOffending data:\n{}".format(homeassistant.util.yaml.dump(data))
+                submsg += " (Offending data: {})".format(data)
                 msg += submsg
                 logging.getLogger(__name__).warning(msg)
                 INVALID_EXTRA_KEYS_FOUND.append(submsg)
