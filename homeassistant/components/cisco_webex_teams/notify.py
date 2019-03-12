@@ -23,18 +23,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the CiscoWebexTeams notification service."""
     return CiscoWebexTeamsNotificationService(
-        config.get(CONF_TOKEN),
-        config.get(CONF_ROOMID))
+        config[CONF_TOKEN],
+        config[CONF_ROOMID])
 
 
 class CiscoWebexTeamsNotificationService(BaseNotificationService):
     """The Cisco Webex Teams Notification Service."""
 
-    def __init__(self, token, default_room):
+    def __init__(self, token, room):
         """Initialize the service."""
         from webexteamssdk import WebexTeamsAPI
-        self._default_room = default_room
-        self._client = WebexTeamsAPI(access_token=token)
+        self.room = room
+        self.client = WebexTeamsAPI(access_token=token)
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
@@ -42,9 +42,10 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
         try:
             title = ""
             if kwargs.get(ATTR_TITLE) is not None:
-                title = kwargs.get(ATTR_TITLE) + ": "
-            self._client.messages.create(roomId=self._default_room,
-                                         text=title + message)
+                title = "{}{}".format(kwargs.get(ATTR_TITLE), "<br>")
+            self.client.messages.create(
+                roomId=self.room,
+                html=title + message)
         except ApiError as api_error:
             _LOGGER.error("Could not send CiscoWebexTeams notification. "
                           "Error: %s",
