@@ -233,7 +233,8 @@ class ZHAGateway:
         async_set_logger_levels(self._log_levels[ORIGINAL])
         self._log_levels[CURRENT] = async_capture_log_levels()
         for logger_name in self._log_levels[CURRENT].keys():
-            logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
+            logging.getLogger(logger_name).removeHandler(
+                self._log_relay_handler)
         self.debug_enabled = False
 
     @callback
@@ -363,7 +364,7 @@ class LogRelayHandler(logging.Handler):
                     stack = [f for f, _, _, _ in traceback.extract_stack()]
 
             entry = LogEntry(record, stack,
-                            _figure_out_source(record, stack, self.hass))
+                             _figure_out_source(record, stack, self.hass))
             async_dispatcher_send(
                 self.hass,
                 "zha_gateway_message",
