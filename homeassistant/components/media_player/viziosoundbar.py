@@ -150,11 +150,11 @@ class VizioSoundBarDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the SoundBar player on."""
-        self._device.pow_on()
+        self._device.power_on()
 
     def turn_off(self):
         """Turn the SoundBar player off."""
-        self._device.pow_off()
+        self._device.power_off()
 
     def mute_volume(self, mute):
         """Mute the volume."""
