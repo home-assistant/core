@@ -34,8 +34,7 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
         """Initialize the service."""
         from webexteamssdk import WebexTeamsAPI
         self._default_room = default_room
-        self._token = token
-        self._client = WebexTeamsAPI(access_token=self._token)
+        self._client = WebexTeamsAPI(access_token=token)
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
