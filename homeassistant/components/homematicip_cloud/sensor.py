@@ -16,6 +16,8 @@ ATTR_VALVE_STATE = 'valve_state'
 ATTR_VALVE_POSITION = 'valve_position'
 ATTR_WIND_DIRECTION = 'wind_direction'
 ATTR_WIND_DIRECTION_VARIATION = 'wind_direction_variation_in_degree'
+ATTR_HUMIDITY = 'humidity'
+ATTR_RSSIPEER = 'rssi_peer_in_dbm'
 
 
 async def async_setup_platform(
@@ -27,7 +29,7 @@ async def async_setup_platform(
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud sensors from a config entry."""
     from homematicip.aio.device import (
-        AsyncHeatingThermostat, AsyncHeatingThermostatCompact,
+        AsyncDevice, AsyncHeatingThermostat, AsyncHeatingThermostatCompact,
         AsyncTemperatureHumiditySensorWithoutDisplay,
         AsyncTemperatureHumiditySensorDisplay, AsyncMotionDetectorIndoor,
         AsyncTemperatureHumiditySensorOutdoor,
@@ -69,6 +71,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if isinstance(device, (AsyncWeatherSensorPlus,
                                AsyncWeatherSensorPro)):
             devices.append(HomematicipTodayRainSensor(home, device))
+        if isinstance(device, AsyncDevice):
+            devices.append(HomematicipSignalStrengthSensor(home, device))
 
     if devices:
         async_add_entities(devices)
@@ -243,12 +247,47 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
     @property
     def state(self):
         """Represenation of the HomematicIP power comsumption value."""
-        return self._device.currentPowerConsumption
+        return 0 if self._device.unreach else \
+            self._device.currentPowerConsumption
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return POWER_WATT
+
+
+class HomematicipSignalStrengthSensor(HomematicipGenericDevice):
+    """Represenation of a HomematicIP rssi_device sensor."""
+
+    def __init__(self, home, device):
+        """Initialize the  device."""
+        super().__init__(home, device, 'RSSI')
+
+    @property
+    def state(self):
+        """Represenation of the HomematicIP rssi_device value."""
+        return 0 if self._device.unreach else \
+            self._device.rssiDeviceValue
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return 'dBm'
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return 'mdi:wifi-off' if self._device.unreach else 'mdi:wifi'
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the security zone group."""
+        # Not all wireless device (e.g. shutter contact, remote control,
+        # dimmer(!), ...) will ever deliver a rssi peer value.
+        attr = super().device_state_attributes
+        if self._device.rssiPeerValue is not None:
+            attr[ATTR_RSSIPEER] = self._device.rssiPeerValue
+        return attr
 
 
 class HomematicipWindspeedSensor(HomematicipGenericDevice):
@@ -262,6 +301,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
     def state(self):
         """Represenation of the HomematicIP wind speed value."""
         return self._device.windSpeed
+
 
     @property
     def unit_of_measurement(self):
