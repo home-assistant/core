@@ -59,7 +59,7 @@ def request_stream(hass, stream_source, *, fmt='hls',
             stream.access_token = generate_secret()
             stream.start()
         return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(
-            hass.config.api.base_url, stream.access_token)
+            stream.access_token)
     except Exception:
         raise HomeAssistantError('Unable to get stream')
 
