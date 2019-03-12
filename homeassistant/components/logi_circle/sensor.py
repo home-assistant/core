@@ -1,14 +1,15 @@
 """Support for Logi Circle sensors."""
 import logging
 
-from homeassistant.components.logi_circle.const import (
-    ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LOGI_SENSORS as SENSOR_TYPES)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, CONF_MONITORED_CONDITIONS,
     CONF_SENSORS, STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.dt import as_local
+
+from .const import (
+    ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LOGI_SENSORS as SENSOR_TYPES)
 
 DEPENDENCIES = ['logi_circle']
 

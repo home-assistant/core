@@ -5,14 +5,15 @@ import logging
 from homeassistant.components.camera import (
     ATTR_ENTITY_ID, SUPPORT_ON_OFF, Camera)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.components.logi_circle.const import (
-    ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LED_MODE_KEY,
-    RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
-    SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, STATE_OFF,
     STATE_ON)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import (
+    ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LED_MODE_KEY,
+    RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
+    SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
 
 DEPENDENCIES = ['logi_circle', 'ffmpeg']
 

@@ -162,7 +162,7 @@ async def async_setup_entry(hass, entry):
 
     async def service_handler(service):
         """Dispatch service calls to target entities."""
-        params = {key: value for key, value in service.data.items()}
+        params = dict(service.data)
 
         if service.service == SERVICE_SET_CONFIG:
             async_dispatcher_send(hass, SIGNAL_LOGI_CIRCLE_RECONFIGURE, params)
