@@ -42,6 +42,13 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
         self.tesla_device.stop_charge()
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        s = "-"
+        parts = ["switch", 'tesla', self.tesla_id]
+        return s.join(parts)
+
+    @property
     def is_on(self):
         """Get whether the switch is in on state."""
         return self._state == STATE_ON
@@ -72,6 +79,13 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
         """Send the off command."""
         _LOGGER.debug("Disable max range charging: %s", self._name)
         self.tesla_device.set_standard()
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        s = "-"
+        parts = ['switch', 'tesla', self.tesla_id]
+        return s.join(parts)
 
     @property
     def is_on(self):

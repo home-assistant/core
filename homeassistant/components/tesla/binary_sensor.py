@@ -30,6 +30,13 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
         self._sensor_type = sensor_type
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        s = "-"
+        parts = ['binary_sensor', 'tesla', self.tesla_id]
+        return s.join(parts)
+
+    @property
     def device_class(self):
         """Return the class of this binary sensor."""
         return self._sensor_type

@@ -36,6 +36,13 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         self._temperature = None
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        s = "-"
+        parts = ['climate', 'tesla', self.tesla_id]
+        return s.join(parts)
+
+    @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS

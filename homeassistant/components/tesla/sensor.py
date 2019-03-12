@@ -49,6 +49,13 @@ class TeslaSensor(TeslaDevice, Entity):
             self.entity_id = ENTITY_ID_FORMAT.format(self.tesla_id)
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        s = "-"
+        parts = ['sensor', 'tesla', self.tesla_id]
+        return s.join(parts)
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self.current_value

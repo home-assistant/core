@@ -38,6 +38,13 @@ class TeslaLock(TeslaDevice, LockDevice):
         self.tesla_device.unlock()
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        s = "-"
+        parts = ['lock', 'tesla', self.tesla_id]
+        return s.join(parts)
+
+    @property
     def is_locked(self):
         """Get whether the lock is in locked state."""
         return self._state == STATE_LOCKED
