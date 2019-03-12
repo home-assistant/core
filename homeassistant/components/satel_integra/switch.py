@@ -90,11 +90,8 @@ class SatelIntegraSwitch(SwitchDevice):
 
     def _read_state(self):
         """Read state of the device."""
-        if self._device_number in\
-                self.hass.data[DATA_SATEL].violated_outputs:
-                return True
-        else:
-                return False
+        return self._device_number in\
+            self.hass.data[DATA_SATEL].violated_outputs
 
     @property
     def name(self):
