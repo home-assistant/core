@@ -104,7 +104,7 @@ async def async_create_cloudhook(hass, webhook_id: str) -> str:
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
-    hook = await hass.data[DOMAIN].cloudhooks.async_create(webhook_id)
+    hook = await hass.data[DOMAIN].cloudhooks.async_create(webhook_id, True)
     return hook['cloudhook_url']
 
 

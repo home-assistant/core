@@ -367,7 +367,7 @@ async def websocket_update_prefs(hass, connection, msg):
 async def websocket_hook_create(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
-    hook = await cloud.cloudhooks.async_create(msg['webhook_id'])
+    hook = await cloud.cloudhooks.async_create(msg['webhook_id'], False)
     connection.send_message(websocket_api.result_message(msg['id'], hook))
 
 
