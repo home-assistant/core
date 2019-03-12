@@ -12,12 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['homematicip_cloud']
 
 ATTR_TEMPERATURE_OFFSET = 'temperature_offset'
-ATTR_VALVE_STATE = 'valve_state'
-ATTR_VALVE_POSITION = 'valve_position'
 ATTR_WIND_DIRECTION = 'wind_direction'
 ATTR_WIND_DIRECTION_VARIATION = 'wind_direction_variation_in_degree'
-ATTR_HUMIDITY = 'humidity'
-ATTR_RSSIPEER = 'rssi_peer_in_dbm'
+ATTR_RSSI_PEER = 'rssi_peer_in_dbm'
 
 
 async def async_setup_platform(
@@ -286,7 +283,7 @@ class HomematicipSignalStrengthSensor(HomematicipGenericDevice):
         # dimmer(!), ...) will ever deliver a rssi peer value.
         attr = super().device_state_attributes
         if self._device.rssiPeerValue is not None:
-            attr[ATTR_RSSIPEER] = self._device.rssiPeerValue
+            attr[ATTR_RSSI_PEER] = self._device.rssiPeerValue
         return attr
 
 
