@@ -50,6 +50,7 @@ omit =
     homeassistant/components/blink/*
     homeassistant/components/bloomsky/*
     homeassistant/components/bmw_connected_drive/*
+    homeassistant/components/broadlink/*
     homeassistant/components/browser/*
     homeassistant/components/calendar/caldav.py
     homeassistant/components/calendar/todoist.py

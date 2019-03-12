@@ -17,9 +17,8 @@ from homeassistant.const import (
     PRECISION_HALVES, STATE_OFF, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['BroadlinkWifiThermostat==2.4.1']
 
-DEFAULT_NAME = 'broadlink'
+REQUIREMENTS = ['BroadlinkWifiThermostat==2.4.1']
 
 CONF_EXTERNAL_TEMP = 'external_temp'
 CONF_AWAY_TEMP = 'away_temp'
