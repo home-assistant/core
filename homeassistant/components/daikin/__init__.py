@@ -17,7 +17,7 @@ from homeassistant.util import Throttle
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import KEY_HOST
 
-REQUIREMENTS = ['pydaikin==0.9']
+REQUIREMENTS = ['pydaikin==1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
