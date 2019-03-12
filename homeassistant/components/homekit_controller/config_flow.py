@@ -189,7 +189,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     async def async_import_legacy_pairing(self, discovery_props, pairing_data):
         """Migrate a legacy pairing to config entries."""
-        from homekit.controller import Pairing
+        from homekit.controller.ip_implementation import IpPairing
 
         hkid = discovery_props['id']
 
@@ -204,7 +204,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             ("Legacy configuration %s for homekit"
              "accessory migrated to config entries"), hkid)
 
-        pairing = Pairing(pairing_data)
+        pairing = IpPairing(pairing_data)
 
         return await self._entry_from_accessory(pairing)
 
