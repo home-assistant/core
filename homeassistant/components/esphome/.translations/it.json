@@ -13,7 +13,7 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Inserisci la password che hai impostato nella tua configurazione.",
+                "description": "Inserisci la password per {name} che hai impostato nella tua configurazione.",
                 "title": "Inserisci la password"
             },
             "user": {
