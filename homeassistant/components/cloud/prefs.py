@@ -1,6 +1,6 @@
 """Preference management for cloud."""
 from .const import (
-    DOMAIN, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
+    DOMAIN, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE, PREF_ENABLE_REMOTE,
     PREF_GOOGLE_ALLOW_UNLOCK, PREF_CLOUDHOOKS)
 
 STORAGE_KEY = DOMAIN
@@ -24,6 +24,7 @@ class CloudPreferences:
             prefs = {
                 PREF_ENABLE_ALEXA: True,
                 PREF_ENABLE_GOOGLE: True,
+                PREF_ENABLE_REMOTE: False,
                 PREF_GOOGLE_ALLOW_UNLOCK: False,
                 PREF_CLOUDHOOKS: {}
             }
@@ -31,12 +32,13 @@ class CloudPreferences:
         self._prefs = prefs
 
     async def async_update(self, *, google_enabled=_UNDEF,
-                           alexa_enabled=_UNDEF, google_allow_unlock=_UNDEF,
-                           cloudhooks=_UNDEF):
+                           alexa_enabled=_UNDEF, remote_enabled=_UNDEF,
+                           google_allow_unlock=_UNDEF, cloudhooks=_UNDEF):
         """Update user preferences."""
         for key, value in (
                 (PREF_ENABLE_GOOGLE, google_enabled),
                 (PREF_ENABLE_ALEXA, alexa_enabled),
+                (PREF_ENABLE_REMOTE, remote_enabled),
                 (PREF_GOOGLE_ALLOW_UNLOCK, google_allow_unlock),
                 (PREF_CLOUDHOOKS, cloudhooks),
         ):
@@ -48,6 +50,11 @@ class CloudPreferences:
     def as_dict(self):
         """Return dictionary version."""
         return self._prefs
+
+    @property
+    def remote_enabled(self):
+        """Return if remote is enabled on start."""
+        return self._prefs.get(PREF_ENABLE_REMOTE, False)
 
     @property
     def alexa_enabled(self):

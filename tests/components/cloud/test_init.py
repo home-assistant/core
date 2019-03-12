@@ -39,6 +39,8 @@ async def test_constructor_loads_info_from_config():
 
 async def test_remote_services(hass, mock_cloud_fixture):
     """Setup cloud component and test services."""
+    cloud = hass.data[DOMAIN]
+
     assert hass.services.has_service(DOMAIN, 'remote_connect')
     assert hass.services.has_service(DOMAIN, 'remote_disconnect')
 
@@ -48,6 +50,7 @@ async def test_remote_services(hass, mock_cloud_fixture):
         await hass.services.async_call(DOMAIN, "remote_connect", blocking=True)
 
     assert mock_connect.called
+    assert cloud.client.remote_autostart
 
     with patch(
         "hass_nabucasa.remote.RemoteUI.disconnect", return_value=mock_coro()
@@ -56,6 +59,7 @@ async def test_remote_services(hass, mock_cloud_fixture):
             DOMAIN, "remote_disconnect", blocking=True)
 
     assert mock_disconnect.called
+    assert not cloud.client.remote_autostart
 
 
 async def test_startup_shutdown_events(hass, mock_cloud_fixture):
