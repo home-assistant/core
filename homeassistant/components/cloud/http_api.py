@@ -82,6 +82,10 @@ async def async_setup(hass):
         WS_TYPE_HOOK_DELETE, websocket_hook_delete,
         SCHEMA_WS_HOOK_DELETE
     )
+    hass.components.websocket_api.async_register_command(
+        websocket_remote_connect)
+    hass.components.websocket_api.async_register_command(
+        websocket_remote_disconnect)
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
@@ -387,6 +391,7 @@ def _account_data(cloud):
 
     claims = cloud.claims
     client = cloud.client
+    remote = cloud.remote
 
     return {
         'logged_in': True,
@@ -397,4 +402,32 @@ def _account_data(cloud):
         'google_domains': list(google_sh.DOMAIN_TO_GOOGLE_TYPES),
         'alexa_entities': client.alexa_config.should_expose.config,
         'alexa_domains': list(alexa_sh.ENTITY_ADAPTERS),
+        # pylint: disable=protected-access
+        'remote_domain': remote._instance_domain,
+        'remote_connected': bool(
+            remote._snitun and remote._snitun.is_connected)
     }
+
+
+@_require_cloud_login
+@websocket_api.async_response
+@websocket_api.websocket_command({
+    'type': 'cloud/remote/connect'
+})
+async def websocket_remote_connect(hass, connection, msg):
+    """Handle request for connect remote."""
+    cloud = hass.data[DOMAIN]
+    await cloud.remote.connect()
+    connection.send_result(msg['id'], _account_data(cloud))
+
+
+@_require_cloud_login
+@websocket_api.async_response
+@websocket_api.websocket_command({
+    'type': 'cloud/remote/disconnect'
+})
+async def websocket_remote_disconnect(hass, connection, msg):
+    """Handle request for disconnect remote."""
+    cloud = hass.data[DOMAIN]
+    await cloud.remote.disconnect()
+    connection.send_result(msg['id'], _account_data(cloud))
