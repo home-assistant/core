@@ -25,7 +25,7 @@ input_select:
 group:
   music_player:
     control: hidden
-    name: Muzyka z YouTube
+    name: Muzyka
     entities:
       - input_select.ais_music_service
       - input_text.ais_music_query
