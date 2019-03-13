@@ -386,8 +386,10 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee,
     await asyncio.gather(*bind_tasks)
 
 
-def async_load_api(hass, application_controller, zha_gateway):
+def async_load_api(hass):
     """Set up the web socket API."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
     async def permit(service):
         """Allow devices to join this network."""
         duration = service.data.get(ATTR_DURATION)
