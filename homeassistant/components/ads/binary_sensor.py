@@ -67,8 +67,8 @@ class AdsBinarySensor(BinarySensorDevice):
             with async_timeout.timeout(30):
                 await self._event.wait()
         except asyncio.TimeoutError:
-            _LOGGER.debug('Variable %s: Timeout during first update',\
-                self.ads_var)
+            _LOGGER.debug('Variable %s: Timeout during first update',
+                            self.ads_var)
 
     @property
     def name(self):
