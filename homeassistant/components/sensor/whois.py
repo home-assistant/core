@@ -134,7 +134,11 @@ class WhoisSensor(Entity):
                 attrs[ATTR_NAME_SERVERS] = ' '.join(response['nameservers'])
 
             if 'updated_date' in response:
-                attrs[ATTR_UPDATED] = response['updated_date'].isoformat()
+                update_date = response['updated_date']
+                if isinstance(update_date, list):
+                    attrs[ATTR_UPDATED] = update_date[0].isoformat()
+                else:
+                    attrs[ATTR_UPDATED] = update_date.isoformat()
 
             if 'registrar' in response:
                 attrs[ATTR_REGISTRAR] = response['registrar']

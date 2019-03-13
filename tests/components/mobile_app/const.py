@@ -28,6 +28,7 @@ REGISTER = {
     'device_name': 'Test 1',
     'manufacturer': 'mobile_app',
     'model': 'Test',
+    'os_name': 'Linux',
     'os_version': '1.0',
     'supports_encryption': True
 }
@@ -40,6 +41,7 @@ REGISTER_CLEARTEXT = {
     'device_name': 'Test 1',
     'manufacturer': 'mobile_app',
     'model': 'Test',
+    'os_name': 'Linux',
     'os_version': '1.0',
     'supports_encryption': False
 }
@@ -47,7 +49,9 @@ REGISTER_CLEARTEXT = {
 RENDER_TEMPLATE = {
     'type': 'render_template',
     'data': {
-        'template': 'Hello world'
+        'one': {
+            'template': 'Hello world'
+        }
     }
 }
 

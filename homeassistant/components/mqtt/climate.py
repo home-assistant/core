@@ -288,8 +288,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         qos = self._config.get(CONF_QOS)
 
         @callback
-        def handle_current_temp_received(topic, payload, qos):
+        def handle_current_temp_received(msg):
             """Handle current temperature coming via MQTT."""
+            payload = msg.payload
             if CONF_CURRENT_TEMPERATURE_TEMPLATE in self._value_templates:
                 payload =\
                   self._value_templates[CONF_CURRENT_TEMPERATURE_TEMPLATE].\
@@ -308,8 +309,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': qos}
 
         @callback
-        def handle_mode_received(topic, payload, qos):
+        def handle_mode_received(msg):
             """Handle receiving mode via MQTT."""
+            payload = msg.payload
             if CONF_MODE_STATE_TEMPLATE in self._value_templates:
                 payload = self._value_templates[CONF_MODE_STATE_TEMPLATE].\
                   async_render_with_possible_json_value(payload)
@@ -327,8 +329,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': qos}
 
         @callback
-        def handle_temperature_received(topic, payload, qos):
+        def handle_temperature_received(msg):
             """Handle target temperature coming via MQTT."""
+            payload = msg.payload
             if CONF_TEMPERATURE_STATE_TEMPLATE in self._value_templates:
                 payload = \
                   self._value_templates[CONF_TEMPERATURE_STATE_TEMPLATE].\
@@ -347,8 +350,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': qos}
 
         @callback
-        def handle_fan_mode_received(topic, payload, qos):
+        def handle_fan_mode_received(msg):
             """Handle receiving fan mode via MQTT."""
+            payload = msg.payload
             if CONF_FAN_MODE_STATE_TEMPLATE in self._value_templates:
                 payload = \
                   self._value_templates[CONF_FAN_MODE_STATE_TEMPLATE].\
@@ -367,8 +371,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': qos}
 
         @callback
-        def handle_swing_mode_received(topic, payload, qos):
+        def handle_swing_mode_received(msg):
             """Handle receiving swing mode via MQTT."""
+            payload = msg.payload
             if CONF_SWING_MODE_STATE_TEMPLATE in self._value_templates:
                 payload = \
                   self._value_templates[CONF_SWING_MODE_STATE_TEMPLATE].\
@@ -387,8 +392,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': qos}
 
         @callback
-        def handle_away_mode_received(topic, payload, qos):
+        def handle_away_mode_received(msg):
             """Handle receiving away mode via MQTT."""
+            payload = msg.payload
             payload_on = self._config.get(CONF_PAYLOAD_ON)
             payload_off = self._config.get(CONF_PAYLOAD_OFF)
             if CONF_AWAY_MODE_STATE_TEMPLATE in self._value_templates:
@@ -416,8 +422,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': qos}
 
         @callback
-        def handle_aux_mode_received(topic, payload, qos):
+        def handle_aux_mode_received(msg):
             """Handle receiving aux mode via MQTT."""
+            payload = msg.payload
             payload_on = self._config.get(CONF_PAYLOAD_ON)
             payload_off = self._config.get(CONF_PAYLOAD_OFF)
             if CONF_AUX_STATE_TEMPLATE in self._value_templates:
@@ -444,8 +451,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': qos}
 
         @callback
-        def handle_hold_mode_received(topic, payload, qos):
+        def handle_hold_mode_received(msg):
             """Handle receiving hold mode via MQTT."""
+            payload = msg.payload
             if CONF_HOLD_STATE_TEMPLATE in self._value_templates:
                 payload = self._value_templates[CONF_HOLD_STATE_TEMPLATE].\
                   async_render_with_possible_json_value(payload)

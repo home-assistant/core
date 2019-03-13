@@ -23,8 +23,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {DATA_DELETED_IDS: [], DATA_REGISTRATIONS: {}}
 
-    hass.data[DOMAIN][DATA_DELETED_IDS] = app_config[DATA_DELETED_IDS]
-    hass.data[DOMAIN][DATA_REGISTRATIONS] = app_config[DATA_REGISTRATIONS]
+    hass.data[DOMAIN][DATA_DELETED_IDS] = app_config.get(DATA_DELETED_IDS, [])
+    hass.data[DOMAIN][DATA_REGISTRATIONS] = app_config.get(DATA_REGISTRATIONS,
+                                                           {})
     hass.data[DOMAIN][DATA_STORE] = store
 
     for registration in app_config[DATA_REGISTRATIONS].values():

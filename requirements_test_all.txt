@@ -114,7 +114,7 @@ ha-ffmpeg==1.11
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.4
+hass-nabucasa==0.5
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -126,7 +126,7 @@ hdate==0.8.7
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190312.0
+home-assistant-frontend==20190313.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.13.0
@@ -203,7 +203,7 @@ pydeconz==52
 pydispatcher==2.0.5
 
 # homeassistant.components.homematic
-pyhomematic==0.1.57
+pyhomematic==0.1.58
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -261,7 +261,7 @@ pyunifi==2.16
 pywebpush==1.6.0
 
 # homeassistant.components.rainmachine
-regenmaschine==1.2.0
+regenmaschine==1.4.0
 
 # homeassistant.components.python_script
 restrictedpython==4.0b8

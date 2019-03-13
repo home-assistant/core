@@ -212,9 +212,9 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 templates[key] = tpl.async_render_with_possible_json_value
 
         @callback
-        def state_received(topic, payload, qos):
+        def state_received(msg):
             """Handle new received MQTT message."""
-            payload = templates[CONF_STATE](payload)
+            payload = templates[CONF_STATE](msg.payload)
             if payload == self._payload[STATE_ON]:
                 self._state = True
             elif payload == self._payload[STATE_OFF]:
@@ -228,9 +228,9 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': self._config.get(CONF_QOS)}
 
         @callback
-        def speed_received(topic, payload, qos):
+        def speed_received(msg):
             """Handle new received MQTT message for the speed."""
-            payload = templates[ATTR_SPEED](payload)
+            payload = templates[ATTR_SPEED](msg.payload)
             if payload == self._payload[SPEED_LOW]:
                 self._speed = SPEED_LOW
             elif payload == self._payload[SPEED_MEDIUM]:
@@ -247,9 +247,9 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._speed = SPEED_OFF
 
         @callback
-        def oscillation_received(topic, payload, qos):
+        def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
-            payload = templates[OSCILLATION](payload)
+            payload = templates[OSCILLATION](msg.payload)
             if payload == self._payload[OSCILLATE_ON_PAYLOAD]:
                 self._oscillation = True
             elif payload == self._payload[OSCILLATE_OFF_PAYLOAD]:
