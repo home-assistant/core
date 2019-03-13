@@ -161,7 +161,7 @@ amcrest==1.2.5
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.media_player.anthemav
-anthemav==1.1.9
+anthemav==1.1.10
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
@@ -178,6 +178,9 @@ asterisk_mbox==0.5.0
 # homeassistant.components.upnp
 # homeassistant.components.media_player.dlna_dmr
 async-upnp-client==0.14.5
+
+# homeassistant.components.stream
+av==6.1.2
 
 # homeassistant.components.light.avion
 # avion==0.10
@@ -270,6 +273,9 @@ ciscomobilityexpress==0.1.2
 
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
+
+# homeassistant.components.cppm_tracker.device_tracker
+clearpasspy==1.0.2
 
 # homeassistant.components.sensor.co2signal
 co2signal==0.4.2
@@ -517,6 +523,9 @@ habitipy==0.2.0
 # homeassistant.components.hangouts
 hangups==0.4.6
 
+# homeassistant.components.cloud
+hass-nabucasa==0.4
+
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
 
@@ -545,13 +554,13 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190305.0
+home-assistant-frontend==20190312.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
 
 # homeassistant.components.homekit_controller
-homekit==0.12.2
+homekit[IP]==0.13.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.6
@@ -722,9 +731,6 @@ myusps==1.3.2
 # homeassistant.components.media_player.nad
 nad_receiver==0.0.11
 
-# homeassistant.components.light.nanoleaf_aurora
-nanoleaf==0.4.1
-
 # homeassistant.components.device_tracker.keenetic_ndms2
 ndms2_client==0.0.6
 
@@ -735,7 +741,7 @@ nessclient==0.9.14
 netdata==0.1.2
 
 # homeassistant.components.discovery
-netdisco==2.3.0
+netdisco==2.4.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -974,7 +980,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==2.5.2
+pychromecast==3.0.0
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.1
@@ -1167,6 +1173,9 @@ pymyq==1.1.0
 # homeassistant.components.mysensors
 pymysensors==0.18.0
 
+# homeassistant.components.light.nanoleaf
+pynanoleaf==0.0.2
+
 # homeassistant.components.lock.nello
 pynello==2.0.2
 
@@ -1265,7 +1274,7 @@ pysher==1.0.1
 pysma==0.3.1
 
 # homeassistant.components.smartthings
-pysmartapp==0.3.1
+pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
 pysmartthings==0.6.7
@@ -1399,6 +1408,9 @@ python-velbus==2.0.22
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
 
+# homeassistant.components.sensor.whois
+python-whois==0.7.1
+
 # homeassistant.components.wink
 python-wink==1.10.3
 
@@ -1410,9 +1422,6 @@ python_opendata_transport==0.1.4
 
 # homeassistant.components.egardia
 pythonegardia==1.0.39
-
-# homeassistant.components.sensor.whois
-pythonwhois==2.4.3
 
 # homeassistant.components.device_tracker.tile
 pytile==2.0.6
@@ -1454,7 +1463,7 @@ pyvesync_v2==0.9.6
 pyvizio==0.0.4
 
 # homeassistant.components.velux
-pyvlx==0.2.9
+pyvlx==0.2.10
 
 # homeassistant.components.notify.html5
 pywebpush==1.6.0
@@ -1475,7 +1484,7 @@ pyzbar==0.1.7
 qnapstats==0.2.7
 
 # homeassistant.components.device_tracker.quantum_gateway
-quantum-gateway==0.0.3
+quantum-gateway==0.0.5
 
 # homeassistant.components.rachio
 rachiopy==0.1.3
@@ -1544,7 +1553,7 @@ samsungctl[websocket]==0.7.1
 satel_integra==0.3.2
 
 # homeassistant.components.sensor.deutsche_bahn
-schiene==0.22
+schiene==0.23
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
@@ -1557,7 +1566,7 @@ sendgrid==5.6.0
 sense-hat==2.2.0
 
 # homeassistant.components.sense
-sense_energy==0.6.0
+sense_energy==0.7.0
 
 # homeassistant.components.media_player.aquostv
 sharp_aquos_rc==0.3.2
@@ -1760,9 +1769,6 @@ wakeonlan==1.1.6
 # homeassistant.components.sensor.waqi
 waqiasync==1.0.0
 
-# homeassistant.components.cloud
-warrant==0.6.1
-
 # homeassistant.components.folder_watcher
 watchdog==0.8.3
 
@@ -1826,7 +1832,7 @@ zengge==0.2
 zeroconf==0.21.3
 
 # homeassistant.components.zha
-zha-quirks==0.0.6
+zha-quirks==0.0.7
 
 # homeassistant.components.climate.zhong_hong
 zhong_hong_hvac==1.0.9

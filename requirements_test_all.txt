@@ -53,6 +53,9 @@ aiounifi==4
 # homeassistant.components.notify.apns
 apns2==0.3.0
 
+# homeassistant.components.stream
+av==6.1.2
+
 # homeassistant.components.zha
 bellows-homeassistant==0.7.1
 
@@ -110,6 +113,9 @@ ha-ffmpeg==1.11
 # homeassistant.components.hangouts
 hangups==0.4.6
 
+# homeassistant.components.cloud
+hass-nabucasa==0.4
+
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
 
@@ -120,10 +126,10 @@ hdate==0.8.7
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190305.0
+home-assistant-frontend==20190312.0
 
 # homeassistant.components.homekit_controller
-homekit==0.12.2
+homekit[IP]==0.13.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.6
@@ -224,7 +230,7 @@ pyps4-homeassistant==0.4.8
 pyqwikswitch==0.8
 
 # homeassistant.components.smartthings
-pysmartapp==0.3.1
+pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
 pysmartthings==0.6.7
@@ -244,9 +250,6 @@ python-nest==4.1.0
 
 # homeassistant.components.sensor.awair
 python_awair==0.0.3
-
-# homeassistant.components.sensor.whois
-pythonwhois==2.4.3
 
 # homeassistant.components.tradfri
 pytradfri[async]==6.0.1
@@ -311,9 +314,6 @@ vultr==0.1.2
 # homeassistant.components.media_player.samsungtv
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==1.1.6
-
-# homeassistant.components.cloud
-warrant==0.6.1
 
 # homeassistant.components.zha
 zigpy-homeassistant==0.3.0

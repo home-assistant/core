@@ -13,6 +13,7 @@ COMPONENTS = [
     'light',
     'sensor',
     'switch',
+    'weather',
 ]
 
 CONF_ACCESSPOINT = 'accesspoint'

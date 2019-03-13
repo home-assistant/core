@@ -111,7 +111,7 @@ class MqttLock(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -130,7 +130,7 @@ class MqttLock(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             elif payload == self._config[CONF_PAYLOAD_UNLOCK]:
                 self._state = False
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -185,9 +185,9 @@ class MqttLock(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN])
         if self._optimistic:
-            # Optimistically assume that switch has changed state.
+            # Optimistically assume that the lock has changed state.
             self._state = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs):
         """Unlock the device.
@@ -200,6 +200,6 @@ class MqttLock(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN])
         if self._optimistic:
-            # Optimistically assume that switch has changed state.
+            # Optimistically assume that the lock has changed state.
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

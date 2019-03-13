@@ -101,7 +101,7 @@ class HomeKitLight(HomeKitEntity, Light):
         """Flag supported features."""
         return self._features
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the specified light on."""
         hs_color = kwargs.get(ATTR_HS_COLOR)
         temperature = kwargs.get(ATTR_COLOR_TEMP)
@@ -127,11 +127,11 @@ class HomeKitLight(HomeKitEntity, Light):
         characteristics.append({'aid': self._aid,
                                 'iid': self._chars['on'],
                                 'value': True})
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the specified light off."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['on'],
                             'value': False}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)

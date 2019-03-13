@@ -1,8 +1,8 @@
 """
-Support for Nanoleaf Aurora platform.
+Support for Nanoleaf Lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.nanoleaf_aurora/
+https://home-assistant.io/components/light.nanoleaf/
 """
 import logging
 
@@ -19,20 +19,20 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['nanoleaf==0.4.1']
+REQUIREMENTS = ['pynanoleaf==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Aurora'
+DEFAULT_NAME = 'Nanoleaf'
 
-DATA_NANOLEAF_AURORA = 'nanoleaf_aurora'
+DATA_NANOLEAF = 'nanoleaf'
 
-CONFIG_FILE = '.nanoleaf_aurora.conf'
+CONFIG_FILE = '.nanoleaf.conf'
 
 ICON = 'mdi:triangle-outline'
 
-SUPPORT_AURORA = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
-                  SUPPORT_COLOR)
+SUPPORT_NANOLEAF = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
+                    SUPPORT_COLOR)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -42,20 +42,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Nanoleaf Aurora device."""
-    import nanoleaf
-    import nanoleaf.setup
-    if DATA_NANOLEAF_AURORA not in hass.data:
-        hass.data[DATA_NANOLEAF_AURORA] = dict()
+    """Set up the Nanoleaf light."""
+    import pynanoleaf
+    if DATA_NANOLEAF not in hass.data:
+        hass.data[DATA_NANOLEAF] = dict()
 
     token = ''
     if discovery_info is not None:
         host = discovery_info['host']
         name = discovery_info['hostname']
         # if device already exists via config, skip discovery setup
-        if host in hass.data[DATA_NANOLEAF_AURORA]:
+        if host in hass.data[DATA_NANOLEAF]:
             return
-        _LOGGER.info("Discovered a new Aurora: %s", discovery_info)
+        _LOGGER.info("Discovered a new Nanoleaf: %s", discovery_info)
         conf = load_json(hass.config.path(CONFIG_FILE))
         if conf.get(host, {}).get('token'):
             token = conf[host]['token']
@@ -64,8 +63,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         name = config[CONF_NAME]
         token = config[CONF_TOKEN]
 
+    nanoleaf_light = pynanoleaf.Nanoleaf(host)
+
     if not token:
-        token = nanoleaf.setup.generate_auth_token(host)
+        token = nanoleaf_light.request_token()
         if not token:
             _LOGGER.error("Could not generate the auth token, did you press "
                           "and hold the power button on %s"
@@ -75,22 +76,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         conf[host] = {'token': token}
         save_json(hass.config.path(CONFIG_FILE), conf)
 
-    aurora_light = nanoleaf.Aurora(host, token)
+    nanoleaf_light.token = token
 
-    if aurora_light.on is None:
+    if nanoleaf_light.on is None:
         _LOGGER.error(
-            "Could not connect to Nanoleaf Aurora: %s on %s", name, host)
+            "Could not connect to Nanoleaf Light: %s on %s", name, host)
         return
 
-    hass.data[DATA_NANOLEAF_AURORA][host] = aurora_light
-    add_entities([AuroraLight(aurora_light, name)], True)
+    hass.data[DATA_NANOLEAF][host] = nanoleaf_light
+    add_entities([NanoleafLight(nanoleaf_light, name)], True)
 
 
-class AuroraLight(Light):
-    """Representation of a Nanoleaf Aurora."""
+class NanoleafLight(Light):
+    """Representation of a Nanoleaf Light."""
 
     def __init__(self, light, name):
-        """Initialize an Aurora light."""
+        """Initialize an Nanoleaf light."""
         self._brightness = None
         self._color_temp = None
         self._effect = None
@@ -158,7 +159,7 @@ class AuroraLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_AURORA
+        return SUPPORT_NANOLEAF
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
@@ -189,6 +190,6 @@ class AuroraLight(Light):
         self._brightness = self._light.brightness
         self._color_temp = self._light.color_temperature
         self._effect = self._light.effect
-        self._effects_list = self._light.effects_list
+        self._effects_list = self._light.effects
         self._hs_color = self._light.hue, self._light.saturation
         self._state = self._light.on

@@ -3,6 +3,7 @@ import asyncio
 from functools import wraps
 import logging
 
+import attr
 import aiohttp
 import async_timeout
 import voluptuous as vol
@@ -15,11 +16,9 @@ from homeassistant.components import websocket_api
 from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import smart_home as google_sh
 
-from . import auth_api
 from .const import (
     DOMAIN, REQUEST_TIMEOUT, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_ALLOW_UNLOCK)
-from .iot import STATE_DISCONNECTED, STATE_CONNECTED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +58,9 @@ SCHEMA_WS_HOOK_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 })
 
 
+_CLOUD_ERRORS = {}
+
+
 async def async_setup(hass):
     """Initialize the HTTP API."""
     hass.components.websocket_api.async_register_command(
@@ -81,6 +83,10 @@ async def async_setup(hass):
         WS_TYPE_HOOK_DELETE, websocket_hook_delete,
         SCHEMA_WS_HOOK_DELETE
     )
+    hass.components.websocket_api.async_register_command(
+        websocket_remote_connect)
+    hass.components.websocket_api.async_register_command(
+        websocket_remote_disconnect)
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
@@ -88,14 +94,20 @@ async def async_setup(hass):
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
 
+    from hass_nabucasa import auth
 
-_CLOUD_ERRORS = {
-    auth_api.UserNotFound: (400, "User does not exist."),
-    auth_api.UserNotConfirmed: (400, 'Email not confirmed.'),
-    auth_api.Unauthenticated: (401, 'Authentication failed.'),
-    auth_api.PasswordChangeRequired: (400, 'Password change required.'),
-    asyncio.TimeoutError: (502, 'Unable to reach the Home Assistant cloud.')
-}
+    _CLOUD_ERRORS.update({
+        auth.UserNotFound:
+            (400, "User does not exist."),
+        auth.UserNotConfirmed:
+            (400, 'Email not confirmed.'),
+        auth.Unauthenticated:
+            (401, 'Authentication failed.'),
+        auth.PasswordChangeRequired:
+            (400, 'Password change required.'),
+        asyncio.TimeoutError:
+            (502, 'Unable to reach the Home Assistant cloud.')
+    })
 
 
 def _handle_cloud_errors(handler):
@@ -135,7 +147,7 @@ class GoogleActionsSyncView(HomeAssistantView):
         websession = hass.helpers.aiohttp_client.async_get_clientsession()
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            await hass.async_add_job(auth_api.check_token, cloud)
+            await hass.async_add_job(cloud.auth.check_token)
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
             req = await websession.post(
@@ -163,7 +175,7 @@ class CloudLoginView(HomeAssistantView):
         cloud = hass.data[DOMAIN]
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            await hass.async_add_job(auth_api.login, cloud, data['email'],
+            await hass.async_add_job(cloud.auth.login, data['email'],
                                      data['password'])
 
         hass.async_add_job(cloud.iot.connect)
@@ -206,7 +218,7 @@ class CloudRegisterView(HomeAssistantView):
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
             await hass.async_add_job(
-                auth_api.register, cloud, data['email'], data['password'])
+                cloud.auth.register, data['email'], data['password'])
 
         return self.json_message('ok')
 
@@ -228,7 +240,7 @@ class CloudResendConfirmView(HomeAssistantView):
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
             await hass.async_add_job(
-                auth_api.resend_email_confirm, cloud, data['email'])
+                cloud.auth.resend_email_confirm, data['email'])
 
         return self.json_message('ok')
 
@@ -250,7 +262,7 @@ class CloudForgotPasswordView(HomeAssistantView):
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
             await hass.async_add_job(
-                auth_api.forgot_password, cloud, data['email'])
+                cloud.auth.forgot_password, data['email'])
 
         return self.json_message('ok')
 
@@ -307,6 +319,7 @@ def _handle_aiohttp_errors(handler):
 @websocket_api.async_response
 async def websocket_subscription(hass, connection, msg):
     """Handle request for account info."""
+    from hass_nabucasa.const import STATE_DISCONNECTED
     cloud = hass.data[DOMAIN]
 
     with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
@@ -320,11 +333,10 @@ async def websocket_subscription(hass, connection, msg):
 
     # Check if a user is subscribed but local info is outdated
     # In that case, let's refresh and reconnect
-    if data.get('provider') and cloud.iot.state != STATE_CONNECTED:
+    if data.get('provider') and not cloud.is_connected:
         _LOGGER.debug(
             "Found disconnected account with valid subscriotion, connecting")
-        await hass.async_add_executor_job(
-            auth_api.renew_access_token, cloud)
+        await hass.async_add_executor_job(cloud.auth.renew_access_token)
 
         # Cancel reconnect in progress
         if cloud.iot.state != STATE_DISCONNECTED:
@@ -344,7 +356,7 @@ async def websocket_update_prefs(hass, connection, msg):
     changes = dict(msg)
     changes.pop('id')
     changes.pop('type')
-    await cloud.prefs.async_update(**changes)
+    await cloud.client.prefs.async_update(**changes)
 
     connection.send_message(websocket_api.result_message(msg['id']))
 
@@ -355,7 +367,7 @@ async def websocket_update_prefs(hass, connection, msg):
 async def websocket_hook_create(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
-    hook = await cloud.cloudhooks.async_create(msg['webhook_id'])
+    hook = await cloud.cloudhooks.async_create(msg['webhook_id'], False)
     connection.send_message(websocket_api.result_message(msg['id'], hook))
 
 
@@ -370,6 +382,8 @@ async def websocket_hook_delete(hass, connection, msg):
 
 def _account_data(cloud):
     """Generate the auth data JSON response."""
+    from hass_nabucasa.const import STATE_DISCONNECTED
+
     if not cloud.is_logged_in:
         return {
             'logged_in': False,
@@ -377,14 +391,51 @@ def _account_data(cloud):
         }
 
     claims = cloud.claims
+    client = cloud.client
+    remote = cloud.remote
+
+    # Load remote certificate
+    if remote.certificate:
+        certificate = attr.asdict(remote.certificate)
+    else:
+        certificate = None
 
     return {
         'logged_in': True,
         'email': claims['email'],
         'cloud': cloud.iot.state,
-        'prefs': cloud.prefs.as_dict(),
-        'google_entities': cloud.google_actions_user_conf['filter'].config,
+        'prefs': client.prefs.as_dict(),
+        'google_entities': client.google_user_config['filter'].config,
         'google_domains': list(google_sh.DOMAIN_TO_GOOGLE_TYPES),
-        'alexa_entities': cloud.alexa_config.should_expose.config,
+        'alexa_entities': client.alexa_config.should_expose.config,
         'alexa_domains': list(alexa_sh.ENTITY_ADAPTERS),
+        'remote_domain': remote.instance_domain,
+        'remote_connected': remote.is_connected,
+        'remote_certificate': certificate,
     }
+
+
+@_require_cloud_login
+@websocket_api.async_response
+@websocket_api.websocket_command({
+    'type': 'cloud/remote/connect'
+})
+async def websocket_remote_connect(hass, connection, msg):
+    """Handle request for connect remote."""
+    cloud = hass.data[DOMAIN]
+    await cloud.remote.connect()
+    await cloud.client.prefs.async_update(remote_enabled=True)
+    connection.send_result(msg['id'], _account_data(cloud))
+
+
+@_require_cloud_login
+@websocket_api.async_response
+@websocket_api.websocket_command({
+    'type': 'cloud/remote/disconnect'
+})
+async def websocket_remote_disconnect(hass, connection, msg):
+    """Handle request for disconnect remote."""
+    cloud = hass.data[DOMAIN]
+    await cloud.remote.disconnect()
+    await cloud.client.prefs.async_update(remote_enabled=False)
+    connection.send_result(msg['id'], _account_data(cloud))

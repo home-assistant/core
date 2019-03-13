@@ -97,6 +97,7 @@ homeassistant/components/sensor/bitcoin.py @fabaff
 homeassistant/components/sensor/cpuspeed.py @fabaff
 homeassistant/components/sensor/cups.py @fabaff
 homeassistant/components/sensor/darksky.py @fabaff
+homeassistant/components/sensor/discogs.py @thibmaek
 homeassistant/components/sensor/file.py @fabaff
 homeassistant/components/sensor/filter.py @dgomes
 homeassistant/components/sensor/fixer.py @fabaff
@@ -114,6 +115,7 @@ homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
 homeassistant/components/sensor/min_max.py @fabaff
 homeassistant/components/sensor/moon.py @fabaff
 homeassistant/components/sensor/netdata.py @fabaff
+homeassistant/components/sensor/nmbs.py @thibmaek
 homeassistant/components/sensor/nsw_fuel_station.py @nickw444
 homeassistant/components/sensor/pi_hole.py @fabaff
 homeassistant/components/sensor/pollen.py @bachya

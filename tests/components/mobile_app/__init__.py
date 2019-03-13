@@ -34,6 +34,15 @@ def webhook_client(hass, aiohttp_client, hass_storage, hass_admin_user):
                     ATTR_MANUFACTURER: 'Home Assistant',
                     ATTR_MODEL: 'Tests',
                     ATTR_OS_VERSION: '1.0.0'
+                },
+                'mobile_app_test_cleartext': {
+                    'supports_encryption': False,
+                    CONF_WEBHOOK_ID: 'mobile_app_test_cleartext',
+                    'device_name': 'Test Device (Cleartext)',
+                    CONF_USER_ID: hass_admin_user.id,
+                    ATTR_MANUFACTURER: 'Home Assistant',
+                    ATTR_MODEL: 'Cleartext Tests',
+                    ATTR_OS_VERSION: '1.0.1'
                 }
             },
             DATA_DELETED_IDS: [],

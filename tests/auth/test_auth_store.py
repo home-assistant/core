@@ -64,7 +64,7 @@ async def test_loading_no_group_data_format(hass, hass_storage):
 
     store = auth_store.AuthStore(hass)
     groups = await store.async_get_groups()
-    assert len(groups) == 2
+    assert len(groups) == 3
     admin_group = groups[0]
     assert admin_group.name == auth_store.GROUP_NAME_ADMIN
     assert admin_group.system_generated
@@ -73,6 +73,10 @@ async def test_loading_no_group_data_format(hass, hass_storage):
     assert read_group.name == auth_store.GROUP_NAME_READ_ONLY
     assert read_group.system_generated
     assert read_group.id == auth_store.GROUP_ID_READ_ONLY
+    user_group = groups[2]
+    assert user_group.name == auth_store.GROUP_NAME_USER
+    assert user_group.system_generated
+    assert user_group.id == auth_store.GROUP_ID_USER
 
     users = await store.async_get_users()
     assert len(users) == 2
@@ -157,7 +161,7 @@ async def test_loading_all_access_group_data_format(hass, hass_storage):
 
     store = auth_store.AuthStore(hass)
     groups = await store.async_get_groups()
-    assert len(groups) == 2
+    assert len(groups) == 3
     admin_group = groups[0]
     assert admin_group.name == auth_store.GROUP_NAME_ADMIN
     assert admin_group.system_generated
@@ -166,6 +170,10 @@ async def test_loading_all_access_group_data_format(hass, hass_storage):
     assert read_group.name == auth_store.GROUP_NAME_READ_ONLY
     assert read_group.system_generated
     assert read_group.id == auth_store.GROUP_ID_READ_ONLY
+    user_group = groups[2]
+    assert user_group.name == auth_store.GROUP_NAME_USER
+    assert user_group.system_generated
+    assert user_group.id == auth_store.GROUP_ID_USER
 
     users = await store.async_get_users()
     assert len(users) == 2
@@ -189,12 +197,16 @@ async def test_loading_empty_data(hass, hass_storage):
     """Test we correctly load with no existing data."""
     store = auth_store.AuthStore(hass)
     groups = await store.async_get_groups()
-    assert len(groups) == 2
+    assert len(groups) == 3
     admin_group = groups[0]
     assert admin_group.name == auth_store.GROUP_NAME_ADMIN
     assert admin_group.system_generated
     assert admin_group.id == auth_store.GROUP_ID_ADMIN
-    read_group = groups[1]
+    user_group = groups[1]
+    assert user_group.name == auth_store.GROUP_NAME_USER
+    assert user_group.system_generated
+    assert user_group.id == auth_store.GROUP_ID_USER
+    read_group = groups[2]
     assert read_group.name == auth_store.GROUP_NAME_READ_ONLY
     assert read_group.system_generated
     assert read_group.id == auth_store.GROUP_ID_READ_ONLY
@@ -218,6 +230,10 @@ async def test_system_groups_store_id_and_name(hass, hass_storage):
             'name': auth_store.GROUP_NAME_ADMIN,
         },
         {
+            'id': auth_store.GROUP_ID_USER,
+            'name': auth_store.GROUP_NAME_USER,
+        },
+        {
             'id': auth_store.GROUP_ID_READ_ONLY,
             'name': auth_store.GROUP_NAME_READ_ONLY,
         },
@@ -229,7 +245,9 @@ async def test_loading_race_condition(hass):
     store = auth_store.AuthStore(hass)
     with asynctest.patch(
         'homeassistant.helpers.entity_registry.async_get_registry',
-    ) as mock_registry, asynctest.patch(
+    ) as mock_ent_registry, asynctest.patch(
+        'homeassistant.helpers.device_registry.async_get_registry',
+    ) as mock_dev_registry, asynctest.patch(
         'homeassistant.helpers.storage.Store.async_load',
     ) as mock_load:
         results = await asyncio.gather(
@@ -237,6 +255,7 @@ async def test_loading_race_condition(hass):
             store.async_get_users(),
         )
 
-        mock_registry.assert_called_once_with(hass)
+        mock_ent_registry.assert_called_once_with(hass)
+        mock_dev_registry.assert_called_once_with(hass)
         mock_load.assert_called_once_with()
         assert results[0] == results[1]

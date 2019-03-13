@@ -21,7 +21,7 @@ class ActiveConnection:
         else:
             self.refresh_token_id = None
 
-        self.event_listeners = {}
+        self.subscriptions = {}
         self.last_id = 0
 
     def context(self, msg):
@@ -82,7 +82,7 @@ class ActiveConnection:
     @callback
     def async_close(self):
         """Close down connection."""
-        for unsub in self.event_listeners.values():
+        for unsub in self.subscriptions.values():
             unsub()
 
     @callback

@@ -1037,8 +1037,13 @@ class SonosEntity(MediaPlayerDevice):
             if entity.state == STATE_PLAYING:
                 entity.media_pause()
 
-        # Bring back the original group topology
         if with_group:
+            # Unjoin slaves that are not already in their target group
+            for entity in [e for e in entities if not e.is_coordinator]:
+                if entity._snapshot_group != entity._sonos_group:
+                    entity.unjoin()
+
+            # Bring back the original group topology
             for entity in (e for e in entities if e._snapshot_group):
                 if entity._snapshot_group[0] == entity:
                     entity.join(entity._snapshot_group)

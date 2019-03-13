@@ -158,7 +158,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -219,7 +219,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self._state = True
             elif payload == self._payload[STATE_OFF]:
                 self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -237,7 +237,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self._speed = SPEED_MEDIUM
             elif payload == self._payload[SPEED_HIGH]:
                 self._speed = SPEED_HIGH
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_SPEED_STATE_TOPIC] is not None:
             topics[CONF_SPEED_STATE_TOPIC] = {
@@ -254,7 +254,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self._oscillation = True
             elif payload == self._payload[OSCILLATE_OFF_PAYLOAD]:
                 self._oscillation = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
             topics[CONF_OSCILLATION_STATE_TOPIC] = {
@@ -360,7 +360,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         if self._optimistic_speed:
             self._speed = speed
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation.
@@ -381,7 +381,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         if self._optimistic_oscillation:
             self._oscillation = oscillating
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def unique_id(self):
