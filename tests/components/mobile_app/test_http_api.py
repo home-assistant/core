@@ -67,4 +67,6 @@ async def test_register_invalid_component(authed_api_client):  # noqa: F811
 
     assert resp.status == 400
     register_json = await resp.json()
-    assert 'message' in register_json
+    assert 'error' in register_json
+    assert register_json['success'] is False
+    assert register_json['error']['code'] == 'invalid_component'

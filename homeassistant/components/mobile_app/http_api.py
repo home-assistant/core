@@ -7,8 +7,8 @@ from homeassistant.auth.util import generate_secret
 from homeassistant.components.cloud import async_create_cloudhook
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_CREATED,
-                                 HTTP_INTERNAL_SERVER_ERROR, CONF_WEBHOOK_ID)
+from homeassistant.const import (HTTP_CREATED, HTTP_INTERNAL_SERVER_ERROR,
+                                 CONF_WEBHOOK_ID)
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
@@ -17,9 +17,10 @@ from homeassistant.loader import get_component
 
 from .const import (ATTR_APP_COMPONENT, ATTR_SUPPORTS_ENCRYPTION,
                     CONF_CLOUDHOOK_URL, CONF_SECRET, CONF_USER_ID,
-                    DATA_REGISTRATIONS, DOMAIN, REGISTRATION_SCHEMA)
+                    DATA_REGISTRATIONS, DOMAIN, ERR_INVALID_COMPONENT,
+                    ERR_SAVE_FAILURE, REGISTRATION_SCHEMA)
 
-from .helpers import supports_encryption, savable_state
+from .helpers import error_response, supports_encryption, savable_state
 
 from .webhook import setup_registration
 
@@ -50,14 +51,14 @@ class RegistrationsView(HomeAssistantView):
             if component is None:
                 fmt_str = "{} is not a valid component."
                 msg = fmt_str.format(data[ATTR_APP_COMPONENT])
-                return self.json_message(msg, HTTP_BAD_REQUEST)
+                return error_response(ERR_INVALID_COMPONENT, msg)
 
             if (hasattr(component, 'DEPENDENCIES') is False or
                     (hasattr(component, 'DEPENDENCIES') and
                      DOMAIN not in component.DEPENDENCIES)):
                 fmt_str = "{} is not compatible with mobile_app."
                 msg = fmt_str.format(data[ATTR_APP_COMPONENT])
-                return self.json_message(msg, HTTP_BAD_REQUEST)
+                return error_response(ERR_INVALID_COMPONENT, msg)
 
         webhook_id = generate_secret()
 
@@ -81,8 +82,9 @@ class RegistrationsView(HomeAssistantView):
         try:
             await self._store.async_save(savable_state(hass))
         except HomeAssistantError:
-            return self.json_message("Error saving registration.",
-                                     HTTP_INTERNAL_SERVER_ERROR)
+            return error_response(ERR_SAVE_FAILURE,
+                                  "Error saving registration",
+                                  status=HTTP_INTERNAL_SERVER_ERROR)
 
         setup_registration(hass, self._store, data)
 

@@ -3,7 +3,7 @@ import logging
 import json
 from typing import Callable, Dict, Tuple
 
-from aiohttp.web import Response
+from aiohttp.web import json_response, Response
 
 from homeassistant.core import Context
 from homeassistant.helpers.typing import HomeAssistantType
@@ -68,6 +68,18 @@ def empty_okay_response(headers: Dict = None, status: int = 200) -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(body='{}', status=status, content_type='application/json',
                     headers=headers)
+
+
+def error_response(code: str, message: str, status: int = 400,
+                   headers: dict = None) -> Response:
+    """Return an error Response."""
+    return json_response({
+        'success': False,
+        'error': {
+            'code': code,
+            'message': message
+        }
+    }, status=status, headers=headers)
 
 
 def supports_encryption() -> bool:
