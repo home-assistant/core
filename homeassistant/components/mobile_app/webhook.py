@@ -132,10 +132,7 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
                 attach(hass, tpl)
                 resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
             # noqa: E722 pylint: disable=broad-except
-            except (ValueError, TemplateError, Exception) as ex:
-                _LOGGER.error("Error when rendering template "
-                              "(device name: %s): %s",
-                              registration[ATTR_DEVICE_NAME], ex)
+            except TemplateError as ex:
                 resp[key] = {"error": str(ex)}
 
         return webhook_response(resp, registration=registration,
