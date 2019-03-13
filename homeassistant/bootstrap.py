@@ -99,12 +99,12 @@ async def async_from_config_dict(config: Dict[str, Any],
                         "This may cause issues")
 
     core_config = config.get(core.DOMAIN, {})
-    has_api_password = bool(config.get('http', {}).get('api_password'))
+    api_password = config.get('http', {}).get('api_password')
     trusted_networks = config.get('http', {}).get('trusted_networks')
 
     try:
         await conf_util.async_process_ha_core_config(
-            hass, core_config, has_api_password, trusted_networks)
+            hass, core_config, api_password, trusted_networks)
     except vol.Invalid as config_err:
         conf_util.async_log_exception(
             config_err, 'homeassistant', core_config, hass)

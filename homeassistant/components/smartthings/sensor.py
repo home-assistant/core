@@ -5,7 +5,7 @@ from typing import Optional, Sequence
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, MASS_KILOGRAMS,
-    POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ENERGY_KILO_WATT_HOUR, POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -54,7 +54,7 @@ CAPABILITY_TO_SENSORS = {
         Map('fineDustLevel', "Fine Dust Level", None, None),
         Map('dustLevel', "Dust Level", None, None)],
     'energyMeter': [
-        Map('energy', "Energy Meter", 'kWh', None)],
+        Map('energy', "Energy Meter", ENERGY_KILO_WATT_HOUR, None)],
     'equivalentCarbonDioxideMeasurement': [
         Map('equivalentCarbonDioxideMeasurement',
             'Equivalent Carbon Dioxide Measurement', 'ppm', None)],
@@ -89,7 +89,7 @@ CAPABILITY_TO_SENSORS = {
     'powerSource': [
         Map('powerSource', "Power Source", None, None)],
     'refrigerationSetpoint': [
-        Map('refrigerationSetpoint', "Refrigeration Setpoint", TEMP_CELSIUS,
+        Map('refrigerationSetpoint', "Refrigeration Setpoint", None,
             DEVICE_CLASS_TEMPERATURE)],
     'relativeHumidityMeasurement': [
         Map('humidity', "Relative Humidity Measurement", '%',
@@ -107,15 +107,15 @@ CAPABILITY_TO_SENSORS = {
     'smokeDetector': [
         Map('smoke', "Smoke Detector", None, None)],
     'temperatureMeasurement': [
-        Map('temperature', "Temperature Measurement", TEMP_CELSIUS,
+        Map('temperature', "Temperature Measurement", None,
             DEVICE_CLASS_TEMPERATURE)],
     'thermostatCoolingSetpoint': [
-        Map('coolingSetpoint', "Thermostat Cooling Setpoint", TEMP_CELSIUS,
+        Map('coolingSetpoint', "Thermostat Cooling Setpoint", None,
             DEVICE_CLASS_TEMPERATURE)],
     'thermostatFanMode': [
         Map('thermostatFanMode', "Thermostat Fan Mode", None, None)],
     'thermostatHeatingSetpoint': [
-        Map('heatingSetpoint', "Thermostat Heating Setpoint", TEMP_CELSIUS,
+        Map('heatingSetpoint', "Thermostat Heating Setpoint", None,
             DEVICE_CLASS_TEMPERATURE)],
     'thermostatMode': [
         Map('thermostatMode', "Thermostat Mode", None, None)],
@@ -123,8 +123,10 @@ CAPABILITY_TO_SENSORS = {
         Map('thermostatOperatingState', "Thermostat Operating State",
             None, None)],
     'thermostatSetpoint': [
-        Map('thermostatSetpoint', "Thermostat Setpoint", TEMP_CELSIUS,
+        Map('thermostatSetpoint', "Thermostat Setpoint", None,
             DEVICE_CLASS_TEMPERATURE)],
+    'threeAxis': [
+        Map('threeAxis', "Three Axis", None, None)],
     'tvChannel': [
         Map('tvChannel', "Tv Channel", None, None)],
     'tvocMeasurement': [
@@ -147,6 +149,8 @@ UNITS = {
     'F': TEMP_FAHRENHEIT
 }
 
+THREE_AXIS_NAMES = ['X Coordinate', 'Y Coordinate', 'Z Coordinate']
+
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -156,16 +160,22 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add binary sensors for a config entry."""
+    from pysmartthings import Capability
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     sensors = []
     for device in broker.devices.values():
         for capability in broker.get_assigned(device.device_id, 'sensor'):
-            maps = CAPABILITY_TO_SENSORS[capability]
-            sensors.extend([
-                SmartThingsSensor(
-                    device, m.attribute, m.name, m.default_unit,
-                    m.device_class)
-                for m in maps])
+            if capability == Capability.three_axis:
+                sensors.extend(
+                    [SmartThingsThreeAxisSensor(device, index)
+                     for index in range(len(THREE_AXIS_NAMES))])
+            else:
+                maps = CAPABILITY_TO_SENSORS[capability]
+                sensors.extend([
+                    SmartThingsSensor(
+                        device, m.attribute, m.name, m.default_unit,
+                        m.device_class)
+                    for m in maps])
     async_add_entities(sensors)
 
 
@@ -176,7 +186,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
 
 
 class SmartThingsSensor(SmartThingsEntity):
-    """Define a SmartThings Binary Sensor."""
+    """Define a SmartThings Sensor."""
 
     def __init__(self, device, attribute: str, name: str,
                  default_unit: str, device_class: str):
@@ -212,3 +222,34 @@ class SmartThingsSensor(SmartThingsEntity):
         """Return the unit this state is expressed in."""
         unit = self._device.status.attributes[self._attribute].unit
         return UNITS.get(unit, unit) if unit else self._default_unit
+
+
+class SmartThingsThreeAxisSensor(SmartThingsEntity):
+    """Define a SmartThings Three Axis Sensor."""
+
+    def __init__(self, device, index):
+        """Init the class."""
+        super().__init__(device)
+        self._index = index
+
+    @property
+    def name(self) -> str:
+        """Return the name of the binary sensor."""
+        return '{} {}'.format(
+            self._device.label, THREE_AXIS_NAMES[self._index])
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return '{}.{}'.format(
+            self._device.device_id, THREE_AXIS_NAMES[self._index])
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        from pysmartthings import Attribute
+        three_axis = self._device.status.attributes[Attribute.three_axis].value
+        try:
+            return three_axis[self._index]
+        except (TypeError, IndexError):
+            return None

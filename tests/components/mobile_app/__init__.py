@@ -26,6 +26,12 @@ def webhook_client(hass, aiohttp_client, hass_storage, hass_admin_user):
                     CONF_WEBHOOK_ID: 'mobile_app_test',
                     'device_name': 'Test Device',
                     CONF_USER_ID: hass_admin_user.id,
+                },
+                'mobile_app_test_cleartext': {
+                    'supports_encryption': False,
+                    CONF_WEBHOOK_ID: 'mobile_app_test_cleartext',
+                    'device_name': 'Test Device (Cleartext)',
+                    CONF_USER_ID: hass_admin_user.id,
                 }
             },
             DATA_DELETED_IDS: [],

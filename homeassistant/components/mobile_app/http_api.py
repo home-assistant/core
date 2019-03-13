@@ -14,12 +14,15 @@ from homeassistant.const import (HTTP_CREATED, HTTP_INTERNAL_SERVER_ERROR,
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.loader import get_component
 
-from .const import (ATTR_DEVICE_ID, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_CLOUDHOOK_URL, CONF_SECRET, CONF_USER_ID,
-                    DATA_REGISTRATIONS, DOMAIN, REGISTRATION_SCHEMA)
+from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_ID,
+                    ATTR_SUPPORTS_ENCRYPTION, CONF_CLOUDHOOK_URL, CONF_SECRET,
+                    CONF_USER_ID, DATA_REGISTRATIONS, DOMAIN,
+                    ERR_INVALID_COMPONENT, ERR_SAVE_FAILURE,
+                    REGISTRATION_SCHEMA)
 
-from .helpers import supports_encryption, savable_state
+from .helpers import error_response, supports_encryption, savable_state
 
 from .webhook import setup_registration
 
@@ -45,22 +48,34 @@ class RegistrationsView(HomeAssistantView):
         """Handle the POST request for registration."""
         hass = request.app['hass']
 
+        if ATTR_APP_COMPONENT in data:
+            component = get_component(hass, data[ATTR_APP_COMPONENT])
+            if component is None:
+                fmt_str = "{} is not a valid component."
+                msg = fmt_str.format(data[ATTR_APP_COMPONENT])
+                return error_response(ERR_INVALID_COMPONENT, msg)
+
+            if (hasattr(component, 'DEPENDENCIES') is False or
+                    (hasattr(component, 'DEPENDENCIES') and
+                     DOMAIN not in component.DEPENDENCIES)):
+                fmt_str = "{} is not compatible with mobile_app."
+                msg = fmt_str.format(data[ATTR_APP_COMPONENT])
+                return error_response(ERR_INVALID_COMPONENT, msg)
+
         webhook_id = generate_secret()
 
-        if "cloud" in hass.config.components:
-            cloudhook = await async_create_cloudhook(hass, webhook_id)
-
-            if cloudhook is not None:
-                data[CONF_CLOUDHOOK_URL] = cloudhook[CONF_CLOUDHOOK_URL]
+        if hass.components.cloud.async_active_subscription():
+            data[CONF_CLOUDHOOK_URL] = \
+                await async_create_cloudhook(hass, webhook_id)
 
         data[ATTR_DEVICE_ID] = str(uuid.uuid4()).replace("-", "")
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
         if data[ATTR_SUPPORTS_ENCRYPTION] and supports_encryption():
-            secret = generate_secret(16)
+            from nacl.secret import SecretBox
 
-            data[CONF_SECRET] = secret
+            data[CONF_SECRET] = generate_secret(SecretBox.KEY_SIZE)
 
         data[CONF_USER_ID] = request['hass_user'].id
 
@@ -69,8 +84,9 @@ class RegistrationsView(HomeAssistantView):
         try:
             await self._store.async_save(savable_state(hass))
         except HomeAssistantError:
-            return self.json_message("Error saving registration.",
-                                     HTTP_INTERNAL_SERVER_ERROR)
+            return error_response(ERR_SAVE_FAILURE,
+                                  "Error saving registration",
+                                  status=HTTP_INTERNAL_SERVER_ERROR)
 
         setup_registration(hass, self._store, data)
 

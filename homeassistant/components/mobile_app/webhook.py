@@ -3,7 +3,7 @@ from functools import partial
 import logging
 from typing import Dict
 
-from aiohttp.web import HTTPBadRequest, json_response, Response, Request
+from aiohttp.web import HTTPBadRequest, Response, Request
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
@@ -30,14 +30,15 @@ from .const import (ATTR_ALTITUDE, ATTR_APP_COMPONENT, ATTR_BATTERY,
                     ATTR_VERTICAL_ACCURACY, ATTR_WEBHOOK_DATA,
                     ATTR_WEBHOOK_ENCRYPTED, ATTR_WEBHOOK_ENCRYPTED_DATA,
                     ATTR_WEBHOOK_TYPE, CONF_SECRET, DATA_DELETED_IDS,
-                    DATA_REGISTRATIONS, DOMAIN, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
-                    WEBHOOK_TYPE_UPDATE_LOCATION,
+                    DATA_REGISTRATIONS, DOMAIN, ERR_RENDER_FAILURE,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
+                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                    WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
-from .helpers import (_decrypt_payload, empty_okay_response,
-                      registration_context, safe_registration, savable_state)
+from .helpers import (_decrypt_payload, empty_okay_response, error_response,
+                      registration_context, safe_registration, savable_state,
+                      webhook_response)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,14 +133,14 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         try:
             tpl = template.Template(data[ATTR_TEMPLATE], hass)
             rendered = tpl.async_render(data.get(ATTR_TEMPLATE_VARIABLES))
-            return json_response({"rendered": rendered}, headers=headers)
+            return webhook_response({"rendered": rendered},
+                                    registration=registration, headers=headers)
         # noqa: E722 pylint: disable=broad-except
         except (ValueError, TemplateError, Exception) as ex:
             _LOGGER.error("Error when rendering template during mobile_app "
                           "webhook (device name: %s): %s",
                           registration[ATTR_DEVICE_NAME], ex)
-            return json_response(({"error": str(ex)}), status=HTTP_BAD_REQUEST,
-                                 headers=headers)
+            return error_response(ERR_RENDER_FAILURE, str(ex), headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         see_payload = {
@@ -178,4 +179,5 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             _LOGGER.error("Error updating mobile_app registration: %s", ex)
             return empty_okay_response()
 
-        return json_response(safe_registration(new_registration))
+        return webhook_response(safe_registration(new_registration),
+                                registration=registration, headers=headers)

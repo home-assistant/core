@@ -822,7 +822,7 @@ async def test_auth_provider_config(hass):
         'time_zone': 'GMT',
         CONF_AUTH_PROVIDERS: [
             {'type': 'homeassistant'},
-            {'type': 'legacy_api_password'},
+            {'type': 'legacy_api_password', 'api_password': 'some-pass'},
         ],
         CONF_AUTH_MFA_MODULES: [
             {'type': 'totp'},
@@ -873,11 +873,12 @@ async def test_auth_provider_config_default_api_password(hass):
     }
     if hasattr(hass, 'auth'):
         del hass.auth
-    await config_util.async_process_ha_core_config(hass, core_config, True)
+    await config_util.async_process_ha_core_config(hass, core_config, 'pass')
 
     assert len(hass.auth.auth_providers) == 2
     assert hass.auth.auth_providers[0].type == 'homeassistant'
     assert hass.auth.auth_providers[1].type == 'legacy_api_password'
+    assert hass.auth.auth_providers[1].api_password == 'pass'
 
 
 async def test_auth_provider_config_default_trusted_networks(hass):

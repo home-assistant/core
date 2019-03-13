@@ -6,8 +6,11 @@ at https://home-assistant.io/components/sensor.zha/
 """
 import logging
 
+from homeassistant.core import callback
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import TEMP_CELSIUS, POWER_WATT
+from homeassistant.const import (
+    TEMP_CELSIUS, POWER_WATT, ATTR_UNIT_OF_MEASUREMENT
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, HUMIDITY, TEMPERATURE,
@@ -133,22 +136,22 @@ class Sensor(ZhaEntity):
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        sensor_type = kwargs.get(SENSOR_TYPE, GENERIC)
-        self._unit = UNIT_REGISTRY.get(sensor_type)
+        self._sensor_type = kwargs.get(SENSOR_TYPE, GENERIC)
+        self._unit = UNIT_REGISTRY.get(self._sensor_type)
         self._formatter_function = FORMATTER_FUNC_REGISTRY.get(
-            sensor_type,
+            self._sensor_type,
             pass_through_formatter
         )
         self._force_update = FORCE_UPDATE_REGISTRY.get(
-            sensor_type,
+            self._sensor_type,
             False
         )
         self._should_poll = POLLING_REGISTRY.get(
-            sensor_type,
+            self._sensor_type,
             False
         )
         self._channel = self.cluster_channels.get(
-            CHANNEL_REGISTRY.get(sensor_type, ATTRIBUTE_CHANNEL)
+            CHANNEL_REGISTRY.get(self._sensor_type, ATTRIBUTE_CHANNEL)
         )
 
     async def async_added_to_hass(self):
@@ -176,5 +179,15 @@ class Sensor(ZhaEntity):
 
     def async_set_state(self, state):
         """Handle state update from channel."""
+        # this is necessary because HA saves the unit based on what shows in
+        # the UI and not based on what the sensor has configured so we need
+        # to flip it back after state restoration
+        self._unit = UNIT_REGISTRY.get(self._sensor_type)
         self._state = self._formatter_function(state)
         self.async_schedule_update_ha_state()
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = last_state.state
+        self._unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)

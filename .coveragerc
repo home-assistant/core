@@ -27,6 +27,7 @@ omit =
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
     homeassistant/components/android_ip_webcam/*
+    homeassistant/components/androidtv/*
     homeassistant/components/apcupsd/*
     homeassistant/components/apiai/*
     homeassistant/components/apple_tv/*
@@ -110,6 +111,7 @@ omit =
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/bt_smarthub.py
     homeassistant/components/device_tracker/cisco_ios.py
+    homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/google_maps.py
@@ -171,7 +173,6 @@ omit =
     homeassistant/components/fan/wemo.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/fibaro/*
-    homeassistant/components/firetv/*
     homeassistant/components/folder_watcher/*
     homeassistant/components/foursquare/*
     homeassistant/components/freebox/*
@@ -237,7 +238,7 @@ omit =
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/lw12wifi.py
     homeassistant/components/light/mystrom.py
-    homeassistant/components/light/nanoleaf_aurora.py
+    homeassistant/components/light/nanoleaf.py
     homeassistant/components/light/niko_home_control.py
     homeassistant/components/light/opple.py
     homeassistant/components/light/osramlightify.py

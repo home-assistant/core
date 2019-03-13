@@ -76,3 +76,8 @@ class FFmpegCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def stream_source(self):
+        """Return the source of the stream."""
+        return self._input

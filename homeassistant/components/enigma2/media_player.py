@@ -1,6 +1,5 @@
 """Support for Enigma2 media players."""
 import logging
-import asyncio
 
 import voluptuous as vol
 
@@ -195,8 +194,7 @@ class Enigma2Device(MediaPlayerDevice):
         """List of available input sources."""
         return self.e2_box.source_list
 
-    @asyncio.coroutine
-    def async_select_source(self, source):
+    def select_source(self, source):
         """Select input source."""
         self.e2_box.select_source(self.e2_box.sources[source])
 
@@ -206,7 +204,13 @@ class Enigma2Device(MediaPlayerDevice):
 
     @property
     def device_state_attributes(self):
-        """Return device specific state attributes."""
+        """Return device specific state attributes.
+
+        isRecording:        Is the box currently recording.
+        currservice_fulldescription: Full program description.
+        currservice_begin:  is in the format '21:00'.
+        currservice_end:    is in the format '21:00'.
+        """
         attributes = {}
         if not self.e2_box.in_standby:
             attributes[ATTR_MEDIA_CURRENTLY_RECORDING] = \

@@ -11,13 +11,11 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_MODE, \
-    HTTP_HEADER_HA_AUTH
+from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_MODE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
-from homeassistant.components.camera import async_get_still_stream
 
 REQUIREMENTS = ['pillow==5.4.1']
 
@@ -209,9 +207,6 @@ class ProxyCamera(Camera):
             or config.get(CONF_CACHE_IMAGES))
         self._last_image_time = dt_util.utc_from_timestamp(0)
         self._last_image = None
-        self._headers = (
-            {HTTP_HEADER_HA_AUTH: self.hass.config.api.api_password}
-            if self.hass.config.api.api_password is not None else None)
         self._mode = config.get(CONF_MODE)
 
     def camera_image(self):
@@ -252,7 +247,7 @@ class ProxyCamera(Camera):
             return await self.hass.components.camera.async_get_mjpeg_stream(
                 request, self._proxied_camera)
 
-        return await async_get_still_stream(
+        return await self.hass.components.camera.async_get_still_stream(
             request, self._async_stream_image,
             self.content_type, self.frame_interval)
 

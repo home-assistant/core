@@ -10,7 +10,7 @@
                 }
             },
             "pair": {
-                "title": "Pair with {{ model }}",
+                "title": "Pair with HomeKit Accessory",
                 "description": "Enter your HomeKit pairing code to use this accessory",
                 "data": {
                     "pairing_code": "Pairing Code"
