@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (ATTR_BATTERY,
-                                                     ATTR_CONSIDER_HOME,
                                                      ATTR_GPS,
                                                      ATTR_GPS_ACCURACY,
                                                      ATTR_LOCATION_NAME,
@@ -115,7 +114,6 @@ UPDATE_LOCATION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_BATTERY): cv.positive_int,
     vol.Optional(ATTR_SOURCE_TYPE,
                  default=SOURCE_TYPE_GPS): vol.In(SOURCE_TYPES),
-    vol.Required(ATTR_CONSIDER_HOME): cv.time_period,
     vol.Optional(ATTR_SPEED): cv.positive_int,
     vol.Optional(ATTR_ALTITUDE): cv.positive_int,
     vol.Optional(ATTR_COURSE): cv.positive_int,
