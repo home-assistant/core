@@ -97,7 +97,7 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""

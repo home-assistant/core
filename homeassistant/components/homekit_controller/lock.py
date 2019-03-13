@@ -75,20 +75,20 @@ class HomeKitLock(HomeKitEntity, LockDevice):
         """Return True if entity is available."""
         return self._state is not None
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the device."""
-        self._set_lock_state(STATE_LOCKED)
+        await self._set_lock_state(STATE_LOCKED)
 
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the device."""
-        self._set_lock_state(STATE_UNLOCKED)
+        await self._set_lock_state(STATE_UNLOCKED)
 
-    def _set_lock_state(self, state):
+    async def _set_lock_state(self, state):
         """Send state command."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['lock-mechanism.target-state'],
                             'value': TARGET_STATE_MAP[state]}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
     @property
     def device_state_attributes(self):

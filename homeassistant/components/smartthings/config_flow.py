@@ -13,7 +13,8 @@ from .const import (
     CONF_LOCATION_ID, CONF_OAUTH_CLIENT_ID, CONF_OAUTH_CLIENT_SECRET, DOMAIN,
     VAL_UID_MATCHER)
 from .smartapp import (
-    create_app, find_app, setup_smartapp, setup_smartapp_endpoint, update_app)
+    create_app, find_app, setup_smartapp, setup_smartapp_endpoint, update_app,
+    validate_webhook_requirements)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,10 +57,6 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         from pysmartthings import APIResponseError, AppOAuth, SmartThings
 
         errors = {}
-        if not self.hass.config.api.base_url.lower().startswith('https://'):
-            errors['base'] = "base_url_not_https"
-            return self._show_step_user(errors)
-
         if user_input is None or CONF_ACCESS_TOKEN not in user_input:
             return self._show_step_user(errors)
 
@@ -80,6 +77,10 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
 
         # Setup end-point
         await setup_smartapp_endpoint(self.hass)
+
+        if not validate_webhook_requirements(self.hass):
+            errors['base'] = "base_url_not_https"
+            return self._show_step_user(errors)
 
         try:
             app = await find_app(self.hass, self.api)

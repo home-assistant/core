@@ -3,7 +3,7 @@ from functools import partial
 import logging
 from typing import Dict
 
-from aiohttp.web import HTTPBadRequest, json_response, Response, Request
+from aiohttp.web import HTTPBadRequest, Response, Request
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (DOMAIN as DT_DOMAIN,
@@ -32,7 +32,8 @@ from .const import (ATTR_APP_COMPONENT, DATA_DELETED_IDS,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
 from .helpers import (_decrypt_payload, empty_okay_response,
-                      registration_context, safe_registration, savable_state)
+                      registration_context, safe_registration, savable_state,
+                      webhook_response)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,7 +138,8 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
                               registration[ATTR_DEVICE_NAME], ex)
                 resp[key] = {"error": str(ex)}
 
-        return json_response(resp, headers=headers)
+        return webhook_response(resp, registration=registration,
+                                headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         try:
@@ -162,4 +164,5 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             _LOGGER.error("Error updating mobile_app registration: %s", ex)
             return empty_okay_response()
 
-        return json_response(safe_registration(new_registration))
+        return webhook_response(safe_registration(new_registration),
+                                registration=registration, headers=headers)
