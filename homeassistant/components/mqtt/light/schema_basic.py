@@ -254,11 +254,12 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         last_state = await self.async_get_last_state()
 
         @callback
-        def state_received(topic, payload, qos):
+        def state_received(msg):
             """Handle new MQTT messages."""
-            payload = templates[CONF_STATE](payload)
+            payload = templates[CONF_STATE](msg.payload)
             if not payload:
-                _LOGGER.debug("Ignoring empty state message from '%s'", topic)
+                _LOGGER.debug("Ignoring empty state message from '%s'",
+                              msg.topic)
                 return
 
             if payload == self._payload['on']:
@@ -276,12 +277,12 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._state = last_state.state == STATE_ON
 
         @callback
-        def brightness_received(topic, payload, qos):
+        def brightness_received(msg):
             """Handle new MQTT messages for the brightness."""
-            payload = templates[CONF_BRIGHTNESS](payload)
+            payload = templates[CONF_BRIGHTNESS](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty brightness message from '%s'",
-                              topic)
+                              msg.topic)
                 return
 
             device_value = float(payload)
@@ -305,11 +306,12 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._brightness = None
 
         @callback
-        def rgb_received(topic, payload, qos):
+        def rgb_received(msg):
             """Handle new MQTT messages for RGB."""
-            payload = templates[CONF_RGB](payload)
+            payload = templates[CONF_RGB](msg.payload)
             if not payload:
-                _LOGGER.debug("Ignoring empty rgb message from '%s'", topic)
+                _LOGGER.debug("Ignoring empty rgb message from '%s'",
+                              msg.topic)
                 return
 
             rgb = [int(val) for val in payload.split(',')]
@@ -333,12 +335,12 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._hs = (0, 0)
 
         @callback
-        def color_temp_received(topic, payload, qos):
+        def color_temp_received(msg):
             """Handle new MQTT messages for color temperature."""
-            payload = templates[CONF_COLOR_TEMP](payload)
+            payload = templates[CONF_COLOR_TEMP](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty color temp message from '%s'",
-                              topic)
+                              msg.topic)
                 return
 
             self._color_temp = int(payload)
@@ -359,11 +361,12 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._color_temp = None
 
         @callback
-        def effect_received(topic, payload, qos):
+        def effect_received(msg):
             """Handle new MQTT messages for effect."""
-            payload = templates[CONF_EFFECT](payload)
+            payload = templates[CONF_EFFECT](msg.payload)
             if not payload:
-                _LOGGER.debug("Ignoring empty effect message from '%s'", topic)
+                _LOGGER.debug("Ignoring empty effect message from '%s'",
+                              msg.topic)
                 return
 
             self._effect = payload
@@ -384,11 +387,11 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._effect = None
 
         @callback
-        def hs_received(topic, payload, qos):
+        def hs_received(msg):
             """Handle new MQTT messages for hs color."""
-            payload = templates[CONF_HS](payload)
+            payload = templates[CONF_HS](msg.payload)
             if not payload:
-                _LOGGER.debug("Ignoring empty hs message from '%s'", topic)
+                _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
                 return
 
             try:
@@ -412,12 +415,12 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._hs = (0, 0)
 
         @callback
-        def white_value_received(topic, payload, qos):
+        def white_value_received(msg):
             """Handle new MQTT messages for white value."""
-            payload = templates[CONF_WHITE_VALUE](payload)
+            payload = templates[CONF_WHITE_VALUE](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty white value message from '%s'",
-                              topic)
+                              msg.topic)
                 return
 
             device_value = float(payload)
@@ -441,12 +444,12 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._white_value = None
 
         @callback
-        def xy_received(topic, payload, qos):
+        def xy_received(msg):
             """Handle new MQTT messages for xy color."""
-            payload = templates[CONF_XY](payload)
+            payload = templates[CONF_XY](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty xy-color message from '%s'",
-                              topic)
+                              msg.topic)
                 return
 
             xy_color = [float(val) for val in payload.split(',')]
