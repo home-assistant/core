@@ -79,7 +79,7 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         _LOGGER.warning('Received invalid JSON from mobile_app')
         return empty_okay_response(status=HTTP_BAD_REQUEST)
 
-    if (req_data.get(ATTR_WEBHOOK_ENCRYPTED, False) is False and
+    if (ATTR_WEBHOOK_ENCRYPTED not in req_data and
             registration[ATTR_SUPPORTS_ENCRYPTION]):
         _LOGGER.warning("Refusing to accept unencrypted webhook from %s",
                         registration[ATTR_DEVICE_NAME])
