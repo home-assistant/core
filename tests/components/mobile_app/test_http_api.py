@@ -5,7 +5,7 @@ import pytest
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.const import CONF_WEBHOOK_ID
 
-from .const import REGISTER
+from .const import REGISTER, RENDER_TEMPLATE
 from . import authed_api_client  # noqa: F401
 
 
@@ -35,7 +35,7 @@ async def test_registration(hass_client, authed_api_client):  # noqa: F811
     key = key[:keylen]
     key = key.ljust(keylen, b'\0')
 
-    payload = json.dumps({'template': 'Hello world'}).encode("utf-8")
+    payload = json.dumps(RENDER_TEMPLATE['data']).encode("utf-8")
 
     data = SecretBox(key).encrypt(payload,
                                   encoder=Base64Encoder).decode("utf-8")
@@ -62,7 +62,7 @@ async def test_registration(hass_client, authed_api_client):  # noqa: F811
                                             encoder=Base64Encoder)
     decrypted_data = decrypted_data.decode("utf-8")
 
-    assert json.loads(decrypted_data) == {'rendered': 'Hello world'}
+    assert json.loads(decrypted_data) == {'one': 'Hello world'}
 
 
 async def test_register_invalid_component(authed_api_client):  # noqa: F811
