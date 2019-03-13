@@ -375,7 +375,8 @@ class PS4Device(MediaPlayerDevice):
         self.send_remote_control('ps')
 
     def select_source(self, source):
-        """Select input source. If device is off, turn it on and wait until it's on."""
+        """Select input source. If device is off,
+           turn it on and wait until it's on."""
         if (self._state == STATE_OFF):
             self.turn_on()
             while (self._state == STATE_OFF):
