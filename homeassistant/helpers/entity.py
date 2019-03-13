@@ -222,6 +222,23 @@ class Entity:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
 
+        self._async_write_ha_state()
+
+    @callback
+    def async_write_ha_state(self):
+        """Write the state to the state machine."""
+        if self.hass is None:
+            raise RuntimeError("Attribute hass is None for {}".format(self))
+
+        if self.entity_id is None:
+            raise NoEntitySpecifiedError(
+                "No entity id specified for entity {}".format(self.name))
+
+        self._async_write_ha_state()
+
+    @callback
+    def _async_write_ha_state(self):
+        """Write the state to the state machine."""
         start = timer()
 
         if not self.available:
@@ -311,13 +328,27 @@ class Entity:
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
 
-        That avoid executor dead looks.
+        Scheduling the update avoids executor deadlocks.
+
+        Entity state and attributes are read when the update ha state change
+        task is executed.
+        If state is changed more than once before the ha state change task has
+        been executed, the intermediate state transitions will be missed.
         """
         self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh=False):
-        """Schedule an update ha state change task."""
+        """Schedule an update ha state change task.
+
+        This method must be run in the event loop.
+        Scheduling the update avoids executor deadlocks.
+
+        Entity state and attributes are read when the update ha state change
+        task is executed.
+        If state is changed more than once before the ha state change task has
+        been executed, the intermediate state transitions will be missed.
+        """
         self.hass.async_create_task(self.async_update_ha_state(force_refresh))
 
     async def async_device_update(self, warning=True):

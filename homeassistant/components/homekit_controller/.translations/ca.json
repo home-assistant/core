@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Accessori ja configurat amb aquest controlador.",
+            "already_paired": "Aquest accessori ja est\u00e0 vinculat amb un altre dispositiu. Reinicia l'accessori i torna-ho a provar.",
+            "ignored_model": "La disponibilitat de HomeKit per aquest model est\u00e0 bloquejada ja que, de moment, no hi ha una integraci\u00f3 nativa completa.",
+            "invalid_config_entry": "Aquest dispositiu s'est\u00e0 mostrant com a llest per a ser vinculat per\u00f2, hi ha una entrada de configuraci\u00f3 conflictiva a Home Assistant que s'ha d'eliminar primer.",
+            "no_devices": "No s'han trobat dispositius desvinculats."
+        },
+        "error": {
+            "authentication_error": "Codi HomeKit incorrecte. Verifica'l i torna-ho a provar.",
+            "unable_to_pair": "No s'ha pogut vincular, torna-ho a provar.",
+            "unknown_error": "El dispositiu ha em\u00e8s un error desconegut. Vinculaci\u00f3 fallida."
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Codi de vinculaci\u00f3"
+                },
+                "description": "Introdueix el codi de vinculaci\u00f3 HomeKit per utilitzar aquest accessori",
+                "title": "Vinculaci\u00f3 amb {{ model }}"
+            },
+            "user": {
+                "data": {
+                    "device": "Dispositiu"
+                },
+                "description": "Selecciona el dispositiu amb el qual et vols vincular",
+                "title": "Vinculaci\u00f3 amb un accessori HomeKit"
+            }
+        },
+        "title": "Acessori HomeKit"
+    }
+}

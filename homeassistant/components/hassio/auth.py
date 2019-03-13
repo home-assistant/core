@@ -57,9 +57,9 @@ class HassIOAuth(HomeAssistantView):
 
     def _get_provider(self):
         """Return Homeassistant auth provider."""
-        for prv in self.hass.auth.auth_providers:
-            if prv.type == 'homeassistant':
-                return prv
+        prv = self.hass.auth.get_auth_provider('homeassistant', None)
+        if prv is not None:
+            return prv
 
         _LOGGER.error("Can't find Home Assistant auth.")
         raise HTTPNotFound()

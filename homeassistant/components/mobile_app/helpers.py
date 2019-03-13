@@ -9,15 +9,15 @@ from homeassistant.core import Context
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME,
-                    ATTR_APP_VERSION, DATA_DELETED_IDS, ATTR_DEVICE_NAME,
-                    ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
-                    DATA_REGISTRATIONS, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_USER_ID, DOMAIN)
+                    ATTR_APP_VERSION, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
+                    ATTR_MODEL, ATTR_OS_VERSION, ATTR_SUPPORTS_ENCRYPTION,
+                    CONF_SECRET, CONF_USER_ID, DATA_DELETED_IDS,
+                    DATA_REGISTRATIONS, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_cipher() -> Tuple[int, Callable]:
+def setup_decrypt() -> Tuple[int, Callable]:
     """Return decryption function and length of key.
 
     Async friendly.
@@ -31,10 +31,24 @@ def get_cipher() -> Tuple[int, Callable]:
     return (SecretBox.KEY_SIZE, decrypt)
 
 
+def setup_encrypt() -> Tuple[int, Callable]:
+    """Return encryption function and length of key.
+
+    Async friendly.
+    """
+    from nacl.secret import SecretBox
+    from nacl.encoding import Base64Encoder
+
+    def encrypt(ciphertext, key):
+        """Encrypt ciphertext using key."""
+        return SecretBox(key).encrypt(ciphertext, encoder=Base64Encoder)
+    return (SecretBox.KEY_SIZE, encrypt)
+
+
 def _decrypt_payload(key: str, ciphertext: str) -> Dict[str, str]:
     """Decrypt encrypted payload."""
     try:
-        keylen, decrypt = get_cipher()
+        keylen, decrypt = setup_decrypt()
     except OSError:
         _LOGGER.warning(
             "Ignoring encrypted payload because libsodium not installed")
@@ -113,3 +127,22 @@ def savable_state(hass: HomeAssistantType) -> Dict:
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
         DATA_REGISTRATIONS: hass.data[DOMAIN][DATA_REGISTRATIONS]
     }
+
+
+def webhook_response(data, *, registration: Dict, status: int = 200,
+                     headers: Dict = None) -> Response:
+    """Return a encrypted response if registration supports it."""
+    data = json.dumps(data)
+
+    if CONF_SECRET in registration:
+        keylen, encrypt = setup_encrypt()
+
+        key = registration[CONF_SECRET].encode("utf-8")
+        key = key[:keylen]
+        key = key.ljust(keylen, b'\0')
+
+        enc_data = encrypt(data.encode("utf-8"), key).decode("utf-8")
+        data = json.dumps({'encrypted': True, 'encrypted_data': enc_data})
+
+    return Response(text=data, status=status, content_type='application/json',
+                    headers=headers)
