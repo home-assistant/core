@@ -52,7 +52,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_service(hass, config, discovery_info=None):
     """Get the RESTful notification service."""
-    from requests.auth import HTTPBasicAuth, HTTPDigestAuth # pylint: disable=import-error
+    # pylint: disable=import-error
+    from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
