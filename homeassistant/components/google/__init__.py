@@ -70,7 +70,7 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema({
     vol.Optional(CONF_OFFSET): cv.string,
     vol.Optional(CONF_SEARCH): cv.string,
     vol.Optional(CONF_TRACK): cv.boolean,
-    vol.Optional(CONF_MAX_RESULTS): cv.string,
+    vol.Optional(CONF_MAX_RESULTS): cv.positive_int,
 })
 
 DEVICE_SCHEMA = vol.Schema({
