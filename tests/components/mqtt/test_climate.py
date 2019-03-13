@@ -95,7 +95,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_supported_features_low_high(self):
         """Test the supported_features."""
-        assert setup_component(self.hass, climate.DOMAIN, TEMP_LOW_HIGH_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, TEMP_LOW_HIGH_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         support = (SUPPORT_TARGET_TEMPERATURE_LOW |
@@ -343,7 +343,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_set_target_temperature_low_high(self):
         """Test setting the target low and high temperature."""
-        assert setup_component(self.hass, climate.DOMAIN, TEMP_LOW_HIGH_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, TEMP_LOW_HIGH_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 21 == state.attributes.get('target_temp_low')

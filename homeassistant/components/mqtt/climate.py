@@ -673,7 +673,7 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                     kwargs.get(ATTR_TARGET_TEMP_HIGH),
                     self._config.get(CONF_QOS),
                     self._config.get(CONF_RETAIN))
-                    
+
         # Always optimistic?
         self.async_write_ha_state()
 
