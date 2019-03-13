@@ -89,7 +89,7 @@ CAPABILITY_TO_SENSORS = {
     'powerSource': [
         Map('powerSource', "Power Source", None, None)],
     'refrigerationSetpoint': [
-        Map('refrigerationSetpoint', "Refrigeration Setpoint", TEMP_CELSIUS,
+        Map('refrigerationSetpoint', "Refrigeration Setpoint", None,
             DEVICE_CLASS_TEMPERATURE)],
     'relativeHumidityMeasurement': [
         Map('humidity', "Relative Humidity Measurement", '%',
@@ -107,15 +107,15 @@ CAPABILITY_TO_SENSORS = {
     'smokeDetector': [
         Map('smoke', "Smoke Detector", None, None)],
     'temperatureMeasurement': [
-        Map('temperature', "Temperature Measurement", TEMP_CELSIUS,
+        Map('temperature', "Temperature Measurement", None,
             DEVICE_CLASS_TEMPERATURE)],
     'thermostatCoolingSetpoint': [
-        Map('coolingSetpoint', "Thermostat Cooling Setpoint", TEMP_CELSIUS,
+        Map('coolingSetpoint', "Thermostat Cooling Setpoint", None,
             DEVICE_CLASS_TEMPERATURE)],
     'thermostatFanMode': [
         Map('thermostatFanMode', "Thermostat Fan Mode", None, None)],
     'thermostatHeatingSetpoint': [
-        Map('heatingSetpoint', "Thermostat Heating Setpoint", TEMP_CELSIUS,
+        Map('heatingSetpoint', "Thermostat Heating Setpoint", None,
             DEVICE_CLASS_TEMPERATURE)],
     'thermostatMode': [
         Map('thermostatMode', "Thermostat Mode", None, None)],
@@ -123,7 +123,7 @@ CAPABILITY_TO_SENSORS = {
         Map('thermostatOperatingState', "Thermostat Operating State",
             None, None)],
     'thermostatSetpoint': [
-        Map('thermostatSetpoint', "Thermostat Setpoint", TEMP_CELSIUS,
+        Map('thermostatSetpoint', "Thermostat Setpoint", None,
             DEVICE_CLASS_TEMPERATURE)],
     'threeAxis': [
         Map('threeAxis', "Three Axis", None, None)],
