@@ -1,4 +1,5 @@
 """Provides an HTTP API for mobile_app."""
+import uuid
 from typing import Dict
 
 from aiohttp.web import Response, Request
@@ -15,10 +16,11 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import get_component
 
-from .const import (ATTR_APP_COMPONENT, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_CLOUDHOOK_URL, CONF_SECRET, CONF_USER_ID,
-                    DATA_REGISTRATIONS, DOMAIN, ERR_INVALID_COMPONENT,
-                    ERR_SAVE_FAILURE, REGISTRATION_SCHEMA)
+from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_ID,
+                    ATTR_SUPPORTS_ENCRYPTION, CONF_CLOUDHOOK_URL, CONF_SECRET,
+                    CONF_USER_ID, DATA_REGISTRATIONS, DOMAIN,
+                    ERR_INVALID_COMPONENT, ERR_SAVE_FAILURE,
+                    REGISTRATION_SCHEMA)
 
 from .helpers import error_response, supports_encryption, savable_state
 
@@ -65,6 +67,8 @@ class RegistrationsView(HomeAssistantView):
         if hass.components.cloud.async_active_subscription():
             data[CONF_CLOUDHOOK_URL] = \
                 await async_create_cloudhook(hass, webhook_id)
+
+        data[ATTR_DEVICE_ID] = str(uuid.uuid4()).replace("-", "")
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
