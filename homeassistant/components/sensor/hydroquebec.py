@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD,
+    CONF_USERNAME, CONF_PASSWORD, ENERGY_KILO_WATT_HOUR,
     CONF_NAME, CONF_MONITORED_VARIABLES, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -24,7 +24,7 @@ REQUIREMENTS = ['pyhydroquebec==2.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOWATT_HOUR = 'kWh'  # type: str
+KILOWATT_HOUR = ENERGY_KILO_WATT_HOUR
 PRICE = 'CAD'  # type: str
 DAYS = 'days'  # type: str
 CONF_CONTRACT = 'contract'  # type: str

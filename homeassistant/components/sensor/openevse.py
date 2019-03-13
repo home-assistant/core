@@ -11,8 +11,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, CONF_HOST
-from homeassistant.const import CONF_MONITORED_VARIABLES
+from homeassistant.const import (
+    TEMP_CELSIUS, CONF_HOST, ENERGY_KILO_WATT_HOUR,
+    CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['openevsewifi==0.4']
@@ -25,8 +26,8 @@ SENSOR_TYPES = {
     'ambient_temp': ['Ambient Temperature', TEMP_CELSIUS],
     'ir_temp': ['IR Temperature', TEMP_CELSIUS],
     'rtc_temp': ['RTC Temperature', TEMP_CELSIUS],
-    'usage_session': ['Usage this Session', 'kWh'],
-    'usage_total': ['Total Usage', 'kWh']
+    'usage_session': ['Usage this Session', ENERGY_KILO_WATT_HOUR],
+    'usage_total': ['Total Usage', ENERGY_KILO_WATT_HOUR]
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

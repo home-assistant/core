@@ -11,7 +11,8 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, POWER_WATT)
+from homeassistant.const import (CONF_API_KEY, POWER_WATT,
+                                 ENERGY_KILO_WATT_HOUR)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -150,7 +151,7 @@ class NeurioEnergy(Entity):
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
         elif sensor_type == DAILY_TYPE:
-            self._unit_of_measurement = 'kWh'
+            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     @property
     def name(self):
