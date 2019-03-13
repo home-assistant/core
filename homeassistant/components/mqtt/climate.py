@@ -381,8 +381,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         @callback
 
-        def handle_temperature_low_received(topic, payload, qos):
+        def handle_temperature_low_received(msg):
             """Handle target temperature coming via MQTT."""
+            payload = msg.payload
             if CONF_TEMPERATURE_LOW_STATE_TEMPLATE in self._value_templates:
                 payload = \
                   self._value_templates[CONF_TEMPERATURE_LOW_STATE_TEMPLATE].\
@@ -401,8 +402,9 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': qos}
 
         @callback
-        def handle_temperature_high_received(topic, payload, qos):
+        def handle_temperature_high_received(msg):
             """Handle target temperature coming via MQTT."""
+            payload = msg.payload
             if CONF_TEMPERATURE_HIGH_STATE_TEMPLATE in self._value_templates:
                 payload = \
                   self._value_templates[CONF_TEMPERATURE_HIGH_STATE_TEMPLATE].\
