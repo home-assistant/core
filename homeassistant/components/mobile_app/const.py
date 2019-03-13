@@ -26,6 +26,7 @@ ATTR_APP_VERSION = 'app_version'
 ATTR_DEVICE_NAME = 'device_name'
 ATTR_MANUFACTURER = 'manufacturer'
 ATTR_MODEL = 'model'
+ATTR_OS_NAME = 'os_name'
 ATTR_OS_VERSION = 'os_version'
 ATTR_SUPPORTS_ENCRYPTION = 'supports_encryption'
 
@@ -40,6 +41,10 @@ ATTR_WEBHOOK_ENCRYPTED = 'encrypted'
 ATTR_WEBHOOK_ENCRYPTED_DATA = 'encrypted_data'
 ATTR_WEBHOOK_TYPE = 'type'
 
+ERR_INVALID_COMPONENT = 'invalid_component'
+ERR_RENDER_FAILURE = 'render_failure'
+ERR_SAVE_FAILURE = 'save_failure'
+
 WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
 WEBHOOK_TYPE_FIRE_EVENT = 'fire_event'
 WEBHOOK_TYPE_RENDER_TEMPLATE = 'render_template'
@@ -50,15 +55,17 @@ WEBHOOK_TYPES = [WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
                  WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
                  WEBHOOK_TYPE_UPDATE_REGISTRATION]
 
+
 REGISTRATION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_APP_COMPONENT): cv.string,
     vol.Optional(ATTR_APP_DATA, default={}): dict,
     vol.Required(ATTR_APP_ID): cv.string,
-    vol.Optional(ATTR_APP_NAME): cv.string,
+    vol.Required(ATTR_APP_NAME): cv.string,
     vol.Required(ATTR_APP_VERSION): cv.string,
     vol.Required(ATTR_DEVICE_NAME): cv.string,
     vol.Required(ATTR_MANUFACTURER): cv.string,
     vol.Required(ATTR_MODEL): cv.string,
+    vol.Required(ATTR_OS_NAME): cv.string,
     vol.Optional(ATTR_OS_VERSION): cv.string,
     vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
 })
