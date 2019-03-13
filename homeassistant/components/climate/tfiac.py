@@ -1,6 +1,7 @@
 """Climate platform that offers a climate device for the TFIAC protocol."""
 from concurrent.futures import _base as futures
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -11,9 +12,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 from homeassistant.util.temperature import convert as convert_temperature
 
 DOMAIN = 'tfiac'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 REQUIREMENTS = ['pytfiac==0.2']
 
@@ -74,6 +78,7 @@ class TfiacClimate(ClimateDevice):
         """Return if the device is available."""
         return self._available
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update status via socket polling."""
         try:
