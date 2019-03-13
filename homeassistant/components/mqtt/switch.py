@@ -121,7 +121,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -153,7 +153,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             elif payload == self._state_off:
                 self._state = False
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -222,7 +222,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off.
@@ -238,4 +238,4 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

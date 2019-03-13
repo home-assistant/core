@@ -141,8 +141,14 @@ async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
 
     assert resp.status == 200
 
-    json = await resp.json()
-    assert json == {'rendered': 'Hello world'}
+    webhook_json = await resp.json()
+    assert 'encrypted_data' in webhook_json
+
+    decrypted_data = SecretBox(key).decrypt(webhook_json['encrypted_data'],
+                                            encoder=Base64Encoder)
+    decrypted_data = decrypted_data.decode("utf-8")
+
+    assert json.loads(decrypted_data) == {'rendered': 'Hello world'}
 
 
 async def test_webhook_requires_encryption(webhook_client):  # noqa: F811

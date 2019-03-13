@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "Fout bij ophalen van inloggegevens.",
+            "devices_configured": "Alle gevonden apparaten zijn al geconfigureerd.",
+            "no_devices_found": "Geen PlayStation 4 apparaten gevonden op het netwerk.",
+            "port_987_bind_error": "Kan niet binden aan poort 987.",
+            "port_997_bind_error": "Kan niet binden aan poort 997."
+        },
+        "error": {
+            "login_failed": "Kan niet koppelen met PlayStation 4. Controleer of de pincode juist is.",
+            "not_ready": "PlayStation 4 staat niet aan of is niet verbonden met een netwerk."
+        },
+        "step": {
+            "creds": {
+                "description": "Aanmeldingsgegevens zijn nodig. Druk op 'Verzenden' en vervolgens in de PS4-app voor het 2e scherm, vernieuw apparaten en selecteer Home Assistant om door te gaan.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "IP-adres",
+                    "name": "Naam",
+                    "region": "Regio"
+                },
+                "description": "Voer je PlayStation 4 informatie in. Voor 'PIN', blader naar 'Instellingen' op je PlayStation 4. Blader dan naar 'Mobiele App verbindingsinstellingen' en kies 'Apparaat toevoegen'. Voer de weergegeven PIN-code in.",
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

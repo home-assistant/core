@@ -110,6 +110,7 @@ omit =
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/bt_smarthub.py
     homeassistant/components/device_tracker/cisco_ios.py
+    homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/google_maps.py
@@ -237,7 +238,7 @@ omit =
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/lw12wifi.py
     homeassistant/components/light/mystrom.py
-    homeassistant/components/light/nanoleaf_aurora.py
+    homeassistant/components/light/nanoleaf.py
     homeassistant/components/light/niko_home_control.py
     homeassistant/components/light/opple.py
     homeassistant/components/light/osramlightify.py

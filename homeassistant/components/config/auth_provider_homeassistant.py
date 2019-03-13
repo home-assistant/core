@@ -122,7 +122,6 @@ async def websocket_delete(hass, connection, msg):
         websocket_api.result_message(msg['id']))
 
 
-@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_change_password(hass, connection, msg):
     """Change user password."""

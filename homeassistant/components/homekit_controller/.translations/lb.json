@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Accessoire ass schon mat d\u00ebsem Kontroller konfigur\u00e9iert.",
+            "already_paired": "D\u00ebsen Accessoire ass schonn mat engem aneren Apparat verbonnen. S\u00ebtzt den Apparat op Wierksastellungen zer\u00e9ck an prob\u00e9iert nach emol w.e.g.",
+            "ignored_model": "HomeKit Support fir d\u00ebse Modell ass block\u00e9iert well eng m\u00e9i komplett nativ Integratioun disponibel ass.",
+            "invalid_config_entry": "D\u00ebsen Apparat mellt sech prett fir ze verbanne mee et g\u00ebtt schonn eng Entr\u00e9e am Home Assistant d\u00e9i ee Konflikt duerstellt welch fir d'\u00e9ischt muss erausgeholl ginn.",
+            "no_devices": "Keng net verbonnen Apparater fonnt"
+        },
+        "error": {
+            "authentication_error": "Ong\u00ebltege HomeKit Code. Iwwerpr\u00e9ift d\u00ebsen an prob\u00e9iert w.e.g. nach emol.",
+            "unable_to_pair": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
+            "unknown_error": "Apparat mellt een onbekannte Feeler. Verbindung net m\u00e9iglech."
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Pairing Code"
+                },
+                "description": "Gitt \u00e4ren HomeKit pairing Code an fir d\u00ebsen Accessoire ze benotzen",
+                "title": "Mat {{ model }} verbannen"
+            },
+            "user": {
+                "data": {
+                    "device": "Apparat"
+                },
+                "description": "Wielt den Apparat aus dee soll verbonne ginn",
+                "title": "Mam HomeKit Accessoire verbannen"
+            }
+        },
+        "title": "HomeKit Accessoire"
+    }
+}

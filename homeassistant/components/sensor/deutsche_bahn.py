@@ -1,9 +1,4 @@
-"""
-Support for information about the German train system.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.deutsche_bahn/
-"""
+"""Support for information about the German train system."""
 from datetime import timedelta
 import logging
 
@@ -14,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['schiene==0.22']
+REQUIREMENTS = ['schiene==0.23']
 
 _LOGGER = logging.getLogger(__name__)
 

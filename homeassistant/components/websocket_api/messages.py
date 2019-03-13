@@ -40,3 +40,12 @@ def error_message(iden, code, message):
             'message': message,
         },
     }
+
+
+def event_message(iden, event):
+    """Return an event message."""
+    return {
+        'id': iden,
+        'type': 'event',
+        'event': event,
+    }
