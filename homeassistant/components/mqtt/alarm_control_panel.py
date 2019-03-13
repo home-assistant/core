@@ -137,7 +137,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
             self._state = msg.payload
-            self._state = payload
+            self.async_write_ha_state()
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
