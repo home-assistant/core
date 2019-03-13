@@ -133,8 +133,9 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             template.hass = self.hass
 
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Handle new MQTT messages."""
+            payload = msg.payload
             # auto-expire enabled?
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
             if expire_after is not None and expire_after > 0:

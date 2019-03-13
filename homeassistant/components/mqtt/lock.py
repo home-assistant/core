@@ -120,8 +120,9 @@ class MqttLock(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             value_template.hass = self.hass
 
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Handle new MQTT messages."""
+            payload = msg.payload
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(
                     payload)

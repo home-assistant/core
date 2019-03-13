@@ -102,9 +102,9 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Handle new MQTT messages."""
-            self._last_image = payload
+            self._last_image = msg.payload
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
