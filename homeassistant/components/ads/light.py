@@ -1,7 +1,10 @@
 """Support for ADS light sources."""
 import logging
-import threading
+import asyncio
+import async_timeout
+
 import voluptuous as vol
+
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
@@ -29,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness,
-                           name)], True)
+                           name)])
 
 
 class AdsLight(Light):
@@ -44,7 +47,7 @@ class AdsLight(Light):
         self._unique_id = ads_var_enable
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
-        self._event = threading.Event()
+        self._event = None
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -61,6 +64,8 @@ class AdsLight(Light):
             self._brightness = value
             self.schedule_update_ha_state()
 
+        self._event = asyncio.Event()
+
         self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification,
             self.ads_var_enable, self._ads_hub.PLCTYPE_BOOL, update_on_state
@@ -71,8 +76,12 @@ class AdsLight(Light):
                 self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
                 update_brightness
             )
-        if not self._event.wait(timeout=30):
-            _LOGGER.debug('Timeout while waiting for first update')
+        try:
+            with async_timeout.timeout(30):
+                await self._event.wait()
+        except asyncio.TimeoutError:
+            _LOGGER.debug('Variable %s: Timeout during first update',\
+                self.ads_var_enable)
 
     @property
     def name(self):
@@ -106,6 +115,11 @@ class AdsLight(Light):
         if self.ads_var_brightness is not None:
             support = SUPPORT_BRIGHTNESS
         return support
+
+    @property
+    def available(self):
+        """Return False if state has not been updated yet."""
+        return self._on_state is not None
 
     def turn_on(self, **kwargs):
         """Turn the light on or set a specific dimmer value."""
