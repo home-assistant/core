@@ -57,6 +57,7 @@ TEMP_LOW_HIGH_CONFIG = {
         'aux_command_topic': 'aux-topic'
     }}
 
+
 class TestMQTTClimate(unittest.TestCase):
     """Test the mqtt climate hvac."""
 
