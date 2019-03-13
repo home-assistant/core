@@ -149,3 +149,18 @@ async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
     decrypted_data = decrypted_data.decode("utf-8")
 
     assert json.loads(decrypted_data) == {'rendered': 'Hello world'}
+
+
+async def test_webhook_requires_encryption(webhook_client):  # noqa: F811
+    """Test that encrypted registrations only accept encrypted data."""
+    resp = await webhook_client.post(
+        '/api/webhook/mobile_app_test',
+        json=RENDER_TEMPLATE
+    )
+
+    assert resp.status == 400
+
+    webhook_json = await resp.json()
+    assert 'error' in webhook_json
+    assert webhook_json['success'] is False
+    assert webhook_json['error']['code'] == 'encryption_required'
