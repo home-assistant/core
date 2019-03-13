@@ -14,10 +14,11 @@ from . import const as zha_const
 from .channels import (
     AttributeListeningChannel, EventRelayChannel, ZDOChannel
 )
+from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .const import (
-    CONF_DEVICE_CONFIG, COMPONENTS, ZIGBEE_CHANNEL_REGISTRY,
-    ZHA_DISCOVERY_NEW, DATA_ZHA, SENSOR_TYPE, UNKNOWN, BINARY_SENSOR_TYPES,
-    NO_SENSOR_CLUSTERS, EVENT_RELAY_CLUSTERS, SENSOR_TYPES, GENERIC,
+    CONF_DEVICE_CONFIG, COMPONENTS, ZHA_DISCOVERY_NEW, DATA_ZHA,
+    SENSOR_TYPE, UNKNOWN, BINARY_SENSOR_TYPES, NO_SENSOR_CLUSTERS,
+    EVENT_RELAY_CLUSTERS, SENSOR_TYPES, GENERIC,
     POWER_CONFIGURATION_CHANNEL
 )
 from ..device_entity import ZhaDeviceEntity
@@ -53,8 +54,8 @@ def async_process_endpoint(
     if endpoint.profile_id in zigpy.profiles.PROFILES:
         profile = zigpy.profiles.PROFILES[endpoint.profile_id]
         if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
-                                        {}).get(endpoint.device_type,
-                                                None):
+                                      {}).get(endpoint.device_type,
+                                              None):
             profile_clusters = profile.CLUSTERS[endpoint.device_type]
             profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
             component = profile_info[endpoint.device_type]

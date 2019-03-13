@@ -11,31 +11,19 @@ import itertools
 import logging
 import os
 
-from homeassistant import const as ha_const
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
-from . import const as zha_const
 from .const import (
-    COMPONENTS, CONF_DEVICE_CONFIG, DATA_ZHA, DATA_ZHA_CORE_COMPONENT, DOMAIN,
-    ZHA_DISCOVERY_NEW, DEVICE_CLASS, SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
-    SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS, COMPONENT_CLUSTERS, HUMIDITY,
-    TEMPERATURE, ILLUMINANCE, PRESSURE, METERING, ELECTRICAL_MEASUREMENT,
-    GENERIC, SENSOR_TYPE, EVENT_RELAY_CLUSTERS, UNKNOWN, OPENING, ZONE,
-    OCCUPANCY, CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_IMMEDIATE,
-    REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT,
-    REPORT_CONFIG_MAX_INT, REPORT_CONFIG_OP, SIGNAL_REMOVE,
-    NO_SENSOR_CLUSTERS, POWER_CONFIGURATION_CHANNEL, BINDABLE_CLUSTERS,
-    DATA_ZHA_GATEWAY, ACCELERATION, CONF_USB_PATH, CONF_BAUDRATE,
+    DATA_ZHA, DATA_ZHA_CORE_COMPONENT, DOMAIN,
+    SIGNAL_REMOVE, DATA_ZHA_GATEWAY, CONF_USB_PATH, CONF_BAUDRATE,
     DEFAULT_BAUDRATE, CONF_RADIO_TYPE, DATA_ZHA_RADIO, CONF_DATABASE,
-    DEFAULT_DATABASE_NAME, DATA_ZHA_BRIDGE_ID, RadioType, RADIO_TYPES,
+    DEFAULT_DATABASE_NAME, DATA_ZHA_BRIDGE_ID, RADIO_TYPES,
     RADIO, CONTROLLER, RADIO_DESCRIPTION)
 from .device import ZHADevice, DeviceStatus
-from ..device_entity import ZhaDeviceEntity
 from .channels import (
-    AttributeListeningChannel, EventRelayChannel, ZDOChannel, MAINS_POWERED
+    ZDOChannel, MAINS_POWERED
 )
-from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .helpers import convert_ieee
 from .discovery import (
     async_process_endpoint, async_dispatch_discovery_info,
@@ -66,17 +54,17 @@ class ZHAGateway:
         hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
 
-    async def async_initialize(self):
+    async def async_initialize(self, config_entry):
         """Initialize controller and connect radio."""
         self.zha_storage = await async_get_registry(self._hass)
 
-        usb_path = self._config_entry.data.get(CONF_USB_PATH)
+        usb_path = config_entry.data.get(CONF_USB_PATH)
         baudrate = self._config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
-        radio_type = self._config_entry.data.get(CONF_RADIO_TYPE)
-        
+        radio_type = config_entry.data.get(CONF_RADIO_TYPE)
+
         radio_details = RADIO_TYPES[radio_type][RADIO]()
         radio = radio_details[RADIO]
-        self.radio_description = radio_details[RADIO_DESCRIPTION]
+        self.radio_description = RADIO_TYPES[radio_type][RADIO_DESCRIPTION]
         await radio.connect(usb_path, baudrate)
         self._hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
 
@@ -85,19 +73,19 @@ class ZHAGateway:
         else:
             database = os.path.join(
                 self._hass.config.config_dir, DEFAULT_DATABASE_NAME)
-        
-        self.application_controller = radio_details[CONTROLLER](radio, database)
-        apply_application_controller_patch()
+
+        self.application_controller = radio_details[CONTROLLER](
+            radio, database)
+        apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         await self.application_controller.startup(auto_form=True)
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
             self.application_controller.ieee)
 
         init_tasks = []
-        for device in self._application_controller.devices.values():
+        for device in self.application_controller.devices.values():
             init_tasks.append(self.async_device_initialized(device, False))
         await asyncio.gather(*init_tasks)
-
 
     def device_joined(self, device):
         """Handle device joined.

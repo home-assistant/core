@@ -7,7 +7,8 @@ https://home-assistant.io/components/zha/
 
 import types
 
-def apply_cluster_listener_patch(zha_gateway):
+
+def apply_cluster_listener_patch():
     """Apply patches to ZHA objects."""
     # patch zigpy listener to prevent flooding logs with warnings due to
     # how zigpy implemented its listeners
@@ -36,5 +37,5 @@ def apply_application_controller_patch(zha_gateway):
             )
         return sender.handle_message(
             is_reply, profile, cluster, src_ep, dst_ep, tsn, command_id, args)
-    
+
     zha_gateway.application_controller.handle_message = handle_message

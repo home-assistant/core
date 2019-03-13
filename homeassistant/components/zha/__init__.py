@@ -4,10 +4,7 @@ Support for Zigbee Home Automation devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
-import asyncio
 import logging
-import os
-import types
 
 import voluptuous as vol
 
@@ -21,9 +18,9 @@ from . import api
 from .core import ZHAGateway
 from .core.const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
-    CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_BRIDGE_ID,
+    CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA,
     DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
-    DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DATA_ZHA_GATEWAY,
+    DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DATA_ZHA_GATEWAY,
     DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
 from .core.registries import establish_device_mappings
 from .core.channels.registry import populate_channel_registry
@@ -113,7 +110,7 @@ async def async_setup_entry(hass, config_entry):
     apply_cluster_listener_patch()
 
     zha_gateway = ZHAGateway(hass, config)
-    await zha_gateway.async_initialize()
+    await zha_gateway.async_initialize(config_entry)
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
