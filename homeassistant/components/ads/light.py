@@ -11,6 +11,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR, \
     CONF_ADS_VAR_BRIGHTNESS
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
@@ -55,8 +56,12 @@ class AdsLight(Light):
             """Handle device notifications for state."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._on_state = value
-            self._event.set()
+            run_coroutine_threadsafe(async_event_set(), self.hass.loop)
             self.schedule_update_ha_state()
+
+        async def async_event_set():
+            """Set event in async context."""
+            self._event.set()
 
         def update_brightness(name, value):
             """Handle device notification for brightness."""
