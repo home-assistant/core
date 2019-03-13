@@ -41,6 +41,7 @@ REGISTER_CLEARTEXT = {
     'device_name': 'Test 1',
     'manufacturer': 'mobile_app',
     'model': 'Test',
+    'os_name': 'Linux',
     'os_version': '1.0',
     'supports_encryption': False
 }

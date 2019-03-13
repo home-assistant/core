@@ -64,7 +64,7 @@ async def test_registration(hass_client, authed_api_client):  # noqa: F811
 
     assert json.loads(decrypted_data) == {'rendered': 'Hello world'}
 
-    
+
 async def test_register_invalid_component(authed_api_client):  # noqa: F811
     """Test that registration with invalid component fails."""
     resp = await authed_api_client.post(
