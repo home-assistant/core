@@ -67,9 +67,9 @@ async def setup_registration(hass: HomeAssistantType, store: Store,
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
-        config_entry_id=webhook_id,
+        config_entry_id=registration[ATTR_DEVICE_ID],
         identifiers={
-            (DOMAIN, webhook_id),
+            (DOMAIN, registration[ATTR_DEVICE_ID]),
         },
         manufacturer=registration[ATTR_MANUFACTURER],
         model=registration[ATTR_MODEL],
