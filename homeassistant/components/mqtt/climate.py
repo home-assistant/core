@@ -380,7 +380,6 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': qos}
 
         @callback
-
         def handle_temperature_low_received(msg):
             """Handle target temperature coming via MQTT."""
             payload = msg.payload
