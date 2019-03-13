@@ -74,6 +74,14 @@ SENSOR_SCHEMA = vol.Schema({
         vol.All(cv.ensure_list, [vol.In(SENSORS)])
 })
 
+SERVICE_ALTER_PROGRAM = vol.Schema({
+    vol.Required(CONF_PROGRAM_ID): cv.positive_int,
+})
+
+SERVICE_ALTER_ZONE = vol.Schema({
+    vol.Required(CONF_ZONE_ID): cv.positive_int,
+})
+
 SERVICE_PAUSE_WATERING = vol.Schema({
     vol.Required(CONF_SECONDS): cv.positive_int,
 })
@@ -189,6 +197,27 @@ async def async_setup_entry(hass, config_entry):
             refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
+    async def disable_program(service):
+        """Disable a program."""
+        await rainmachine.client.programs.disable(
+            service.data[CONF_PROGRAM_ID])
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+
+    async def disable_zone(service):
+        """Disable a zone."""
+        await rainmachine.client.zones.disable(service.data[CONF_ZONE_ID])
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
+
+    async def enable_program(service):
+        """Enable a program."""
+        await rainmachine.client.programs.enable(service.data[CONF_PROGRAM_ID])
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+
+    async def enable_zone(service):
+        """Enable a zone."""
+        await rainmachine.client.zones.enable(service.data[CONF_ZONE_ID])
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
+
     async def pause_watering(service):
         """Pause watering for a set number of seconds."""
         await rainmachine.client.watering.pause_all(service.data[CONF_SECONDS])
@@ -226,6 +255,10 @@ async def async_setup_entry(hass, config_entry):
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
     for service, method, schema in [
+            ('disable_program', disable_program, SERVICE_ALTER_PROGRAM),
+            ('disable_zone', disable_zone, SERVICE_ALTER_ZONE),
+            ('enable_program', enable_program, SERVICE_ALTER_PROGRAM),
+            ('enable_zone', enable_zone, SERVICE_ALTER_ZONE),
             ('pause_watering', pause_watering, SERVICE_PAUSE_WATERING),
             ('start_program', start_program, SERVICE_START_PROGRAM_SCHEMA),
             ('start_zone', start_zone, SERVICE_START_ZONE_SCHEMA),
