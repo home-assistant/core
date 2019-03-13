@@ -1,6 +1,7 @@
 """Support for ADS binary sensors."""
 import logging
-import threading
+import asyncio
+import async_timeout
 
 import voluptuous as vol
 
@@ -32,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device_class = config.get(CONF_DEVICE_CLASS)
 
     ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)
-    add_entities([ads_sensor], True)
+    add_entities([ads_sensor])
 
 
 class AdsBinarySensor(BinarySensorDevice):
@@ -46,22 +47,28 @@ class AdsBinarySensor(BinarySensorDevice):
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
         self.ads_var = ads_var
-        self._event = threading.Event()
+        self._event = None
 
-    def update(self):
+    async def async_added_to_hass(self):
         """Register device notification."""
-        def callback(name, value):
+        def update(name, value):
             """Handle device notifications."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._state = value
             self._event.set()
-            if self.entity_id is not None:
-                self.schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
-        self._ads_hub.add_device_notification(
-            self.ads_var, self._ads_hub.PLCTYPE_BOOL, callback)
-        if not self._event.wait(timeout=5):
-            _LOGGER.debug('Timeout while waiting for first update')
+        self._event = asyncio.Event()
+
+        self.hass.async_add_job(
+            self._ads_hub.add_device_notification,
+            self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
+        try:
+            with async_timeout.timeout(30):
+                await self._event.wait()
+        except asyncio.TimeoutError:
+            _LOGGER.debug('Variable %s: Timeout during first update',\
+                self.ads_var)
 
     @property
     def name(self):

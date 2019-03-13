@@ -1,6 +1,7 @@
 """Support for ADS switch platform."""
 import logging
-import threading
+import asyncio
+import async_timeout
 
 import voluptuous as vol
 
@@ -30,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     ads_var = config.get(CONF_ADS_VAR)
 
-    add_entities([AdsSwitch(ads_hub, name, ads_var)], True)
+    add_entities([AdsSwitch(ads_hub, name, ads_var)])
 
 
 class AdsSwitch(ToggleEntity):
@@ -43,7 +44,7 @@ class AdsSwitch(ToggleEntity):
         self._name = name
         self._unique_id = ads_var
         self.ads_var = ads_var
-        self._event = threading.Event()
+        self._event = None
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -54,11 +55,17 @@ class AdsSwitch(ToggleEntity):
             self._event.set()
             self.schedule_update_ha_state()
 
+        self._event = asyncio.Event()
+
         self.hass.async_add_job(
             self._ads_hub.add_device_notification,
             self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
-        if not self._event.wait(timeout=30):
-            _LOGGER.debug('Timeout while waiting for first update')
+        try:
+            with async_timeout.timeout(30):
+                await self._event.wait()
+        except asyncio.TimeoutError:
+            _LOGGER.debug('Variable %s: Timeout during first update',\
+                self.ads_var)
 
     @property
     def is_on(self):
@@ -79,6 +86,11 @@ class AdsSwitch(ToggleEntity):
     def should_poll(self):
         """Return False because entity pushes its state to HA."""
         return False
+
+    @property
+    def available(self):
+        """Return False if state has not been updated yet."""
+        return self._on_state is not None
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
