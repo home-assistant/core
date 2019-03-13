@@ -2,8 +2,7 @@
 import asyncio
 import logging
 
-from requests import RequestException
-from urllib3.exceptions import ReadTimeoutError
+from amcrest import CommError
 
 from homeassistant.components.amcrest import (
     DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT)
@@ -57,7 +56,7 @@ class AmcrestCam(Camera):
                 response = await self.hass.async_add_executor_job(
                     self._camera.snapshot, self._resolution)
                 return response.data
-            except (RequestException, ReadTimeoutError, ValueError) as error:
+            except CommError as error:
                 _LOGGER.error(
                     'Could not get camera image due to error %s', error)
                 return None
