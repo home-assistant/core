@@ -83,9 +83,7 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        s = "-"
-        parts = ['switch', 'tesla', self.tesla_id]
-        return s.join(parts)
+        return self.tesla_id
 
     @property
     def is_on(self):
