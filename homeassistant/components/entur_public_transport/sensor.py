@@ -165,10 +165,7 @@ class EnturPublicTransportSensor(Entity):
         self._name = name
         self._state = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_STOP_ID: self._stop,
-        }
+        self._attributes = {}
 
     @property
     def name(self) -> str:
@@ -183,6 +180,8 @@ class EnturPublicTransportSensor(Entity):
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
+        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
+        self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
 
     @property
@@ -200,8 +199,8 @@ class EnturPublicTransportSensor(Entity):
         await self.api.async_update()
 
         self._attributes = {}
-        data = self.api.get_stop_info(self._stop)
 
+        data = self.api.get_stop_info(self._stop)
         if data is None:
             self._state = None
             return
@@ -210,14 +209,10 @@ class EnturPublicTransportSensor(Entity):
             self._attributes[CONF_LATITUDE] = data.latitude
             self._attributes[CONF_LONGITUDE] = data.longitude
 
-        self._attributes[ATTR_STOP_ID] = data.place_id
-
         calls = data.estimated_calls
         if not calls:
             self._state = None
             return
-
-        number_of_calls = len(calls)
 
         self._state = due_in_minutes(calls[0].expected_departure_time)
         self._icon = ICONS.get(
@@ -230,6 +225,7 @@ class EnturPublicTransportSensor(Entity):
         self._attributes[ATTR_REALTIME] = calls[0].is_realtime
         self._attributes[ATTR_DELAY] = calls[0].delay_in_min
 
+        number_of_calls = len(calls)
         if number_of_calls < 2:
             return
 
