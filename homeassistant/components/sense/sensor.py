@@ -48,6 +48,8 @@ SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Sense sensor."""
+    if discovery_info is None:
+        return
     data = hass.data[SENSE_DATA]
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
