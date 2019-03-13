@@ -74,10 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     excl_filter = config.get(CONF_EXCL_FILTER)
     realtime = config.get(CONF_REALTIME)
     vehicle_type = config.get(CONF_VEHICLE_TYPE)
-    units = config.get(CONF_UNITS)
-
-    if units is None:
-        units = hass.config.units.name
+    units = config.get(CONF_UNITS, hass.config.units.name)
 
     data = WazeTravelTimeData(None, None, region, incl_filter,
                               excl_filter, realtime, units,
