@@ -68,7 +68,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensors += [TmdbSensor(list_type, tmdb_television, 'tv')
                     for list_type in television_lists]
 
-    _LOGGER.error(sensors)
     add_entities(sensors, True)
 
 
