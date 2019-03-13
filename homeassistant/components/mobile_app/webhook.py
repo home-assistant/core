@@ -15,7 +15,7 @@ from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
 from homeassistant.core import EventOrigin
 from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
                                       TemplateError)
-from homeassistant.helpers import template
+from homeassistant.helpers.template import attach
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
@@ -26,10 +26,9 @@ from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_NAME, ATTR_EVENT_DATA,
                     ATTR_WEBHOOK_ENCRYPTED, ATTR_WEBHOOK_ENCRYPTED_DATA,
                     ATTR_WEBHOOK_TYPE, CONF_SECRET, DATA_DELETED_IDS,
                     DATA_REGISTRATIONS, DOMAIN, ERR_ENCRYPTION_REQUIRED,
-                    ERR_RENDER_FAILURE, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
-                    WEBHOOK_TYPE_UPDATE_LOCATION,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
+                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                    WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
 from .helpers import (_decrypt_payload, empty_okay_response, error_response,
@@ -132,17 +131,18 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         return empty_okay_response(headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
-        try:
-            tpl = template.Template(data[ATTR_TEMPLATE], hass)
-            rendered = tpl.async_render(data.get(ATTR_TEMPLATE_VARIABLES))
-            return webhook_response({"rendered": rendered},
-                                    registration=registration, headers=headers)
-        # noqa: E722 pylint: disable=broad-except
-        except (ValueError, TemplateError, Exception) as ex:
-            _LOGGER.error("Error when rendering template during mobile_app "
-                          "webhook (device name: %s): %s",
-                          registration[ATTR_DEVICE_NAME], ex)
-            return error_response(ERR_RENDER_FAILURE, str(ex), headers=headers)
+        resp = {}
+        for key, item in data.items():
+            try:
+                tpl = item[ATTR_TEMPLATE]
+                attach(hass, tpl)
+                resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
+            # noqa: E722 pylint: disable=broad-except
+            except TemplateError as ex:
+                resp[key] = {"error": str(ex)}
+
+        return webhook_response(resp, registration=registration,
+                                headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         try:

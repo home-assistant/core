@@ -24,7 +24,7 @@ async def test_webhook_handle_render_template(webhook_client):  # noqa: F811
     assert resp.status == 200
 
     json = await resp.json()
-    assert json == {'rendered': 'Hello world'}
+    assert json == {'one': 'Hello world'}
 
 
 async def test_webhook_handle_call_services(hass, webhook_client):  # noqa: E501 F811
@@ -123,7 +123,7 @@ async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
     key = key[:keylen]
     key = key.ljust(keylen, b'\0')
 
-    payload = json.dumps({'template': 'Hello world'}).encode("utf-8")
+    payload = json.dumps(RENDER_TEMPLATE['data']).encode("utf-8")
 
     data = SecretBox(key).encrypt(payload,
                                   encoder=Base64Encoder).decode("utf-8")
@@ -148,7 +148,7 @@ async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
                                             encoder=Base64Encoder)
     decrypted_data = decrypted_data.decode("utf-8")
 
-    assert json.loads(decrypted_data) == {'rendered': 'Hello world'}
+    assert json.loads(decrypted_data) == {'one': 'Hello world'}
 
 
 async def test_webhook_requires_encryption(webhook_client):  # noqa: F811
