@@ -124,7 +124,7 @@ aioftp==0.12.0
 aioharmony==0.1.8
 
 # homeassistant.components.heos
-aioheos==0.3.1
+aioheos==0.3.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
