@@ -284,45 +284,45 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 tpl.hass = self.hass
 
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Handle new MQTT message."""
-            if topic == self._state_topics[CONF_BATTERY_LEVEL_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_BATTERY_LEVEL_TOPIC] and \
                     self._templates[CONF_BATTERY_LEVEL_TEMPLATE]:
                 battery_level = self._templates[CONF_BATTERY_LEVEL_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if battery_level is not None:
                     self._battery_level = int(battery_level)
 
-            if topic == self._state_topics[CONF_CHARGING_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_CHARGING_TOPIC] and \
                     self._templates[CONF_CHARGING_TEMPLATE]:
                 charging = self._templates[CONF_CHARGING_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if charging is not None:
                     self._charging = cv.boolean(charging)
 
-            if topic == self._state_topics[CONF_CLEANING_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_CLEANING_TOPIC] and \
                     self._templates[CONF_CLEANING_TEMPLATE]:
                 cleaning = self._templates[CONF_CLEANING_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if cleaning is not None:
                     self._cleaning = cv.boolean(cleaning)
 
-            if topic == self._state_topics[CONF_DOCKED_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_DOCKED_TOPIC] and \
                     self._templates[CONF_DOCKED_TEMPLATE]:
                 docked = self._templates[CONF_DOCKED_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if docked is not None:
                     self._docked = cv.boolean(docked)
 
-            if topic == self._state_topics[CONF_ERROR_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_ERROR_TOPIC] and \
                     self._templates[CONF_ERROR_TEMPLATE]:
                 error = self._templates[CONF_ERROR_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if error is not None:
                     self._error = cv.string(error)
 
@@ -338,11 +338,11 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             else:
                 self._status = "Stopped"
 
-            if topic == self._state_topics[CONF_FAN_SPEED_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_FAN_SPEED_TOPIC] and \
                     self._templates[CONF_FAN_SPEED_TEMPLATE]:
                 fan_speed = self._templates[CONF_FAN_SPEED_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if fan_speed is not None:
                     self._fan_speed = fan_speed
 

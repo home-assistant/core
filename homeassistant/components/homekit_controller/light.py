@@ -25,11 +25,11 @@ class HomeKitLight(HomeKitEntity, Light):
     def __init__(self, *args):
         """Initialise the light."""
         super().__init__(*args)
-        self._on = None
-        self._brightness = None
-        self._color_temperature = None
-        self._hue = None
-        self._saturation = None
+        self._on = False
+        self._brightness = 0
+        self._color_temperature = 0
+        self._hue = 0
+        self._saturation = 0
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
@@ -78,23 +78,17 @@ class HomeKitLight(HomeKitEntity, Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if self._features & SUPPORT_BRIGHTNESS:
-            return self._brightness * 255 / 100
-        return None
+        return self._brightness * 255 / 100
 
     @property
     def hs_color(self):
         """Return the color property."""
-        if self._features & SUPPORT_COLOR:
-            return (self._hue, self._saturation)
-        return None
+        return (self._hue, self._saturation)
 
     @property
     def color_temp(self):
         """Return the color temperature."""
-        if self._features & SUPPORT_COLOR_TEMP:
-            return self._color_temperature
-        return None
+        return self._color_temperature
 
     @property
     def supported_features(self):

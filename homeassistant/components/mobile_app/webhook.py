@@ -25,13 +25,13 @@ from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_NAME, ATTR_EVENT_DATA,
                     ATTR_TEMPLATE_VARIABLES, ATTR_WEBHOOK_DATA,
                     ATTR_WEBHOOK_ENCRYPTED, ATTR_WEBHOOK_ENCRYPTED_DATA,
                     ATTR_WEBHOOK_TYPE, CONF_SECRET, DATA_DELETED_IDS,
-                    DATA_REGISTRATIONS, DOMAIN, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
-                    WEBHOOK_TYPE_UPDATE_LOCATION,
+                    DATA_REGISTRATIONS, DOMAIN, ERR_RENDER_FAILURE,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
+                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                    WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
-from .helpers import (_decrypt_payload, empty_okay_response,
+from .helpers import (_decrypt_payload, empty_okay_response, error_response,
                       registration_context, safe_registration, savable_state,
                       webhook_response)
 
@@ -141,9 +141,7 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             _LOGGER.error("Error when rendering template during mobile_app "
                           "webhook (device name: %s): %s",
                           registration[ATTR_DEVICE_NAME], ex)
-            return webhook_response(({"error": str(ex)}),
-                                    status=HTTP_BAD_REQUEST,
-                                    registration=registration, headers=headers)
+            return error_response(ERR_RENDER_FAILURE, str(ex), headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         try:
