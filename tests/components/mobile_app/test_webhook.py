@@ -158,7 +158,9 @@ async def test_webhook_requires_encryption(webhook_client):  # noqa: F811
         json=RENDER_TEMPLATE
     )
 
-    assert resp.status == 200
+    assert resp.status == 400
 
     webhook_json = await resp.json()
-    assert webhook_json == {}
+    assert 'error' in webhook_json
+    assert webhook_json['success'] is False
+    assert webhook_json['error']['code'] == 'encryption_required'

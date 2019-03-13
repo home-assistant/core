@@ -41,6 +41,7 @@ ATTR_WEBHOOK_ENCRYPTED = 'encrypted'
 ATTR_WEBHOOK_ENCRYPTED_DATA = 'encrypted_data'
 ATTR_WEBHOOK_TYPE = 'type'
 
+ERR_ENCRYPTION_REQUIRED = 'encryption_required'
 ERR_INVALID_COMPONENT = 'invalid_component'
 ERR_RENDER_FAILURE = 'render_failure'
 ERR_SAVE_FAILURE = 'save_failure'

@@ -25,10 +25,11 @@ from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_NAME, ATTR_EVENT_DATA,
                     ATTR_TEMPLATE_VARIABLES, ATTR_WEBHOOK_DATA,
                     ATTR_WEBHOOK_ENCRYPTED, ATTR_WEBHOOK_ENCRYPTED_DATA,
                     ATTR_WEBHOOK_TYPE, CONF_SECRET, DATA_DELETED_IDS,
-                    DATA_REGISTRATIONS, DOMAIN, ERR_RENDER_FAILURE,
-                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
-                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
-                    WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
+                    DATA_REGISTRATIONS, DOMAIN, ERR_ENCRYPTION_REQUIRED,
+                    ERR_RENDER_FAILURE, WEBHOOK_PAYLOAD_SCHEMA,
+                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
+                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
+                    WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
 from .helpers import (_decrypt_payload, empty_okay_response, error_response,
@@ -82,7 +83,7 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             registration[ATTR_SUPPORTS_ENCRYPTION]):
         _LOGGER.warning("Refusing to accept unencrypted webhook from %s",
                         registration[ATTR_DEVICE_NAME])
-        return empty_okay_response()
+        return error_response(ERR_ENCRYPTION_REQUIRED, "Encryption required")
 
     try:
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
