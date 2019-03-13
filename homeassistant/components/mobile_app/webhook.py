@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
                                                      ATTR_DEV_ID,
-                                                     ATTR_HOST_NAME,
                                                      DOMAIN as DT_DOMAIN,
                                                      SERVICE_SEE as DT_SEE)
 from homeassistant.components.webhook import async_register as webhook_register
@@ -146,7 +145,6 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         see_payload = {
             ATTR_DEV_ID: registration[ATTR_DEVICE_ID],
-            ATTR_HOST_NAME: registration[ATTR_DEVICE_NAME],
             ATTR_LOCATION_NAME: data.get(ATTR_LOCATION_NAME),
             ATTR_GPS: data.get(ATTR_GPS),
             ATTR_GPS_ACCURACY: data.get(ATTR_GPS_ACCURACY),
