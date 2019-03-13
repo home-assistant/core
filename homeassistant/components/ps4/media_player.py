@@ -376,9 +376,9 @@ class PS4Device(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source. If device is off, turn it on and wait until it's on."""
-        if (self._state == "off"):
+        if (self._state == STATE_OFF):
             self.turn_on()
-            while (self._state == "off"):
+            while (self._state == STATE_OFF):
                 pass
         for title_id, game in self._games.items():
             if source == game:
