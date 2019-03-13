@@ -316,8 +316,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'test-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'test-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
         unsub()
 
@@ -343,8 +343,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'test-topic/bier/on' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'test-topic/bier/on' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_level_wildcard_no_subtree_match(self):
         """Test the subscription of wildcard topics."""
@@ -372,8 +372,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'test-topic/bier/on' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'test-topic/bier/on' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_subtree_wildcard_root_topic(self):
         """Test the subscription of wildcard topics."""
@@ -383,8 +383,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'test-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'test-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_subtree_wildcard_no_match(self):
         """Test the subscription of wildcard topics."""
@@ -403,8 +403,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'hi/test-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'hi/test-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_level_wildcard_and_wildcard_subtree_topic(self):
         """Test the subscription of wildcard topics."""
@@ -414,8 +414,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'hi/test-topic/here-iam' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'hi/test-topic/here-iam' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_level_wildcard_and_wildcard_level_no_match(self):
         """Test the subscription of wildcard topics."""
@@ -443,8 +443,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert '$test-topic/subtree/on' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert '$test-topic/subtree/on' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_sys_root_and_wildcard_topic(self):
         """Test the subscription of $ root and wildcard topics."""
@@ -454,8 +454,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert '$test-topic/some-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert '$test-topic/some-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_sys_root_and_wildcard_subtree_topic(self):
         """Test the subscription of $ root and wildcard subtree topics."""
@@ -466,8 +466,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert '$test-topic/subtree/some-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert '$test-topic/subtree/some-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_special_characters(self):
         """Test the subscription to topics with special characters."""
@@ -479,8 +479,8 @@ class TestMQTTCallbacks(unittest.TestCase):
         fire_mqtt_message(self.hass, topic, payload)
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert topic == self.calls[0][0]
-        assert payload == self.calls[0][1]
+        assert topic == self.calls[0][0].topic
+        assert payload == self.calls[0][0].payload
 
     def test_mqtt_failed_connection_results_in_disconnect(self):
         """Test if connection failure leads to disconnect."""
