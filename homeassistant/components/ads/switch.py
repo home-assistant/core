@@ -65,7 +65,7 @@ class AdsSwitch(ToggleEntity):
                 await self._event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug('Variable %s: Timeout during first update',
-                            self.ads_var)
+                          self.ads_var)
 
     @property
     def is_on(self):

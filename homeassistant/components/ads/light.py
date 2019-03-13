@@ -81,7 +81,7 @@ class AdsLight(Light):
                 await self._event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug('Variable %s: Timeout during first update',
-                            self.ads_var_enable)
+                          self.ads_var_enable)
 
     @property
     def name(self):
