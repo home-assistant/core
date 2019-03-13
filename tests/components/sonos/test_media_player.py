@@ -12,6 +12,7 @@ from homeassistant.components.sonos import media_player as sonos
 from homeassistant.components.media_player.const import DOMAIN
 from homeassistant.components.sonos.media_player import CONF_INTERFACE_ADDR
 from homeassistant.const import CONF_HOSTS, CONF_PLATFORM
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import get_test_home_assistant
 
@@ -328,7 +329,9 @@ class TestSonosMediaPlayer(unittest.TestCase):
         snapshotMock.return_value = True
         entity.soco.group = mock.MagicMock()
         entity.soco.group.members = [e.soco for e in entities]
-        sonos.SonosEntity.snapshot_multi(entities, True)
+        run_coroutine_threadsafe(
+            sonos.SonosEntity.snapshot_multi(self.hass, entities, True),
+            self.hass.loop).result()
         assert snapshotMock.call_count == 1
         assert snapshotMock.call_args == mock.call()
 
@@ -350,6 +353,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         entity._snapshot_group = mock.MagicMock()
         entity._snapshot_group.members = [e.soco for e in entities]
         entity._soco_snapshot = Snapshot(entity.soco)
-        sonos.SonosEntity.restore_multi(entities, True)
+        run_coroutine_threadsafe(
+            sonos.SonosEntity.restore_multi(self.hass, entities, True),
+            self.hass.loop).result()
         assert restoreMock.call_count == 1
         assert restoreMock.call_args == mock.call()
