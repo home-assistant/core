@@ -1012,7 +1012,11 @@ class SonosEntity(MediaPlayerDevice):
         """Unjoin several players from their group."""
         def _unjoin_all(entities):
             """Sync helper."""
-            for entity in entities:
+            # Unjoin slaves first to prevent inheritance of queues
+            coordinators = [e for e in entities if e.is_coordinator]
+            slaves = [e for e in entities if not e.is_coordinator]
+
+            for entity in slaves + coordinators:
                 entity.unjoin()
 
         async with hass.data[DATA_SONOS].topology_lock:
@@ -1079,7 +1083,7 @@ class SonosEntity(MediaPlayerDevice):
                     entity.media_pause()
 
             if with_group:
-                # Unjoin slaves that are not already in their target group
+                # Unjoin slaves first to prevent inheritance of queues
                 for entity in [e for e in entities if not e.is_coordinator]:
                     if entity._snapshot_group != entity._sonos_group:
                         entity.unjoin()
