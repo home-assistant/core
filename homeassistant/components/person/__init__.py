@@ -381,7 +381,7 @@ class Person(RestoreEntity):
     @callback
     def _update_state(self):
         """Update the state."""
-        latest_non_gps_home = latest_not_home = latest_gps = latest = None
+        latest_non_gps_zone = latest_not_home = latest_gps = latest = None
         for entity_id in self._config.get(CONF_DEVICE_TRACKERS, []):
             state = self.hass.states.get(entity_id)
 
@@ -390,13 +390,13 @@ class Person(RestoreEntity):
 
             if state.attributes.get(ATTR_SOURCE_TYPE) == SOURCE_TYPE_GPS:
                 latest_gps = _get_latest(latest_gps, state)
-            elif state.state == STATE_HOME:
-                latest_non_gps_home = _get_latest(latest_non_gps_home, state)
+            elif state.state != STATE_NOT_HOME:
+                latest_non_gps_zone = _get_latest(latest_non_gps_zone, state)
             elif state.state == STATE_NOT_HOME:
                 latest_not_home = _get_latest(latest_not_home, state)
 
-        if latest_non_gps_home:
-            latest = latest_non_gps_home
+        if latest_non_gps_zone:
+            latest = latest_non_gps_zone
         elif latest_gps:
             latest = latest_gps
         else:
