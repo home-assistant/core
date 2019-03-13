@@ -1,11 +1,16 @@
 """Support for ThinkingCleaner switches."""
 import time
 import logging
-from datetime import timedelta
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
+from datetime import timedelta
 from homeassistant import util
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +28,17 @@ SWITCH_TYPES = {
     'find': ['Find', None, None],
 }
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+})
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ThinkingCleaner platform."""
-    from pythinkingcleaner import Discovery
+    from pythinkingcleaner import ThinkingCleaner
 
-    discovery = Discovery()
-    devices = discovery.discover()
+    host = config.get(CONF_HOST)
+    devices = [ThinkingCleaner(host, 'unknown')]
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
