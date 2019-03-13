@@ -7,7 +7,6 @@ https://home-assistant.io/components/notify.rest/
 import logging
 
 import requests
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -53,6 +52,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_service(hass, config, discovery_info=None):
     """Get the RESTful notification service."""
+    from requests.auth import HTTPBasicAuth, HTTPDigestAuth # pylint: disable=import-error
+
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     headers = config.get(CONF_HEADERS)
