@@ -1,53 +1,35 @@
-"""
-Denon HEOS Media Player.
-"""
+"""Denon HEOS Media Player."""
 
-import logging
-
-import voluptuous as vol
-
-from aioheos import AioHeosController
-
-from homeassistant.components.media_player import (PLATFORM_SCHEMA,
-                                                   MediaPlayerDevice)
-
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
-
-from homeassistant.const import (CONF_HOST, STATE_OFF, STATE_PAUSED,
-                                 STATE_PLAYING)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 
+from . import DOMAIN as HEOS_DOMAIN
 
-REQUIREMENTS = ['aioheos==0.3.1']
+DEPENDENCIES = ['heos']
 
 SUPPORT_HEOS = SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_PAUSE | \
         SUPPORT_PLAY_MEDIA | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
         SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
 
+SIGNAL_HEOS_UPDATE = 'heos_update'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-})
-
-_LOGGER = logging.getLogger(__name__)
+PLAY_STATE_TO_STATE = {
+    'play': STATE_PLAYING,
+    'pause': STATE_PAUSED,
+    'stop': STATE_OFF
+}
 
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discover_info=None):
     """Set up the HEOS platform."""
-    host = config[CONF_HOST]
-
-    controller = AioHeosController(hass.loop, host, verbose=True)
-    await controller.connect(host=host)
-
-    players = controller.get_players()
-    players.sort()
+    players = hass.data[HEOS_DOMAIN][DOMAIN]
     devices = [HeosMediaPlayer(p) for p in players]
     async_add_devices(devices, True)
 
@@ -58,14 +40,14 @@ class HeosMediaPlayer(MediaPlayerDevice):
     def __init__(self, player):
         """Initialize."""
         self._player = player
-        self._state = None
         self._dispatcher_remove = None
-        self._player.state_change_callback = self.update_state
+        self._player.state_change_callback = self._update_state
 
-    def update_state(self):
-        async_dispatcher_send(self.hass, 'heos_update', self.unique_id)
+    def _update_state(self):
+        async_dispatcher_send(self.hass, SIGNAL_HEOS_UPDATE, self.unique_id)
 
     async def async_update(self):
+        """Update the player."""
         self._player.request_update()
 
     async def async_added_to_hass(self):
@@ -76,7 +58,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
                 await self.async_update_ha_state()
 
         self._dispatcher_remove = async_dispatcher_connect(
-            self.hass, 'heos_update', async_update_state)
+            self.hass, SIGNAL_HEOS_UPDATE, async_update_state)
 
     async def async_will_remove_from_hass(self):
         """Disconnect the device when removed."""
@@ -85,6 +67,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     @property
     def unique_id(self):
+        """Get unique id of the player."""
         return self._player.player_id
 
     @property
@@ -101,14 +84,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
     @property
     def state(self):
         """Get state."""
-        self._state = self._player.play_state
-        if self._state == 'stop':
-            return STATE_OFF
-        if self._state == 'pause':
-            return STATE_PAUSED
-        if self._state == 'play':
-            return STATE_PLAYING
-        return None
+        return PLAY_STATE_TO_STATE.get(self._player.play_state)
 
     @property
     def should_poll(self):

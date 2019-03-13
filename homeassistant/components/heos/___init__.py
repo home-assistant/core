@@ -1,1 +1,0 @@
-"""Denon HEOS Media Player."""
