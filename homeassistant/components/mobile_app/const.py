@@ -43,7 +43,6 @@ ATTR_WEBHOOK_TYPE = 'type'
 
 ERR_ENCRYPTION_REQUIRED = 'encryption_required'
 ERR_INVALID_COMPONENT = 'invalid_component'
-ERR_RENDER_FAILURE = 'render_failure'
 ERR_SAVE_FAILURE = 'save_failure'
 
 WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
@@ -99,8 +98,10 @@ FIRE_EVENT_SCHEMA = vol.Schema({
 })
 
 RENDER_TEMPLATE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TEMPLATE): cv.string,
-    vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
+    str: {
+        vol.Required(ATTR_TEMPLATE): cv.template,
+        vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
+    }
 })
 
 WEBHOOK_SCHEMAS = {
