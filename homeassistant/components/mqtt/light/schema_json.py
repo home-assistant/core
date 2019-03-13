@@ -201,9 +201,9 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         last_state = await self.async_get_last_state()
 
         @callback
-        def state_received(topic, payload, qos):
+        def state_received(msg):
             """Handle new MQTT messages."""
-            values = json.loads(payload)
+            values = json.loads(msg.payload)
 
             if values['state'] == 'ON':
                 self._state = True

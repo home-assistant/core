@@ -143,8 +143,9 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             template.hass = self.hass
 
         @callback
-        def state_message_received(topic, payload, qos):
+        def state_message_received(msg):
             """Handle new MQTT state messages."""
+            payload = msg.payload
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
                     payload)
