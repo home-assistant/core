@@ -6,7 +6,7 @@ from homekit.model.services import AbstractService, ServicesTypes
 from homekit.model.characteristics import (
     AbstractCharacteristic, CharacteristicPermissions, CharacteristicsTypes)
 from homekit.model import Accessory, get_id
-
+from homekit.exceptions import AccessoryNotFoundError
 from homeassistant.components.homekit_controller import (
     DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, SERVICE_HOMEKIT)
 from homeassistant.setup import async_setup_component
@@ -26,6 +26,7 @@ class FakePairing:
         """Create a fake pairing from an accessory model."""
         self.accessories = accessories
         self.pairing_data = {}
+        self.available = True
 
     def list_accessories_and_characteristics(self):
         """Fake implementation of list_accessories_and_characteristics."""
@@ -38,6 +39,9 @@ class FakePairing:
 
     def get_characteristics(self, characteristics):
         """Fake implementation of get_characteristics."""
+        if not self.available:
+            raise AccessoryNotFoundError('Accessory not found')
+
         results = {}
         for aid, cid in characteristics:
             for accessory in self.accessories:
