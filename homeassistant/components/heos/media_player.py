@@ -48,40 +48,44 @@ async def async_setup_platform(hass, config, async_add_devices,
 
     players = controller.get_players()
     players.sort()
-    devices = [HeosMediaPlayer(hass, p) for p in players]
-    async_add_devices(devices)
+    devices = [HeosMediaPlayer(p) for p in players]
+    async_add_devices(devices, True)
 
 
 class HeosMediaPlayer(MediaPlayerDevice):
     """The HEOS player."""
 
-    def __init__(self, hass, player):
+    def __init__(self, player):
         """Initialize."""
-        self._hass = hass
         self._player = player
         self._state = None
         self._dispatcher_remove = None
-
         self._player.state_change_callback = self.update_state
-        self._player.request_update()
 
     def update_state(self):
-        async_dispatcher_send(self._hass, 'heos_update', [self])
+        async_dispatcher_send(self.hass, 'heos_update', self.unique_id)
 
-    # async_dispatcher_send(hass, 'heos_update', devices)
+    async def async_update(self):
+        self._player.request_update()
+
     async def async_added_to_hass(self):
         """Device added to hass."""
-        async def async_update_state(devices):
+        async def async_update_state(unique_id):
             """Update device state."""
-            await self.async_update_ha_state(False)
+            if self.unique_id == unique_id:
+                await self.async_update_ha_state()
 
         self._dispatcher_remove = async_dispatcher_connect(
-            self._hass, 'heos_update', async_update_state)
+            self.hass, 'heos_update', async_update_state)
 
     async def async_will_remove_from_hass(self):
         """Disconnect the device when removed."""
         if self._dispatcher_remove:
             self._dispatcher_remove()
+
+    @property
+    def unique_id(self):
+        return self._player.player_id
 
     @property
     def name(self):
