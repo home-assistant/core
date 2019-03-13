@@ -274,8 +274,8 @@ class Message:
 
     topic = attr.ib(type=str)
     payload = attr.ib(type=PublishPayloadType)
-    qos = attr.ib(type=int, default=0)
-    retain = attr.ib(type=bool, default=False)
+    qos = attr.ib(type=int)
+    retain = attr.ib(type=bool)
 
 
 MessageCallbackType = Callable[[Message], None]
@@ -318,6 +318,30 @@ def publish_template(hass: HomeAssistantType, topic, payload_template,
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
+def wrap_msg_callback(
+        msg_callback: MessageCallbackType) -> MessageCallbackType:
+    """Wrap an MQTT message callback to support deprecated signature."""
+    # Check for partials to properly determine if coroutine function
+    check_func = msg_callback
+    while isinstance(check_func, partial):
+        check_func = check_func.func
+
+    wrapper_func = None
+    if asyncio.iscoroutinefunction(check_func):
+        @wraps(msg_callback)
+        async def async_wrapper(msg: Any) -> None:
+            """Catch and log exception."""
+            await msg_callback(msg.topic, msg.payload, msg.qos)
+        wrapper_func = async_wrapper
+    else:
+        @wraps(msg_callback)
+        def wrapper(msg: Any) -> None:
+            """Catch and log exception."""
+            msg_callback(msg.topic, msg.payload, msg.qos)
+        wrapper_func = wrapper
+    return wrapper_func
+
+
 @bind_hass
 async def async_subscribe(hass: HomeAssistantType, topic: str,
                           msg_callback: MessageCallbackType,
@@ -327,53 +351,26 @@ async def async_subscribe(hass: HomeAssistantType, topic: str,
 
     Call the return value to unsubscribe.
     """
-    def wrap_msg_callback(
-            msg_callback: MessageCallbackType) -> MessageCallbackType:
-        """Wrap an MQTT message callback to support deprecated signature."""
-        # Check for partials to properly determine if coroutine function
-        check_func = msg_callback
-        while isinstance(check_func, partial):
-            check_func = check_func.func
-
-        wrapper_func = None
-        if asyncio.iscoroutinefunction(check_func):
-            @wraps(msg_callback)
-            async def async_wrapper(msg: Any) -> None:
-                """Catch and log exception."""
-                await msg_callback(msg.topic, msg.payload, msg.qos)
-            wrapper_func = async_wrapper
-        else:
-            @wraps(msg_callback)
-            def wrapper(msg: Any) -> None:
-                """Catch and log exception."""
-                msg_callback(msg.topic, msg.payload, msg.qos)
-            wrapper_func = wrapper
-        return wrapper_func
-
     # Count callback parameters which don't have a default value
     non_default = 0
     if msg_callback:
         non_default = sum(p.default == inspect.Parameter.empty for _, p in
                           inspect.signature(msg_callback).parameters.items())
 
+    wrapped_msg_callback = msg_callback
     # If we have 3 paramaters with no default value, wrap the callback
     if non_default == 3:
         _LOGGER.info(
             "Signature of MQTT msg_callback '%s.%s' is deprecated",
             inspect.getmodule(msg_callback).__name__, msg_callback.__name__)
-        async_remove = await hass.data[DATA_MQTT].async_subscribe(
-            topic, catch_log_exception(
-                wrap_msg_callback(msg_callback), lambda msg:
-                "Exception in {} when handling msg on '{}': '{}'".format(
-                    msg_callback.__name__, msg.topic, msg.payload)),
-            qos, encoding)
-    else:
-        async_remove = await hass.data[DATA_MQTT].async_subscribe(
-            topic, catch_log_exception(
-                msg_callback, lambda msg:
-                "Exception in {} when handling msg on '{}': '{}'".format(
-                    msg_callback.__name__, msg.topic, msg.payload)),
-            qos, encoding)
+        wrapped_msg_callback = wrap_msg_callback(msg_callback)
+
+    async_remove = await hass.data[DATA_MQTT].async_subscribe(
+        topic, catch_log_exception(
+            wrapped_msg_callback, lambda msg:
+            "Exception in {} when handling msg on '{}': '{}'".format(
+                msg_callback.__name__, msg.topic, msg.payload)),
+        qos, encoding)
     return async_remove
 
 
