@@ -17,7 +17,7 @@ from homeassistant.util import Throttle
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import KEY_HOST
 
-REQUIREMENTS = ['pydaikin==1.0']
+REQUIREMENTS = ['pydaikin==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,9 +87,10 @@ async def async_unload_entry(hass, config_entry):
 async def daikin_api_setup(hass, host):
     """Create a Daikin instance only once."""
     from pydaikin.appliance import Appliance
+    session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
         with async_timeout.timeout(10):
-            device = await hass.async_add_executor_job(Appliance, host)
+            device = Appliance(host, session)
             await device.init()
     except asyncio.TimeoutError:
         _LOGGER.error("Connection to Daikin could not be established")
@@ -98,8 +99,7 @@ async def daikin_api_setup(hass, host):
         _LOGGER.error("Unexpected error creating device")
         return None
 
-    name = device.values['name']
-    api = DaikinApi(device, name)
+    api = DaikinApi(device)
 
     return api
 
@@ -107,10 +107,10 @@ async def daikin_api_setup(hass, host):
 class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
-    def __init__(self, device, name):
+    def __init__(self, device):
         """Initialize the Daikin Handle."""
         self.device = device
-        self.name = name
+        self.name = device.values['name']
         self.ip_address = device.ip
         self._available = True
 
