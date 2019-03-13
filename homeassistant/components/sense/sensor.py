@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.sense import SENSE_DATA
-from homeassistant.const import POWER_WATT
+from homeassistant.const import POWER_WATT, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -91,7 +91,7 @@ class Sense(Entity):
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
         else:
-            self._unit_of_measurement = 'kWh'
+            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     @property
     def name(self):
