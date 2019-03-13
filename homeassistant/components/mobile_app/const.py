@@ -1,7 +1,10 @@
 """Constants for mobile_app."""
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import SERVICE_SEE_PAYLOAD_SCHEMA
+from homeassistant.components.device_tracker import (ATTR_BATTERY,
+                                                     ATTR_GPS,
+                                                     ATTR_GPS_ACCURACY,
+                                                     ATTR_LOCATION_NAME)
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA)
 from homeassistant.helpers import config_validation as cv
 
@@ -23,6 +26,7 @@ ATTR_APP_DATA = 'app_data'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_APP_VERSION = 'app_version'
+ATTR_DEVICE_ID = 'device_id'
 ATTR_DEVICE_NAME = 'device_name'
 ATTR_MANUFACTURER = 'manufacturer'
 ATTR_MODEL = 'model'
@@ -35,6 +39,11 @@ ATTR_EVENT_TYPE = 'event_type'
 
 ATTR_TEMPLATE = 'template'
 ATTR_TEMPLATE_VARIABLES = 'variables'
+
+ATTR_SPEED = 'speed'
+ATTR_ALTITUDE = 'altitude'
+ATTR_COURSE = 'course'
+ATTR_VERTICAL_ACCURACY = 'vertical_accuracy'
 
 ATTR_WEBHOOK_DATA = 'data'
 ATTR_WEBHOOK_ENCRYPTED = 'encrypted'
@@ -104,10 +113,21 @@ RENDER_TEMPLATE_SCHEMA = vol.Schema({
     }
 })
 
+UPDATE_LOCATION_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_LOCATION_NAME): cv.string,
+    vol.Required(ATTR_GPS): cv.gps,
+    vol.Required(ATTR_GPS_ACCURACY): cv.positive_int,
+    vol.Optional(ATTR_BATTERY): cv.positive_int,
+    vol.Optional(ATTR_SPEED): cv.positive_int,
+    vol.Optional(ATTR_ALTITUDE): cv.positive_int,
+    vol.Optional(ATTR_COURSE): cv.positive_int,
+    vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+})
+
 WEBHOOK_SCHEMAS = {
     WEBHOOK_TYPE_CALL_SERVICE: CALL_SERVICE_SCHEMA,
     WEBHOOK_TYPE_FIRE_EVENT: FIRE_EVENT_SCHEMA,
     WEBHOOK_TYPE_RENDER_TEMPLATE: RENDER_TEMPLATE_SCHEMA,
-    WEBHOOK_TYPE_UPDATE_LOCATION: SERVICE_SEE_PAYLOAD_SCHEMA,
+    WEBHOOK_TYPE_UPDATE_LOCATION: UPDATE_LOCATION_SCHEMA,
     WEBHOOK_TYPE_UPDATE_REGISTRATION: UPDATE_REGISTRATION_SCHEMA,
 }
