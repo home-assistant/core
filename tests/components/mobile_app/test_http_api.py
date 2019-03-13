@@ -5,7 +5,7 @@ import pytest
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.const import CONF_WEBHOOK_ID
 
-from .const import REGISTER, REGISTER_BAD_COMPONENT
+from .const import REGISTER
 from . import authed_api_client  # noqa: F401
 
 
@@ -62,7 +62,19 @@ async def test_registration(hass_client, authed_api_client):  # noqa: F811
 async def test_register_invalid_component(authed_api_client):  # noqa: F811
     """Test that registration with invalid component fails."""
     resp = await authed_api_client.post(
-        '/api/mobile_app/registrations', json=REGISTER_BAD_COMPONENT
+        '/api/mobile_app/registrations', json={
+            'app_component': 'will_never_be_valid',
+            'app_data': {'foo': 'bar'},
+            'app_id': 'io.homeassistant.mobile_app_test',
+            'app_name': 'Mobile App Tests',
+            'app_version': '1.0.0',
+            'device_name': 'Test 1',
+            'manufacturer': 'mobile_app',
+            'model': 'Test',
+            'os_name': 'Linux',
+            'os_version': '1.0',
+            'supports_encryption': True
+        }
     )
 
     assert resp.status == 400
