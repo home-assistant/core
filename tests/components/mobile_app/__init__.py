@@ -6,7 +6,9 @@ from tests.common import mock_device_registry
 
 from homeassistant.setup import async_setup_component
 
-from homeassistant.components.mobile_app.const import (DATA_DELETED_IDS,
+from homeassistant.components.mobile_app.const import (DATA_CONFIG_ENTRIES,
+                                                       DATA_DELETED_IDS,
+                                                       DATA_DEVICES,
                                                        DOMAIN,
                                                        STORAGE_KEY,
                                                        STORAGE_VERSION)
@@ -45,7 +47,9 @@ async def webhook_client(hass, aiohttp_client, hass_storage, hass_admin_user):
     """mobile_app mock client."""
     hass_storage[STORAGE_KEY] = {
         'version': STORAGE_VERSION,
-        'data': {DATA_DELETED_IDS: []}
+        'data': {
+            DATA_CONFIG_ENTRIES: {}, DATA_DELETED_IDS: [], DATA_DEVICES: {},
+        }
     }
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})

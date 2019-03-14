@@ -25,7 +25,7 @@ from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     ATTR_TEMPLATE_VARIABLES, ATTR_VERTICAL_ACCURACY,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
-                    CONF_SECRET, DATA_DELETED_IDS, DOMAIN,
+                    CONF_SECRET, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS, DOMAIN,
                     ERR_ENCRYPTION_REQUIRED, WEBHOOK_PAYLOAD_SCHEMA,
                     WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
                     WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
@@ -33,8 +33,8 @@ from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
 from .helpers import (_decrypt_payload, empty_okay_response, error_response,
-                      get_config_entry, registration_context,
-                      safe_registration, webhook_response)
+                      registration_context, safe_registration,
+                      webhook_response)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
     headers = {}
 
-    config_entry = await get_config_entry(hass, webhook_id)
+    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
 
     registration = config_entry.data
 

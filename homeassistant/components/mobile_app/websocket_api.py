@@ -17,10 +17,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (CONF_CLOUDHOOK_URL, CONF_USER_ID, DATA_DELETED_IDS,
-                    DATA_STORE, DOMAIN)
+from .const import (CONF_CLOUDHOOK_URL, CONF_USER_ID, DATA_CONFIG_ENTRIES,
+                    DATA_DELETED_IDS, DATA_STORE, DOMAIN)
 
-from .helpers import get_config_entry, safe_registration, savable_state
+from .helpers import safe_registration, savable_state
 
 
 def register_websocket_handlers(hass: HomeAssistantType) -> bool:
@@ -79,7 +79,7 @@ async def websocket_delete_registration(hass: HomeAssistantType,
                               "Webhook ID not provided")
         return
 
-    config_entry = await get_config_entry(hass, webhook_id)
+    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
 
     registration = config_entry.data
 

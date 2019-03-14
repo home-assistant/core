@@ -17,7 +17,9 @@ CONF_CLOUDHOOK_URL = 'cloudhook_url'
 CONF_SECRET = 'secret'
 CONF_USER_ID = 'user_id'
 
+DATA_CONFIG_ENTRIES = 'config_entries'
 DATA_DELETED_IDS = 'deleted_ids'
+DATA_DEVICES = 'devices'
 DATA_STORE = 'store'
 
 ATTR_APP_COMPONENT = 'app_component'

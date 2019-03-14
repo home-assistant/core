@@ -10,8 +10,8 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
                     ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
-                    DATA_DELETED_IDS, DATA_STORE, DOMAIN, STORAGE_KEY,
-                    STORAGE_VERSION)
+                    DATA_CONFIG_ENTRIES, DATA_DELETED_IDS, DATA_DEVICES,
+                    DATA_STORE, DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
@@ -26,16 +26,19 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the mobile app component."""
-    hass.data[DOMAIN] = {DATA_DELETED_IDS: []}
+    hass.data[DOMAIN] = {
+        DATA_CONFIG_ENTRIES: {}, DATA_DELETED_IDS: [], DATA_DEVICES: {},
+    }
+
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()
     if app_config is None:
-        app_config = {DATA_DELETED_IDS: []}
+        app_config = {
+            DATA_CONFIG_ENTRIES: {}, DATA_DELETED_IDS: [], DATA_DEVICES: {},
+        }
 
-    hass.data[DOMAIN] = {
-        DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
-        DATA_STORE: store
-    }
+    hass.data[DOMAIN] = app_config
+    hass.data[DOMAIN][DATA_STORE] = store
 
     hass.http.register_view(RegistrationsView())
     register_websocket_handlers(hass)
@@ -54,6 +57,10 @@ async def async_setup_entry(hass, entry):
     """Set up a mobile_app entry."""
     registration = entry.data
 
+    webhook_id = registration[CONF_WEBHOOK_ID]
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id] = entry
+
     device_registry = await dr.async_get_registry(hass)
 
     identifiers = {
@@ -68,7 +75,7 @@ async def async_setup_entry(hass, entry):
                       registration[ATTR_DEVICE_NAME])
         return False
 
-    device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=config_entry_id,
         identifiers=identifiers,
         manufacturer=registration[ATTR_MANUFACTURER],
@@ -77,8 +84,9 @@ async def async_setup_entry(hass, entry):
         sw_version=registration[ATTR_OS_VERSION]
     )
 
+    hass.data[DOMAIN][DATA_DEVICES][webhook_id] = device
+
     registration_name = 'Mobile App: {}'.format(registration[ATTR_DEVICE_NAME])
-    webhook_id = registration[CONF_WEBHOOK_ID]
     webhook_register(hass, DOMAIN, registration_name, webhook_id,
                      handle_webhook)
 
