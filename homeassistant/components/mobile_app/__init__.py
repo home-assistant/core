@@ -48,11 +48,6 @@ class MobileAppFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(
-                reason='single_instance_allowed'
-            )
-
         return self.async_abort(reason='install_app')
 
     async def async_step_registration(self, user_input=None):
