@@ -52,9 +52,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_service(hass, config, discovery_info=None):
     """Get the RESTful notification service."""
-    # pylint: disable=import-error
-    from requests.auth import HTTPBasicAuth, HTTPDigestAuth
-
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     headers = config.get(CONF_HEADERS)
@@ -69,9 +66,9 @@ def get_service(hass, config, discovery_info=None):
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = HTTPDigestAuth(username, password)
+            auth = requests.auth.HTTPDigestAuth(username, password)
         else:
-            auth = HTTPBasicAuth(username, password)
+            auth = requests.auth.HTTPBasicAuth(username, password)
     else:
         auth = None
 
