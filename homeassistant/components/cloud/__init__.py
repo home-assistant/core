@@ -3,6 +3,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
@@ -136,12 +137,21 @@ async def async_setup(hass, config):
     else:
         kwargs = {CONF_MODE: DEFAULT_MODE}
 
+    # Alexa/Google custom config
     alexa_conf = kwargs.pop(CONF_ALEXA, None) or ALEXA_SCHEMA({})
     google_conf = kwargs.pop(CONF_GOOGLE_ACTIONS, None) or GACTIONS_SCHEMA({})
 
+    # Cloud settings
     prefs = CloudPreferences(hass)
     await prefs.async_initialize()
 
+    # Cloud user
+    if not prefs.cloud_user:
+        user = await hass.auth.async_create_system_user(
+            'Home Assistant Cloud', [GROUP_ID_ADMIN])
+        await prefs.async_update(cloud_user=user.id)
+
+    # Initialize Cloud
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
