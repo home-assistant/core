@@ -63,9 +63,9 @@ class RegistrationsView(HomeAssistantView):
         data[CONF_USER_ID] = request['hass_user'].id
 
         ctx = {'source': 'registration'}
-        hass.async_create_task(hass.config_entries.flow.async_init(DOMAIN,
-                                                                   context=ctx,
-                                                                   data=data))
+        await hass.async_create_task(
+            hass.config_entries.flow.async_init(DOMAIN, context=ctx,
+                                                data=data))
 
         return self.json({
             CONF_CLOUDHOOK_URL: data.get(CONF_CLOUDHOOK_URL),
