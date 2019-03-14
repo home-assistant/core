@@ -66,9 +66,11 @@ async def setup_registration(hass: HomeAssistantType,
         (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID])
     }
 
-    device = device_registry.async_get_device(identifiers, set())
+    if entry is None:
+        entry = await get_config_entry(hass, registration[CONF_WEBHOOK_ID])
 
-    config_entry_id = device.id if device else entry.entry_id
+    config_entry_id = entry.entry_id
+
     if config_entry_id is None:
         _LOGGER.error("No config_entry_id for registration %s!",
                       registration[ATTR_DEVICE_NAME])
