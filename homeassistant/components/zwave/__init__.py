@@ -274,7 +274,7 @@ async def async_setup_entry(hass, config_entry):
     usb_path = config.get(
         CONF_USB_STICK_PATH, config_entry.data[CONF_USB_STICK_PATH])
 
-    _LOGGER.info('Z-Wave  USB path is %s', usb_path)
+    _LOGGER.info('Z-Wave USB path is %s', usb_path)
 
     # Setup options
     options = ZWaveOption(
