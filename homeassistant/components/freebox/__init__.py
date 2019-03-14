@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aiofreepybox==0.0.7']
+REQUIREMENTS = ['aiofreepybox==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ async def async_setup_freebox(hass, config, host, port):
         }
 
     token_file = hass.config.path(FREEBOX_CONFIG_FILE)
-    api_version = 'v1'
+    api_version = 'v4'
 
     fbx = Freepybox(
         app_desc=app_desc,
