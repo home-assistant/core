@@ -66,15 +66,17 @@ homeassistant/components/device_tracker/automatic.py @armills
 homeassistant/components/device_tracker/bt_smarthub.py @jxwolstenholme
 homeassistant/components/device_tracker/huawei_router.py @abmantis
 homeassistant/components/device_tracker/quantum_gateway.py @cisasteelersfan
+homeassistant/components/device_tracker/synology_srm.py @aerialls
 homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/device_tracker/traccar.py @ludeeus
-homeassistant/components/device_tracker/synology_srm.py @aerialls
 homeassistant/components/device_tracker/xfinity.py @cisasteelersfan
+homeassistant/components/lametric/notify.py @robbiet480
 homeassistant/components/light/lifx_legacy.py @amelchio
 homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/light/yeelightsunflower.py @lindsaymarkward
 homeassistant/components/lock/nello.py @pschmitt
 homeassistant/components/lock/nuki.py @pschmitt
+homeassistant/components/media_player/braviatv.py @robbiet480
 homeassistant/components/media_player/emby.py @mezz64
 homeassistant/components/media_player/kodi.py @armills
 homeassistant/components/media_player/liveboxplaytv.py @pschmitt
@@ -83,11 +85,18 @@ homeassistant/components/media_player/monoprice.py @etsinko
 homeassistant/components/media_player/mpd.py @fabaff
 homeassistant/components/media_player/xiaomi_tv.py @fattdev
 homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
+homeassistant/components/notify/aws_lambda.py @robbiet480
+homeassistant/components/notify/aws_sns.py @robbiet480
+homeassistant/components/notify/aws_sqs.py @robbiet480
 homeassistant/components/notify/file.py @fabaff
 homeassistant/components/notify/flock.py @fabaff
+homeassistant/components/notify/gntp.py @robbiet480
+homeassistant/components/notify/html5.py @robbiet480
 homeassistant/components/notify/mastodon.py @fabaff
 homeassistant/components/notify/smtp.py @fabaff
 homeassistant/components/notify/syslog.py @fabaff
+homeassistant/components/notify/twilio_call.py @robbiet480
+homeassistant/components/notify/twilio_sms.py @robbiet480
 homeassistant/components/notify/xmpp.py @fabaff
 homeassistant/components/notify/yessssms.py @flowolf
 homeassistant/components/scene/lifx_cloud.py @amelchio
@@ -100,12 +109,15 @@ homeassistant/components/sensor/darksky.py @fabaff
 homeassistant/components/sensor/discogs.py @thibmaek
 homeassistant/components/sensor/file.py @fabaff
 homeassistant/components/sensor/filter.py @dgomes
+homeassistant/components/sensor/fitbit.py @robbiet480
 homeassistant/components/sensor/fixer.py @fabaff
 homeassistant/components/sensor/flunearyou.py @bachya
 homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/gitter.py @fabaff
 homeassistant/components/sensor/glances.py @fabaff
+homeassistant/components/sensor/google_travel_time.py @robbiet480
 homeassistant/components/sensor/gpsd.py @fabaff
+homeassistant/components/sensor/gtfs.py @robbiet480
 homeassistant/components/sensor/integration.py @dgomes
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/jewish_calendar.py @tsvi
@@ -117,6 +129,7 @@ homeassistant/components/sensor/moon.py @fabaff
 homeassistant/components/sensor/netdata.py @fabaff
 homeassistant/components/sensor/nmbs.py @thibmaek
 homeassistant/components/sensor/nsw_fuel_station.py @nickw444
+homeassistant/components/sensor/ohmconnect.py @robbiet480
 homeassistant/components/sensor/pi_hole.py @fabaff
 homeassistant/components/sensor/pollen.py @bachya
 homeassistant/components/sensor/pvoutput.py @fabaff
@@ -133,11 +146,13 @@ homeassistant/components/sensor/swiss*.py @fabaff
 homeassistant/components/sensor/sytadin.py @gautric
 homeassistant/components/sensor/tautulli.py @ludeeus
 homeassistant/components/sensor/time_date.py @fabaff
+homeassistant/components/sensor/uber.py @robbiet480
 homeassistant/components/sensor/version.py @fabaff
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/sensor/worldclock.py @fabaff
 homeassistant/components/switch/switchbot.py @danielhiversen
 homeassistant/components/switch/switchmate.py @danielhiversen
+homeassistant/components/tts/amazon_polly.py @robbiet480
 homeassistant/components/vacuum/roomba.py @pschmitt
 homeassistant/components/weather/__init__.py @fabaff
 homeassistant/components/weather/darksky.py @fabaff
@@ -175,6 +190,7 @@ homeassistant/components/esphome/*.py @OttoWinter
 
 # F
 homeassistant/components/freebox/*.py @snoof85
+homeassistant/components/foursquare/* @robbiet480
 
 # G
 homeassistant/components/googlehome/* @ludeeus
@@ -188,6 +204,7 @@ homeassistant/components/huawei_lte/* @scop
 
 # I
 homeassistant/components/influx/* @fabaff
+homeassistant/components/ios/* @robbiet480
 homeassistant/components/ipma/* @dgomes
 
 # K
@@ -201,6 +218,7 @@ homeassistant/components/luftdaten/* @fabaff
 # M
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/melissa/* @kennedyshead
+homeassistant/components/mobile_app/* @robbiet480
 homeassistant/components/*/melissa.py @kennedyshead
 homeassistant/components/*/mystrom.py @fabaff
 
@@ -246,6 +264,7 @@ homeassistant/components/toon/* @frenck
 # U
 homeassistant/components/unifi/* @kane610
 homeassistant/components/upcloud/* @scop
+homeassistant/components/upnp/* @robbiet480
 homeassistant/components/utility_meter/* @dgomes
 
 # V
@@ -259,6 +278,7 @@ homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
 homeassistant/components/xiaomi_miio/* @rytilahti @syssi
 
 # Z
+homeassistant/components/zeroconf/* @robbiet480
 homeassistant/components/zoneminder/* @rohankapoorcom
 
 # Other code
