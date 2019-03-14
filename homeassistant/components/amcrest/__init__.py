@@ -90,7 +90,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
-    from amcrest import AmcrestCamera, CommError, LoginError
+    from amcrest import AmcrestCamera, AmcrestError
 
     hass.data[DATA_AMCREST] = {}
     amcrest_cams = config[DOMAIN]
@@ -104,7 +104,7 @@ def setup(hass, config):
             # pylint: disable=pointless-statement
             camera.current_time
 
-        except (CommError, LoginError) as ex:
+        except AmcrestError as ex:
             _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
             hass.components.persistent_notification.create(
                 'Error: {}<br />'
