@@ -74,6 +74,7 @@ SERVICE_SCHEMAS = {
 }
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices'
@@ -103,6 +104,7 @@ async def websocket_get_devices(hass, connection, msg):
     connection.send_result(msg[ID], devices)
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/reconfigure',
@@ -117,6 +119,7 @@ async def websocket_reconfigure_node(hass, connection, msg):
     hass.async_create_task(device.async_configure())
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/clusters',
@@ -149,6 +152,7 @@ async def websocket_device_clusters(hass, connection, msg):
     connection.send_result(msg[ID], response_clusters)
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/clusters/attributes',
@@ -190,6 +194,7 @@ async def websocket_device_cluster_attributes(hass, connection, msg):
     connection.send_result(msg[ID], cluster_attributes)
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/clusters/commands',
@@ -241,6 +246,7 @@ async def websocket_device_cluster_commands(hass, connection, msg):
     connection.send_result(msg[ID], cluster_commands)
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/clusters/attributes/value',
@@ -283,6 +289,7 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
     connection.send_result(msg[ID], str(success.get(attribute)))
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/bindable',
@@ -311,6 +318,7 @@ async def websocket_get_bindable_devices(hass, connection, msg):
     ))
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/bind',
@@ -330,6 +338,7 @@ async def websocket_bind_devices(hass, connection, msg):
                  )
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/unbind',
@@ -386,16 +395,19 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee,
     await asyncio.gather(*bind_tasks)
 
 
-def async_load_api(hass, application_controller, zha_gateway):
+def async_load_api(hass):
     """Set up the web socket API."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
     async def permit(service):
         """Allow devices to join this network."""
         duration = service.data.get(ATTR_DURATION)
         _LOGGER.info("Permitting joins for %ss", duration)
         await application_controller.permit(duration)
 
-    hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
-                                 schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, SERVICE_PERMIT, permit, schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
 
     async def remove(service):
         """Remove a node from the network."""
@@ -405,8 +417,8 @@ def async_load_api(hass, application_controller, zha_gateway):
         _LOGGER.info("Removing node %s", ieee)
         await application_controller.remove(ieee)
 
-    hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
-                                 schema=SERVICE_SCHEMAS[IEEE_SERVICE])
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, SERVICE_REMOVE, remove, schema=SERVICE_SCHEMAS[IEEE_SERVICE])
 
     async def set_zigbee_cluster_attributes(service):
         """Set zigbee attribute for cluster on zha entity."""
@@ -438,11 +450,12 @@ def async_load_api(hass, application_controller, zha_gateway):
                       "{}: [{}]".format(RESPONSE, response)
                       )
 
-    hass.services.async_register(DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
-                                 set_zigbee_cluster_attributes,
-                                 schema=SERVICE_SCHEMAS[
-                                     SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE
-                                 ])
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE,
+        set_zigbee_cluster_attributes,
+        schema=SERVICE_SCHEMAS[
+            SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE
+        ])
 
     async def issue_zigbee_cluster_command(service):
         """Issue command on zigbee cluster on zha entity."""
@@ -477,11 +490,12 @@ def async_load_api(hass, application_controller, zha_gateway):
                       "{}: [{}]".format(RESPONSE, response)
                       )
 
-    hass.services.async_register(DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
-                                 issue_zigbee_cluster_command,
-                                 schema=SERVICE_SCHEMAS[
-                                     SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND
-                                 ])
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
+        issue_zigbee_cluster_command,
+        schema=SERVICE_SCHEMAS[
+            SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND
+        ])
 
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
