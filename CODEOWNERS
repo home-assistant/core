@@ -66,6 +66,7 @@ homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/emby/* @mezz64
 homeassistant/components/enigma2/* @fbradyirl
+homeassistant/components/enocean/* @bdurrer
 homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
