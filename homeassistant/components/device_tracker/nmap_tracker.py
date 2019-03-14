@@ -1,14 +1,9 @@
-"""
-Support for scanning a network with nmap.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.nmap_tracker/
-"""
-from datetime import timedelta
+"""Support for scanning a network with nmap."""
 import logging
 import re
 import subprocess
 from collections import namedtuple
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -74,7 +69,7 @@ class NmapDeviceScanner(DeviceScanner):
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
 
-        _LOGGER.info("Scanner initialized")
+        _LOGGER.debug("Scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -105,7 +100,7 @@ class NmapDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning...")
+        _LOGGER.debug("Scanning...")
 
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
@@ -146,5 +141,5 @@ class NmapDeviceScanner(DeviceScanner):
 
         self.last_results = last_results
 
-        _LOGGER.info("nmap scan successful")
+        _LOGGER.debug("nmap scan successful")
         return True
