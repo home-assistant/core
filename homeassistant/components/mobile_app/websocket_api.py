@@ -89,7 +89,8 @@ async def websocket_get_user_registrations(
 
     user_registrations = []
 
-    for registration in hass.config_entries.async_entries(domain=DOMAIN):
+    for config_entry in hass.config_entries.async_entries(domain=DOMAIN):
+        registration = config_entry.data
         if connection.user.is_admin or registration[CONF_USER_ID] is user_id:
             user_registrations.append(safe_registration(registration))
 
@@ -128,7 +129,7 @@ async def websocket_delete_registration(hass: HomeAssistantType,
         return error_message(
             msg['id'], ERR_UNAUTHORIZED, 'User is not registration owner')
 
-    await hass.config_entries.async_remove(config_entry.id)
+    await hass.config_entries.async_remove(config_entry.entry_id)
 
     hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
 

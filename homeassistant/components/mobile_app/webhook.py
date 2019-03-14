@@ -107,8 +107,6 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
     registration = config_entry.data
 
-    _LOGGER.warning("Webhook registration %s", registration)
-
     try:
         req_data = await request.json()
     except ValueError:
@@ -213,7 +211,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
         device_registry = await dr.async_get_registry(hass)
 
         device_registry.async_get_or_create(
-            config_entry_id=config_entry.id,
+            config_entry_id=config_entry.entry_id,
             identifiers={
                 (ATTR_DEVICE_ID, registration[ATTR_DEVICE_ID]),
                 (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID])
