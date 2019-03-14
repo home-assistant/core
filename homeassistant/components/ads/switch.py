@@ -61,7 +61,7 @@ class AdsSwitch(ToggleEntity):
 
         self._event = asyncio.Event()
 
-        self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification,
             self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
         try:
