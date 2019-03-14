@@ -274,7 +274,8 @@ async def async_setup_entry(hass, config_entry):
     usb_path = config.get(
         CONF_USB_STICK_PATH, config_entry.data[CONF_USB_STICK_PATH])
 
-    _LOGGER.info('Zwave  USB path is %s', usb_path)
+    _LOGGER.info('Z-Wave  USB path is %s', usb_path)
+
     # Setup options
     options = ZWaveOption(
         usb_path,
@@ -378,7 +379,7 @@ async def async_setup_entry(hass, config_entry):
 
     def network_ready():
         """Handle the query of all awake nodes."""
-        _LOGGER.info("Zwave network is ready for use. All awake nodes "
+        _LOGGER.info("Z-Wave network is ready for use. All awake nodes "
                      "have been queried. Sleeping nodes will be "
                      "queried when they awake.")
         hass.bus.fire(const.EVENT_NETWORK_READY)
