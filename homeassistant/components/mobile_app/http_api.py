@@ -8,19 +8,16 @@ from homeassistant.auth.util import generate_secret
 from homeassistant.components.cloud import async_create_cloudhook
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import (HTTP_CREATED, HTTP_INTERNAL_SERVER_ERROR,
-                                 CONF_WEBHOOK_ID)
+from homeassistant.const import (HTTP_CREATED, CONF_WEBHOOK_ID)
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
 
 from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_ID,
                     ATTR_SUPPORTS_ENCRYPTION, CONF_CLOUDHOOK_URL, CONF_SECRET,
-                    CONF_USER_ID, DATA_REGISTRATIONS, DATA_STORE, DOMAIN,
-                    ERR_INVALID_COMPONENT, ERR_SAVE_FAILURE,
+                    CONF_USER_ID, DOMAIN, ERR_INVALID_COMPONENT,
                     REGISTRATION_SCHEMA)
 
-from .helpers import error_response, supports_encryption, savable_state
+from .helpers import error_response, supports_encryption
 
 
 class RegistrationsView(HomeAssistantView):
@@ -64,15 +61,6 @@ class RegistrationsView(HomeAssistantView):
             data[CONF_SECRET] = generate_secret(SecretBox.KEY_SIZE)
 
         data[CONF_USER_ID] = request['hass_user'].id
-
-        hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id] = data
-
-        try:
-            await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
-        except HomeAssistantError:
-            return error_response(ERR_SAVE_FAILURE,
-                                  "Error saving registration",
-                                  status=HTTP_INTERNAL_SERVER_ERROR)
 
         ctx = {'source': 'registration'}
         hass.async_create_task(hass.config_entries.flow.async_init(DOMAIN,

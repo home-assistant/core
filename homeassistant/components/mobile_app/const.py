@@ -18,7 +18,6 @@ CONF_SECRET = 'secret'
 CONF_USER_ID = 'user_id'
 
 DATA_DELETED_IDS = 'deleted_ids'
-DATA_REGISTRATIONS = 'registrations'
 DATA_STORE = 'store'
 
 ATTR_APP_COMPONENT = 'app_component'
@@ -53,7 +52,6 @@ ATTR_WEBHOOK_TYPE = 'type'
 
 ERR_ENCRYPTION_REQUIRED = 'encryption_required'
 ERR_INVALID_COMPONENT = 'invalid_component'
-ERR_SAVE_FAILURE = 'save_failure'
 
 WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
 WEBHOOK_TYPE_FIRE_EVENT = 'fire_event'

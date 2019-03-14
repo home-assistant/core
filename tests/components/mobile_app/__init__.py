@@ -4,18 +4,10 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 
-from homeassistant.components.mobile_app.const import (ATTR_DEVICE_NAME,
-                                                       ATTR_MANUFACTURER,
-                                                       ATTR_MODEL,
-                                                       ATTR_OS_VERSION,
-                                                       CONF_SECRET,
-                                                       CONF_USER_ID,
-                                                       DATA_DELETED_IDS,
-                                                       DATA_REGISTRATIONS,
+from homeassistant.components.mobile_app.const import (DATA_DELETED_IDS,
                                                        DOMAIN,
                                                        STORAGE_KEY,
                                                        STORAGE_VERSION)
-from homeassistant.const import CONF_WEBHOOK_ID
 
 
 @pytest.fixture
@@ -24,27 +16,6 @@ def webhook_client(hass, aiohttp_client, hass_storage, hass_admin_user):
     hass_storage[STORAGE_KEY] = {
         'version': STORAGE_VERSION,
         'data': {
-            DATA_REGISTRATIONS: {
-                'mobile_app_test': {
-                    CONF_SECRET: '58eb127991594dad934d1584bdee5f27',
-                    'supports_encryption': True,
-                    CONF_WEBHOOK_ID: 'mobile_app_test',
-                    ATTR_DEVICE_NAME: 'Test Device',
-                    CONF_USER_ID: hass_admin_user.id,
-                    ATTR_MANUFACTURER: 'Home Assistant',
-                    ATTR_MODEL: 'Tests',
-                    ATTR_OS_VERSION: '1.0.0'
-                },
-                'mobile_app_test_cleartext': {
-                    'supports_encryption': False,
-                    CONF_WEBHOOK_ID: 'mobile_app_test_cleartext',
-                    'device_name': 'Test Device (Cleartext)',
-                    CONF_USER_ID: hass_admin_user.id,
-                    ATTR_MANUFACTURER: 'Home Assistant',
-                    ATTR_MODEL: 'Cleartext Tests',
-                    ATTR_OS_VERSION: '1.0.1'
-                }
-            },
             DATA_DELETED_IDS: [],
         }
     }

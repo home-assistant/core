@@ -2,9 +2,8 @@
 from homeassistant import config_entries
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import (ATTR_DEVICE_NAME, DATA_DELETED_IDS,
-                    DATA_REGISTRATIONS, DATA_STORE, DOMAIN, STORAGE_KEY,
-                    STORAGE_VERSION)
+from .const import (ATTR_DEVICE_NAME, DATA_DELETED_IDS, DATA_STORE, DOMAIN,
+                    STORAGE_KEY, STORAGE_VERSION)
 
 from .http_api import RegistrationsView
 from .webhook import register_deleted_webhooks, setup_registration
@@ -17,15 +16,14 @@ REQUIREMENTS = ['PyNaCl==1.3.0']
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the mobile app component."""
-    hass.data[DOMAIN] = {DATA_DELETED_IDS: [], DATA_REGISTRATIONS: {}}
+    hass.data[DOMAIN] = {DATA_DELETED_IDS: []}
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()
     if app_config is None:
-        app_config = {DATA_DELETED_IDS: [], DATA_REGISTRATIONS: {}}
+        app_config = {DATA_DELETED_IDS: []}
 
     hass.data[DOMAIN] = {
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
-        DATA_REGISTRATIONS: app_config.get(DATA_REGISTRATIONS, {}),
         DATA_STORE: store
     }
 

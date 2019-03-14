@@ -18,9 +18,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (CONF_CLOUDHOOK_URL, CONF_USER_ID, DATA_DELETED_IDS,
-                    DATA_REGISTRATIONS, DATA_STORE, DOMAIN)
+                    DATA_STORE, DOMAIN)
 
-from .helpers import safe_registration, savable_state
+from .helpers import get_config_entry, safe_registration, savable_state
 
 
 def register_websocket_handlers(hass: HomeAssistantType) -> bool:
@@ -52,7 +52,9 @@ async def websocket_get_registration(
                               "Webhook ID not provided")
         return
 
-    registration = hass.data[DOMAIN][DATA_REGISTRATIONS].get(webhook_id)
+    config_entry = await get_config_entry(hass, webhook_id)
+
+    registration = config_entry.data
 
     if registration is None:
         connection.send_error(msg['id'], ERR_NOT_FOUND,
@@ -87,7 +89,7 @@ async def websocket_get_user_registrations(
 
     user_registrations = []
 
-    for registration in hass.data[DOMAIN][DATA_REGISTRATIONS].values():
+    for registration in hass.config_entries.async_entries(domain=DOMAIN):
         if connection.user.is_admin or registration[CONF_USER_ID] is user_id:
             user_registrations.append(safe_registration(registration))
 
@@ -113,7 +115,9 @@ async def websocket_delete_registration(hass: HomeAssistantType,
                               "Webhook ID not provided")
         return
 
-    registration = hass.data[DOMAIN][DATA_REGISTRATIONS].get(webhook_id)
+    config_entry = await get_config_entry(hass, webhook_id)
+
+    registration = config_entry.data
 
     if registration is None:
         connection.send_error(msg['id'], ERR_NOT_FOUND,
@@ -124,7 +128,7 @@ async def websocket_delete_registration(hass: HomeAssistantType,
         return error_message(
             msg['id'], ERR_UNAUTHORIZED, 'User is not registration owner')
 
-    del hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id]
+    await hass.config_entries.async_remove(config_entry.id)
 
     hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
 
