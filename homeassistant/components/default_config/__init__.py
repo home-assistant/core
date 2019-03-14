@@ -6,7 +6,6 @@ DEPENDENCIES = (
     'cloud',
     'config',
     'conversation',
-    'discovery',
     'frontend',
     'history',
     'logbook',
