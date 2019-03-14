@@ -1,9 +1,4 @@
-"""
-Real-time information about public transport departures in Norway.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.entur_public_transport/
-"""
+"""Real-time information about public transport departures in Norway."""
 from datetime import datetime, timedelta
 import logging
 
@@ -78,11 +73,7 @@ ATTR_TRANSPORT_MODE = 'transport_mode'
 
 
 def due_in_minutes(timestamp: datetime) -> int:
-    """Get the time in minutes from a timestamp.
-
-    The timestamp should be in the format
-    year-month-yearThour:minute:second+timezone
-    """
+    """Get the time in minutes from a timestamp."""
     if timestamp is None:
         return None
     diff = timestamp - dt_util.now()
