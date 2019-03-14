@@ -187,7 +187,7 @@ class NetatmoThermostat(ClimateDevice):
             "module_id": self._data.room_status[self._room_id]['module_id']
         }
         if module_type == NA_THERM:
-            state_attributes["boiler_status"] = self.current_operation
+            state_attributes["boiler_status"] = self._data.boilerstatus
         elif module_type == NA_VALVE:
             state_attributes["heating_power_request"] = \
                 self._data.room_status[self._room_id]['heating_power_request']
