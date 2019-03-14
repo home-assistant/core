@@ -16,6 +16,7 @@ DEPENDENCIES = (
     'sun',
     'system_health',
     'updater',
+    'zeroconf',
 )
 
 
