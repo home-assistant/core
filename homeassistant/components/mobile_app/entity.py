@@ -85,8 +85,6 @@ async def async_setup_mobile_app_entry(sensor_type, hass, config_entry,
 
     async_add_entities(entities, True)
 
-    return
-
 
 class MobileAppEntity(Entity):
     """Representation of an mobile app entity."""
