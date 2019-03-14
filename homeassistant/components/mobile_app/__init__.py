@@ -36,7 +36,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass, entry):
     """Set up a mobile_app entry."""
-    return await setup_registration(hass, entry.data, entry)
+    return await setup_registration(hass, entry)
 
 
 @config_entries.HANDLERS.register(DOMAIN)

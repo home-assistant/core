@@ -1,6 +1,5 @@
 """Webhook handlers for mobile_app."""
 import logging
-from typing import Dict
 
 from aiohttp.web import HTTPBadRequest, Response, Request
 import voluptuous as vol
@@ -56,18 +55,16 @@ def register_deleted_webhooks(hass: HomeAssistantType):
 
 
 async def setup_registration(hass: HomeAssistantType,
-                             registration: Dict,
-                             entry: ConfigEntry = None) -> bool:
+                             entry: ConfigEntry) -> bool:
     """Register the webhook for a registration and loads the app component."""
+    registration = entry.data
+
     device_registry = await dr.async_get_registry(hass)
 
     identifiers = {
         (ATTR_DEVICE_ID, registration[ATTR_DEVICE_ID]),
         (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID])
     }
-
-    if entry is None:
-        entry = await get_config_entry(hass, registration[CONF_WEBHOOK_ID])
 
     config_entry_id = entry.entry_id
 
