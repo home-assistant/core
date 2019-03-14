@@ -38,7 +38,7 @@ async def async_setup_mobile_app_entry(sensor_type, hass, config_entry,
 
         entities.append(platform(config, device, config_entry))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
     @callback
     def handle_sensor_registration(data):
