@@ -226,6 +226,7 @@ def test_abort(hass, client):
     data = yield from resp.json()
     data.pop('flow_id')
     assert data == {
+        'description_placeholders': None,
         'handler': 'test',
         'reason': 'bla',
         'type': 'abort'
