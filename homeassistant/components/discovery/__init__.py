@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.4.0']
+REQUIREMENTS = ['netdisco==2.5.0']
 
 DOMAIN = 'discovery'
 
@@ -40,6 +40,7 @@ SERVICE_HUE = 'philips_hue'
 SERVICE_IGD = 'igd'
 SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 SERVICE_KONNECTED = 'konnected'
+SERVICE_MOBILE_APP = 'hass_mobile_app'
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_OCTOPRINT = 'octoprint'
 SERVICE_ROKU = 'roku'
@@ -63,6 +64,7 @@ CONFIG_ENTRY_HANDLERS = {
 }
 
 SERVICE_HANDLERS = {
+    SERVICE_MOBILE_APP: ('mobile_app', None),
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
