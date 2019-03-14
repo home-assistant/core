@@ -141,7 +141,7 @@ class CloudClient(Interface):
         )
 
         # Fix AgentUserId
-        cloud = self._hass[DOMAIN]
+        cloud = self._hass.data[DOMAIN]
         answer['payload']['agentUserId'] = cloud.claims['cognito:username']
 
         return answer
