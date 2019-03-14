@@ -1,5 +1,4 @@
 """Webhook handlers for mobile_app."""
-from functools import partial
 import logging
 from typing import Dict
 
@@ -12,6 +11,7 @@ from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
                                                      SERVICE_SEE as DT_SEE)
 from homeassistant.components.webhook import async_register as webhook_register
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
                                  CONF_WEBHOOK_ID, HTTP_BAD_REQUEST)
 from homeassistant.core import EventOrigin
@@ -19,7 +19,6 @@ from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
                                       TemplateError)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import attach
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -32,11 +31,11 @@ from .const import (ATTR_ALTITUDE, ATTR_APP_COMPONENT, ATTR_BATTERY,
                     ATTR_TEMPLATE_VARIABLES, ATTR_VERTICAL_ACCURACY,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
-                    CONF_SECRET, DATA_DELETED_IDS, DATA_REGISTRATIONS, DOMAIN,
-                    ERR_ENCRYPTION_REQUIRED, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
-                    WEBHOOK_TYPE_UPDATE_LOCATION,
+                    CONF_SECRET, DATA_DELETED_IDS, DATA_REGISTRATIONS,
+                    DATA_STORE, DOMAIN, ERR_ENCRYPTION_REQUIRED,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
+                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                    WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION)
 
 from .helpers import (_decrypt_payload, empty_okay_response, error_response,
@@ -47,43 +46,55 @@ from .helpers import (_decrypt_payload, empty_okay_response, error_response,
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_deleted_webhooks(hass: HomeAssistantType, store: Store):
+def register_deleted_webhooks(hass: HomeAssistantType):
     """Register previously deleted webhook IDs so we can return 410."""
     for deleted_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
         try:
             webhook_register(hass, DOMAIN, "Deleted Webhook", deleted_id,
-                             partial(handle_webhook, store))
+                             handle_webhook)
         except ValueError:
             pass
 
 
-async def setup_registration(hass: HomeAssistantType, store: Store,
-                             registration: Dict) -> None:
+async def setup_registration(hass: HomeAssistantType,
+                             registration: Dict,
+                             entry: ConfigEntry = None) -> bool:
     """Register the webhook for a registration and loads the app component."""
-    registration_name = 'Mobile App: {}'.format(registration[ATTR_DEVICE_NAME])
-    webhook_id = registration[CONF_WEBHOOK_ID]
-    webhook_register(hass, DOMAIN, registration_name, webhook_id,
-                     partial(handle_webhook, store))
-
     device_registry = await dr.async_get_registry(hass)
+
+    identifiers = {(DOMAIN, registration[ATTR_DEVICE_ID])}
+
+    device = device_registry.async_get_device(identifiers, set())
+
+    config_entry_id = device.id if device else entry.entry_id
+    if config_entry_id is None:
+        _LOGGER.error("No config_entry_id for registration %s!",
+                      registration[ATTR_DEVICE_NAME])
+        return False
+
     device_registry.async_get_or_create(
-        config_entry_id=registration[ATTR_DEVICE_ID],
-        identifiers={
-            (DOMAIN, registration[ATTR_DEVICE_ID]),
-        },
+        config_entry_id=config_entry_id,
+        identifiers=identifiers,
         manufacturer=registration[ATTR_MANUFACTURER],
         model=registration[ATTR_MODEL],
         name=registration[ATTR_DEVICE_NAME],
         sw_version=registration[ATTR_OS_VERSION]
     )
 
+    registration_name = 'Mobile App: {}'.format(registration[ATTR_DEVICE_NAME])
+    webhook_id = registration[CONF_WEBHOOK_ID]
+    webhook_register(hass, DOMAIN, registration_name, webhook_id,
+                     handle_webhook)
+
     if ATTR_APP_COMPONENT in registration:
         load_platform(hass, registration[ATTR_APP_COMPONENT], DOMAIN, {},
                       {DOMAIN: {}})
 
+    return True
 
-async def handle_webhook(store: Store, hass: HomeAssistantType,
-                         webhook_id: str, request: Request) -> Response:
+
+async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
+                         request: Request) -> Response:
     """Handle webhook callback."""
     if webhook_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
         return Response(status=410)
@@ -196,10 +207,25 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id] = new_registration
 
         try:
-            await store.async_save(savable_state(hass))
+            await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
         except HomeAssistantError as ex:
             _LOGGER.error("Error updating mobile_app registration: %s", ex)
             return empty_okay_response()
+
+        device_registry = await dr.async_get_registry(hass)
+
+        identifiers = {(DOMAIN, new_registration[ATTR_DEVICE_ID])}
+
+        device = device_registry.async_get_device(identifiers, set())
+
+        device_registry.async_get_or_create(
+            config_entry_id=device.id,
+            identifiers=identifiers,
+            manufacturer=new_registration[ATTR_MANUFACTURER],
+            model=new_registration[ATTR_MODEL],
+            name=new_registration[ATTR_DEVICE_NAME],
+            sw_version=new_registration[ATTR_OS_VERSION]
+        )
 
         return webhook_response(safe_registration(new_registration),
                                 registration=registration, headers=headers)

@@ -1,0 +1,15 @@
+{
+  "config": {
+    "title": "Mobile App",
+    "step": {
+      "confirm": {
+        "title": "Mobile App",
+        "description": "Do you want to set up the Mobile App component?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of Mobile App is necessary.",
+      "install_app": "Open the mobile app to set up the integration with Home Assistant. See our website for a list of compatible apps."
+    }
+  }
+}
