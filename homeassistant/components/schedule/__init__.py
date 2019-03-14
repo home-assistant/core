@@ -126,7 +126,6 @@ class Schedule:
 
     def handle_state(self, entity, old_state, new_state):
         """Handle state changes of the monitored entities."""
-        # TODO only do this if all entities are loaded
         _LOGGER.info("State change detected for %s", entity)
         self.exec_schedule(dt.now())
 
@@ -202,15 +201,12 @@ class Schedule:
                     new_state[rule.entity] = rule.value
 
         for entity in self.monitored:
-            if entity in new_state:
-                value = new_state[entity]
-            else:
-                value = self.defaults[entity]
-            self.setValue(entity, value)
+            value = new_state.get(entity, self.defaults[entity])
+            self.set_value(entity, value)
         _LOGGER.info("Schedule executed, result = %s", json.dumps(new_state))
         self.active_status = new_state
 
-    def setValue(self, entity, value):
+    def set_value(self, entity, value):
         """Set the entity value.
 
         Calls a service based on the entity's domain to set
@@ -332,8 +328,6 @@ class Rule:
         current_time = now.time()
         start = dt.parse_time(self._start)
         end = dt.parse_time(self._end)
-        if (self._days[now.weekday()]
-                and start <= current_time
-                and current_time < end):
+        if (self._days[now.weekday()] and start <= current_time < end):
             return True
         return False
