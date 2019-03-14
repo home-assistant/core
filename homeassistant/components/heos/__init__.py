@@ -10,7 +10,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 DOMAIN = 'heos'
-REQUIREMENTS = ['aioheos==0.3.2']
+REQUIREMENTS = ['aioheos==0.4.0']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -25,7 +25,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     host = config[DOMAIN][CONF_HOST]
     controller = AioHeosController(hass.loop, host)
-    await controller.connect(host=host)
+    await controller.connect()
 
     players = controller.get_players()
     players.sort()
