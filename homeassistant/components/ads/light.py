@@ -71,12 +71,12 @@ class AdsLight(Light):
 
         self._event = asyncio.Event()
 
-        self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification,
             self.ads_var_enable, self._ads_hub.PLCTYPE_BOOL, update_on_state
         )
         if self.ads_var_brightness is not None:
-            self.hass.async_add_executor_job(
+            await self.hass.async_add_executor_job(
                 self._ads_hub.add_device_notification,
                 self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
                 update_brightness
