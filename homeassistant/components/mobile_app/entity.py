@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import (CONF_WEBHOOK_ID, STATE_ON, STATE_OFF)
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -26,7 +26,7 @@ async def async_setup_mobile_app_platform(sensor_type, hass, config,
     """Set up the mobile app entity sensor."""
     sensor_configs = hass.data[DOMAIN][sensor_type]
 
-    platform_name = "MobileAppEntity"
+    platform_name = "MobileAppSensor"
 
     if sensor_type == ATTR_SENSOR_TYPE_BINARY_SENSOR:
         platform_name = "MobileAppBinarySensor"
@@ -63,7 +63,7 @@ async def async_setup_mobile_app_entry(sensor_type, hass, config_entry,
     """Set up the mobile app entity sensor via config entry."""
     sensor_configs = hass.data[DOMAIN][sensor_type]
 
-    platform_name = "MobileAppEntity"
+    platform_name = "MobileAppSensor"
 
     if sensor_type == ATTR_SENSOR_TYPE_BINARY_SENSOR:
         platform_name = "MobileAppBinarySensor"
@@ -142,27 +142,6 @@ class MobileAppEntity(Entity):
         return self._sensor_id
 
     @property
-    def is_on(self):
-        """Return the state of the binary sensor."""
-        return self._config[ATTR_SENSOR_STATE]
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._entity_type == ATTR_SENSOR_TYPE_BINARY_SENSOR:
-            return STATE_ON if self.is_on else STATE_OFF
-
-        return self._config[ATTR_SENSOR_STATE]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        if self._entity_type == ATTR_SENSOR_TYPE_BINARY_SENSOR:
-            return None
-
-        return self._config[ATTR_SENSOR_UOM]
-
-    @property
     def device_info(self):
         """Return device registry information for this entity."""
         return {
@@ -189,5 +168,24 @@ class MobileAppEntity(Entity):
         self.async_schedule_update_ha_state()
 
 
+class MobileAppSensor(MobileAppEntity):
+    """Representation of an mobile app sensor."""
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._config[ATTR_SENSOR_STATE]
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement this sensor expresses itself in."""
+        return self._config[ATTR_SENSOR_UOM]
+
+
 class MobileAppBinarySensor(MobileAppEntity, BinarySensorDevice):
     """Representation of an mobile app binary sensor."""
+
+    @property
+    def is_on(self):
+        """Return the state of the binary sensor."""
+        return self._config[ATTR_SENSOR_STATE]
