@@ -1,5 +1,11 @@
 {
     "config": {
+        "step": {
+            "user": {
+                "description": "Weet je zeker dat je de GPSLogger Webhook wilt instellen?",
+                "title": "Configureer de GPSLogger Webhook"
+            }
+        },
         "title": "GPSLogger Webhook"
     }
 }

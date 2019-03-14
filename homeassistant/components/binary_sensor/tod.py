@@ -119,6 +119,17 @@ class TodSensor(BinarySensorDevice):
                 self.hass.config.time_zone).isoformat(),
         }
 
+    def _naive_time_to_utc_datetime(self, naive_time):
+        """Convert naive time from config to utc_datetime with current day."""
+        # get the current local date from utc time
+        current_local_date = self.current_datetime.astimezone(
+            self.hass.config.time_zone).date()
+        # calcuate utc datetime corecponding to local time
+        utc_datetime = self.hass.config.time_zone.localize(
+            datetime.combine(
+                current_local_date, naive_time)).astimezone(tz=pytz.UTC)
+        return utc_datetime
+
     def _calculate_initial_boudary_time(self):
         """Calculate internal absolute time boudaries."""
         nowutc = self.current_datetime
@@ -134,9 +145,7 @@ class TodSensor(BinarySensorDevice):
             # datetime.combine(date, time, tzinfo) is not supported
             # in python 3.5. The self._after is provided
             # with hass configured TZ not system wide
-            after_event_date = datetime.combine(
-                nowutc, self._after.replace(
-                    tzinfo=self.hass.config.time_zone)).astimezone(tz=pytz.UTC)
+            after_event_date = self._naive_time_to_utc_datetime(self._after)
 
         self._time_after = after_event_date
 
@@ -154,9 +163,7 @@ class TodSensor(BinarySensorDevice):
                     self.hass, self._before, after_event_date)
         else:
             # Convert local time provided to UTC today, see above
-            before_event_date = datetime.combine(
-                nowutc, self._before.replace(
-                    tzinfo=self.hass.config.time_zone)).astimezone(tz=pytz.UTC)
+            before_event_date = self._naive_time_to_utc_datetime(self._before)
 
             # It is safe to add timedelta days=1 to UTC as there is no DST
             if before_event_date < after_event_date + self._after_offset:
@@ -190,7 +197,6 @@ class TodSensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
-        await super().async_added_to_hass()
         self._calculate_initial_boudary_time()
         self._calculate_next_update()
         self._point_in_time_listener(dt_util.now())

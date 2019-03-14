@@ -10,21 +10,21 @@ from tests.common import async_mock_service
 
 from . import authed_api_client, webhook_client  # noqa: F401
 
-from .const import (CALL_SERVICE, FIRE_EVENT, REGISTER, RENDER_TEMPLATE,
-                    UPDATE)
+from .const import (CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT,
+                    RENDER_TEMPLATE, UPDATE)
 
 
 async def test_webhook_handle_render_template(webhook_client):  # noqa: F811
     """Test that we render templates properly."""
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test',
+        '/api/webhook/mobile_app_test_cleartext',
         json=RENDER_TEMPLATE
     )
 
     assert resp.status == 200
 
     json = await resp.json()
-    assert json == {'rendered': 'Hello world'}
+    assert json == {'one': 'Hello world'}
 
 
 async def test_webhook_handle_call_services(hass, webhook_client):  # noqa: E501 F811
@@ -32,7 +32,7 @@ async def test_webhook_handle_call_services(hass, webhook_client):  # noqa: E501
     calls = async_mock_service(hass, 'test', 'mobile_app')
 
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test',
+        '/api/webhook/mobile_app_test_cleartext',
         json=CALL_SERVICE
     )
 
@@ -53,7 +53,7 @@ async def test_webhook_handle_fire_event(hass, webhook_client):  # noqa: F811
     hass.bus.async_listen('test_event', store_event)
 
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test',
+        '/api/webhook/mobile_app_test_cleartext',
         json=FIRE_EVENT
     )
 
@@ -69,7 +69,7 @@ async def test_webhook_update_registration(webhook_client, hass_client):  # noqa
     """Test that a we can update an existing registration via webhook."""
     authed_api_client = await hass_client()  # noqa: F811
     register_resp = await authed_api_client.post(
-        '/api/mobile_app/registrations', json=REGISTER
+        '/api/mobile_app/registrations', json=REGISTER_CLEARTEXT
     )
 
     assert register_resp.status == 201
@@ -96,7 +96,7 @@ async def test_webhook_update_registration(webhook_client, hass_client):  # noqa
 async def test_webhook_returns_error_incorrect_json(webhook_client, caplog):  # noqa: E501 F811
     """Test that an error is returned when JSON is invalid."""
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test',
+        '/api/webhook/mobile_app_test_cleartext',
         data='not json'
     )
 
@@ -123,7 +123,7 @@ async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
     key = key[:keylen]
     key = key.ljust(keylen, b'\0')
 
-    payload = json.dumps({'template': 'Hello world'}).encode("utf-8")
+    payload = json.dumps(RENDER_TEMPLATE['data']).encode("utf-8")
 
     data = SecretBox(key).encrypt(payload,
                                   encoder=Base64Encoder).decode("utf-8")
@@ -141,5 +141,26 @@ async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
 
     assert resp.status == 200
 
-    json = await resp.json()
-    assert json == {'rendered': 'Hello world'}
+    webhook_json = await resp.json()
+    assert 'encrypted_data' in webhook_json
+
+    decrypted_data = SecretBox(key).decrypt(webhook_json['encrypted_data'],
+                                            encoder=Base64Encoder)
+    decrypted_data = decrypted_data.decode("utf-8")
+
+    assert json.loads(decrypted_data) == {'one': 'Hello world'}
+
+
+async def test_webhook_requires_encryption(webhook_client):  # noqa: F811
+    """Test that encrypted registrations only accept encrypted data."""
+    resp = await webhook_client.post(
+        '/api/webhook/mobile_app_test',
+        json=RENDER_TEMPLATE
+    )
+
+    assert resp.status == 400
+
+    webhook_json = await resp.json()
+    assert 'error' in webhook_json
+    assert webhook_json['success'] is False
+    assert webhook_json['error']['code'] == 'encryption_required'

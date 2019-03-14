@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, POWER_WATT)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, POWER_WATT, ENERGY_KILO_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
@@ -29,7 +29,7 @@ ATTR_CURRENT_CONSUMPTION_UNIT_VALUE = POWER_WATT
 
 ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_TOTAL_CONSUMPTION_UNIT = 'total_consumption_unit'
-ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = 'kWh'
+ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 
 ATTR_TEMPERATURE_UNIT = 'temperature_unit'
 

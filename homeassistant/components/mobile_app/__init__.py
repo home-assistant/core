@@ -28,6 +28,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         }
 
     hass.data[DOMAIN] = app_config
+
     hass.data[DOMAIN][DATA_STORE] = store
 
     for registration in app_config[DATA_REGISTRATIONS].values():

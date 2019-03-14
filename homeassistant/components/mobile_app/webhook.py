@@ -3,10 +3,12 @@ from functools import partial
 import logging
 from typing import Dict
 
-from aiohttp.web import HTTPBadRequest, json_response, Response, Request
+from aiohttp.web import HTTPBadRequest, Response, Request
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import (DOMAIN as DT_DOMAIN,
+from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
+                                                     ATTR_DEV_ID,
+                                                     DOMAIN as DT_DOMAIN,
                                                      SERVICE_SEE as DT_SEE)
 from homeassistant.components.webhook import async_register as webhook_register
 
@@ -15,18 +17,23 @@ from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
 from homeassistant.core import EventOrigin
 from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
                                       TemplateError)
-from homeassistant.helpers import template
 from homeassistant.helpers.discovery import async_load_platform, load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.template import attach
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_NAME, ATTR_EVENT_DATA,
-                    ATTR_EVENT_TYPE, ATTR_SENSOR_TYPE, ATTR_SENSOR_UNIQUE_ID,
-                    ATTR_TEMPLATE, ATTR_TEMPLATE_VARIABLES, ATTR_WEBHOOK_DATA,
-                    ATTR_WEBHOOK_ENCRYPTED, ATTR_WEBHOOK_ENCRYPTED_DATA,
-                    ATTR_WEBHOOK_TYPE, CONF_SECRET, DATA_DELETED_IDS,
-                    DATA_REGISTRATIONS, DOMAIN, SIGNAL_SENSOR_UPDATE,
+from .const import (ATTR_ALTITUDE, ATTR_APP_COMPONENT, ATTR_BATTERY,
+                    ATTR_COURSE, ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
+                    ATTR_EVENT_DATA, ATTR_EVENT_TYPE, ATTR_GPS,
+                    ATTR_GPS_ACCURACY, ATTR_LOCATION_NAME, ATTR_SENSOR_TYPE,
+                    ATTR_SENSOR_UNIQUE_ID, ATTR_SPEED,
+                    ATTR_SUPPORTS_ENCRYPTION, ATTR_TEMPLATE,
+                    ATTR_TEMPLATE_VARIABLES, ATTR_VERTICAL_ACCURACY,
+                    ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
+                    ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
+                    CONF_SECRET, DATA_DELETED_IDS, DATA_REGISTRATIONS, DOMAIN,
+                    ERR_ENCRYPTION_REQUIRED, SIGNAL_SENSOR_UPDATE,
                     WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS,
                     WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
                     WEBHOOK_TYPE_REGISTER_SENSOR, WEBHOOK_TYPE_RENDER_TEMPLATE,
@@ -34,8 +41,9 @@ from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_NAME, ATTR_EVENT_DATA,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION,
                     WEBHOOK_TYPE_UPDATE_SENSOR_STATES)
 
-from .helpers import (_decrypt_payload, empty_okay_response,
-                      registration_context, safe_registration, savable_state)
+from .helpers import (_decrypt_payload, empty_okay_response, error_response,
+                      registration_context, safe_registration, savable_state,
+                      webhook_response)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,6 +87,12 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
     except ValueError:
         _LOGGER.warning('Received invalid JSON from mobile_app')
         return empty_okay_response(status=HTTP_BAD_REQUEST)
+
+    if (ATTR_WEBHOOK_ENCRYPTED not in req_data and
+            registration[ATTR_SUPPORTS_ENCRYPTION]):
+        _LOGGER.warning("Refusing to accept unencrypted webhook from %s",
+                        registration[ATTR_DEVICE_NAME])
+        return error_response(ERR_ENCRYPTION_REQUIRED, "Encryption required")
 
     try:
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
@@ -127,22 +141,37 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         return empty_okay_response(headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_RENDER_TEMPLATE:
-        try:
-            tpl = template.Template(data[ATTR_TEMPLATE], hass)
-            rendered = tpl.async_render(data.get(ATTR_TEMPLATE_VARIABLES))
-            return json_response({"rendered": rendered}, headers=headers)
-        # noqa: E722 pylint: disable=broad-except
-        except (ValueError, TemplateError, Exception) as ex:
-            _LOGGER.error("Error when rendering template during mobile_app "
-                          "webhook (device name: %s): %s",
-                          registration[ATTR_DEVICE_NAME], ex)
-            return json_response(({"error": str(ex)}), status=HTTP_BAD_REQUEST,
-                                 headers=headers)
+        resp = {}
+        for key, item in data.items():
+            try:
+                tpl = item[ATTR_TEMPLATE]
+                attach(hass, tpl)
+                resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
+            # noqa: E722 pylint: disable=broad-except
+            except TemplateError as ex:
+                resp[key] = {"error": str(ex)}
+
+        return webhook_response(resp, registration=registration,
+                                headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
+        see_payload = {
+            ATTR_DEV_ID: registration[ATTR_DEVICE_ID],
+            ATTR_LOCATION_NAME: data.get(ATTR_LOCATION_NAME),
+            ATTR_GPS: data.get(ATTR_GPS),
+            ATTR_GPS_ACCURACY: data.get(ATTR_GPS_ACCURACY),
+            ATTR_BATTERY: data.get(ATTR_BATTERY),
+            ATTR_ATTRIBUTES: {
+                ATTR_SPEED: data.get(ATTR_SPEED),
+                ATTR_ALTITUDE: data.get(ATTR_ALTITUDE),
+                ATTR_COURSE: data.get(ATTR_COURSE),
+                ATTR_VERTICAL_ACCURACY: data.get(ATTR_VERTICAL_ACCURACY),
+            }
+        }
+
         try:
             await hass.services.async_call(DT_DOMAIN,
-                                           DT_SEE, data,
+                                           DT_SEE, see_payload,
                                            blocking=True, context=context)
         # noqa: E722 pylint: disable=broad-except
         except (vol.Invalid, ServiceNotFound, Exception) as ex:
@@ -162,7 +191,8 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
             _LOGGER.error("Error updating mobile_app registration: %s", ex)
             return empty_okay_response()
 
-        return json_response(safe_registration(new_registration))
+        return webhook_response(safe_registration(new_registration),
+                                registration=registration, headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_REGISTER_SENSOR:
         entity_type = data[ATTR_SENSOR_TYPE]
@@ -190,7 +220,8 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
                                                    data[ATTR_SENSOR_TYPE],
                                                    DOMAIN, data, {DOMAIN: {}}))
 
-        return json_response({"status": "registered"})
+        return webhook_response({"status": "registered"},
+                                registration=registration, headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_SENSOR_STATES:
         resp = {}
@@ -226,4 +257,5 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
 
             resp[unique_id] = {"status": "okay"}
 
-        return json_response(resp)
+        return webhook_response(resp, registration=registration,
+                                headers=headers)

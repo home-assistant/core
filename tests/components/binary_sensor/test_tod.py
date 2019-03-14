@@ -110,8 +110,8 @@ class TestBinarySensorTod(unittest.TestCase):
 
     def test_midnight_turnover_after_midnight_inside_period(self):
         """Test midnight turnover setting before midnight inside period ."""
-        test_time = datetime(
-            2019, 1, 10, 21, 00, 0, tzinfo=self.hass.config.time_zone)
+        test_time = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 10, 21, 0, 0)).astimezone(pytz.UTC)
         config = {
             'binary_sensor': [
                 {
@@ -143,8 +143,8 @@ class TestBinarySensorTod(unittest.TestCase):
 
     def test_midnight_turnover_before_midnight_outside_period(self):
         """Test midnight turnover setting before midnight outside period."""
-        test_time = datetime(
-            2019, 1, 10, 20, 30, 0, tzinfo=self.hass.config.time_zone)
+        test_time = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 10, 20, 30, 0)).astimezone(pytz.UTC)
         config = {
             'binary_sensor': [
                 {
@@ -165,8 +165,9 @@ class TestBinarySensorTod(unittest.TestCase):
 
     def test_midnight_turnover_after_midnight_outside_period(self):
         """Test midnight turnover setting before midnight inside period ."""
-        test_time = datetime(
-            2019, 1, 10, 20, 0, 0, tzinfo=self.hass.config.time_zone)
+        test_time = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 10, 20, 0, 0)).astimezone(pytz.UTC)
+
         config = {
             'binary_sensor': [
                 {
@@ -185,8 +186,8 @@ class TestBinarySensorTod(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.night')
         assert state.state == STATE_OFF
 
-        switchover_time = datetime(
-            2019, 1, 11, 4, 59, 0, tzinfo=self.hass.config.time_zone)
+        switchover_time = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 11, 4, 59, 0)).astimezone(pytz.UTC)
         with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
                    return_value=switchover_time):
 
@@ -210,8 +211,8 @@ class TestBinarySensorTod(unittest.TestCase):
 
     def test_from_sunrise_to_sunset(self):
         """Test period from sunrise to sunset."""
-        test_time = datetime(
-            2019, 1, 12, tzinfo=self.hass.config.time_zone)
+        test_time = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 12)).astimezone(pytz.UTC)
         sunrise = dt_util.as_local(get_astral_event_date(
             self.hass, 'sunrise', dt_util.as_utc(test_time)))
         sunset = dt_util.as_local(get_astral_event_date(
@@ -299,8 +300,8 @@ class TestBinarySensorTod(unittest.TestCase):
 
     def test_from_sunset_to_sunrise(self):
         """Test period from sunset to sunrise."""
-        test_time = datetime(
-            2019, 1, 12, tzinfo=self.hass.config.time_zone)
+        test_time = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 12)).astimezone(pytz.UTC)
         sunset = dt_util.as_local(get_astral_event_date(
             self.hass, 'sunset', test_time))
         sunrise = dt_util.as_local(get_astral_event_next(
@@ -385,14 +386,14 @@ class TestBinarySensorTod(unittest.TestCase):
 
     def test_offset(self):
         """Test offset."""
-        after = datetime(
-            2019, 1, 10, 18, 0, 0,
-            tzinfo=self.hass.config.time_zone) + \
+        after = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 10, 18, 0, 0)).astimezone(pytz.UTC) + \
             timedelta(hours=1, minutes=34)
-        before = datetime(
-            2019, 1, 10, 22, 0, 0,
-            tzinfo=self.hass.config.time_zone) + \
+
+        before = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 10, 22, 0, 0)).astimezone(pytz.UTC) + \
             timedelta(hours=1, minutes=45)
+
         entity_id = 'binary_sensor.evening'
         config = {
             'binary_sensor': [
@@ -457,9 +458,8 @@ class TestBinarySensorTod(unittest.TestCase):
 
     def test_offset_overnight(self):
         """Test offset overnight."""
-        after = datetime(
-            2019, 1, 10, 18, 0, 0,
-            tzinfo=self.hass.config.time_zone) + \
+        after = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 10, 18, 0, 0)).astimezone(pytz.UTC) + \
             timedelta(hours=1, minutes=34)
         entity_id = 'binary_sensor.evening'
         config = {
@@ -498,7 +498,8 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.config.latitude = 69.6
         self.hass.config.longitude = 18.8
 
-        test_time = datetime(2010, 1, 1, tzinfo=self.hass.config.time_zone)
+        test_time = self.hass.config.time_zone.localize(
+            datetime(2010, 1, 1)).astimezone(pytz.UTC)
         sunrise = dt_util.as_local(get_astral_event_next(
             self.hass, 'sunrise', dt_util.as_utc(test_time)))
         sunset = dt_util.as_local(get_astral_event_next(
@@ -600,13 +601,13 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.config.latitude = 69.6
         self.hass.config.longitude = 18.8
 
-        test_time = datetime(2010, 6, 1, tzinfo=self.hass.config.time_zone)
+        test_time = self.hass.config.time_zone.localize(
+            datetime(2010, 6, 1)).astimezone(pytz.UTC)
+
         sunrise = dt_util.as_local(get_astral_event_next(
             self.hass, 'sunrise', dt_util.as_utc(test_time)))
         sunset = dt_util.as_local(get_astral_event_next(
             self.hass, 'sunset', dt_util.as_utc(test_time)))
-        print(sunrise)
-        print(sunset)
         config = {
             'binary_sensor': [
                 {
@@ -701,8 +702,8 @@ class TestBinarySensorTod(unittest.TestCase):
 
     def test_sun_offset(self):
         """Test sun event with offset."""
-        test_time = datetime(
-            2019, 1, 12, tzinfo=self.hass.config.time_zone)
+        test_time = self.hass.config.time_zone.localize(
+            datetime(2019, 1, 12)).astimezone(pytz.UTC)
         sunrise = dt_util.as_local(get_astral_event_date(
             self.hass, 'sunrise', dt_util.as_utc(test_time)) +
             timedelta(hours=-1, minutes=-30))
@@ -810,8 +811,8 @@ class TestBinarySensorTod(unittest.TestCase):
     def test_dst(self):
         """Test sun event with offset."""
         self.hass.config.time_zone = pytz.timezone('CET')
-        test_time = datetime(
-            2019, 3, 30, 3, 0, 0, tzinfo=self.hass.config.time_zone)
+        test_time = self.hass.config.time_zone.localize(
+            datetime(2019, 3, 30, 3, 0, 0)).astimezone(pytz.UTC)
         config = {
             'binary_sensor': [
                 {

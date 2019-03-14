@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.3.0']
+REQUIREMENTS = ['netdisco==2.5.0']
 
 DOMAIN = 'discovery'
 
@@ -40,6 +40,7 @@ SERVICE_HUE = 'philips_hue'
 SERVICE_IGD = 'igd'
 SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 SERVICE_KONNECTED = 'konnected'
+SERVICE_MOBILE_APP = 'hass_mobile_app'
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_OCTOPRINT = 'octoprint'
 SERVICE_ROKU = 'roku'
@@ -63,13 +64,14 @@ CONFIG_ENTRY_HANDLERS = {
 }
 
 SERVICE_HANDLERS = {
+    SERVICE_MOBILE_APP: ('mobile_app', None),
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
-    SERVICE_ENIGMA2: ('enigma2', None),
+    SERVICE_ENIGMA2: ('media_player', 'enigma2'),
     SERVICE_ROKU: ('roku', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
@@ -95,7 +97,7 @@ SERVICE_HANDLERS = {
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
     'lg_smart_device': ('media_player', 'lg_soundbar'),
-    'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
+    'nanoleaf_aurora': ('light', 'nanoleaf'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {

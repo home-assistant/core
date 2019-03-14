@@ -5,7 +5,7 @@ import pytest
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.const import CONF_WEBHOOK_ID
 
-from .const import REGISTER
+from .const import REGISTER, RENDER_TEMPLATE
 from . import authed_api_client  # noqa: F401
 
 
@@ -35,7 +35,7 @@ async def test_registration(hass_client, authed_api_client):  # noqa: F811
     key = key[:keylen]
     key = key.ljust(keylen, b'\0')
 
-    payload = json.dumps({'template': 'Hello world'}).encode("utf-8")
+    payload = json.dumps(RENDER_TEMPLATE['data']).encode("utf-8")
 
     data = SecretBox(key).encrypt(payload,
                                   encoder=Base64Encoder).decode("utf-8")
@@ -56,4 +56,35 @@ async def test_registration(hass_client, authed_api_client):  # noqa: F811
     assert resp.status == 200
 
     webhook_json = await resp.json()
-    assert webhook_json == {'rendered': 'Hello world'}
+    assert 'encrypted_data' in webhook_json
+
+    decrypted_data = SecretBox(key).decrypt(webhook_json['encrypted_data'],
+                                            encoder=Base64Encoder)
+    decrypted_data = decrypted_data.decode("utf-8")
+
+    assert json.loads(decrypted_data) == {'one': 'Hello world'}
+
+
+async def test_register_invalid_component(authed_api_client):  # noqa: F811
+    """Test that registration with invalid component fails."""
+    resp = await authed_api_client.post(
+        '/api/mobile_app/registrations', json={
+            'app_component': 'will_never_be_valid',
+            'app_data': {'foo': 'bar'},
+            'app_id': 'io.homeassistant.mobile_app_test',
+            'app_name': 'Mobile App Tests',
+            'app_version': '1.0.0',
+            'device_name': 'Test 1',
+            'manufacturer': 'mobile_app',
+            'model': 'Test',
+            'os_name': 'Linux',
+            'os_version': '1.0',
+            'supports_encryption': True
+        }
+    )
+
+    assert resp.status == 400
+    register_json = await resp.json()
+    assert 'error' in register_json
+    assert register_json['success'] is False
+    assert register_json['error']['code'] == 'invalid_component'

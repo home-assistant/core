@@ -3,8 +3,11 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (DEVICE_CLASSES as
                                                     BINARY_SENSOR_CLASSES)
-from homeassistant.components.device_tracker import SERVICE_SEE_PAYLOAD_SCHEMA
 from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
+from homeassistant.components.device_tracker import (ATTR_BATTERY,
+                                                     ATTR_GPS,
+                                                     ATTR_GPS_ACCURACY,
+                                                     ATTR_LOCATION_NAME)
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA)
 from homeassistant.helpers import config_validation as cv
 
@@ -28,9 +31,11 @@ ATTR_APP_DATA = 'app_data'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_APP_VERSION = 'app_version'
+ATTR_DEVICE_ID = 'device_id'
 ATTR_DEVICE_NAME = 'device_name'
 ATTR_MANUFACTURER = 'manufacturer'
 ATTR_MODEL = 'model'
+ATTR_OS_NAME = 'os_name'
 ATTR_OS_VERSION = 'os_version'
 ATTR_SUPPORTS_ENCRYPTION = 'supports_encryption'
 
@@ -40,10 +45,19 @@ ATTR_EVENT_TYPE = 'event_type'
 ATTR_TEMPLATE = 'template'
 ATTR_TEMPLATE_VARIABLES = 'variables'
 
+ATTR_SPEED = 'speed'
+ATTR_ALTITUDE = 'altitude'
+ATTR_COURSE = 'course'
+ATTR_VERTICAL_ACCURACY = 'vertical_accuracy'
+
 ATTR_WEBHOOK_DATA = 'data'
 ATTR_WEBHOOK_ENCRYPTED = 'encrypted'
 ATTR_WEBHOOK_ENCRYPTED_DATA = 'encrypted_data'
 ATTR_WEBHOOK_TYPE = 'type'
+
+ERR_ENCRYPTION_REQUIRED = 'encryption_required'
+ERR_INVALID_COMPONENT = 'invalid_component'
+ERR_SAVE_FAILURE = 'save_failure'
 
 WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
 WEBHOOK_TYPE_FIRE_EVENT = 'fire_event'
@@ -59,15 +73,17 @@ WEBHOOK_TYPES = [WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
                  WEBHOOK_TYPE_UPDATE_REGISTRATION,
                  WEBHOOK_TYPE_UPDATE_SENSOR_STATES]
 
+
 REGISTRATION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_APP_COMPONENT): cv.string,
     vol.Optional(ATTR_APP_DATA, default={}): dict,
     vol.Required(ATTR_APP_ID): cv.string,
-    vol.Optional(ATTR_APP_NAME): cv.string,
+    vol.Required(ATTR_APP_NAME): cv.string,
     vol.Required(ATTR_APP_VERSION): cv.string,
     vol.Required(ATTR_DEVICE_NAME): cv.string,
     vol.Required(ATTR_MANUFACTURER): cv.string,
     vol.Required(ATTR_MODEL): cv.string,
+    vol.Required(ATTR_OS_NAME): cv.string,
     vol.Optional(ATTR_OS_VERSION): cv.string,
     vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
 })
@@ -100,8 +116,21 @@ FIRE_EVENT_SCHEMA = vol.Schema({
 })
 
 RENDER_TEMPLATE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TEMPLATE): cv.string,
-    vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
+    str: {
+        vol.Required(ATTR_TEMPLATE): cv.template,
+        vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
+    }
+})
+
+UPDATE_LOCATION_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_LOCATION_NAME): cv.string,
+    vol.Required(ATTR_GPS): cv.gps,
+    vol.Required(ATTR_GPS_ACCURACY): cv.positive_int,
+    vol.Optional(ATTR_BATTERY): cv.positive_int,
+    vol.Optional(ATTR_SPEED): cv.positive_int,
+    vol.Optional(ATTR_ALTITUDE): cv.positive_int,
+    vol.Optional(ATTR_COURSE): cv.positive_int,
+    vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
 })
 
 ATTR_SENSOR_ATTRIBUTES = 'attributes'
@@ -146,7 +175,7 @@ WEBHOOK_SCHEMAS = {
     WEBHOOK_TYPE_FIRE_EVENT: FIRE_EVENT_SCHEMA,
     WEBHOOK_TYPE_REGISTER_SENSOR: REGISTER_SENSOR_SCHEMA,
     WEBHOOK_TYPE_RENDER_TEMPLATE: RENDER_TEMPLATE_SCHEMA,
-    WEBHOOK_TYPE_UPDATE_LOCATION: SERVICE_SEE_PAYLOAD_SCHEMA,
+    WEBHOOK_TYPE_UPDATE_LOCATION: UPDATE_LOCATION_SCHEMA,
     WEBHOOK_TYPE_UPDATE_REGISTRATION: UPDATE_REGISTRATION_SCHEMA,
     WEBHOOK_TYPE_UPDATE_SENSOR_STATES: UPDATE_SENSOR_STATE_SCHEMA,
 }

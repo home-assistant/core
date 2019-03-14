@@ -14,7 +14,7 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pythonwhois==2.4.3']
+REQUIREMENTS = ['python-whois==0.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,21 +37,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the WHOIS sensor."""
-    from pythonwhois import get_whois
-    from pythonwhois.shared import WhoisException
+    import whois
 
     domain = config.get(CONF_DOMAIN)
     name = config.get(CONF_NAME)
 
     try:
-        if 'expiration_date' in get_whois(domain, normalized=True):
+        if 'expiration_date' in whois.whois(domain):
             add_entities([WhoisSensor(name, domain)], True)
         else:
             _LOGGER.error(
                 "WHOIS lookup for %s didn't contain expiration_date",
                 domain)
             return
-    except WhoisException as ex:
+    except whois.BaseException as ex:
         _LOGGER.error(
             "Exception %s occurred during WHOIS lookup for %s", ex, domain)
         return
@@ -62,9 +61,9 @@ class WhoisSensor(Entity):
 
     def __init__(self, name, domain):
         """Initialize the sensor."""
-        from pythonwhois import get_whois
+        import whois
 
-        self.whois = get_whois
+        self.whois = whois.whois
 
         self._name = name
         self._domain = domain
@@ -104,11 +103,11 @@ class WhoisSensor(Entity):
 
     def update(self):
         """Get the current WHOIS data for the domain."""
-        from pythonwhois.shared import WhoisException
+        import whois
 
         try:
-            response = self.whois(self._domain, normalized=True)
-        except WhoisException as ex:
+            response = self.whois(self._domain)
+        except whois.BaseException as ex:
             _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
             self._empty_state_and_attributes()
             return
@@ -128,17 +127,21 @@ class WhoisSensor(Entity):
 
             attrs = {}
 
-            expiration_date = response['expiration_date'][0]
+            expiration_date = response['expiration_date']
             attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
             if 'nameservers' in response:
                 attrs[ATTR_NAME_SERVERS] = ' '.join(response['nameservers'])
 
             if 'updated_date' in response:
-                attrs[ATTR_UPDATED] = response['updated_date'][0].isoformat()
+                update_date = response['updated_date']
+                if isinstance(update_date, list):
+                    attrs[ATTR_UPDATED] = update_date[0].isoformat()
+                else:
+                    attrs[ATTR_UPDATED] = update_date.isoformat()
 
             if 'registrar' in response:
-                attrs[ATTR_REGISTRAR] = response['registrar'][0]
+                attrs[ATTR_REGISTRAR] = response['registrar']
 
             time_delta = (expiration_date - expiration_date.now())
 
