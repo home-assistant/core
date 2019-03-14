@@ -1,9 +1,4 @@
-"""
-Support for Switchbot.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.switchbot
-"""
+"""Support for Switchbot."""
 import logging
 
 import voluptuous as vol
@@ -11,6 +6,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_MAC
+from homeassistant.helpers.restore_state import RestoreEntity
 
 REQUIREMENTS = ['PySwitchbot==0.5']
 
@@ -18,10 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Switchbot'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -31,17 +29,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SwitchBot(mac_addr, name)])
 
 
-class SwitchBot(SwitchDevice):
+class SwitchBot(SwitchDevice, RestoreEntity):
     """Representation of a Switchbot."""
 
     def __init__(self, mac, name) -> None:
         """Initialize the Switchbot."""
         # pylint: disable=import-error, no-member
         import switchbot
-        self._state = False
+
+        self._state = None
         self._name = name
         self._mac = mac
         self._device = switchbot.Switchbot(mac=mac)
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._state = state.state
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""
