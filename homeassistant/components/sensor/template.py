@@ -52,7 +52,8 @@ async def async_setup_platform(hass, config, async_add_entities,
             CONF_ENTITY_PICTURE_TEMPLATE)
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
-        unit_of_measurement_template = device_config.get(CONF_UNIT_OF_MEASUREMENT_TEMPLATE)
+        unit_of_measurement_template = 
+            device_config.get(CONF_UNIT_OF_MEASUREMENT_TEMPLATE)
         device_class = device_config.get(CONF_DEVICE_CLASS)
 
         entity_ids = set()
@@ -64,7 +65,8 @@ async def async_setup_platform(hass, config, async_add_entities,
                 (CONF_ICON_TEMPLATE, icon_template),
                 (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
                 (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
-                (CONF_UNIT_OF_MEASUREMENT_TEMPLATE, unit_of_measurement_template),
+                (CONF_UNIT_OF_MEASUREMENT_TEMPLATE, 
+                    unit_of_measurement_template),
         ):
             if template is None:
                 continue
