@@ -11,19 +11,23 @@ from homeassistant.setup import async_setup_component
 from tests.common import mock_coro
 
 
-async def test_constructor_loads_info_from_config():
+async def test_constructor_loads_info_from_config(hass):
     """Test non-dev mode loads info from SERVERS constant."""
-    hass = MagicMock(data={})
 
-    await cloud.async_setup(hass, {
-        'cloud': {
-            cloud.CONF_MODE: cloud.MODE_DEV,
-            'cognito_client_id': 'test-cognito_client_id',
-            'user_pool_id': 'test-user_pool_id',
-            'region': 'test-region',
-            'relayer': 'test-relayer',
-        }
-    })
+    with patch(
+        "hass_nabucasa.Cloud.start", return_value=mock_coro()
+    ) as mock_start:
+        result = await async_setup_component(hass, 'cloud', {
+            'http': {},
+            'cloud': {
+                cloud.CONF_MODE: cloud.MODE_DEV,
+                'cognito_client_id': 'test-cognito_client_id',
+                'user_pool_id': 'test-user_pool_id',
+                'region': 'test-region',
+                'relayer': 'test-relayer',
+            }
+        })
+        assert result
 
     cl = hass.data['cloud']
     assert cl.mode == cloud.MODE_DEV
