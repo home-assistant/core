@@ -8,29 +8,16 @@ from homeassistant.auth.util import generate_secret
 from homeassistant.components.cloud import async_create_cloudhook
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import (HTTP_CREATED, HTTP_INTERNAL_SERVER_ERROR,
-                                 CONF_WEBHOOK_ID)
+from homeassistant.const import (HTTP_CREATED, CONF_WEBHOOK_ID)
 
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import get_component
 
 from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_ID,
                     ATTR_SUPPORTS_ENCRYPTION, CONF_CLOUDHOOK_URL, CONF_SECRET,
-                    CONF_USER_ID, DATA_REGISTRATIONS, DOMAIN,
-                    ERR_INVALID_COMPONENT, ERR_SAVE_FAILURE,
+                    CONF_USER_ID, DOMAIN, ERR_INVALID_COMPONENT,
                     REGISTRATION_SCHEMA)
 
-from .helpers import error_response, supports_encryption, savable_state
-
-from .webhook import setup_registration
-
-
-def register_http_handlers(hass: HomeAssistantType, store: Store) -> bool:
-    """Register the HTTP handlers/views."""
-    hass.http.register_view(RegistrationsView(store))
-    return True
+from .helpers import error_response, supports_encryption
 
 
 class RegistrationsView(HomeAssistantView):
@@ -38,10 +25,6 @@ class RegistrationsView(HomeAssistantView):
 
     url = '/api/mobile_app/registrations'
     name = 'api:mobile_app:register'
-
-    def __init__(self, store: Store) -> None:
-        """Initialize the view."""
-        self._store = store
 
     @RequestDataValidator(REGISTRATION_SCHEMA)
     async def post(self, request: Request, data: Dict) -> Response:
@@ -79,16 +62,10 @@ class RegistrationsView(HomeAssistantView):
 
         data[CONF_USER_ID] = request['hass_user'].id
 
-        hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id] = data
-
-        try:
-            await self._store.async_save(savable_state(hass))
-        except HomeAssistantError:
-            return error_response(ERR_SAVE_FAILURE,
-                                  "Error saving registration",
-                                  status=HTTP_INTERNAL_SERVER_ERROR)
-
-        setup_registration(hass, self._store, data)
+        ctx = {'source': 'registration'}
+        await hass.async_create_task(
+            hass.config_entries.flow.async_init(DOMAIN, context=ctx,
+                                                data=data))
 
         return self.json({
             CONF_CLOUDHOOK_URL: data.get(CONF_CLOUDHOOK_URL),
