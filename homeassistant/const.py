@@ -146,6 +146,7 @@ CONF_TRIGGER_TIME = 'trigger_time'
 CONF_TTL = 'ttl'
 CONF_TYPE = 'type'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
+CONF_UNIT_OF_MEASUREMENT_TEMPLATE = 'unit_of_measurement_template'
 CONF_UNIT_SYSTEM = 'unit_system'
 
 # Deprecated in 0.88.0, invalidated in 0.91.0, remove in 0.92.0
