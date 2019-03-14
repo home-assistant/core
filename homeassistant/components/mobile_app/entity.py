@@ -49,7 +49,7 @@ async def async_setup_mobile_app_entry(sensor_type, hass, config_entry,
 
         device = hass.data[DOMAIN][DATA_DEVICES][data[CONF_WEBHOOK_ID]]
 
-        async_add_entities([platform(data, device, config_entry)], True)
+        async_add_entities([platform(data, device, config_entry)])
 
     async_dispatcher_connect(hass,
                              '{}_{}_register'.format(DOMAIN, sensor_type),
