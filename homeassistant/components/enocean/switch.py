@@ -15,9 +15,9 @@ CONF_CHANNEL = 'channel'
 DEFAULT_NAME = 'EnOcean Switch'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_CHANNEL, default=0): cv.positive_int,
     vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_CHANNEL, default=0): cv.positive_int,
 })
 
 
@@ -35,7 +35,7 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
 
     def __init__(self, dev_id, dev_name, channel):
         """Initialize the EnOcean switch device."""
-        enocean.EnOceanDevice.__init__(self, dev_id, dev_name)
+        super().__init__(dev_id, dev_name)
         self._light = None
         self._on_state = False
         self._on_state2 = False

@@ -9,7 +9,6 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS, CONF_ID, CONF_NAME, DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, POWER_WATT)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,8 +20,6 @@ CONF_RANGE_TO = 'range_to'
 DEFAULT_NAME = 'EnOcean sensor'
 
 DEVICE_CLASS_POWER = 'powersensor'
-
-DOMAIN = 'enocean'
 
 SENSOR_TYPES = {
     DEVICE_CLASS_HUMIDITY: {
@@ -77,12 +74,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([EnOceanPowerSensor(dev_id, dev_name)])
 
 
-class EnOceanSensor(enocean.EnOceanDevice, Entity):
+class EnOceanSensor(enocean.EnOceanDevice):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
     def __init__(self, dev_id, dev_name, sensor_type):
         """Initialize the EnOcean sensor device."""
-        enocean.EnOceanDevice.__init__(self, dev_id)
+        super().__init__(dev_id, dev_name)
         self._sensor_type = sensor_type
         self._device_class = SENSOR_TYPES[self._sensor_type]['class']
         self._dev_name = '{} {}'.format(

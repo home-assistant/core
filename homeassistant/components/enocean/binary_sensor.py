@@ -41,7 +41,7 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
 
     def __init__(self, dev_id, dev_name, device_class):
         """Initialize the EnOcean binary sensor."""
-        enocean.EnOceanDevice.__init__(self, dev_id, dev_name)
+        super().__init__(dev_id, dev_name)
         self._device_class = device_class
         self.which = -1
         self.onoff = -1
@@ -99,9 +99,6 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
             self.onoff = 1
         self.hass.bus.fire(EVENT_BUTTON_PRESSED,
                            {'id': self.dev_id,
-                            'id_str': packet.sender_hex,
-                            'entity_id': self.entity_id,
-                            'name': self.dev_name,
                             'pushed': pushed,
                             'which': self.which,
                             'onoff': self.onoff})

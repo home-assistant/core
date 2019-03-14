@@ -39,7 +39,7 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
 
     def __init__(self, sender_id, dev_id, dev_name):
         """Initialize the EnOcean light source."""
-        enocean.EnOceanDevice.__init__(self, dev_id, dev_name)
+        super().__init__(dev_id, dev_name)
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
