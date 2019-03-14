@@ -1,4 +1,6 @@
 """A entity class for mobile_app."""
+from functools import partial
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -41,16 +43,17 @@ async def async_setup_mobile_app_entry(sensor_type, hass, config_entry,
     async_add_entities(entities, True)
 
     @callback
-    def handle_sensor_registration(data):
-        webhook_id = data[CONF_WEBHOOK_ID]
+    def handle_sensor_registration(webhook_id, data):
+        if data[CONF_WEBHOOK_ID] != webhook_id:
+            return
 
-        device = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
+        device = hass.data[DOMAIN][DATA_DEVICES][data[CONF_WEBHOOK_ID]]
 
         async_add_entities([platform(data, device, config_entry)], True)
 
     async_dispatcher_connect(hass,
                              '{}_{}_register'.format(DOMAIN, sensor_type),
-                             handle_sensor_registration)
+                             partial(handle_sensor_registration, webhook_id))
 
 
 class MobileAppEntity(Entity):
@@ -126,7 +129,10 @@ class MobileAppEntity(Entity):
     async def async_update(self):
         """Get the latest state of the sensor."""
         data = self.hass.data[DOMAIN]
-        self._config = data[self._entity_type][self._sensor_id]
+        try:
+            self._config = data[self._entity_type][self._sensor_id]
+        except KeyError:
+            return
 
     @callback
     def _handle_update(self, data):
