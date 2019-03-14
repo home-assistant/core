@@ -96,9 +96,9 @@ class DaikinClimateSensor(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-    def update(self):
+    async def async_update(self):
         """Retrieve latest state."""
-        self._api.update()
+        await self._api.async_update()
 
     @property
     def device_info(self):

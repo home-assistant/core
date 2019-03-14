@@ -90,16 +90,16 @@ class MQTTRoomSensor(Entity):
             self.async_schedule_update_ha_state()
 
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Handle new MQTT messages."""
             try:
-                data = MQTT_PAYLOAD(payload)
+                data = MQTT_PAYLOAD(msg.payload)
             except vol.MultipleInvalid as error:
                 _LOGGER.debug(
                     "Skipping update because of malformatted data: %s", error)
                 return
 
-            device = _parse_update_data(topic, data)
+            device = _parse_update_data(msg.topic, data)
             if device.get(CONF_DEVICE_ID) == self._device_id:
                 if self._distance is None or self._updated is None:
                     update_state(**device)

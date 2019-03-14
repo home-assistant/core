@@ -61,7 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the ARWN platform."""
     @callback
-    def async_sensor_event_received(topic, payload, qos):
+    def async_sensor_event_received(msg):
         """Process events as sensors.
 
         When a new event on our topic (arwn/#) is received we map it
@@ -74,8 +74,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         This lets us dynamically incorporate sensors without any
         configuration on our side.
         """
-        event = json.loads(payload)
-        sensors = discover_sensors(topic, event)
+        event = json.loads(msg.payload)
+        sensors = discover_sensors(msg.topic, event)
         if not sensors:
             return
 

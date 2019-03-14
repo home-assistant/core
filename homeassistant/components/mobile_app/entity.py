@@ -1,17 +1,20 @@
 """A entity class for mobile_app."""
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import (CONF_WEBHOOK_ID, STATE_ON, STATE_OFF)
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (ATTR_SENSOR_ATTRIBUTES,
+from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
+                    ATTR_MODEL, ATTR_OS_VERSION, ATTR_SENSOR_ATTRIBUTES,
                     ATTR_SENSOR_DEVICE_CLASS, ATTR_SENSOR_ICON,
                     ATTR_SENSOR_NAME, ATTR_SENSOR_STATE, ATTR_SENSOR_TYPE,
                     ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_UNIQUE_ID,
-                    ATTR_SENSOR_UOM, DATA_REGISTRATIONS, DOMAIN,
+                    ATTR_SENSOR_UOM, DATA_CONFIG_ENTRIES, DATA_DEVICES, DOMAIN,
                     SIGNAL_SENSOR_UPDATE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +24,6 @@ async def async_setup_mobile_app_platform(sensor_type, hass, config,
                                           async_add_entities,
                                           discovery_info=None):
     """Set up the mobile app entity sensor."""
-    registrations = hass.data[DOMAIN][DATA_REGISTRATIONS]
     sensor_configs = hass.data[DOMAIN][sensor_type]
 
     platform_name = "MobileAppEntity"
@@ -35,25 +37,67 @@ async def async_setup_mobile_app_platform(sensor_type, hass, config,
 
     if discovery_info is None:
         for sensor_config in sensor_configs.values():
-            device = registrations[sensor_config[CONF_WEBHOOK_ID]]
-            entities.append(platform(sensor_config, device))
+            webhook_id = sensor_config[CONF_WEBHOOK_ID]
+
+            device = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
+
+            entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+
+            entities.append(platform(sensor_config, device, entry))
     else:
-        device = registrations[discovery_info[CONF_WEBHOOK_ID]]
-        sensor_config = sensor_configs[discovery_info[ATTR_SENSOR_UNIQUE_ID]]
-        entities.append(platform(sensor_config, device))
+        webhook_id = discovery_info[CONF_WEBHOOK_ID]
+
+        device = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
+
+        entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+
+        key = "{}_{}".format(webhook_id,
+                             discovery_info[ATTR_SENSOR_UNIQUE_ID])
+        entities.append(platform(sensor_configs[key], device, entry))
 
     async_add_entities(entities, True)
+
+
+async def async_setup_mobile_app_entry(sensor_type, hass, config_entry,
+                                       async_add_entities):
+    """Set up the mobile app entity sensor via config entry."""
+    sensor_configs = hass.data[DOMAIN][sensor_type]
+
+    platform_name = "MobileAppEntity"
+
+    if sensor_type == ATTR_SENSOR_TYPE_BINARY_SENSOR:
+        platform_name = "MobileAppBinarySensor"
+
+    platform = globals()[platform_name]
+
+    entities = list()
+
+    for sensor_config in sensor_configs.values():
+        webhook_id = sensor_config[CONF_WEBHOOK_ID]
+
+        device = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
+
+        entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+
+        config_id = list(device.config_entries)[0]
+        entry = hass.config_entries.async_get_entry(config_id)
+        entities.append(platform(sensor_config, device, entry))
+
+    async_add_entities(entities, True)
+
+    return
 
 
 class MobileAppEntity(Entity):
     """Representation of an mobile app entity."""
 
-    def __init__(self, config, device):
+    def __init__(self, config: dict, device: DeviceEntry, entry: ConfigEntry):
         """Initialize the sensor."""
         self._config = config
         self._device = device
-        self._device_id = device[CONF_WEBHOOK_ID]
-        self._sensor_id = "{}_{}".format(device[CONF_WEBHOOK_ID],
+        self._entry = entry
+        self._registration = entry.data
+        self._sensor_id = "{}_{}".format(self._registration[CONF_WEBHOOK_ID],
                                          config[ATTR_SENSOR_UNIQUE_ID])
         self._entity_type = config[ATTR_SENSOR_TYPE]
 
@@ -118,10 +162,24 @@ class MobileAppEntity(Entity):
 
         return self._config[ATTR_SENSOR_UOM]
 
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            'identifiers': {
+                (ATTR_DEVICE_ID, self._registration[ATTR_DEVICE_ID]),
+                (CONF_WEBHOOK_ID, self._registration[CONF_WEBHOOK_ID])
+            },
+            'manufacturer': self._registration[ATTR_MANUFACTURER],
+            'model': self._registration[ATTR_MODEL],
+            'device_name': self._registration[ATTR_DEVICE_NAME],
+            'sw_version': self._registration[ATTR_OS_VERSION],
+            'config_entries': self._device.config_entries
+        }
+
     async def async_update(self):
         """Get the latest state of the sensor."""
         data = self.hass.data[DOMAIN]
-        self._device = data[DATA_REGISTRATIONS][self._device_id]
         self._config = data[self._entity_type][self._sensor_id]
 
     @callback

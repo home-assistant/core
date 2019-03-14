@@ -21,8 +21,9 @@ CONF_SECRET = 'secret'
 CONF_USER_ID = 'user_id'
 
 DATA_BINARY_SENSOR = 'binary_sensor'
+DATA_CONFIG_ENTRIES = 'config_entries'
 DATA_DELETED_IDS = 'deleted_ids'
-DATA_REGISTRATIONS = 'registrations'
+DATA_DEVICES = 'devices'
 DATA_SENSOR = 'sensor'
 DATA_STORE = 'store'
 
@@ -31,6 +32,7 @@ ATTR_APP_DATA = 'app_data'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_APP_VERSION = 'app_version'
+ATTR_CONFIG_ENTRY_ID = 'entry_id'
 ATTR_DEVICE_ID = 'device_id'
 ATTR_DEVICE_NAME = 'device_name'
 ATTR_MANUFACTURER = 'manufacturer'
@@ -57,7 +59,6 @@ ATTR_WEBHOOK_TYPE = 'type'
 
 ERR_ENCRYPTION_REQUIRED = 'encryption_required'
 ERR_INVALID_COMPONENT = 'invalid_component'
-ERR_SAVE_FAILURE = 'save_failure'
 
 WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
 WEBHOOK_TYPE_FIRE_EVENT = 'fire_event'
@@ -99,7 +100,7 @@ UPDATE_REGISTRATION_SCHEMA = vol.Schema({
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Schema({
     vol.Required(ATTR_WEBHOOK_TYPE): cv.string,  # vol.In(WEBHOOK_TYPES)
-    vol.Required(ATTR_WEBHOOK_DATA, default={}): dict,
+    vol.Required(ATTR_WEBHOOK_DATA, default={}): vol.Any(dict, list),
     vol.Optional(ATTR_WEBHOOK_ENCRYPTED, default=False): cv.boolean,
     vol.Optional(ATTR_WEBHOOK_ENCRYPTED_DATA): cv.string,
 })
