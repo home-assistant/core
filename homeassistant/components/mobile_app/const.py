@@ -59,6 +59,8 @@ ATTR_WEBHOOK_TYPE = 'type'
 
 ERR_ENCRYPTION_REQUIRED = 'encryption_required'
 ERR_INVALID_COMPONENT = 'invalid_component'
+ERR_SENSOR_NOT_REGISTERED = 'not_registered'
+ERR_SENSOR_DUPLICATE_UNIQUE_ID = 'duplicate_unique_id'
 
 WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
 WEBHOOK_TYPE_FIRE_EVENT = 'fire_event'

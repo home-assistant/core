@@ -10,7 +10,8 @@ from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
                                                      SERVICE_SEE as DT_SEE)
 
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
-                                 CONF_WEBHOOK_ID, HTTP_BAD_REQUEST)
+                                 CONF_WEBHOOK_ID, HTTP_BAD_REQUEST,
+                                 HTTP_CREATED)
 from homeassistant.core import EventOrigin
 from homeassistant.exceptions import (HomeAssistantError,
                                       ServiceNotFound, TemplateError)
@@ -30,6 +31,7 @@ from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
                     CONF_SECRET, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
                     DATA_STORE, DOMAIN, ERR_ENCRYPTION_REQUIRED,
+                    ERR_SENSOR_DUPLICATE_UNIQUE_ID, ERR_SENSOR_NOT_REGISTERED,
                     SIGNAL_SENSOR_UPDATE, WEBHOOK_PAYLOAD_SCHEMA,
                     WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
                     WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_REGISTER_SENSOR,
@@ -193,7 +195,10 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
         if unique_store_key in hass.data[DOMAIN][entity_type]:
             _LOGGER.error("Refusing to re-register existing sensor %s!",
                           unique_id)
-            return empty_okay_response()
+            return error_response(ERR_SENSOR_DUPLICATE_UNIQUE_ID,
+                                  "{} {} already exists!".format(entity_type,
+                                                                 unique_id),
+                                  status=409)
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
@@ -202,7 +207,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
         try:
             await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
         except HomeAssistantError as ex:
-            _LOGGER.error("Error updating mobile_app registration: %s", ex)
+            _LOGGER.error("Error registering sensor: %s", ex)
             return empty_okay_response()
 
         register_signal = '{}_{}_register'.format(DOMAIN,
@@ -210,7 +215,8 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
         async_dispatcher_send(hass, register_signal, data)
 
         return webhook_response({"status": "registered"},
-                                registration=registration, headers=headers)
+                                registration=registration, status=HTTP_CREATED,
+                                headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_SENSOR_STATES:
         resp = {}
@@ -224,9 +230,14 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
             if unique_store_key not in hass.data[DOMAIN][entity_type]:
                 _LOGGER.error("Refusing to update non-registered sensor: %s",
                               unique_store_key)
+                err_msg = '{} {} is not registered'.format(entity_type,
+                                                           unique_id)
                 resp[unique_id] = {
-                    "status": "error",
-                    "message": "not_registered"
+                    'success': False,
+                    'error': {
+                        'code': ERR_SENSOR_NOT_REGISTERED,
+                        'message': err_msg
+                    }
                 }
                 continue
 
