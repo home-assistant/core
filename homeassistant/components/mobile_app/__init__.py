@@ -1,6 +1,4 @@
 """Integrates Native Apps to Home Assistant."""
-import logging
-
 from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.webhook import async_register as webhook_register
@@ -20,8 +18,6 @@ from .websocket_api import register_websocket_handlers
 DEPENDENCIES = ['device_tracker', 'http', 'webhook']
 
 REQUIREMENTS = ['PyNaCl==1.3.0']
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
@@ -68,15 +64,8 @@ async def async_setup_entry(hass, entry):
         (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID])
     }
 
-    config_entry_id = entry.entry_id
-
-    if config_entry_id is None:
-        _LOGGER.error("No config_entry_id for registration %s!",
-                      registration[ATTR_DEVICE_NAME])
-        return False
-
     device = device_registry.async_get_or_create(
-        config_entry_id=config_entry_id,
+        config_entry_id=entry.entry_id,
         identifiers=identifiers,
         manufacturer=registration[ATTR_MANUFACTURER],
         model=registration[ATTR_MODEL],
