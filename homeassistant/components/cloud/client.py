@@ -136,9 +136,15 @@ class CloudClient(Interface):
         if not self._prefs.google_enabled:
             return ga.turned_off_response(payload)
 
-        return await ga.async_handle_message(
+        result = await ga.async_handle_message(
             self._hass, self.google_config, self.prefs.cloud_user, payload
         )
+
+        # Fix AgentUserId
+        cloud = self._hass[DOMAIN]
+        result['payload']['agentUserId'] = cloud.claims['cognito:username']
+
+        return result
 
     async def async_webhook_message(
             self, payload: Dict[Any, Any]) -> Dict[Any, Any]:

@@ -15,21 +15,15 @@ async def test_constructor_loads_info_from_config():
     """Test non-dev mode loads info from SERVERS constant."""
     hass = MagicMock(data={})
 
-    with patch(
-        "homeassistant.components.cloud.prefs.CloudPreferences."
-        "async_initialize",
-        return_value=mock_coro()
-    ):
-        result = await cloud.async_setup(hass, {
-            'cloud': {
-                cloud.CONF_MODE: cloud.MODE_DEV,
-                'cognito_client_id': 'test-cognito_client_id',
-                'user_pool_id': 'test-user_pool_id',
-                'region': 'test-region',
-                'relayer': 'test-relayer',
-            }
-        })
-        assert result
+    await cloud.async_setup(hass, {
+        'cloud': {
+            cloud.CONF_MODE: cloud.MODE_DEV,
+            'cognito_client_id': 'test-cognito_client_id',
+            'user_pool_id': 'test-user_pool_id',
+            'region': 'test-region',
+            'relayer': 'test-relayer',
+        }
+    })
 
     cl = hass.data['cloud']
     assert cl.mode == cloud.MODE_DEV
