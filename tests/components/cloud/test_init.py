@@ -1,5 +1,5 @@
 """Test the cloud component."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import cloud
@@ -13,7 +13,6 @@ from tests.common import mock_coro
 
 async def test_constructor_loads_info_from_config(hass):
     """Test non-dev mode loads info from SERVERS constant."""
-
     with patch("hass_nabucasa.Cloud.start", return_value=mock_coro()):
         result = await async_setup_component(hass, 'cloud', {
             'http': {},
