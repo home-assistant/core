@@ -4,7 +4,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player.const import (
     DOMAIN as MEDIA_PLAYER_DOMAIN)
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -27,11 +27,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     controller = AioHeosController(hass.loop, host)
     await controller.connect()
 
-    players = controller.get_players()
-    players.sort()
+    async def controller_close(event):
+        """Close connection when HASS shutsdown."""
+        await controller.close()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller_close)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] = players
+    hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] = controller.get_players()
 
     hass.async_create_task(async_load_platform(
         hass, MEDIA_PLAYER_DOMAIN, DOMAIN, {}, config))
