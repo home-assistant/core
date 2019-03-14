@@ -31,7 +31,7 @@ async def async_trigger(hass, config, action, automation_info):
     @callback
     def mqtt_automation_listener(mqttmsg):
         """Listen for MQTT messages."""
-        if payload is None or payload == mqttmsg.msg_payload:
+        if payload is None or payload == mqttmsg.payload:
             data = {
                 'platform': 'mqtt',
                 'topic': mqttmsg.topic,
@@ -40,7 +40,7 @@ async def async_trigger(hass, config, action, automation_info):
             }
 
             try:
-                data['payload_json'] = json.loads(mqttmsg.msg_payload)
+                data['payload_json'] = json.loads(mqttmsg.payload)
             except ValueError:
                 pass
 
