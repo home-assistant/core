@@ -7,6 +7,7 @@ PREF_ENABLE_GOOGLE = 'google_enabled'
 PREF_ENABLE_REMOTE = 'remote_enabled'
 PREF_GOOGLE_ALLOW_UNLOCK = 'google_allow_unlock'
 PREF_CLOUDHOOKS = 'cloudhooks'
+PREF_CLOUD_USER = 'cloud_user'
 
 CONF_ALEXA = 'alexa'
 CONF_ALIASES = 'aliases'
