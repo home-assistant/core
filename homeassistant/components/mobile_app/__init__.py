@@ -23,10 +23,6 @@ REQUIREMENTS = ['PyNaCl==1.3.0']
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the mobile app component."""
-    hass.data[DOMAIN] = {
-        DATA_CONFIG_ENTRIES: {}, DATA_DELETED_IDS: [], DATA_DEVICES: {},
-    }
-
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()
     if app_config is None:
@@ -38,9 +34,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
             DATA_SENSOR: {}
         }
 
-    hass.data[DOMAIN] = app_config
-
-    hass.data[DOMAIN][DATA_STORE] = store
+    hass.data[DOMAIN] = {
+        DATA_BINARY_SENSOR: app_config.get(DATA_BINARY_SENSOR, {}),
+        DATA_CONFIG_ENTRIES: {},
+        DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
+        DATA_DEVICES: {},
+        DATA_SENSOR: app_config.get(DATA_SENSOR, {}),
+        DATA_STORE: store,
+    }
 
     hass.http.register_view(RegistrationsView())
     register_websocket_handlers(hass)

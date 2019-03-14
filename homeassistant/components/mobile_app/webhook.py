@@ -15,7 +15,6 @@ from homeassistant.core import EventOrigin
 from homeassistant.exceptions import (HomeAssistantError,
                                       ServiceNotFound, TemplateError)
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.template import attach
 from homeassistant.helpers.typing import HomeAssistantType
@@ -206,10 +205,9 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
             _LOGGER.error("Error updating mobile_app registration: %s", ex)
             return empty_okay_response()
 
-        plat_data = data[ATTR_SENSOR_TYPE]
-        await hass.async_create_task(async_load_platform(hass, plat_data,
-                                                         DOMAIN, data,
-                                                         {DOMAIN: {}}))
+        register_signal = '{}_{}_register'.format(DOMAIN,
+                                                  data[ATTR_SENSOR_TYPE])
+        async_dispatcher_send(hass, register_signal, data)
 
         return webhook_response({"status": "registered"},
                                 registration=registration, headers=headers)
