@@ -25,48 +25,11 @@ from .helpers import get_config_entry, safe_registration, savable_state
 
 def register_websocket_handlers(hass: HomeAssistantType) -> bool:
     """Register the websocket handlers."""
-    async_register_command(hass, websocket_get_registration)
-
     async_register_command(hass, websocket_get_user_registrations)
 
     async_register_command(hass, websocket_delete_registration)
 
     return True
-
-
-@ws_require_user()
-@async_response
-@websocket_command({
-    vol.Required('type'): 'mobile_app/get_registration',
-    vol.Required(CONF_WEBHOOK_ID): cv.string,
-})
-async def websocket_get_registration(
-        hass: HomeAssistantType, connection: ActiveConnection,
-        msg: dict) -> None:
-    """Return the registration for the given webhook_id."""
-    user = connection.user
-
-    webhook_id = msg.get(CONF_WEBHOOK_ID)
-    if webhook_id is None:
-        connection.send_error(msg['id'], ERR_INVALID_FORMAT,
-                              "Webhook ID not provided")
-        return
-
-    config_entry = await get_config_entry(hass, webhook_id)
-
-    registration = config_entry.data
-
-    if registration is None:
-        connection.send_error(msg['id'], ERR_NOT_FOUND,
-                              "Webhook ID not found in storage")
-        return
-
-    if registration[CONF_USER_ID] != user.id and not user.is_admin:
-        return error_message(
-            msg['id'], ERR_UNAUTHORIZED, 'User is not registration owner')
-
-    connection.send_message(
-        result_message(msg['id'], safe_registration(registration)))
 
 
 @ws_require_user()
