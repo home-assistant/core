@@ -98,7 +98,13 @@ class MobileAppFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        return self.async_abort(reason='install_app')
+        placeholders = {
+            'apps_url':
+                'https://www.home-assistant.io/components/mobile_app/#apps'
+        }
+
+        return self.async_abort(reason='install_app',
+                                description_placeholders=placeholders)
 
     async def async_step_registration(self, user_input=None):
         """Handle a flow initialized during registration."""
