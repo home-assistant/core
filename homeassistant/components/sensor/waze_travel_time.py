@@ -218,7 +218,6 @@ class WazeTravelTime(Entity):
 
                 route = sorted(routes, key=(lambda key: routes[key][0]))[0]
                 duration, distance = routes[route]
-                route = bytes(route, 'ISO-8859-1').decode('UTF-8')
                 self._state = {
                     'duration': duration,
                     'distance': distance,
