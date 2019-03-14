@@ -2,8 +2,6 @@
 import asyncio
 import logging
 
-from amcrest import CommError
-
 from homeassistant.components.amcrest import (
     DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT)
 from homeassistant.components.camera import Camera
@@ -12,6 +10,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_web,
     async_aiohttp_proxy_stream)
+
 
 DEPENDENCIES = ['amcrest', 'ffmpeg']
 
@@ -50,6 +49,8 @@ class AmcrestCam(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
+        from amcrest import CommError
+
         async with self._snapshot_lock:
             try:
                 # Send the request to snap a picture and return raw jpg data
