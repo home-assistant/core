@@ -21,7 +21,7 @@ CONF_TELEVISION_LISTS = 'television_lists'
 ATTR_MEDIA = 'media'
 ATTR_RELEASE_DATE = 'release_date'
 ATTR_OVERVIEW = 'overview'
-ATTR_POSTER_PATH = 'poster_apth'
+ATTR_POSTER_PATH = 'poster_path'
 ATTR_TITLE = 'title'
 
 LIST_TYPES = ['upcoming', 'now_playing', 'popular', 'top_rated']
@@ -55,18 +55,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
 
     # get all movie sensors
-    movie_lists = config.get(CONF_MOVIE_LISTS)
-    if movie_lists:
-        tmdb_movie = tmdb.Movies()
-        sensors += [TmdbSensor(list_type, tmdb_movie, 'movie')
-                    for list_type in movie_lists]
+    movie_lists = config.get(CONF_MOVIE_LISTS, [])
+    tmdb_movie = tmdb.Movies()
+    sensors += [TmdbSensor(list_type, tmdb_movie, 'movie')
+                for list_type in movie_lists]
 
     # get all television sensors
-    television_lists = config.get(CONF_TELEVISION_LISTS)
-    if television_lists:
-        tmdb_television = tmdb.TV()
-        sensors += [TmdbSensor(list_type, tmdb_television, 'tv')
-                    for list_type in television_lists]
+    television_lists = config.get(CONF_TELEVISION_LISTS, [])
+    tmdb_television = tmdb.TV()
+    sensors += [TmdbSensor(list_type, tmdb_television, 'tv')
+                for list_type in television_lists]
 
     add_entities(sensors, True)
 
@@ -84,11 +82,6 @@ class TmdbSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'tmdb_{}_{}'.format(self._query_type, self._list_type)
-
-    @property
-    def friendly_name(self):
-        """Return the friendly name of the sensor."""
         return '{} {}'.format(self._list_type, self._query_type)
 
     @property
