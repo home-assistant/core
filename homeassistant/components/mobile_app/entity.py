@@ -100,16 +100,18 @@ class MobileAppEntity(Entity):
         self._sensor_id = "{}_{}".format(self._registration[CONF_WEBHOOK_ID],
                                          config[ATTR_SENSOR_UNIQUE_ID])
         self._entity_type = config[ATTR_SENSOR_TYPE]
+        self.unsub_dispatcher = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_SENSOR_UPDATE,
-                                 self._handle_update)
+        self.unsub_dispatcher = async_dispatcher_connect(self.hass,
+                                                         SIGNAL_SENSOR_UPDATE,
+                                                         self._handle_update)
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
-        async_dispatcher_connect(self.hass, SIGNAL_SENSOR_UPDATE,
-                                 self._handle_update)
+        if self.unsub_dispatcher is not None:
+            self.unsub_dispatcher()
 
     @property
     def should_poll(self) -> bool:
