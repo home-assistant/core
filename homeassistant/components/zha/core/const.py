@@ -1,6 +1,12 @@
 """All constants related to the ZHA component."""
 import enum
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.fan import DOMAIN as FAN
+from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
+
 DOMAIN = 'zha'
 
 BAUD_RATES = [
@@ -17,13 +23,13 @@ DATA_ZHA_CORE_EVENTS = 'zha_core_events'
 DATA_ZHA_GATEWAY = 'zha_gateway'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
-COMPONENTS = [
-    'binary_sensor',
-    'fan',
-    'light',
-    'sensor',
-    'switch',
-]
+COMPONENTS = (
+    BINARY_SENSOR,
+    FAN,
+    LIGHT,
+    SENSOR,
+    SWITCH,
+)
 
 CONF_BAUDRATE = 'baudrate'
 CONF_DATABASE = 'database_path'
