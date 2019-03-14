@@ -16,7 +16,16 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['aioharmony==0.1.8']
+# REQUIREMENTS = ['aioharmony==0.2.0']
+# WIP - BETA testing
+# slixmpp also has an issue with HA>=0.87, fix provided to that library
+# in the mean time added to this requirement to download my
+# copy from github.
+REQUIREMENTS = [
+    'https://github.com/ehendrix23/aioharmony/archive/dev.zip'
+    '#aioharmony==0.2.0b3',
+    'https://github.com/ehendrix23/slixmpp/archive/master.zip#slixmpp==1.4.2.2'
+]
 
 _LOGGER = logging.getLogger(__name__)
 
