@@ -128,7 +128,7 @@ class CloudClient(Interface):
     @callback
     def dispatcher_message(self, identifier: str, data: Any = None) -> None:
         """Match cloud notification to dispatcher."""
-        if identifier.startwith("remote_"):
+        if identifier.startswith("remote_"):
             async_dispatcher_send(self._hass, DISPATCHER_REMOTE_UPDATE, data)
 
     async def async_alexa_message(
