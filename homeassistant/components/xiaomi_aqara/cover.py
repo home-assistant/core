@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             model = device['model']
             if model == 'curtain':
                 devices.append(XiaomiGenericCover(device, "Curtain",
-                                                  'status', gateway))
+                                                  'curtain_status', gateway))
     add_entities(devices)
 
 
