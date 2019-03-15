@@ -11,7 +11,9 @@ from concurrent.futures import TimeoutError as Timeout
 from homeassistant.core import callback
 from .const import (
     DEFAULT_BAUDRATE, REPORT_CONFIG_MAX_INT, REPORT_CONFIG_MIN_INT,
-    REPORT_CONFIG_RPT_CHANGE, RadioType, IN, OUT, BINDABLE_CLUSTERS)
+    REPORT_CONFIG_RPT_CHANGE, RadioType, IN, OUT
+)
+from .registries import BINDABLE_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
 
