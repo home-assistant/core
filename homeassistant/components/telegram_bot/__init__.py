@@ -177,7 +177,7 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                     params["auth"] = HTTPDigestAuth(username, password)
                 else:
                     params["auth"] = HTTPBasicAuth(username, password)
-            if verify_ssl is not None:
+            if verify_ssl:
                 params["verify"] = verify_ssl
             retry_num = 0
             while retry_num < num_retries:
