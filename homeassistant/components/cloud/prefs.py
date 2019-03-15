@@ -102,14 +102,15 @@ class CloudPreferences:
     @property
     def _has_local_trusted_network(self) -> bool:
         """Return if we allow localhost to bypass auth."""
-        local = ip_address('127.0.0.1')
+        local4 = ip_address('127.0.0.1')
+        local6 = ip_address('::1')
 
         for prv in self._hass.auth.auth_providers:
             if prv.type != 'trusted_networks':
                 continue
 
             for network in prv.trusted_networks:
-                if local in network:
+                if local4 in network or local6 in network:
                     return True
 
         return False
