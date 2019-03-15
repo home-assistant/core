@@ -107,6 +107,7 @@ async def websocket_subscribe(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg['id']))
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices'
