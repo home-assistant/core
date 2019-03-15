@@ -139,8 +139,19 @@ class RestNotificationService(BaseNotificationService):
                                     params=data, timeout=10, auth=self._auth,
                                     verify=self._verify_ssl)
 
-        success_codes = (200, 201, 202, 203, 204, 205, 206, 207, 208, 226)
-        if response.status_code not in success_codes:
+        if response.status_code >= 500 and response.status_code < 600:
             _LOGGER.exception(
-                "Error sending message. Response %d: %s:",
+                "Server error. Response %d: %s:",
+                response.status_code, response.reason)
+        elif response.status_code >= 400 and response.status_code < 500:
+            _LOGGER.exception(
+                "Client error. Response %d: %s:",
+                response.status_code, response.reason)
+        elif response.status_code >= 200 and response.status_code < 300:
+            _LOGGER.debug(
+                "Success. Response %d: %s:",
+                response.status_code, response.reason)
+        else:
+            _LOGGER.debug(
+                "Response %d: %s:",
                 response.status_code, response.reason)
