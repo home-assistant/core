@@ -30,7 +30,7 @@ SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_TURN_OFF | SUPPORT_PLAY | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_STOP
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_TURN_ON
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -134,15 +134,16 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._mac:
-            return SUPPORT_VIERATV | SUPPORT_TURN_ON
         return SUPPORT_VIERATV
 
     def turn_on(self):
         """Turn on the media player."""
         if self._mac:
             self._wol.send_magic_packet(self._mac, ip_address=self._host)
-            self._state = STATE_ON
+        else:
+            # power button is actually power toggle
+            self._remote.turn_off()
+        self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
