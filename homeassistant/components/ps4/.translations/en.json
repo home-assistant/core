@@ -4,12 +4,14 @@
             "credential_error": "Error fetching credentials.",
             "devices_configured": "All devices found are already configured.",
             "no_devices_found": "No PlayStation 4 devices found on the network.",
-            "port_987_bind_error": "Could not bind to port 987.",
-            "port_997_bind_error": "Could not bind to port 997."
+            "port_987_bind_error": "Could not bind to port 987. Refer to the documentation for additional info: https://www.home-assistant.io/components/ps4/",
+            "port_997_bind_error": "Could not bind to port 997. Refer to the documentation for additional info: https://www.home-assistant.io/components/ps4/"
         },
         "error": {
             "login_failed": "Failed to pair to PlayStation 4. Verify PIN is correct.",
-            "not_ready": "PlayStation 4 is not on or connected to network."
+            "not_ready": "PlayStation 4 is not on or connected to network.",
+            "pin_length_incorrect": "PIN must be 8 digits.",
+            "pin_invalid": "PIN must be a number."
         },
         "step": {
             "creds": {
@@ -23,7 +25,7 @@
                     "name": "Name",
                     "region": "Region"
                 },
-                "description": "Enter your PlayStation 4 information. For 'PIN', navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the PIN that is displayed.",
+                "description": "Enter your PlayStation 4 information. For 'PIN', navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the PIN that is displayed. Refer to the documentation for additional info: https://www.home-assistant.io/components/ps4/",
                 "title": "PlayStation 4"
             }
         },
