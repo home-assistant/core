@@ -1,5 +1,8 @@
 """Integrates Native Apps to Home Assistant."""
+from typing import Dict
+
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.webhook import async_register as webhook_register
 from homeassistant.helpers import device_registry as dr
@@ -11,6 +14,7 @@ from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
                     DATA_SENSOR, DATA_STORE, DOMAIN, STORAGE_KEY,
                     STORAGE_VERSION)
 
+from .helpers import delete_webhook
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 from .websocket_api import register_websocket_handlers
@@ -55,7 +59,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up a mobile_app entry."""
     registration = entry.data
 
@@ -94,6 +98,12 @@ async def async_setup_entry(hass, entry):
     return True
 
 
+async def async_remove_entry(hass: HomeAssistantType,
+                             entry: ConfigEntry) -> None:
+    """Perform clean-up when entry is being removed."""
+    return await delete_webhook(hass, entry)
+
+
 @config_entries.HANDLERS.register(DOMAIN)
 class MobileAppFlowHandler(config_entries.ConfigFlow):
     """Handle a Mobile App config flow."""
@@ -101,7 +111,7 @@ class MobileAppFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> Dict:
         """Handle a flow initialized by the user."""
         placeholders = {
             'apps_url':
@@ -111,7 +121,7 @@ class MobileAppFlowHandler(config_entries.ConfigFlow):
         return self.async_abort(reason='install_app',
                                 description_placeholders=placeholders)
 
-    async def async_step_registration(self, user_input=None):
+    async def async_step_registration(self, user_input=None) -> Dict:
         """Handle a flow initialized during registration."""
         return self.async_create_entry(title=user_input[ATTR_DEVICE_NAME],
                                        data=user_input)
