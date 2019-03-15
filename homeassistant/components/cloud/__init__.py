@@ -24,7 +24,7 @@ from .const import (
     CONF_USER_POOL_ID, DOMAIN, MODE_DEV, MODE_PROD)
 from .prefs import CloudPreferences
 
-REQUIREMENTS = ['hass-nabucasa==0.5']
+REQUIREMENTS = ['hass-nabucasa==0.7']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
@@ -193,4 +193,6 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler)
 
     await http_api.async_setup(hass)
+    hass.async_create_task(hass.helpers.discovery.async_load_platform(
+        'binary_sensor', DOMAIN, {}, config))
     return True
