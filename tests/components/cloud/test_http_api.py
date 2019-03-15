@@ -620,7 +620,7 @@ async def test_enabling_remote_trusted_networks_local(
     assert not response['success']
     assert response['error']['code'] == 500
     assert response['error']['message'] == \
-        'Remote UI not compatible with trusted networks.'
+        'Remote UI not compatible with 127.0.0.1 as a trusted network.'
 
     assert len(mock_connect.mock_calls) == 0
 
