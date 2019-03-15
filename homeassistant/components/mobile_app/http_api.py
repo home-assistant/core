@@ -5,7 +5,9 @@ from typing import Dict
 from aiohttp.web import Response, Request
 
 from homeassistant.auth.util import generate_secret
-from homeassistant.components.cloud import async_create_cloudhook
+from homeassistant.components.cloud import (async_create_cloudhook,
+                                            async_remote_ui_url,
+                                            CloudNotAvailable)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import (HTTP_CREATED, CONF_WEBHOOK_ID)
@@ -13,7 +15,8 @@ from homeassistant.const import (HTTP_CREATED, CONF_WEBHOOK_ID)
 from homeassistant.loader import get_component
 
 from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_ID,
-                    ATTR_SUPPORTS_ENCRYPTION, CONF_CLOUDHOOK_URL, CONF_SECRET,
+                    ATTR_SUPPORTS_ENCRYPTION, CONF_CLOUDHOOK_URL,
+                    CONF_REMOTE_UI_URL, CONF_SECRET,
                     CONF_USER_ID, DOMAIN, ERR_INVALID_COMPONENT,
                     REGISTRATION_SCHEMA)
 
@@ -67,8 +70,15 @@ class RegistrationsView(HomeAssistantView):
             hass.config_entries.flow.async_init(DOMAIN, context=ctx,
                                                 data=data))
 
+        remote_ui_url = None
+        try:
+            remote_ui_url = async_remote_ui_url(hass)
+        except CloudNotAvailable:
+            pass
+
         return self.json({
             CONF_CLOUDHOOK_URL: data.get(CONF_CLOUDHOOK_URL),
+            CONF_REMOTE_UI_URL: remote_ui_url,
             CONF_SECRET: data.get(CONF_SECRET),
             CONF_WEBHOOK_ID: data[CONF_WEBHOOK_ID],
         }, status_code=HTTP_CREATED)
