@@ -175,7 +175,7 @@ async def test_gravatar_and_picture(hass):
 @patch(
     'homeassistant.components.device_tracker.DeviceTracker.see')
 @patch(
-    'homeassistant.components.device_tracker.demo.setup_scanner',
+    'homeassistant.components.demo.device_tracker.setup_scanner',
     autospec=True)
 async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
     """Test discovery of device_tracker demo platform."""
