@@ -79,10 +79,10 @@ SERVICE_SCHEMAS = {
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
-    vol.Required('type'): 'zha/gateway/messages'
+    vol.Required('type'): 'zha/devices/add'
 })
-async def websocket_subscribe(hass, connection, msg):
-    """Subscribe to ZHA gateway messages."""
+async def websocket_add_devices(hass, connection, msg):
+    """Add ZHA zigbee devices."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
     async def forward_messages(data):
@@ -103,6 +103,7 @@ async def websocket_subscribe(hass, connection, msg):
 
     connection.subscriptions[msg['id']] = async_cleanup
     zha_gateway.async_enable_debug_mode()
+    zha_gateway.application_controller.permit(60)
 
     connection.send_message(websocket_api.result_message(msg['id']))
 
@@ -540,7 +541,7 @@ def async_load_api(hass):
             SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND
         ])
 
-    websocket_api.async_register_command(hass, websocket_subscribe)
+    websocket_api.async_register_command(hass, websocket_add_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)
