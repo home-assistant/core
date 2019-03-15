@@ -4,17 +4,21 @@ from pathlib import Path
 from typing import Any, Dict
 
 import aiohttp
+from hass_nabucasa import const as cloud_const
 from hass_nabucasa.client import CloudClient as Interface
 
+from homeassistant.core import callback
 from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import (
     helpers as ga_h, smart_home as ga)
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.aiohttp import MockRequest
 
 from . import utils
-from .const import CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN
+from .const import (
+    CONF_ENTITY_CONFIG, CONF_FILTER, DOMAIN, DISPATCHER_REMOTE_UPDATE)
 from .prefs import CloudPreferences
 
 
@@ -25,7 +29,7 @@ class CloudClient(Interface):
                  websession: aiohttp.ClientSession,
                  alexa_config: Dict[str, Any], google_config: Dict[str, Any]):
         """Initialize client interface to Cloud."""
-        self._hass = hass
+        self.hass = hass
         self._prefs = prefs
         self._websession = websession
         self._alexa_user_config = alexa_config
@@ -37,7 +41,7 @@ class CloudClient(Interface):
     @property
     def base_path(self) -> Path:
         """Return path to base dir."""
-        return Path(self._hass.config.config_dir)
+        return Path(self.hass.config.config_dir)
 
     @property
     def prefs(self) -> CloudPreferences:
@@ -47,7 +51,7 @@ class CloudClient(Interface):
     @property
     def loop(self) -> asyncio.BaseEventLoop:
         """Return client loop."""
-        return self._hass.loop
+        return self.hass.loop
 
     @property
     def websession(self) -> aiohttp.ClientSession:
@@ -57,7 +61,7 @@ class CloudClient(Interface):
     @property
     def aiohttp_runner(self) -> aiohttp.web.AppRunner:
         """Return client webinterface aiohttp application."""
-        return self._hass.http.runner
+        return self.hass.http.runner
 
     @property
     def cloudhooks(self) -> Dict[str, Dict[str, str]]:
@@ -115,18 +119,24 @@ class CloudClient(Interface):
         self._alexa_config = None
         self._google_config = None
 
-    async def async_user_message(
-            self, identifier: str, title: str, message: str) -> None:
+    @callback
+    def user_message(self, identifier: str, title: str, message: str) -> None:
         """Create a message for user to UI."""
-        self._hass.components.persistent_notification.async_create(
+        self.hass.components.persistent_notification.async_create(
             message, title, identifier
         )
+
+    @callback
+    def dispatcher_message(self, identifier: str, data: Any = None) -> None:
+        """Match cloud notification to dispatcher."""
+        if identifier.startwith("remote_"):
+            async_dispatcher_send(self.hass, DISPATCHER_REMOTE_UPDATE, data)
 
     async def async_alexa_message(
             self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
         """Process cloud alexa message to client."""
         return await alexa_sh.async_handle_message(
-            self._hass, self.alexa_config, payload,
+            self.hass, self.alexa_config, payload,
             enabled=self._prefs.alexa_enabled
         )
 
@@ -137,11 +147,11 @@ class CloudClient(Interface):
             return ga.turned_off_response(payload)
 
         answer = await ga.async_handle_message(
-            self._hass, self.google_config, self.prefs.cloud_user, payload
+            self.hass, self.google_config, self.prefs.cloud_user, payload
         )
 
         # Fix AgentUserId
-        cloud = self._hass.data[DOMAIN]
+        cloud = self.hass.data[DOMAIN]
         answer['payload']['agentUserId'] = cloud.claims['cognito:username']
 
         return answer
@@ -169,7 +179,7 @@ class CloudClient(Interface):
             query_string=payload['query'],
         )
 
-        response = await self._hass.components.webhook.async_handle_webhook(
+        response = await self.hass.components.webhook.async_handle_webhook(
             found['webhook_id'], request)
 
         response_dict = utils.aiohttp_serialize_response(response)
