@@ -1,8 +1,5 @@
 """A entity class for mobile_app."""
-from functools import partial
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -12,48 +9,8 @@ from homeassistant.helpers.entity import Entity
 from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
                     ATTR_MODEL, ATTR_OS_VERSION, ATTR_SENSOR_ATTRIBUTES,
                     ATTR_SENSOR_DEVICE_CLASS, ATTR_SENSOR_ICON,
-                    ATTR_SENSOR_NAME, ATTR_SENSOR_STATE, ATTR_SENSOR_TYPE,
-                    ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_UNIQUE_ID,
-                    ATTR_SENSOR_UOM, DATA_DEVICES, DOMAIN,
-                    SIGNAL_SENSOR_UPDATE)
-
-
-async def async_setup_mobile_app_entry(sensor_type, hass, config_entry,
-                                       async_add_entities):
-    """Set up the mobile app entity sensor via config entry."""
-    platform_name = "MobileAppSensor"
-
-    if sensor_type == ATTR_SENSOR_TYPE_BINARY_SENSOR:
-        platform_name = "MobileAppBinarySensor"
-
-    platform = globals()[platform_name]
-
-    entities = list()
-
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-
-    for config in hass.data[DOMAIN][sensor_type].values():
-        if config[CONF_WEBHOOK_ID] != webhook_id:
-            continue
-
-        device = hass.data[DOMAIN][DATA_DEVICES][webhook_id]
-
-        entities.append(platform(config, device, config_entry))
-
-    async_add_entities(entities)
-
-    @callback
-    def handle_sensor_registration(webhook_id, data):
-        if data[CONF_WEBHOOK_ID] != webhook_id:
-            return
-
-        device = hass.data[DOMAIN][DATA_DEVICES][data[CONF_WEBHOOK_ID]]
-
-        async_add_entities([platform(data, device, config_entry)])
-
-    async_dispatcher_connect(hass,
-                             '{}_{}_register'.format(DOMAIN, sensor_type),
-                             partial(handle_sensor_registration, webhook_id))
+                    ATTR_SENSOR_NAME, ATTR_SENSOR_TYPE, ATTR_SENSOR_UNIQUE_ID,
+                    DOMAIN, SIGNAL_SENSOR_UPDATE)
 
 
 class MobileAppEntity(Entity):
@@ -139,26 +96,3 @@ class MobileAppEntity(Entity):
         """Handle async event updates."""
         self._config = data
         self.async_schedule_update_ha_state()
-
-
-class MobileAppSensor(MobileAppEntity):
-    """Representation of an mobile app sensor."""
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._config[ATTR_SENSOR_STATE]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        return self._config[ATTR_SENSOR_UOM]
-
-
-class MobileAppBinarySensor(MobileAppEntity, BinarySensorDevice):
-    """Representation of an mobile app binary sensor."""
-
-    @property
-    def is_on(self):
-        """Return the state of the binary sensor."""
-        return self._config[ATTR_SENSOR_STATE]
