@@ -3,13 +3,13 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.webhook import async_register as webhook_register
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
-                    ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
+from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
+                    ATTR_MODEL, ATTR_OS_VERSION, DATA_BINARY_SENSOR,
                     DATA_CONFIG_ENTRIES, DATA_DELETED_IDS, DATA_DEVICES,
-                    DATA_STORE, DOMAIN, STORAGE_KEY, STORAGE_VERSION)
+                    DATA_SENSOR, DATA_STORE, DOMAIN, STORAGE_KEY,
+                    STORAGE_VERSION)
 
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
@@ -22,19 +22,25 @@ REQUIREMENTS = ['PyNaCl==1.3.0']
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the mobile app component."""
-    hass.data[DOMAIN] = {
-        DATA_CONFIG_ENTRIES: {}, DATA_DELETED_IDS: [], DATA_DEVICES: {},
-    }
-
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()
     if app_config is None:
         app_config = {
-            DATA_CONFIG_ENTRIES: {}, DATA_DELETED_IDS: [], DATA_DEVICES: {},
+            DATA_BINARY_SENSOR: {},
+            DATA_CONFIG_ENTRIES: {},
+            DATA_DELETED_IDS: [],
+            DATA_DEVICES: {},
+            DATA_SENSOR: {}
         }
 
-    hass.data[DOMAIN] = app_config
-    hass.data[DOMAIN][DATA_STORE] = store
+    hass.data[DOMAIN] = {
+        DATA_BINARY_SENSOR: app_config.get(DATA_BINARY_SENSOR, {}),
+        DATA_CONFIG_ENTRIES: {},
+        DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
+        DATA_DEVICES: {},
+        DATA_SENSOR: app_config.get(DATA_SENSOR, {}),
+        DATA_STORE: store,
+    }
 
     hass.http.register_view(RegistrationsView())
     register_websocket_handlers(hass)
@@ -79,9 +85,11 @@ async def async_setup_entry(hass, entry):
     webhook_register(hass, DOMAIN, registration_name, webhook_id,
                      handle_webhook)
 
-    if ATTR_APP_COMPONENT in registration:
-        load_platform(hass, registration[ATTR_APP_COMPONENT], DOMAIN, {},
-                      {DOMAIN: {}})
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry,
+                                                      DATA_BINARY_SENSOR))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, DATA_SENSOR))
 
     return True
 
