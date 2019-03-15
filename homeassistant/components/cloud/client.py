@@ -28,7 +28,7 @@ class CloudClient(Interface):
                  websession: aiohttp.ClientSession,
                  alexa_config: Dict[str, Any], google_config: Dict[str, Any]):
         """Initialize client interface to Cloud."""
-        self.hass = hass
+        self._hass = hass
         self._prefs = prefs
         self._websession = websession
         self._alexa_user_config = alexa_config
@@ -40,7 +40,7 @@ class CloudClient(Interface):
     @property
     def base_path(self) -> Path:
         """Return path to base dir."""
-        return Path(self.hass.config.config_dir)
+        return Path(self._hass.config.config_dir)
 
     @property
     def prefs(self) -> CloudPreferences:
@@ -50,7 +50,7 @@ class CloudClient(Interface):
     @property
     def loop(self) -> asyncio.BaseEventLoop:
         """Return client loop."""
-        return self.hass.loop
+        return self._hass.loop
 
     @property
     def websession(self) -> aiohttp.ClientSession:
@@ -60,7 +60,7 @@ class CloudClient(Interface):
     @property
     def aiohttp_runner(self) -> aiohttp.web.AppRunner:
         """Return client webinterface aiohttp application."""
-        return self.hass.http.runner
+        return self._hass.http.runner
 
     @property
     def cloudhooks(self) -> Dict[str, Dict[str, str]]:
@@ -121,7 +121,7 @@ class CloudClient(Interface):
     @callback
     def user_message(self, identifier: str, title: str, message: str) -> None:
         """Create a message for user to UI."""
-        self.hass.components.persistent_notification.async_create(
+        self._hass.components.persistent_notification.async_create(
             message, title, identifier
         )
 
@@ -129,13 +129,13 @@ class CloudClient(Interface):
     def dispatcher_message(self, identifier: str, data: Any = None) -> None:
         """Match cloud notification to dispatcher."""
         if identifier.startwith("remote_"):
-            async_dispatcher_send(self.hass, DISPATCHER_REMOTE_UPDATE, data)
+            async_dispatcher_send(self._hass, DISPATCHER_REMOTE_UPDATE, data)
 
     async def async_alexa_message(
             self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
         """Process cloud alexa message to client."""
         return await alexa_sh.async_handle_message(
-            self.hass, self.alexa_config, payload,
+            self._hass, self.alexa_config, payload,
             enabled=self._prefs.alexa_enabled
         )
 
@@ -146,11 +146,11 @@ class CloudClient(Interface):
             return ga.turned_off_response(payload)
 
         answer = await ga.async_handle_message(
-            self.hass, self.google_config, self.prefs.cloud_user, payload
+            self._hass, self.google_config, self.prefs.cloud_user, payload
         )
 
         # Fix AgentUserId
-        cloud = self.hass.data[DOMAIN]
+        cloud = self._hass.data[DOMAIN]
         answer['payload']['agentUserId'] = cloud.claims['cognito:username']
 
         return answer
@@ -178,7 +178,7 @@ class CloudClient(Interface):
             query_string=payload['query'],
         )
 
-        response = await self.hass.components.webhook.async_handle_webhook(
+        response = await self._hass.components.webhook.async_handle_webhook(
             found['webhook_id'], request)
 
         response_dict = utils.aiohttp_serialize_response(response)
