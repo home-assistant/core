@@ -8,6 +8,8 @@ from homeassistant.setup import setup_component
 from tests.common import (get_test_home_assistant,
                           MockDependency)
 
+import logging
+_LOGGER = logging.getLogger(__name__)
 
 MOVIE_CONFIG = {
     'sensor': {
@@ -74,16 +76,16 @@ class TestTmdbSetup(unittest.TestCase):
         """Test the platform setup with movie configuration."""
         setup_component(self.hass, 'sensor', MOVIE_CONFIG)
 
-        state = self.hass.states.get('sensor.tmdb_movie_upcoming')
+        state = self.hass.states.get('sensor.tmdb_upcoming_movie')
         assert int(state.state) == MOCK_RESULTS_LENGTH
 
-        state = self.hass.states.get('sensor.tmdb_movie_now_playing')
+        state = self.hass.states.get('sensor.tmdb_now_playing_movie')
         assert int(state.state) == MOCK_RESULTS_LENGTH
 
-        state = self.hass.states.get('sensor.tmdb_movie_popular')
+        state = self.hass.states.get('sensor.tmdb_popular_movie')
         assert int(state.state) == MOCK_RESULTS_LENGTH
 
-        state = self.hass.states.get('sensor.tmdb_movie_top_rated')
+        state = self.hass.states.get('sensor.tmdb_top_rated_movie')
         assert int(state.state) == MOCK_RESULTS_LENGTH
 
     @MockDependency('tmdbsimple')
@@ -92,14 +94,14 @@ class TestTmdbSetup(unittest.TestCase):
         """Test the platform setup with tv configuration."""
         setup_component(self.hass, 'sensor', TV_CONFIG)
 
-        state = self.hass.states.get('sensor.tmdb_tv_upcoming')
+        state = self.hass.states.get('sensor.tmdb_upcoming_tv')
         assert int(state.state) == MOCK_RESULTS_LENGTH
 
-        state = self.hass.states.get('sensor.tmdb_tv_now_playing')
+        state = self.hass.states.get('sensor.tmdb_now_playing_tv')
         assert int(state.state) == MOCK_RESULTS_LENGTH
 
-        state = self.hass.states.get('sensor.tmdb_tv_popular')
+        state = self.hass.states.get('sensor.tmdb_popular_tv')
         assert int(state.state) == MOCK_RESULTS_LENGTH
 
-        state = self.hass.states.get('sensor.tmdb_tv_top_rated')
+        state = self.hass.states.get('sensor.tmdb_top_rated_tv')
         assert int(state.state) == MOCK_RESULTS_LENGTH

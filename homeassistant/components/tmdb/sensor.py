@@ -82,7 +82,7 @@ class TmdbSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._list_type, self._query_type)
+        return 'tmdb {} {}'.format(self._list_type, self._query_type)
 
     @property
     def state(self):
