@@ -24,11 +24,12 @@ class CloudRemoteBinary(BinarySensorDevice):
     def __init__(self, cloud):
         """Initialize the binary sensor."""
         self.cloud = cloud
+        self._unsub_dispatcher = None
 
     @property
     def name(self) -> str:
         """Return the name of the binary sensor, if any."""
-        return "Home Assistant Remote UI"
+        return "Remote UI"
 
     @property
     def unique_id(self) -> str:
@@ -60,7 +61,13 @@ class CloudRemoteBinary(BinarySensorDevice):
         @callback
         def async_state_update(data):
             """Update callback."""
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
-        async_dispatcher_connect(
+        self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, DISPATCHER_REMOTE_UPDATE, async_state_update)
+
+    async def async_will_remove_from_hass(self):
+        """Register update dispatcher."""
+        if self._unsub_dispatcher is not None:
+            self._unsub_dispatcher()
+            self._unsub_dispatcher = None

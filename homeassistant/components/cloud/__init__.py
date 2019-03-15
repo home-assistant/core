@@ -193,4 +193,6 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler)
 
     await http_api.async_setup(hass)
+    hass.async_create_task(hass.helpers.discovery.async_load_platform(
+        'binary_sensor', DOMAIN, {}, config))
     return True
