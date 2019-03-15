@@ -382,7 +382,7 @@ class DeviceTracker:
         This method must be run in the event loop.
         """
         for device in self.devices.values():
-            if (device.track and device.last_update_home) and \
+            if (device.track and (device.state==STATE_HOME)) and \
                device.stale(now):
                 self.hass.async_create_task(device.async_update_ha_state(True))
 
@@ -399,6 +399,7 @@ class DeviceTracker:
         tasks = []
         for device in self.devices.values():
             if device.track and not device.last_seen:
+                device.last_seen = dt_util.utcnow()
                 tasks.append(self.hass.async_create_task(
                     async_init_single_device(device)))
 
@@ -420,7 +421,6 @@ class Device(RestoreEntity):
     icon = None  # type: str
 
     # Track if the last update of this device was HOME.
-    last_update_home = False
     _state = STATE_NOT_HOME
 
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
@@ -546,7 +546,6 @@ class Device(RestoreEntity):
         """Mark the device state as stale."""
         self._state = STATE_NOT_HOME
         self.gps = None
-        self.last_update_home = False
 
     async def async_update(self):
         """Update state of entity.
@@ -554,6 +553,7 @@ class Device(RestoreEntity):
         This method is a coroutine.
         """
         if not self.last_seen:
+            self.last_seen = dt_util.utcnow() # we much have a valid time, else it will stuck 
             return
         if self.location_name:
             self._state = self.location_name
@@ -570,7 +570,6 @@ class Device(RestoreEntity):
             self.mark_stale()
         else:
             self._state = STATE_HOME
-            self.last_update_home = True
 
     async def async_added_to_hass(self):
         """Add an entity."""
@@ -579,7 +578,6 @@ class Device(RestoreEntity):
         if not state:
             return
         self._state = state.state
-        self.last_update_home = (state.state == STATE_HOME)
         self.last_seen = dt_util.utcnow()
 
         for attr, var in (
