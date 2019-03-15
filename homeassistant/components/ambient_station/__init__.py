@@ -215,12 +215,15 @@ SENSOR_TYPES = {
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN:
         vol.Schema({
-            vol.Required(CONF_APP_KEY): cv.string,
-            vol.Required(CONF_API_KEY): cv.string,
+            vol.Required(CONF_APP_KEY):
+                cv.string,
+            vol.Required(CONF_API_KEY):
+                cv.string,
             vol.Optional(CONF_MONITORED_CONDITIONS):
                 vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         })
-}, extra=vol.ALLOW_EXTRA)
+},
+                           extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
@@ -356,8 +359,10 @@ class AmbientStation:
                     ]
 
                 self.stations[station['macAddress']] = {
-                    ATTR_LAST_DATA: station['lastData'],
-                    ATTR_LOCATION: station.get('info', {}).get('location'),
+                    ATTR_LAST_DATA:
+                        station['lastData'],
+                    ATTR_LOCATION:
+                        station.get('info', {}).get('location'),
                     ATTR_NAME:
                         station.get('info', {}).get(
                             'name', station['macAddress']),
@@ -412,12 +417,17 @@ class AmbientWeatherEntity(Entity):
         self._station_name = station_name
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(
+            self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
+                self._sensor_type))
+
+    @property
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            'identifiers': {
-                (DOMAIN, self._mac_address)
-            },
+            'identifiers': {(DOMAIN, self._mac_address)},
             'name': self._station_name,
             'manufacturer': 'Ambient Weather',
         }
@@ -439,6 +449,7 @@ class AmbientWeatherEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
         @callback
         def update():
             """Update the state."""
