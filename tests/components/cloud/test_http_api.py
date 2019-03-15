@@ -7,6 +7,7 @@ from jose import jwt
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
 
+from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.cloud.const import (
     PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_ALLOW_UNLOCK, DOMAIN)
 
@@ -589,3 +590,36 @@ async def test_disabling_remote(hass, hass_ws_client, setup_api,
     assert not cloud.client.remote_autostart
 
     assert len(mock_disconnect.mock_calls) == 1
+
+
+async def test_enabling_remote_trusted_networks(
+        hass, hass_ws_client, setup_api, mock_cloud_login):
+    """Test we cannot enable remote UI when trusted networks active."""
+    hass.auth._providers[('trusted_networks', None)] = \
+        tn_auth.TrustedNetworksAuthProvider(
+            hass, None, tn_auth.CONFIG_SCHEMA({
+                'type': 'trusted_networks',
+                'trusted_networks': [
+                    '127.0.0.1'
+                ]
+            })
+        )
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+            'hass_nabucasa.remote.RemoteUI.connect',
+            side_effect=AssertionError
+    ) as mock_connect:
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/remote/connect',
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 500
+    assert response['error']['message'] == \
+        'Remote UI not compatible with trusted networks.'
+
+    assert len(mock_connect.mock_calls) == 0
