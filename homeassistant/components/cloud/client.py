@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Any, Dict
 
 import aiohttp
-from hass_nabucasa import const as cloud_const
 from hass_nabucasa.client import CloudClient as Interface
 
 from homeassistant.core import callback
