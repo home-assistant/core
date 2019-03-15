@@ -34,6 +34,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         self.host = None
         self.region = None
         self.pin = None
+        self.device_list = []
 
     async def async_step_user(self, user_input=None):
         """Handle a user config flow."""
@@ -67,15 +68,16 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         errors = {}
 
         # Search for device.
-        devices = await self.hass.async_add_executor_job(
-            self.helper.has_devices)
+        if user_input is None:
+            devices = await self.hass.async_add_executor_job(
+                self.helper.has_devices)
 
-        # Abort if can't find device.
-        if not devices:
-            return self.async_abort(reason='no_devices_found')
+            # Abort if can't find device.
+            if not devices:
+                return self.async_abort(reason='no_devices_found')
 
-        device_list = [
-            device['host-ip'] for device in devices]
+            self.device_list = [
+                device['host-ip'] for device in devices]
 
         # If entry exists check that devices found aren't configured.
         if self.hass.config_entries.async_entries(DOMAIN):
@@ -86,11 +88,11 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                 # Retrieve device data from entry
                 conf_devices = entry.data['devices']
                 for c_device in conf_devices:
-                    if c_device['host'] in device_list:
+                    if c_device['host'] in self.device_list:
                         # Remove configured device from search list.
-                        device_list.remove(c_device['host'])
+                        self.device_list.remove(c_device['host'])
             # If list is empty then all devices are configured.
-            if not device_list:
+            if not self.device_list:
                 return self.async_abort(reason='devices_configured')
             # Add existing creds for linking. Should be only 1.
             if not creds:
@@ -104,33 +106,50 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             self.name = user_input[CONF_NAME]
             self.pin = user_input[CONF_CODE]
             self.host = user_input[CONF_IP_ADDRESS]
+            pin_valid = True
 
-            is_ready, is_login = await self.hass.async_add_executor_job(
-                self.helper.link, self.host, self.creds, self.pin)
+            # Remove any whitespace from pin.
+            if ' ' in self.pin:
+                self.pin = self.pin.replace(' ', '')
+            # If pin length is greater than 8 show error.
+            if len(str(self.pin)) != 8:
+                errors['base'] = 'pin_length_incorrect'
+                pin_valid = False
+            # Ensure pin is a valid int.
+            try:
+                int(self.pin)
+            except ValueError:
+                errors['base'] = 'pin_invalid'
+                pin_valid = False
 
-            if is_ready is False:
-                errors['base'] = 'not_ready'
-            elif is_login is False:
-                errors['base'] = 'login_failed'
-            else:
-                device = {
-                    CONF_HOST: self.host,
-                    CONF_NAME: self.name,
-                    CONF_REGION: self.region
-                }
+            if pin_valid:
+                is_ready, is_login = await self.hass.async_add_executor_job(
+                    self.helper.link, self.host, self.creds, self.pin)
 
-                # Create entry.
-                return self.async_create_entry(
-                    title='PlayStation 4',
-                    data={
-                        CONF_TOKEN: self.creds,
-                        'devices': [device],
-                    },
-                )
+                if is_ready is False:
+                    errors['base'] = 'not_ready'
+                elif is_login is False:
+                    errors['base'] = 'login_failed'
+                else:
+                    device = {
+                        CONF_HOST: self.host,
+                        CONF_NAME: self.name,
+                        CONF_REGION: self.region
+                    }
+
+                    # Create entry.
+                    return self.async_create_entry(
+                        title='PlayStation 4',
+                        data={
+                            CONF_TOKEN: self.creds,
+                            'devices': [device],
+                        },
+                    )
 
         # Show User Input form.
         link_schema = OrderedDict()
-        link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(list(device_list))
+        link_schema[vol.Required(
+            CONF_IP_ADDRESS)] = vol.In(list(self.device_list))
         link_schema[vol.Required(
             CONF_REGION, default=DEFAULT_REGION)] = vol.In(list(REGIONS))
         link_schema[vol.Required(CONF_CODE)] = str
