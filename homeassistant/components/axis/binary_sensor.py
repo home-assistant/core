@@ -34,8 +34,11 @@ class AxisBinarySensor(BinarySensorDevice):
         """Initialize the Axis binary sensor."""
         self.axis_event = event
         self.device = device
-        self.delay = device.config_entry.data[CONF_TRIGGER_TIME]
+        self.delay = device.config_entry.options[CONF_TRIGGER_TIME]
         self.remove_timer = None
+
+        if not self.axis_event.id:
+            self.axis_event.id = self.axis_event.topic.split('/')[-1]
 
     async def async_added_to_hass(self):
         """Subscribe sensors events."""
@@ -43,25 +46,26 @@ class AxisBinarySensor(BinarySensorDevice):
 
     def update_callback(self):
         """Update the sensor's state, if needed."""
+        delay = self.device.config_entry.options[CONF_TRIGGER_TIME]
+
         if self.remove_timer is not None:
             self.remove_timer()
             self.remove_timer = None
 
-        if self.delay == 0 or self.is_on:
+        if delay == 0 or self.is_on:
             self.schedule_update_ha_state()
             return
 
         @callback
         def _delay_update(now):
             """Timer callback for sensor update."""
-            LOGGER.debug(
-                "%s called delayed (%s sec) update", self.name, self.delay)
+            LOGGER.debug("%s called delayed (%s sec) update", self.name, delay)
             self.async_schedule_update_ha_state()
             self.remove_timer = None
 
         self.remove_timer = async_track_point_in_utc_time(
             self.hass, _delay_update,
-            utcnow() + timedelta(seconds=self.delay))
+            utcnow() + timedelta(seconds=delay))
 
     @property
     def is_on(self):

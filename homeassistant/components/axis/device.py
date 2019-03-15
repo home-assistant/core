@@ -60,7 +60,7 @@ class AxisNetworkDevice:
         try:
             self.api = await get_device(
                 hass, self.config_entry.data[CONF_DEVICE],
-                event_types=self.config_entry.data[CONF_EVENTS],
+                event_types=self.config_entry.options[CONF_EVENTS],
                 signal_callback=self.async_signal_callback)
 
         except CannotConnect:
@@ -74,12 +74,12 @@ class AxisNetworkDevice:
         self.fw_version = self.api.vapix.get_param(VAPIX_FW_VERSION)
         self.product_type = self.api.vapix.get_param(VAPIX_PROD_TYPE)
 
-        if self.config_entry.data[CONF_CAMERA]:
+        if self.config_entry.options[CONF_CAMERA]:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, 'camera'))
 
-        if self.config_entry.data[CONF_EVENTS]:
+        if self.config_entry.options[CONF_EVENTS]:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, 'binary_sensor'))

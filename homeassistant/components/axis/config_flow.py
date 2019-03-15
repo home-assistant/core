@@ -1,6 +1,4 @@
 """Config flow to configure Axis devices."""
-from collections import OrderedDict
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,7 +9,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json
 
-from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL_ID, DOMAIN
+from .const import CONF_MODEL_ID, DEFAULT_TRIGGER_TIME, DOMAIN
 from .device import get_device
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
@@ -28,19 +26,18 @@ AXIS_DEFAULT_HOST = '192.168.0.90'
 AXIS_DEFAULT_USERNAME = 'root'
 AXIS_DEFAULT_PASSWORD = 'pass'
 DEFAULT_PORT = 80
-DEFAULT_TRIGGER_TIME = 0
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_INCLUDE):
+    cv.deprecated(CONF_INCLUDE):
         vol.All(cv.ensure_list, [vol.In(AXIS_INCLUDE)]),
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST): cv.string,
     vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(
+    cv.deprecated(
         CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): cv.positive_int,
-    vol.Optional(ATTR_LOCATION, default=''): cv.string,
+    cv.deprecated(ATTR_LOCATION, default=''): cv.string,
 })
 
 
@@ -61,15 +58,9 @@ class AxisFlowHandler(config_entries.ConfigFlow):
     def __init__(self):
         """Initialize the Axis config flow."""
         self.device_config = {}
-        self.camera = False
-        self.events = []
         self.model_id = None
         self.name = None
         self.serial_number = None
-        self.trigger_time = 0
-
-        self.supports_video = False
-        self.supported_events = ()
 
         self.discovery_schema = {}
         self.import_schema = {}
@@ -79,9 +70,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
 
         Manage device specific parameters.
         """
-        from axis.event import device_events
-        from axis.vapix import (
-            VAPIX_IMAGE_FORMAT, VAPIX_MODEL_ID, VAPIX_SERIAL_NUMBER)
+        from axis.vapix import VAPIX_MODEL_ID, VAPIX_SERIAL_NUMBER
         errors = {}
 
         if user_input is not None:
@@ -101,19 +90,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
                     VAPIX_SERIAL_NUMBER)
                 self.model_id = device.vapix.get_param(VAPIX_MODEL_ID)
 
-                if self.import_schema:
-                    # Imported config is expected to have a working config
-                    return await self._create_entry()
-
-                supported_formats = device.vapix.get_param(VAPIX_IMAGE_FORMAT)
-                self.supports_video = 'mjpeg' in supported_formats
-
-                supported_events = await self.hass.async_add_executor_job(
-                    device_events, device.config)
-                self.supported_events = set(supported_events.keys())
-
-                if self.supports_video or self.supported_events:
-                    return await self.async_step_features()
+                return await self._create_entry()
 
             except AlreadyConfigured:
                 errors['base'] = 'already_configured'
@@ -124,10 +101,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             except CannotConnect:
                 errors['base'] = 'device_unavailable'
 
-            else:
-                errors['base'] = 'no_device_support'
-
-        data = self.import_schema or self.discovery_schema or {
+        data = user_input or {
             vol.Required(CONF_HOST): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
@@ -138,59 +112,6 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             step_id='user',
             description_placeholders=self.device_config,
             data_schema=vol.Schema(data),
-            errors=errors
-        )
-
-    async def async_step_features(self, user_input=None):
-        """What platforms and events to include with Axis devices."""
-        errors = {}
-
-        if user_input is not None:
-            if self.supports_video:
-                self.camera = user_input.pop(CONF_CAMERA)
-
-                if self.camera and not any(user_input.values()):
-                    # No events selected
-                    return await self._create_entry()
-
-            for event, selected in user_input.items():
-                if selected:
-                    self.events.append(event)
-
-            if self.events:
-                return await self.async_step_options()
-
-            errors['base'] = 'no_feature'
-
-        schema = OrderedDict()
-        if self.supports_video:
-            schema[vol.Optional(CONF_CAMERA, default=False)] = bool
-        for event in sorted(self.supported_events):
-            schema[vol.Optional(event, default=False)] = bool
-
-        return self.async_show_form(
-            step_id='features',
-            data_schema=vol.Schema(schema),
-            errors=errors
-        )
-
-    async def async_step_options(self, user_input=None):
-        """Extra options for events from Axis device.
-
-        CONF_TRIGGER_TIME -- Minimum time a sensor will be active.
-        """
-        errors = {}
-
-        if user_input is not None:
-            self.trigger_time = user_input[CONF_TRIGGER_TIME]
-            return await self._create_entry()
-
-        return self.async_show_form(
-            step_id='options',
-            data_schema=vol.Schema({
-                vol.Optional(
-                    CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): int
-            }),
             errors=errors
         )
 
@@ -217,14 +138,11 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             CONF_NAME: self.name,
             CONF_MAC: self.serial_number,
             CONF_MODEL_ID: self.model_id,
-            CONF_CAMERA: self.camera,
-            CONF_EVENTS: self.events,
-            CONF_TRIGGER_TIME: self.trigger_time
         }
 
-        desc = "{} - {}".format(self.model_id, self.serial_number)
+        title = "{} - {}".format(self.model_id, self.serial_number)
         return self.async_create_entry(
-            title=desc,
+            title=title,
             data=data
         )
 
@@ -245,7 +163,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
         serialnumber = discovery_info['properties']['macaddress']
 
         if serialnumber not in config_file:
-            self.discovery_schema = {
+            discovery_schema = {
                 vol.Required(
                     CONF_HOST, default=discovery_info[CONF_HOST]): str,
                 vol.Required(CONF_USERNAME): str,
@@ -275,17 +193,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
         This will execute for any Axis device that contains a complete
         configuration.
         """
-        self.name = import_config[CONF_NAME]
-
-        if CONF_CAMERA in import_config[CONF_INCLUDE]:
-            self.camera = True
-            import_config[CONF_INCLUDE].remove(CONF_CAMERA)
-
-        self.events = import_config[CONF_INCLUDE]
-
-        self.trigger_time = import_config[CONF_TRIGGER_TIME]
-
-        self.import_schema = {
+        import_schema = {
             vol.Required(CONF_HOST, default=import_config[CONF_HOST]): str,
             vol.Required(
                 CONF_USERNAME, default=import_config[CONF_USERNAME]): str,
