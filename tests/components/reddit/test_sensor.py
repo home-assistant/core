@@ -1,9 +1,12 @@
-"""The tests for The Movie Database platform."""
+"""The tests for the Reddit platform."""
 import copy
 import unittest
 from unittest.mock import patch
 
-from homeassistant.components.reddit.sensor import DOMAIN
+from homeassistant.components.reddit.sensor import (
+    DOMAIN, ATTR_SUBREDDIT, ATTR_POSTS, CONF_SORT_BY,
+    ATTR_ID, ATTR_URL, ATTR_TITLE, ATTR_SCORE, ATTR_COMMENTS_NUMBER,
+    ATTR_CREATED, ATTR_BODY)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_MAXIMUM)
 from homeassistant.setup import setup_component
 
@@ -51,7 +54,9 @@ INVALID_SORT_BY_CONFIG = {
 
 class ObjectView():
     """Use dict properties as attributes."""
+
     def __init__(self, d):
+        """Set dict as internal dict."""
         self.__dict__ = d
 
 
@@ -83,6 +88,7 @@ MOCK_RESULTS_LENGTH = len(MOCK_RESULTS['results'])
 
 class MockPraw():
     """Mock class for tmdbsimple library."""
+
     def __init__(self, client_id: str, client_secret:
                  str, username: str, password: str,
                  user_agent: str):
@@ -90,12 +96,13 @@ class MockPraw():
         self._data = MOCK_RESULTS
 
     def subreddit(self, subreddit: str):
-        """Return an instance of a sunbreddit"""
+        """Return an instance of a sunbreddit."""
         return MockSubreddit(subreddit, self._data)
 
 
 class MockSubreddit():
     """Mock class for a subreddit instance."""
+
     def __init__(self, subreddit: str, data):
         """Add mock data for API return."""
         self._subreddit = subreddit
@@ -142,3 +149,29 @@ class TestRedditSetup(unittest.TestCase):
 
         state = self.hass.states.get('sensor.reddit_worldnews')
         assert int(state.state) == MOCK_RESULTS_LENGTH
+
+        state = self.hass.states.get('sensor.reddit_news')
+        assert int(state.state) == MOCK_RESULTS_LENGTH
+
+        assert state.attributes[ATTR_SUBREDDIT] == 'news'
+
+        assert state.attributes[ATTR_POSTS][0] == {
+            ATTR_ID: 0,
+            ATTR_URL: 'http://example.com/1',
+            ATTR_TITLE: 'example1',
+            ATTR_SCORE: '1',
+            ATTR_COMMENTS_NUMBER: '1',
+            ATTR_CREATED: '',
+            ATTR_BODY: 'example1 selftext'
+        }
+
+        assert state.attributes[CONF_SORT_BY] == 'hot'
+
+    @MockDependency('praw')
+    @patch('praw.Reddit', new=MockPraw)
+    def test_setup_with_invalid_config(self, mock_praw):
+        """Test the platform setup with movie configuration."""
+        setup_component(self.hass, 'sensor', INVALID_SORT_BY_CONFIG)
+
+        state = self.hass.states.get('sensor.reddit_worldnews')
+        assert int(state.state) == 0
