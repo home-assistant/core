@@ -25,3 +25,5 @@ CONF_ACME_DIRECTORY_SERVER = 'acme_directory_server'
 
 MODE_DEV = "development"
 MODE_PROD = "production"
+
+DISPATCHER_REMOTE_UPDATE = 'cloud_remote_update'
