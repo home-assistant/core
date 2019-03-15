@@ -366,8 +366,7 @@ def _get_related_entity_ids(session, entity_filter):
 
             if tryno == RETRIES - 1:
                 raise
-            else:
-                time.sleep(QUERY_RETRY_WAIT)
+            time.sleep(QUERY_RETRY_WAIT)
 
 
 def _generate_filter_from_config(config):

@@ -334,9 +334,9 @@ class EntityPlatform:
         if not valid_entity_id(entity.entity_id):
             raise HomeAssistantError(
                 'Invalid entity id: {}'.format(entity.entity_id))
-        elif (entity.entity_id in self.entities or
-              entity.entity_id in self.hass.states.async_entity_ids(
-                  self.domain)):
+        if (entity.entity_id in self.entities or
+                entity.entity_id in self.hass.states.async_entity_ids(
+                    self.domain)):
             msg = 'Entity id already exists: {}'.format(entity.entity_id)
             if entity.unique_id is not None:
                 msg += '. Platform {} does not generate unique IDs'.format(

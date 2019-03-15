@@ -2,8 +2,9 @@
 import logging
 
 from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
-from homeassistant.components.climate import (
-    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.components.tado import DATA_TADO

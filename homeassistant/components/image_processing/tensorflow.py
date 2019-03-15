@@ -1,12 +1,4 @@
-"""
-Support for performing TensorFlow classification on images.
-
-For a quick start, pick a pre-trained COCO model from:
-https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.tensorflow/
-"""
+"""Support for performing TensorFlow classification on images."""
 import logging
 import os
 import sys
@@ -20,7 +12,7 @@ from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.16.0', 'pillow==5.4.1', 'protobuf==3.6.1']
+REQUIREMENTS = ['numpy==1.16.1', 'pillow==5.4.1', 'protobuf==3.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 

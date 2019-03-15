@@ -23,7 +23,8 @@ ATTR_CLOSE = 'close'
 ATTR_HIGH = 'high'
 ATTR_LOW = 'low'
 
-CONF_ATTRIBUTION = "Stock market information provided by Alpha Vantage"
+ATTRIBUTION = "Stock market information provided by Alpha Vantage"
+
 CONF_FOREIGN_EXCHANGE = 'foreign_exchange'
 CONF_FROM = 'from'
 CONF_SYMBOL = 'symbol'
@@ -143,7 +144,7 @@ class AlphaVantageSensor(Entity):
         """Return the state attributes."""
         if self.values is not None:
             return {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_CLOSE: self.values['4. close'],
                 ATTR_HIGH: self.values['2. high'],
                 ATTR_LOW: self.values['3. low'],
@@ -203,7 +204,7 @@ class AlphaVantageForeignExchange(Entity):
         """Return the state attributes."""
         if self.values is not None:
             return {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 CONF_FROM: self._from_currency,
                 CONF_TO: self._to_currency,
             }

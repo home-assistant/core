@@ -1,16 +1,11 @@
-"""
-Support for HomematicIP Cloud sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud sensors."""
 import logging
 
 from homeassistant.components.homematicip_cloud import (
     DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +64,17 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
     def __init__(self, home):
         """Initialize access point device."""
         super().__init__(home, home)
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        # Adds a sensor to the existing HAP device
+        return {
+            'identifiers': {
+                # Serial numbers of Homematic IP device
+                (HMIPC_DOMAIN, self._device.id)
+            }
+        }
 
     @property
     def icon(self):

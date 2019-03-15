@@ -13,7 +13,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyeconet==0.0.6']
+REQUIREMENTS = ['pyeconet==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,17 +43,17 @@ DELETE_VACATION_SCHEMA = vol.Schema({
 
 ECONET_DATA = 'econet'
 
-HA_STATE_TO_ECONET = {
-    STATE_ECO: 'Energy Saver',
-    STATE_ELECTRIC: 'Electric',
-    STATE_HEAT_PUMP: 'Heat Pump',
-    STATE_GAS: 'gas',
-    STATE_HIGH_DEMAND: 'High Demand',
-    STATE_OFF: 'Off',
-    STATE_PERFORMANCE: 'Performance'
+ECONET_STATE_TO_HA = {
+    'Energy Saver': STATE_ECO,
+    'gas': STATE_GAS,
+    'High Demand': STATE_HIGH_DEMAND,
+    'Off': STATE_OFF,
+    'Performance': STATE_PERFORMANCE,
+    'Heat Pump Only': STATE_HEAT_PUMP,
+    'Electric-Only': STATE_ELECTRIC,
+    'Electric': STATE_ELECTRIC,
+    'Heat Pump': STATE_HEAT_PUMP
 }
-
-ECONET_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_ECONET.items()}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -110,6 +110,19 @@ class EcoNetWaterHeater(WaterHeaterDevice):
     def __init__(self, water_heater):
         """Initialize the water heater."""
         self.water_heater = water_heater
+        self.supported_modes = self.water_heater.supported_modes
+        self.econet_state_to_ha = {}
+        self.ha_state_to_econet = {}
+        for mode in ECONET_STATE_TO_HA:
+            if mode in self.supported_modes:
+                self.econet_state_to_ha[mode] = ECONET_STATE_TO_HA.get(mode)
+        for key, value in self.econet_state_to_ha.items():
+            self.ha_state_to_econet[value] = key
+        for mode in self.supported_modes:
+            if mode not in ECONET_STATE_TO_HA:
+                error = "Invalid operation mode mapping. " + mode + \
+                    " doesn't map. Please report this."
+                _LOGGER.error(error)
 
     @property
     def name(self):
@@ -149,22 +162,17 @@ class EcoNetWaterHeater(WaterHeaterDevice):
 
         ["eco", "heat_pump", "high_demand", "electric_only"]
         """
-        current_op = ECONET_STATE_TO_HA.get(self.water_heater.mode)
+        current_op = self.econet_state_to_ha.get(self.water_heater.mode)
         return current_op
 
     @property
     def operation_list(self):
         """List of available operation modes."""
         op_list = []
-        modes = self.water_heater.supported_modes
-        for mode in modes:
-            ha_mode = ECONET_STATE_TO_HA.get(mode)
+        for mode in self.supported_modes:
+            ha_mode = self.econet_state_to_ha.get(mode)
             if ha_mode is not None:
                 op_list.append(ha_mode)
-            else:
-                error = "Invalid operation mode mapping. " + mode + \
-                    " doesn't map. Please report this."
-                _LOGGER.error(error)
         return op_list
 
     @property
@@ -182,7 +190,7 @@ class EcoNetWaterHeater(WaterHeaterDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        op_mode_to_set = HA_STATE_TO_ECONET.get(operation_mode)
+        op_mode_to_set = self.ha_state_to_econet.get(operation_mode)
         if op_mode_to_set is not None:
             self.water_heater.set_mode(op_mode_to_set)
         else:

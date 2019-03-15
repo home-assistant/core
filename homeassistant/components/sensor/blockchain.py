@@ -18,8 +18,9 @@ REQUIREMENTS = ['python-blockchain-api==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTRIBUTION = "Data provided by blockchain.info"
+
 CONF_ADDRESSES = 'addresses'
-CONF_ATTRIBUTION = "Data provided by blockchain.info"
 
 DEFAULT_NAME = 'Bitcoin Balance'
 
@@ -82,7 +83,7 @@ class BlockchainSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     def update(self):

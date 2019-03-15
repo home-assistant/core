@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_AUTHENTICATION, CONF_FORCE_UPDATE, CONF_HEADERS, CONF_NAME,
     CONF_METHOD, CONF_PASSWORD, CONF_PAYLOAD, CONF_RESOURCE,
-    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
+    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME, CONF_TIMEOUT,
     CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL, CONF_DEVICE_CLASS,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import PlatformNotReady
@@ -29,6 +29,7 @@ DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Sensor'
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
+DEFAULT_TIMEOUT = 10
 
 CONF_JSON_ATTRS = 'json_attributes'
 METHODS = ['POST', 'GET']
@@ -49,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 
@@ -67,6 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
     force_update = config.get(CONF_FORCE_UPDATE)
+    timeout = config.get(CONF_TIMEOUT)
 
     if value_template is not None:
         value_template.hass = hass
@@ -78,7 +81,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
+    rest = RestData(method, resource, auth, headers, payload, verify_ssl,
+                    timeout)
     rest.update()
     if rest.data is None:
         raise PlatformNotReady
@@ -174,11 +178,13 @@ class RestSensor(Entity):
 class RestData:
     """Class for handling the data retrieval."""
 
-    def __init__(self, method, resource, auth, headers, data, verify_ssl):
+    def __init__(self, method, resource, auth, headers, data, verify_ssl,
+                 timeout=DEFAULT_TIMEOUT):
         """Initialize the data object."""
         self._request = requests.Request(
             method, resource, headers=headers, auth=auth, data=data).prepare()
         self._verify_ssl = verify_ssl
+        self._timeout = timeout
         self.data = None
 
     def update(self):
@@ -187,7 +193,8 @@ class RestData:
         try:
             with requests.Session() as sess:
                 response = sess.send(
-                    self._request, timeout=10, verify=self._verify_ssl)
+                    self._request, timeout=self._timeout,
+                    verify=self._verify_ssl)
 
             self.data = response.text
         except requests.exceptions.RequestException as ex:

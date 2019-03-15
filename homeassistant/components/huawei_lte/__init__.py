@@ -1,9 +1,4 @@
-"""
-Support for Huawei LTE routers.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/huawei_lte/
-"""
+"""Support for Huawei LTE routers."""
 from datetime import timedelta
 from functools import reduce
 import logging
@@ -17,7 +12,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
-
 
 _LOGGER = logging.getLogger(__name__)
 

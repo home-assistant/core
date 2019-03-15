@@ -1,9 +1,4 @@
-"""
-Support for Google Home alarm sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.googlehome/
-"""
+"""Support for Google Home alarm sensor."""
 import logging
 from datetime import timedelta
 
@@ -12,7 +7,6 @@ from homeassistant.components.googlehome import (
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
 
 DEPENDENCIES = ['googlehome']
 
@@ -23,13 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:alarm'
 
 SENSOR_TYPES = {
-    'timer': "Timer",
-    'alarm': "Alarm",
+    'timer': 'Timer',
+    'alarm': 'Alarm',
 }
 
 
-async def async_setup_platform(hass, config,
-                               async_add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the googlehome sensor platform."""
     if discovery_info is None:
         _LOGGER.warning(

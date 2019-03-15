@@ -1,9 +1,4 @@
-"""
-Support for Google Cloud Pub/Sub.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/google_pubsub/
-"""
+"""Support for Google Cloud Pub/Sub."""
 import datetime
 import json
 import logging
@@ -34,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PROJECT_ID): cv.string,
         vol.Required(CONF_TOPIC_NAME): cv.string,
         vol.Required(CONF_SERVICE_PRINCIPAL): cv.string,
-        vol.Required(CONF_FILTER): FILTER_SCHEMA
+        vol.Required(CONF_FILTER): FILTER_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -46,8 +41,8 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     config = yaml_config[DOMAIN]
     project_id = config[CONF_PROJECT_ID]
     topic_name = config[CONF_TOPIC_NAME]
-    service_principal_path = os.path.join(hass.config.config_dir,
-                                          config[CONF_SERVICE_PRINCIPAL])
+    service_principal_path = os.path.join(
+        hass.config.config_dir, config[CONF_SERVICE_PRINCIPAL])
 
     if not os.path.isfile(service_principal_path):
         _LOGGER.error("Path to credentials file cannot be found")

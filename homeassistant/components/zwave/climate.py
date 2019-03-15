@@ -2,8 +2,9 @@
 # Because we do not compile openzwave on CI
 import logging
 from homeassistant.core import callback
-from homeassistant.components.climate import (
-    DOMAIN, ClimateDevice, STATE_AUTO, STATE_COOL, STATE_HEAT,
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    DOMAIN, STATE_AUTO, STATE_COOL, STATE_HEAT,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE)
 from homeassistant.components.zwave import ZWaveDeviceEntity

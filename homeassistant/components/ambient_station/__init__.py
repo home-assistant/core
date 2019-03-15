@@ -20,13 +20,14 @@ from .const import (
     ATTR_LAST_DATA, CONF_APP_KEY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE,
     TYPE_BINARY_SENSOR, TYPE_SENSOR)
 
-REQUIREMENTS = ['aioambient==0.1.2']
+REQUIREMENTS = ['aioambient==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CONFIG = 'config'
 
 DEFAULT_SOCKET_MIN_RETRY = 15
+DEFAULT_WATCHDOG_SECONDS = 5 * 60
 
 TYPE_24HOURRAININ = '24hourrainin'
 TYPE_BAROMABSIN = 'baromabsin'
@@ -296,6 +297,7 @@ class AmbientStation:
         """Initialize."""
         self._config_entry = config_entry
         self._hass = hass
+        self._watchdog_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
         self.monitored_conditions = monitored_conditions
@@ -305,9 +307,18 @@ class AmbientStation:
         """Register handlers and connect to the websocket."""
         from aioambient.errors import WebsocketError
 
+        async def _ws_reconnect(event_time):
+            """Forcibly disconnect from and reconnect to the websocket."""
+            _LOGGER.debug('Watchdog expired; forcing socket reconnection')
+            await self.client.websocket.disconnect()
+            await self.client.websocket.connect()
+
         def on_connect():
             """Define a handler to fire when the websocket is connected."""
             _LOGGER.info('Connected to websocket')
+            _LOGGER.debug('Watchdog starting')
+            self._watchdog_listener = async_call_later(
+                self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect)
 
         def on_data(data):
             """Define a handler to fire when the data is received."""
@@ -316,6 +327,11 @@ class AmbientStation:
                 _LOGGER.debug('New data received: %s', data)
                 self.stations[mac_address][ATTR_LAST_DATA] = data
                 async_dispatcher_send(self._hass, TOPIC_UPDATE)
+
+            _LOGGER.debug('Resetting watchdog')
+            self._watchdog_listener()
+            self._watchdog_listener = async_call_later(
+                self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect)
 
         def on_disconnect():
             """Define a handler to fire when the websocket is disconnected."""

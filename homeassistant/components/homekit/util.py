@@ -1,5 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 import logging
 
 import voluptuous as vol

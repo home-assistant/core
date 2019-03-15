@@ -7,7 +7,7 @@ import threading
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     ATTR_AWAY_MODE, SERVICE_SET_AWAY_MODE)
 from homeassistant.const import (
     CONF_BINARY_SENSORS, CONF_FILENAME, CONF_MONITORED_CONDITIONS,

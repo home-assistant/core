@@ -135,3 +135,10 @@ async def test_get_platform(hass, caplog):
     legacy_platform = loader.get_platform(hass, 'switch', 'test')
     assert legacy_platform.__name__ == 'custom_components.switch.test'
     assert 'Integrations need to be in their own folder.' in caplog.text
+
+
+async def test_get_platform_enforces_component_path(hass, caplog):
+    """Test that existence of a component limits lookup path of platforms."""
+    assert loader.get_platform(hass, 'comp_path_test', 'hue') is None
+    assert ('Search path was limited to path of component: '
+            'homeassistant.components') in caplog.text

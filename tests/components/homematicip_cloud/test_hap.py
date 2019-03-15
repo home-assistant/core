@@ -44,7 +44,7 @@ async def test_auth_auth_check_and_register(hass):
     hap = hmipc.HomematicipAuth(hass, config)
     hap.auth = Mock()
     with patch.object(hap.auth, 'isRequestAcknowledged',
-                      return_value=mock_coro()), \
+                      return_value=mock_coro(True)), \
             patch.object(hap.auth, 'requestAuthToken',
                          return_value=mock_coro('ABC')), \
             patch.object(hap.auth, 'confirmAuthToken',

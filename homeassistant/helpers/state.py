@@ -218,7 +218,7 @@ def state_as_number(state: State) -> float:
 
     Raises ValueError if this is not possible.
     """
-    from homeassistant.components.climate import (
+    from homeassistant.components.climate.const import (
         STATE_HEAT, STATE_COOL, STATE_IDLE)
 
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,

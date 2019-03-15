@@ -1,9 +1,4 @@
-"""
-Support for Google Calendar Search binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/calendar.google/
-"""
+"""Support for Google Calendar Search binary sensors."""
 import logging
 from datetime import timedelta
 

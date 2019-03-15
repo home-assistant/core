@@ -1,9 +1,4 @@
-"""
-Support for HLK-SW16 switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hlk_sw16/
-"""
+"""Support for HLK-SW16 switches."""
 import logging
 
 from homeassistant.components.hlk_sw16 import (
@@ -31,8 +26,8 @@ def devices_from_config(hass, domain_config):
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the HLK-SW16 platform."""
     async_add_entities(devices_from_config(hass, discovery_info))
 

@@ -19,8 +19,8 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric" \
-                   "Administration"
+ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric " \
+              "Administration"
 CONF_THRESHOLD = 'forecast_threshold'
 
 DEFAULT_DEVICE_CLASS = 'visible'
@@ -91,7 +91,7 @@ class AuroraSensor(BinarySensorDevice):
         if self.aurora_data:
             attrs['visibility_level'] = self.aurora_data.visibility_level
             attrs['message'] = self.aurora_data.is_visible_text
-            attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+            attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         return attrs
 
     def update(self):

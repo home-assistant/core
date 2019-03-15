@@ -18,7 +18,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyairvisual==2.0.1']
+REQUIREMENTS = ['pyairvisual==3.0.1']
 _LOGGER = getLogger(__name__)
 
 ATTR_CITY = 'city'
@@ -141,7 +141,7 @@ async def async_setup_platform(
             "Using city, state, and country: %s, %s, %s", city, state, country)
         location_id = ','.join((city, state, country))
         data = AirVisualData(
-            Client(config[CONF_API_KEY], websession),
+            Client(websession, api_key=config[CONF_API_KEY]),
             city=city,
             state=state,
             country=country,
@@ -152,7 +152,7 @@ async def async_setup_platform(
             "Using latitude and longitude: %s, %s", latitude, longitude)
         location_id = ','.join((str(latitude), str(longitude)))
         data = AirVisualData(
-            Client(config[CONF_API_KEY], websession),
+            Client(websession, api_key=config[CONF_API_KEY]),
             latitude=latitude,
             longitude=longitude,
             show_on_map=config[CONF_SHOW_ON_MAP],
@@ -278,11 +278,11 @@ class AirVisualData:
 
         try:
             if self.city and self.state and self.country:
-                resp = await self._client.data.city(
+                resp = await self._client.api.city(
                     self.city, self.state, self.country)
                 self.longitude, self.latitude = resp['location']['coordinates']
             else:
-                resp = await self._client.data.nearest_city(
+                resp = await self._client.api.nearest_city(
                     self.latitude, self.longitude)
 
             _LOGGER.debug("New data retrieved: %s", resp)

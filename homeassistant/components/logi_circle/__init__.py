@@ -1,19 +1,19 @@
 """Support for Logi Circle devices."""
-import logging
 import asyncio
+import logging
 
-import voluptuous as vol
 import async_timeout
+import voluptuous as vol
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 REQUIREMENTS = ['logi_circle==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
-CONF_ATTRIBUTION = "Data provided by circle.logi.com"
+ATTRIBUTION = "Data provided by circle.logi.com"
 
 NOTIFICATION_ID = 'logi_notification'
 NOTIFICATION_TITLE = 'Logi Circle Setup'

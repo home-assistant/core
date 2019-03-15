@@ -5,7 +5,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.logi_circle import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DOMAIN as LOGI_CIRCLE_DOMAIN)
+    ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DOMAIN as LOGI_CIRCLE_DOMAIN)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING,
@@ -86,7 +86,7 @@ class LogiSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         state = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'battery_saving_mode': (
                 STATE_ON if self._camera.battery_saving else STATE_OFF),
             'ip_address': self._camera.ip_address,

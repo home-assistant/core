@@ -1,9 +1,9 @@
 """Support for OpenTherm Gateway climate devices."""
 import logging
 
-from homeassistant.components.climate import (ClimateDevice, STATE_IDLE,
-                                              STATE_HEAT, STATE_COOL,
-                                              SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_IDLE, STATE_HEAT, STATE_COOL, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.opentherm_gw import (
     CONF_FLOOR_TEMP, CONF_PRECISION, DATA_DEVICE, DATA_GW_VARS,
     DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE)

@@ -1,12 +1,13 @@
 """MySensors platform that offers a Climate (MySensors-HVAC) component."""
 from homeassistant.components import mysensors
-from homeassistant.components.climate import (
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN, STATE_AUTO,
-    STATE_COOL, STATE_HEAT, STATE_OFF, SUPPORT_FAN_MODE,
+    STATE_COOL, STATE_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
-    ClimateDevice)
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 DICT_HA_TO_MYS = {
     STATE_AUTO: 'AutoChangeOver',

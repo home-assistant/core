@@ -75,8 +75,8 @@ class AreaRegistry:
 
         if self._async_is_registered(name):
             raise ValueError('Name is already in use')
-        else:
-            changes['name'] = name
+
+        changes['name'] = name
 
         new = self.areas[area_id] = attr.evolve(old, **changes)
         self.async_schedule_save()

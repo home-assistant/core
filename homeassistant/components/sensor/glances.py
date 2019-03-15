@@ -47,6 +47,7 @@ SENSOR_TYPES = {
     'process_total': ['Total', 'Count', 'mdi:memory'],
     'process_thread': ['Thread', 'Count', 'mdi:memory'],
     'process_sleeping': ['Sleeping', 'Count', 'mdi:memory'],
+    'cpu_use_percent': ['CPU used', '%', 'mdi:memory'],
     'cpu_temp': ['CPU Temp', TEMP_CELSIUS, 'mdi:thermometer'],
     'docker_active': ['Containers active', '', 'mdi:docker'],
     'docker_cpu_use': ['Containers CPU used', '%', 'mdi:docker'],
@@ -177,6 +178,8 @@ class GlancesSensor(Entity):
                 self._state = value['processcount']['thread']
             elif self.type == 'process_sleeping':
                 self._state = value['processcount']['sleeping']
+            elif self.type == 'cpu_use_percent':
+                self._state = value['quicklook']['cpu']
             elif self.type == 'cpu_temp':
                 for sensor in value['sensors']:
                     if sensor['label'] in ['CPU', "Package id 0",

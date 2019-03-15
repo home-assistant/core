@@ -37,7 +37,7 @@ def setup(hass, config):
             reader.connect()
             hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, reader.stop)
         except OSError as error:
-            _LOGGER.error('Error creating "%s". %s', name, error)
+            _LOGGER.error("Error creating %s. %s", name, error)
             return False
 
     return True

@@ -1,9 +1,4 @@
-"""
-U.S. Geological Survey Earthquake Hazards Program Feed platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/geo_location/usgs_earthquakes_feed/
-"""
+"""Support for U.S. Geological Survey Earthquake Hazards Program Feeds."""
 from datetime import timedelta
 import logging
 from typing import Optional
@@ -13,8 +8,8 @@ import voluptuous as vol
 from homeassistant.components.geo_location import (
     PLATFORM_SCHEMA, GeolocationEvent)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_RADIUS, CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_START, CONF_LATITUDE, CONF_LONGITUDE)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
+    CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (

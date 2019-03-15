@@ -61,7 +61,7 @@ def message_handler(handler):
             """Initialize the messages handler instance."""
             super().__init__(handler)
 
-        def check_update(self, update):
+        def check_update(self, update):  # pylint: disable=no-self-use
             """Check is update valid."""
             return isinstance(update, Update)
 

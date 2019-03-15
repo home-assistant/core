@@ -1,9 +1,4 @@
-"""
-This component provides basic support for the Philips Hue system.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/hue/
-"""
+"""Support for the Philips Hue system."""
 import ipaddress
 import logging
 
@@ -19,7 +14,7 @@ from .bridge import HueBridge
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
 
-REQUIREMENTS = ['aiohue==1.9.0']
+REQUIREMENTS = ['aiohue==1.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,10 +121,16 @@ async def async_setup_entry(hass, entry):
         },
         manufacturer='Signify',
         name=config.name,
-        # Not yet exposed as properties in aiohue
-        model=config.raw['modelid'],
-        sw_version=config.raw['swversion'],
+        model=config.modelid,
+        sw_version=config.swversion,
     )
+
+    if config.swupdate2_bridge_state == "readytoinstall":
+        err = (
+            "Please check for software updates of the bridge "
+            "in the Philips Hue App."
+        )
+        _LOGGER.warning(err)
 
     return True
 

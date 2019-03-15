@@ -1,8 +1,8 @@
-"""Intents for the hangouts component."""
+"""Intents for the Hangouts component."""
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 
-from .const import INTENT_HELP, DOMAIN, CONF_BOT
+from .const import CONF_BOT, DOMAIN, INTENT_HELP
 
 
 class HelpIntent(intent.IntentHandler):

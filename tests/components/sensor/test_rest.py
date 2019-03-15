@@ -89,6 +89,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     'name': 'foo',
                     'unit_of_measurement': 'MB',
                     'verify_ssl': 'true',
+                    'timeout': 30,
                     'authentication': 'basic',
                     'username': 'my username',
                     'password': 'my password',
@@ -112,6 +113,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     'name': 'foo',
                     'unit_of_measurement': 'MB',
                     'verify_ssl': 'true',
+                    'timeout': 30,
                     'authentication': 'basic',
                     'username': 'my username',
                     'password': 'my password',
@@ -280,8 +282,10 @@ class TestRestData(unittest.TestCase):
         self.method = "GET"
         self.resource = "http://localhost"
         self.verify_ssl = True
+        self.timeout = 10
         self.rest = rest.RestData(
-            self.method, self.resource, None, None, None, self.verify_ssl)
+            self.method, self.resource, None, None, None, self.verify_ssl,
+            self.timeout)
 
     @requests_mock.Mocker()
     def test_update(self, mock_req):

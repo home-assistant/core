@@ -29,8 +29,8 @@ REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Weather forecast from met.no, delivered " \
-                   "by the Norwegian Meteorological Institute."
+ATTRIBUTION = "Weather forecast from met.no, delivered by the Norwegian " \
+              "Meteorological Institute."
 # https://api.met.no/license_data.html
 
 SENSOR_TYPES = {
@@ -134,7 +134,7 @@ class YrSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     @property

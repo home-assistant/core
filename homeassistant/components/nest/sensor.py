@@ -1,7 +1,7 @@
 """Support for Nest Thermostat sensors."""
 import logging
 
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     STATE_COOL, STATE_HEAT)
 from homeassistant.components.nest import (
     DATA_NEST, DATA_NEST_CONFIG, CONF_SENSORS, NestSensorDevice)

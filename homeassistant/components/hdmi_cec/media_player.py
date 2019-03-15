@@ -1,9 +1,4 @@
-"""
-Support for HDMI CEC devices as media players.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/hdmi_cec/
-"""
+"""Support for HDMI CEC devices as media players."""
 import logging
 
 from homeassistant.components.hdmi_cec import ATTR_NEW, CecDevice
@@ -25,7 +20,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return HDMI devices as +switches."""
     if ATTR_NEW in discovery_info:
-        _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
+        _LOGGER.debug("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         entities = []
         for device in discovery_info[ATTR_NEW]:
             hdmi_device = hass.data.get(device)

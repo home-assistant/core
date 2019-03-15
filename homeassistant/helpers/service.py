@@ -272,7 +272,10 @@ async def entity_service_call(hass, platforms, func, call, service_name=''):
     ]
 
     if tasks:
-        await asyncio.wait(tasks)
+        done, pending = await asyncio.wait(tasks)
+        assert not pending
+        for future in done:
+            future.result()  # pop exception if have
 
 
 async def _handle_service_platform_call(func, data, entities, context):
@@ -294,4 +297,7 @@ async def _handle_service_platform_call(func, data, entities, context):
             tasks.append(entity.async_update_ha_state(True))
 
     if tasks:
-        await asyncio.wait(tasks)
+        done, pending = await asyncio.wait(tasks)
+        assert not pending
+        for future in done:
+            future.result()  # pop exception if have

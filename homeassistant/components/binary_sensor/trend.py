@@ -1,9 +1,4 @@
-"""
-A sensor that monitors trends in other components.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.trend/
-"""
+"""A sensor that monitors trends in other components."""
 from collections import deque
 import logging
 import math
@@ -22,7 +17,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import utcnow
 
-REQUIREMENTS = ['numpy==1.16.0']
+REQUIREMENTS = ['numpy==1.16.1']
 
 _LOGGER = logging.getLogger(__name__)
 

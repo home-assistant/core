@@ -1,9 +1,4 @@
-"""
-Support for HLK-SW16 relay switch.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/hlk_sw16/
-"""
+"""Support for HLK-SW16 relay switches."""
 import logging
 
 import voluptuous as vol

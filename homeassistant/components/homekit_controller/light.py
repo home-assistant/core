@@ -1,15 +1,10 @@
-"""
-Support for Homekit lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.homekit_controller/
-"""
+"""Support for Homekit lights."""
 import logging
 
 from homeassistant.components.homekit_controller import (
-    HomeKitEntity, KNOWN_ACCESSORIES)
+    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_COLOR_TEMP, SUPPORT_BRIGHTNESS,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 
 DEPENDENCIES = ['homekit_controller']

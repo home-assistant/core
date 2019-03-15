@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTR = 'attribute'
 CONF_SELECT = 'select'
+CONF_INDEX = 'index'
 
 DEFAULT_NAME = 'Web scrape'
 DEFAULT_VERIFY_SSL = True
@@ -34,6 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.string,
     vol.Required(CONF_SELECT): cv.string,
     vol.Optional(CONF_ATTR): cv.string,
+    vol.Optional(CONF_INDEX, default=0): cv.positive_int,
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
@@ -56,6 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
     attr = config.get(CONF_ATTR)
+    index = config.get(CONF_INDEX)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -77,19 +80,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady
 
     add_entities([
-        ScrapeSensor(rest, name, select, attr, value_template, unit)], True)
+        ScrapeSensor(rest, name, select, attr, index, value_template, unit)],
+                 True)
 
 
 class ScrapeSensor(Entity):
     """Representation of a web scrape sensor."""
 
-    def __init__(self, rest, name, select, attr, value_template, unit):
+    def __init__(self, rest, name, select, attr, index, value_template, unit):
         """Initialize a web scrape sensor."""
         self.rest = rest
         self._name = name
         self._state = None
         self._select = select
         self._attr = attr
+        self._index = index
         self._value_template = value_template
         self._unit_of_measurement = unit
 
@@ -119,9 +124,9 @@ class ScrapeSensor(Entity):
 
         try:
             if self._attr is not None:
-                value = raw_data.select(self._select)[0][self._attr]
+                value = raw_data.select(self._select)[self._index][self._attr]
             else:
-                value = raw_data.select(self._select)[0].text
+                value = raw_data.select(self._select)[self._index].text
             _LOGGER.debug(value)
         except IndexError:
             _LOGGER.error("Unable to extract data from HTML")

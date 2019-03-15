@@ -34,14 +34,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]
     flip_on_off = config[CONF_FLIP_ON_OFF]
-    add_entities([Switchmate(mac_addr, name, flip_on_off)], True)
+    add_entities([SwitchmateEntity(mac_addr, name, flip_on_off)], True)
 
 
-class Switchmate(SwitchDevice):
+class SwitchmateEntity(SwitchDevice):
     """Representation of a Switchmate."""
 
     def __init__(self, mac, name, flip_on_off) -> None:
         """Initialize the Switchmate."""
+        # pylint: disable=import-error, no-member, no-value-for-parameter
         import switchmate
         self._mac = mac
         self._name = name

@@ -1,19 +1,14 @@
-"""Component for interfacing to Lutron Homeworks lights.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.homeworks/
-"""
+"""Support for Lutron Homeworks lights."""
 import logging
 
 from homeassistant.components.homeworks import (
-    HomeworksDevice, HOMEWORKS_CONTROLLER, ENTITY_SIGNAL,
-    CONF_DIMMERS, CONF_ADDR, CONF_RATE)
+    CONF_ADDR, CONF_DIMMERS, CONF_RATE, ENTITY_SIGNAL, HOMEWORKS_CONTROLLER,
+    HomeworksDevice)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['homeworks']
 

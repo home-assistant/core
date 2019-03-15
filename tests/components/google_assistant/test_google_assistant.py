@@ -8,7 +8,8 @@ import pytest
 
 from homeassistant import core, const, setup
 from homeassistant.components import (
-    fan, cover, light, switch, climate, lock, async_setup, media_player)
+    fan, cover, light, switch, lock, async_setup, media_player)
+from homeassistant.components.climate import const as climate
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.components import google_assistant as ga
 

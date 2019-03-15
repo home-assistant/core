@@ -1,9 +1,4 @@
-"""
-Support for Irish Rail RTPI information.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.irish_rail_transport/
-"""
+"""Support for Irish Rail RTPI information."""
 import logging
 from datetime import timedelta
 
@@ -11,7 +6,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyirishrail==0.0.2']
@@ -28,6 +23,7 @@ ATTR_DUE_AT = "Due at"
 ATTR_EXPECT_AT = "Expected at"
 ATTR_NEXT_UP = "Later Train"
 ATTR_TRAIN_TYPE = "Train type"
+ATTRIBUTION = "Data provided by Irish Rail"
 
 CONF_STATION = 'station'
 CONF_DESTINATION = 'destination'
@@ -100,6 +96,7 @@ class IrishRailTransportSensor(Entity):
                 next_up += self._times[1][ATTR_DUE_IN]
 
             return {
+                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_STATION: self._station,
                 ATTR_ORIGIN: self._times[0][ATTR_ORIGIN],
                 ATTR_DESTINATION: self._times[0][ATTR_DESTINATION],
@@ -109,7 +106,7 @@ class IrishRailTransportSensor(Entity):
                 ATTR_DIRECTION: self._times[0][ATTR_DIRECTION],
                 ATTR_STOPS_AT: self._times[0][ATTR_STOPS_AT],
                 ATTR_NEXT_UP: next_up,
-                ATTR_TRAIN_TYPE: self._times[0][ATTR_TRAIN_TYPE]
+                ATTR_TRAIN_TYPE: self._times[0][ATTR_TRAIN_TYPE],
             }
 
     @property
@@ -146,22 +143,23 @@ class IrishRailTransportData:
 
     def update(self):
         """Get the latest data from irishrail."""
-        trains = self._ir_api.get_station_by_name(self.station,
-                                                  direction=self.direction,
-                                                  destination=self.destination,
-                                                  stops_at=self.stops_at)
+        trains = self._ir_api.get_station_by_name(
+            self.station, direction=self.direction,
+            destination=self.destination, stops_at=self.stops_at)
         stops_at = self.stops_at if self.stops_at else ''
         self.info = []
         for train in trains:
-            train_data = {ATTR_STATION: self.station,
-                          ATTR_ORIGIN: train.get('origin'),
-                          ATTR_DESTINATION: train.get('destination'),
-                          ATTR_DUE_IN: train.get('due_in_mins'),
-                          ATTR_DUE_AT: train.get('scheduled_arrival_time'),
-                          ATTR_EXPECT_AT: train.get('expected_departure_time'),
-                          ATTR_DIRECTION: train.get('direction'),
-                          ATTR_STOPS_AT: stops_at,
-                          ATTR_TRAIN_TYPE: train.get('type')}
+            train_data = {
+                ATTR_STATION: self.station,
+                ATTR_ORIGIN: train.get('origin'),
+                ATTR_DESTINATION: train.get('destination'),
+                ATTR_DUE_IN: train.get('due_in_mins'),
+                ATTR_DUE_AT: train.get('scheduled_arrival_time'),
+                ATTR_EXPECT_AT: train.get('expected_departure_time'),
+                ATTR_DIRECTION: train.get('direction'),
+                ATTR_STOPS_AT: stops_at,
+                ATTR_TRAIN_TYPE: train.get('type'),
+            }
             self.info.append(train_data)
 
         if not self.info:
@@ -180,4 +178,5 @@ class IrishRailTransportData:
                  ATTR_EXPECT_AT: 'n/a',
                  ATTR_DIRECTION: direction,
                  ATTR_STOPS_AT: stops_at,
-                 ATTR_TRAIN_TYPE: ''}]
+                 ATTR_TRAIN_TYPE: '',
+                 }]

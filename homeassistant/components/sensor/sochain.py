@@ -1,27 +1,22 @@
-"""
-Support for watching multiple cryptocurrencies.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sochain/
-"""
-import logging
+"""Support for watching multiple cryptocurrencies."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-sochain-api==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ADDRESS = 'address'
+ATTRIBUTION = "Data provided by chain.so"
+
 CONF_NETWORK = 'network'
-CONF_ATTRIBUTION = "Data provided by chain.so"
 
 DEFAULT_NAME = 'Crypto Balance'
 
@@ -34,8 +29,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the sochain sensors."""
     from pysochain import ChainSo
     address = config.get(CONF_ADDRESS)
@@ -77,7 +72,7 @@ class SochainSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
     async def async_update(self):

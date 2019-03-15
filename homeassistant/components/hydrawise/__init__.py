@@ -20,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
 
-CONF_ATTRIBUTION = "Data provided by hydrawise.com"
+ATTRIBUTION = "Data provided by hydrawise.com"
+
 CONF_WATERING_TIME = 'watering_minutes'
 
 NOTIFICATION_ID = 'hydrawise_notification'
@@ -141,6 +142,6 @@ class HydrawiseEntity(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'identifier': self.data.get('relay'),
         }

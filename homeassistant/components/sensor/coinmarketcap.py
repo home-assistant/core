@@ -32,7 +32,8 @@ ATTR_RANK = 'rank'
 ATTR_SYMBOL = 'symbol'
 ATTR_TOTAL_SUPPLY = 'total_supply'
 
-CONF_ATTRIBUTION = "Data provided by CoinMarketCap"
+ATTRIBUTION = "Data provided by CoinMarketCap"
+
 CONF_CURRENCY_ID = 'currency_id'
 CONF_DISPLAY_CURRENCY_DECIMALS = 'display_currency_decimals'
 
@@ -115,7 +116,7 @@ class CoinMarketCapSensor(Entity):
             ATTR_VOLUME_24H:
                 self._ticker.get('quotes').get(self.data.display_currency)
                 .get('volume_24h'),
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_CIRCULATING_SUPPLY: self._ticker.get('circulating_supply'),
             ATTR_MARKET_CAP:
                 self._ticker.get('quotes').get(self.data.display_currency)

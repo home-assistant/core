@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "Error al obtener las credenciales.",
+            "devices_configured": "Todos los dispositivos encontrados ya est\u00e1n configurados.",
+            "no_devices_found": "No se encuentran dispositivos PlayStation 4 en la red."
+        },
+        "error": {
+            "not_ready": "PlayStation 4 no est\u00e1 encendido o conectado a la red."
+        },
+        "step": {
+            "creds": {
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "Direcci\u00f3n IP",
+                    "name": "Nombre",
+                    "region": "Regi\u00f3n"
+                },
+                "title": "PlayStation 4"
+            }
+        },
+        "title": "PlayStation 4"
+    }
+}

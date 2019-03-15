@@ -5,11 +5,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 
-import asyncio
 import collections
 import itertools
 import logging
 from homeassistant import const as ha_const
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 from . import const as zha_const
@@ -122,7 +122,8 @@ class ZHAGateway:
             )
         )
 
-    async def _get_or_create_device(self, zigpy_device):
+    @callback
+    def _async_get_or_create_device(self, zigpy_device):
         """Get or create a ZHA device."""
         zha_device = self._devices.get(zigpy_device.ieee)
         if zha_device is None:
@@ -130,12 +131,14 @@ class ZHAGateway:
             self._devices[zigpy_device.ieee] = zha_device
         return zha_device
 
-    async def async_device_became_available(
+    @callback
+    def async_device_became_available(
             self, sender, is_reply, profile, cluster, src_ep, dst_ep, tsn,
             command_id, args):
         """Handle tasks when a device becomes available."""
         self.async_update_device(sender)
 
+    @callback
     def async_update_device(self, sender):
         """Update device that has just become available."""
         if sender.ieee in self.devices:
@@ -146,34 +149,17 @@ class ZHAGateway:
 
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
-        zha_device = await self._get_or_create_device(device)
+        zha_device = self._async_get_or_create_device(device)
         discovery_infos = []
-        endpoint_tasks = []
         for endpoint_id, endpoint in device.endpoints.items():
-            endpoint_tasks.append(self._async_process_endpoint(
+            self._async_process_endpoint(
                 endpoint_id, endpoint, discovery_infos, device, zha_device,
                 is_new_join
-            ))
-        await asyncio.gather(*endpoint_tasks)
-
-        await zha_device.async_initialize(from_cache=(not is_new_join))
-
-        discovery_tasks = []
-        for discovery_info in discovery_infos:
-            discovery_tasks.append(_dispatch_discovery_info(
-                self._hass,
-                is_new_join,
-                discovery_info
-            ))
-        await asyncio.gather(*discovery_tasks)
-
-        device_entity = _create_device_entity(zha_device)
-        await self._component.async_add_entities([device_entity])
+            )
 
         if is_new_join:
-            # because it's a new join we can immediately mark the device as
-            # available and we already loaded fresh state above
-            zha_device.update_available(True)
+            # configure the device
+            await zha_device.async_configure()
         elif not zha_device.available and zha_device.power_source is not None\
                 and zha_device.power_source != BasicChannel.BATTERY\
                 and zha_device.power_source != BasicChannel.UNKNOWN:
@@ -187,15 +173,33 @@ class ZHAGateway:
                 )
             )
             await zha_device.async_initialize(from_cache=False)
+        else:
+            await zha_device.async_initialize(from_cache=True)
 
-    async def _async_process_endpoint(
+        for discovery_info in discovery_infos:
+            _async_dispatch_discovery_info(
+                self._hass,
+                is_new_join,
+                discovery_info
+            )
+
+        device_entity = _async_create_device_entity(zha_device)
+        await self._component.async_add_entities([device_entity])
+
+        if is_new_join:
+            # because it's a new join we can immediately mark the device as
+            # available. We do it here because the entities didn't exist above
+            zha_device.update_available(True)
+
+    @callback
+    def _async_process_endpoint(
             self, endpoint_id, endpoint, discovery_infos, device, zha_device,
             is_new_join):
         """Process an endpoint on a zigpy device."""
         import zigpy.profiles
 
         if endpoint_id == 0:  # ZDO
-            await _create_cluster_channel(
+            _async_create_cluster_channel(
                 endpoint,
                 zha_device,
                 is_new_join,
@@ -226,12 +230,12 @@ class ZHAGateway:
             profile_clusters = zha_const.COMPONENT_CLUSTERS[component]
 
         if component and component in COMPONENTS:
-            profile_match = await _handle_profile_match(
+            profile_match = _async_handle_profile_match(
                 self._hass, endpoint, profile_clusters, zha_device,
                 component, device_key, is_new_join)
             discovery_infos.append(profile_match)
 
-        discovery_infos.extend(await _handle_single_cluster_matches(
+        discovery_infos.extend(_async_handle_single_cluster_matches(
             self._hass,
             endpoint,
             zha_device,
@@ -241,21 +245,21 @@ class ZHAGateway:
         ))
 
 
-async def _create_cluster_channel(cluster, zha_device, is_new_join,
+@callback
+def _async_create_cluster_channel(cluster, zha_device, is_new_join,
                                   channels=None, channel_class=None):
     """Create a cluster channel and attach it to a device."""
     if channel_class is None:
         channel_class = ZIGBEE_CHANNEL_REGISTRY.get(cluster.cluster_id,
                                                     AttributeListeningChannel)
     channel = channel_class(cluster, zha_device)
-    if is_new_join:
-        await channel.async_configure()
     zha_device.add_cluster_channel(channel)
     if channels is not None:
         channels.append(channel)
 
 
-async def _dispatch_discovery_info(hass, is_new_join, discovery_info):
+@callback
+def _async_dispatch_discovery_info(hass, is_new_join, discovery_info):
     """Dispatch or store discovery information."""
     if not discovery_info['channels']:
         _LOGGER.warning(
@@ -273,7 +277,8 @@ async def _dispatch_discovery_info(hass, is_new_join, discovery_info):
             discovery_info
 
 
-async def _handle_profile_match(hass, endpoint, profile_clusters, zha_device,
+@callback
+def _async_handle_profile_match(hass, endpoint, profile_clusters, zha_device,
                                 component, device_key, is_new_join):
     """Dispatch a profile match to the appropriate HA component."""
     in_clusters = [endpoint.in_clusters[c]
@@ -284,17 +289,14 @@ async def _handle_profile_match(hass, endpoint, profile_clusters, zha_device,
                     if c in endpoint.out_clusters]
 
     channels = []
-    cluster_tasks = []
 
     for cluster in in_clusters:
-        cluster_tasks.append(_create_cluster_channel(
-            cluster, zha_device, is_new_join, channels=channels))
+        _async_create_cluster_channel(
+            cluster, zha_device, is_new_join, channels=channels)
 
     for cluster in out_clusters:
-        cluster_tasks.append(_create_cluster_channel(
-            cluster, zha_device, is_new_join, channels=channels))
-
-    await asyncio.gather(*cluster_tasks)
+        _async_create_cluster_channel(
+            cluster, zha_device, is_new_join, channels=channels)
 
     discovery_info = {
         'unique_id': device_key,
@@ -319,24 +321,25 @@ async def _handle_profile_match(hass, endpoint, profile_clusters, zha_device,
     return discovery_info
 
 
-async def _handle_single_cluster_matches(hass, endpoint, zha_device,
+@callback
+def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
                                          profile_clusters, device_key,
                                          is_new_join):
     """Dispatch single cluster matches to HA components."""
     cluster_matches = []
-    cluster_match_tasks = []
-    event_channel_tasks = []
+    cluster_match_results = []
     for cluster in endpoint.in_clusters.values():
         # don't let profiles prevent these channels from being created
         if cluster.cluster_id in NO_SENSOR_CLUSTERS:
-            cluster_match_tasks.append(_handle_channel_only_cluster_match(
-                zha_device,
-                cluster,
-                is_new_join,
-            ))
+            cluster_match_results.append(
+                _async_handle_channel_only_cluster_match(
+                    zha_device,
+                    cluster,
+                    is_new_join,
+                ))
 
         if cluster.cluster_id not in profile_clusters[0]:
-            cluster_match_tasks.append(_handle_single_cluster_match(
+            cluster_match_results.append(_async_handle_single_cluster_match(
                 hass,
                 zha_device,
                 cluster,
@@ -347,7 +350,7 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
 
     for cluster in endpoint.out_clusters.values():
         if cluster.cluster_id not in profile_clusters[1]:
-            cluster_match_tasks.append(_handle_single_cluster_match(
+            cluster_match_results.append(_async_handle_single_cluster_match(
                 hass,
                 zha_device,
                 cluster,
@@ -357,27 +360,28 @@ async def _handle_single_cluster_matches(hass, endpoint, zha_device,
             ))
 
         if cluster.cluster_id in EVENT_RELAY_CLUSTERS:
-            event_channel_tasks.append(_create_cluster_channel(
+            _async_create_cluster_channel(
                 cluster,
                 zha_device,
                 is_new_join,
                 channel_class=EventRelayChannel
-            ))
-    await asyncio.gather(*event_channel_tasks)
-    cluster_match_results = await asyncio.gather(*cluster_match_tasks)
+            )
+
     for cluster_match in cluster_match_results:
         if cluster_match is not None:
             cluster_matches.append(cluster_match)
     return cluster_matches
 
 
-async def _handle_channel_only_cluster_match(
+@callback
+def _async_handle_channel_only_cluster_match(
         zha_device, cluster, is_new_join):
     """Handle a channel only cluster match."""
-    await _create_cluster_channel(cluster, zha_device, is_new_join)
+    _async_create_cluster_channel(cluster, zha_device, is_new_join)
 
 
-async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
+@callback
+def _async_handle_single_cluster_match(hass, zha_device, cluster, device_key,
                                        device_classes, is_new_join):
     """Dispatch a single cluster match to a HA component."""
     component = None  # sub_component = None
@@ -392,7 +396,7 @@ async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
     if component is None or component not in COMPONENTS:
         return
     channels = []
-    await _create_cluster_channel(cluster, zha_device, is_new_join,
+    _async_create_cluster_channel(cluster, zha_device, is_new_join,
                                   channels=channels)
 
     cluster_key = "{}-{}".format(device_key, cluster.cluster_id)
@@ -416,7 +420,8 @@ async def _handle_single_cluster_match(hass, zha_device, cluster, device_key,
     return discovery_info
 
 
-def _create_device_entity(zha_device):
+@callback
+def _async_create_device_entity(zha_device):
     """Create ZHADeviceEntity."""
     device_entity_channels = []
     if POWER_CONFIGURATION_CHANNEL in zha_device.cluster_channels:

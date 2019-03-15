@@ -1,9 +1,4 @@
-"""
-Support for Pollen.com allergen and cold/flu sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.pollen/
-"""
+"""Support for Pollen.com allergen and cold/flu sensors."""
 from datetime import timedelta
 import logging
 from statistics import mean
@@ -18,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['numpy==1.16.0', 'pypollencom==2.2.2']
+REQUIREMENTS = ['numpy==1.16.1', 'pypollencom==2.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 

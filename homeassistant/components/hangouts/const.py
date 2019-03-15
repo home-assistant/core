@@ -3,8 +3,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify \
-    import ATTR_MESSAGE, ATTR_TARGET, ATTR_DATA
+from homeassistant.components.notify import (
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger('homeassistant.components.hangouts')

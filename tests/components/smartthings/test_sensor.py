@@ -37,7 +37,7 @@ async def test_entity_state(hass, device_factory):
     """Tests the state attributes properly match the light types."""
     device = device_factory('Sensor 1', [Capability.battery],
                             {Attribute.battery: 100})
-    await setup_platform(hass, SENSOR_DOMAIN, device)
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     state = hass.states.get('sensor.sensor_1_battery')
     assert state.state == '100'
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == '%'
@@ -53,7 +53,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     device_registry = await hass.helpers.device_registry.async_get_registry()
     # Act
-    await setup_platform(hass, SENSOR_DOMAIN, device)
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get('sensor.sensor_1_battery')
     assert entry
@@ -71,7 +71,7 @@ async def test_update_from_signal(hass, device_factory):
     # Arrange
     device = device_factory('Sensor 1', [Capability.battery],
                             {Attribute.battery: 100})
-    await setup_platform(hass, SENSOR_DOMAIN, device)
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     device.status.apply_attribute_update(
         'main', Capability.battery, Attribute.battery, 75)
     # Act
@@ -89,7 +89,7 @@ async def test_unload_config_entry(hass, device_factory):
     # Arrange
     device = device_factory('Sensor 1', [Capability.battery],
                             {Attribute.battery: 100})
-    config_entry = await setup_platform(hass, SENSOR_DOMAIN, device)
+    config_entry = await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Act
     await hass.config_entries.async_forward_entry_unload(
         config_entry, 'sensor')

@@ -17,11 +17,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['rova==0.0.2']
+REQUIREMENTS = ['rova==0.1.0']
 
 # Config for rova requests.
 CONF_ZIP_CODE = 'zip_code'
 CONF_HOUSE_NUMBER = 'house_number'
+CONF_HOUSE_NUMBER_SUFFIX = 'house_number_suffix'
 
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
@@ -37,6 +38,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ZIP_CODE): cv.string,
     vol.Required(CONF_HOUSE_NUMBER): cv.string,
+    vol.Optional(CONF_HOUSE_NUMBER_SUFFIX, default=''): cv.string,
     vol.Optional(CONF_NAME, default='Rova'): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['bio']):
     vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
@@ -52,10 +54,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     zip_code = config[CONF_ZIP_CODE]
     house_number = config[CONF_HOUSE_NUMBER]
+    house_number_suffix = config[CONF_HOUSE_NUMBER_SUFFIX]
     platform_name = config[CONF_NAME]
 
     # Create new Rova object to  retrieve data
-    api = Rova(zip_code, house_number)
+    api = Rova(zip_code, house_number, house_number_suffix)
 
     try:
         if not api.is_rova_area():

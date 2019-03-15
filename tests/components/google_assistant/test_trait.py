@@ -2,7 +2,6 @@
 import pytest
 
 from homeassistant.components import (
-    climate,
     cover,
     fan,
     input_boolean,
@@ -15,10 +14,11 @@ from homeassistant.components import (
     vacuum,
     group,
 )
+from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import trait, helpers, const
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE)
 from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.util import color
 from tests.common import async_mock_service
@@ -668,7 +668,7 @@ async def test_temperature_setting_climate_range(hass):
             climate.ATTR_CURRENT_HUMIDITY: 25,
             climate.ATTR_OPERATION_MODE: climate.STATE_AUTO,
             climate.ATTR_OPERATION_LIST: [
-                climate.STATE_OFF,
+                STATE_OFF,
                 climate.STATE_COOL,
                 climate.STATE_HEAT,
                 climate.STATE_AUTO,
@@ -737,12 +737,12 @@ async def test_temperature_setting_climate_setpoint(hass):
         'climate.bla', climate.STATE_AUTO, {
             climate.ATTR_OPERATION_MODE: climate.STATE_COOL,
             climate.ATTR_OPERATION_LIST: [
-                climate.STATE_OFF,
+                STATE_OFF,
                 climate.STATE_COOL,
             ],
             climate.ATTR_MIN_TEMP: 10,
             climate.ATTR_MAX_TEMP: 30,
-            climate.ATTR_TEMPERATURE: 18,
+            ATTR_TEMPERATURE: 18,
             climate.ATTR_CURRENT_TEMPERATURE: 20
         }), BASIC_CONFIG)
     assert trt.sync_attributes() == {
@@ -772,7 +772,7 @@ async def test_temperature_setting_climate_setpoint(hass):
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'climate.bla',
-        climate.ATTR_TEMPERATURE: 19
+        ATTR_TEMPERATURE: 19
     }
 
 

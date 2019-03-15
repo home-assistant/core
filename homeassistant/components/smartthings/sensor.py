@@ -43,8 +43,6 @@ CAPABILITY_TO_SENSORS = {
         Map('dishwasherJobState', "Dishwasher Job State", None, None),
         Map('completionTime', "Dishwasher Completion Time", None,
             DEVICE_CLASS_TIMESTAMP)],
-    'doorControl': [
-        Map('door', "Door", None, None)],
     'dryerMode': [
         Map('dryerMode', "Dryer Mode", None, None)],
     'dryerOperatingState': [
@@ -62,8 +60,6 @@ CAPABILITY_TO_SENSORS = {
             'Equivalent Carbon Dioxide Measurement', 'ppm', None)],
     'formaldehydeMeasurement': [
         Map('formaldehydeLevel', 'Formaldehyde Measurement', 'ppm', None)],
-    'garageDoorControl': [
-        Map('door', 'Garage Door', None, None)],
     'illuminanceMeasurement': [
         Map('illuminance', "Illuminance", 'lux', DEVICE_CLASS_ILLUMINANCE)],
     'infraredLevel': [
@@ -143,9 +139,7 @@ CAPABILITY_TO_SENSORS = {
         Map('machineState', "Washer Machine State", None, None),
         Map('washerJobState', "Washer Job State", None, None),
         Map('completionTime', "Washer Completion Time", None,
-            DEVICE_CLASS_TIMESTAMP)],
-    'windowShade': [
-        Map('windowShade', 'Window Shade', None, None)]
+            DEVICE_CLASS_TIMESTAMP)]
 }
 
 UNITS = {

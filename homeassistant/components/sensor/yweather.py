@@ -21,7 +21,8 @@ REQUIREMENTS = ['yahooweather==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Weather details provided by Yahoo! Inc."
+ATTRIBUTION = "Weather details provided by Yahoo! Inc."
+
 CONF_FORECAST = 'forecast'
 CONF_WOEID = 'woeid'
 
@@ -131,7 +132,7 @@ class YahooWeatherSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+        attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
         if self._code is not None and "weather" in self._type:
             attrs['condition_code'] = self._code

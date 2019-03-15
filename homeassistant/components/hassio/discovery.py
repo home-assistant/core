@@ -1,18 +1,18 @@
-"""Implement the serivces discovery feature from Hass.io for Add-ons."""
+"""Implement the services discovery feature from Hass.io for Add-ons."""
 import asyncio
 import logging
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
-from homeassistant.core import callback, CoreState
-from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import CoreState, callback
 
-from .handler import HassioAPIError
 from .const import (
-    ATTR_DISCOVERY, ATTR_ADDON, ATTR_NAME, ATTR_SERVICE, ATTR_CONFIG,
+    ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_NAME, ATTR_SERVICE,
     ATTR_UUID)
+from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -61,8 +61,9 @@ class GoogleMapsScanner:
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
 
         try:
-            self.service = Service(self.username, self.password,
-                                   hass.config.path(CREDENTIALS_FILE))
+            credfile = "{}.{}".format(hass.config.path(CREDENTIALS_FILE),
+                                      slugify(self.username))
+            self.service = Service(self.username, self.password, credfile)
             self._update_info()
 
             track_time_interval(

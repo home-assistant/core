@@ -4,9 +4,11 @@ import struct
 import logging
 import ctypes
 from collections import namedtuple
+
 import voluptuous as vol
-from homeassistant.const import CONF_DEVICE, CONF_PORT, CONF_IP_ADDRESS, \
-    EVENT_HOMEASSISTANT_STOP
+
+from homeassistant.const import (
+    CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyads==3.0.7']
@@ -16,18 +18,20 @@ _LOGGER = logging.getLogger(__name__)
 DATA_ADS = 'data_ads'
 
 # Supported Types
-ADSTYPE_INT = 'int'
-ADSTYPE_UINT = 'uint'
-ADSTYPE_BYTE = 'byte'
 ADSTYPE_BOOL = 'bool'
+ADSTYPE_BYTE = 'byte'
+ADSTYPE_DINT = 'dint'
+ADSTYPE_INT = 'int'
+ADSTYPE_UDINT = 'udint'
+ADSTYPE_UINT = 'uint'
 
-DOMAIN = 'ads'
-
+CONF_ADS_FACTOR = 'factor'
+CONF_ADS_TYPE = 'adstype'
+CONF_ADS_VALUE = 'value'
 CONF_ADS_VAR = 'adsvar'
 CONF_ADS_VAR_BRIGHTNESS = 'adsvar_brightness'
-CONF_ADS_TYPE = 'adstype'
-CONF_ADS_FACTOR = 'factor'
-CONF_ADS_VALUE = 'value'
+
+DOMAIN = 'ads'
 
 SERVICE_WRITE_DATA_BY_NAME = 'write_data_by_name'
 
@@ -41,7 +45,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema({
     vol.Required(CONF_ADS_TYPE):
-        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, ADSTYPE_BOOL]),
+        vol.In([ADSTYPE_INT, ADSTYPE_UINT, ADSTYPE_BYTE, ADSTYPE_BOOL,
+                ADSTYPE_DINT, ADSTYPE_UDINT]),
     vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
     vol.Required(CONF_ADS_VAR): cv.string,
 })
@@ -61,15 +66,19 @@ def setup(hass, config):
     AdsHub.ADS_TYPEMAP = {
         ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
         ADSTYPE_BYTE: pyads.PLCTYPE_BYTE,
+        ADSTYPE_DINT: pyads.PLCTYPE_DINT,
         ADSTYPE_INT: pyads.PLCTYPE_INT,
+        ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
         ADSTYPE_UINT: pyads.PLCTYPE_UINT,
     }
 
+    AdsHub.ADSError = pyads.ADSError
     AdsHub.PLCTYPE_BOOL = pyads.PLCTYPE_BOOL
     AdsHub.PLCTYPE_BYTE = pyads.PLCTYPE_BYTE
+    AdsHub.PLCTYPE_DINT = pyads.PLCTYPE_DINT
     AdsHub.PLCTYPE_INT = pyads.PLCTYPE_INT
+    AdsHub.PLCTYPE_UDINT = pyads.PLCTYPE_UDINT
     AdsHub.PLCTYPE_UINT = pyads.PLCTYPE_UINT
-    AdsHub.ADSError = pyads.ADSError
 
     try:
         ads = AdsHub(client)
@@ -162,12 +171,11 @@ class AdsHub:
             hnotify, huser = self._client.add_device_notification(
                 name, attr, self._device_notification_callback)
             hnotify = int(hnotify)
+            self._notification_items[hnotify] = NotificationItem(
+                hnotify, huser, name, plc_datatype, callback)
 
         _LOGGER.debug(
             "Added device notification %d for variable %s", hnotify, name)
-
-        self._notification_items[hnotify] = NotificationItem(
-            hnotify, huser, name, plc_datatype, callback)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
@@ -178,9 +186,10 @@ class AdsHub:
         data = contents.data
 
         try:
-            notification_item = self._notification_items[hnotify]
+            with self._lock:
+                notification_item = self._notification_items[hnotify]
         except KeyError:
-            _LOGGER.debug("Unknown device notification handle: %d", hnotify)
+            _LOGGER.error("Unknown device notification handle: %d", hnotify)
             return
 
         # Parse data to desired datatype
@@ -192,6 +201,10 @@ class AdsHub:
             value = struct.unpack('<B', bytearray(data)[:1])[0]
         elif notification_item.plc_datatype == self.PLCTYPE_UINT:
             value = struct.unpack('<H', bytearray(data)[:2])[0]
+        elif notification_item.plc_datatype == self.PLCTYPE_DINT:
+            value = struct.unpack('<i', bytearray(data)[:4])[0]
+        elif notification_item.plc_datatype == self.PLCTYPE_UDINT:
+            value = struct.unpack('<I', bytearray(data)[:4])[0]
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")

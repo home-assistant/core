@@ -1,9 +1,4 @@
-"""
-Generic GeoJSON events platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/geo_location/geo_json_events/
-"""
+"""Support for generic GeoJSON events."""
 from datetime import timedelta
 import logging
 from typing import Optional
@@ -13,8 +8,8 @@ import voluptuous as vol
 from homeassistant.components.geo_location import (
     PLATFORM_SCHEMA, GeolocationEvent)
 from homeassistant.const import (
-    CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_URL, EVENT_HOMEASSISTANT_START,
-    CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_SCAN_INTERVAL, CONF_URL,
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (

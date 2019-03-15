@@ -2,8 +2,8 @@
 import asyncio
 import logging
 
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -39,8 +39,7 @@ class HomematicipAuth:
         from homematicip.base.base_connection import HmipConnectionError
 
         try:
-            await self.auth.isRequestAcknowledged()
-            return True
+            return await self.auth.isRequestAcknowledged()
         except HmipConnectionError:
             return False
 

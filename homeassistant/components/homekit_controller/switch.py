@@ -1,13 +1,8 @@
-"""
-Support for Homekit switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.homekit_controller/
-"""
+"""Support for Homekit switches."""
 import logging
 
-from homeassistant.components.homekit_controller import (HomeKitEntity,
-                                                         KNOWN_ACCESSORIES)
+from homeassistant.components.homekit_controller import (
+    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['homekit_controller']

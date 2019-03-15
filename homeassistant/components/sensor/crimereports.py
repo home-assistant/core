@@ -1,9 +1,4 @@
-"""
-Sensor for Crime Reports.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.crimereports/
-"""
+"""Sensor for Crime Reports."""
 from collections import defaultdict
 from datetime import timedelta
 import logging
@@ -21,7 +16,7 @@ from homeassistant.util.distance import convert
 from homeassistant.util.dt import now
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['crimereports==1.0.0']
+REQUIREMENTS = ['crimereports==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

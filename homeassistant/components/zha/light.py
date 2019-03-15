@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zha']
 
-DEFAULT_DURATION = 0.5
+DEFAULT_DURATION = 5
 
 CAPABILITIES_COLOR_XY = 0x08
 CAPABILITIES_COLOR_TEMP = 0x10
@@ -110,8 +110,13 @@ class Light(ZhaEntity, light.Light):
         return self.state_attributes
 
     def set_level(self, value):
-        """Set the brightness of this light between 0..255."""
-        value = max(0, min(255, value))
+        """Set the brightness of this light between 0..254.
+
+        brightness level 255 is a special value instructing the device to come
+        on at `on_level` Zigbee attribute value, regardless of the last set
+        level
+        """
+        value = max(0, min(254, value))
         self._brightness = value
         self.async_schedule_update_ha_state()
 
@@ -146,8 +151,31 @@ class Light(ZhaEntity, light.Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        duration = kwargs.get(light.ATTR_TRANSITION, DEFAULT_DURATION)
-        duration = duration * 10  # tenths of s
+        transition = kwargs.get(light.ATTR_TRANSITION)
+        duration = transition * 10 if transition else DEFAULT_DURATION
+        brightness = kwargs.get(light.ATTR_BRIGHTNESS)
+
+        if (brightness is not None or transition) and \
+                self._supported_features & light.SUPPORT_BRIGHTNESS:
+            if brightness is not None:
+                level = min(254, brightness)
+            else:
+                level = self._brightness or 254
+            success = await self._level_channel.move_to_level_with_on_off(
+                level,
+                duration
+            )
+            if not success:
+                return
+            self._state = bool(level)
+            if level:
+                self._brightness = level
+
+        if brightness is None or brightness:
+            success = await self._on_off_channel.on()
+            if not success:
+                return
+            self._state = True
 
         if light.ATTR_COLOR_TEMP in kwargs and \
                 self.supported_features & light.SUPPORT_COLOR_TEMP:
@@ -171,32 +199,12 @@ class Light(ZhaEntity, light.Light):
                 return
             self._hs_color = hs_color
 
-        if self._brightness is not None:
-            brightness = kwargs.get(
-                light.ATTR_BRIGHTNESS, self._brightness or 255)
-            success = await self._level_channel.move_to_level_with_on_off(
-                brightness,
-                duration
-            )
-            if not success:
-                return
-            self._state = True
-            self._brightness = brightness
-            self.async_schedule_update_ha_state()
-            return
-
-        success = await self._on_off_channel.on()
-        if not success:
-            return
-
-        self._state = True
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         duration = kwargs.get(light.ATTR_TRANSITION)
         supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
-        success = None
         if duration and supports_level:
             success = await self._level_channel.move_to_level_with_on_off(
                 0,

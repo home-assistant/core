@@ -1,15 +1,10 @@
-"""
-Demo platform that offers fake meteorological data.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that offers fake meteorological data."""
 from datetime import datetime, timedelta
 
 from homeassistant.components.weather import (
-    WeatherEntity, ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, WeatherEntity)
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 CONDITION_CLASSES = {
     'cloudy': [],

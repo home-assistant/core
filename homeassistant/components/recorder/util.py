@@ -76,5 +76,4 @@ def execute(qry):
 
             if tryno == RETRIES - 1:
                 raise
-            else:
-                time.sleep(QUERY_RETRY_WAIT)
+            time.sleep(QUERY_RETRY_WAIT)

@@ -12,7 +12,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC
+    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC,
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_BATTERY
 )
 
 
@@ -37,9 +38,9 @@ DEFAULT_TIMEOUT = 10
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
-    'temperature': ['Temperature', '°C'],
-    'humidity': ['Humidity', '%'],
-    'battery': ['Battery', '%'],
+    'temperature': [DEVICE_CLASS_TEMPERATURE, 'Temperature', '°C'],
+    'humidity': [DEVICE_CLASS_HUMIDITY, 'Humidity', '%'],
+    'battery': [DEVICE_CLASS_BATTERY, 'Battery', '%'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -80,15 +81,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devs = []
 
     for parameter in config[CONF_MONITORED_CONDITIONS]:
-        name = SENSOR_TYPES[parameter][0]
-        unit = SENSOR_TYPES[parameter][1]
+        device = SENSOR_TYPES[parameter][0]
+        name = SENSOR_TYPES[parameter][1]
+        unit = SENSOR_TYPES[parameter][2]
 
         prefix = config.get(CONF_NAME)
         if prefix:
             name = "{} {}".format(prefix, name)
 
         devs.append(MiTempBtSensor(
-            poller, parameter, name, unit, force_update, median))
+            poller, parameter, device, name, unit, force_update, median))
 
     add_entities(devs)
 
@@ -96,10 +98,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MiTempBtSensor(Entity):
     """Implementing the MiTempBt sensor."""
 
-    def __init__(self, poller, parameter, name, unit, force_update, median):
+    def __init__(self, poller, parameter, device, name, unit,
+                 force_update, median):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
+        self._device = device
         self._unit = unit
         self._name = name
         self._state = None
@@ -124,6 +128,11 @@ class MiTempBtSensor(Entity):
     def unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit
+
+    @property
+    def device_class(self):
+        """Device class of this entity."""
+        return self._device
 
     @property
     def force_update(self):

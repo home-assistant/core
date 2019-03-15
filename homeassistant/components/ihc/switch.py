@@ -1,10 +1,5 @@
-"""IHC switch platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.ihc/
-"""
-from homeassistant.components.ihc import (
-    IHC_DATA, IHC_CONTROLLER, IHC_INFO)
+"""Support for IHC switches."""
+from homeassistant.components.ihc import IHC_CONTROLLER, IHC_DATA, IHC_INFO
 from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.switch import SwitchDevice
 
@@ -31,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class IHCSwitch(IHCDevice, SwitchDevice):
-    """IHC Switch."""
+    """Representation of an IHC switch."""
 
     def __init__(self, ihc_controller, name: str, ihc_id: int,
                  info: bool, product=None) -> None:

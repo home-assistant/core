@@ -108,6 +108,23 @@ class TestFilterSensor(unittest.TestCase):
                              radius=4.0)
         for state in self.values:
             filtered = filt.filter_state(state)
+        assert 21 == filtered.state
+
+    def test_outlier_step(self):
+        """
+        Test step-change handling in outlier.
+
+        Test if outlier filter handles long-running step-changes correctly.
+        It should converge to no longer filter once just over half the
+        window_size is occupied by the new post step-change values.
+        """
+        filt = OutlierFilter(window_size=3,
+                             precision=2,
+                             entity=None,
+                             radius=1.1)
+        self.values[-1].state = 22
+        for state in self.values:
+            filtered = filt.filter_state(state)
         assert 22 == filtered.state
 
     def test_initial_outlier(self):
@@ -119,7 +136,7 @@ class TestFilterSensor(unittest.TestCase):
         out = ha.State('sensor.test_monitored', 4000)
         for state in [out]+self.values:
             filtered = filt.filter_state(state)
-        assert 22 == filtered.state
+        assert 21 == filtered.state
 
     def test_lowpass(self):
         """Test if lowpass filter works."""

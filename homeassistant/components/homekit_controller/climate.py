@@ -1,16 +1,12 @@
-"""
-Support for Homekit climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.homekit_controller/
-"""
+"""Support for Homekit climate devices."""
 import logging
 
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_HEAT, STATE_COOL, STATE_IDLE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.components.homekit_controller import (
     HomeKitEntity, KNOWN_ACCESSORIES)
-from homeassistant.components.climate import (
-    ClimateDevice, STATE_HEAT, STATE_COOL, STATE_IDLE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import TEMP_CELSIUS, STATE_OFF, ATTR_TEMPERATURE
 
 DEPENDENCIES = ['homekit_controller']

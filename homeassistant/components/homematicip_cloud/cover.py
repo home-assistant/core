@@ -1,15 +1,9 @@
-"""
-Support for HomematicIP Cloud cover devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.homematicip_cloud/
-"""
+"""Support for HomematicIP Cloud cover devices."""
 import logging
 
-from homeassistant.components.cover import (
-    ATTR_POSITION, CoverDevice)
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.components.homematicip_cloud import (
-    HMIPC_HAPID, HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN)
+    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 
 DEPENDENCIES = ['homematicip_cloud']
 
@@ -45,7 +39,7 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
     @property
     def current_cover_position(self):
         """Return current position of cover."""
-        return int(self._device.shutterLevel * 100)
+        return int((1 - self._device.shutterLevel) * 100)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""

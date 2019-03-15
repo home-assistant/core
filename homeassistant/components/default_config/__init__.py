@@ -11,6 +11,7 @@ DEPENDENCIES = (
     'history',
     'logbook',
     'map',
+    'mobile_app',
     'person',
     'script',
     'sun',

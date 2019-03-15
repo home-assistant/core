@@ -5,7 +5,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import core as hacore
-from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
+from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONTENT_TYPE_TEXT_PLAIN,
@@ -147,6 +147,15 @@ class PrometheusMetrics:
             'device_tracker_state',
             self.prometheus_client.Gauge,
             'State of the device tracker (0/1)',
+        )
+        value = state_helper.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
+    def _handle_person(self, state):
+        metric = self._metric(
+            'person_state',
+            self.prometheus_client.Gauge,
+            'State of the person (0/1)',
         )
         value = state_helper.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)

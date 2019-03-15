@@ -1,9 +1,4 @@
-"""
-Provide pre-made queries on top of the recorder component.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/history/
-"""
+"""Provide pre-made queries on top of the recorder component."""
 from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
@@ -34,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
+SIGNIFICANT_DOMAINS = ('thermostat', 'climate', 'water_heater')
 IGNORE_DOMAINS = ('zone', 'scene',)
 
 

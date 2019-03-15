@@ -152,7 +152,7 @@ class SlackNotificationService(BaseNotificationService):
                     req = requests.get(url, timeout=CONF_TIMEOUT)
                 return req.content
 
-            elif local_path:
+            if local_path:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
                     return open(local_path, 'rb')

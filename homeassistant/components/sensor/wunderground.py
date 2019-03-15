@@ -29,7 +29,8 @@ import homeassistant.helpers.config_validation as cv
 _RESOURCE = 'http://api.wunderground.com/api/{}/{}/{}/q/'
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by the WUnderground weather service"
+ATTRIBUTION = "Data provided by the WUnderground weather service"
+
 CONF_PWS_ID = 'pws_id'
 CONF_LANG = 'lang'
 
@@ -679,9 +680,7 @@ class WUndergroundSensor(Entity):
         self.rest = rest
         self._condition = condition
         self._state = None
-        self._attributes = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-        }
+        self._attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._icon = None
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")

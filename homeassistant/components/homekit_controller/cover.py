@@ -1,17 +1,12 @@
-"""
-Support for Homekit Cover.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.homekit_controller/
-"""
+"""Support for Homekit covers."""
 import logging
 
-from homeassistant.components.homekit_controller import (HomeKitEntity,
-                                                         KNOWN_ACCESSORIES)
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
-    SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT, SUPPORT_SET_TILT_POSITION,
-    ATTR_POSITION, ATTR_TILT_POSITION)
+    ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION, CoverDevice)
+from homeassistant.components.homekit_controller import (
+    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.const import (
     STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING)
 
