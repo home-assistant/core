@@ -120,12 +120,12 @@ async def async_delete_cloudhook(hass, webhook_id: str) -> None:
 
 @bind_hass
 @callback
-def async_remote_ui_fqdn(hass) -> str:
-    """Get the remote UI fully qualified domain name."""
+def async_remote_ui_url(hass) -> str:
+    """Get the remote UI URL."""
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
-    return hass.data[DOMAIN].remote.instance_domain
+    return "https://" + hass.data[DOMAIN].remote.instance_domain
 
 
 def is_cloudhook_request(request):
