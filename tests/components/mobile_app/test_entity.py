@@ -65,8 +65,7 @@ async def test_sensor(hass, create_registrations, webhook_client):  # noqa: F401
 
     assert update_resp.status == 200
 
-    updated_entity = hass.states.async_all()[2]
-
+    updated_entity = hass.states.get('sensor.battery_state')
     assert updated_entity.state == '123'
 
 
