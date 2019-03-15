@@ -1,4 +1,6 @@
 """Preference management for cloud."""
+from ipaddress import ip_address
+
 from .const import (
     DOMAIN, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE, PREF_ENABLE_REMOTE,
     PREF_GOOGLE_ALLOW_UNLOCK, PREF_CLOUDHOOKS, PREF_CLOUD_USER,
@@ -50,7 +52,7 @@ class CloudPreferences:
             if value is not _UNDEF:
                 self._prefs[key] = value
 
-        if remote_enabled is True and self._has_trusted_networks:
+        if remote_enabled is True and self._has_local_trusted_network:
             raise InvalidTrustedNetworks
 
         await self._store.async_save(self._prefs)
@@ -67,7 +69,7 @@ class CloudPreferences:
         if not enabled:
             return False
 
-        if self._has_trusted_networks:
+        if self._has_local_trusted_network:
             return False
 
         return True
@@ -98,9 +100,16 @@ class CloudPreferences:
         return self._prefs.get(PREF_CLOUD_USER)
 
     @property
-    def _has_trusted_networks(self) -> bool:
+    def _has_local_trusted_network(self) -> bool:
         """Return if we allow localhost to bypass auth."""
-        return any(
-            prv for prv in self._hass.auth.auth_providers
-            if prv.type == 'trusted_networks'
-        )
+        local = ip_address('127.0.0.1')
+
+        for prv in self._hass.auth.auth_providers:
+            if prv.type != 'trusted_networks':
+                continue
+
+            for network in prv.trusted_networks:
+                if local in network:
+                    return True
+
+        return False
