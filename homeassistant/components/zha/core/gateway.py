@@ -15,11 +15,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 from .const import (
-    DATA_ZHA, DATA_ZHA_CORE_COMPONENT, DOMAIN,
-    SIGNAL_REMOVE, DATA_ZHA_GATEWAY, CONF_USB_PATH, CONF_BAUDRATE,
-    DEFAULT_BAUDRATE, CONF_RADIO_TYPE, DATA_ZHA_RADIO, CONF_DATABASE,
-    DEFAULT_DATABASE_NAME, DATA_ZHA_BRIDGE_ID, RADIO_TYPES,
-    RADIO, CONTROLLER, RADIO_DESCRIPTION)
+    DATA_ZHA, DATA_ZHA_CORE_COMPONENT, DOMAIN, SIGNAL_REMOVE, DATA_ZHA_GATEWAY,
+    CONF_USB_PATH, CONF_BAUDRATE, DEFAULT_BAUDRATE, CONF_RADIO_TYPE,
+    DATA_ZHA_RADIO, CONF_DATABASE, DEFAULT_DATABASE_NAME, DATA_ZHA_BRIDGE_ID,
+    RADIO, CONTROLLER, RADIO_DESCRIPTION
+)
 from .device import ZHADevice, DeviceStatus
 from .channels import (
     ZDOChannel, MAINS_POWERED
@@ -31,6 +31,7 @@ from .discovery import (
 )
 from .store import async_get_registry
 from .patches import apply_application_controller_patch
+from .registries import RADIO_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
