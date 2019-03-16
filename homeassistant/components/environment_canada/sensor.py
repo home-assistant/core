@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['env_canada==0.0.7']
+REQUIREMENTS = ['env_canada==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,10 +119,10 @@ class ECSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.platform_name is None:
-            return 'EC {}'.format(SENSOR_TYPES[self.sensor_type]['name'])
+            return SENSOR_TYPES[self.sensor_type]['name']
 
-        return 'EC {} {}'.format(
-            self.platform_name, SENSOR_TYPES[self.sensor_type]['name'])
+        return ' '.join([self.platform_name,
+                         SENSOR_TYPES[self.sensor_type]['name']])
 
     @property
     def state(self):
