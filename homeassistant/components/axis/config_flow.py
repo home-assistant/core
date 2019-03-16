@@ -3,13 +3,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    ATTR_LOCATION, CONF_DEVICE, CONF_HOST, CONF_INCLUDE, CONF_MAC, CONF_NAME,
-    CONF_PASSWORD, CONF_PORT, CONF_TRIGGER_TIME, CONF_USERNAME)
+    CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_PORT,
+    CONF_USERNAME)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json
 
-from .const import CONF_MODEL_ID, DEFAULT_TRIGGER_TIME, DOMAIN
+from .const import CONF_MODEL_ID, DOMAIN
 from .device import get_device
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
@@ -28,17 +28,12 @@ AXIS_DEFAULT_PASSWORD = 'pass'
 DEFAULT_PORT = 80
 
 DEVICE_SCHEMA = vol.Schema({
-    cv.deprecated(CONF_INCLUDE):
-        vol.All(cv.ensure_list, [vol.In(AXIS_INCLUDE)]),
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST): cv.string,
     vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    cv.deprecated(
-        CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): cv.positive_int,
-    cv.deprecated(ATTR_LOCATION, default=''): cv.string,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 @callback
@@ -101,7 +96,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             except CannotConnect:
                 errors['base'] = 'device_unavailable'
 
-        data = user_input or {
+        data = self.import_schema or self.discovery_schema or {
             vol.Required(CONF_HOST): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
@@ -163,7 +158,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
         serialnumber = discovery_info['properties']['macaddress']
 
         if serialnumber not in config_file:
-            discovery_schema = {
+            self.discovery_schema = {
                 vol.Required(
                     CONF_HOST, default=discovery_info[CONF_HOST]): str,
                 vol.Required(CONF_USERNAME): str,
@@ -193,7 +188,9 @@ class AxisFlowHandler(config_entries.ConfigFlow):
         This will execute for any Axis device that contains a complete
         configuration.
         """
-        import_schema = {
+        self.name = import_config[CONF_NAME]
+
+        self.import_schema = {
             vol.Required(CONF_HOST, default=import_config[CONF_HOST]): str,
             vol.Required(
                 CONF_USERNAME, default=import_config[CONF_USERNAME]): str,
