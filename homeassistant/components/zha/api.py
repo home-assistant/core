@@ -103,7 +103,7 @@ async def websocket_add_devices(hass, connection, msg):
 
     connection.subscriptions[msg['id']] = async_cleanup
     zha_gateway.async_enable_debug_mode()
-    zha_gateway.application_controller.permit(60)
+    await zha_gateway.application_controller.permit(60)
 
     connection.send_message(websocket_api.result_message(msg['id']))
 
