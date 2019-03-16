@@ -6,7 +6,7 @@ from libpurecoollink.const import (FocusMode, HeatMode, HeatState, HeatTarget,
                                    TiltState)
 from libpurecoollink.dyson_pure_state import DysonPureHotCoolState
 from libpurecoollink.dyson_pure_hotcool_link import DysonPureHotCoolLink
-from homeassistant.components.climate import dyson
+from homeassistant.components.dyson import climate as dyson
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 from homeassistant.setup import setup_component

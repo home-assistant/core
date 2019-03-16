@@ -9,7 +9,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     STATE_HEAT,
     STATE_IDLE)
-import homeassistant.components.climate.nuheat as nuheat
+import homeassistant.components.nuheat.climate as nuheat
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 SCHEDULE_HOLD = 3
@@ -57,7 +57,7 @@ class TestNuHeat(unittest.TestCase):
         """Stop hass."""
         self.hass.stop()
 
-    @patch("homeassistant.components.climate.nuheat.NuHeatThermostat")
+    @patch("homeassistant.components.nuheat.climate.NuHeatThermostat")
     def test_setup_platform(self, mocked_thermostat):
         """Test setup_platform."""
         mocked_thermostat.return_value = self.thermostat
@@ -73,7 +73,7 @@ class TestNuHeat(unittest.TestCase):
         nuheat.setup_platform(self.hass, config, add_entities, discovery_info)
         add_entities.assert_called_once_with(thermostats, True)
 
-    @patch("homeassistant.components.climate.nuheat.NuHeatThermostat")
+    @patch("homeassistant.components.nuheat.climate.NuHeatThermostat")
     def test_resume_program_service(self, mocked_thermostat):
         """Test resume program service."""
         mocked_thermostat.return_value = self.thermostat

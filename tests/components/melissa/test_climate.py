@@ -2,9 +2,9 @@
 from unittest.mock import Mock, patch
 import json
 
-from homeassistant.components.climate.melissa import MelissaClimate
+from homeassistant.components.melissa.climate import MelissaClimate
 
-from homeassistant.components.climate import melissa
+from homeassistant.components.melissa import climate as melissa
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_ON_OFF, SUPPORT_FAN_MODE, STATE_HEAT, STATE_FAN_ONLY, STATE_DRY,
@@ -56,7 +56,7 @@ def melissa_mock():
 
 async def test_setup_platform(hass):
     """Test setup_platform."""
-    with patch("homeassistant.components.climate.melissa.MelissaClimate"
+    with patch("homeassistant.components.melissa.climate.MelissaClimate"
                ) as mocked_thermostat:
         api = melissa_mock()
         device = (await api.async_fetch_devices())[_SERIAL]
@@ -319,9 +319,9 @@ async def test_send(hass):
 
 async def test_update(hass):
     """Test update."""
-    with patch('homeassistant.components.melissa'):
-        with patch('homeassistant.components.climate.melissa._LOGGER.warning'
-                   ) as mocked_warning:
+    with patch('homeassistant.components.melissa.climate._LOGGER.warning'
+               ) as mocked_warning:
+        with patch('homeassistant.components.melissa'):
             api = melissa_mock()
             device = (await api.async_fetch_devices())[_SERIAL]
             thermostat = MelissaClimate(api, _SERIAL, device)
@@ -374,9 +374,9 @@ async def test_melissa_fan_to_hass(hass):
 
 async def test_hass_mode_to_melissa(hass):
     """Test for hass operations to melssa."""
-    with patch('homeassistant.components.melissa'):
-        with patch('homeassistant.components.climate.melissa._LOGGER.warning'
-                   ) as mocked_warning:
+    with patch('homeassistant.components.melissa.climate._LOGGER.warning'
+               ) as mocked_warning:
+        with patch('homeassistant.components.melissa'):
             api = melissa_mock()
             device = (await api.async_fetch_devices())[_SERIAL]
             thermostat = MelissaClimate(api, _SERIAL, device)
@@ -391,9 +391,9 @@ async def test_hass_mode_to_melissa(hass):
 
 async def test_hass_fan_to_melissa(hass):
     """Test for translate melissa states to hass."""
-    with patch('homeassistant.components.melissa'):
-        with patch('homeassistant.components.climate.melissa._LOGGER.warning'
-                   ) as mocked_warning:
+    with patch('homeassistant.components.melissa.climate._LOGGER.warning'
+                ) as mocked_warning:
+        with patch('homeassistant.components.melissa'):
             api = melissa_mock()
             device = (await api.async_fetch_devices())[_SERIAL]
             thermostat = MelissaClimate(api, _SERIAL, device)
