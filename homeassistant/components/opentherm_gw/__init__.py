@@ -8,9 +8,8 @@ from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
 from homeassistant.const import (
     ATTR_DATE, ATTR_ID, ATTR_TEMPERATURE, ATTR_TIME, CONF_DEVICE,
-    CONF_MONITORED_VARIABLES, CONF_NAME, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, PRECISION_HALVES, PRECISION_TENTHS,
-    PRECISION_WHOLE)
+    CONF_MONITORED_VARIABLES, CONF_NAME, EVENT_HOMEASSISTANT_STOP,
+    PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE)
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -122,12 +121,9 @@ async def async_setup(hass, config):
     if monitored_vars:
         hass.async_create_task(setup_monitored_vars(
             hass, config, monitored_vars))
-
-    def schedule_connect(event):
-        """Schedule the connect_and_subscribe coroutine."""
-        hass.async_create_task(
-            connect_and_subscribe(hass, conf[CONF_DEVICE], gateway))
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_connect)
+    # Schedule directly on the loop to avoid blocking HA startup.
+    hass.loop.create_task(
+        connect_and_subscribe(hass, conf[CONF_DEVICE], gateway))
     return True
 
 
