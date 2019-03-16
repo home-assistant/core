@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import (patch, Mock, MagicMock)
 
 import homeassistant.components.calendar as calendar_base
-import homeassistant.components.calendar.caldav as caldav
+import homeassistant.components.caldav.calendar as caldav
 from caldav.objects import Event
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.util import dt
