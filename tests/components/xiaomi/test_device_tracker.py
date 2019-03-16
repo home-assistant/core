@@ -4,8 +4,9 @@ from asynctest import mock, patch
 
 import requests
 
-from homeassistant.components.device_tracker import DOMAIN, xiaomi as xiaomi
-from homeassistant.components.device_tracker.xiaomi import get_scanner
+from homeassistant.components.device_tracker import DOMAIN
+import homeassistant.components.xiaomi.device_tracker as xiaomi
+from homeassistant.components.xiaomi.device_tracker import get_scanner
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
                                  CONF_PLATFORM)
 
@@ -150,7 +151,7 @@ def mocked_requests(*args, **kwargs):
 
 
 @patch(
-    'homeassistant.components.device_tracker.xiaomi.XiaomiDeviceScanner',
+    'homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner',
     return_value=mock.MagicMock())
 async def test_config(xiaomi_mock, hass):
     """Testing minimal configuration."""
@@ -172,7 +173,7 @@ async def test_config(xiaomi_mock, hass):
 
 
 @patch(
-    'homeassistant.components.device_tracker.xiaomi.XiaomiDeviceScanner',
+    'homeassistant.components.xiaomi.device_tracker.XiaomiDeviceScanner',
     return_value=mock.MagicMock())
 async def test_config_full(xiaomi_mock, hass):
     """Testing full configuration."""

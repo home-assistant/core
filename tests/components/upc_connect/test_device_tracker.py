@@ -5,7 +5,7 @@ from asynctest import patch
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN
-import homeassistant.components.device_tracker.upc_connect as platform
+import homeassistant.components.upc_connect.device_tracker as platform
 from homeassistant.const import CONF_HOST, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
@@ -65,7 +65,7 @@ async def test_setup_platform_timeout_webservice(hass, caplog, aioclient_mock):
     assert 'Error setting up platform' in caplog.text
 
 
-@patch('homeassistant.components.device_tracker.upc_connect.'
+@patch('homeassistant.components.upc_connect.device_tracker.'
        'UPCDeviceScanner.async_scan_devices',
        return_value=async_scan_devices_mock)
 async def test_setup_platform(scan_mock, hass, aioclient_mock):

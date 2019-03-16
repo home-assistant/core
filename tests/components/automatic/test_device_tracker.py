@@ -6,7 +6,7 @@ from unittest.mock import patch, MagicMock
 import aioautomatic
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components.device_tracker.automatic import (
+from homeassistant.components.automatic.device_tracker import (
     async_setup_scanner)
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 @patch('json.dump')
 @patch('os.makedirs')
 @patch('os.path.isfile', return_value=True)
-@patch('homeassistant.components.device_tracker.automatic.open', create=True)
+@patch('homeassistant.components.automatic.device_tracker.open', create=True)
 def test_invalid_credentials(
         mock_open, mock_isfile, mock_makedirs, mock_json_dump, mock_json_load,
         mock_create_session, hass):
@@ -52,7 +52,7 @@ def test_invalid_credentials(
 @patch('json.dump')
 @patch('os.makedirs')
 @patch('os.path.isfile', return_value=True)
-@patch('homeassistant.components.device_tracker.automatic.open', create=True)
+@patch('homeassistant.components.automatic.device_tracker.open', create=True)
 def test_valid_credentials(
         mock_open, mock_isfile, mock_makedirs, mock_json_dump, mock_json_load,
         mock_ws_connect, mock_create_session, hass):

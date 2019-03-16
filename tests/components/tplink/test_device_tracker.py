@@ -4,7 +4,7 @@ import os
 import pytest
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker.tplink import Tplink4DeviceScanner
+from homeassistant.components.tplink.device_tracker import Tplink4DeviceScanner
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 import requests_mock
