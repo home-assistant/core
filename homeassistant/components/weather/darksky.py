@@ -232,7 +232,6 @@ class DarkSkyData:
     @property
     def units(self):
         """Get the unit system of returned data."""
-        if self.data is not None:
-            return self.data.json.get('flags').get('units')
-        else:
+        if self.data is None:
             return None
+        return self.data.json.get('flags').get('units')
