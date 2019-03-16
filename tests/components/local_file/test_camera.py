@@ -3,7 +3,7 @@ import asyncio
 from unittest import mock
 
 from homeassistant.components.camera import DOMAIN
-from homeassistant.components.camera.local_file import (
+from homeassistant.components.local_file.camera import (
     SERVICE_UPDATE_FILE_PATH)
 from homeassistant.setup import async_setup_component
 
@@ -28,7 +28,7 @@ def test_loading_file(hass, hass_client):
 
     m_open = mock.mock_open(read_data=b'hello')
     with mock.patch(
-            'homeassistant.components.camera.local_file.open',
+            'homeassistant.components.local_file.camera.open',
             m_open, create=True
     ):
         resp = yield from client.get('/api/camera_proxy/camera.config_test')
@@ -87,7 +87,7 @@ def test_camera_content_type(hass, hass_client):
 
     image = 'hello'
     m_open = mock.mock_open(read_data=image.encode())
-    with mock.patch('homeassistant.components.camera.local_file.open',
+    with mock.patch('homeassistant.components.local_file.camera.open',
                     m_open, create=True):
         resp_1 = yield from client.get('/api/camera_proxy/camera.test_jpg')
         resp_2 = yield from client.get('/api/camera_proxy/camera.test_png')
