@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 ANDROIDTV_DOMAIN = 'androidtv'
 
-REQUIREMENTS = ['androidtv==0.0.11']
+REQUIREMENTS = ['androidtv==0.0.12']
 
 _LOGGER = logging.getLogger(__name__)
 

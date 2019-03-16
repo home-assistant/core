@@ -1,7 +1,10 @@
 """Preference management for cloud."""
+from ipaddress import ip_address
+
 from .const import (
     DOMAIN, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE, PREF_ENABLE_REMOTE,
-    PREF_GOOGLE_ALLOW_UNLOCK, PREF_CLOUDHOOKS, PREF_CLOUD_USER)
+    PREF_GOOGLE_ALLOW_UNLOCK, PREF_CLOUDHOOKS, PREF_CLOUD_USER,
+    InvalidTrustedNetworks)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -13,6 +16,7 @@ class CloudPreferences:
 
     def __init__(self, hass):
         """Initialize cloud prefs."""
+        self._hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._prefs = None
 
@@ -48,6 +52,9 @@ class CloudPreferences:
             if value is not _UNDEF:
                 self._prefs[key] = value
 
+        if remote_enabled is True and self._has_local_trusted_network:
+            raise InvalidTrustedNetworks
+
         await self._store.async_save(self._prefs)
 
     def as_dict(self):
@@ -57,7 +64,15 @@ class CloudPreferences:
     @property
     def remote_enabled(self):
         """Return if remote is enabled on start."""
-        return self._prefs.get(PREF_ENABLE_REMOTE, False)
+        enabled = self._prefs.get(PREF_ENABLE_REMOTE, False)
+
+        if not enabled:
+            return False
+
+        if self._has_local_trusted_network:
+            return False
+
+        return True
 
     @property
     def alexa_enabled(self):
@@ -83,3 +98,19 @@ class CloudPreferences:
     def cloud_user(self) -> str:
         """Return ID from Home Assistant Cloud system user."""
         return self._prefs.get(PREF_CLOUD_USER)
+
+    @property
+    def _has_local_trusted_network(self) -> bool:
+        """Return if we allow localhost to bypass auth."""
+        local4 = ip_address('127.0.0.1')
+        local6 = ip_address('::1')
+
+        for prv in self._hass.auth.auth_providers:
+            if prv.type != 'trusted_networks':
+                continue
+
+            for network in prv.trusted_networks:
+                if local4 in network or local6 in network:
+                    return True
+
+        return False

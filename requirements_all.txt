@@ -155,10 +155,10 @@ alarmdecoder==1.13.2
 alpha_vantage==2.1.0
 
 # homeassistant.components.amcrest
-amcrest==1.2.6
+amcrest==1.2.7
 
 # homeassistant.components.androidtv.media_player
-androidtv==0.0.11
+androidtv==0.0.12
 
 # homeassistant.components.switch.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -554,7 +554,7 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190315.0
+home-assistant-frontend==20190315.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2

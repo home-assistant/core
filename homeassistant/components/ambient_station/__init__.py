@@ -412,6 +412,13 @@ class AmbientWeatherEntity(Entity):
         self._station_name = station_name
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(
+            self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
+                self._sensor_type))
+
+    @property
     def device_info(self):
         """Return device registry information for this entity."""
         return {
