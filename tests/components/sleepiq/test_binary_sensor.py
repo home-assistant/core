@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import requests_mock
 
 from homeassistant.setup import setup_component
-from homeassistant.components.binary_sensor import sleepiq
+from homeassistant.components.sleepiq import binary_sensor as sleepiq
 
 from tests.components.sleepiq.test_init import mock_responses
 from tests.common import get_test_home_assistant

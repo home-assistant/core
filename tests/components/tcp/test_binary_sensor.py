@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch, Mock
 
 from homeassistant.setup import setup_component
-from homeassistant.components.binary_sensor import tcp as bin_tcp
+from homeassistant.components.tcp import binary_sensor as bin_tcp
 from homeassistant.components.sensor import tcp
 from tests.common import (get_test_home_assistant, assert_setup_component)
 from tests.components.sensor import test_tcp

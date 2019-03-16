@@ -2,7 +2,7 @@
 import unittest
 
 from homeassistant.const import (STATE_ON, STATE_OFF)
-from homeassistant.components.binary_sensor import command_line
+from homeassistant.components.command_line import binary_sensor as command_line
 from homeassistant.helpers import template
 
 from tests.common import get_test_home_assistant

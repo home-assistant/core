@@ -7,7 +7,7 @@ import requests_mock
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import vultr
+from homeassistant.components.vultr import binary_sensor as vultr
 from homeassistant.components import vultr as base_vultr
 from homeassistant.components.vultr import (
     ATTR_ALLOWED_BANDWIDTH, ATTR_AUTO_BACKUPS, ATTR_IPV4_ADDRESS,

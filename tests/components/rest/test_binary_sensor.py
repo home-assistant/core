@@ -10,7 +10,7 @@ import requests_mock
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 import homeassistant.components.binary_sensor as binary_sensor
-import homeassistant.components.binary_sensor.rest as rest
+import homeassistant.components.rest.binary_sensor as rest
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers import template
 

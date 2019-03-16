@@ -78,7 +78,7 @@ class TestBinarySensorTod(unittest.TestCase):
                 }
             ]
         }
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=test_time):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -100,7 +100,7 @@ class TestBinarySensorTod(unittest.TestCase):
                 },
             ]
         }
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=test_time):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -122,7 +122,7 @@ class TestBinarySensorTod(unittest.TestCase):
                 },
             ]
         }
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=test_time):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -131,7 +131,7 @@ class TestBinarySensorTod(unittest.TestCase):
 
             self.hass.block_till_done()
 
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=test_time + timedelta(hours=1)):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -155,7 +155,7 @@ class TestBinarySensorTod(unittest.TestCase):
                 }
             ]
         }
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=test_time):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -178,7 +178,7 @@ class TestBinarySensorTod(unittest.TestCase):
                 }
             ]
         }
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=test_time):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -188,7 +188,7 @@ class TestBinarySensorTod(unittest.TestCase):
 
         switchover_time = self.hass.config.time_zone.localize(
             datetime(2019, 1, 11, 4, 59, 0)).astimezone(pytz.UTC)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=switchover_time):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -197,7 +197,7 @@ class TestBinarySensorTod(unittest.TestCase):
             state = self.hass.states.get('binary_sensor.night')
             assert state.state == STATE_ON
 
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=switchover_time + timedelta(
                        minutes=1, seconds=1)):
 
@@ -229,7 +229,7 @@ class TestBinarySensorTod(unittest.TestCase):
         }
         entity_id = 'binary_sensor.day'
         testtime = sunrise + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -238,7 +238,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_OFF
 
         testtime = sunrise
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -249,7 +249,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_ON
 
         testtime = sunrise + timedelta(seconds=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -262,7 +262,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -275,7 +275,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -288,7 +288,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset + timedelta(seconds=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -319,7 +319,7 @@ class TestBinarySensorTod(unittest.TestCase):
         }
         entity_id = 'binary_sensor.night'
         testtime = sunset + timedelta(minutes=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -328,7 +328,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_OFF
 
         testtime = sunset
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -339,7 +339,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_ON
 
         testtime = sunset + timedelta(minutes=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -350,7 +350,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_ON
 
         testtime = sunrise + timedelta(minutes=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -361,7 +361,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_ON
 
         testtime = sunrise
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -374,7 +374,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_OFF
 
         testtime = sunrise + timedelta(minutes=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -408,7 +408,7 @@ class TestBinarySensorTod(unittest.TestCase):
             ]
         }
         testtime = after + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -417,7 +417,7 @@ class TestBinarySensorTod(unittest.TestCase):
         assert state.state == STATE_OFF
 
         testtime = after
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
                 ha.ATTR_NOW: testtime})
@@ -427,7 +427,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_ON
 
         testtime = before + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
                 ha.ATTR_NOW: testtime})
@@ -437,7 +437,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_ON
 
         testtime = before
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
                 ha.ATTR_NOW: testtime})
@@ -447,7 +447,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_OFF
 
         testtime = before + timedelta(seconds=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
                 ha.ATTR_NOW: testtime})
@@ -475,7 +475,7 @@ class TestBinarySensorTod(unittest.TestCase):
             ]
         }
         testtime = after + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -484,7 +484,7 @@ class TestBinarySensorTod(unittest.TestCase):
         assert state.state == STATE_OFF
 
         testtime = after
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
                 ha.ATTR_NOW: testtime})
@@ -516,7 +516,7 @@ class TestBinarySensorTod(unittest.TestCase):
         }
         entity_id = 'binary_sensor.day'
         testtime = test_time
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -525,7 +525,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_OFF
 
         testtime = sunrise + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -536,7 +536,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_OFF
 
         testtime = sunrise
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -547,7 +547,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_ON
 
         testtime = sunrise + timedelta(seconds=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -560,7 +560,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -573,7 +573,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -586,7 +586,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset + timedelta(seconds=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -620,7 +620,7 @@ class TestBinarySensorTod(unittest.TestCase):
         }
         entity_id = 'binary_sensor.day'
         testtime = test_time
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -629,7 +629,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_OFF
 
         testtime = sunrise + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -640,7 +640,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_OFF
 
         testtime = sunrise
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -651,7 +651,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_ON
 
         testtime = sunrise + timedelta(seconds=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -664,7 +664,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -677,7 +677,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -690,7 +690,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset + timedelta(seconds=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -724,7 +724,7 @@ class TestBinarySensorTod(unittest.TestCase):
         }
         entity_id = 'binary_sensor.day'
         testtime = sunrise + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             setup_component(self.hass, 'binary_sensor', config)
 
@@ -733,7 +733,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_OFF
 
         testtime = sunrise
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -744,7 +744,7 @@ class TestBinarySensorTod(unittest.TestCase):
             assert state.state == STATE_ON
 
         testtime = sunrise + timedelta(seconds=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -757,7 +757,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset + timedelta(seconds=-1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -770,7 +770,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -783,7 +783,7 @@ class TestBinarySensorTod(unittest.TestCase):
         self.hass.block_till_done()
 
         testtime = sunset + timedelta(seconds=1)
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -798,7 +798,7 @@ class TestBinarySensorTod(unittest.TestCase):
             self.hass, 'sunrise', dt_util.as_utc(test_time)) +
             timedelta(hours=-1, minutes=-30))
         testtime = sunrise
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
 
             self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {
@@ -828,7 +828,7 @@ class TestBinarySensorTod(unittest.TestCase):
         # Internally the
         entity_id = 'binary_sensor.day'
         testtime = test_time
-        with patch('homeassistant.components.binary_sensor.tod.dt_util.utcnow',
+        with patch('homeassistant.components.tod.binary_sensor.dt_util.utcnow',
                    return_value=testtime):
             setup_component(self.hass, 'binary_sensor', config)
 

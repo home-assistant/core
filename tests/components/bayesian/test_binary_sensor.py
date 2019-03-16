@@ -2,7 +2,7 @@
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant.components.binary_sensor import bayesian
+from homeassistant.components.bayesian import binary_sensor as bayesian
 
 from tests.common import get_test_home_assistant
 

@@ -5,7 +5,7 @@ from unittest import mock
 
 from homeassistant.const import MATCH_ALL, EVENT_HOMEASSISTANT_START
 from homeassistant import setup
-from homeassistant.components.binary_sensor import template
+from homeassistant.components.template import binary_sensor as template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -159,7 +159,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.test_template_sensor')
         assert state.attributes['entity_picture'] == '/local/sensor.png'
 
-    @mock.patch('homeassistant.components.binary_sensor.template.'
+    @mock.patch('homeassistant.components.template.binary_sensor.'
                 'BinarySensorTemplate._async_render')
     def test_match_all(self, _async_render):
         """Test MATCH_ALL in template."""

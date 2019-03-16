@@ -5,7 +5,7 @@ from unittest import mock
 
 from nx584 import client as nx584_client
 
-from homeassistant.components.binary_sensor import nx584
+from homeassistant.components.nx584 import binary_sensor as nx584
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
@@ -42,8 +42,8 @@ class TestNX584SensorSetup(unittest.TestCase):
         self.hass.stop()
         self._mock_client.stop()
 
-    @mock.patch('homeassistant.components.binary_sensor.nx584.NX584Watcher')
-    @mock.patch('homeassistant.components.binary_sensor.nx584.NX584ZoneSensor')
+    @mock.patch('homeassistant.components.nx584.binary_sensor.NX584Watcher')
+    @mock.patch('homeassistant.components.nx584.binary_sensor.NX584ZoneSensor')
     def test_setup_defaults(self, mock_nx, mock_watcher):
         """Test the setup with no configuration."""
         add_entities = mock.MagicMock()
@@ -61,8 +61,8 @@ class TestNX584SensorSetup(unittest.TestCase):
         assert nx584_client.Client.call_args == \
             mock.call('http://localhost:5007')
 
-    @mock.patch('homeassistant.components.binary_sensor.nx584.NX584Watcher')
-    @mock.patch('homeassistant.components.binary_sensor.nx584.NX584ZoneSensor')
+    @mock.patch('homeassistant.components.nx584.binary_sensor.NX584Watcher')
+    @mock.patch('homeassistant.components.nx584.binary_sensor.NX584ZoneSensor')
     def test_setup_full_config(self, mock_nx, mock_watcher):
         """Test the setup with full configuration."""
         config = {

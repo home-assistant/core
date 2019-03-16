@@ -4,7 +4,7 @@ import unittest
 
 import requests_mock
 
-from homeassistant.components.binary_sensor import aurora
+from homeassistant.components.aurora import binary_sensor as aurora
 from tests.common import load_fixture, get_test_home_assistant
 
 
