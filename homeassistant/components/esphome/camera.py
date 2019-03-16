@@ -1,3 +1,4 @@
+"""Support for ESPHome cameras."""
 import asyncio
 import logging
 from typing import Optional, TYPE_CHECKING
@@ -31,7 +32,10 @@ async def async_setup_entry(hass: HomeAssistantType,
 
 
 class EsphomeCamera(Camera, EsphomeEntity):
+    """A camera implementation for ESPHome."""
+
     def __init__(self, entry_id: str, component_key: str, key: int):
+        """Initialize."""
         Camera.__init__(self)
         EsphomeEntity.__init__(self, entry_id, component_key, key)
         self._image_cond = asyncio.Condition()
@@ -73,6 +77,7 @@ class EsphomeCamera(Camera, EsphomeEntity):
             return self._state.image[:]
 
     async def handle_async_mjpeg_stream(self, request):
+        """Serve an HTTP MJPEG stream from the camera."""
         return await camera.async_get_still_stream(
             request, self._async_camera_stream_image,
             camera.DEFAULT_CONTENT_TYPE, 0.0)

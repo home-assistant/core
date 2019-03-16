@@ -32,11 +32,9 @@ if TYPE_CHECKING:
         ServiceCall, UserService
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.6.0']
+REQUIREMENTS = ['aioesphomeapi==1.7.0']
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'esphome'
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
 DISPATCHER_REMOVE_ENTITY = 'esphome_{entry_id}_remove_{component_key}_{key}'
