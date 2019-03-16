@@ -41,6 +41,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
     def __init__(self):
         """Initialize flow."""
         self._registered_view = False
+        self._oauth = None
 
     async def async_step_user(self, user_input=None):
         """Handle external yaml configuration."""
@@ -66,16 +67,15 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
             errors['base'] = 'follow_link'
 
         if not self._registered_view:
-            self.hass.http.register_view(AmbiclimateAuthCallbackView())
-            self._registered_view = True
+            await self._generate_view()
 
         oauth = await self._generate_oauth()
 
         return self.async_show_form(
             step_id='auth',
             description_placeholders={'authorization_url':
-                                      oauth.get_authorize_url(),
-                                      'cb_link': self._cb_url()},
+                                      self._get_authorize_url(oauth),
+                                      'cb_url': self._cb_url()},
             errors=errors,
         )
 
@@ -84,17 +84,11 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
-        oauth = await self._generate_oauth()
+        token_info = await self._get_token_info(code)
 
-        import ambiclimate
-        try:
-            token_info = await oauth.get_access_token(code)
-        except ambiclimate.AmbiclimateOauthError:
-            _LOGGER.error("Failed to get access token", exc_info=True)
+        if token_info is None:
             return self.async_abort(reason='access_token')
 
-        store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-        await store.async_save(token_info)
         config = self.hass.data[DATA_AMBICLIMATE_IMPL].copy()
         config['callback_url'] = self._cb_url()
 
@@ -102,6 +96,24 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
             title="Ambiclimate",
             data=config,
         )
+
+    async def _get_token_info(self, code):
+        oauth = await self._generate_oauth()
+        import ambiclimate
+        try:
+            token_info = await oauth.get_access_token(code)
+        except ambiclimate.AmbiclimateOauthError:
+            _LOGGER.error("Failed to get access token", exc_info=True)
+            return None
+
+        store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        await store.async_save(token_info)
+
+        return token_info
+
+    async def _generate_view(self):
+        self.hass.http.register_view(AmbiclimateAuthCallbackView())
+        self._registered_view = True
 
     async def _generate_oauth(self):
         import ambiclimate
@@ -116,8 +128,14 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         return oauth
 
     def _cb_url(self):
+        return "https://server1.dahoiv.net/api/ambiclimate"
         return '{}{}'.format(self.hass.config.api.base_url,
                              AUTH_CALLBACK_PATH)
+
+    def _get_authorize_url(self, oauth):
+        if oauth is None:
+            return ""
+        return oauth.get_authorize_url()
 
 
 class AmbiclimateAuthCallbackView(HomeAssistantView):
