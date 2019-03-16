@@ -85,7 +85,8 @@ class ZigbeeChannel:
 
     def __init__(self, cluster, device):
         """Initialize ZigbeeChannel."""
-        self.name = 'channel_{}'.format(cluster.cluster_id)
+        self._channel_name = cluster.ep_attribute
+        self._generic_id = 'channel_0x{:04x}'.format(cluster.cluster_id)
         self._cluster = cluster
         self._zha_device = device
         self._unique_id = construct_unique_id(cluster)
@@ -95,6 +96,11 @@ class ZigbeeChannel:
         )
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
+
+    @property
+    def generic_id(self):
+        """Return the generic id for this channel."""
+        return self._generic_id
 
     @property
     def unique_id(self):
@@ -110,6 +116,11 @@ class ZigbeeChannel:
     def device(self):
         """Return the device this channel is linked to."""
         return self._zha_device
+
+    @property
+    def name(self) -> str:
+        """Return friendly name."""
+        return self._channel_name
 
     @property
     def status(self):
@@ -218,7 +229,7 @@ class AttributeListeningChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize AttributeListeningChannel."""
         super().__init__(cluster, device)
-        self.name = ATTRIBUTE_CHANNEL
+        self._channel_name = ATTRIBUTE_CHANNEL
         attr = self._report_config[0].get('attr')
         if isinstance(attr, str):
             self.value_attribute = get_attr_id_by_name(self.cluster, attr)
@@ -343,7 +354,7 @@ class EventRelayChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize EventRelayChannel."""
         super().__init__(cluster, device)
-        self.name = EVENT_RELAY_CHANNEL
+        self._channel_name = EVENT_RELAY_CHANNEL
 
     @callback
     def attribute_updated(self, attrid, value):

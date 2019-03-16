@@ -18,7 +18,7 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
     def __init__(self, cluster, device):
         """Initialize ElectricalMeasurementChannel."""
         super().__init__(cluster, device)
-        self.name = ELECTRICAL_MEASUREMENT_CHANNEL
+        self._channel_name = ELECTRICAL_MEASUREMENT_CHANNEL
 
     async def async_update(self):
         """Retrieve latest state."""

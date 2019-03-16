@@ -21,7 +21,7 @@ class ColorChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize ColorChannel."""
         super().__init__(cluster, device)
-        self.name = COLOR_CHANNEL
+        self._channel_name = COLOR_CHANNEL
         self._color_capabilities = None
 
     def get_color_capabilities(self):

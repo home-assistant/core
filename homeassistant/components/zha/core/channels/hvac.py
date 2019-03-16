@@ -21,7 +21,7 @@ class FanChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize FanChannel."""
         super().__init__(cluster, device)
-        self.name = FAN_CHANNEL
+        self._channel_name = FAN_CHANNEL
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""

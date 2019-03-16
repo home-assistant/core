@@ -26,7 +26,7 @@ class OnOffChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize OnOffChannel."""
         super().__init__(cluster, device)
-        self.name = ON_OFF_CHANNEL
+        self._channel_name = ON_OFF_CHANNEL
         self._state = None
 
     @callback
@@ -80,7 +80,7 @@ class LevelControlChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize LevelControlChannel."""
         super().__init__(cluster, device)
-        self.name = LEVEL_CHANNEL
+        self._channel_name = LEVEL_CHANNEL
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -149,7 +149,7 @@ class BasicChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize BasicChannel."""
         super().__init__(cluster, device)
-        self.name = BASIC_CHANNEL
+        self._channel_name = BASIC_CHANNEL
         self._power_source = None
 
     async def async_configure(self):
@@ -174,7 +174,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize PowerConfigurationChannel."""
         super().__init__(cluster, device)
-        self.name = POWER_CONFIGURATION_CHANNEL
+        self._channel_name = POWER_CONFIGURATION_CHANNEL
 
     @callback
     def attribute_updated(self, attrid, value):

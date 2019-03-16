@@ -20,7 +20,7 @@ class IASZoneChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize IASZoneChannel."""
         super().__init__(cluster, device)
-        self.name = ZONE_CHANNEL
+        self._channel_name = ZONE_CHANNEL
 
     @callback
     def cluster_command(self, tsn, command_id, args):
