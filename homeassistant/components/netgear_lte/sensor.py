@@ -1,41 +1,49 @@
 """Support for Netgear LTE sensors."""
-import attr
-import voluptuous as vol
+import logging
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_SENSORS
+import attr
+
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from ..netgear_lte import DATA_KEY
+from ..netgear_lte import CONF_MONITORED_CONDITIONS, DATA_KEY
 
 DEPENDENCIES = ['netgear_lte']
+
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_SMS = 'sms'
 SENSOR_USAGE = 'usage'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Required(CONF_SENSORS): vol.All(
-        cv.ensure_list, [vol.In([SENSOR_SMS, SENSOR_USAGE])]),
-})
+DEFAULT_SENSORS = [SENSOR_SMS, SENSOR_USAGE]
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info):
     """Set up Netgear LTE sensor devices."""
-    modem_data = hass.data[DATA_KEY].get_modem_data(config)
+    if discovery_info is None:
+        return
+
+    modem_data = hass.data[DATA_KEY].get_modem_data(discovery_info)
 
     if not modem_data:
         raise PlatformNotReady
 
+    sensor_conf = discovery_info[DOMAIN]
+    if sensor_conf:
+        monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
+    else:
+        monitored_conditions = DEFAULT_SENSORS
+
     sensors = []
-    for sensor_type in config[CONF_SENSORS]:
+    for sensor_type in monitored_conditions:
         if sensor_type == SENSOR_SMS:
             sensors.append(SMSSensor(modem_data, sensor_type))
         elif sensor_type == SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
+        else:
+            _LOGGER.error("Unknown sensor type '%s'", sensor_type)
 
     async_add_entities(sensors, True)
 
