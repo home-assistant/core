@@ -1,0 +1,6 @@
+"""Tests for the unifi_direct component.
+
+    For more details about this component, please refer to the documentation at
+    https://home-assistant.io/components/unifi_direct/
+    """
+    
