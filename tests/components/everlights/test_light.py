@@ -1,5 +1,5 @@
 """The tests for the everlights component."""
-from homeassistant.components.light import everlights
+from homeassistant.components.everlights import light as everlights
 
 
 def test_color_rgb_to_int():
