@@ -100,8 +100,8 @@ async def async_setup_entry(hass, config_entry):
                     friendly_name = None
                     if "name" in entry:
                         friendly_name = entry['name']
-                        _LOGGER.debug("Name SET FOR TPLINK DEVICE %s"
-                                      % friendly_name)
+                        _LOGGER.debug("Name set for TP-LINK devices %s",
+                                      friendly_name)
 
                     dev = _device_for_type(host, type_)
                     # not sure this is the best way to carry forward this,

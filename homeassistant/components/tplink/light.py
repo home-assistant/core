@@ -87,8 +87,7 @@ class TPLinkSmartBulb(Light):
         """Return the name of the Smart Bulb."""
         if self.friendly_name is None:
             return self._sysinfo["alias"]
-        else:
-            return self.friendly_name
+        return self.friendly_name
 
     @property
     def device_info(self):
