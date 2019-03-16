@@ -6,7 +6,7 @@ import requests
 
 from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
-import homeassistant.components.sensor.mfi as mfi
+import homeassistant.components.mfi.sensor as mfi
 from homeassistant.const import TEMP_CELSIUS
 
 from tests.common import get_test_home_assistant
@@ -104,7 +104,7 @@ class TestMfiSensorSetup(unittest.TestCase):
             )
 
     @mock.patch('mficlient.client.MFiClient')
-    @mock.patch('homeassistant.components.sensor.mfi.MfiSensor')
+    @mock.patch('homeassistant.components.mfi.sensor.MfiSensor')
     def test_setup_adds_proper_devices(self, mock_sensor, mock_client):
         """Test if setup adds devices."""
         ports = {i: mock.MagicMock(model=model)

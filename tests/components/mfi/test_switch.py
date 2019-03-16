@@ -4,8 +4,8 @@ import unittest.mock as mock
 
 from homeassistant.setup import setup_component
 import homeassistant.components.switch as switch
-import homeassistant.components.switch.mfi as mfi
-from tests.components.sensor import test_mfi as test_mfi_sensor
+import homeassistant.components.mfi.switch as mfi
+from tests.components.mfi import test_sensor as test_mfi_sensor
 
 from tests.common import get_test_home_assistant
 
@@ -29,7 +29,7 @@ class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
     }
 
     @mock.patch('mficlient.client.MFiClient')
-    @mock.patch('homeassistant.components.switch.mfi.MfiSwitch')
+    @mock.patch('homeassistant.components.mfi.switch.MfiSwitch')
     def test_setup_adds_proper_devices(self, mock_switch, mock_client):
         """Test if setup adds devices."""
         ports = {i: mock.MagicMock(model=model)

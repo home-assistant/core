@@ -7,7 +7,7 @@ import requests_mock
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.switch import vultr
+from homeassistant.components.vultr import switch as vultr
 from homeassistant.components import vultr as base_vultr
 from homeassistant.components.vultr import (
     ATTR_ALLOWED_BANDWIDTH, ATTR_AUTO_BACKUPS, ATTR_IPV4_ADDRESS,

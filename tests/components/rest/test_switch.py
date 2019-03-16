@@ -3,7 +3,7 @@ import asyncio
 
 import aiohttp
 
-import homeassistant.components.switch.rest as rest
+import homeassistant.components.rest.switch as rest
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers.template import Template
