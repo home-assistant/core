@@ -13,7 +13,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA, SUPPORT_PAUSE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
     SUPPORT_PLAY_MEDIA, SUPPORT_STOP, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY)
-from homeassistant.components.media_player.directv import (
+from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_CURRENTLY_RECORDING, ATTR_MEDIA_RATING, ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME, DEFAULT_DEVICE, DEFAULT_PORT)
 from homeassistant.const import (

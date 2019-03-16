@@ -5,7 +5,7 @@ from unittest import mock
 from libsoundtouch.device import SoundTouchDevice as STD, Status, Volume, \
     Preset, Config
 
-from homeassistant.components.media_player import soundtouch
+from homeassistant.components.soundtouch import media_player as soundtouch
 from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from tests.common import get_test_home_assistant

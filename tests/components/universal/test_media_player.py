@@ -10,7 +10,7 @@ import homeassistant.components.switch as switch
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
-import homeassistant.components.media_player.universal as universal
+import homeassistant.components.universal.media_player as universal
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import mock_service, get_test_home_assistant

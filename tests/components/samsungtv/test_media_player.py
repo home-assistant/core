@@ -10,7 +10,7 @@ import pytest
 import tests.common
 from homeassistant.components.media_player.const import SUPPORT_TURN_ON, \
     MEDIA_TYPE_CHANNEL, MEDIA_TYPE_URL
-from homeassistant.components.media_player.samsungtv import setup_platform, \
+from homeassistant.components.samsungtv.media_player import setup_platform, \
     CONF_TIMEOUT, SamsungTVDevice, SUPPORT_SAMSUNGTV
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_ON, \
     CONF_MAC, STATE_OFF
@@ -71,7 +71,7 @@ class TestSamsungTv(unittest.TestCase):
     def test_setup(self, samsung_mock, wol_mock):
         """Testing setup of platform."""
         with mock.patch(
-                'homeassistant.components.media_player.samsungtv.socket'):
+                'homeassistant.components.samsungtv.media_player.socket'):
             add_entities = mock.Mock()
             setup_platform(
                 self.hass, WORKING_CONFIG, add_entities)
@@ -81,7 +81,7 @@ class TestSamsungTv(unittest.TestCase):
     def test_setup_discovery(self, samsung_mock, wol_mock):
         """Testing setup of platform with discovery."""
         with mock.patch(
-                'homeassistant.components.media_player.samsungtv.socket'):
+                'homeassistant.components.samsungtv.media_player.socket'):
             add_entities = mock.Mock()
             setup_platform(self.hass, {}, add_entities,
                            discovery_info=DISCOVERY_INFO)
@@ -89,11 +89,11 @@ class TestSamsungTv(unittest.TestCase):
     @MockDependency('samsungctl')
     @MockDependency('wakeonlan')
     @mock.patch(
-        'homeassistant.components.media_player.samsungtv._LOGGER.warning')
+        'homeassistant.components.samsungtv.media_player._LOGGER.warning')
     def test_setup_none(self, samsung_mock, wol_mock, mocked_warn):
         """Testing setup of platform with no data."""
         with mock.patch(
-                'homeassistant.components.media_player.samsungtv.socket'):
+                'homeassistant.components.samsungtv.media_player.socket'):
             add_entities = mock.Mock()
             setup_platform(self.hass, {}, add_entities,
                            discovery_info=None)
@@ -214,7 +214,7 @@ class TestSamsungTv(unittest.TestCase):
         self.device.send_key.assert_called_once_with('KEY_POWEROFF')
 
     @mock.patch(
-        'homeassistant.components.media_player.samsungtv._LOGGER.debug')
+        'homeassistant.components.samsungtv.media_player._LOGGER.debug')
     def test_turn_off_os_error(self, mocked_debug):
         """Test for turn_off with OSError."""
         _remote = mock.Mock()

@@ -9,7 +9,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import STATE_ON, STATE_OFF
 
 import tests.common
-from homeassistant.components.media_player.blackbird import (
+from homeassistant.components.blackbird.media_player import (
     DATA_BLACKBIRD, PLATFORM_SCHEMA, SERVICE_SETALLZONES, setup_platform)
 import pytest
 

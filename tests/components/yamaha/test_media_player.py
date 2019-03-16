@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 
 from homeassistant.setup import setup_component
 import homeassistant.components.media_player as mp
-from homeassistant.components.media_player import yamaha
+from homeassistant.components.yamaha import media_player as yamaha
 from tests.common import get_test_home_assistant
 
 
