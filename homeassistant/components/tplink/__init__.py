@@ -100,11 +100,13 @@ async def async_setup_entry(hass, config_entry):
                     friendly_name = None
                     if "name" in entry:
                         friendly_name = entry['name']
-                        _LOGGER.debug("Name SET FOR TPLINK DEVICE %s" % friendly_name)
+                        _LOGGER.debug("Name SET FOR TPLINK DEVICE %s"
+                                      % friendly_name)
 
                     dev = _device_for_type(host, type_)
-                    # not sure this is the best way to carry forward this, but works.
-                    # also, do this so i don't have to check in the Device Class if the property exits on 'dev'
+                    # not sure this is the best way to carry forward this,
+                    # but works. also, do this so i don't have to check in the
+                    # Device Class if the property exits on 'dev'
                     # it will always exist and be None if config wasn't set.
                     dev.friendly_name = friendly_name
 
