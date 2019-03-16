@@ -43,8 +43,8 @@ class LcnVariableSensor(LcnDevice):
         super().__init__(config, address_connection)
 
         self.variable = self.pypck.lcn_defs.Var[config[CONF_SOURCE]]
-        self.unit = self.pypck.lcn_defs.VarUnit[
-            config[CONF_UNIT_OF_MEASUREMENT]]
+        self.unit = self.pypck.lcn_defs.VarUnit.parse(
+            config[CONF_UNIT_OF_MEASUREMENT])
 
         self._value = None
 
