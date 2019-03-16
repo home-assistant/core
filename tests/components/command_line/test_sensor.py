@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from homeassistant.helpers.template import Template
-from homeassistant.components.sensor import command_line
+from homeassistant.components.command_line import sensor as command_line
 from tests.common import get_test_home_assistant
 
 
@@ -95,7 +95,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         assert 'value_three' == \
             self.sensor.device_state_attributes['key_three']
 
-    @patch('homeassistant.components.sensor.command_line._LOGGER')
+    @patch('homeassistant.components.command_line.sensor._LOGGER')
     def test_update_with_json_attrs_no_data(self, mock_logger):
         """Test attributes when no JSON result fetched."""
         data = command_line.CommandSensorData(
@@ -108,7 +108,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         assert {} == self.sensor.device_state_attributes
         assert mock_logger.warning.called
 
-    @patch('homeassistant.components.sensor.command_line._LOGGER')
+    @patch('homeassistant.components.command_line.sensor._LOGGER')
     def test_update_with_json_attrs_not_dict(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
         data = command_line.CommandSensorData(
@@ -121,7 +121,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         assert {} == self.sensor.device_state_attributes
         assert mock_logger.warning.called
 
-    @patch('homeassistant.components.sensor.command_line._LOGGER')
+    @patch('homeassistant.components.command_line.sensor._LOGGER')
     def test_update_with_json_attrs_bad_JSON(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
         data = command_line.CommandSensorData(

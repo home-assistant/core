@@ -7,7 +7,7 @@ import pytest
 
 
 import homeassistant.components.sensor as sensor
-from homeassistant.components.sensor import foobot
+from homeassistant.components.foobot import sensor as foobot
 from homeassistant.const import (TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component

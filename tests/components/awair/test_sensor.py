@@ -7,7 +7,7 @@ import logging
 from unittest.mock import patch
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sensor.awair import (
+from homeassistant.components.awair.sensor import (
     ATTR_LAST_API_UPDATE,
     ATTR_TIMESTAMP,
     DEVICE_CLASS_CARBON_DIOXIDE,
@@ -54,7 +54,7 @@ def alter_time(retval):
     patch_one = patch("homeassistant.util.dt.utcnow", return_value=retval)
     patch_two = patch("homeassistant.util.utcnow", return_value=retval)
     patch_three = patch(
-        "homeassistant.components.sensor.awair.dt.utcnow", return_value=retval
+        "homeassistant.components.awair.sensor.dt.utcnow", return_value=retval
     )
 
     with patch_one, patch_two, patch_three:

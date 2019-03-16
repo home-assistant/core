@@ -3,7 +3,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-from homeassistant.components.sensor.filter import (
+from homeassistant.components.filter.sensor import (
     LowPassFilter, OutlierFilter, ThrottleFilter, TimeSMAFilter,
     RangeFilter, TimeThrottleFilter)
 import homeassistant.util.dt as dt_util

@@ -5,7 +5,7 @@ import sys
 from unittest.mock import MagicMock
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.sensor import fido
+from homeassistant.components.fido import sensor as fido
 from tests.common import assert_setup_component
 
 

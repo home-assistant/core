@@ -7,7 +7,7 @@ from enturclient.api import RESOURCE
 from enturclient.consts import ATTR_EXPECTED_AT, ATTR_ROUTE, ATTR_STOP_ID
 import requests_mock
 
-from homeassistant.components.sensor.entur_public_transport import (
+from homeassistant.components.entur_public_transport.sensor import (
     CONF_EXPAND_PLATFORMS, CONF_STOP_IDS)
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
@@ -40,7 +40,7 @@ class TestEnturPublicTransportSensor(unittest.TestCase):
 
     @requests_mock.Mocker()
     @patch(
-        'homeassistant.components.sensor.entur_public_transport.dt_util.now',
+        'homeassistant.components.entur_public_transport.sensor.dt_util.now',
         return_value=TEST_TIMESTAMP)
     def test_setup(self, mock_req, mock_patch):
         """Test for correct sensor setup with state and proper attributes."""

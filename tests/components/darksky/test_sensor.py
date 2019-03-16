@@ -9,7 +9,7 @@ import requests_mock
 
 import forecastio
 
-from homeassistant.components.sensor import darksky
+from homeassistant.components.darksky import sensor as darksky
 from homeassistant.setup import setup_component
 
 from tests.common import (load_fixture, get_test_home_assistant,

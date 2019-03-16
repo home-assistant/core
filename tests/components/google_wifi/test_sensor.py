@@ -7,7 +7,7 @@ import requests_mock
 
 from homeassistant import core as ha
 from homeassistant.setup import setup_component
-import homeassistant.components.sensor.google_wifi as google_wifi
+import homeassistant.components.google_wifi.sensor as google_wifi
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.util import dt as dt_util
 

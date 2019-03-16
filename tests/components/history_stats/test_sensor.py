@@ -9,7 +9,7 @@ from homeassistant.helpers import template
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import setup_component
-from homeassistant.components.sensor.history_stats import HistoryStatsSensor
+from homeassistant.components.history_stats.sensor import HistoryStatsSensor
 import homeassistant.core as ha
 from homeassistant.helpers.template import Template
 import homeassistant.util.dt as dt_util

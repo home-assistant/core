@@ -2,7 +2,7 @@
 import unittest
 import os
 
-from homeassistant.components.sensor.folder import CONF_FOLDER_PATHS
+from homeassistant.components.folder.sensor import CONF_FOLDER_PATHS
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 

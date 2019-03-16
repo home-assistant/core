@@ -12,7 +12,7 @@ from unittest.mock import Mock
 
 import asynctest
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.sensor.dsmr import DerivativeDSMREntity
+from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 import pytest
 from tests.common import assert_setup_component
 

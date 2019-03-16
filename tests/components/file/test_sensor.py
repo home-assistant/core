@@ -39,7 +39,7 @@ class TestFileSensor(unittest.TestCase):
         }
 
         m_open = MockOpen(read_data='43\n45\n21')
-        with patch('homeassistant.components.sensor.file.open', m_open,
+        with patch('homeassistant.components.file.sensor.open', m_open,
                    create=True):
             assert setup_component(self.hass, 'sensor', config)
             self.hass.block_till_done()
@@ -64,7 +64,7 @@ class TestFileSensor(unittest.TestCase):
                '{"temperature": 26, "humidity": 36}'
 
         m_open = MockOpen(read_data=data)
-        with patch('homeassistant.components.sensor.file.open', m_open,
+        with patch('homeassistant.components.file.sensor.open', m_open,
                    create=True):
             assert setup_component(self.hass, 'sensor', config)
             self.hass.block_till_done()
@@ -85,7 +85,7 @@ class TestFileSensor(unittest.TestCase):
         }
 
         m_open = MockOpen(read_data='')
-        with patch('homeassistant.components.sensor.file.open', m_open,
+        with patch('homeassistant.components.file.sensor.open', m_open,
                    create=True):
             assert setup_component(self.hass, 'sensor', config)
             self.hass.block_till_done()

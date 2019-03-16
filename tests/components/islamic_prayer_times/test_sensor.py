@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 from homeassistant.setup import async_setup_component
-from homeassistant.components.sensor.islamic_prayer_times import \
+from homeassistant.components.islamic_prayer_times.sensor import \
     IslamicPrayerTimesData
 from tests.common import MockDependency
 import homeassistant.util.dt as dt_util
@@ -154,7 +154,7 @@ async def test_islamic_prayer_times_sensor_update(hass):
         future = midnight_dt + timedelta(days=1, minutes=1)
 
         with patch(
-                'homeassistant.components.sensor.islamic_prayer_times'
+                'homeassistant.components.islamic_prayer_times.sensor'
                 '.dt_util.utcnow', return_value=future):
 
             async_fire_time_changed(hass, future)

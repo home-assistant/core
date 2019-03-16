@@ -2,7 +2,7 @@
 import unittest
 import os
 
-from homeassistant.components.sensor.filesize import CONF_FILE_PATHS
+from homeassistant.components.filesize.sensor import CONF_FILE_PATHS
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 

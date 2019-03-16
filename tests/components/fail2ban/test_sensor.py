@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 from mock_open import MockOpen
 
 from homeassistant.setup import setup_component
-from homeassistant.components.sensor.fail2ban import (
+from homeassistant.components.fail2ban.sensor import (
     BanSensor, BanLogParser, STATE_CURRENT_BANS, STATE_ALL_BANS
 )
 
@@ -78,7 +78,7 @@ class TestBanSensor(unittest.TestCase):
             }
         }
         mock_fh = MockOpen()
-        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+        with patch('homeassistant.components.fail2ban.sensor.open', mock_fh,
                    create=True):
             assert setup_component(self.hass, 'sensor', config)
             self.hass.block_till_done()
@@ -94,7 +94,7 @@ class TestBanSensor(unittest.TestCase):
             }
         }
         mock_fh = MockOpen()
-        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+        with patch('homeassistant.components.fail2ban.sensor.open', mock_fh,
                    create=True):
             assert setup_component(self.hass, 'sensor', config)
             self.hass.block_till_done()
@@ -106,7 +106,7 @@ class TestBanSensor(unittest.TestCase):
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
         assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('single_ban'))
-        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+        with patch('homeassistant.components.fail2ban.sensor.open', mock_fh,
                    create=True):
             sensor.update()
 
@@ -122,7 +122,7 @@ class TestBanSensor(unittest.TestCase):
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
         assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('ipv6_ban'))
-        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+        with patch('homeassistant.components.fail2ban.sensor.open', mock_fh,
                    create=True):
             sensor.update()
 
@@ -139,7 +139,7 @@ class TestBanSensor(unittest.TestCase):
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
         assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('multi_ban'))
-        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+        with patch('homeassistant.components.fail2ban.sensor.open', mock_fh,
                    create=True):
             sensor.update()
 
@@ -155,7 +155,7 @@ class TestBanSensor(unittest.TestCase):
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
         assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('unban_all'))
-        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+        with patch('homeassistant.components.fail2ban.sensor.open', mock_fh,
                    create=True):
             sensor.update()
 
@@ -170,7 +170,7 @@ class TestBanSensor(unittest.TestCase):
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
         assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('unban_one'))
-        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+        with patch('homeassistant.components.fail2ban.sensor.open', mock_fh,
                    create=True):
             sensor.update()
 
@@ -188,7 +188,7 @@ class TestBanSensor(unittest.TestCase):
         assert sensor1.name == 'fail2ban jail_one'
         assert sensor2.name == 'fail2ban jail_two'
         mock_fh = MockOpen(read_data=fake_log('multi_jail'))
-        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+        with patch('homeassistant.components.fail2ban.sensor.open', mock_fh,
                    create=True):
             sensor1.update()
             sensor2.update()
@@ -208,7 +208,7 @@ class TestBanSensor(unittest.TestCase):
         sensor = BanSensor('fail2ban', 'jail_one', log_parser)
         assert sensor.name == 'fail2ban jail_one'
         mock_fh = MockOpen(read_data=fake_log('single_ban'))
-        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+        with patch('homeassistant.components.fail2ban.sensor.open', mock_fh,
                    create=True):
             sensor.update()
             assert sensor.state == '111.111.111.111'

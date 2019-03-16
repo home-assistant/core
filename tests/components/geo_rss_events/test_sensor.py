@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME, \
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, \
     assert_setup_component, fire_time_changed
-import homeassistant.components.sensor.geo_rss_events as geo_rss_events
+import homeassistant.components.geo_rss_events.sensor as geo_rss_events
 import homeassistant.util.dt as dt_util
 
 URL = 'http://geo.rss.local/geo_rss_events.xml'
