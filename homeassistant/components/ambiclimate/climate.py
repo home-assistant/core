@@ -58,15 +58,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
                                          config['callback_url'],
                                          websession)
 
+    try:
+        _token_info = await oauth.refresh_access_token()
+        if _token_info:
+            await store.async_save(token_info)
+            token_info = _token_info
+    except ambiclimate.AmbiclimateOauthError:
+        _LOGGER.error("Failed to refresh access token")
+
     data_connection = ambiclimate.AmbiclimateConnection(oauth,
                                                         token_info=token_info,
                                                         websession=websession)
-    try:
-        token_info = await data_connection.refresh_access_token()
-        if token_info:
-            await store.async_save(token_info)
-    except ambiclimate.AmbiclimateOauthError:
-        _LOGGER.error("Failed to refresh access token")
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
