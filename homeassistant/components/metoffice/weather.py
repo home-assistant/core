@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor.metoffice import (
+from homeassistant.components.metoffice.sensor import (
     CONDITION_CLASSES, ATTRIBUTION, MetOfficeCurrentData)
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
 from homeassistant.const import (

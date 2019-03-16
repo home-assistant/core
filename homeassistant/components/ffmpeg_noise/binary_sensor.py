@@ -10,7 +10,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
-from homeassistant.components.binary_sensor.ffmpeg_motion import (
+from homeassistant.components.ffmpeg_motion.binary_sensor import (
     FFmpegBinarySensor)
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG, CONF_INPUT, CONF_OUTPUT, CONF_EXTRA_ARGUMENTS,

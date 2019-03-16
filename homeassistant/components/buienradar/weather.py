@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 # Reuse data and API logic from the sensor implementation
-from homeassistant.components.sensor.buienradar import BrData
+from homeassistant.components.buienradar.sensor import BrData
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)

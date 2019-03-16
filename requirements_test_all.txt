@@ -68,7 +68,7 @@ coinmarketcap==5.0.3
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.device_tracker.upc_connect
-# homeassistant.components.sensor.ohmconnect
+# homeassistant.components.ohmconnect.sensor
 defusedxml==0.5.0
 
 # homeassistant.components.sensor.dsmr
@@ -135,7 +135,7 @@ homekit[IP]==0.13.0
 homematicip==0.10.6
 
 # homeassistant.components.influxdb
-# homeassistant.components.sensor.influxdb
+# homeassistant.components.influxdb.sensor
 influxdb==5.2.0
 
 # homeassistant.components.verisure
@@ -158,33 +158,33 @@ mbddns==0.1.2
 mficlient==0.3.0
 
 # homeassistant.components.binary_sensor.trend
-# homeassistant.components.image_processing.opencv
-# homeassistant.components.image_processing.tensorflow
-# homeassistant.components.sensor.pollen
+# homeassistant.components.opencv.image_processing
+# homeassistant.components.pollen.sensor
+# homeassistant.components.tensorflow.image_processing
 numpy==1.16.2
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.4.0
 
-# homeassistant.components.device_tracker.aruba
-# homeassistant.components.device_tracker.cisco_ios
+# homeassistant.components.aruba.device_tracker
+# homeassistant.components.cisco_ios.device_tracker
 # homeassistant.components.device_tracker.unifi_direct
-# homeassistant.components.media_player.pandora
+# homeassistant.components.pandora.media_player
 pexpect==4.6.0
 
 # homeassistant.components.pilight
 pilight==0.1.1
 
 # homeassistant.components.sensor.mhz19
-# homeassistant.components.sensor.serial_pm
+# homeassistant.components.serial_pm.sensor
 pmsensor==0.4
 
 # homeassistant.components.prometheus
 prometheus_client==0.2.0
 
 # homeassistant.components.notify.pushbullet
-# homeassistant.components.sensor.pushbullet
+# homeassistant.components.pushbullet.sensor
 pushbullet.py==0.11.0
 
 # homeassistant.components.canary
@@ -211,7 +211,6 @@ pylitejet==0.1
 # homeassistant.components.media_player.monoprice
 pymonoprice==0.3
 
-# homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.4
 
@@ -220,7 +219,7 @@ pyopenuv==1.0.9
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
-# homeassistant.components.sensor.otp
+# homeassistant.components.otp.sensor
 pyotp==2.2.6
 
 # homeassistant.components.ps4
@@ -310,8 +309,8 @@ vsure==1.5.2
 vultr==0.1.2
 
 # homeassistant.components.wake_on_lan
-# homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.samsungtv
+# homeassistant.components.panasonic_viera.media_player
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==1.1.6
 

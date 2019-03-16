@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 # Reuse data and API logic from the sensor implementation
-from homeassistant.components.sensor.zamg import (
+from homeassistant.components.zamg.sensor import (
     ATTRIBUTION, CONF_STATION_ID, ZamgData, closest_station, zamg_stations)
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE,
