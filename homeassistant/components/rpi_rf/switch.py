@@ -4,6 +4,7 @@ Allows to configure a switch using a 433MHz module via GPIO on a Raspberry Pi.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rpi_rf/
 """
+import importlib
 import logging
 
 import voluptuous as vol
@@ -47,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=no-member
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return switches controlled by a generic RF device via GPIO."""
-    import rpi_rf
+    rpi_rf = importlib.import_module('rpi_rf')
     from threading import RLock
 
     gpio = config.get(CONF_GPIO)

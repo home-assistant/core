@@ -4,6 +4,7 @@ Details about printers which are connected to CUPS.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.cups/
 """
+import importlib
 import logging
 from datetime import timedelta
 
@@ -140,7 +141,7 @@ class CupsData:
 
     def update(self):
         """Get the latest data from CUPS."""
-        from cups import Connection
+        cups = importlib.import_module('cups')
 
-        conn = Connection(host=self._host, port=self._port)
+        conn = cups.Connection(host=self._host, port=self._port)
         self.printers = conn.getPrinters()

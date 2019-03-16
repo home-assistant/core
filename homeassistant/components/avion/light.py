@@ -4,6 +4,7 @@ Support for Avion dimmers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.avion/
 """
+import importlib
 import logging
 import time
 
@@ -38,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an Avion switch."""
     # pylint: disable=no-member
-    import avion
+    avion = importlib.import_module('avion')
 
     lights = []
     if CONF_USERNAME in config and CONF_PASSWORD in config:
@@ -108,7 +109,7 @@ class AvionLight(Light):
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
         # pylint: disable=no-member
-        import avion
+        avion = importlib.import_module('avion')
 
         # Bluetooth LE is unreliable, and the connection may drop at any
         # time. Make an effort to re-establish the link.

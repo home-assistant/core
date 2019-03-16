@@ -7,6 +7,7 @@ Air Quality calculation based on humidity and volatile gas.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bme680/
 """
+import importlib
 import logging
 
 from time import time, sleep
@@ -122,7 +123,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 def _setup_bme680(config):
     """Set up and configure the BME680 sensor."""
     from smbus import SMBus  # pylint: disable=import-error
-    import bme680
+    bme680 = importlib.import_module('bme680')
 
     sensor_handler = None
     sensor = None

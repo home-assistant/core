@@ -4,6 +4,7 @@ Support for Blinkt! lights on Raspberry Pi.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.blinkt/
 """
+import importlib
 import logging
 
 import voluptuous as vol
@@ -31,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Blinkt Light platform."""
     # pylint: disable=no-member
-    import blinkt
+    blinkt = importlib.import_module('blinkt')
 
     # ensure that the lights are off when exiting
     blinkt.set_clear_on_exit()

@@ -4,6 +4,7 @@ Support for Decora dimmers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.decora/
 """
+import importlib
 import logging
 from functools import wraps
 import time
@@ -76,7 +77,7 @@ class DecoraLight(Light):
     def __init__(self, device):
         """Initialize the light."""
         # pylint: disable=no-member
-        import decora
+        decora = importlib.import_module('decora')
 
         self._name = device['name']
         self._address = device['address']

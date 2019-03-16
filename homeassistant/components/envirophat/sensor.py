@@ -4,6 +4,7 @@ Support for Enviro pHAT sensors.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.envirophat
 """
+import importlib
 import logging
 from datetime import timedelta
 
@@ -55,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense HAT sensor platform."""
     try:
-        import envirophat
+        envirophat = importlib.import_module('envirophat')
     except OSError:
         _LOGGER.error("No Enviro pHAT was found.")
         return False
