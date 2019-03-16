@@ -161,13 +161,6 @@ class ToonSensor(ToonEntity):
                 self.measurement in ['average_daily', 'daily_usage',
                                      'meter_reading']:
             value = round(float(value)/1000.0, 2)
-            
-        if self.section == 'thermostat_info' and \
-                self.measurement == 'current_modulation_level':
-            if value >= 1:
-                value = (value - 0) * (100 - 23) / (100 - 0) + 23
-            else: 
-                value = 0
 
         self._state = max(0, value)
 
