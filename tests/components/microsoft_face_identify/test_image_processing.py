@@ -106,7 +106,7 @@ class TestMicrosoftFaceIdentify:
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.image_processing.microsoft_face_identify.'
+    @patch('homeassistant.components.microsoft_face_identify.image_processing.'
            'MicrosoftFaceIdentifyEntity.should_poll',
            new_callable=PropertyMock(return_value=False))
     def test_ms_identify_process_image(self, poll_mock, aioclient_mock):

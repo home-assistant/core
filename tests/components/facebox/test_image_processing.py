@@ -12,7 +12,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_OK, HTTP_UNAUTHORIZED, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
-import homeassistant.components.image_processing.facebox as fb
+import homeassistant.components.facebox.image_processing as fb
 
 MOCK_IP = '192.168.0.1'
 MOCK_PORT = '8080'
@@ -72,8 +72,8 @@ VALID_CONFIG = {
 @pytest.fixture
 def mock_healthybox():
     """Mock fb.check_box_health."""
-    check_box_health = 'homeassistant.components.image_processing.' \
-        'facebox.check_box_health'
+    check_box_health = 'homeassistant.components.facebox.image_processing.' \
+        'check_box_health'
     with patch(check_box_health, return_value=MOCK_BOX_ID) as _mock_healthybox:
         yield _mock_healthybox
 
@@ -81,7 +81,7 @@ def mock_healthybox():
 @pytest.fixture
 def mock_isfile():
     """Mock os.path.isfile."""
-    with patch('homeassistant.components.image_processing.facebox.cv.isfile',
+    with patch('homeassistant.components.facebox.image_processing.cv.isfile',
                return_value=True) as _mock_isfile:
         yield _mock_isfile
 
@@ -98,7 +98,7 @@ def mock_image():
 def mock_open_file():
     """Mock open."""
     mopen = mock_open()
-    with patch('homeassistant.components.image_processing.facebox.open',
+    with patch('homeassistant.components.facebox.image_processing.open',
                mopen, create=True) as _mock_open:
         yield _mock_open
 

@@ -5,7 +5,7 @@ from unittest.mock import patch, PropertyMock
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
 from homeassistant.components import camera, image_processing as ip
-from homeassistant.components.image_processing.openalpr_cloud import (
+from homeassistant.components.openalpr_cloud.image_processing import (
     OPENALPR_API_URL)
 
 from tests.common import (
@@ -126,7 +126,7 @@ class TestOpenAlprCloud:
             },
         }
 
-        with patch('homeassistant.components.image_processing.openalpr_cloud.'
+        with patch('homeassistant.components.openalpr_cloud.image_processing.'
                    'OpenAlprCloudEntity.should_poll',
                    new_callable=PropertyMock(return_value=False)):
             setup_component(self.hass, ip.DOMAIN, config)

@@ -118,7 +118,7 @@ class TestOpenAlprLocal:
             },
         }
 
-        with patch('homeassistant.components.image_processing.openalpr_local.'
+        with patch('homeassistant.components.openalpr_local.image_processing.'
                    'OpenAlprLocalEntity.should_poll',
                    new_callable=PropertyMock(return_value=False)):
             setup_component(self.hass, ip.DOMAIN, config)
