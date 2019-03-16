@@ -12,6 +12,8 @@ from .const import DEFAULT_NAME, DEFAULT_REGION, DOMAIN, REGIONS
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_MODE = 'Config Mode'
+
 UDP_PORT = 987
 TCP_PORT = 997
 PORT_MSG = {UDP_PORT: 'port_987_bind_error', TCP_PORT: 'port_997_bind_error'}
@@ -57,27 +59,57 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                 self.helper.get_creds)
 
             if self.creds is not None:
-                return await self.async_step_link()
+                return await self.async_step_mode()
             return self.async_abort(reason='credential_error')
 
         return self.async_show_form(
             step_id='creds')
+
+    async def async_step_mode(self, user_input=None):
+        """Prompt for mode."""
+        errors = {}
+        auto = "Auto Discover"
+        manual = "Manual Entry"
+        mode = [auto, manual]
+
+        if user_input is not None:
+            if user_input[CONF_MODE] == manual:
+                try:
+                    device = user_input[CONF_IP_ADDRESS]
+                    if device:
+                        self.device_list.append(device)
+                except KeyError:
+                    errors['base'] = 'no_ipaddress'
+            if not errors:
+                return await self.async_step_link()
+
+        mode_schema = OrderedDict()
+        mode_schema[vol.Required(
+            CONF_MODE, default=auto)] = vol.In(list(mode))
+        mode_schema[vol.Optional(CONF_IP_ADDRESS)] = str
+
+        return self.async_show_form(
+            step_id='mode',
+            data_schema=vol.Schema(mode_schema),
+            errors=errors,
+        )
 
     async def async_step_link(self, user_input=None):
         """Prompt user input. Create or edit entry."""
         errors = {}
 
         # Search for device.
-        if user_input is None:
-            devices = await self.hass.async_add_executor_job(
-                self.helper.has_devices)
+        if not self.device_list:
+            if user_input is None:
+                devices = await self.hass.async_add_executor_job(
+                    self.helper.has_devices)
 
-            # Abort if can't find device.
-            if not devices:
-                return self.async_abort(reason='no_devices_found')
+                # Abort if can't find device.
+                if not devices:
+                    return self.async_abort(reason='no_devices_found')
 
-            self.device_list = [
-                device['host-ip'] for device in devices]
+                self.device_list = [
+                    device['host-ip'] for device in devices]
 
         # If entry exists check that devices found aren't configured.
         if self.hass.config_entries.async_entries(DOMAIN):
