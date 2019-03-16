@@ -33,7 +33,7 @@ NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
 
 AVAILABLE_ATTRS = [
     '_id', '_is_guest_by_uap', '_last_seen_by_uap', '_uptime_by_uap',
-    'ap_mac', 'assoc_time', 'authorized', 'bssid', 'bytes-r', 'ccq',
+    'ap_mac', 'ap_name', 'assoc_time', 'authorized', 'bssid', 'bytes-r', 'ccq',
     'channel', 'essid', 'first_seen', 'hostname', 'idletime', 'ip',
     'is_11r', 'is_guest', 'is_wired', 'last_seen', 'latest_assoc_time',
     'mac', 'name', 'noise', 'noted', 'oui', 'powersave_enabled',
@@ -112,6 +112,13 @@ class UnifiScanner(DeviceScanner):
             _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
 
+        try:
+            aps = self._controller.get_aps()
+        except APIError as ex:
+            _LOGGER.error("Failed to get access points: %s", ex)
+            aps = {}
+        self._apnames = dict([(ap['mac'], ap.get('name')) for ap in aps])
+
         # Filter clients to provided SSID list
         if self._ssid_filter:
             clients = [client for client in clients
@@ -148,6 +155,8 @@ class UnifiScanner(DeviceScanner):
         client = self._clients.get(device, {})
         attributes = {}
         for variable in self._monitored_conditions:
+            if variable == "ap_name" and "ap_mac" in client:
+                attributes["ap_name"] = self._apnames.get(client["ap_mac"], "unknown")
             if variable in client:
                 attributes[variable] = client[variable]
 
