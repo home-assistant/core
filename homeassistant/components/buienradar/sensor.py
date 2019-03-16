@@ -144,7 +144,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Create the buienradar sensor."""
-    from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
+    from homeassistant.components.buienradar.weather import DEFAULT_TIMEFRAME
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
