@@ -74,7 +74,7 @@ class SmartPlugSwitch(SwitchDevice):
     def device_info(self):
         """Return information about the device."""
         return {
-            "name": self._sysinfo["alias"],
+            "name": self.name,
             "model": self._sysinfo["model"],
             "manufacturer": 'TP-Link',
             "connections": {
