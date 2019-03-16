@@ -122,12 +122,9 @@ async def async_setup(hass, config):
     if monitored_vars:
         hass.async_create_task(setup_monitored_vars(
             hass, config, monitored_vars))
-
-    def schedule_connect(event):
-        """Schedule the connect_and_subscribe coroutine."""
-        hass.async_create_task(
-            connect_and_subscribe(hass, conf[CONF_DEVICE], gateway))
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_connect)
+    # Schedule directly on the loop to avoid blocking HA startup.
+    hass.loop.create_task(
+        connect_and_subscribe(hass, conf[CONF_DEVICE], gateway))
     return True
 
 
