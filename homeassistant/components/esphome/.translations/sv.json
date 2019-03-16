@@ -13,7 +13,7 @@
                 "data": {
                     "password": "L\u00f6senord"
                 },
-                "description": "Ange det l\u00f6senord du angav i din konfiguration.",
+                "description": "Ange det l\u00f6senord du angett i din konfiguration f\u00f6r {name}.",
                 "title": "Ange l\u00f6senord"
             },
             "discovery_confirm": {

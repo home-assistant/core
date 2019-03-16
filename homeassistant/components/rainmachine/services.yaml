@@ -1,6 +1,30 @@
 # Describes the format for available RainMachine services
 
 ---
+disable_program:
+  description: Disable a program.
+  fields:
+    program_id:
+      description: The program to disable.
+      example: 3
+disable_zone:
+  description: Disable a zone.
+  fields:
+    zone_id:
+      description: The zone to disable.
+      example: 3
+enable_program:
+  description: Enable a program.
+  fields:
+    program_id:
+      description: The program to enable.
+      example: 3
+enable_zone:
+  description: Enable a zone.
+  fields:
+    zone_id:
+      description: The zone to enable.
+      example: 3
 pause_watering:
   description: Pause all watering for a number of seconds.
   fields:

@@ -296,6 +296,7 @@ class AmbientStation:
     def __init__(self, hass, config_entry, client, monitored_conditions):
         """Initialize."""
         self._config_entry = config_entry
+        self._entry_setup_complete = False
         self._hass = hass
         self._watchdog_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
@@ -362,12 +363,18 @@ class AmbientStation:
                             'name', station['macAddress']),
                 }
 
-            for component in ('binary_sensor', 'sensor'):
-                self._hass.async_create_task(
-                    self._hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, component))
+            # If the websocket disconnects and reconnects, the on_subscribed
+            # handler will get called again; in that case, we don't want to
+            # attempt forward setup of the config entry (because it will have
+            # already been done):
+            if not self._entry_setup_complete:
+                for component in ('binary_sensor', 'sensor'):
+                    self._hass.async_create_task(
+                        self._hass.config_entries.async_forward_entry_setup(
+                            self._config_entry, component))
+                self._entry_setup_complete = True
 
-                self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
+            self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
         self.client.websocket.on_connect(on_connect)
         self.client.websocket.on_data(on_data)
@@ -403,6 +410,13 @@ class AmbientWeatherEntity(Entity):
         self._sensor_type = sensor_type
         self._state = None
         self._station_name = station_name
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(
+            self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
+                self._sensor_type))
 
     @property
     def device_info(self):

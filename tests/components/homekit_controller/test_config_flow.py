@@ -471,7 +471,9 @@ async def test_import_works(hass):
     flow = config_flow.HomekitControllerFlowHandler()
     flow.hass = hass
 
-    with mock.patch('homekit.controller.Pairing') as pairing_cls:
+    pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
+
+    with mock.patch(pairing_cls_imp) as pairing_cls:
         pairing_cls.return_value = pairing
         result = await flow.async_import_legacy_pairing(
             discovery_info['properties'], import_info)
@@ -649,7 +651,9 @@ async def test_parse_new_homekit_json(hass):
     flow = config_flow.HomekitControllerFlowHandler()
     flow.hass = hass
 
-    with mock.patch('homekit.controller.Pairing') as pairing_cls:
+    pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
+
+    with mock.patch(pairing_cls_imp) as pairing_cls:
         pairing_cls.return_value = pairing
         with mock.patch('builtins.open', mock_open):
             with mock.patch('os.path', mock_path):
@@ -703,7 +707,9 @@ async def test_parse_old_homekit_json(hass):
     flow = config_flow.HomekitControllerFlowHandler()
     flow.hass = hass
 
-    with mock.patch('homekit.controller.Pairing') as pairing_cls:
+    pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
+
+    with mock.patch(pairing_cls_imp) as pairing_cls:
         pairing_cls.return_value = pairing
         with mock.patch('builtins.open', mock_open):
             with mock.patch('os.path', mock_path):
@@ -769,7 +775,9 @@ async def test_parse_overlapping_homekit_json(hass):
     flow = config_flow.HomekitControllerFlowHandler()
     flow.hass = hass
 
-    with mock.patch('homekit.controller.Pairing') as pairing_cls:
+    pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
+
+    with mock.patch(pairing_cls_imp) as pairing_cls:
         pairing_cls.return_value = pairing
         with mock.patch('builtins.open', side_effect=side_effects):
             with mock.patch('os.path', mock_path):

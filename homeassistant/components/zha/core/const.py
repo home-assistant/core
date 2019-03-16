@@ -1,6 +1,12 @@
 """All constants related to the ZHA component."""
 import enum
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.fan import DOMAIN as FAN
+from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
+
 DOMAIN = 'zha'
 
 BAUD_RATES = [
@@ -17,13 +23,13 @@ DATA_ZHA_CORE_EVENTS = 'zha_core_events'
 DATA_ZHA_GATEWAY = 'zha_gateway'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
-COMPONENTS = [
-    'binary_sensor',
-    'fan',
-    'light',
-    'sensor',
-    'switch',
-]
+COMPONENTS = (
+    BINARY_SENSOR,
+    FAN,
+    LIGHT,
+    SENSOR,
+    SWITCH,
+)
 
 CONF_BAUDRATE = 'baudrate'
 CONF_DATABASE = 'database_path'
@@ -32,6 +38,10 @@ CONF_RADIO_TYPE = 'radio_type'
 CONF_USB_PATH = 'usb_path'
 DATA_DEVICE_CONFIG = 'zha_device_config'
 ENABLE_QUIRKS = 'enable_quirks'
+
+RADIO = 'radio'
+RADIO_DESCRIPTION = 'radio_description'
+CONTROLLER = 'controller'
 
 DEFAULT_RADIO_TYPE = 'ezsp'
 DEFAULT_BAUDRATE = 57600
@@ -111,15 +121,6 @@ class RadioType(enum.Enum):
 
 
 DISCOVERY_KEY = 'zha_discovery_info'
-DEVICE_CLASS = {}
-SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
-SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
-CLUSTER_REPORT_CONFIGS = {}
-CUSTOM_CLUSTER_MAPPINGS = {}
-COMPONENT_CLUSTERS = {}
-EVENT_RELAY_CLUSTERS = []
-NO_SENSOR_CLUSTERS = []
-BINDABLE_CLUSTERS = []
 
 REPORT_CONFIG_MAX_INT = 900
 REPORT_CONFIG_MAX_INT_BATTERY_SAVE = 10800
@@ -134,7 +135,7 @@ REPORT_CONFIG_DEFAULT = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT,
 REPORT_CONFIG_ASAP = (REPORT_CONFIG_MIN_INT_ASAP, REPORT_CONFIG_MAX_INT,
                       REPORT_CONFIG_RPT_CHANGE)
 REPORT_CONFIG_BATTERY_SAVE = (REPORT_CONFIG_MIN_INT_BATTERY_SAVE,
-                              REPORT_CONFIG_MAX_INT,
+                              REPORT_CONFIG_MAX_INT_BATTERY_SAVE,
                               REPORT_CONFIG_RPT_CHANGE)
 REPORT_CONFIG_IMMEDIATE = (REPORT_CONFIG_MIN_INT_IMMEDIATE,
                            REPORT_CONFIG_MAX_INT,

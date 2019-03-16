@@ -11,10 +11,10 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
                                                      DeviceScanner)
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_SSL)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['quantum-gateway==0.0.3']
+REQUIREMENTS = ['quantum-gateway==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ DEFAULT_HOST = 'myfiosgateway.com'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_SSL, default=True): cv.boolean,
     vol.Required(CONF_PASSWORD): cv.string
 })
 
@@ -42,10 +43,12 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
 
         self.host = config[CONF_HOST]
         self.password = config[CONF_PASSWORD]
+        self.use_https = config[CONF_SSL]
         _LOGGER.debug('Initializing')
 
         try:
-            self.quantum = QuantumGatewayScanner(self.host, self.password)
+            self.quantum = QuantumGatewayScanner(self.host, self.password,
+                                                 self.use_https)
             self.success_init = self.quantum.success_init
         except RequestException:
             self.success_init = False

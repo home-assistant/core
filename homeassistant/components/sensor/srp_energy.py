@@ -12,7 +12,7 @@ from requests.exceptions import (
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_PASSWORD,
+    CONF_NAME, CONF_PASSWORD, ENERGY_KILO_WATT_HOUR,
     CONF_USERNAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -27,7 +27,7 @@ ATTRIBUTION = "Powered by SRP Energy"
 
 DEFAULT_NAME = 'SRP Energy'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1440)
-ENERGY_KWH = 'kWh'
+ENERGY_KWH = ENERGY_KILO_WATT_HOUR
 
 ATTR_READING_COST = "reading_cost"
 ATTR_READING_TIME = 'datetime'
