@@ -116,7 +116,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self.toon.thermostat_state = HA_TOON[operation_mode]
-        
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Update local state."""
