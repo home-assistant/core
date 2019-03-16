@@ -1,5 +1,8 @@
+# coding: utf-8
 """Constants for the LCN component."""
 import re
+
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 DOMAIN = 'lcn'
 DATA_LCN = 'lcn'
@@ -49,9 +52,9 @@ THRESHOLDS = ['THRS1', 'THRS2', 'THRS3', 'THRS4', 'THRS5',
 S0_INPUTS = ['S0INPUT1', 'S0INPUT2', 'S0INPUT3', 'S0INPUT4']
 
 VAR_UNITS = ['', 'LCN', 'NATIVE',
-             'CELSIUS', '\u00b0CELSIUS', '\u00b0C',
-             'KELVIN', '\u00b0KELVIN', '\u00b0K',
-             'FAHRENHEIT', '\u00b0FAHRENHEIT', '\u00b0F'
+             TEMP_CELSIUS,
+             '°K',
+             TEMP_FAHRENHEIT,
              'LUX_T', 'LX_T',
              'LUX_I', 'LUX', 'LX',
              'M/S', 'METERPERSECOND',
@@ -59,4 +62,4 @@ VAR_UNITS = ['', 'LCN', 'NATIVE',
              'PPM',
              'VOLT', 'V',
              'AMPERE', 'AMP', 'A',
-             'DEGREE', '\u00b0']
+             'DEGREE', '°']
