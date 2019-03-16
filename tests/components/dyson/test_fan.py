@@ -4,8 +4,8 @@ from unittest import mock
 
 from homeassistant.setup import setup_component
 from homeassistant.components import dyson as dyson_parent
-from homeassistant.components.dyson import DYSON_DEVICES
-from homeassistant.components.fan import (dyson, ATTR_SPEED, ATTR_SPEED_LIST,
+from homeassistant.components.dyson import DYSON_DEVICES, fan as dyson
+from homeassistant.components.fan import (ATTR_SPEED, ATTR_SPEED_LIST,
                                           ATTR_OSCILLATING)
 from tests.common import get_test_home_assistant
 from libpurecoollink.const import FanSpeed, FanMode, NightMode, Oscillation
