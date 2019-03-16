@@ -27,3 +27,7 @@ MODE_DEV = "development"
 MODE_PROD = "production"
 
 DISPATCHER_REMOTE_UPDATE = 'cloud_remote_update'
+
+
+class InvalidTrustedNetworks(Exception):
+    """Raised when invalid trusted networks config."""
