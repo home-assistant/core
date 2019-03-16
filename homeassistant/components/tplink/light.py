@@ -75,6 +75,7 @@ class TPLinkSmartBulb(Light):
         self._min_mireds = None
         self._max_mireds = None
         self._emeter_params = {}
+        self.friendly_name = smartbulb.friendly_name
 
     @property
     def unique_id(self):
@@ -84,7 +85,10 @@ class TPLinkSmartBulb(Light):
     @property
     def name(self):
         """Return the name of the Smart Bulb."""
-        return self._sysinfo["alias"]
+        if self.friendly_name is None:
+            return self._sysinfo["alias"]
+        else:
+            return self.friendly_name
 
     @property
     def device_info(self):

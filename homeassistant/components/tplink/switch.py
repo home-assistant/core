@@ -55,6 +55,7 @@ class SmartPlugSwitch(SwitchDevice):
         self._available = False
         # Set up emeter cache
         self._emeter_params = {}
+        self.friendly_name = smartplug.friendly_name
 
     @property
     def unique_id(self):
@@ -64,13 +65,16 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def name(self):
         """Return the name of the Smart Plug."""
-        return self._sysinfo["alias"]
+        if self.friendly_name is None:
+            return self._sysinfo["alias"]
+        else:
+            return self.friendly_name
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
-            "name": self.name,
+            "name": self._sysinfo["alias"],
             "model": self._sysinfo["model"],
             "manufacturer": 'TP-Link',
             "connections": {

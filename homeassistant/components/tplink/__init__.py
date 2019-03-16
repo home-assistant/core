@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
@@ -14,7 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'tplink'
 
 TPLINK_HOST_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 CONF_LIGHT = 'light'
@@ -95,7 +96,18 @@ async def async_setup_entry(hass, config_entry):
             for entry in config_data[type_]:
                 try:
                     host = entry['host']
+
+                    friendly_name = None
+                    if "name" in entry:
+                        friendly_name = entry['name']
+                        _LOGGER.debug("Name SET FOR TPLINK DEVICE %s" % friendly_name)
+
                     dev = _device_for_type(host, type_)
+                    # not sure this is the best way to carry forward this, but works.
+                    # also, do this so i don't have to check in the Device Class if the property exits on 'dev'
+                    # it will always exist and be None if config wasn't set.
+                    dev.friendly_name = friendly_name
+
                     devices[host] = dev
                     _LOGGER.debug("Succesfully added %s %s: %s",
                                   type_, host, dev)
