@@ -8,9 +8,8 @@ from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
 from homeassistant.const import (
     ATTR_DATE, ATTR_ID, ATTR_TEMPERATURE, ATTR_TIME, CONF_DEVICE,
-    CONF_MONITORED_VARIABLES, CONF_NAME, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, PRECISION_HALVES, PRECISION_TENTHS,
-    PRECISION_WHOLE)
+    CONF_MONITORED_VARIABLES, CONF_NAME, EVENT_HOMEASSISTANT_STOP,
+    PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE)
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
