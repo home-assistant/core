@@ -4,7 +4,7 @@ from asynctest.mock import patch, MagicMock, call
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.components.geo_location.nsw_rural_fire_service_feed import \
+from homeassistant.components.nsw_rural_fire_service_feed.geo_location import \
     ATTR_EXTERNAL_ID, SCAN_INTERVAL, ATTR_CATEGORY, ATTR_FIRE, ATTR_LOCATION, \
     ATTR_COUNCIL_AREA, ATTR_STATUS, ATTR_TYPE, ATTR_SIZE, \
     ATTR_RESPONSIBLE_AGENCY, ATTR_PUBLICATION_DATE

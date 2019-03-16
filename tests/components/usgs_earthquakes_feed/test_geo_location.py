@@ -4,11 +4,10 @@ from unittest.mock import patch, MagicMock, call
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
-from homeassistant.components.geo_location\
-    .usgs_earthquakes_feed import \
-    ATTR_ALERT, ATTR_EXTERNAL_ID, SCAN_INTERVAL, ATTR_PLACE, \
-    ATTR_MAGNITUDE, ATTR_STATUS, ATTR_TYPE, \
-    ATTR_TIME, ATTR_UPDATED, CONF_FEED_TYPE
+from homeassistant.components.usgs_earthquakes_feed.geo_location import ( 
+    ATTR_ALERT, ATTR_EXTERNAL_ID, SCAN_INTERVAL, ATTR_PLACE,
+    ATTR_MAGNITUDE, ATTR_STATUS, ATTR_TYPE,
+    ATTR_TIME, ATTR_UPDATED, CONF_FEED_TYPE)
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
     CONF_RADIUS, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME, \
     ATTR_UNIT_OF_MEASUREMENT, ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE
