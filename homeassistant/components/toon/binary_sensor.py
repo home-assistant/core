@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import Throttle
 
 from . import (ToonEntity, ToonDisplayDeviceEntity, ToonBoilerDeviceEntity,
                ToonBoilerModuleDeviceEntity)
@@ -16,8 +17,7 @@ DEPENDENCIES = ['toon']
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-SCAN_INTERVAL = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
@@ -102,6 +102,7 @@ class ToonBinarySensor(ToonEntity, BinarySensorDevice):
 
         return value
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Get the latest data from the binary sensor."""
         section = getattr(self.toon, self.section)

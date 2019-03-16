@@ -11,6 +11,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import Throttle
 
 from . import ToonDisplayDeviceEntity
 from .const import DATA_TOON_CLIENT, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
@@ -21,8 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-SCAN_INTERVAL = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 HA_TOON = {
     STATE_AUTO: 'Comfort',
@@ -116,7 +116,8 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self.toon.thermostat_state = HA_TOON[operation_mode]
-
+        
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Update local state."""
         if self.toon.thermostat_state is None:

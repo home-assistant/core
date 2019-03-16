@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import Throttle
 
 from . import (ToonEntity, ToonElectricityMeterDeviceEntity,
                ToonGasMeterDeviceEntity, ToonSolarDeviceEntity,
@@ -15,8 +16,7 @@ DEPENDENCIES = ['toon']
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-SCAN_INTERVAL = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
@@ -134,6 +134,7 @@ class ToonSensor(ToonEntity):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Get the latest data from the sensor."""
         section = getattr(self.toon, self.section)
@@ -160,6 +161,13 @@ class ToonSensor(ToonEntity):
                 self.measurement in ['average_daily', 'daily_usage',
                                      'meter_reading']:
             value = round(float(value)/1000.0, 2)
+            
+        if self.section == 'thermostat_info' and \
+                self.measurement == 'current_modulation_level':
+            if value >= 1:
+                value = (value - 0) * (100 - 23) / (100 - 0) + 23
+            else: 
+                value = 0
 
         self._state = max(0, value)
 
