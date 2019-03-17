@@ -31,7 +31,7 @@ DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
 
 CONF_LOCATION_IDX = 'location_idx'
 SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
-SCAN_INTERVAL_MINIMUM = timedelta(seconds=10)                                    # TODO: should be 180
+SCAN_INTERVAL_MINIMUM = timedelta(seconds=180)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
