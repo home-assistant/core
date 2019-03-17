@@ -71,10 +71,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.warning("Host %s:%d already registered", host, port)
         return
 
-    if [item for item in known_hosts if item[1] == port]:
-        _LOGGER.warning("Port %s:%d already registered", host, port)
-        return
-
     reg_host = (ipaddr, port)
     known_hosts.append(reg_host)
 
