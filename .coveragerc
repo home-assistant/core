@@ -579,7 +579,68 @@ omit =
     homeassistant/components/tapsaff/binary_sensor.py
     homeassistant/components/tautulli/sensor.py
     homeassistant/components/ted5000/sensor.py
-    homeassistant/components/telegram/notify.py
+    homeassistant/components/temper/sensor.py
+    homeassistant/components/thermoworks_smoke/sensor.py
+    homeassistant/components/time_date/sensor.py
+    homeassistant/components/torque/sensor.py
+    homeassistant/components/trafikverket_weatherstation/sensor.py
+    homeassistant/components/travisci/sensor.py
+    homeassistant/components/twitch/sensor.py
+    homeassistant/components/uber/sensor.py
+    homeassistant/components/ups/sensor.py
+    homeassistant/components/uscis/sensor.py
+    homeassistant/components/vasttrafik/sensor.py
+    homeassistant/components/viaggiatreno/sensor.py
+    homeassistant/components/volkszaehler/sensor.py
+    homeassistant/components/waqi/sensor.py
+    homeassistant/components/waze_travel_time/sensor.py
+    homeassistant/components/whois/sensor.py
+    homeassistant/components/worldtidesinfo/sensor.py
+    homeassistant/components/worxlandroid/sensor.py
+    homeassistant/components/xbox_live/sensor.py
+    homeassistant/components/zamg/sensor.py
+    homeassistant/components/zestimate/sensor.py
+    homeassistant/components/shiftr/*
+    homeassistant/components/simplisafe/__init__.py
+    homeassistant/components/simplisafe/alarm_control_panel.py
+    homeassistant/components/sisyphus/*
+    homeassistant/components/skybell/*
+    homeassistant/components/smappee/*
+    homeassistant/components/sonos/*
+    homeassistant/components/spc/*
+    homeassistant/components/speedtestdotnet/*
+    homeassistant/components/spider/*
+    homeassistant/components/acer_projector/switch.py
+    homeassistant/components/anel_pwrctrl/switch.py
+    homeassistant/components/arest/switch.py
+    homeassistant/components/broadlink/switch.py
+    homeassistant/components/deluge/switch.py
+    homeassistant/components/digitalloggers/switch.py
+    homeassistant/components/dlink/switch.py
+    homeassistant/components/edimax/switch.py
+    homeassistant/components/fritzdect/switch.py
+    homeassistant/components/hikvisioncam/switch.py
+    homeassistant/components/hook/switch.py
+    homeassistant/components/kankun/switch.py
+    homeassistant/components/mystrom/switch.py
+    homeassistant/components/netio/switch.py
+    homeassistant/components/orvibo/switch.py
+    homeassistant/components/pencom/switch.py
+    homeassistant/components/pulseaudio_loopback/switch.py
+    homeassistant/components/rainbird/switch.py
+    homeassistant/components/recswitch/switch.py
+    homeassistant/components/rest/switch.py
+    homeassistant/components/rpi_rf/switch.py
+    homeassistant/components/snmp/switch.py
+    homeassistant/components/sony_projector/switch.py
+    homeassistant/components/switchbot/switch.py
+    homeassistant/components/switchmate/switch.py
+    homeassistant/components/telnet/switch.py
+    homeassistant/components/tplink/switch.py
+    homeassistant/components/vesync/switch.py
+    homeassistant/components/stiebel_eltron/*
+    homeassistant/components/tado/*
+    homeassistant/components/tahoma/*
     homeassistant/components/telegram_bot/*
     homeassistant/components/tellduslive/*
     homeassistant/components/tellstick/*
