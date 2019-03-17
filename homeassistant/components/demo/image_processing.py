@@ -8,7 +8,7 @@ from homeassistant.components.image_processing import (
     ImageProcessingFaceEntity, ATTR_CONFIDENCE, ATTR_NAME, ATTR_AGE,
     ATTR_GENDER
     )
-from homeassistant.components.image_processing.openalpr_local import (
+from homeassistant.components.openalpr_local.image_processing import (
     ImageProcessingAlprEntity)
 
 
