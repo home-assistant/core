@@ -8,7 +8,7 @@
 from datetime import timedelta
 import logging
 
-import requests.exceptions
+from requests import ConnectionError, HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -79,7 +79,7 @@ def setup(hass, hass_config):
             debug=False
         )
 
-    except requests.exceptions.ConnectionError:
+    except ConnectionError:
         _LOGGER.error(
             "setup(): Failed to connect with the vendor's web servers. "
             "The server is not contactable (maybe the vendor's fault?). "
@@ -87,7 +87,7 @@ def setup(hass, hass_config):
         )
         raise  # Expose the actual exception to the user
 
-    except requests.exceptions.HTTPError as err:
+    except HTTPError as err:
         if err.response.status_code == HTTP_BAD_REQUEST:
             _LOGGER.error(
                 "setup(): Failed to connect with the vendor's web servers. "
