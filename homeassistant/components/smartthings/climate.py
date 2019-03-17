@@ -7,9 +7,10 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN, ClimateDevice)
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_HEAT, SUPPORT_FAN_MODE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT,
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE_HIGH,
+    SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
     ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
@@ -35,6 +36,25 @@ STATE_TO_MODE = {
     STATE_HEAT: 'heat',
     STATE_OFF: 'off'
 }
+
+AC_MODE_TO_STATE = {
+    'auto': STATE_AUTO,
+    'cool': STATE_COOL,
+    'dry': STATE_DRY,
+    'heat': STATE_HEAT,
+    'fanOnly': STATE_FAN_ONLY
+}
+STATE_TO_AC_MODE = {v: k for k, v in AC_MODE_TO_STATE.items()}
+
+SPEED_TO_FAN_MODE = {
+    0: 'auto',
+    1: 'low',
+    2: 'medium',
+    3: 'high',
+    4: 'turbo'
+}
+FAN_MODE_TO_SPEED = {v: k for k, v in SPEED_TO_FAN_MODE.items()}
+
 UNIT_MAP = {
     'C': TEMP_CELSIUS,
     'F': TEMP_FAHRENHEIT
@@ -51,10 +71,26 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add climate entities for a config entry."""
+    from pysmartthings import Capability
+
+    ac_capabilities = [
+        Capability.air_conditioner_mode,
+        Capability.fan_speed,
+        Capability.switch,
+        Capability.temperature_measurement,
+        Capability.thermostat_cooling_setpoint]
+
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    async_add_entities(
-        [SmartThingsThermostat(device) for device in broker.devices.values()
-         if broker.any_assigned(device.device_id, CLIMATE_DOMAIN)], True)
+    entities = []
+    for device in broker.devices.values():
+        if not broker.any_assigned(device.device_id, CLIMATE_DOMAIN):
+            continue
+        if all(capability in device.capabilities
+               for capability in ac_capabilities):
+            entities.append(SmartThingsAirConditioner(device))
+        else:
+            entities.append(SmartThingsThermostat(device))
+    async_add_entities(entities, True)
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
@@ -62,28 +98,41 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     from pysmartthings import Capability
 
     supported = [
-        Capability.thermostat,
+        Capability.air_conditioner_mode,
+        Capability.demand_response_load_control,
+        Capability.fan_speed,
+        Capability.power_consumption_report,
+        Capability.relative_humidity_measurement,
+        Capability.switch,
         Capability.temperature_measurement,
+        Capability.thermostat,
         Capability.thermostat_cooling_setpoint,
+        Capability.thermostat_fan_mode,
         Capability.thermostat_heating_setpoint,
         Capability.thermostat_mode,
-        Capability.relative_humidity_measurement,
-        Capability.thermostat_operating_state,
-        Capability.thermostat_fan_mode
-    ]
+        Capability.thermostat_operating_state]
     # Can have this legacy/deprecated capability
     if Capability.thermostat in capabilities:
         return supported
-    # Or must have all of these
-    climate_capabilities = [
+    # Or must have all of these thermostat capabilities
+    thermostat_capabilities = [
         Capability.temperature_measurement,
         Capability.thermostat_cooling_setpoint,
         Capability.thermostat_heating_setpoint,
         Capability.thermostat_mode]
     if all(capability in capabilities
-           for capability in climate_capabilities):
+           for capability in thermostat_capabilities):
         return supported
-
+    # Or must have all of these A/C capabilities
+    ac_capabilities = [
+        Capability.air_conditioner_mode,
+        Capability.fan_speed,
+        Capability.switch,
+        Capability.temperature_measurement,
+        Capability.thermostat_cooling_setpoint]
+    if all(capability in capabilities
+           for capability in ac_capabilities):
+        return supported
     return None
 
 
@@ -254,5 +303,128 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
+        from pysmartthings import Attribute
         return UNIT_MAP.get(
-            self._device.status.attributes['temperature'].unit)
+            self._device.status.attributes[Attribute.temperature].unit)
+
+
+class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
+    """Define a SmartThings Air Conditioner."""
+
+    async def async_set_fan_mode(self, fan_mode):
+        """Set new target fan mode."""
+        await self._device.set_fan_speed(
+            FAN_MODE_TO_SPEED[fan_mode], set_status=True)
+        # State is set optimistically in the command above, therefore update
+        # the entity state ahead of receiving the confirming push updates
+        self.async_schedule_update_ha_state()
+
+    async def async_set_operation_mode(self, operation_mode):
+        """Set new target operation mode."""
+        await self._device.set_air_conditioner_mode(
+            STATE_TO_AC_MODE[operation_mode], set_status=True)
+        # State is set optimistically in the command above, therefore update
+        # the entity state ahead of receiving the confirming push updates
+        self.async_schedule_update_ha_state()
+
+    async def async_set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        tasks = []
+        # operation mode
+        operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+        if operation_mode:
+            tasks.append(self.async_set_operation_mode(operation_mode))
+        # temperature
+        tasks.append(self._device.set_cooling_setpoint(
+            kwargs[ATTR_TEMPERATURE], set_status=True))
+        await asyncio.gather(*tasks)
+        # State is set optimistically in the command above, therefore update
+        # the entity state ahead of receiving the confirming push updates
+        self.async_schedule_update_ha_state()
+
+    async def async_turn_on(self):
+        """Turn device on."""
+        await self._device.switch_on(set_status=True)
+        # State is set optimistically in the command above, therefore update
+        # the entity state ahead of receiving the confirming push updates
+        self.async_schedule_update_ha_state()
+
+    async def async_turn_off(self):
+        """Turn device off."""
+        await self._device.switch_off(set_status=True)
+        # State is set optimistically in the command above, therefore update
+        # the entity state ahead of receiving the confirming push updates
+        self.async_schedule_update_ha_state()
+
+    @property
+    def current_fan_mode(self):
+        """Return the fan setting."""
+        return SPEED_TO_FAN_MODE.get(self._device.status.fan_speed)
+
+    @property
+    def current_operation(self):
+        """Return current operation ie. heat, cool, idle."""
+        return AC_MODE_TO_STATE.get(self._device.status.air_conditioner_mode)
+
+    @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return self._device.status.temperature
+
+    @property
+    def device_state_attributes(self):
+        """
+        Return device specific state attributes.
+
+        Include attributes from the Demand Response Load Control (drlc)
+        and Power Consumption capabilities.
+        """
+        attributes = [
+            'drlc_status_duration',
+            'drlc_status_level',
+            'drlc_status_start',
+            'drlc_status_override',
+            'power_consumption_start',
+            'power_consumption_power',
+            'power_consumption_energy',
+            'power_consumption_end'
+        ]
+        state_attributes = {}
+        for attribute in attributes:
+            value = getattr(self._device.status, attribute)
+            if value is not None:
+                state_attributes[attribute] = value
+        return state_attributes
+
+    @property
+    def fan_list(self):
+        """Return the list of available fan modes."""
+        return list(FAN_MODE_TO_SPEED)
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._device.status.switch
+
+    @property
+    def operation_list(self):
+        """Return the list of available operation modes."""
+        return list(STATE_TO_AC_MODE)
+
+    @property
+    def supported_features(self):
+        """Return the supported features."""
+        return SUPPORT_OPERATION_MODE | SUPPORT_TARGET_TEMPERATURE \
+            | SUPPORT_FAN_MODE | SUPPORT_ON_OFF
+
+    @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        return self._device.status.cooling_setpoint
+
+    @property
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        from pysmartthings import Attribute
+        return UNIT_MAP.get(
+            self._device.status.attributes[Attribute.temperature].unit)

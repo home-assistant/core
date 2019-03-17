@@ -10,9 +10,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import ZigbeeChannel, parse_and_log_command
 from ..helpers import get_attr_id_by_name
 from ..const import (
-    SIGNAL_ATTR_UPDATED,
-    SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL, SIGNAL_STATE_ATTR, BASIC_CHANNEL,
-    ON_OFF_CHANNEL, LEVEL_CHANNEL, POWER_CONFIGURATION_CHANNEL
+    SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL,
+    SIGNAL_STATE_ATTR, BASIC_CHANNEL, ON_OFF_CHANNEL, LEVEL_CHANNEL,
+    POWER_CONFIGURATION_CHANNEL
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,6 +63,13 @@ class OnOffChannel(ZigbeeChannel):
         self._state = bool(
             await self.get_attribute_value(self.ON_OFF, from_cache=from_cache))
         await super().async_initialize(from_cache)
+
+    async def async_update(self):
+        """Initialize channel."""
+        _LOGGER.debug("Attempting to update onoff state")
+        self._state = bool(
+            await self.get_attribute_value(self.ON_OFF, from_cache=False))
+        await super().async_update()
 
 
 class LevelControlChannel(ZigbeeChannel):
