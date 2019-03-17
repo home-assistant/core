@@ -1,4 +1,5 @@
 """Test Axis device."""
+import pytest
 from unittest.mock import Mock, patch
 
 from homeassistant.components import axis
@@ -7,16 +8,19 @@ from homeassistant.components.axis import device, errors
 from tests.common import mock_coro
 
 DEVICE_DATA = {
-    axis.CONF_HOST: '1.2.3.4',
-    axis.CONF_USERNAME: 'username',
-    axis.CONF_PASSWORD: 'password',
-    axis.CONF_PORT: 1234
+    device.CONF_HOST: '1.2.3.4',
+    device.CONF_USERNAME: 'username',
+    device.CONF_PASSWORD: 'password',
+    device.CONF_PORT: 1234
+}
+
+ENTRY_OPTIONS = {
+    device.CONF_CAMERA: True,
+    device.CONF_EVENTS: ['pir'],
 }
 
 ENTRY_CONFIG = {
     device.CONF_DEVICE: DEVICE_DATA,
-    device.CONF_CAMERA: True,
-    device.CONF_EVENTS: ['pir'],
     device.CONF_MAC: 'mac',
     device.CONF_MODEL_ID: 'model',
     device.CONF_NAME: 'name'
@@ -28,9 +32,16 @@ async def test_device_setup():
     hass = Mock()
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = ENTRY_OPTIONS
     api = Mock()
 
     axis_device = device.AxisNetworkDevice(hass, entry)
+
+    assert axis_device.host == DEVICE_DATA[device.CONF_HOST]
+    assert axis_device.serial == ENTRY_CONFIG[device.CONF_MAC]
+    assert axis_device.model_id == ENTRY_CONFIG[device.CONF_MODEL_ID]
+    assert axis_device.name == ENTRY_CONFIG[device.CONF_NAME]
+    assert axis_device.serial == ENTRY_CONFIG[device.CONF_MAC]
 
     with patch.object(device, 'get_device', return_value=mock_coro(api)):
         assert await axis_device.async_setup() is True
@@ -43,30 +54,19 @@ async def test_device_setup():
         (entry, 'binary_sensor')
 
 
-async def test_device_properties():
-    """Config entry host and device host are the same."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-
-    axis_device = device.AxisNetworkDevice(hass, entry)
-
-    assert axis_device.host == '1.2.3.4'
-    assert axis_device.model_id == 'model'
-    assert axis_device.name == 'name'
-    assert axis_device.serial == 'mac'
-
-
 async def test_device_not_accessible():
     """Failed setup schedules a retry of setup."""
     hass = Mock()
+    hass.data = dict()
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = ENTRY_OPTIONS
 
     axis_device = device.AxisNetworkDevice(hass, entry)
 
-    with patch.object(device, 'get_device', side_effect=errors.CannotConnect):
-        assert await axis_device.async_setup() is False
+    with patch.object(device, 'get_device', side_effect=errors.CannotConnect), \
+            pytest.raises(device.ConfigEntryNotReady):
+        await axis_device.async_setup()
 
     assert not hass.helpers.event.async_call_later.mock_calls
 
@@ -76,6 +76,7 @@ async def test_device_unknown_error():
     hass = Mock()
     entry = Mock()
     entry.data = ENTRY_CONFIG
+    entry.options = ENTRY_OPTIONS
 
     axis_device = device.AxisNetworkDevice(hass, entry)
 
@@ -123,41 +124,29 @@ async def test_get_device(hass):
 
 async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
-    import axis
+    import axis as axis_lib
 
-    result = None
     with patch('axis.vapix.Vapix.load_params',
-               side_effect=axis.Unauthorized):
-        try:
-            result = await device.get_device(hass, DEVICE_DATA)
-        except errors.AuthenticationRequired:
-            pass
-    assert result is None
+               side_effect=axis_lib.Unauthorized), \
+            pytest.raises(errors.AuthenticationRequired):
+        await device.get_device(hass, DEVICE_DATA)
 
 
 async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
-    import axis
+    import axis as axis_lib
 
-    result = None
     with patch('axis.vapix.Vapix.load_params',
-               side_effect=axis.RequestError):
-        try:
-            result = await device.get_device(hass, DEVICE_DATA)
-        except errors.CannotConnect:
-            pass
-    assert result is None
+               side_effect=axis_lib.RequestError), \
+            pytest.raises(errors.CannotConnect):
+        await device.get_device(hass, DEVICE_DATA)
 
 
 async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
-    import axis
+    import axis as axis_lib
 
-    result = None
     with patch('axis.vapix.Vapix.load_params',
-               side_effect=axis.AxisException):
-        try:
-            result = await device.get_device(hass, DEVICE_DATA)
-        except errors.AuthenticationRequired:
-            pass
-    assert result is None
+               side_effect=axis_lib.AxisException), \
+            pytest.raises(errors.AuthenticationRequired):
+        await device.get_device(hass, DEVICE_DATA)
