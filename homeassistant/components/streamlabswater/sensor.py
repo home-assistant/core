@@ -100,14 +100,12 @@ class StreamLabsDailyUsage(Entity):
         self._streamlabs_usage_data.update()
 
 
-class StreamLabsMonthlyUsage(Entity):
+class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
     """Monitors the monthly water usage."""
 
     def __init__(self, location_name, streamlabs_usage_data):
         """Initialize the monthly water usage device."""
-        self._location_name = location_name
-        self._streamlabs_usage_data = streamlabs_usage_data
-        self._state = None
+        super(StreamLabsMonthlyUsage, self).__init__(location_name, streamlabs_usage_data)
 
     @property
     def name(self):
@@ -115,33 +113,17 @@ class StreamLabsMonthlyUsage(Entity):
         return "{} {}".format(self._location_name, NAME_MONTHLY_USAGE)
 
     @property
-    def icon(self):
-        """Return the monthly usage icon."""
-        return WATER_ICON
-
-    @property
     def state(self):
         """Return the current monthly usage."""
         return self._streamlabs_usage_data.get_monthly_usage()
 
-    @property
-    def unit_of_measurement(self):
-        """Return gallons as the unit measurement for water."""
-        return VOLUME_GALLONS
 
-    def update(self):
-        """Retrieve the latest monthly usage."""
-        self._streamlabs_usage_data.update()
-
-
-class StreamLabsYearlyUsage(Entity):
+class StreamLabsYearlyUsage(StreamLabsDailyUsage):
     """Monitors the yearly water usage."""
 
     def __init__(self, location_name, streamlabs_usage_data):
         """Initialize the yearly water usage device."""
-        self._location_name = location_name
-        self._streamlabs_usage_data = streamlabs_usage_data
-        self._state = None
+        super(StreamLabsYearlyUsage, self).__init__(location_name, streamlabs_usage_data)
 
     @property
     def name(self):
@@ -149,20 +131,6 @@ class StreamLabsYearlyUsage(Entity):
         return "{} {}".format(self._location_name, NAME_YEARLY_USAGE)
 
     @property
-    def icon(self):
-        """Return the yearly usage icon."""
-        return WATER_ICON
-
-    @property
     def state(self):
         """Return the current yearly usage."""
         return self._streamlabs_usage_data.get_yearly_usage()
-
-    @property
-    def unit_of_measurement(self):
-        """Return gallons as the unit measurement for water."""
-        return VOLUME_GALLONS
-
-    def update(self):
-        """Retrieve the latest yearly usage."""
-        self._streamlabs_usage_data.update()

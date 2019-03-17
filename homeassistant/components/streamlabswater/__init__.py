@@ -1,31 +1,4 @@
-"""
-Support for Streamlabs Water Monitor.
-
-This component provides sensors that return the daily, monthly, and yearly
-water usage as returned by the Streamlabs Water service. A binary sensor
-is used to indicate whether the water monitor is in the home or away mode.
-
-In addition to the sensors, a service is provided that can be used to set
-the away mode of the water monitor.
-
-The minimum configuration needed to get started is:
-
-    streamlabswater:
-      api_key: <your_api_key>
-
-where the api_key is retrieved by following the instructions at:
-https://developer.streamlabswater.com/docs/getting-started.html
-
-By default the first location found will be used. You can specify a location:
-
-    streamlabswater:
-      api_key: <your_api_key>
-      location_id: <your_location_id>
-
-The away mode service is exposed at streamlabswater.set_away_mode where the
-required parameter away_mode should be set to either home or away.
-"""
-
+"""Support for Streamlabs Water Monitor devices."""
 import logging
 
 import voluptuous as vol
@@ -75,7 +48,7 @@ def setup(hass, config):
     locations = client.get_locations().get('locations')
 
     if locations is None:
-        _LOGGER.error("Unable to retrieve locations. Verify API key.")
+        _LOGGER.error("Unable to retrieve locations. Verify API key")
         return False
 
     if location_id is None:
@@ -87,7 +60,7 @@ def setup(hass, config):
         location = next((
             l for l in locations if location_id == l['locationId']), None)
         if location is None:
-            _LOGGER.error("Supplied location_id is invalid.")
+            _LOGGER.error("Supplied location_id is invalid")
             return False
 
     location_name = location['name']

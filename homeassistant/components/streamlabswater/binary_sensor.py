@@ -16,7 +16,7 @@ NAME_AWAY_MODE = "Water Away Mode"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up away mode sensor."""
+    """Set up the StreamLabsWater mode sensor."""
     client = hass.data[STREAMLABSWATER_DOMAIN]['client']
     location_id = hass.data[STREAMLABSWATER_DOMAIN]['location_id']
     location_name = hass.data[STREAMLABSWATER_DOMAIN]['location_name']
