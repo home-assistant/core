@@ -217,11 +217,12 @@ def gather_modules():
             explore_module('homeassistant.auth', True)):
         try:
             module = importlib.import_module(package)
-        except ImportError:
+        except ImportError as err:
             for pattern in IGNORE_PACKAGES:
                 if fnmatch.fnmatch(package, pattern):
                     break
             else:
+                print("{}: {}".format(package, err))
                 errors.append(package)
             continue
 
