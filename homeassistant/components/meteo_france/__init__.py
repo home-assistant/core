@@ -31,6 +31,7 @@ SENSOR_TYPES = {
     'next_rain': ['Next rain', 'min'],
     'temperature': ['Temperature', TEMP_CELSIUS],
     'uv': ['UV', None],
+    'weather_alert': ['Weather Alert', None],
 }
 
 CONDITION_CLASSES = {

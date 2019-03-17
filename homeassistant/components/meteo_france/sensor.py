@@ -5,6 +5,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 
 from . import ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES
+REQUIREMENTS = ['vigilancemeteo==2.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,17 +21,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     monitored_conditions = discovery_info[CONF_MONITORED_CONDITIONS]
     client = hass.data[DATA_METEO_FRANCE][city]
 
-    add_entities([MeteoFranceSensor(variable, client)
+    from vigilancemeteo import ZoneAlerte
+
+    if 'weather_alert' in monitored_conditions:
+        #TODO: add link with client to retrieve the area code and pass it to ZoneAlerte
+        alert_watcher = ZoneAlerte('32')
+    else:
+        alert_watcher = None
+
+    add_entities([MeteoFranceSensor(variable, client, alert_watcher)
                   for variable in monitored_conditions], True)
 
 
 class MeteoFranceSensor(Entity):
     """Representation of a Meteo-France sensor."""
 
-    def __init__(self, condition, client):
+    def __init__(self, condition, client, alert_watcher):
         """Initialize the Meteo-France sensor."""
         self._condition = condition
         self._client = client
+        self._alert_watcher = alert_watcher
         self._state = None
         self._data = {}
 
@@ -66,8 +76,15 @@ class MeteoFranceSensor(Entity):
         try:
             self._client.update()
             self._data = self._client.get_data()
-            self._state = self._data[self._condition]
-        except KeyError:
+            
+            if self._condition == 'weather_alert':
+                self._alert_watcher.mise_a_jour_etat()
+                self._state = self._alert_watcher.synthese_couleur
+                #TODO: add attributes
+                return
+            else:
+                self._state = self._data[self._condition]
+        except KeyError: #TODO: catch weather alert error ?
             _LOGGER.error("No condition %s for location %s",
                           self._condition, self._data['name'])
             self._state = None
