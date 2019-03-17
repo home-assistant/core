@@ -73,7 +73,7 @@ def setup(hass, hass_config):
     from evohomeclient2 import EvohomeClient
 
     try:
-        client = EvohomeClient(
+        client = evo_data['client'] = EvohomeClient(
             evo_data['params'][CONF_USERNAME],
             evo_data['params'][CONF_PASSWORD],
             debug=False
@@ -115,15 +115,14 @@ def setup(hass, hass_config):
 
         return False
 
-    finally:  # Redact username, password, etc. as no longer needed
+    finally:  # Redact any config data that's no longer needed
         for parameter in CONF_SECRETS:
             evo_data['params'][parameter] = 'REDACTED' \
                 if evo_data['params'][parameter] else None
 
-    evo_data['client'] = client
     evo_data['status'] = {}
 
-    # Redact any installation data we'll never need
+    # Redact any installation data that's no longer needed
     for loc in client.installation_info:
         loc['locationInfo']['locationId'] = 'REDACTED'
         loc['locationInfo']['locationOwner'] = 'REDACTED'
@@ -133,18 +132,22 @@ def setup(hass, hass_config):
 
     # Pull down the installation configuration
     loc_idx = evo_data['params'][CONF_LOCATION_IDX]
-
     try:
         evo_data['config'] = client.installation_info[loc_idx]
+
     except IndexError:
-        _LOGGER.warning(
-            "setup(): Parameter '%s'=%s, is outside its range (0-%s)",
-            CONF_LOCATION_IDX, loc_idx, len(client.installation_info) - 1)
+        _LOGGER.error(
+            "setup(): Invalid configuration (unknown location). "
+            "Parameter '%s'=%s, is outside its valid range (0-%s). "
+            "Unable to continue. Fix any configuration errors and restart HA.",
+            CONF_LOCATION_IDX, loc_idx, len(client.installation_info) - 1
+        )
         return False
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         tmp_loc = dict(evo_data['config'])
         tmp_loc['locationInfo']['postcode'] = 'REDACTED'
+
         if 'dhw' in tmp_loc[GWS][0][TCS][0]:  # if this location has DHW...
             tmp_loc[GWS][0][TCS][0]['dhw'] = '...'
 
