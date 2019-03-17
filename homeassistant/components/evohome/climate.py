@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 
-from requests.exceptions import HTTPError
+from requests import ConnectionError, HTTPError
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -144,7 +144,7 @@ class EvoClimateDevice(ClimateDevice):
         try:
             raise err
 
-        except requests.exceptions.ConnectionError:
+        except ConnectionError:
             # this appears to be common with Honeywell's servers
             _LOGGER.warning(
                 "The vendor's web servers appear to be uncontactable, so "
@@ -153,7 +153,7 @@ class EvoClimateDevice(ClimateDevice):
             )
             return True
 
-        except requests.exceptions.HTTPError:
+        except HTTPError:
             if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
                 _LOGGER.warning(
                     "The vendor's API rate limit has been exceeded, so unable"
@@ -565,7 +565,7 @@ class EvoController(EvoClimateDevice):
         try:
             self._status.update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])
-        except HTTPError as err:  # check if we've exceeded the api rate limit
+        except HTTPError as err:
             self._handle_exception(err)
         else:
             self._timers['statusUpdated'] = datetime.now()
