@@ -21,7 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['evohomeclient==0.2.8']
+REQUIREMENTS = ['evohomeclient==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
