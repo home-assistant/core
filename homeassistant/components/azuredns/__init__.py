@@ -69,18 +69,19 @@ async def async_setup(hass, config):
                host +
                '?api-version=2018-05-01')
 
-    session = async_get_clientsession(hass)
+    async_get_clientsession(hass)
 
-    result = await _update_azuredns(session, resource, tenant,
+    result = await _update_azuredns(resource, tenant,
                                     clientid, clientsecret,
                                     authority_url, api_url, timeout, ttl)
 
     if not result:
+        _LOGGER.error("Failed to update Azure DNS record.")
         return False
 
-    async def update_domain_interval(now):
+    async def update_domain_interval():
         """Update the Azure DNS entry."""
-        await _update_azuredns(session, resource, tenant,
+        await _update_azuredns(resource, tenant,
                                clientid, clientsecret, authority_url,
                                api_url, timeout, ttl)
 
@@ -88,7 +89,7 @@ async def async_setup(hass, config):
     return result
 
 
-async def _update_azuredns(session, resource, tenant,
+async def _update_azuredns(resource, tenant,
                            clientid, clientsecret, authority_url,
                            api_url, timeout, ttl):
     """Update the Azure DNS Record with the external IP address."""
@@ -115,6 +116,11 @@ async def _update_azuredns(session, resource, tenant,
 
     access_token = token.get('accessToken')
 
+    if not access_token:
+        _LOGGER.error("Failed to acquire Azure AD Access Token.")
+    else:
+        _LOGGER.debug("Azure AD App Token was acquired.")
+
     # Get the external IP address of the Home Assistant instance.
     aiotimeout = aiohttp.ClientTimeout(total=timeout)
 
@@ -122,7 +128,10 @@ async def _update_azuredns(session, resource, tenant,
         async with aiosession.get('https://api.ipify.org') as aioresp:
             ipv4address = (await aioresp.text())
 
-    _LOGGER.debug("External IP address is: %s", ipv4address)
+    if not ipv4address:
+        _LOGGER.error("Failed to get external IP address from ipify API")
+    else:
+        _LOGGER.debug("External IP address is: %s", ipv4address)
 
     # Create a PATCH request with the Azure Resource Manager REST API.
     headers = {
@@ -145,10 +154,18 @@ async def _update_azuredns(session, resource, tenant,
     }
 
     try:
-        requests.patch(url, json=payload,
-                       headers=headers, timeout=timeout).json()
-        return True
+        result = requests.patch(url, json=payload,
+                                headers=headers, timeout=timeout).json()
+
+        configured_ipv4address = result['properties']['ARecords'][0]['ipv4Address']
+
+        if ipv4address == configured_ipv4address:
+            _LOGGER.debug("IP address in Azure DNS configured correctly to %s.", ipv4address)
+            return True
+        else:
+            _LOGGER.error("External IP address %s does not match IP address from Azure DNS %s",
+                          ipv4address, configured_ipv4address)
 
     except requests.exceptions.RequestException as errormessage:
-        _LOGGER.error(errormessage)
+        _LOGGER.error("Azure DNS patch request failed: %s", errormessage)
         return False
