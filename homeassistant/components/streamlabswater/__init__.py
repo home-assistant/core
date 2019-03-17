@@ -75,6 +75,7 @@ def setup(hass, config):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def set_away_mode(service):
+        """Set the StreamLabsWater Away Mode."""
         away_mode = service.data.get(ATTR_AWAY_MODE)
         client.update_location(location_id, away_mode)
 
