@@ -8,7 +8,8 @@ import unittest
 
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.event import track_state_change
-from homeassistant.components.imap_email_content import sensor as imap_email_content
+from homeassistant.components.imap_email_content \
+    import sensor as imap_email_content
 
 from tests.common import get_test_home_assistant
 

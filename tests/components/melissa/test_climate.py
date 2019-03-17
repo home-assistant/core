@@ -391,8 +391,9 @@ async def test_hass_mode_to_melissa(hass):
 
 async def test_hass_fan_to_melissa(hass):
     """Test for translate melissa states to hass."""
-    with patch('homeassistant.components.melissa.climate._LOGGER.warning'
-                ) as mocked_warning:
+    with patch(
+            'homeassistant.components.melissa.climate._LOGGER.warning'
+            ) as mocked_warning:
         with patch('homeassistant.components.melissa'):
             api = melissa_mock()
             device = (await api.async_fetch_devices())[_SERIAL]
