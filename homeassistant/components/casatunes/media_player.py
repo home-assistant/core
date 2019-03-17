@@ -1,25 +1,28 @@
 """
-Support for interfacing with CasaTunes devices
+Support for interfacing with CasaTunes devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.casatunes/
 """
-import logging
 import asyncio
-import requests
+import logging
+
 import aiohttp
 import voluptuous as vol
-import homeassistant.util.dt as dt_util
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
-    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP)
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
+    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_NEXT_TRACK,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_PLAY, SUPPORT_PAUSE,
+    SUPPORT_STOP)
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_CLOSED)
-import homeassistant.helpers.config_validation as cv
+    CONF_HOST, CONF_PORT, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON,
+    STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,11 +31,11 @@ DEFAULT_NAME = 'CasaTunes'
 DEFAULT_PORT = 8735
 DEFAULT_TIMEOUT = 10
 
-SUPPORT_CT_ZONE = SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
-                  SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
+SUPPORT_CT_ZONE = SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF | \
+                  SUPPORT_TURN_ON | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
 
-SUPPORT_CT_PLAYER = SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SEEK | \
-                    SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP
+SUPPORT_CT_PLAYER = SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | \
+                    SUPPORT_SEEK | SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -51,19 +54,22 @@ async def _async_request(hass, url, params=None, json=True):
             else:
                 return await response.text()
         else:
-            return {'error': 'Code - {}, {}: '.format(response.status, response)}
+            return {'error': 'Code - {}, {}: '.format(response.status,
+                                                      response)}
 
     except (asyncio.TimeoutError, aiohttp.ClientError) as error:
         return {'error': type(error)}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the CasaTunes platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
     url = 'http://{}:{}/api/v1/'.format(host, port)
-    service_logo_prefix_url = 'http://{}/CasaTunes/GetImage.ashx?ID='.format(host)
+    service_logo_tpl = 'http://{}/CasaTunes/GetImage.ashx?ID='
+    service_logo_prefix_url = service_logo_tpl.format(host)
 
     sources = await _async_request(hass, url + 'sources', {'format': 'json'})
     zones = await _async_request(hass, url + 'zones', {'format': 'json'})
@@ -80,16 +86,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for zone in zones:
         try:
-            iterator = iter(zone)
-            zone_devices.append(CasaTunesZone(hass, zone, url, sources))
+            zone = CasaTunesZone(hass, zone, url, sources)
+            zone_devices.append(zone)
         except TypeError:
             _LOGGER.error("Zone is not iterable - %s", zone)
 
     for source in sources:
         try:
-            iterator = iter(source)
             if not source.get('Hidden'):
-                player_devices.append(CasaTunesPlayer(hass, source, url, service_logo_prefix_url))
+                player = CasaTunesPlayer(hass, source, url,
+                                         service_logo_prefix_url)
+                player_devices.append(player)
         except TypeError:
             _LOGGER.error("Source is not iterable - %s", source)
 
@@ -127,8 +134,10 @@ class CasaTunesPlayer(MediaPlayerDevice):
             self._set_now_playing_dict(response)
 
     async def _set_property(self, prop, value):
-        """Send a command to CasaTunes"""
-        response = await _async_request(self._hass, self._url_now_playing, {prop: value, 'format': 'json'})
+        """Send a command to CasaTunes."""
+        props = {prop: value, 'format': 'json'}
+        response = await _async_request(self._hass, self._url_now_playing,
+                                        props)
         if response is None or 'error' in response:
             _LOGGER.error("Operation (%s, %s) unsuccessful: %s", prop, value,
                           response.get('error') if response else 'unknown')
@@ -136,7 +145,7 @@ class CasaTunesPlayer(MediaPlayerDevice):
             self._set_now_playing_dict(response)
 
     async def _send_action(self, action):
-        """Send an action to CasaTunes"""
+        """Send an action to CasaTunes."""
         url = '{}/player/{}'.format(self._url, action)
         response = await _async_request(self._hass, url, json=False)
         if response is None or 'error' in response:
@@ -148,7 +157,7 @@ class CasaTunesPlayer(MediaPlayerDevice):
             _LOGGER.error("Player action unknown response: %s", response)
 
     def _set_now_playing_dict(self, now_playing):
-        """Update now playing and timestamp"""
+        """Update now playing and timestamp."""
         self._media_last_updated = dt_util.utcnow()
         self._now_playing.update(now_playing)
 
@@ -267,7 +276,8 @@ class CasaTunesPlayer(MediaPlayerDevice):
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
-        await self._set_property('ShuffleMode', 'true' if shuffle else 'false')
+        str_flag = 'true' if shuffle else 'false'
+        await self._set_property('ShuffleMode', str_flag)
 
 
 class CasaTunesZone(MediaPlayerDevice):
@@ -285,13 +295,15 @@ class CasaTunesZone(MediaPlayerDevice):
         """Get the latest details."""
         response = await _async_request(self._hass, self._url)
         if response is None or 'error' in response:
-            _LOGGER.error("Update unsuccessful: %s", response.get('error') if response else 'unknown')
+            msg = response.get('error') if response else 'unknown'
+            _LOGGER.error("Update unsuccessful: %s", msg)
         else:
             self._zone.update(response)
 
     async def _set_property(self, prop, value):
-        """Send a command to CasaTunes"""
-        response = await _async_request(self._hass, self._url, {prop: value, 'format': 'json'})
+        """Send a command to CasaTunes."""
+        props = {prop: value, 'format': 'json'}
+        response = await _async_request(self._hass, self._url, props)
 
         if response is None or 'error' in response:
             _LOGGER.error("Operation (%s, %s) unsuccessful: %s", prop, value,
@@ -340,7 +352,8 @@ class CasaTunesZone(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return [source.get('Name') for source in self._sources if not source.get('Hidden', False)]
+        return [source.get('Name') for source in self._sources
+                if not source.get('Hidden', False)]
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -362,4 +375,5 @@ class CasaTunesZone(MediaPlayerDevice):
         """Select input source."""
         for source_item in self._sources:
             if source_item.get('Name') == source:
-                await self._set_property('SourceID', source_item.get('SourceID'))
+                source_id = source_item.get('SourceID')
+                await self._set_property('SourceID', source_id)
