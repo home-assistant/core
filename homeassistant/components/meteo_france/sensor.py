@@ -10,6 +10,7 @@ REQUIREMENTS = ['vigilancemeteo==2.0.0']
 _LOGGER = logging.getLogger(__name__)
 
 STATE_ATTR_FORECAST = '1h rain forecast'
+STATE_ATTR_BULLETIN_TIME = 'Date du bulletin'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -24,8 +25,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from vigilancemeteo import ZoneAlerte
 
     if 'weather_alert' in monitored_conditions:
-        #TODO: add link with client to retrieve the area code and pass it to ZoneAlerte
-        alert_watcher = ZoneAlerte('32')
+        # TODO: add link with client to retrieve the area code and pass it to ZoneAlerte
+        alert_watcher = ZoneAlerte('02')
     else:
         alert_watcher = None
 
@@ -64,6 +65,23 @@ class MeteoFranceSensor(Entity):
                 ** self._data['next_rain_intervals'],
                 **{ATTR_ATTRIBUTION: ATTRIBUTION}
             }
+        elif self._condition == 'weather_alert':
+            from vigilancemeteo import ZoneAlerte
+
+            alert_type_list = {}
+            # Create one attribute for each weather alert type.
+            for alert_type in ZoneAlerte.LISTE_TYPE_ALERTE:
+                if alert_type in self._alert_watcher.liste_alertes:
+                    alert_type_list[alert_type] = self._alert_watcher.liste_alertes[alert_type]
+                else:
+                    alert_type_list[alert_type] = 'Vert'
+
+            return {
+                **{STATE_ATTR_BULLETIN_TIME: self._alert_watcher.date_mise_a_jour},
+                ** alert_type_list,
+                ATTR_ATTRIBUTION: ATTRIBUTION
+            }
+
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
@@ -76,15 +94,14 @@ class MeteoFranceSensor(Entity):
         try:
             self._client.update()
             self._data = self._client.get_data()
-            
+
             if self._condition == 'weather_alert':
                 self._alert_watcher.mise_a_jour_etat()
                 self._state = self._alert_watcher.synthese_couleur
-                #TODO: add attributes
                 return
             else:
                 self._state = self._data[self._condition]
-        except KeyError: #TODO: catch weather alert error ?
+        except KeyError: # TODO: catch weather alert error ?
             _LOGGER.error("No condition %s for location %s",
                           self._condition, self._data['name'])
             self._state = None
