@@ -4,7 +4,6 @@ This platform enables the possibility to control a MQTT alarm.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.mqtt/
 """
-import json
 import logging
 import re
 
@@ -31,12 +30,13 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CODE_ARM_REQUIRED = 'code_arm_required'
 CONF_CODE_DISARM_REQUIRED = 'code_disarm_required'
-CONF_PUBLISH_CODE = 'publish_code'
 CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
 CONF_PAYLOAD_ARM_NIGHT = 'payload_arm_night'
+CONF_COMMAND_TEMPLATE = 'command_template'
 
+DEFAULT_COMMAND_TEMPLATE = '{{action}}'
 DEFAULT_ARM_NIGHT = 'ARM_NIGHT'
 DEFAULT_ARM_AWAY = 'ARM_AWAY'
 DEFAULT_ARM_HOME = 'ARM_HOME'
@@ -54,11 +54,11 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
     vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
-    vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_CODE_DISARM_REQUIRED, default=True): cv.boolean,
-    vol.Optional(CONF_PUBLISH_CODE, default=False): cv.boolean,
+    vol.Optional(CONF_COMMAND_TEMPLATE, default=DEFAULT_COMMAND_TEMPLATE): cv.template,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
@@ -104,6 +104,13 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
+        self._templates = None
+
+        self._templates = {
+            key: config.get(key) for key in (
+                CONF_COMMAND_TEMPLATE,
+            )
+        }
 
         device_config = config.get(CONF_DEVICE)
 
@@ -130,6 +137,10 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+        for tpl in self._templates.values():
+            if tpl is not None:
+                tpl.hass = self.hass
+
         @callback
         def message_received(topic, payload, qos):
             """Run when new MQTT message has been received."""
@@ -185,7 +196,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if isinstance(code, str) and re.search('^\\d+$', code):
             return alarm.FORMAT_NUMBER
         return alarm.FORMAT_TEXT
-    
+
     async def async_alarm_disarm(self, code=None):
         """Send disarm command.
 
@@ -205,8 +216,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
         if code_required and not self._validate_code(code, 'arming home'):
             return
-        payload = self._config.get(CONF_PAYLOAD_ARM_HOME)
-        self._publish(code, payload)
+        action = self._config.get(CONF_PAYLOAD_ARM_HOME)
+        self._publish(code, action)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command.
@@ -216,8 +227,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
         if code_required and not self._validate_code(code, 'arming away'):
             return
-        payload = self._config.get(CONF_PAYLOAD_ARM_AWAY)
-        self._publish(code, payload)
+        action = self._config.get(CONF_PAYLOAD_ARM_AWAY)
+        self._publish(code, action)
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command.
@@ -227,14 +238,14 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
         if code_required and not self._validate_code(code, 'arming night'):
             return
-        payload = self._config.get(CONF_PAYLOAD_ARM_NIGHT)
-        self._publish(code, payload)
+        action = self._config.get(CONF_PAYLOAD_ARM_AWAY)
+        self._publish(code, action)
 
-    def _publish(self, code, payload):
+    def _publish(self, code, action):
         """Publish via mqtt."""
-        publish_code = self._config.get(CONF_PUBLISH_CODE)
-        if publish_code:
-            payload = json.dumps({"action": payload, "code": code})
+        values = {'action': action}
+        values['code'] = code
+        payload = self._templates[CONF_COMMAND_TEMPLATE].async_render(**values)
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             payload,
