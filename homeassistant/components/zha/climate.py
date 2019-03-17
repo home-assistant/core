@@ -122,9 +122,11 @@ async def _async_setup_entities(hass, config_entry, async_add_entities,
 
 async def get_climate(discovery_info):
     """Create ZHA climate entity."""
-    manufacturer = discovery_info.get('manufacturer', '')
-    if manufacturer.startswith('Sinope Technologies'):
-        thermostat = SinopeTechnologiesThermostat(**discovery_info)
+    zha_dev = discovery_info.get('zha_device')
+    if zha_dev is not None:
+        manufacturer = zha_dev.manufacturer
+        if manufacturer.startswith('Sinope Technologies'):
+            thermostat = SinopeTechnologiesThermostat(**discovery_info)
     else:
         thermostat = Thermostat(**discovery_info)
 
@@ -282,8 +284,7 @@ class Thermostat(ZhaEntity, ClimateDevice):
             else:
                 temp = self._thrm.occupied_cooling_setpoint / ZCL_TEMP
             return round(temp, 1)
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_low(self):
@@ -294,8 +295,7 @@ class Thermostat(ZhaEntity, ClimateDevice):
             else:
                 temp = self._thrm.occupied_heating_setpoint / ZCL_TEMP
             return round(temp, 1)
-        else:
-            return None
+        return None
 
     @property
     def temperature_unit(self):
@@ -321,39 +321,38 @@ class Thermostat(ZhaEntity, ClimateDevice):
         if operation_mode is not None:
             await self.async_set_operation_mode(operation_mode)
 
-        success = False
+        thrm = self._thrm
         if self.current_operation == STATE_AUTO:
-            if low_temp is None:
-                low_temp = self.min_temp
-            if high_temp is None:
-                high_temp = self.max_temp
-            low_temp = int(low_temp * ZCL_TEMP)
-            high_temp = int(high_temp * ZCL_TEMP)
-            success = await self._thrm.async_set_cooling_setpoint(
-                high_temp, self.is_away_mode_on)
-            success = success and await self._thrm.async_set_heating_setpoint(
-                low_temp, self.is_away_mode_on)
+            success = True
+            if low_temp is not None:
+                low_temp = int(low_temp * ZCL_TEMP)
+                success = success and await thrm.async_set_heating_setpoint(
+                    low_temp, self.is_away_mode_on)
+            if high_temp is not None:
+                high_temp = int(high_temp * ZCL_TEMP)
+                success = success and await thrm.async_set_cooling_setpoint(
+                    high_temp, self.is_away_mode_on)
         elif temp is not None:
-            high_temp = low_temp = int(temp * ZCL_TEMP)
-            if self.current_operation == STATE_COOL:
-               success = await self._thrm.async_set_cooling_setpoint(
-                   low_temp, self.is_away_mode_on
-               )
-            elif self.current_operation == STATE_HEAT:
-                success = await self._thrm.async_set_heating_setpoint(
-                    high_temp, self.is_away_mode_on
+            temp = int(temp * ZCL_TEMP)
+            success = True
+            if STATE_COOL in self.operation_list:
+                success = success and await thrm.async_set_cooling_setpoint(
+                    temp, self.is_away_mode_on
+                )
+            elif STATE_HEAT in self.operation_list:
+                success = success and await thrm.async_set_heating_setpoint(
+                    temp, self.is_away_mode_on
                 )
             if success:
-                self._target_temp = temp
+                self._target_temp = temp / ZCL_TEMP
         else:
             _LOGGER.error(
                 'Missing valid argument for set_temperature in %s', kwargs)
             return
 
-        if not success:
-            return
-
-        self.async_schedule_update_ha_state()
+        if success:
+            self.async_schedule_update_ha_state()
+        return
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
@@ -412,9 +411,9 @@ class SinopeTechnologiesThermostat(Thermostat):
     async def async_added_to_hass(self):
         """Run when about to be added to Hass."""
         await super().async_added_to_hass()
-        async_track_time_interval(self.hass, self._async_update_time,
-                                  self.update_time_interval)
-        async_call_later(self.hass, randint(30, 45), self._async_update_time)
+        #async_track_time_interval(self.hass, self._async_update_time,
+        #                          self.update_time_interval)
+        #async_call_later(self.hass, randint(30, 45), self._async_update_time)
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
