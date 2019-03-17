@@ -44,6 +44,9 @@ MOCK_DATA = {
 MOCK_UDP_PORT = int(987)
 MOCK_TCP_PORT = int(997)
 
+MOCK_AUTO = {"Config Mode": 'Auto Discover'}
+MOCK_MANUAL = {"Config Mode": 'Manual Entry', CONF_IP_ADDRESS: MOCK_HOST}
+
 
 async def test_full_flow_implementation(hass):
     """Test registering an implementation and flow works."""
@@ -58,12 +61,17 @@ async def test_full_flow_implementation(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'creds'
 
-    # Step Creds results with form in Step Link.
+    # Step Creds results with form in Step Mode.
     with patch('pyps4_homeassistant.Helper.get_creds',
-               return_value=MOCK_CREDS), \
-            patch('pyps4_homeassistant.Helper.has_devices',
-                  return_value=[{'host-ip': MOCK_HOST}]):
+               return_value=MOCK_CREDS):
         result = await flow.async_step_creds({})
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'mode'
+
+    # Step Mode with User Input which is not manual, results in Step Link.
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': MOCK_HOST}]):
+        result = await flow.async_step_mode(user_input=MOCK_AUTO)
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'link'
 
@@ -104,13 +112,18 @@ async def test_multiple_flow_implementation(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'creds'
 
-    # Step Creds results with form in Step Link.
+    # Step Creds results with form in Step Mode.
     with patch('pyps4_homeassistant.Helper.get_creds',
-               return_value=MOCK_CREDS), \
-            patch('pyps4_homeassistant.Helper.has_devices',
-                  return_value=[{'host-ip': MOCK_HOST},
-                                {'host-ip': MOCK_HOST_ADDITIONAL}]):
+               return_value=MOCK_CREDS):
         result = await flow.async_step_creds({})
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'mode'
+
+    # Step Mode with User Input which is not manual, results in Step Link.
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': MOCK_HOST},
+                             {'host-ip': MOCK_HOST_ADDITIONAL}]):
+        result = await flow.async_step_mode(user_input=MOCK_AUTO)
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'link'
 
@@ -142,13 +155,18 @@ async def test_multiple_flow_implementation(hass):
 
     # Test additional flow.
 
-    # User Step Started, results in Step Link:
+    # User Step Started, results in Step Mode:
     with patch('pyps4_homeassistant.Helper.port_bind',
                return_value=None), \
             patch('pyps4_homeassistant.Helper.has_devices',
                   return_value=[{'host-ip': MOCK_HOST},
                                 {'host-ip': MOCK_HOST_ADDITIONAL}]):
         result = await flow.async_step_user()
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'mode'
+
+    # Step Mode with User Input which is not manual, results in Step Link.
+    result = await flow.async_step_mode(user_input=MOCK_AUTO)
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'link'
 
@@ -294,3 +312,17 @@ async def test_device_connection_error(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'link'
     assert result['errors'] == {'base': 'not_ready'}
+
+
+async def test_manual_mode(hass):
+    """Test host specified in manual mode is passed to Step Link."""
+    flow = ps4.PlayStation4FlowHandler()
+    flow.hass = hass
+
+    # Step Mode with User Input: manual, results in Step Link.
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': flow.m_device}]):
+        result = await flow.async_step_mode(user_input=MOCK_MANUAL)
+    assert flow.m_device == MOCK_HOST
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'link'
