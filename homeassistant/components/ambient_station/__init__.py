@@ -317,7 +317,6 @@ class AmbientStation:
             async_call_later(
                 self._hass, self._ws_reconnect_delay, self.ws_connect)
 
-
     async def ws_connect(self):
         """Register handlers and connect to the websocket."""
         async def _ws_reconnect(event_time):
