@@ -1,6 +1,12 @@
-"""Support for MyQ-Enabled Garage Doors."""
-import logging
+"""
+Support for MyQ-Enabled Garage Doors.
 
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/cover.myq/
+"""
+import aiohttp
+import logging
+import socket
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -10,7 +16,8 @@ from homeassistant.const import (
     STATE_OPEN, STATE_OPENING)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-REQUIREMENTS = ['pymyq==1.1.0']
+REQUIREMENTS = ['aiohttp',
+                'pymyq==1.1.0']
 _LOGGER = logging.getLogger(__name__)
 
 MYQ_TO_HASS = {
@@ -33,7 +40,17 @@ async def async_setup_platform(
     from pymyq import login
     from pymyq.errors import MyQError, UnsupportedBrandError
 
-    websession = aiohttp_client.async_get_clientsession(hass)
+    # websession = aiohttp_client.async_get_clientsession(hass)
+
+    # Specify socket
+    conn = aiohttp.TCPConnector(
+        family=socket.AF_INET,
+        verify_ssl=True,
+    )
+
+    session_timeout = aiohttp.ClientTimeout(connect=10)
+    websession = aiohttp.ClientSession(connector=conn,
+                                       timeout=session_timeout)
 
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
