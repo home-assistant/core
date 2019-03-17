@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA)
-from homeassistant.components.sensor.command_line import CommandSensorData
+from homeassistant.components.command_line.sensor import CommandSensorData
 from homeassistant.const import (
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_NAME, CONF_VALUE_TEMPLATE,
     CONF_COMMAND, CONF_DEVICE_CLASS)

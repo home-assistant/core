@@ -11,7 +11,7 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA)
-from homeassistant.components.sensor.rest import RestData
+from homeassistant.components.rest.sensor import RestData
 from homeassistant.const import (
     CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
     CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT,
