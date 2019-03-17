@@ -6,9 +6,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
 
+import asyncio
+import logging
 from . import DOMAIN as HEOS_DOMAIN
 
 DEPENDENCIES = ['heos']
@@ -17,19 +17,32 @@ SUPPORT_HEOS = SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_PAUSE | \
         SUPPORT_PLAY_MEDIA | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
         SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
 
-SIGNAL_HEOS_UPDATE = 'heos_update'
-
 PLAY_STATE_TO_STATE = {
     'play': STATE_PLAYING,
     'pause': STATE_PAUSED,
     'stop': STATE_OFF
 }
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discover_info=None):
     """Set up the HEOS platform."""
-    players = hass.data[HEOS_DOMAIN][DOMAIN]
+    controller = hass.data[HEOS_DOMAIN][DOMAIN]
+    try:
+        await asyncio.wait_for(
+            _heos_setup(controller, async_add_devices),
+            timeout=5.0)
+    except asyncio.TimeoutError:
+        _LOGGER.error('Timeout during setup.')
+
+
+async def _heos_setup(controller, async_add_devices):
+    """HEOS initial setup"""
+    await controller.connect()
+
+    players = controller.get_players()
     devices = [HeosMediaPlayer(p) for p in players]
     async_add_devices(devices, True)
 
@@ -41,10 +54,10 @@ class HeosMediaPlayer(MediaPlayerDevice):
         """Initialize."""
         self._player = player
         self._dispatcher_remove = None
-        self._player.state_change_callback = self._update_state
+        self._player.state_change_callback = None
 
     def _update_state(self):
-        async_dispatcher_send(self.hass, SIGNAL_HEOS_UPDATE, self.unique_id)
+        self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Update the player."""
@@ -52,18 +65,8 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Device added to hass."""
-        async def async_update_state(unique_id):
-            """Update device state."""
-            if self.unique_id == unique_id:
-                await self.async_update_ha_state()
-
-        self._dispatcher_remove = async_dispatcher_connect(
-            self.hass, SIGNAL_HEOS_UPDATE, async_update_state)
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect the device when removed."""
-        if self._dispatcher_remove:
-            self._dispatcher_remove()
+        self._player.state_change_callback = self._update_state
+        await self.async_update_ha_state()
 
     @property
     def unique_id(self):

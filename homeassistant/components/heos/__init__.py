@@ -25,7 +25,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     host = config[DOMAIN][CONF_HOST]
     controller = AioHeosController(hass.loop, host)
-    await controller.connect()
 
     async def controller_close(event):
         """Close connection when HASS shutsdown."""
@@ -33,7 +32,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller_close)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] = controller.get_players()
+    hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] = controller
 
     hass.async_create_task(async_load_platform(
         hass, MEDIA_PLAYER_DOMAIN, DOMAIN, {}, config))
