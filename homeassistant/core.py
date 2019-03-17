@@ -1180,7 +1180,7 @@ class Config:
         # List of loaded components
         self.components = set()  # type: set
 
-        # API (HTTP) server configuration
+        # API (HTTP) server configuration, see components.http.ApiConfig
         self.api = None  # type: Optional[Any]
 
         # Directory that holds the configuration

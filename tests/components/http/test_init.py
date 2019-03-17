@@ -143,15 +143,13 @@ async def test_api_base_url_removes_trailing_slash(hass):
 async def test_not_log_password(hass, aiohttp_client, caplog, legacy_auth):
     """Test access with password doesn't get logged."""
     assert await async_setup_component(hass, 'api', {
-        'http': {
-            http.CONF_API_PASSWORD: 'some-pass'
-        }
+        'http': {}
     })
     client = await aiohttp_client(hass.http.app)
     logging.getLogger('aiohttp.access').setLevel(logging.INFO)
 
     resp = await client.get('/api/', params={
-        'api_password': 'some-pass'
+        'api_password': 'test-password'
     })
 
     assert resp.status == 200

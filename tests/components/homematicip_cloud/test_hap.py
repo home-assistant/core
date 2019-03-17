@@ -68,7 +68,7 @@ async def test_hap_setup_works(aioclient_mock):
         assert await hap.async_setup() is True
 
     assert hap.home is home
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 7
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 8
     assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == \
         (entry, 'alarm_control_panel')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == \
@@ -111,10 +111,10 @@ async def test_hap_reset_unloads_entry_if_setup():
 
     assert hap.home is home
     assert len(hass.services.async_register.mock_calls) == 0
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 7
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 8
 
     hass.config_entries.async_forward_entry_unload.return_value = \
         mock_coro(True)
     await hap.async_reset()
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 7
+    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 8

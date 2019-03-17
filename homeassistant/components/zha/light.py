@@ -4,9 +4,12 @@ Lights on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/light.zha/
 """
+from datetime import timedelta
 import logging
 
 from homeassistant.components import light
+from homeassistant.const import STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 from .const import (
@@ -26,6 +29,7 @@ CAPABILITIES_COLOR_XY = 0x08
 CAPABILITIES_COLOR_TEMP = 0x10
 
 UNSUPPORTED_ATTRIBUTE = 0x86
+SCAN_INTERVAL = timedelta(minutes=60)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -93,6 +97,11 @@ class Light(ZhaEntity, light.Light):
                 self._hs_color = (0, 0)
 
     @property
+    def should_poll(self) -> bool:
+        """Poll state from device."""
+        return True
+
+    @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
         if self._state is None:
@@ -148,6 +157,17 @@ class Light(ZhaEntity, light.Light):
         if self._level_channel:
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level)
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = last_state.state == STATE_ON
+        if 'brightness' in last_state.attributes:
+            self._brightness = last_state.attributes['brightness']
+        if 'color_temp' in last_state.attributes:
+            self._color_temp = last_state.attributes['color_temp']
+        if 'hs_color' in last_state.attributes:
+            self._hs_color = last_state.attributes['hs_color']
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
@@ -217,3 +237,13 @@ class Light(ZhaEntity, light.Light):
             return
         self._state = False
         self.async_schedule_update_ha_state()
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the light."""
+        await super().async_update()
+        if self._on_off_channel:
+            self._state = await self._on_off_channel.get_attribute_value(
+                'on_off')
+        if self._level_channel:
+            self._brightness = await self._level_channel.get_attribute_value(
+                'current_level')

@@ -7,8 +7,10 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.http import (
-    CONF_API_PASSWORD, CONF_SERVER_HOST, CONF_SERVER_PORT,
-    CONF_SSL_CERTIFICATE)
+    CONF_SERVER_HOST,
+    CONF_SERVER_PORT,
+    CONF_SSL_CERTIFICATE,
+)
 from homeassistant.const import CONF_TIME_ZONE, SERVER_PORT
 
 from .const import X_HASSIO
@@ -125,7 +127,6 @@ class HassIO:
         options = {
             'ssl': CONF_SSL_CERTIFICATE in http_config,
             'port': port,
-            'password': http_config.get(CONF_API_PASSWORD),
             'watchdog': True,
             'refresh_token': refresh_token,
         }

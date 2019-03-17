@@ -31,10 +31,10 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     for dev_id, topic in devices.items():
         @callback
-        def async_message_received(topic, payload, qos, dev_id=dev_id):
+        def async_message_received(msg, dev_id=dev_id):
             """Handle received MQTT message."""
             hass.async_create_task(
-                async_see(dev_id=dev_id, location_name=payload))
+                async_see(dev_id=dev_id, location_name=msg.payload))
 
         await mqtt.async_subscribe(
             hass, topic, async_message_received, qos)

@@ -1,6 +1,7 @@
 """Provide a way to connect entities belonging to one device."""
 import logging
 import uuid
+from typing import List, Optional
 
 from collections import OrderedDict
 
@@ -69,6 +70,11 @@ class DeviceRegistry:
         self.hass = hass
         self.devices = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+
+    @callback
+    def async_get(self, device_id: str) -> Optional[DeviceEntry]:
+        """Get device."""
+        return self.devices.get(device_id)
 
     @callback
     def async_get_device(self, identifiers: set, connections: set):
@@ -280,3 +286,11 @@ async def async_get_registry(hass) -> DeviceRegistry:
         task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
 
     return await task
+
+
+@callback
+def async_entries_for_area(registry: DeviceRegistry, area_id: str) \
+        -> List[DeviceEntry]:
+    """Return entries that match an area."""
+    return [device for device in registry.devices.values()
+            if device.area_id == area_id]
