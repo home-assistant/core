@@ -1292,6 +1292,9 @@ pyspcwebgw==0.4.0
 # homeassistant.components.notify.stride
 pystride==0.1.7
 
+# homeassistant.components.supla
+pysupla==0.0.1
+
 # homeassistant.components.syncthru.sensor
 pysyncthru==0.3.1
 
