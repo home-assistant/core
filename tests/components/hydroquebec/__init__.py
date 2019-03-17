@@ -1,6 +1,1 @@
-"""Tests for the hydroquebec component.
-
-    For more details about this component, please refer to the documentation at
-    https://home-assistant.io/components/hydroquebec/
-    """
-    
+"""Tests for the hydroquebec component."""

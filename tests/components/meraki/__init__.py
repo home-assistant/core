@@ -1,6 +1,1 @@
-"""Tests for the meraki component.
-
-    For more details about this component, please refer to the documentation at
-    https://home-assistant.io/components/meraki/
-    """
-    
+"""Tests for the meraki component."""

@@ -1,6 +1,1 @@
-"""The blackbird component.
-
-    For more details about this component, please refer to the documentation at
-    https://home-assistant.io/components/blackbird/
-    """
-    
+"""The blackbird component."""

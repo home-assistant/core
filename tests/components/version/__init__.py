@@ -1,6 +1,1 @@
-"""Tests for the version component.
-
-    For more details about this component, please refer to the documentation at
-    https://home-assistant.io/components/version/
-    """
-    
+"""Tests for the version component."""

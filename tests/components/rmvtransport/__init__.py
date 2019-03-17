@@ -1,6 +1,1 @@
-"""Tests for the rmvtransport component.
-
-    For more details about this component, please refer to the documentation at
-    https://home-assistant.io/components/rmvtransport/
-    """
-    
+"""Tests for the rmvtransport component."""

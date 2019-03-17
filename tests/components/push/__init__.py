@@ -1,6 +1,1 @@
-"""Tests for the push component.
-
-    For more details about this component, please refer to the documentation at
-    https://home-assistant.io/components/push/
-    """
-    
+"""Tests for the push component."""

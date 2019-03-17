@@ -1,6 +1,1 @@
-"""Tests for the yamaha component.
-
-    For more details about this component, please refer to the documentation at
-    https://home-assistant.io/components/yamaha/
-    """
-    
+"""Tests for the yamaha component."""
