@@ -89,8 +89,7 @@ class GrowattPlant(Entity):
             ).format(metric_name)
             logging.error(message)
             raise ValueError(message)
-        else:
-            return multiplier_lookup[metric_name]
+        return multiplier_lookup[metric_name]
 
 
 class GrowattPlantTotals(GrowattPlant):
