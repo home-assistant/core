@@ -75,11 +75,19 @@ def setup(hass, hass_config):
             debug=False
         )
 
+    except ConnectionError:
+        _LOGGER.error(
+            "setup(): Failed to connect with the vendor's web servers. "
+            "The server is not contactable (maybe the vendor's fault?). "
+            "Unable to continue. Resolve any errors and restart HA."
+        )
+        raise  # Expose the actual error to the user
+
     except HTTPError as err:
         if err.response.status_code == HTTP_BAD_REQUEST:
             _LOGGER.error(
                 "setup(): Failed to connect with the vendor's web servers. "
-                "Check your username (%s), and password are correct."
+                "Check your username (%s), and password are correct. "
                 "Unable to continue. Resolve any errors and restart HA.",
                 evo_data['params'][CONF_USERNAME]
             )
@@ -87,15 +95,15 @@ def setup(hass, hass_config):
         elif err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
             _LOGGER.error(
                 "setup(): Failed to connect with the vendor's web servers. "
-                "The server is not contactable. Unable to continue. "
-                "Resolve any errors and restart HA."
+                "The vendor says the server is currently unavailable. "
+                "Unable to continue. Wait a while and restart HA."
             )
 
         elif err.response.status_code == HTTP_TOO_MANY_REQUESTS:
             _LOGGER.error(
                 "setup(): Failed to connect with the vendor's web servers. "
-                "You have exceeded the api rate limit. Unable to continue. "
-                "Wait a while (say 10 minutes) and restart HA."
+                "The vendor's API rate limit has been exceeded. "
+                "Unable to continue. Wait a while and restart HA."
             )
 
         else:
@@ -138,6 +146,11 @@ def setup(hass, hass_config):
         _LOGGER.debug("setup(): evo_data['config']=%s", tmp_loc)
 
     load_platform(hass, 'climate', DOMAIN, {}, hass_config)
+
+    if 'dhw' in evo_data['config'][GWS][0][TCS][0]:
+        _LOGGER.warning(
+            "setup(): DHW found, but this component doesn't support DHW."
+        )
 
     @callback
     def _first_update(event):

@@ -141,17 +141,12 @@ class EvoClimateDevice(ClimateDevice):
             self.async_schedule_update_ha_state(force_refresh=True)
 
     def _handle_exception(self, err):
+        # Currently, only HTTPError are passed here
         if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
-            # execute a backoff: pause, and also reduce rate
-            old_interval = self._params[CONF_SCAN_INTERVAL]
-            new_interval = min(old_interval, SCAN_INTERVAL_DEFAULT) * 2
-            self._params[CONF_SCAN_INTERVAL] = new_interval
-
             _LOGGER.warning(
-                "API rate limit has been exceeded. Suspending polling for %s "
-                "seconds, and increasing '%s' from %s to %s seconds",
-                new_interval * 3, CONF_SCAN_INTERVAL, old_interval,
-                new_interval)
+                "The vendor's API rate limit has been exceeded, "
+                "so suspending polling for %s seconds",
+                new_interval * 3)
 
             self._timers['statusUpdated'] = datetime.now() + new_interval * 3
 
