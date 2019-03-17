@@ -140,7 +140,7 @@ class EvoClimateDevice(ClimateDevice):
         if packet['to'] & self._type and packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
-    def _handle_requests_exceptions(self, err):
+    def _handle_exception(self, err):
         if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
             # execute a backoff: pause, and also reduce rate
             old_interval = self._params[CONF_SCAN_INTERVAL]
@@ -300,7 +300,7 @@ class EvoZone(EvoClimateDevice):
         try:
             self._obj.set_temperature(temperature, until)
         except HTTPError as err:
-            self._handle_exception("HTTPError", str(err))  # noqa: E501; pylint: disable=no-member
+            self._handle_exception(err)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature, indefinitely."""
@@ -350,7 +350,7 @@ class EvoZone(EvoClimateDevice):
             try:
                 self._obj.cancel_temp_override()
             except HTTPError as err:
-                self._handle_exception("HTTPError", str(err))  # noqa: E501; pylint: disable=no-member
+                self._handle_exception(err)
 
         elif operation_mode == EVO_TEMPOVER:
             _LOGGER.error(
@@ -510,9 +510,9 @@ class EvoController(EvoClimateDevice):
 
     def _set_operation_mode(self, operation_mode):
         try:
-            self._obj._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
+            self._obj._set_status(operation_mode)                                # noqa: E501; pylint: disable=protected-access
         except HTTPError as err:
-            self._handle_requests_exceptions(err)
+            self._handle_exception(err)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode for the TCS.
@@ -549,7 +549,7 @@ class EvoController(EvoClimateDevice):
             self._status.update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])
         except HTTPError as err:  # check if we've exceeded the api rate limit
-            self._handle_requests_exceptions(err)
+            self._handle_exception(err)
         else:
             self._timers['statusUpdated'] = datetime.now()
             self._available = True
