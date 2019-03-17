@@ -105,7 +105,8 @@ class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
 
     def __init__(self, location_name, streamlabs_usage_data):
         """Initialize the monthly water usage device."""
-        super(StreamLabsMonthlyUsage, self).__init__(location_name, streamlabs_usage_data)
+        super(StreamLabsMonthlyUsage, self)\
+            .__init__(location_name, streamlabs_usage_data)
 
     @property
     def name(self):
@@ -123,7 +124,8 @@ class StreamLabsYearlyUsage(StreamLabsDailyUsage):
 
     def __init__(self, location_name, streamlabs_usage_data):
         """Initialize the yearly water usage device."""
-        super(StreamLabsYearlyUsage, self).__init__(location_name, streamlabs_usage_data)
+        super(StreamLabsYearlyUsage, self)\
+            .__init__(location_name, streamlabs_usage_data)
 
     @property
     def name(self):
