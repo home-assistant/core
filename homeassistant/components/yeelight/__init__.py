@@ -1,0 +1,1 @@
+"""The yeelight component."""
