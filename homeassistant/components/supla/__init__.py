@@ -17,7 +17,7 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['pysupla==0.0.1']
+REQUIREMENTS = ['pysupla==0.0.2']
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def discover_devices(hass, hass_config):
     """
-    Run peridoically to discover new devices;
+    Run periodically to discover new devices;
     currently it's only run at startup.
     """
     component_configs = {}

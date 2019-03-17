@@ -689,6 +689,7 @@ omit =
     homeassistant/components/zha/sensor.py
     homeassistant/components/zigbee/*
     homeassistant/components/zoneminder/*
+    homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
 
 [report]
