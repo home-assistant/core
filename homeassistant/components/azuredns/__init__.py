@@ -157,14 +157,17 @@ async def _update_azuredns(resource, tenant,
         result = requests.patch(url, json=payload,
                                 headers=headers, timeout=timeout).json()
 
-        configured_ipv4address = result['properties']['ARecords'][0]['ipv4Address']
+        azureip = result['properties']['ARecords'][0]['ipv4Address']
 
-        if ipv4address == configured_ipv4address:
-            _LOGGER.debug("IP address in Azure DNS configured correctly to %s.", ipv4address)
+        if ipv4address == azureip:
+            _LOGGER.debug(
+                "IP address in Azure DNS configured correctly to %s.",
+                ipv4address)
             return True
         else:
-            _LOGGER.error("External IP address %s does not match IP address from Azure DNS %s",
-                          ipv4address, configured_ipv4address)
+            _LOGGER.error(
+                "External IP address %s does not match IP from Azure DNS %s",
+                ipv4address, azureip)
 
     except requests.exceptions.RequestException as errormessage:
         _LOGGER.error("Azure DNS patch request failed: %s", errormessage)
