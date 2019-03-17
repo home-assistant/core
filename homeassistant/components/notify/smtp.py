@@ -246,7 +246,8 @@ def _build_html_msg(text, html, images):
             name = os.path.basename(atch_name)
             try:
                 with open(atch_name, 'rb') as attachment_file:
-                    attachment = MIMEImage(attachment_file.read(), filename=name)
+                    attachment = MIMEImage(attachment_file.read(),
+                                           filename=name)
                 msg.attach(attachment)
                 attachment.add_header('Content-ID', '<{}>'.format(name))
             except FileNotFoundError:
