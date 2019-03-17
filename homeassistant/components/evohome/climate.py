@@ -246,7 +246,6 @@ class EvoZone(EvoClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature of the evohome Zone."""
-        _LOGGER.warn("current_temperature(%s) = %s", self._id, self._status)     # TODO: delete me
         return (self._status['temperatureStatus']['temperature']
                 if self._status['temperatureStatus']['isAvailable'] else None)
 
@@ -549,7 +548,7 @@ class EvoController(EvoClimateDevice):
             self._timers['statusUpdated'] = datetime.now()
             self._available = True
 
-        _LOGGER.warn("Status = %s", self._status)                                # TODO: back to debug (from warn)
+        _LOGGER.debug("Status = %s", self._status)
 
         # inform the child devices that state data has been updated
         pkt = {'sender': 'controller', 'signal': 'refresh', 'to': EVO_CHILD}

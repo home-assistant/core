@@ -8,7 +8,7 @@
 from datetime import timedelta
 import logging
 
-from requests.exceptions import HTTPError
+import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -43,6 +43,10 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+CONF_SECRETS = [
+    CONF_USERNAME, CONF_PASSWORD,
+]
+
 # These are used to help prevent E501 (line too long) violations.
 GWS = 'gateways'
 TCS = 'temperatureControlSystems'
@@ -75,15 +79,15 @@ def setup(hass, hass_config):
             debug=False
         )
 
-    except ConnectionError:
+    except requests.exceptions.ConnectionError:
         _LOGGER.error(
             "setup(): Failed to connect with the vendor's web servers. "
             "The server is not contactable (maybe the vendor's fault?). "
             "Unable to continue. Resolve any errors and restart HA."
         )
-        raise  # Expose the actual error to the user
+        raise  # Expose the actual exception to the user
 
-    except HTTPError as err:
+    except requests.exceptions.HTTPError as err:
         if err.response.status_code == HTTP_BAD_REQUEST:
             _LOGGER.error(
                 "setup(): Failed to connect with the vendor's web servers. "
@@ -111,9 +115,10 @@ def setup(hass, hass_config):
 
         return False
 
-    finally:  # Redact username, password as no longer needed
-        evo_data['params'][CONF_USERNAME] = 'REDACTED'
-        evo_data['params'][CONF_PASSWORD] = 'REDACTED'
+    finally:  # Redact username, password, etc. as no longer needed
+        for parameter in CONF_SECRETS:
+            evo_data['params'][parameter] = 'REDACTED' \
+                if evo_data['params'][parameter] else None
 
     evo_data['client'] = client
     evo_data['status'] = {}
