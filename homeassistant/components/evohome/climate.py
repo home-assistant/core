@@ -14,16 +14,16 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.components.evohome import (
     DATA_EVOHOME, DISPATCHER_EVOHOME,
-    CONF_LOCATION_IDX, SCAN_INTERVAL_DEFAULT,
+    CONF_LOCATION_IDX,
     EVO_PARENT, EVO_CHILD,
     GWS, TCS,
 )
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
-    HTTP_TOO_MANY_REQUESTS,
+    HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
     PRECISION_HALVES,
     STATE_OFF,
-    TEMP_CELSIUS
+    TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -141,17 +141,40 @@ class EvoClimateDevice(ClimateDevice):
             self.async_schedule_update_ha_state(force_refresh=True)
 
     def _handle_exception(self, err):
-        # Currently, only HTTPError are passed here
-        if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
+        try:
+            raise err
+
+        except requests.exceptions.ConnectionError:
+            # this appears to be common with Honeywell's servers
             _LOGGER.warning(
-                "The vendor's API rate limit has been exceeded, "
-                "so suspending polling for %s seconds",
-                new_interval * 3)
+                "The vendor's web servers appear to be uncontactable, so "
+                "unable to get the latest state data during this cycle. "
+                "Hint: This is often a problem with the vendor's network."
+            )
+            return True
 
-            self._timers['statusUpdated'] = datetime.now() + new_interval * 3
+        except requests.exceptions.HTTPError:
+            if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
+                _LOGGER.warning(
+                    "The vendor's API rate limit has been exceeded, so unable"
+                    "to get the latest state data during this polling cycle. "
+                    "Suspending polling, and will resume after %s seconds.",
+                    (self._params[CONF_SCAN_INTERVAL] * 3).total_seconds()
+                )
 
-        else:
-            raise err  # we dont handle any other HTTPErrors
+                self._timers['statusUpdated'] = datetime.now() + \
+                    self._params[CONF_SCAN_INTERVAL] * 3
+
+            if err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
+                # this appears to be common with Honeywell servers
+                _LOGGER.warning(
+                    "The vendor's web servers appear unavailable, so unable "
+                    "to get the latest state data during this polling cycle. "
+                    "Note: This is a problem with the vendor's network."
+                )
+                return True
+
+            raise  # we don't expect/handle any other HTTPErrors
 
     @property
     def name(self) -> str:

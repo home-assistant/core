@@ -111,7 +111,7 @@ def setup(hass, hass_config):
             )
 
         else:
-            raise  # We don't expect/handle any other HTTPErrors
+            raise  # we don't expect/handle any other HTTPErrors
 
         return False
 
