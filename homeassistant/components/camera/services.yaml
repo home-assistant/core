@@ -50,9 +50,6 @@ play_stream:
     format:
       description: (Optional) Stream format supported by media player.
       example: 'hls'
-    keepalive:
-      description: (Optional) Keep the stream worker alive for fast access.
-      example: 'true'
 
 local_file_update_file_path:
   description: Update the file_path for a local_file camera.
