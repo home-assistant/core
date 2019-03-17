@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.tcp/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.sensor.tcp import (
+from homeassistant.components.tcp.sensor import (
     TcpSensor, CONF_VALUE_ON, PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
