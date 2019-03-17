@@ -3,7 +3,7 @@ import unittest
 
 from tests.common import get_test_home_assistant
 
-from homeassistant.components.sensor.simulated import (
+from homeassistant.components.simulated.sensor import (
     CONF_AMP, CONF_FWHM, CONF_MEAN, CONF_PERIOD, CONF_PHASE, CONF_SEED,
     CONF_UNIT, CONF_RELATIVE_TO_EPOCH, DEFAULT_AMP, DEFAULT_FWHM, DEFAULT_MEAN,
     DEFAULT_NAME, DEFAULT_PHASE, DEFAULT_SEED, DEFAULT_RELATIVE_TO_EPOCH)

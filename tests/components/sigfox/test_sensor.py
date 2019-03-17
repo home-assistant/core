@@ -3,7 +3,7 @@ import re
 import requests_mock
 import unittest
 
-from homeassistant.components.sensor.sigfox import (
+from homeassistant.components.sigfox.sensor import (
     API_URL, CONF_API_LOGIN, CONF_API_PASSWORD)
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant

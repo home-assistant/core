@@ -3,7 +3,7 @@ import os
 import unittest
 import requests_mock
 
-from homeassistant.components.sensor import ring
+import homeassistant.components.ring.sensor as ring
 from homeassistant.components import ring as base_ring
 
 from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG

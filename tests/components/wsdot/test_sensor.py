@@ -6,8 +6,8 @@ import unittest
 import requests_mock
 from tests.common import get_test_home_assistant, load_fixture
 
-from homeassistant.components.sensor import wsdot
-from homeassistant.components.sensor.wsdot import (
+import homeassistant.components.wsdot.sensor as wsdot
+from homeassistant.components.wsdot.sensor import (
     ATTR_DESCRIPTION, ATTR_TIME_UPDATED, CONF_API_KEY, CONF_ID, CONF_NAME,
     CONF_TRAVEL_TIMES, RESOURCE, SCAN_INTERVAL)
 from homeassistant.setup import setup_component

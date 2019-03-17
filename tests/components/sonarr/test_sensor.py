@@ -5,7 +5,7 @@ from datetime import datetime
 
 import pytest
 
-from homeassistant.components.sensor import sonarr
+import homeassistant.components.sonarr.sensor as sonarr
 
 from tests.common import get_test_home_assistant
 

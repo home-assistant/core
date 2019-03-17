@@ -9,7 +9,7 @@ import pytest
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.util.dt import get_time_zone, set_default_time_zone
 from homeassistant.setup import setup_component
-from homeassistant.components.sensor.jewish_calendar import (
+from homeassistant.components.jewish_calendar.sensor import (
     JewishCalSensor, CANDLE_LIGHT_DEFAULT)
 from tests.common import get_test_home_assistant
 

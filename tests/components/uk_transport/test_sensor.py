@@ -4,7 +4,7 @@ import re
 import requests_mock
 import unittest
 
-from homeassistant.components.sensor.uk_transport import (
+from homeassistant.components.uk_transport.sensor import (
     UkTransportSensor,
     ATTR_ATCOCODE, ATTR_LOCALITY, ATTR_STOP_NAME, ATTR_NEXT_BUSES,
     ATTR_STATION_CODE, ATTR_CALLING_AT, ATTR_NEXT_TRAINS,

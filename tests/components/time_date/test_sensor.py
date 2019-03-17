@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant.components.sensor import time_date as time_date
+import homeassistant.components.time_date.sensor as time_date
 import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant

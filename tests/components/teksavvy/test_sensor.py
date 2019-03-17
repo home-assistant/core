@@ -1,7 +1,7 @@
 """Tests for the TekSavvy sensor platform."""
 import asyncio
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.sensor.teksavvy import TekSavvyData
+from homeassistant.components.teksavvy.sensor import TekSavvyData
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 

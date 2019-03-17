@@ -2,7 +2,7 @@
 import unittest
 import requests_mock
 
-from homeassistant.components.sensor.london_air import (
+from homeassistant.components.london_air.sensor import (
     CONF_LOCATIONS, URL)
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant

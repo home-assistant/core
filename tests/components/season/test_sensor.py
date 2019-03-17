@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime
 
 from homeassistant.setup import setup_component
-import homeassistant.components.sensor.season as season
+import homeassistant.components.season.sensor as season
 
 from tests.common import get_test_home_assistant
 

@@ -7,7 +7,7 @@ import pytest
 import requests_mock
 import voluptuous as vol
 
-from homeassistant.components.sensor import vultr
+import homeassistant.components.vultr.sensor as vultr
 from homeassistant.components import vultr as base_vultr
 from homeassistant.components.vultr import CONF_SUBSCRIPTION
 from homeassistant.const import (

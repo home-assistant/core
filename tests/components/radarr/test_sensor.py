@@ -3,7 +3,7 @@ import unittest
 
 import pytest
 
-from homeassistant.components.sensor import radarr
+import homeassistant.components.radarr.sensor as radarr
 
 from tests.common import get_test_home_assistant
 

@@ -4,7 +4,7 @@ import aiohttp
 
 from pytest import raises
 
-from homeassistant.components.sensor import wunderground
+import homeassistant.components.wunderground.sensor as wunderground
 from homeassistant.const import TEMP_CELSIUS, LENGTH_INCHES, STATE_UNKNOWN
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component

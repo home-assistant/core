@@ -3,7 +3,7 @@ import unittest
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.sensor.sql import validate_sql_select
+from homeassistant.components.sql.sensor import validate_sql_select
 from homeassistant.setup import setup_component
 from homeassistant.const import STATE_UNKNOWN
 

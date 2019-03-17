@@ -5,7 +5,7 @@ import statistics
 import pytest
 
 from homeassistant.setup import setup_component
-from homeassistant.components.sensor.statistics import StatisticsSensor
+from homeassistant.components.statistics.sensor import StatisticsSensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, STATE_UNKNOWN)
 from homeassistant.util import dt as dt_util
@@ -165,7 +165,7 @@ class TestStatisticsSensor(unittest.TestCase):
         def mock_now():
             return mock_data['return_time']
 
-        with patch('homeassistant.components.sensor.statistics.dt_util.utcnow',
+        with patch('homeassistant.components.statistics.sensor.dt_util.utcnow',
                    new=mock_now):
             assert setup_component(self.hass, 'sensor', {
                 'sensor': {
@@ -201,7 +201,7 @@ class TestStatisticsSensor(unittest.TestCase):
         def mock_now():
             return mock_data['return_time']
 
-        with patch('homeassistant.components.sensor.statistics.dt_util.utcnow',
+        with patch('homeassistant.components.statistics.sensor.dt_util.utcnow',
                    new=mock_now):
             assert setup_component(self.hass, 'sensor', {
                 'sensor': {
@@ -284,7 +284,7 @@ class TestStatisticsSensor(unittest.TestCase):
         # enable the recorder
         init_recorder_component(self.hass)
 
-        with patch('homeassistant.components.sensor.statistics.dt_util.utcnow',
+        with patch('homeassistant.components.statistics.sensor.dt_util.utcnow',
                    new=mock_now), \
                 patch.object(StatisticsSensor, '_purge_old', mock_purge):
             # store some values
