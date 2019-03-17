@@ -37,7 +37,7 @@ class TestTCPBinarySensor(unittest.TestCase):
                 }
             })
 
-    @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
+    @patch('homeassistant.components.tcp.sensor.TcpSensor.update')
     def test_setup_platform_devices(self, mock_update):
         """Check the supplied config and call add_entities with sensor."""
         add_entities = Mock()
@@ -47,7 +47,7 @@ class TestTCPBinarySensor(unittest.TestCase):
         assert isinstance(
             add_entities.call_args[0][0][0], bin_tcp.TcpBinarySensor)
 
-    @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
+    @patch('homeassistant.components.tcp.sensor.TcpSensor.update')
     def test_is_on_true(self, mock_update):
         """Check the return that _state is value_on."""
         sensor = bin_tcp.TcpBinarySensor(
@@ -56,7 +56,7 @@ class TestTCPBinarySensor(unittest.TestCase):
         print(sensor._state)
         assert sensor.is_on
 
-    @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
+    @patch('homeassistant.components.tcp.sensor.TcpSensor.update')
     def test_is_on_false(self, mock_update):
         """Check the return that _state is not the same as value_on."""
         sensor = bin_tcp.TcpBinarySensor(

@@ -23,7 +23,7 @@ class TestMoonSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.sensor.moon.dt_util.utcnow',
+    @patch('homeassistant.components.moon.sensor.dt_util.utcnow',
            return_value=DAY1)
     def test_moon_day1(self, mock_request):
         """Test the Moon sensor."""
@@ -39,7 +39,7 @@ class TestMoonSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.moon_day1')
         assert state.state == 'waxing_crescent'
 
-    @patch('homeassistant.components.sensor.moon.dt_util.utcnow',
+    @patch('homeassistant.components.moon.sensor.dt_util.utcnow',
            return_value=DAY2)
     def test_moon_day2(self, mock_request):
         """Test the Moon sensor."""

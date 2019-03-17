@@ -20,7 +20,7 @@ def test_default_setup(hass, aioclient_mock):
     config = {'platform': 'yr',
               'elevation': 0}
     hass.allow_pool = True
-    with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
+    with patch('homeassistant.components.yr.sensor.dt_util.utcnow',
                return_value=NOW), assert_setup_component(1):
         yield from async_setup_component(hass, 'sensor', {'sensor': config})
 
@@ -46,7 +46,7 @@ def test_custom_setup(hass, aioclient_mock):
                   'fog',
                   'windSpeed']}
     hass.allow_pool = True
-    with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
+    with patch('homeassistant.components.yr.sensor.dt_util.utcnow',
                return_value=NOW), assert_setup_component(1):
         yield from async_setup_component(hass, 'sensor', {'sensor': config})
 
@@ -88,7 +88,7 @@ def test_forecast_setup(hass, aioclient_mock):
                   'fog',
                   'windSpeed']}
     hass.allow_pool = True
-    with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
+    with patch('homeassistant.components.yr.sensor.dt_util.utcnow',
                return_value=NOW), assert_setup_component(1):
         yield from async_setup_component(hass, 'sensor', {'sensor': config})
 

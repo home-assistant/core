@@ -214,7 +214,7 @@ class TestRestSensor(unittest.TestCase):
         assert 'some_json_value' == \
             self.sensor.device_state_attributes['key']
 
-    @patch('homeassistant.components.sensor.rest._LOGGER')
+    @patch('homeassistant.components.rest.sensor._LOGGER')
     def test_update_with_json_attrs_no_data(self, mock_logger):
         """Test attributes when no JSON result fetched."""
         self.rest.update = Mock('rest.RestData.update',
@@ -227,7 +227,7 @@ class TestRestSensor(unittest.TestCase):
         assert {} == self.sensor.device_state_attributes
         assert mock_logger.warning.called
 
-    @patch('homeassistant.components.sensor.rest._LOGGER')
+    @patch('homeassistant.components.rest.sensor._LOGGER')
     def test_update_with_json_attrs_not_dict(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
         self.rest.update = Mock('rest.RestData.update',
@@ -241,7 +241,7 @@ class TestRestSensor(unittest.TestCase):
         assert {} == self.sensor.device_state_attributes
         assert mock_logger.warning.called
 
-    @patch('homeassistant.components.sensor.rest._LOGGER')
+    @patch('homeassistant.components.rest.sensor._LOGGER')
     def test_update_with_json_attrs_bad_JSON(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
         self.rest.update = Mock('rest.RestData.update',
