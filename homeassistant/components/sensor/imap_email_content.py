@@ -2,7 +2,7 @@
 Email sensor support.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.email/
+https://home-assistant.io/components/sensor.imap_email_content/
 """
 import logging
 import datetime
@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SERVER = 'server'
 CONF_SENDERS = 'senders'
+CONF_FOLDER = 'folder'
 
 ATTR_FROM = 'from'
 ATTR_BODY = 'body'
@@ -34,8 +35,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_SERVER): cv.string,
+    vol.Required(CONF_SENDERS): [cv.string],
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_FOLDER, default='INBOX'): cv.string,
 })
 
 
@@ -43,7 +46,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Email sensor platform."""
     reader = EmailReader(
         config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
-        config.get(CONF_SERVER), config.get(CONF_PORT))
+        config.get(CONF_SERVER), config.get(CONF_PORT),
+        config.get(CONF_FOLDER))
 
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
@@ -61,12 +65,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class EmailReader:
     """A class to read emails from an IMAP server."""
 
-    def __init__(self, user, password, server, port):
+    def __init__(self, user, password, server, port, folder):
         """Initialize the Email Reader."""
         self._user = user
         self._password = password
         self._server = server
         self._port = port
+        self._folder = folder
         self._last_id = None
         self._unread_ids = deque([])
         self.connection = None
@@ -97,7 +102,7 @@ class EmailReader:
         """Read the next email from the email server."""
         import imaplib
         try:
-            self.connection.select()
+            self.connection.select(self._folder, readonly=True)
 
             if not self._unread_ids:
                 search = "SINCE {0:%d-%b-%Y}".format(datetime.date.today())

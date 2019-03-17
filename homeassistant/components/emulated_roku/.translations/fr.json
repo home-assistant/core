@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "D\u00e9finir la configuration du serveur"
+            }
+        },
+        "title": "EmulatedRoku"
+    }
+}

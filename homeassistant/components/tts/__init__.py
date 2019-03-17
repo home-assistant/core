@@ -18,18 +18,18 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA)
-from homeassistant.components.media_player import DOMAIN as DOMAIN_MP
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.media_player.const import DOMAIN as DOMAIN_MP
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['mutagen==1.41.1']
+REQUIREMENTS = ['mutagen==1.42.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,11 +68,12 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
     vol.Optional(CONF_BASE_URL): cv.string,
 })
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 SCHEMA_SERVICE_SAY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.string,
     vol.Optional(ATTR_CACHE): cv.boolean,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_LANGUAGE): cv.string,
     vol.Optional(ATTR_OPTIONS): dict,
 })
@@ -125,7 +126,7 @@ async def async_setup(hass, config):
 
         async def async_say_handle(service):
             """Service handle for say."""
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            entity_ids = service.data.get(ATTR_ENTITY_ID, ENTITY_MATCH_ALL)
             message = service.data.get(ATTR_MESSAGE)
             cache = service.data.get(ATTR_CACHE)
             language = service.data.get(ATTR_LANGUAGE)
@@ -143,10 +144,8 @@ async def async_setup(hass, config):
             data = {
                 ATTR_MEDIA_CONTENT_ID: url,
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_ENTITY_ID: entity_ids,
             }
-
-            if entity_ids:
-                data[ATTR_ENTITY_ID] = entity_ids
 
             await hass.services.async_call(
                 DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True)

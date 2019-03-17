@@ -12,7 +12,7 @@
             "init": {
                 "data": {
                     "host": "Gostitelj",
-                    "port": "Vrata (privzeta vrednost: '80')"
+                    "port": "Vrata"
                 },
                 "title": "Dolo\u010dite deCONZ prehod"
             },
@@ -28,6 +28,6 @@
                 "title": "Dodatne mo\u017enosti konfiguracije za deCONZ"
             }
         },
-        "title": "deCONZ"
+        "title": "deCONZ Zigbee prehod"
     }
 }

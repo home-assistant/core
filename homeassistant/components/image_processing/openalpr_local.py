@@ -13,7 +13,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import split_entity_id, callback
-from homeassistant.const import STATE_UNKNOWN, CONF_REGION
+from homeassistant.const import CONF_REGION
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingEntity, CONF_CONFIDENCE, CONF_SOURCE,
     CONF_ENTITY_ID, CONF_NAME, ATTR_ENTITY_ID, ATTR_CONFIDENCE)
@@ -82,7 +82,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
     def state(self):
         """Return the state of the entity."""
         confidence = 0
-        plate = STATE_UNKNOWN
+        plate = None
 
         # search high plate
         for i_pl, i_co in self.plates.items():

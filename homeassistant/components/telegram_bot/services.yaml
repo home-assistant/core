@@ -52,6 +52,9 @@ send_photo:
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
+    verify_ssl:
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      example: false
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -80,6 +83,9 @@ send_sticker:
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
+    verify_ssl:
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      example: false
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -111,6 +117,9 @@ send_video:
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
+    verify_ssl:
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      example: false
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -142,6 +151,9 @@ send_document:
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
+    verify_ssl:
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      example: false
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'

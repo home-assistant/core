@@ -71,7 +71,7 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
         raise HTTPUnauthorized
 
     app.router.add_get('/', unauth_handler)
-    setup_bans(hass, app, 1)
+    setup_bans(hass, app, 2)
     mock_real_ip(app)("200.201.202.204")
 
     with patch('homeassistant.components.http.ban.async_load_ip_bans_config',

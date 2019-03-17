@@ -12,7 +12,7 @@ from homeassistant.const import (
 from homeassistant.core import callback, State, CoreState
 
 from tests.common import mock_restore_cache
-from ..test_rflink import mock_rflink
+from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = 'light'
 
@@ -632,7 +632,7 @@ async def test_restore_state(hass, monkeypatch):
     state = hass.states.get(DOMAIN + '.l4')
     assert state
     assert state.state == STATE_OFF
-    assert not state.attributes.get(ATTR_BRIGHTNESS)
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes['assumed_state']
 
     # test coverage for dimmable light

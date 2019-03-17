@@ -7,7 +7,6 @@ from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.components.automation import DOMAIN, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
-
 CONFIG_PATH = 'automations.yaml'
 
 

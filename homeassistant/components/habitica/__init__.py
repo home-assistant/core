@@ -1,9 +1,4 @@
-"""
-The Habitica API component.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/habitica/
-"""
+"""Support for Habitica devices."""
 from collections import namedtuple
 import logging
 

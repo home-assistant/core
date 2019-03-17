@@ -11,13 +11,14 @@ import voluptuous as vol
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_AUTHENTICATION, CONF_FORCE_UPDATE, CONF_HEADERS, CONF_NAME,
     CONF_METHOD, CONF_PASSWORD, CONF_PAYLOAD, CONF_RESOURCE,
-    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
-    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL,
-    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, STATE_UNKNOWN)
+    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME, CONF_TIMEOUT,
+    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL, CONF_DEVICE_CLASS,
+    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -28,6 +29,7 @@ DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Sensor'
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
+DEFAULT_TIMEOUT = 10
 
 CONF_JSON_ATTRS = 'json_attributes'
 METHODS = ['POST', 'GET']
@@ -43,10 +45,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 
@@ -61,9 +65,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+    device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
     force_update = config.get(CONF_FORCE_UPDATE)
+    timeout = config.get(CONF_TIMEOUT)
 
     if value_template is not None:
         value_template.hass = hass
@@ -75,7 +81,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
+    rest = RestData(method, resource, auth, headers, payload, verify_ssl,
+                    timeout)
     rest.update()
     if rest.data is None:
         raise PlatformNotReady
@@ -83,7 +90,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Must update the sensor now (including fetching the rest resource) to
     # ensure it's updating its state.
     add_entities([RestSensor(
-        hass, rest, name, unit, value_template, json_attrs, force_update
+        hass, rest, name, unit, device_class,
+        value_template, json_attrs, force_update
     )], True)
 
 
@@ -91,13 +99,14 @@ class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
     def __init__(self, hass, rest, name, unit_of_measurement,
-                 value_template, json_attrs, force_update):
+                 device_class, value_template, json_attrs, force_update):
         """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._unit_of_measurement = unit_of_measurement
+        self._device_class = device_class
         self._value_template = value_template
         self._json_attrs = json_attrs
         self._attributes = None
@@ -112,6 +121,11 @@ class RestSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return self._device_class
 
     @property
     def available(self):
@@ -149,11 +163,9 @@ class RestSensor(Entity):
                     _LOGGER.debug("Erroneous JSON: %s", value)
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
-        if value is None:
-            value = STATE_UNKNOWN
-        elif self._value_template is not None:
+        if value is not None and self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(
-                value, STATE_UNKNOWN)
+                value, None)
 
         self._state = value
 
@@ -166,11 +178,13 @@ class RestSensor(Entity):
 class RestData:
     """Class for handling the data retrieval."""
 
-    def __init__(self, method, resource, auth, headers, data, verify_ssl):
+    def __init__(self, method, resource, auth, headers, data, verify_ssl,
+                 timeout=DEFAULT_TIMEOUT):
         """Initialize the data object."""
         self._request = requests.Request(
             method, resource, headers=headers, auth=auth, data=data).prepare()
         self._verify_ssl = verify_ssl
+        self._timeout = timeout
         self.data = None
 
     def update(self):
@@ -179,7 +193,8 @@ class RestData:
         try:
             with requests.Session() as sess:
                 response = sess.send(
-                    self._request, timeout=10, verify=self._verify_ssl)
+                    self._request, timeout=self._timeout,
+                    verify=self._verify_ssl)
 
             self.data = response.text
         except requests.exceptions.RequestException as ex:

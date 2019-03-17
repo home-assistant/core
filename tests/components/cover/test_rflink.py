@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import callback, State, CoreState
 
 from tests.common import mock_restore_cache
-from ..test_rflink import mock_rflink
+from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = 'cover'
 
@@ -414,33 +414,6 @@ async def test_nogroup_device_id(hass, monkeypatch):
     await hass.async_block_till_done()
     # should affect state
     assert hass.states.get(DOMAIN + '.test').state == STATE_OPEN
-
-
-async def test_disable_automatic_add(hass, monkeypatch):
-    """If disabled new devices should not be automatically added."""
-    config = {
-        'rflink': {
-            'port': '/dev/ttyABC0',
-        },
-        DOMAIN: {
-            'platform': 'rflink',
-            'automatic_add': False,
-        },
-    }
-
-    # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(
-        hass, config, DOMAIN, monkeypatch)
-
-    # test event for new unconfigured sensor
-    event_callback({
-        'id': 'protocol_0_0',
-        'command': 'down',
-    })
-    await hass.async_block_till_done()
-
-    # make sure new device is not added
-    assert not hass.states.get(DOMAIN + '.protocol_0_0')
 
 
 async def test_restore_state(hass, monkeypatch):

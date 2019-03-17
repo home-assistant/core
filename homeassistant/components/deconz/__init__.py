@@ -1,9 +1,4 @@
-"""
-Support for deCONZ devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/deconz/
-"""
+"""Support for deCONZ devices."""
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,10 +12,7 @@ from .config_flow import configured_hosts
 from .const import DEFAULT_PORT, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
-REQUIREMENTS = ['pydeconz==47']
-
-SUPPORTED_PLATFORMS = ['binary_sensor', 'cover',
-                       'light', 'scene', 'sensor', 'switch']
+REQUIREMENTS = ['pydeconz==52']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -76,10 +68,10 @@ async def async_setup_entry(hass, config_entry):
 
     gateway = DeconzGateway(hass, config_entry)
 
-    hass.data[DOMAIN] = gateway
-
     if not await gateway.async_setup():
         return False
+
+    hass.data[DOMAIN] = gateway
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()

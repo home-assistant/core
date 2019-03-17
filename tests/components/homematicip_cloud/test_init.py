@@ -21,7 +21,7 @@ async def test_config_with_accesspoint_passed_to_config_entry(hass):
         }) is True
 
     # Flow started for the access point
-    assert len(mock_config_entries.flow.mock_calls) == 2
+    assert len(mock_config_entries.flow.mock_calls) >= 2
 
 
 async def test_config_already_registered_not_passed_to_config_entry(hass):
@@ -58,7 +58,7 @@ async def test_setup_entry_successful(hass):
             }
         }) is True
 
-    assert len(mock_hap.mock_calls) == 2
+    assert len(mock_hap.mock_calls) >= 2
 
 
 async def test_setup_defined_accesspoint(hass):
@@ -95,7 +95,7 @@ async def test_unload_entry(hass):
         mock_hap.return_value.async_setup.return_value = mock_coro(True)
         assert await async_setup_component(hass, hmipc.DOMAIN, {}) is True
 
-    assert len(mock_hap.return_value.mock_calls) == 1
+    assert len(mock_hap.return_value.mock_calls) >= 1
 
     mock_hap.return_value.async_reset.return_value = mock_coro(True)
     assert await hmipc.async_unload_entry(hass, entry)

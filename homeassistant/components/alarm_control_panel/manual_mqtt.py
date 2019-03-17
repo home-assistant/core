@@ -241,8 +241,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return 'Number'
-        return 'Any'
+            return alarm.FORMAT_NUMBER
+        return alarm.FORMAT_TEXT
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -342,18 +342,18 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         )
 
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Run when new MQTT message has been received."""
-            if payload == self._payload_disarm:
+            if msg.payload == self._payload_disarm:
                 self.async_alarm_disarm(self._code)
-            elif payload == self._payload_arm_home:
+            elif msg.payload == self._payload_arm_home:
                 self.async_alarm_arm_home(self._code)
-            elif payload == self._payload_arm_away:
+            elif msg.payload == self._payload_arm_away:
                 self.async_alarm_arm_away(self._code)
-            elif payload == self._payload_arm_night:
+            elif msg.payload == self._payload_arm_night:
                 self.async_alarm_arm_night(self._code)
             else:
-                _LOGGER.warning("Received unexpected payload: %s", payload)
+                _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
 
         await mqtt.async_subscribe(

@@ -10,7 +10,7 @@ timer.
 from collections import OrderedDict
 from itertools import chain
 import logging
-from typing import Optional
+from typing import Optional, List
 import weakref
 
 import attr
@@ -122,8 +122,15 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
         if entity_id:
             return self._async_update_entity(
-                entity_id, config_entry_id=config_entry_id,
-                device_id=device_id)
+                entity_id,
+                config_entry_id=config_entry_id,
+                device_id=device_id,
+                # When we changed our slugify algorithm, we invalidated some
+                # stored entity IDs with either a __ or ending in _.
+                # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
+                # removed when we release 1.0 or in 2020.
+                new_entity_id='.'.join(slugify(part) for part
+                                       in entity_id.split('.', 1)))
 
         entity_id = self.async_generate_entity_id(
             domain, suggested_object_id or '{}_{}'.format(platform, unique_id),
@@ -141,6 +148,12 @@ class EntityRegistry:
                      domain, platform, entity_id)
         self.async_schedule_save()
         return entity
+
+    @callback
+    def async_remove(self, entity_id):
+        """Remove an entity from registry."""
+        self.entities.pop(entity_id)
+        self.async_schedule_save()
 
     @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,
@@ -277,6 +290,14 @@ async def async_get_registry(hass) -> EntityRegistry:
         task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
 
     return await task
+
+
+@callback
+def async_entries_for_device(registry: EntityRegistry, device_id: str) \
+        -> List[RegistryEntry]:
+    """Return entries that match a device."""
+    return [entry for entry in registry.entities.values()
+            if entry.device_id == device_id]
 
 
 async def _async_migrate(entities):

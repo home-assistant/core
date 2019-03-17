@@ -8,7 +8,7 @@ from asynctest import mock
 import pytest
 
 import tests.common
-from homeassistant.components.media_player import SUPPORT_TURN_ON, \
+from homeassistant.components.media_player.const import SUPPORT_TURN_ON, \
     MEDIA_TYPE_CHANNEL, MEDIA_TYPE_URL
 from homeassistant.components.media_player.samsungtv import setup_platform, \
     CONF_TIMEOUT, SamsungTVDevice, SUPPORT_SAMSUNGTV

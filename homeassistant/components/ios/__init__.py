@@ -1,24 +1,17 @@
-"""
-Native Home Assistant iOS app component.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/ecosystem/ios/
-"""
-import logging
+"""Native Home Assistant iOS app component."""
 import datetime
+import logging
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (HTTP_INTERNAL_SERVER_ERROR,
-                                 HTTP_BAD_REQUEST)
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
-    config_validation as cv, discovery, config_entry_flow)
+    config_entry_flow, config_validation as cv, discovery)
 from homeassistant.util.json import load_json, save_json
-
 
 _LOGGER = logging.getLogger(__name__)
 

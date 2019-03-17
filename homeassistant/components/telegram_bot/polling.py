@@ -1,9 +1,4 @@
-"""
-Telegram bot polling implementation.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/telegram_bot.polling/
-"""
+"""Support for Telegram bot using polling."""
 import logging
 
 from homeassistant.components.telegram_bot import (
@@ -66,7 +61,7 @@ def message_handler(handler):
             """Initialize the messages handler instance."""
             super().__init__(handler)
 
-        def check_update(self, update):
+        def check_update(self, update):  # pylint: disable=no-self-use
             """Check is update valid."""
             return isinstance(update, Update)
 

@@ -4,7 +4,7 @@ from unittest import mock
 import voluptuous as vol
 
 from collections import defaultdict
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     DOMAIN, SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_SELECT_SOURCE)
 from homeassistant.const import STATE_ON, STATE_OFF
 

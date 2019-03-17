@@ -1,9 +1,4 @@
-"""
-Platform for the Daikin AC.
-
-For more details about this component, please refer to the documentation
-https://home-assistant.io/components/daikin/
-"""
+"""Platform for the Daikin AC."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -22,7 +17,7 @@ from homeassistant.util import Throttle
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import KEY_HOST
 
-REQUIREMENTS = ['pydaikin==0.9']
+REQUIREMENTS = ['pydaikin==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,9 +87,11 @@ async def async_unload_entry(hass, config_entry):
 async def daikin_api_setup(hass, host):
     """Create a Daikin instance only once."""
     from pydaikin.appliance import Appliance
+    session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
         with async_timeout.timeout(10):
-            device = await hass.async_add_executor_job(Appliance, host)
+            device = Appliance(host, session)
+            await device.init()
     except asyncio.TimeoutError:
         _LOGGER.error("Connection to Daikin could not be established")
         return None
@@ -102,8 +99,7 @@ async def daikin_api_setup(hass, host):
         _LOGGER.error("Unexpected error creating device")
         return None
 
-    name = device.values['name']
-    api = DaikinApi(device, name)
+    api = DaikinApi(device)
 
     return api
 
@@ -111,21 +107,29 @@ async def daikin_api_setup(hass, host):
 class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
-    def __init__(self, device, name):
+    def __init__(self, device):
         """Initialize the Daikin Handle."""
         self.device = device
-        self.name = name
+        self.name = device.values['name']
         self.ip_address = device.ip
+        self._available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs):
+    async def async_update(self, **kwargs):
         """Pull the latest data from Daikin."""
         try:
-            self.device.update_status()
+            await self.device.update_status()
+            self._available = True
         except timeout:
             _LOGGER.warning(
                 "Connection failed for %s", self.ip_address
             )
+            self._available = False
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def mac(self):

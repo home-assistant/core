@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "\u00c8 necessaria una sola istanza."
+        },
+        "step": {
+            "user": {
+                "description": "Sei sicuro di voler configurare OwnTracks?",
+                "title": "Configura OwnTracks"
+            }
+        },
+        "title": "OwnTracks"
+    }
+}

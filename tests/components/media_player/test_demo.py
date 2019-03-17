@@ -6,21 +6,12 @@ import asyncio
 import pytest
 import voluptuous as vol
 
-from homeassistant.setup import setup_component
-from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.media_player as mp
-import homeassistant.components.http as http
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
 
-import requests
-
-from tests.common import get_test_home_assistant, get_test_instance_port
+from tests.common import get_test_home_assistant
 from tests.components.media_player import common
-
-SERVER_PORT = get_test_instance_port()
-HTTP_BASE_URL = 'http://127.0.0.1:{}'.format(SERVER_PORT)
-API_PASSWORD = "test1234"
-HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
 entity_id = 'media_player.walkman'
 
@@ -231,61 +222,41 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert mock_seek.called
 
 
-class TestMediaPlayerWeb(unittest.TestCase):
-    """Test the media player web views sensor."""
+async def test_media_image_proxy(hass, hass_client):
+    """Test the media server image proxy server ."""
+    assert await async_setup_component(
+        hass, mp.DOMAIN,
+        {'media_player': {'platform': 'demo'}})
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    fake_picture_data = 'test.test'
 
-        assert setup_component(self.hass, http.DOMAIN, {
-            http.DOMAIN: {
-                http.CONF_SERVER_PORT: SERVER_PORT,
-                http.CONF_API_PASSWORD: API_PASSWORD,
-            },
-        })
+    class MockResponse():
+        def __init__(self):
+            self.status = 200
+            self.headers = {'Content-Type': 'sometype'}
 
-        assert setup_component(
-            self.hass, mp.DOMAIN,
-            {'media_player': {'platform': 'demo'}})
+        @asyncio.coroutine
+        def read(self):
+            return fake_picture_data.encode('ascii')
 
-        self.hass.start()
+        @asyncio.coroutine
+        def release(self):
+            pass
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    class MockWebsession():
 
-    def test_media_image_proxy(self):
-        """Test the media server image proxy server ."""
-        fake_picture_data = 'test.test'
+        @asyncio.coroutine
+        def get(self, url):
+            return MockResponse()
 
-        class MockResponse():
-            def __init__(self):
-                self.status = 200
-                self.headers = {'Content-Type': 'sometype'}
+        def detach(self):
+            pass
 
-            @asyncio.coroutine
-            def read(self):
-                return fake_picture_data.encode('ascii')
+    hass.data[DATA_CLIENTSESSION] = MockWebsession()
 
-            @asyncio.coroutine
-            def release(self):
-                pass
-
-        class MockWebsession():
-
-            @asyncio.coroutine
-            def get(self, url):
-                return MockResponse()
-
-            def detach(self):
-                pass
-
-        self.hass.data[DATA_CLIENTSESSION] = MockWebsession()
-
-        assert self.hass.states.is_state(entity_id, 'playing')
-        state = self.hass.states.get(entity_id)
-        req = requests.get(HTTP_BASE_URL +
-                           state.attributes.get('entity_picture'))
-        assert req.status_code == 200
-        assert req.text == fake_picture_data
+    assert hass.states.is_state(entity_id, 'playing')
+    state = hass.states.get(entity_id)
+    client = await hass_client()
+    req = await client.get(state.attributes.get('entity_picture'))
+    assert req.status == 200
+    assert await req.text() == fake_picture_data

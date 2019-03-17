@@ -7,8 +7,9 @@ https://home-assistant.io/components/climate.dyson/
 import logging
 
 from homeassistant.components.dyson import DYSON_DEVICES
-from homeassistant.components.climate import (
-    ClimateDevice, STATE_HEAT, STATE_COOL, STATE_IDLE,
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_HEAT, STATE_COOL, STATE_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 

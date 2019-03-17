@@ -8,14 +8,15 @@ from datetime import timedelta
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AQI = 'air_quality_index'
 ATTR_ATTRIBUTION = 'attribution'
-ATTR_C02 = 'carbon_dioxide'
+ATTR_CO2 = 'carbon_dioxide'
 ATTR_CO = 'carbon_monoxide'
 ATTR_N2O = 'nitrogen_oxide'
 ATTR_NO = 'nitrogen_monoxide'
@@ -35,7 +36,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 PROP_TO_ATTR = {
     'air_quality_index': ATTR_AQI,
     'attribution': ATTR_ATTRIBUTION,
-    'carbon_dioxide': ATTR_C02,
+    'carbon_dioxide': ATTR_CO2,
     'carbon_monoxide': ATTR_CO,
     'nitrogen_oxide': ATTR_N2O,
     'nitrogen_monoxide': ATTR_NO,

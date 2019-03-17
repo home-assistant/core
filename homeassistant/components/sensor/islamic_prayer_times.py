@@ -6,13 +6,15 @@ https://home-assistant.io/components/sensor.islamic_prayer_times/
 """
 import logging
 from datetime import datetime, timedelta
+
 import voluptuous as vol
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_point_in_time
 
 REQUIREMENTS = ['prayer_times_calculator==0.0.3']
 
@@ -118,25 +120,24 @@ async def schedule_future_update(hass, sensors, midnight_time,
 
     _LOGGER.debug("Next update scheduled for: %s", str(next_update_at))
 
+    async def update_sensors(_):
+        """Update sensors with new prayer times."""
+        # Update prayer times
+        prayer_times = prayer_times_data.get_new_prayer_times()
+
+        _LOGGER.debug("New prayer times retrieved.  Updating sensors.")
+
+        # Update all prayer times sensors
+        for sensor in sensors:
+            sensor.async_schedule_update_ha_state(True)
+
+        # Schedule next update
+        await schedule_future_update(hass, sensors, prayer_times['Midnight'],
+                                     prayer_times_data)
+
     async_track_point_in_time(hass,
-                              update_sensors(hass, sensors, prayer_times_data),
+                              update_sensors,
                               next_update_at)
-
-
-async def update_sensors(hass, sensors, prayer_times_data):
-    """Update sensors with new prayer times."""
-    # Update prayer times
-    prayer_times = prayer_times_data.get_new_prayer_times()
-
-    _LOGGER.debug("New prayer times retrieved.  Updating sensors.")
-
-    # Update all prayer times sensors
-    for sensor in sensors:
-        sensor.async_schedule_update_ha_state(True)
-
-    # Schedule next update
-    await schedule_future_update(hass, sensors, prayer_times['Midnight'],
-                                 prayer_times_data)
 
 
 class IslamicPrayerTimesData:

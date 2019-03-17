@@ -19,6 +19,10 @@ def fake_log(log_key):
             '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 111.111.111.111'
         ),
+        'ipv6_ban': (
+             '2017-01-01 12:23:35 fail2ban.actions [111]: '
+             'NOTICE [jail_one] Ban 2607:f0d0:1002:51::4'
+         ),
         'multi_ban': (
             '2017-01-01 12:23:35 fail2ban.actions [111]: '
             'NOTICE [jail_one] Ban 111.111.111.111\n'
@@ -111,6 +115,23 @@ class TestBanSensor(unittest.TestCase):
             sensor.state_attributes[STATE_CURRENT_BANS] == ['111.111.111.111']
         assert \
             sensor.state_attributes[STATE_ALL_BANS] == ['111.111.111.111']
+
+    def test_ipv6_ban(self):
+        """Test that log is parsed correctly for IPV6 bans."""
+        log_parser = BanLogParser('/tmp')
+        sensor = BanSensor('fail2ban', 'jail_one', log_parser)
+        assert sensor.name == 'fail2ban jail_one'
+        mock_fh = MockOpen(read_data=fake_log('ipv6_ban'))
+        with patch('homeassistant.components.sensor.fail2ban.open', mock_fh,
+                   create=True):
+            sensor.update()
+
+        assert sensor.state == '2607:f0d0:1002:51::4'
+        assert \
+            sensor.state_attributes[STATE_CURRENT_BANS] == \
+            ['2607:f0d0:1002:51::4']
+        assert \
+            sensor.state_attributes[STATE_ALL_BANS] == ['2607:f0d0:1002:51::4']
 
     def test_multiple_ban(self):
         """Test that log is parsed correctly for multiple ban."""

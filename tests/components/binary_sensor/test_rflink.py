@@ -16,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from ..test_rflink import mock_rflink
+from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = 'binary_sensor'
 

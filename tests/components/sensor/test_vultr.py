@@ -13,7 +13,7 @@ from homeassistant.components.vultr import CONF_SUBSCRIPTION
 from homeassistant.const import (
     CONF_NAME, CONF_MONITORED_CONDITIONS, CONF_PLATFORM)
 
-from tests.components.test_vultr import VALID_CONFIG
+from tests.components.vultr.test_init import VALID_CONFIG
 from tests.common import (
     get_test_home_assistant, load_fixture)
 

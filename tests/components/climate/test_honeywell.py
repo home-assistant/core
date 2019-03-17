@@ -8,7 +8,7 @@ import somecomfort
 
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.components.climate import (
+from homeassistant.components.climate.const import (
     ATTR_FAN_MODE, ATTR_OPERATION_MODE, ATTR_FAN_LIST, ATTR_OPERATION_LIST)
 
 import homeassistant.components.climate.honeywell as honeywell

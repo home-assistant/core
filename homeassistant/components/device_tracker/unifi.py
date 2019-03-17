@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyunifi==2.13']
+REQUIREMENTS = ['pyunifi==2.16']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
@@ -42,6 +42,8 @@ AVAILABLE_ATTRS = [
     'tx_bytes', 'tx_bytes-r', 'tx_packets', 'tx_power', 'tx_rate',
     'uptime', 'user_id', 'usergroup_id', 'vlan'
 ]
+
+TIMESTAMP_ATTRS = ['first_seen', 'last_seen', 'latest_assoc_time']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -149,7 +151,12 @@ class UnifiScanner(DeviceScanner):
         attributes = {}
         for variable in self._monitored_conditions:
             if variable in client:
-                attributes[variable] = client[variable]
+                if variable in TIMESTAMP_ATTRS:
+                    attributes[variable] = dt_util.utc_from_timestamp(
+                        float(client[variable])
+                    )
+                else:
+                    attributes[variable] = client[variable]
 
         _LOGGER.debug("Device mac %s attributes %s", device, attributes)
         return attributes

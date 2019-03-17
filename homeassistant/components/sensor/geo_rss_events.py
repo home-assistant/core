@@ -16,7 +16,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT, CONF_NAME,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_URL)
 from homeassistant.helpers.entity import Entity
 
@@ -89,7 +89,7 @@ class GeoRssServiceSensor(Entity):
         """Initialize the sensor."""
         self._category = category
         self._service_name = service_name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._state_attributes = None
         self._unit_of_measurement = unit_of_measurement
         from georss_client.generic_feed import GenericFeed

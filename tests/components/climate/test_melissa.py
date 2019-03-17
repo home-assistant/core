@@ -4,8 +4,9 @@ import json
 
 from homeassistant.components.climate.melissa import MelissaClimate
 
-from homeassistant.components.climate import (
-    melissa, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+from homeassistant.components.climate import melissa
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_ON_OFF, SUPPORT_FAN_MODE, STATE_HEAT, STATE_FAN_ONLY, STATE_DRY,
     STATE_COOL, STATE_AUTO
 )

@@ -1,9 +1,4 @@
-"""
-Support for functionality to have conversations with Home Assistant.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/conversation/
-"""
+"""Support for functionality to have conversations with Home Assistant."""
 import logging
 import re
 

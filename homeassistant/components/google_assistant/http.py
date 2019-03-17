@@ -71,17 +71,16 @@ class GoogleAssistantView(HomeAssistantView):
 
     def __init__(self, is_exposed, entity_config, allow_unlock):
         """Initialize the Google Assistant request handler."""
-        self.is_exposed = is_exposed
-        self.entity_config = entity_config
-        self.allow_unlock = allow_unlock
+        self.config = Config(is_exposed,
+                             allow_unlock,
+                             entity_config)
 
     async def post(self, request: Request) -> Response:
         """Handle Google Assistant requests."""
         message = await request.json()  # type: dict
-        config = Config(self.is_exposed,
-                        self.allow_unlock,
-                        request['hass_user'].id,
-                        self.entity_config)
         result = await async_handle_message(
-            request.app['hass'], config, message)
+            request.app['hass'],
+            self.config,
+            request['hass_user'].id,
+            message)
         return self.json(result)

@@ -64,7 +64,7 @@ class BanSensor(Entity):
         self.last_ban = None
         self.log_parser = log_parser
         self.log_parser.ip_regex[self.jail] = re.compile(
-            r"\[{}\].(Ban|Unban) ([\w+\.]{{3,}})".format(re.escape(self.jail))
+            r"\[{}\]\s*(Ban|Unban) (.*)".format(re.escape(self.jail))
         )
         _LOGGER.debug("Setting up jail %s", self.jail)
 

@@ -1,5 +1,4 @@
 """Provide configuration end points for Customize."""
-
 from homeassistant.components.config import EditKeyBasedConfigView
 from homeassistant.components import SERVICE_RELOAD_CORE_CONFIG
 from homeassistant.config import DATA_CUSTOMIZE

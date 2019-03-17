@@ -1,19 +1,20 @@
 """Component to configure Home Assistant via an API."""
 import asyncio
+import importlib
 import os
 
 import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
-from homeassistant.setup import (
-    async_prepare_setup_platform, ATTR_COMPONENT)
+from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.util.yaml import load_yaml, dump
 
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
 SECTIONS = (
+    'area_registry',
     'auth',
     'auth_provider_homeassistant',
     'automation',
@@ -23,7 +24,6 @@ SECTIONS = (
     'device_registry',
     'entity_registry',
     'group',
-    'hassbian',
     'script',
 )
 ON_DEMAND = ('zwave',)
@@ -36,8 +36,7 @@ async def async_setup(hass, config):
 
     async def setup_panel(panel_name):
         """Set up a panel."""
-        panel = await async_prepare_setup_platform(
-            hass, config, DOMAIN, panel_name)
+        panel = importlib.import_module('.{}'.format(panel_name), __name__)
 
         if not panel:
             return

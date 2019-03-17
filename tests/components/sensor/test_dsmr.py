@@ -6,13 +6,13 @@ Entity to be updated with new values.
 """
 
 import asyncio
+import datetime
 from decimal import Decimal
 from unittest.mock import Mock
 
 import asynctest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.sensor.dsmr import DerivativeDSMREntity
-from homeassistant.const import STATE_UNKNOWN
 import pytest
 from tests.common import assert_setup_component
 
@@ -83,7 +83,7 @@ def test_default_setup(hass, mock_connection_factory):
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get('sensor.power_consumption')
     assert power_consumption.state == '0.0'
-    assert power_consumption.attributes.get('unit_of_measurement') is 'kWh'
+    assert power_consumption.attributes.get('unit_of_measurement') == 'kWh'
 
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get('sensor.power_tariff')
@@ -96,32 +96,34 @@ def test_derivative():
     """Test calculation of derivative value."""
     from dsmr_parser.objects import MBusObject
 
-    entity = DerivativeDSMREntity('test', '1.0.0')
+    config = {'platform': 'dsmr'}
+
+    entity = DerivativeDSMREntity('test', '1.0.0', config)
     yield from entity.async_update()
 
-    assert entity.state == STATE_UNKNOWN, 'initial state not unknown'
+    assert entity.state is None, 'initial state not unknown'
 
     entity.telegram = {
         '1.0.0': MBusObject([
-            {'value': 1},
-            {'value': 1, 'unit': 'm3'},
+            {'value': datetime.datetime.fromtimestamp(1551642213)},
+            {'value': Decimal(745.695), 'unit': 'm3'},
         ])
     }
     yield from entity.async_update()
 
-    assert entity.state == STATE_UNKNOWN, \
+    assert entity.state is None, \
         'state after first update should still be unknown'
 
     entity.telegram = {
         '1.0.0': MBusObject([
-            {'value': 2},
-            {'value': 2, 'unit': 'm3'},
+            {'value': datetime.datetime.fromtimestamp(1551642543)},
+            {'value': Decimal(745.698), 'unit': 'm3'},
         ])
     }
     yield from entity.async_update()
 
-    assert entity.state == 1, \
-        'state should be difference between first and second update'
+    assert abs(entity.state - 0.033) < 0.00001, \
+        'state should be hourly usage calculated from first and second update'
 
     assert entity.unit_of_measurement == 'm3/h'
 

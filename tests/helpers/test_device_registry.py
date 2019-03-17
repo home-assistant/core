@@ -1,6 +1,8 @@
 """Tests for the Device Registry."""
+import asyncio
 from unittest.mock import patch
 
+import asynctest
 import pytest
 
 from homeassistant.helpers import device_registry
@@ -133,6 +135,8 @@ async def test_loading_from_storage(hass, hass_storage):
                     'model': 'model',
                     'name': 'name',
                     'sw_version': 'version',
+                    'area_id': '12345A',
+                    'name_by_user': 'Test Friendly Name'
                 }
             ]
         }
@@ -146,6 +150,8 @@ async def test_loading_from_storage(hass, hass_storage):
         identifiers={('serial', '12:34:56:AB:CD:EF')},
         manufacturer='manufacturer', model='model')
     assert entry.id == 'abcdefghijklm'
+    assert entry.area_id == '12345A'
+    assert entry.name_by_user == 'Test Friendly Name'
     assert isinstance(entry.config_entries, set)
 
 
@@ -184,6 +190,25 @@ async def test_removing_config_entries(registry):
 
     assert entry.config_entries == {'456'}
     assert entry3.config_entries == set()
+
+
+async def test_removing_area_id(registry):
+    """Make sure we can clear area id."""
+    entry = registry.async_get_or_create(
+        config_entry_id='123',
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        },
+        identifiers={('bridgeid', '0123')},
+        manufacturer='manufacturer', model='model')
+
+    entry_w_area = registry.async_update_device(entry.id, area_id='12345A')
+
+    registry.async_clear_area_id('12345A')
+    entry_wo_area = registry.async_get_device({('bridgeid', '0123')}, set())
+
+    assert not entry_wo_area.area_id
+    assert entry_w_area != entry_wo_area
 
 
 async def test_specifying_hub_device_create(registry):
@@ -328,3 +353,36 @@ async def test_format_mac(registry):
             },
         )
         assert list(invalid_mac_entry.connections)[0][1] == invalid
+
+
+async def test_update(registry):
+    """Verify that we can update area_id of a device."""
+    entry = registry.async_get_or_create(
+        config_entry_id='1234',
+        connections={
+            (device_registry.CONNECTION_NETWORK_MAC, '12:34:56:AB:CD:EF')
+        })
+
+    assert not entry.area_id
+    assert not entry.name_by_user
+
+    updated_entry = registry.async_update_device(
+        entry.id, area_id='12345A', name_by_user='Test Friendly Name')
+
+    assert updated_entry != entry
+    assert updated_entry.area_id == '12345A'
+    assert updated_entry.name_by_user == 'Test Friendly Name'
+
+
+async def test_loading_race_condition(hass):
+    """Test only one storage load called when concurrent loading occurred ."""
+    with asynctest.patch(
+        'homeassistant.helpers.device_registry.DeviceRegistry.async_load',
+    ) as mock_load:
+        results = await asyncio.gather(
+            device_registry.async_get_registry(hass),
+            device_registry.async_get_registry(hass),
+        )
+
+        mock_load.assert_called_once_with()
+        assert results[0] == results[1]
