@@ -10,7 +10,7 @@ import requests_mock
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
-import homeassistant.components.sensor.rest as rest
+import homeassistant.components.rest.sensor as rest
 from homeassistant.helpers.config_validation import template
 
 from tests.common import get_test_home_assistant, assert_setup_component

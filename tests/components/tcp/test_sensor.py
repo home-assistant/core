@@ -7,7 +7,7 @@ from unittest.mock import patch, Mock
 
 from tests.common import (get_test_home_assistant, assert_setup_component)
 from homeassistant.setup import setup_component
-from homeassistant.components.sensor import tcp
+import homeassistant.components.tcp.sensor as tcp
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
 
