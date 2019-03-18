@@ -19,7 +19,7 @@ DOMAIN = 'tfiac'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-REQUIREMENTS = ['pytfiac==0.2']
+REQUIREMENTS = ['pytfiac==0.3']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
