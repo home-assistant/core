@@ -40,6 +40,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         self.region = None
         self.pin = None
         self.m_device = None
+        self.device_list = []
 
     async def async_step_user(self, user_input=None):
         """Handle a user config flow."""
@@ -101,36 +102,37 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         REGIONS = sorted(COUNTRIES.keys())
         errors = {}
 
-        # Search for device.
-        devices = await self.hass.async_add_executor_job(
-            self.helper.has_devices, self.m_device)
+        if user_input is None:
+            # Search for device.
+            devices = await self.hass.async_add_executor_job(
+                self.helper.has_devices, self.m_device)
 
-        # Abort if can't find device.
-        if not devices:
-            return self.async_abort(reason='no_devices_found')
+            # Abort if can't find device.
+            if not devices:
+                return self.async_abort(reason='no_devices_found')
 
-        device_list = [device['host-ip'] for device in devices]
+            self.device_list = [device['host-ip'] for device in devices]
 
-        # If entry exists check that devices found aren't configured.
-        if self.hass.config_entries.async_entries(DOMAIN):
-            creds = {}
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                # Retrieve creds from entry
-                creds['data'] = entry.data[CONF_TOKEN]
-                # Retrieve device data from entry
-                conf_devices = entry.data['devices']
-                for c_device in conf_devices:
-                    if c_device['host'] in self.device_list:
-                        # Remove configured device from search list.
-                        self.device_list.remove(c_device['host'])
-            # If list is empty then all devices are configured.
-            if not self.device_list:
-                return self.async_abort(reason='devices_configured')
-            # Add existing creds for linking. Should be only 1.
-            if not creds:
-                # Abort if creds is missing.
-                return self.async_abort(reason='credential_error')
-            self.creds = creds['data']
+            # If entry exists check that devices found aren't configured.
+            if self.hass.config_entries.async_entries(DOMAIN):
+                creds = {}
+                for entry in self.hass.config_entries.async_entries(DOMAIN):
+                    # Retrieve creds from entry
+                    creds['data'] = entry.data[CONF_TOKEN]
+                    # Retrieve device data from entry
+                    conf_devices = entry.data['devices']
+                    for c_device in conf_devices:
+                        if c_device['host'] in self.device_list:
+                            # Remove configured device from search list.
+                            self.device_list.remove(c_device['host'])
+                # If list is empty then all devices are configured.
+                if not self.device_list:
+                    return self.async_abort(reason='devices_configured')
+                # Add existing creds for linking. Should be only 1.
+                if not creds:
+                    # Abort if creds is missing.
+                    return self.async_abort(reason='credential_error')
+                self.creds = creds['data']
 
         # Login to PS4 with user data.
         if user_input is not None:
@@ -180,7 +182,8 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         # Show User Input form.
         link_schema = OrderedDict()
-        link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(list(device_list))
+        link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(
+            list(self.device_list))
         link_schema[vol.Required(CONF_REGION)] = vol.In(list(REGIONS))
         link_schema[vol.Required(CONF_CODE)] = str
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
