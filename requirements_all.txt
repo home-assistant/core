@@ -1393,7 +1393,7 @@ python-songpal==0.0.9.1
 python-synology==0.2.0
 
 # homeassistant.components.tado
-python-tado==0.2.3
+python-tado==0.2.8
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==11.1.0
