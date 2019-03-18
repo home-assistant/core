@@ -32,11 +32,9 @@ if TYPE_CHECKING:
         ServiceCall, UserService
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.6.0']
+REQUIREMENTS = ['aioesphomeapi==1.7.0']
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'esphome'
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
 DISPATCHER_REMOVE_ENTITY = 'esphome_{entry_id}_remove_{component_key}_{key}'
@@ -50,6 +48,7 @@ STORAGE_VERSION = 1
 # The HA component types this integration supports
 HA_COMPONENTS = [
     'binary_sensor',
+    'camera',
     'cover',
     'fan',
     'light',
@@ -543,7 +542,7 @@ class EsphomeEntity(Entity):
         self._remove_callbacks.append(
             async_dispatcher_connect(self.hass,
                                      DISPATCHER_UPDATE_ENTITY.format(**kwargs),
-                                     self.async_schedule_update_ha_state)
+                                     self._on_update)
         )
 
         self._remove_callbacks.append(
@@ -557,6 +556,10 @@ class EsphomeEntity(Entity):
                 self.hass, DISPATCHER_ON_DEVICE_UPDATE.format(**kwargs),
                 self.async_schedule_update_ha_state)
         )
+
+    async def _on_update(self):
+        """Update the entity state when state or static info changed."""
+        self.async_schedule_update_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Unregister callbacks."""
