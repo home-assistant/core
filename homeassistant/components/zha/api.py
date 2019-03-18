@@ -310,7 +310,10 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
     cluster_id = msg[ATTR_CLUSTER_ID]
     cluster_type = msg[ATTR_CLUSTER_TYPE]
     attribute = msg[ATTR_ATTRIBUTE]
-    manufacturer = msg.get(ATTR_MANUFACTURER) or None
+    manufacturer = None
+    #  only use manufacturer code for manufacturer clusters
+    if cluster_id >= 0xfc00:
+        msg.get(ATTR_MANUFACTURER) or None
     zha_device = zha_gateway.get_device(ieee)
     success = failure = None
     if zha_device is not None:
@@ -473,7 +476,10 @@ def async_load_api(hass):
         cluster_type = service.data.get(ATTR_CLUSTER_TYPE)
         attribute = service.data.get(ATTR_ATTRIBUTE)
         value = service.data.get(ATTR_VALUE)
-        manufacturer = service.data.get(ATTR_MANUFACTURER) or None
+        manufacturer = None
+        #  only use manufacturer code for manufacturer clusters
+        if cluster_id >= 0xfc00:
+            manufacturer = service.data.get(ATTR_MANUFACTURER) or None
         zha_device = zha_gateway.get_device(ieee)
         response = None
         if zha_device is not None:
@@ -511,7 +517,10 @@ def async_load_api(hass):
         command = service.data.get(ATTR_COMMAND)
         command_type = service.data.get(ATTR_COMMAND_TYPE)
         args = service.data.get(ATTR_ARGS)
-        manufacturer = service.data.get(ATTR_MANUFACTURER) or None
+        manufacturer = None
+        #  only use manufacturer code for manufacturer clusters
+        if cluster_id >= 0xfc00:
+            manufacturer = service.data.get(ATTR_MANUFACTURER) or None
         zha_device = zha_gateway.get_device(ieee)
         response = None
         if zha_device is not None:
