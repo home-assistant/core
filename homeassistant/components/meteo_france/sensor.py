@@ -24,11 +24,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     from vigilancemeteo import ZoneAlerte
 
+    alert_watcher = None
     if 'weather_alert' in monitored_conditions:
-        # TODO: add link with client to retrieve the area code and pass it to ZoneAlerte
-        alert_watcher = ZoneAlerte('02')
-    else:
-        alert_watcher = None
+        datas = hass.data[DATA_METEO_FRANCE][city].get_data()
+        if "dept" in datas:
+            alert_watcher = ZoneAlerte(datas["dept"])
 
     add_entities([MeteoFranceSensor(variable, client, alert_watcher)
                   for variable in monitored_conditions], True)
@@ -96,6 +96,7 @@ class MeteoFranceSensor(Entity):
             self._data = self._client.get_data()
 
             if self._condition == 'weather_alert':
+                #TODO: check if not 'None'
                 self._alert_watcher.mise_a_jour_etat()
                 self._state = self._alert_watcher.synthese_couleur
                 return
