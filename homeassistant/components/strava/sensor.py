@@ -16,7 +16,7 @@ DEPENDENCIES = ['strava']
 ICON_MAPPING_FIELDS = {
     'distance': 'mdi:map-marker-distance',
     'moving_time': 'mdi:timer',
-    'elapsed_time': 'mdi:timer', 
+    'elapsed_time': 'mdi:timer',
     'start_latlng': 'mdi:map-marker',
     'end_latlng': 'mdi:map-marker',
     'total_elevation_gain': 'mdi:elevation-rise',
@@ -280,7 +280,7 @@ class StravaAthleteSensor(StravaSensor):
         """
 
         self._data.renew_token()
-        
+
         if self._data.is_authorized:
             self._state = self._client.get_athlete_stats(self._athlete_id)
 
@@ -301,7 +301,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     athlete_id = config.get(CONF_ATHLETE)
     stats = config.get(CONF_STATS)
     activity = config.get(CONF_ACTIVITY)
-    
+
     if data.is_authorized:
         sensors = []
 
@@ -312,5 +312,5 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for field in activity:
             sensor = StravaActivitySensor(data, athlete_id, field)
             sensors.append(sensor)
-            
+
         add_entities(sensors, True)
