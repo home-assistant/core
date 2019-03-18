@@ -48,8 +48,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 def discover_devices(hass, hass_config):
     """
-    Run periodically to discover new devices;
-    currently it's only run at startup.
+    Run periodically to discover new devices.
+
+    Currently it's only run at startup.
     """
     component_configs = {}
 
@@ -102,19 +103,16 @@ def setup(hass, base_config):
 
 
 class SuplaChannel(Entity):
-    '''
-    Base class of a Supla Channel (an equivalent of HA's Entity)
-    '''
+    "Base class of a Supla Channel (an equivalent of HA's Entity)."
 
     def __init__(self, channel_data):
+        "Channel data -- raw channel infor from PySupla."
         self.server_name = channel_data['server_name']
         self.channel_data = channel_data
 
     @property
     def server(self):
-        """
-        Return PySupla's server component associated with entity
-        """
+        "Return PySupla's server component associated with entity."
         return self.hass.data[SUPLA_SERVERS][self.server_name]
 
     @property
@@ -134,12 +132,14 @@ class SuplaChannel(Entity):
 
     @property
     def should_poll(self):
-        "Supla's web API requires polling"
+        "Supla's web API requires polling."
         return True
 
     def action(self, action, **add_pars):
         """
-        Runs server action; actions are currently hardoced in components
+        Run server action.
+
+        Actions are currently hardoced in components.
         Supla's API enables autodiscovery
         """
         _LOGGER.debug(
