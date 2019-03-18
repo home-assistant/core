@@ -39,6 +39,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
                                timeout=5.0)
     except asyncio.TimeoutError:
         _LOGGER.error('Timeout during setup.')
+        return False
 
     async def controller_close(event):
         """Close connection when HASS shutsdown."""
