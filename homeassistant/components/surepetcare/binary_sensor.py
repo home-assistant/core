@@ -13,8 +13,6 @@ from .const import (CONF_FLAPS, CONF_HOUSEHOLD_ID, CONF_PETS,
 
 _LOGGER = logging.getLogger(__name__)
 
-# SCAN_INTERVAL = timedelta(seconds=600)
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Sure PetCare Flaps sensors based on a config entry."""
