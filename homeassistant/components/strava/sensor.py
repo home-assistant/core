@@ -272,7 +272,8 @@ class StravaAthleteSensor(StravaSensor):
 
     @property
     def unique_id(self):
-        return 'strava_athelete_{}_stats_{}'.format(self._athlete_id, self._field)
+        return 'strava_athelete_{}_stats_{}'.format(
+            self._athlete_id, self._field)
 
     def update(self):
         """Fetch new state data for the sensor.

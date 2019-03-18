@@ -56,7 +56,8 @@ class StravaData:
         self._hass.http.register_view(StravaAuthCallbackView(self))
 
         # Some settings
-        self._path = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
+        self._path = config.get(CONF_CACHE_PATH,
+                                hass.config.path(DEFAULT_CACHE_PATH))
         self._client_id = config.get(CONF_CLIENT_ID)
         self._client_secret = config.get(CONF_CLIENT_SECRET)
 
@@ -109,7 +110,8 @@ class StravaData:
     def request_token(self):
         """Request Strava access token."""
 
-        callback_url = '{}{}'.format(self._hass.config.api.base_url, AUTH_CALLBACK_PATH)
+        callback_url = '{}{}'.format(self._hass.config.api.base_url,
+                                     AUTH_CALLBACK_PATH)
         authorize_url = self.client.authorization_url(
             client_id=self._config.get(CONF_CLIENT_ID),
             redirect_uri=callback_url)
