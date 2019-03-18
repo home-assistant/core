@@ -4,7 +4,6 @@ Support for Dyson Pure Cool Link Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dyson/
 """
-import asyncio
 import logging
 
 from homeassistant.components.dyson import DYSON_DEVICES
@@ -18,7 +17,6 @@ SENSOR_UNITS = {
     'dust': None,
     'filter_life': 'hours',
     'humidity': '%',
-    'filter_state': '%'
 }
 
 SENSOR_ICONS = {
@@ -27,7 +25,6 @@ SENSOR_ICONS = {
     'filter_life': 'mdi:filter-outline',
     'humidity': 'mdi:water-percent',
     'temperature': 'mdi:thermometer',
-    'filter_state': 'mdi:filter-outline'
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,21 +36,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     unit = hass.config.units.temperature_unit
     # Get Dyson Devices from parent component
-    from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
-    from libpurecool.dyson_pure_cool import DysonPureCool
-
-    for device in hass.data[DYSON_DEVICES]:
-        if isinstance(device, DysonPureCool):
-            devices.append(DysonTemperatureSensor(device, unit))
-            devices.append(DysonHumiditySensor(device))
-            devices.append(DysonCarbonFilterStateSensor(device))
-            devices.append(DysonHepaFilterStateSensor(device))
-        elif isinstance(device, DysonPureCoolLink):
-            devices.append(DysonFilterLifeSensor(device))
-            devices.append(DysonDustSensor(device))
-            devices.append(DysonHumiditySensor(device))
-            devices.append(DysonTemperatureSensor(device, unit))
-            devices.append(DysonAirQualitySensor(device))
+    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+    for device in [d for d in hass.data[DYSON_DEVICES] if
+                   isinstance(d, DysonPureCoolLink)]:
+        devices.append(DysonFilterLifeSensor(device))
+        devices.append(DysonDustSensor(device))
+        devices.append(DysonHumiditySensor(device))
+        devices.append(DysonTemperatureSensor(device, unit))
+        devices.append(DysonAirQualitySensor(device))
     add_entities(devices)
 
 
@@ -67,8 +57,7 @@ class DysonSensor(Entity):
         self._name = None
         self._sensor_type = sensor_type
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.async_add_job(
             self._device.add_message_listener, self.on_message)
@@ -193,36 +182,4 @@ class DysonAirQualitySensor(DysonSensor):
         """Return Air Quality value."""
         if self._device.environmental_state:
             return self._device.environmental_state.volatil_organic_compounds
-        return None
-
-
-class DysonCarbonFilterStateSensor(DysonSensor):
-    """Representation of Dyson carbon filter state sensor (in %)."""
-
-    def __init__(self, device):
-        """Create a new Dyson carbon filter state sensor."""
-        DysonSensor.__init__(self, device, 'filter_state')
-        self._name = "{} Carbon filter state".format(self._device.name)
-
-    @property
-    def state(self):
-        """Return carbon filter state in %."""
-        if self._device.state:
-            return int(self._device.state.carbon_filter_state)
-        return None
-
-
-class DysonHepaFilterStateSensor(DysonSensor):
-    """Representation of Dyson carbon filter state sensor (in %)."""
-
-    def __init__(self, device):
-        """Create a new Dyson carbon filter state sensor."""
-        DysonSensor.__init__(self, device, 'filter_state')
-        self._name = "{} HEPA filter state".format(self._device.name)
-
-    @property
-    def state(self):
-        """Return hepa filter state in %."""
-        if self._device.state:
-            return int(self._device.state.hepa_filter_state)
         return None

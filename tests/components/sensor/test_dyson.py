@@ -2,8 +2,7 @@
 import unittest
 from unittest import mock
 
-from libpurecool.dyson_pure_cool import DysonPureCool
-from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
 
 from homeassistant.components.sensor import dyson
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, \
@@ -46,33 +45,6 @@ def _get_with_standby_monitoring():
     device.environmental_state.humidity = 0
     device.environmental_state.temperature = 0
     device.environmental_state.volatil_organic_compounds = 2
-
-    return device
-
-
-def _get_purecool_device_without_state():
-    """Return a valid purecool device provided by Dyson web services."""
-    device = mock.Mock(spec=DysonPureCool)
-    device.name = "Device_name"
-    device.state = None
-    device.environmental_state = None
-    return device
-
-
-def _get_purecool_device_with_state():
-    """Return a valid purecool device with state values."""
-    device = mock.Mock()
-    device.name = "Device_name"
-    device.state = mock.Mock()
-    device.state.carbon_filter_state = 100
-    device.state.hepa_filter_state = 90
-    device.environmental_state = mock.Mock()
-    device.environmental_state.humidity = 47
-    device.environmental_state.nitrogen_dioxide = 1
-    device.environmental_state.particulate_matter_10 = 50
-    device.environmental_state.particulate_matter_25 = 60
-    device.environmental_state.temperature = 296.1
-    device.environmental_state.volatile_organic_compounds = 13
 
     return device
 
@@ -255,67 +227,4 @@ class DysonTest(unittest.TestCase):
         assert sensor.state == 2
         assert sensor.unit_of_measurement is None
         assert sensor.name == "Device_name AQI"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_setup_purecool_component(self):
-        """Test setup purecool component with devices."""
-        def _add_device(devices):
-            assert len(devices) == 4
-            assert devices[0].name == "Device_name Temperature"
-            assert devices[1].name == "Device_name Humidity"
-            assert devices[2].name == "Device_name Carbon filter state"
-            assert devices[3].name == "Device_name HEPA filter state"
-
-        device_fan = _get_purecool_device_without_state()
-        device_non_fan = _get_purecool_device_with_state()
-        self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
-        dyson.setup_platform(self.hass, None, _add_device)
-
-    def test_dyson_purecool_carbon_filter_sensor(self):
-        """Test carbon filter sensor with no value."""
-        sensor = dyson.DysonCarbonFilterStateSensor(
-            _get_purecool_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == "%"
-        assert sensor.name == "Device_name Carbon filter state"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_carbon_filter_sensor_with_values(self):
-        """Test carbon filter sensor with with values."""
-        sensor = dyson.DysonCarbonFilterStateSensor(
-            _get_purecool_device_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 100
-        assert sensor.unit_of_measurement == "%"
-        assert sensor.name == "Device_name Carbon filter state"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_hepa_filter_sensor(self):
-        """Test hepa filter sensor with no value."""
-        sensor = dyson.DysonHepaFilterStateSensor(
-            _get_purecool_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == "%"
-        assert sensor.name == "Device_name HEPA filter state"
-        assert sensor.entity_id == "sensor.dyson_1"
-
-    def test_dyson_purecool_hepa_filter_sensor_with_values(self):
-        """Test HEPA filter sensor with with values."""
-        sensor = dyson.DysonHepaFilterStateSensor(
-            _get_purecool_device_with_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 90
-        assert sensor.unit_of_measurement == "%"
-        assert sensor.name == "Device_name " \
-                              "HEPA filter state"
         assert sensor.entity_id == "sensor.dyson_1"
