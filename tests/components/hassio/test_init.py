@@ -321,7 +321,12 @@ def test_service_calls_core(hassio_env, hass, aioclient_mock):
 
     assert aioclient_mock.call_count == 2
 
-    yield from hass.services.async_call('homeassistant', 'restart')
-    yield from hass.async_block_till_done()
+    with patch(
+        'homeassistant.config.async_check_ha_config_file',
+        return_value=mock_coro()
+    ) as mock_check_config:
+        yield from hass.services.async_call('homeassistant', 'restart')
+        yield from hass.async_block_till_done()
+        assert mock_check_config.called
 
     assert aioclient_mock.call_count == 3
