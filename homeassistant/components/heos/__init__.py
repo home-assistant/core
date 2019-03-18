@@ -30,13 +30,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     host = config[DOMAIN][CONF_HOST]
     controller = AioHeosController(hass.loop, host)
 
-    async def controller_connect(controller):
-        """Make connection to HEOS."""
-        await controller.connect()
-
     try:
-        await asyncio.wait_for(controller_connect(controller),
-                               timeout=5.0)
+        await asyncio.wait_for(controller.connect(), timeout=5.0)
     except asyncio.TimeoutError:
         _LOGGER.error('Timeout during setup.')
         return False
