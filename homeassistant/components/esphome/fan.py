@@ -2,8 +2,7 @@
 import logging
 from typing import List, Optional, TYPE_CHECKING
 
-from homeassistant.components.esphome import EsphomeEntity, \
-    platform_async_setup_entry
+from . import EsphomeEntity, platform_async_setup_entry
 from homeassistant.components.fan import FanEntity, SPEED_HIGH, SPEED_LOW, \
     SPEED_MEDIUM, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, SPEED_OFF
 from homeassistant.config_entries import ConfigEntry

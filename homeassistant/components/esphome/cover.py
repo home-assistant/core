@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, Optional
 
 from homeassistant.components.cover import CoverDevice, SUPPORT_CLOSE, \
     SUPPORT_OPEN, SUPPORT_STOP
-from homeassistant.components.esphome import EsphomeEntity, \
-    platform_async_setup_entry
+from . import EsphomeEntity, platform_async_setup_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 

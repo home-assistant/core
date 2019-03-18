@@ -2,8 +2,7 @@
 import logging
 from typing import Optional, List, Tuple, TYPE_CHECKING
 
-from homeassistant.components.esphome import EsphomeEntity, \
-    platform_async_setup_entry
+from . import EsphomeEntity, platform_async_setup_entry
 from homeassistant.components.light import Light, SUPPORT_FLASH, \
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR, \
     SUPPORT_WHITE_VALUE, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, ATTR_HS_COLOR, \

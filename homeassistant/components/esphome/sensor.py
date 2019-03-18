@@ -3,8 +3,7 @@ import logging
 import math
 from typing import Optional, TYPE_CHECKING
 
-from homeassistant.components.esphome import EsphomeEntity, \
-    platform_async_setup_entry
+from . import EsphomeEntity, platform_async_setup_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
