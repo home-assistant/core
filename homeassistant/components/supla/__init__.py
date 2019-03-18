@@ -103,16 +103,16 @@ def setup(hass, base_config):
 
 
 class SuplaChannel(Entity):
-    "Base class of a Supla Channel (an equivalent of HA's Entity)."
+    """Base class of a Supla Channel (an equivalent of HA's Entity)."""
 
     def __init__(self, channel_data):
-        "Channel data -- raw channel infor from PySupla."
+        """Channel data -- raw channel infor from PySupla."""
         self.server_name = channel_data['server_name']
         self.channel_data = channel_data
 
     @property
     def server(self):
-        "Return PySupla's server component associated with entity."
+        """Return PySupla's server component associated with entity."""
         return self.hass.data[SUPLA_SERVERS][self.server_name]
 
     @property
@@ -132,7 +132,7 @@ class SuplaChannel(Entity):
 
     @property
     def should_poll(self):
-        "Supla's web API requires polling."
+        """Supla's web API requires polling."""
         return True
 
     def action(self, action, **add_pars):
