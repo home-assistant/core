@@ -39,11 +39,14 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_HOUSEHOLD_ID): cv.positive_int,
-        vol.Optional(CONF_FLAPS): vol.Schema(vol.All(cv.ensure_list, [FLAP_SCHEMA])),
-        vol.Optional(CONF_PETS): vol.Schema(vol.All(cv.ensure_list, [PET_SCHEMA])),
+        vol.Optional(CONF_FLAPS): vol.Schema(
+            vol.All(cv.ensure_list, [FLAP_SCHEMA])),
+        vol.Optional(CONF_PETS): vol.Schema(
+            vol.All(cv.ensure_list, [PET_SCHEMA])),
         vol.Optional(CONF_DEVICE_CLASS, default="door"): cv.string,
         vol.Optional(CONF_ICON, default="mdi:door"): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
+        vol.Optional(
+            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -93,7 +96,9 @@ async def async_setup(hass, config):
     configured_households = get_configured_households(hass)
 
     if conf[CONF_HOUSEHOLD_ID] in configured_households:
-        _LOGGER.debug("%s already configured in %s", conf[CONF_HOUSEHOLD_ID], configured_households)
+        _LOGGER.debug(
+            "%s already configured in %s",
+            conf[CONF_HOUSEHOLD_ID], configured_households)
         return True
 
     sure_entry_data[CONF_USERNAME] = conf[CONF_USERNAME]
