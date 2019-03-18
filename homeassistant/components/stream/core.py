@@ -43,6 +43,7 @@ class StreamOutput:
 
     def __init__(self, stream) -> None:
         """Initialize a stream output."""
+        self.idle = False
         self._stream = stream
         self._cursor = None
         self._event = asyncio.Event()
@@ -77,10 +78,11 @@ class StreamOutput:
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""
+        self.idle = False
         # Reset idle timeout
         if self._unsub is not None:
             self._unsub()
-        self._unsub = async_call_later(self._stream.hass, 300, self._cleanup)
+        self._unsub = async_call_later(self._stream.hass, 300, self._timeout)
 
         if not sequence:
             return self._segments
@@ -109,7 +111,7 @@ class StreamOutput:
         # Start idle timeout when we start recieving data
         if self._unsub is None:
             self._unsub = async_call_later(
-                self._stream.hass, 300, self._cleanup)
+                self._stream.hass, 300, self._timeout)
 
         if segment is None:
             self._event.set()
@@ -124,7 +126,15 @@ class StreamOutput:
         self._event.clear()
 
     @callback
-    def _cleanup(self, _now=None):
+    def _timeout(self, _now=None):
+        """Handle stream timeout."""
+        if self._stream.keepalive:
+            self.idle = True
+            self._stream.check_idle()
+        else:
+            self._cleanup()
+
+    def _cleanup(self):
         """Remove provider."""
         self._segments = []
         self._stream.remove_provider(self)
