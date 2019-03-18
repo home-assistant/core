@@ -151,7 +151,7 @@ class MailNotificationService(BaseNotificationService):
         if data:
             if ATTR_HTML in data:
                 msg = _build_html_msg(
-                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES))
+                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, []))
             else:
                 msg = _build_multipart_msg(
                     message, images=data.get(ATTR_IMAGES))
@@ -241,16 +241,14 @@ def _build_html_msg(text, html, images):
     alternative.attach(MIMEText(html, ATTR_HTML, _charset='utf-8'))
     msg.attach(alternative)
 
-    if images is not None:
-        for atch_num, atch_name in enumerate(images):
-            name = os.path.basename(atch_name)
-            try:
-                with open(atch_name, 'rb') as attachment_file:
-                    attachment = MIMEImage(attachment_file.read(),
-                                           filename=name)
-                msg.attach(attachment)
-                attachment.add_header('Content-ID', '<{}>'.format(name))
-            except FileNotFoundError:
-                _LOGGER.warning("Attachment %s [#%s] not found. Skipping",
-                                atch_name, atch_num)
+    for atch_num, atch_name in enumerate(images):
+        name = os.path.basename(atch_name)
+        try:
+            with open(atch_name, 'rb') as attachment_file:
+                attachment = MIMEImage(attachment_file.read(), filename=name)
+            msg.attach(attachment)
+            attachment.add_header('Content-ID', '<{}>'.format(name))
+        except FileNotFoundError:
+            _LOGGER.warning("Attachment %s [#%s] not found. Skipping",
+                            atch_name, atch_num)
     return msg
