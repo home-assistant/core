@@ -1,4 +1,5 @@
 """Config flow to configure Axis devices."""
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -140,7 +141,6 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             title=title,
             data=data
         )
-
 
     async def async_step_discovery(self, discovery_info):
         """Prepare configuration for a discovered Axis device.

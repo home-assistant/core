@@ -1,4 +1,5 @@
 """Support for Axis binary sensors."""
+
 from datetime import timedelta
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
