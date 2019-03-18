@@ -8,7 +8,7 @@ async def async_setup_platform(
     """Set up Proxmox VE sensors."""
     nodes = hass.data[proxmox.DATA_PROXMOX_NODES]
     sensors = []
-    
+
     for name in nodes.keys():
         item = nodes[name]
         if 'type' in item and item['type'] == 'node':
@@ -43,7 +43,7 @@ async def async_setup_platform(
 
 
 class PXMXSensor(Entity):
-    """Sensors to show the resource usages of Proxmox VE nodes & VMs/Containers."""
+    """Sensors to show the resource usages of Proxmox VE nodes & VMs."""
 
     def __init__(self, hass, node_name, sensor_name, value, unit, icon):
         """Initialize Proxmox VE sensor."""
