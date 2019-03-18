@@ -1,5 +1,6 @@
 """Support for Sure PetCare Flaps binary sensors."""
 import logging
+from enum import IntEnum
 from typing import AnyStr
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -12,6 +13,39 @@ from .const import (CONF_FLAPS, CONF_HOUSEHOLD_ID, CONF_PETS,
                     SURE_IDS, SURE_TYPES, TOPIC_UPDATE)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class SureProductID(IntEnum):
+    ROUTER = 1      # Sure Hub
+    PET_FLAP = 3    # Pet Door Connect
+    CAT_FLAP = 6    # Cat Door Connect
+
+
+class SureLocationID(IntEnum):
+    INSIDE = 1
+    OUTSIDE = 2
+    UNKNOWN = -1
+
+
+class SureLockStateID(IntEnum):
+    UNLOCKED = 0
+    LOCKED_IN = 1
+    LOCKED_OUT = 2
+    LOCKED_ALL = 3
+    CURFEW = 4
+    CURFEW_LOCKED = -1
+    CURFEW_UNLOCKED = -2
+    CURFEW_UNKNOWN = -3
+
+
+class SureEventID(IntEnum):
+    MOVE = 0
+    MOVE_UNKNOWN_ANIMAL = 7     # movement of unknown animal
+    BATTERY_WARNING = 1
+    LOCK_ST = 6
+    USR_IFO = 12
+    USR_NEW = 17
+    CURFEW = 20
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -139,10 +173,30 @@ class Flap(SurePetcareBinarySensor):
     def is_on(self):
         """Return true if light is on."""
         try:
-            return bool(self._state["locking"]["mode"])
+            return bool(self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
         except (KeyError, TypeError):
             return False
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        attrs = None
+
+        if self._state:
+            attrs = dict(
+                battery_voltage=self._state["battery"] / 4,
+                locking_mode=self._state["locking"]["mode"],
+                device_rssi=self._state["signal"]["device_rssi"],
+                hub_rssi=self._state["signal"]["hub_rssi"],
+                device_hardware_version=self._state["version"]["device"]["hardware"],
+                device_firmware_version=self._state["version"]["device"]["firmware"],
+                lcd_hardware_version=self._state["version"]["lcd"]["hardware"],
+                lcd_firmware_version=self._state["version"]["lcd"]["firmware"],
+                rf_hardware_version=self._state["version"]["rf"]["hardware"],
+                rf_firmware_version=self._state["version"]["rf"]["firmware"],
+            )
+
+        return attrs
 
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
@@ -161,6 +215,6 @@ class Pet(SurePetcareBinarySensor):
     def is_on(self):
         """Return true if light is on."""
         try:
-            return bool(self._state["where"])
+            return bool(self._state["where"] == SureLocationID.INSIDE)
         except (KeyError, TypeError):
             return False
