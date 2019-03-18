@@ -63,8 +63,8 @@ async def async_setup(hass, config):
     sure_entry_data = dict()
 
     # Store config in hass.data so the config entry can find it
-    sure_data[CONF_USERNAME]: str = conf[CONF_USERNAME]
-    sure_data[CONF_PASSWORD]: str = conf[CONF_PASSWORD]
+    sure_data[CONF_USERNAME] = conf[CONF_USERNAME]
+    sure_data[CONF_PASSWORD] = conf[CONF_PASSWORD]
     sure_data[CONF_ICON] = conf[CONF_ICON]
 
     surepy = SurePetcare(
