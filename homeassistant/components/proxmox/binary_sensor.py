@@ -1,7 +1,7 @@
+"""Support for binary sensors to display Proxmox VE data."""
 import homeassistant.components.proxmox as proxmox
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
-DOMAIN = 'proxmox'
 
 async def async_setup_platform(
                  hass, config, async_add_entities, discovery_info=None):
@@ -12,20 +12,22 @@ async def async_setup_platform(
     for node_name in nodes.keys():
         item = nodes[node_name]
         if 'type' not in item or item['type'] != 'node':
-            sensor = PXMXBinarySensor(hass, node_name, 'Is Running')
+            sensor = PXMXBinarySensor(hass, node_name, 'Status')
             sensors.append(sensor)
 
     async_add_entities(sensors)
 
 
-class PXMXBinarySensor(SwitchDevice):
+class PXMXBinarySensor(BinarySensorDevice):
+    """Define a binary sensor for Proxmox VE VM/Container state."""
 
     def __init__(self, hass, node_name, sensor_name):
         """Initialize Proxmox VE binary sensor."""
         self._hass = hass
         self._node_name = node_name
         self._sensor_name = sensor_name
-        self.update()
+        self._is_available = False
+        self._state = None
 
     @property
     def name(self):
@@ -39,7 +41,7 @@ class PXMXBinarySensor(SwitchDevice):
 
     @property
     def available(self):
-        """Return True if Monitor is available."""
+        """Return True if sensor is available."""
         return self._is_available
 
     def update(self):

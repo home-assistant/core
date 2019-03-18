@@ -1,54 +1,60 @@
+"""Support for sensors to show the resource usages of Proxmox VE"""
 import homeassistant.components.proxmox as proxmox
 from homeassistant.helpers.entity import Entity
 
-DOMAIN = 'proxmox'
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+                 hass, config, async_add_entities, discovery_info=None):
     """Set up Proxmox VE sensors."""
     nodes = hass.data[proxmox.DATA_PROXMOX_NODES]
     sensors = []
     
-    for node_name in nodes.keys():
-        item = nodes[node_name]
+    for name in nodes.keys():
+        item = nodes[name]
         if 'type' in item and item['type'] == 'node':
-            sensors.append(PXMXSensor(hass, node_name, 'Uptime',
-                                      lambda node: "{:.0f}".format(node['uptime']/60), "min", 'mdi:clock-outline'))
+            sensors.append(
+                PXMXSensor(
+                    hass, name, 'Uptime', uptime, "min", 'mdi:clock-outline'))
         else:
-            sensors.append(PXMXSensor(hass, node_name, 'VCPU Count',
-                                      lambda node: node['cpus'], None, 'mdi:chip'))
-        sensors.append(PXMXSensor(hass, node_name, 'Memory',
-                                  lambda node: "{:.2f}".format(node['mem'] * 100 / node['maxmem']), "%", 'mdi:memory'))
-        sensors.append(PXMXSensor(hass, node_name, 'Disk',
-                                  lambda node: "{:.2f}".format(int(node['disk']) * 100 / int(node['maxdisk'])),
-                                  "%", 'mdi:harddisk'))
-        sensors.append(PXMXSensor(hass, node_name, 'CPU',
-                                  lambda node: "{:.2f}".format(node['cpu'] * 100), "%", 'mdi:chip'))
-        sensors.append(PXMXSensor(hass, node_name, 'Max. Memory',
-                                  lambda node: "{:.2f}".format(node['maxmem']/1073741824), 'GB', 'mdi:memor'))
-        sensors.append(PXMXSensor(hass, node_name, 'Memory Used',
-                                  lambda node: "{:.2f}".format(node['mem']/1073741824), 'GB', 'mdi:memory'))
-        sensors.append(PXMXSensor(hass, node_name, 'Max. Disk',
-                                  lambda node: "{:.2f}".format(int(node['maxdisk'])/1073741824), 'GB', 'mdi:harddisk'))
-        sensors.append(PXMXSensor(hass, node_name, 'Disk Used',
-                                  lambda node: "{:.2f}".format(int(node['disk'])/1073741824), 'GB', 'mdi:harddisk'))
-        sensors.append(PXMXSensor(hass, node_name, 'Status',
-                                  lambda node: node['status'], None, None))
+            sensors.append(
+                PXMXSensor(hass, name, 'VCPU Count', vcpus, None, 'mdi:chip'))
+        sensors.append(
+            PXMXSensor(hass, name, 'Memory', ram, "%", 'mdi:memory'))
+        sensors.append(
+            PXMXSensor(hass, name, 'Disk', disk, "%", 'mdi:harddisk'))
+        sensors.append(
+            PXMXSensor(hass, name, 'CPU', cpu, "%", 'mdi:chip'))
+        sensors.append(
+            PXMXSensor(
+                hass, name, 'Max. Memory', mem_max, 'GB', 'mdi:memory'))
+        sensors.append(
+            PXMXSensor(
+                hass, name, 'Memory Used', mem_used, 'GB', 'mdi:memory'))
+        sensors.append(
+            PXMXSensor(
+                hass, name, 'Max. Disk', disk_max, 'GB', 'mdi:harddisk'))
+        sensors.append(
+            PXMXSensor(
+                hass, name, 'Disk Used', disk_used, 'GB', 'mdi:harddisk'))
+        sensors.append(
+            PXMXSensor(hass, name, 'Status', status, None, None))
 
     async_add_entities(sensors)
 
 
 class PXMXSensor(Entity):
+    """Sensors to show the resource usages of Proxmox VE nodes & VMs/Containers."""
 
-    def __init__(self, hass, node_name, sensor_name, sensor_value, unit, icon):
+    def __init__(self, hass, node_name, sensor_name, value, unit, icon):
         """Initialize Proxmox VE sensor."""
         self._hass = hass
         self._node_name = node_name
         self._unit = unit
         self._icon = icon
         self._sensor_name = sensor_name
-        self._sensor_value = sensor_value
-        self.update()
+        self._value = value
+        self._state = None
+        self._is_available = False
 
     @property
     def name(self):
@@ -83,5 +89,55 @@ class PXMXSensor(Entity):
             self._state = None
             self._is_available = False
         else:
-            self._state = self._sensor_value(node)
+            self._state = self._value(node)
             self._is_available = True
+
+
+def uptime(node):
+    """Returns uptime of the given node in minutes."""
+    return "{:.0f}".format(node['uptime']/60)
+
+
+def vcpus(node):
+    """Returns the no. of vcpus in the given vm."""
+    return node['cpus']
+
+
+def ram(node):
+    """Returns the memory usage as a percentage."""
+    return "{:.2f}".format(node['mem'] * 100 / node['maxmem'])
+
+
+def disk(node):
+    """Return the disk usage as a percentage."""
+    return "{:.2f}".format(int(node['disk']) * 100 / int(node['maxdisk']))
+
+
+def cpu(node):
+    """Returns the cpu usage as a percentage."""
+    return "{:.2f}".format(node['cpu'] * 100)
+
+
+def mem_max(node):
+    """Returns the max. memory allocate to the given node in GB."""
+    return "{:.2f}".format(node['maxmem']/1073741824)
+
+
+def mem_used(node):
+    """Returns the memory used by the given node in GB."""
+    return "{:.2f}".format(node['mem']/1073741824)
+
+
+def disk_max(node):
+    """Returns the max. disk space allocate to the given node in GB."""
+    return "{:.2f}".format(int(node['maxdisk'])/1073741824)
+
+
+def disk_used(node):
+    """Returns the disk space used by the given node in GB."""
+    return "{:.2f}".format(int(node['disk'])/1073741824)
+
+
+def status(node):
+    """Returns the current status."""
+    return node['status']

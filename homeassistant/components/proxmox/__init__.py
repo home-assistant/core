@@ -36,67 +36,73 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
-        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_NODES, default=[]): [cv.string],
         vol.Optional(CONF_VMS, default=[]): [int],
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-HOST_CONFIG_SCHEMA = vol.Schema({
-})
-
-
-async def async_configure_proxmox(hass, config):
-    """Configure Proxmox VE API client."""
-    from proxmoxer import ProxmoxAPI
-
-    conf = config.get(DOMAIN)
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    user = conf.get(CONF_USERNAME)
-    realm = conf.get(CONF_REALM)
-    password = conf.get(CONF_PASSWORD)
-    verify_ssl = conf.get(CONF_VERIFY_SSL)
-    proxmox = ProxmoxAPI(host, user=user + '@' + realm, password=password, port=port, verify_ssl=verify_ssl)
-    if proxmox is not None:
-        await setup_proxmox(hass, proxmox, config)
-
 
 async def async_setup(hass, config):
     """Set up the Proxmox VE component."""
+    from proxmoxer import ProxmoxAPI
+    from proxmoxer.backends.https import AuthenticationError
     conf = config.get(DOMAIN)
     if conf is not None:
-        await async_configure_proxmox(hass, config)
+        host = conf.get(CONF_HOST)
+        port = conf.get(CONF_PORT)
+        user = conf.get(CONF_USERNAME)
+        realm = conf.get(CONF_REALM)
+        password = conf.get(CONF_PASSWORD)
+        verify_ssl = conf.get(CONF_VERIFY_SSL)
+        try:
+            proxmox = ProxmoxAPI(
+                host, user=user + '@' + realm, password=password,
+                port=port, verify_ssl=verify_ssl)
+            await setup_proxmox(hass, proxmox, config)
+        except AuthenticationError:
+            # Error authenticating to Proxmox VE
+            _LOGGER.exception("Invalid username or password.")
+            return False
     return True
 
 
 @callback
 async def setup_proxmox(hass, proxmox, config):
+    """Create entities and load data from Proxmox VE."""
     conf = config.get(DOMAIN)
     conf_nodes = conf.get(CONF_NODES)
     conf_vms = conf.get(CONF_VMS)
     await update_data(hass, proxmox, conf_nodes, conf_vms)
 
     async def start(vm):
-        type = 'qemu'
+        """Start the VM or container"""
+        vm_type = 'qemu'
         if 'type' in vm:
-            type = vm['type']
-        result = proxmox.nodes('{}/{}/{}/status/start'.format(vm['node'], type, vm['vmid'])).post()
+            vm_type = vm['type']
+        uri = '{}/{}/{}/status/start'.format(vm['node'], vm_type, vm['vmid'])
+        result = proxmox.nodes(uri).post()
         _LOGGER.info(result)
         fix_status(hass, vm, 'running')
 
     async def stop(vm):
-        type = 'qemu'
+        """Stop the VM or container"""
+        vm_type = 'qemu'
         if 'type' in vm:
-            type = vm['type']
-        result = proxmox.nodes('{}/{}/{}/status/stop'.format(vm['node'], type, vm['vmid'])).post()
+            vm_type = vm['type']
+        uri = '{}/{}/{}/status/stop'.format(vm['node'], vm_type, vm['vmid'])
+        result = proxmox.nodes(uri).post()
         _LOGGER.info(result)
         fix_status(hass, vm, 'stopped')
 
-    hass.data[DATA_PROXMOX_CONTROL] = {'start': start, 'stop': stop}  
-    hass.async_create_task(discovery.async_load_platform(hass, 'sensor', DOMAIN, {}, config))
-    hass.async_create_task(discovery.async_load_platform(hass, 'switch', DOMAIN, {}, config))
-    hass.async_create_task(discovery.async_load_platform(hass, 'binary_sensor', DOMAIN, {}, config))
+    hass.data[DATA_PROXMOX_CONTROL] = {'start': start, 'stop': stop}
+    hass.async_create_task(
+        discovery.async_load_platform(hass, 'sensor', DOMAIN, {}, config))
+    hass.async_create_task(
+        discovery.async_load_platform(hass, 'switch', DOMAIN, {}, config))
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass, 'binary_sensor', DOMAIN, {}, config))
 
     async def async_update_proxmox(now):
         await update_data(hass, proxmox, conf_nodes, conf_vms)
@@ -106,6 +112,7 @@ async def setup_proxmox(hass, proxmox, config):
 
 
 async def update_data(hass, proxmox, conf_nodes, conf_vms):
+    """Update Proxmox VE data."""
     nodes = proxmox.nodes.get()
     node_dict = {}
     for node in nodes:
@@ -126,6 +133,10 @@ async def update_data(hass, proxmox, conf_nodes, conf_vms):
 
 
 def fix_status(hass, vm, status):
+    """Update the currently cached data with the new status of the vm
+    in order to avoid the switch going back to the previous
+    state until the cache is updated with the latest data.
+    """
     data = hass.data[DATA_PROXMOX_NODES]
     vm['status'] = status
     data["{} - {}".format(vm['name'], vm['vmid'])] = vm
