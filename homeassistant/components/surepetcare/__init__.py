@@ -21,7 +21,7 @@ from .const import (CONF_FLAPS, CONF_HOUSEHOLD_ID, CONF_PETS, DATA_SURE_DATA,
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['surepy>=0.1.1']
+REQUIREMENTS = ['surepy==0.1.1']
 SCAN_INTERVAL = timedelta(seconds=60)
 
 FLAP_SCHEMA = vol.Schema({
