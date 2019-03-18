@@ -97,6 +97,5 @@ def setup(hass, config):
         discovery.load_platform(hass, "fan", DOMAIN, {}, config)
         discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
         discovery.load_platform(hass, "climate", DOMAIN, {}, config)
-        discovery.load_platform(hass, "air_quality", DOMAIN, {}, config)
 
     return True
