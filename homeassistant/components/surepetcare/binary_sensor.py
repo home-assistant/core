@@ -16,7 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Sure PetCare Flaps sensors based on a config entry."""
-    hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID] = entry.data[CONF_HOUSEHOLD_ID]
+    hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID] = entry.data[
+        CONF_HOUSEHOLD_ID]
     hass.data[DATA_SURE_PETCARE][CONF_FLAPS] = dict()
     hass.data[DATA_SURE_PETCARE][CONF_PETS] = dict()
 
@@ -47,7 +48,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     def __init__(self, _id: int, name: int, sure_type: str, hass=None):
         self._hass = hass
 
-        self._household_id: int = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
+        self._household_id = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
         self._id: int = _id
         self._type = sure_type
         self._name: AnyStr = None
@@ -83,7 +84,9 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the device class."""
-        return DEFAULT_DEVICE_CLASS if not self._device_class else self._device_class
+        return (DEFAULT_DEVICE_CLASS
+                if not self._device_class
+                else self._device_class)
 
     @property
     def icon(self):
