@@ -252,7 +252,7 @@ async def async_setup(hass, config):
             _LOGGER.error(errors)
             hass.components.persistent_notification.async_create(
                 "Config error. See dev-info panel for details.",
-                "Config validating", "{0}.check_config".format(ha.DOMAIN))
+                "Config validating", "{0}.check_config".format(HASS_DOMAIN))
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
