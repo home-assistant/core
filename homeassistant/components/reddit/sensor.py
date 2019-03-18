@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_SUBREDDITS): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_SORT_BY, default='hot'):
-        vol.All(cv.string, [vol.In(LIST_TYPES)]),
+        vol.All(cv.string, vol.In(LIST_TYPES)),
     vol.Optional(CONF_MAXIMUM, default=10): cv.positive_int
 })
 
