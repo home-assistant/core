@@ -313,7 +313,7 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
     manufacturer = None
     #  only use manufacturer code for manufacturer clusters
     if cluster_id >= 0xfc00:
-        msg.get(ATTR_MANUFACTURER) or None
+        manufacturer = msg.get(ATTR_MANUFACTURER) or None
     zha_device = zha_gateway.get_device(ieee)
     success = failure = None
     if zha_device is not None:
