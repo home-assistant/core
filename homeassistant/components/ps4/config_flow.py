@@ -5,14 +5,17 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+
 from homeassistant.const import (
     CONF_CODE, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_REGION, CONF_TOKEN)
 
-from .const import DEFAULT_NAME, DEFAULT_REGION, DOMAIN, REGIONS
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MODE = 'Config Mode'
+CONF_AUTO = "Auto Discover"
+CONF_MANUAL = "Manual Entry"
 
 UDP_PORT = 987
 TCP_PORT = 997
@@ -36,7 +39,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         self.host = None
         self.region = None
         self.pin = None
-        self.device_list = []
+        self.m_device = None
 
     async def async_step_user(self, user_input=None):
         """Handle a user config flow."""
@@ -49,7 +52,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason=reason)
         # Skip Creds Step if a device is configured.
         if self.hass.config_entries.async_entries(DOMAIN):
-            return await self.async_step_link()
+            return await self.async_step_mode()
         return await self.async_step_creds()
 
     async def async_step_creds(self, user_input=None):
@@ -68,16 +71,14 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
     async def async_step_mode(self, user_input=None):
         """Prompt for mode."""
         errors = {}
-        auto = "Auto Discover"
-        manual = "Manual Entry"
-        mode = [auto, manual]
+        mode = [CONF_AUTO, CONF_MANUAL]
 
         if user_input is not None:
-            if user_input[CONF_MODE] == manual:
+            if user_input[CONF_MODE] == CONF_MANUAL:
                 try:
                     device = user_input[CONF_IP_ADDRESS]
                     if device:
-                        self.device_list.append(device)
+                        self.m_device = device
                 except KeyError:
                     errors['base'] = 'no_ipaddress'
             if not errors:
@@ -85,7 +86,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         mode_schema = OrderedDict()
         mode_schema[vol.Required(
-            CONF_MODE, default=auto)] = vol.In(list(mode))
+            CONF_MODE, default=CONF_AUTO)] = vol.In(list(mode))
         mode_schema[vol.Optional(CONF_IP_ADDRESS)] = str
 
         return self.async_show_form(
@@ -96,20 +97,19 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_link(self, user_input=None):
         """Prompt user input. Create or edit entry."""
+        from pyps4_homeassistant.media_art import COUNTRIES
+        REGIONS = sorted(COUNTRIES.keys())
         errors = {}
 
         # Search for device.
-        if not self.device_list:
-            if user_input is None:
-                devices = await self.hass.async_add_executor_job(
-                    self.helper.has_devices)
+        devices = await self.hass.async_add_executor_job(
+            self.helper.has_devices, self.m_device)
 
-                # Abort if can't find device.
-                if not devices:
-                    return self.async_abort(reason='no_devices_found')
+        # Abort if can't find device.
+        if not devices:
+            return self.async_abort(reason='no_devices_found')
 
-                self.device_list = [
-                    device['host-ip'] for device in devices]
+        device_list = [device['host-ip'] for device in devices]
 
         # If entry exists check that devices found aren't configured.
         if self.hass.config_entries.async_entries(DOMAIN):
@@ -180,10 +180,8 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         # Show User Input form.
         link_schema = OrderedDict()
-        link_schema[vol.Required(
-            CONF_IP_ADDRESS)] = vol.In(list(self.device_list))
-        link_schema[vol.Required(
-            CONF_REGION, default=DEFAULT_REGION)] = vol.In(list(REGIONS))
+        link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(list(device_list))
+        link_schema[vol.Required(CONF_REGION)] = vol.In(list(REGIONS))
         link_schema[vol.Required(CONF_CODE)] = str
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 
