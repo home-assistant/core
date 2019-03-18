@@ -55,7 +55,7 @@ class EntityPlatform:
             return
 
         # Async platforms do all updates in parallel by default
-        if hasattr(platform, 'async_setup_platform'):
+        if hasattr(platform, 'async_update'):
             default_parallel_updates = 0
         else:
             default_parallel_updates = 1

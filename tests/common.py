@@ -499,7 +499,8 @@ class MockPlatform:
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
                  platform_schema=None, async_setup_platform=None,
-                 async_setup_entry=None, scan_interval=None):
+                 async_setup_entry=None, scan_interval=None,
+                 update=None, async_update=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
@@ -513,14 +514,24 @@ class MockPlatform:
             # We run this in executor, wrap it in function
             self.setup_platform = lambda *args: setup_platform(*args)
 
+        if update is not None:
+            # We run this in executor, wrap it in function
+            self.update = lambda *args: update(*args)
+
         if async_setup_platform is not None:
             self.async_setup_platform = async_setup_platform
 
         if async_setup_entry is not None:
             self.async_setup_entry = async_setup_entry
 
+        if async_update is not None:
+            self.async_update = async_update
+
         if setup_platform is None and async_setup_platform is None:
             self.async_setup_platform = mock_coro_func()
+
+        if update is None and async_update is None:
+            self.async_update = mock_coro_func()
 
 
 class MockEntityPlatform(entity_platform.EntityPlatform):
