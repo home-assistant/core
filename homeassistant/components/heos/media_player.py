@@ -7,8 +7,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
-import asyncio
-import logging
 from . import DOMAIN as HEOS_DOMAIN
 
 DEPENDENCIES = ['heos']
@@ -23,25 +21,11 @@ PLAY_STATE_TO_STATE = {
     'stop': STATE_OFF
 }
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discover_info=None):
     """Set up the HEOS platform."""
     controller = hass.data[HEOS_DOMAIN][DOMAIN]
-    try:
-        await asyncio.wait_for(
-            _heos_setup(controller, async_add_devices),
-            timeout=5.0)
-    except asyncio.TimeoutError:
-        _LOGGER.error('Timeout during setup.')
-
-
-async def _heos_setup(controller, async_add_devices):
-    """HEOS initial setup"""
-    await controller.connect()
-
     players = controller.get_players()
     devices = [HeosMediaPlayer(p) for p in players]
     async_add_devices(devices, True)
@@ -53,7 +37,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
     def __init__(self, player):
         """Initialize."""
         self._player = player
-        self._dispatcher_remove = None
         self._player.state_change_callback = None
 
     def _update_state(self):
@@ -66,7 +49,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Device added to hass."""
         self._player.state_change_callback = self._update_state
-        await self.async_update_ha_state()
 
     @property
     def unique_id(self):

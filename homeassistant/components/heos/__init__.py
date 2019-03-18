@@ -1,5 +1,7 @@
 """Denon HEOS Media Player."""
 
+import asyncio
+import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player.const import (
@@ -18,6 +20,8 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the HEOS component."""
@@ -26,9 +30,20 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     host = config[DOMAIN][CONF_HOST]
     controller = AioHeosController(hass.loop, host)
 
+    async def controller_connect(controller):
+        """Make connection to HEOS."""
+        await controller.connect()
+
+    try:
+        await asyncio.wait_for(controller_connect(controller),
+                               timeout=5.0)
+    except asyncio.TimeoutError:
+        _LOGGER.error('Timeout during setup.')
+
     async def controller_close(event):
         """Close connection when HASS shutsdown."""
         await controller.close()
+
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller_close)
 
     hass.data.setdefault(DOMAIN, {})
