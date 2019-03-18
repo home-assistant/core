@@ -3,5 +3,5 @@ DEFAULT_NAME = "PlayStation 4"
 DEFAULT_REGION = "United States"
 DOMAIN = 'ps4'
 
-# Deprecated
+# Deprecated used for logger only
 REGIONS = ['R1', 'R2', 'R3', 'R4', 'R5']
