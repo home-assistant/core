@@ -79,6 +79,7 @@ ICON_MAPPING_ACTIVITY_TYPES = {
     'Yoga': None
 }
 
+
 class StravaSensor(Entity):
 
     def __init__(self, data, field):
@@ -293,6 +294,7 @@ class StravaAthleteSensor(StravaSensor):
             return ICON_MAPPING_FIELDS[self._subfield]
         else:
             return super().icon
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
 

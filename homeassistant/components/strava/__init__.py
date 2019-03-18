@@ -37,8 +37,10 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
 class TokenExpired(Exception):
     pass
+
 
 class StravaData:
 
@@ -133,6 +135,7 @@ class StravaData:
             refresh_token=self._token['refresh_token'])
 
         self._update_token_cache()
+
 
 class StravaAuthCallbackView(HomeAssistantView):
     """Strava Authorization Callback View."""
