@@ -44,15 +44,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SurePetcareBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Sure Petcare Entities."""
 
-    def __init__(self, _id: int, name: int, hass=None):
+    def __init__(self, _id: int, name: int, sure_type: str, hass=None):
         self._hass = hass
 
         self._household_id: int = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
         self._id: int = _id
-        self._name: AnyStr = f"{self._type[:-1].capitalize()} {name}"
+        self._type = sure_type
+        self._name: AnyStr = None
 
         self._data = hass.data[DATA_SURE_PETCARE][self._type]
         self._state = dict()
+
+        self._icon = None
+        self._type = None
+        self._device_class = None
 
     @property
     def is_on(self):
@@ -104,7 +109,9 @@ class SurePetcareBinarySensor(BinarySensorDevice):
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(self._hass, TOPIC_UPDATE, update)
+        # noinspection W0201
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self._hass, TOPIC_UPDATE, update)
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
@@ -113,15 +120,15 @@ class SurePetcareBinarySensor(BinarySensorDevice):
 
 
 class Flap(SurePetcareBinarySensor):
+    """Sure Petcare Flap."""
 
     def __init__(self, _id: int, name: int, hass=None):
-        self._device_class = "door"
         self._icon = "mdi:lock"
-        self._type = CONF_FLAPS
-
+        self._device_class = "door"
         super().__init__(
             _id,
             name,
+            CONF_FLAPS,
             hass=hass,
         )
 
@@ -135,15 +142,15 @@ class Flap(SurePetcareBinarySensor):
 
 
 class Pet(SurePetcareBinarySensor):
+    """Sure Petcare Pet."""
 
     def __init__(self, _id: int, name: int, hass=None):
-        self._device_class = "presence"
         self._icon = "mdi:cat"
-        self._type = CONF_PETS
-
+        self._device_class = "presence"
         super().__init__(
             _id,
             name,
+            CONF_PETS,
             hass=hass,
         )
 

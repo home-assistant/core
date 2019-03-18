@@ -64,11 +64,26 @@ async def async_setup(hass, config):
     sure_data[CONF_PASSWORD]: str = conf[CONF_PASSWORD]
     sure_data[CONF_ICON] = conf[CONF_ICON]
 
-    surepy = SurePetcare(conf[CONF_USERNAME], conf[CONF_PASSWORD], conf[CONF_HOUSEHOLD_ID], hass.loop, async_get_clientsession(hass), debug=True)
+    surepy = SurePetcare(
+        conf[CONF_USERNAME], conf[CONF_PASSWORD], conf[CONF_HOUSEHOLD_ID],
+        hass.loop, async_get_clientsession(hass), debug=True)
     hass.data[DATA_SURE_PETCARE][DATA_SUREPY] = surepy
 
-    flaps: list = [{CONF_NAME: flap[CONF_NAME], CONF_ID: flap[CONF_ID], CONF_TYPE: CONF_FLAPS} for flap in conf[CONF_FLAPS]]
-    pets: list = [{CONF_NAME: pet[CONF_NAME], CONF_ID: pet[CONF_ID], CONF_TYPE: CONF_PETS} for pet in conf[CONF_PETS]]
+    flaps: list = [
+        {
+            CONF_NAME: flap[CONF_NAME],
+            CONF_ID: flap[CONF_ID],
+            CONF_TYPE: CONF_FLAPS
+        }
+        for flap in conf[CONF_FLAPS]]
+
+    pets: list = [
+        {
+            CONF_NAME: pet[CONF_NAME],
+            CONF_ID: pet[CONF_ID],
+            CONF_TYPE: CONF_PETS
+        } for pet in conf[CONF_PETS]]
+
     things: list = flaps + pets
 
     # User has configured household or flaps
@@ -114,9 +129,12 @@ async def async_setup_entry(hass, entry: ConfigEntry):
         if hass.data[DATA_SURE_PETCARE][DATA_SUREPY]:
             surepy = hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
         else:
-            _LOGGER.debug(f"using new connection -> {hass.data[DATA_SURE_PETCARE]}")
             from surepy import SurePetcare
-            surepy = SurePetcare(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], entry.data[CONF_HOUSEHOLD_ID], hass.loop, async_get_clientsession(hass), debug=True)
+            surepy = SurePetcare(
+                entry.data[CONF_USERNAME],
+                entry.data[CONF_PASSWORD],
+                entry.data[CONF_HOUSEHOLD_ID],
+                hass.loop, async_get_clientsession(hass), debug=True)
 
         if CONF_FLAPS not in hass.data[DATA_SURE_PETCARE]:
             hass.data[DATA_SURE_PETCARE][CONF_FLAPS] = dict()
@@ -130,7 +148,6 @@ async def async_setup_entry(hass, entry: ConfigEntry):
             sure_id = thing[CONF_ID]
             sure_type = thing[CONF_TYPE]
             if sure_type == CONF_FLAPS:
-                # hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = await surepy.get_flap_data(sure_id)
                 response = await surepy.get_flap_data(sure_id)
             elif sure_type == CONF_PETS:
                 response = await surepy.get_pet_data(sure_id)
