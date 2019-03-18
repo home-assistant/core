@@ -1,7 +1,5 @@
 """Support for Axis camera streaming."""
 
-from homeassistant.components.axis.const import (
-    CONF_DEVICE, DOMAIN as AXIS_DOMAIN)
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera, filter_urllib3_logging)
 from homeassistant.const import (

@@ -141,6 +141,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             data=data
         )
 
+
     async def async_step_discovery(self, discovery_info):
         """Prepare configuration for a discovered Axis device.
 
