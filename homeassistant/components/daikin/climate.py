@@ -146,7 +146,7 @@ class DaikinClimate(ClimateDevice):
 
         return value
 
-    def set(self, settings):
+    async def _set(self, settings):
         """Set device settings using API."""
         values = {}
 
@@ -173,7 +173,7 @@ class DaikinClimate(ClimateDevice):
                     _LOGGER.error("Invalid temperature %s", value)
 
         if values:
-            self._api.device.set(values)
+            await self._api.device.set(values)
 
     @property
     def supported_features(self):
@@ -210,9 +210,9 @@ class DaikinClimate(ClimateDevice):
         """Return the supported step of target temperature."""
         return 1
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        self.set(kwargs)
+        await self._set(kwargs)
 
     @property
     def current_operation(self):
@@ -224,18 +224,18 @@ class DaikinClimate(ClimateDevice):
         """Return the list of available operation modes."""
         return self._list.get(ATTR_OPERATION_MODE)
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set HVAC mode."""
-        self.set({ATTR_OPERATION_MODE: operation_mode})
+        await self._set({ATTR_OPERATION_MODE: operation_mode})
 
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
         return self.get(ATTR_FAN_MODE)
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        self.set({ATTR_FAN_MODE: fan_mode})
+        await self._set({ATTR_FAN_MODE: fan_mode})
 
     @property
     def fan_list(self):
@@ -247,18 +247,18 @@ class DaikinClimate(ClimateDevice):
         """Return the fan setting."""
         return self.get(ATTR_SWING_MODE)
 
-    def set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode):
         """Set new target temperature."""
-        self.set({ATTR_SWING_MODE: swing_mode})
+        await self._set({ATTR_SWING_MODE: swing_mode})
 
     @property
     def swing_list(self):
         """List of available swing modes."""
         return self._list.get(ATTR_SWING_MODE)
 
-    def update(self):
+    async def async_update(self):
         """Retrieve latest state."""
-        self._api.update()
+        await self._api.async_update()
 
     @property
     def device_info(self):

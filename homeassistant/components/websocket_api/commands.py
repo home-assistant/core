@@ -1,7 +1,9 @@
 """Commands part of Websocket API."""
 import voluptuous as vol
 
-from homeassistant.const import MATCH_ALL, EVENT_TIME_CHANGED
+from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.const import (
+    MATCH_ALL, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED)
 from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
 from homeassistant.exceptions import Unauthorized, ServiceNotFound, \
     HomeAssistantError
@@ -24,15 +26,6 @@ def async_register_commands(hass):
     async_reg(handle_ping)
 
 
-def event_message(iden, event):
-    """Return an event message."""
-    return {
-        'id': iden,
-        'type': 'event',
-        'event': event.as_dict(),
-    }
-
-
 def pong_message(iden):
     """Return a pong message."""
     return {
@@ -51,18 +44,37 @@ def handle_subscribe_events(hass, connection, msg):
 
     Async friendly.
     """
-    if not connection.user.is_admin:
+    from .permissions import SUBSCRIBE_WHITELIST
+
+    event_type = msg['event_type']
+
+    if (event_type not in SUBSCRIBE_WHITELIST and
+            not connection.user.is_admin):
         raise Unauthorized
 
-    async def forward_events(event):
-        """Forward events to websocket."""
-        if event.event_type == EVENT_TIME_CHANGED:
-            return
+    if event_type == EVENT_STATE_CHANGED:
+        @callback
+        def forward_events(event):
+            """Forward state changed events to websocket."""
+            if not connection.user.permissions.check_entity(
+                    event.data['entity_id'], POLICY_READ):
+                return
 
-        connection.send_message(event_message(msg['id'], event))
+            connection.send_message(messages.event_message(msg['id'], event))
 
-    connection.event_listeners[msg['id']] = hass.bus.async_listen(
-        msg['event_type'], forward_events)
+    else:
+        @callback
+        def forward_events(event):
+            """Forward events to websocket."""
+            if event.event_type == EVENT_TIME_CHANGED:
+                return
+
+            connection.send_message(messages.event_message(
+                msg['id'], event.as_dict()
+            ))
+
+    connection.subscriptions[msg['id']] = hass.bus.async_listen(
+        event_type, forward_events)
 
     connection.send_message(messages.result_message(msg['id']))
 
@@ -79,8 +91,8 @@ def handle_unsubscribe_events(hass, connection, msg):
     """
     subscription = msg['subscription']
 
-    if subscription in connection.event_listeners:
-        connection.event_listeners.pop(subscription)()
+    if subscription in connection.subscriptions:
+        connection.subscriptions.pop(subscription)()
         connection.send_message(messages.result_message(msg['id']))
     else:
         connection.send_message(messages.error_message(
