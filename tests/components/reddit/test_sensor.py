@@ -170,8 +170,6 @@ class TestRedditSetup(unittest.TestCase):
     @MockDependency('praw')
     @patch('praw.Reddit', new=MockPraw)
     def test_setup_with_invalid_config(self, mock_praw):
-        """Test the platform setup with movie configuration."""
+        """Test the platform setup with invalid movie configuration."""
         setup_component(self.hass, 'sensor', INVALID_SORT_BY_CONFIG)
-
-        state = self.hass.states.get('sensor.reddit_worldnews')
-        assert int(state.state) == 0
+        assert not self.hass.states.get('sensor.reddit_worldnews')
