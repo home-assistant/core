@@ -86,6 +86,8 @@ async def test_full_flow_implementation(hass):
     assert result['data']['devices'] == [MOCK_DEVICE]
     assert result['title'] == MOCK_TITLE
 
+    await hass.async_block_till_done()
+
     # Add entry using result data.
     mock_data = {
         CONF_TOKEN: result['data'][CONF_TOKEN],
@@ -182,6 +184,8 @@ async def test_multiple_flow_implementation(hass):
     assert len(result['data']['devices']) == 1
     assert result['title'] == MOCK_TITLE
 
+    await hass.async_block_till_done()
+
     mock_data = {
         CONF_TOKEN: result['data'][CONF_TOKEN],
         'devices': result['data']['devices']}
@@ -262,6 +266,17 @@ async def test_additional_device(hass):
     assert len(manager.async_entries()) == 2
 
 
+async def test_no_devices_found_abort(hass):
+    """Test that failure to find devices aborts flow."""
+    flow = ps4.PlayStation4FlowHandler()
+    flow.hass = hass
+
+    with patch('pyps4_homeassistant.Helper.has_devices', return_value=[]):
+        result = await flow.async_step_link()
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'no_devices_found'
+
+
 async def test_manual_mode(hass):
     """Test host specified in manual mode is passed to Step Link."""
     flow = ps4.PlayStation4FlowHandler()
@@ -276,17 +291,6 @@ async def test_manual_mode(hass):
     assert result['step_id'] == 'link'
 
 
-async def test_no_devices_found_abort(hass):
-    """Test that failure to find devices aborts flow."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
-
-    with patch('pyps4_homeassistant.Helper.has_devices', return_value=None):
-        result = await flow.async_step_link(MOCK_CONFIG)
-    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'no_devices_found'
-
-
 async def test_credential_abort(hass):
     """Test that failure to get credentials aborts flow."""
     flow = ps4.PlayStation4FlowHandler()
@@ -298,8 +302,8 @@ async def test_credential_abort(hass):
     assert result['reason'] == 'credential_error'
 
 
-async def test_invalid_pin_error(hass):
-    """Test that invalid pin throws an error."""
+async def test_wrong_pin_error(hass):
+    """Test that incorect pin throws an error."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
@@ -339,3 +343,46 @@ async def test_manual_mode_no_ip_error(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'mode'
     assert result['errors'] == {'base': 'no_ipaddress'}
+
+
+async def test_long_pin_error(hass):
+    """Test invalid pin throws an error."""
+    flow = ps4.PlayStation4FlowHandler()
+    flow.hass = hass
+    mock_config = MOCK_CONFIG
+
+    """Test that long pin throws an error."""
+    mock_config[CONF_CODE] = '123456789'
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': MOCK_HOST}]):
+        result = await flow.async_step_link(mock_config)
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'link'
+    assert result['errors'] == {'base': 'pin_length_incorrect'}
+
+    """Test that short pin throws an error."""
+    mock_config[CONF_CODE] = '1234567'
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': MOCK_HOST}]):
+        result = await flow.async_step_link(mock_config)
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'link'
+    assert result['errors'] == {'base': 'pin_length_incorrect'}
+
+    """Test that letter in pin throws an error."""
+    mock_config[CONF_CODE] = '1234567a'
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': MOCK_HOST}]):
+        result = await flow.async_step_link(mock_config)
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'link'
+    assert result['errors'] == {'base': 'pin_invalid'}
+
+    """Test that special char in pin throws an error."""
+    mock_config[CONF_CODE] = '1234567@'
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': MOCK_HOST}]):
+        result = await flow.async_step_link(mock_config)
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'link'
+    assert result['errors'] == {'base': 'pin_invalid'}
