@@ -1,7 +1,5 @@
-""""""
+"""Test Axis config flow."""
 from unittest.mock import Mock, patch
-
-import pytest
 
 from homeassistant.components import axis
 from homeassistant.components.axis import config_flow
@@ -33,8 +31,8 @@ async def test_flow_works(hass):
 
     with patch('axis.AxisDevice') as mock_device:
         def mock_constructor(
-            loop, host, username, password, port, web_proto, event_types,
-            signal):
+                loop, host, username, password, port, web_proto, event_types,
+                signal):
             """Fake the controller constructor."""
             mock_device.loop = loop
             mock_device.host = host
