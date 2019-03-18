@@ -5,13 +5,16 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, ATTR_ID)
+from homeassistant.const import (
+    CONF_API_KEY, ATTR_ID, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['tmdbsimple==2.2.0']
 
 DOMAIN = 'tmdb'
+
+ATTRIBUTION = "Data provided by themoviedb.org"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def normalize_result(result):
-    """Normailzes a TMDB result."""
+    """Normalize a TMDB result."""
     return {
         ATTR_ID: result.get(ATTR_ID),
         ATTR_RELEASE_DATE: result.get(ATTR_RELEASE_DATE),
@@ -55,16 +58,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
 
     # get all movie sensors
-    movie_lists = config.get(CONF_MOVIE_LISTS, [])
-    tmdb_movie = tmdb.Movies()
-    sensors += [TmdbSensor(list_type, tmdb_movie, 'movie')
-                for list_type in movie_lists]
+    movie_lists = config.get(CONF_MOVIE_LISTS, None)
+    if movie_lists:
+        tmdb_movie = tmdb.Movies()
+        sensors += [TmdbSensor(list_type, tmdb_movie, 'movie')
+                    for list_type in movie_lists]
 
     # get all television sensors
-    television_lists = config.get(CONF_TELEVISION_LISTS, [])
-    tmdb_television = tmdb.TV()
-    sensors += [TmdbSensor(list_type, tmdb_television, 'tv')
-                for list_type in television_lists]
+    television_lists = config.get(CONF_TELEVISION_LISTS, None)
+    if television_lists:
+        tmdb_television = tmdb.TV()
+        sensors += [TmdbSensor(list_type, tmdb_television, 'tv')
+                    for list_type in television_lists]
 
     add_entities(sensors, True)
 
@@ -73,7 +78,7 @@ class TmdbSensor(Entity):
     """Representation of a Movie Database sensor."""
 
     def __init__(self, list_type: str, tmdb, query_type):
-        """Initialize the Reddit sensor."""
+        """Initialize the TMDB sensor."""
         self._list_type = list_type
         self._tmdb = tmdb
         self._query_type = query_type
@@ -93,7 +98,8 @@ class TmdbSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_MEDIA: self._data
+            ATTR_MEDIA: self._data,
+            ATTR_ATTRIBUTION: ATTRIBUTION
         }
 
     @property
