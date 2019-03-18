@@ -262,6 +262,20 @@ async def test_additional_device(hass):
     assert len(manager.async_entries()) == 2
 
 
+async def test_manual_mode(hass):
+    """Test host specified in manual mode is passed to Step Link."""
+    flow = ps4.PlayStation4FlowHandler()
+    flow.hass = hass
+
+    # Step Mode with User Input: manual, results in Step Link.
+    with patch('pyps4_homeassistant.Helper.has_devices',
+               return_value=[{'host-ip': flow.m_device}]):
+        result = await flow.async_step_mode(user_input=MOCK_MANUAL)
+    assert flow.m_device == MOCK_HOST
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'link'
+
+
 async def test_no_devices_found_abort(hass):
     """Test that failure to find devices aborts flow."""
     flow = ps4.PlayStation4FlowHandler()
@@ -314,15 +328,14 @@ async def test_device_connection_error(hass):
     assert result['errors'] == {'base': 'not_ready'}
 
 
-async def test_manual_mode(hass):
-    """Test host specified in manual mode is passed to Step Link."""
+async def test_manual_mode_no_ip_error(hass):
+    """Test no IP specified in manual mode throws an error."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
-    # Step Mode with User Input: manual, results in Step Link.
-    with patch('pyps4_homeassistant.Helper.has_devices',
-               return_value=[{'host-ip': flow.m_device}]):
-        result = await flow.async_step_mode(user_input=MOCK_MANUAL)
-    assert flow.m_device == MOCK_HOST
+    mock_input = {"Config Mode": 'Manual Entry'}
+
+    result = await flow.async_step_mode(mock_input)
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['step_id'] == 'link'
+    assert result['step_id'] == 'mode'
+    assert result['errors'] == {'base': 'no_ipaddress'}
