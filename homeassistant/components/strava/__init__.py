@@ -72,7 +72,7 @@ class StravaData:
             else:
                 self.client.access_token = self._token['access_token']
 
-        except:
+        except FileNotFoundError:
             _LOGGER.info("No Strava token found. Starting authorization.")
 
             self.request_token()
