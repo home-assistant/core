@@ -120,9 +120,15 @@ class Stream:
         """Remove provider output stream."""
         if provider.format in self._outputs:
             del self._outputs[provider.format]
+            self.check_idle()
 
         if not self._outputs:
             self.stop()
+
+    def check_idle(self):
+        """Reset access token if all providers are idle."""
+        if all([p.idle for p in self._outputs.values()]):
+            self.access_token = None
 
     def start(self):
         """Start a stream."""
