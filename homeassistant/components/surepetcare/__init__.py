@@ -152,7 +152,8 @@ async def async_setup_entry(hass, entry: ConfigEntry):
             elif sure_type == CONF_PETS:
                 response = await surepy.get_pet_data(sure_id)
 
-            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = response[DATA_SURE_DATA]
+            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = response[
+                DATA_SURE_DATA]
 
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
@@ -161,9 +162,11 @@ async def async_setup_entry(hass, entry: ConfigEntry):
     hass.data[DATA_SURE_PETCARE][DATA_SURE_LISTENER][
         entry.entry_id] = async_track_time_interval(
             hass, refresh_sensors,
-            hass.data[DATA_SURE_PETCARE].get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+            hass.data[DATA_SURE_PETCARE].get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, 'binary_sensor'))
+    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+        entry, 'binary_sensor'))
 
     return True
 
@@ -171,7 +174,10 @@ async def async_setup_entry(hass, entry: ConfigEntry):
 @callback
 def get_configured_households(hass):
     """Return a set of configured Ambient PWS instances."""
-    return set(entry.data[CONF_HOUSEHOLD_ID] for entry in hass.config_entries.async_entries(DOMAIN))
+    return (set(
+        entry.data[CONF_HOUSEHOLD_ID]
+        for entry
+        in hass.config_entries.async_entries(DOMAIN)))
 
 
 @config_entries.HANDLERS.register(DOMAIN)
