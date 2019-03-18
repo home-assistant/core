@@ -1,10 +1,9 @@
-from datetime import timedelta, datetime
+from datetime import datetime
 import logging
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
-from homeassistant.const import TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['stravalib>=0.10.2']
