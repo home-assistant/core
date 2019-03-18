@@ -28,7 +28,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if 'weather_alert' in monitored_conditions:
         datas = hass.data[DATA_METEO_FRANCE][city].get_data()
         if "dept" in datas:
-            alert_watcher = ZoneAlerte(datas["dept"])
+            try:
+                alert_watcher = ZoneAlerte(datas["dept"])
+            except ValueError as exp:
+                _LOGGER.error(exp)
+            
 
     add_entities([MeteoFranceSensor(variable, client, alert_watcher)
                   for variable in monitored_conditions], True)
@@ -59,13 +63,17 @@ class MeteoFranceSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
+
+        # Attributes for next_rain sensor
         if self._condition == 'next_rain' and 'rain_forecast' in self._data:
             return {
                 **{STATE_ATTR_FORECAST: self._data['rain_forecast']},
                 ** self._data['next_rain_intervals'],
                 **{ATTR_ATTRIBUTION: ATTRIBUTION}
             }
-        elif self._condition == 'weather_alert':
+
+        # Attributes for weather_alert sensor
+        elif self._condition == 'weather_alert' and self._alert_watcher is not None:
             from vigilancemeteo import ZoneAlerte
 
             alert_type_list = {}
@@ -76,12 +84,14 @@ class MeteoFranceSensor(Entity):
                 else:
                     alert_type_list[alert_type] = 'Vert'
 
+            # TODO: improve date display
             return {
                 **{STATE_ATTR_BULLETIN_TIME: self._alert_watcher.date_mise_a_jour},
                 ** alert_type_list,
                 ATTR_ATTRIBUTION: ATTRIBUTION
             }
 
+        # Attributes for all other sensors
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
@@ -91,14 +101,18 @@ class MeteoFranceSensor(Entity):
 
     def update(self):
         """Fetch new state data for the sensor."""
+        # TODO: check behaviour if unable to fetch data online
         try:
             self._client.update()
             self._data = self._client.get_data()
 
             if self._condition == 'weather_alert':
-                #TODO: check if not 'None'
-                self._alert_watcher.mise_a_jour_etat()
-                self._state = self._alert_watcher.synthese_couleur
+                if self._alert_watcher is not None:
+                    self._alert_watcher.mise_a_jour_etat()
+                    self._state = self._alert_watcher.synthese_couleur
+                else:
+                    _LOGGER.debug("No weather alert data for location %s",
+                                  self._data['name'])
                 return
             else:
                 self._state = self._data[self._condition]
