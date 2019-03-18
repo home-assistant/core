@@ -146,6 +146,7 @@ homeassistant/components/swiss_*/* @fabaff
 homeassistant/components/sytadin/sensor.py @gautric
 homeassistant/components/tautulli/sensor.py @ludeeus
 homeassistant/components/time_date/sensor.py @fabaff
+homeassistant/components/tfiac/climate.py @fredrike @mellado
 homeassistant/components/uber/sensor.py @robbiet480
 homeassistant/components/version/sensor.py @fabaff
 homeassistant/components/waqi/sensor.py @andrey-git
