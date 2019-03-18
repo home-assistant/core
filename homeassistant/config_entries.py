@@ -141,6 +141,8 @@ SOURCE_IMPORT = 'import'
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
+    'ais_host',
+    'ais_spotify_service',
     'ambient_station',
     'cast',
     'daikin',

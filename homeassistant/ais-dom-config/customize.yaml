@@ -19,8 +19,6 @@ sensor.time:
   friendly_name: Godzina
 sensor.date:
   friendly_name: Dzień
-script.ais_change_host_name:
-  icon: mdi:alert
 binary_sensor.ais_remote_button:
   friendly_name: Przycisk w pilocie
 binary_sensor.selected_entity:

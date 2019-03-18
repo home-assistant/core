@@ -1,7 +1,10 @@
 # Describes the format for available AIS cloud services
 change_host_name:
-  description: Zmiana nazwy hosta na nazwę podaną w polu tekstowym w aplikacji
-
+  description: Zmiana nazwy hosta urządzenia
+  fields:
+    hostname:
+      description: Nowa nazwa hosta
+      example: 'ais-dom'
 execute_command:
   description: Wykonanie komendy w konsoli
   fields:

@@ -46,7 +46,7 @@ def async_setup(hass, config):
             secs = time_now - G_LAST_BROWSE_CALL
             G_LAST_BROWSE_CALL = time_now
 
-        if secs < 1:
+        if secs < 0.5:
             _LOGGER.info("This call is blocked, secs: " + str(secs))
             return
         data.browse_path(call)

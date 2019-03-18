@@ -9,6 +9,7 @@ import asyncio
 from homeassistant.ais_dom import ais_global
 from homeassistant.components import ais_cloud
 from homeassistant.core import callback
+from .config_flow import configured_instances
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -189,6 +190,20 @@ def async_request_configuration(hass, config, oauth):
         description=CONFIGURATOR_DESCRIPTION,
         submit_caption=CONFIGURATOR_SUBMIT_CAPTION
     )
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up spotify token as config entry."""
+    entry = config_entry.data
+    name = entry['name ais']
+
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    # TODO remove the Spotify token from gate and cloud
+    return True
 
 
 class SpotifyData:
