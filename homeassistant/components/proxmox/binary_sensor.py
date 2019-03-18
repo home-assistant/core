@@ -3,9 +3,8 @@ from homeassistant.components.switch import SwitchDevice
 
 DOMAIN = 'proxmox'
 
-
-async def async_setup_platform(hass, config, async_add_entities,
-                 discovery_info=None):
+async def async_setup_platform(
+                 hass, config, async_add_entities, discovery_info=None):
     """Set up Proxmox VE binary sensor."""
     nodes = hass.data[proxmox.DATA_PROXMOX_NODES]
     sensors = []
@@ -13,8 +12,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     for node_name in nodes.keys():
         item = nodes[node_name]
         if 'type' not in item or item['type'] != 'node':
-            status = lambda node: 'running' == node['status']
-            sensor = PXMXBinarySensor(hass, node_name, 'Is Running', status)
+            sensor = PXMXBinarySensor(hass, node_name, 'Is Running')
             sensors.append(sensor)
 
     async_add_entities(sensors)
@@ -22,12 +20,11 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 class PXMXBinarySensor(SwitchDevice):
 
-    def __init__(self, hass, node_name, sensor_name, sensor_value):
+    def __init__(self, hass, node_name, sensor_name):
         """Initialize Proxmox VE binary sensor."""
         self._hass = hass
         self._node_name = node_name
         self._sensor_name = sensor_name
-        self._sensor_value = sensor_value
         self.update()
 
     @property
@@ -53,5 +50,5 @@ class PXMXBinarySensor(SwitchDevice):
             self._state = None
             self._is_available = False
         else:
-            self._state = self._sensor_value(node)
+            self._state = 'running' == node['status']
             self._is_available = True
