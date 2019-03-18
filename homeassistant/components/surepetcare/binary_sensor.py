@@ -198,6 +198,7 @@ class Flap(SurePetcareBinarySensor):
 
         return attrs
 
+
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
