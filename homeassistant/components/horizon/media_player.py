@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['einder==0.3.1']
+REQUIREMENTS = ['horimote==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Horizon platform."""
-    from einder import Client, keys
-    from einder.exceptions import AuthenticationError
+    from horimote import Client, keys
+    from horimote.exceptions import AuthenticationError
 
     host = config[CONF_HOST]
     name = config[CONF_NAME]
@@ -162,7 +162,7 @@ class HorizonDevice(MediaPlayerDevice):
 
     def _send(self, key=None, channel=None):
         """Send a key to the Horizon device."""
-        from einder.exceptions import AuthenticationError
+        from horimote.exceptions import AuthenticationError
 
         try:
             if key:
