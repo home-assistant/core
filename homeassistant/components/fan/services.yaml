@@ -104,7 +104,7 @@ dyson_set_timer:
       description: Name(s) of the entities to set the sleep timer for
       example: 'fan.living_room'
     timer:
-      description: Timer status
+      description: The value in minutes to set the timer to.
       example: 30
 
 dyson_set_speed:

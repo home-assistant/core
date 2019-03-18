@@ -127,7 +127,7 @@ class DysonSetupTest(unittest.TestCase):
         """Test setup component with no devices."""
         self.hass.data[dyson.DYSON_DEVICES] = []
         add_entities = mock.MagicMock()
-        dyson.setup_platform(self.hass, None, add_entities)
+        dyson.setup_platform(self.hass, None, add_entities, mock.Mock())
         add_entities.assert_called_with([])
 
     def test_setup_component(self):
@@ -518,7 +518,8 @@ class DysonTest(unittest.TestCase):
         self.hass.data[DYSON_DEVICES] = []
         dyson_device.entity_id = 'fan.living_room'
         self.hass.data[dyson.DYSON_FAN_DEVICES] = [dyson_device]
-        dyson.setup_platform(self.hass, None, mock.MagicMock())
+        dyson.setup_platform(self.hass, None,
+                             mock.MagicMock(), mock.MagicMock())
 
         self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
                                 {"entity_id": "fan.bed_room",
@@ -531,373 +532,391 @@ class DysonTest(unittest.TestCase):
         dyson_device.set_night_mode.assert_called_with(True)
 
 
-class DysonPurecoolTest(unittest.TestCase):
-    """Dyson purecool fan component test class."""
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+async def test_empty_state(hass):
+    """Test purecool fan with no status."""
+    test_device = _get_dyson_purecool_device()
+    test_device.state = None
+    with mock.patch.object(DysonAccount, 'devices',
+                           return_value=[test_device]):
+        dyson_parent.setup(hass, _get_config())
+        hass.block_till_done()
+        device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+        assert device.is_on is False
+        assert device.speed is None
+        assert device.dyson_speed is None
+        assert device.should_poll is False
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_async_purecool_added_to_hass(self, mocked_devices):
+    """Test async added to hass."""
+    setup_component(self.hass, dyson_parent.DOMAIN, {
+        dyson_parent.DOMAIN: {
+            dyson_parent.CONF_USERNAME: "email",
+            dyson_parent.CONF_PASSWORD: "password",
+            dyson_parent.CONF_LANGUAGE: "US",
+            }
+        })
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    def test_empty_state(self, mocked_login):
-        """Test purecool fan with no status."""
-        test_device = _get_dyson_purecool_device()
-        test_device.state = None
-        with mock.patch.object(DysonAccount, 'devices',
-                               return_value=[test_device]):
-            dyson_parent.setup(self.hass, _get_config())
-            self.hass.block_till_done()
-            device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-            assert device.is_on is False
-            assert device.speed is None
-            assert device.dyson_speed is None
-            assert device.should_poll is False
+    self.hass.block_till_done()
+    assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
+    assert mocked_devices.return_value[0].add_message_listener.called
 
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    def test_async_purecool_added_to_hass(self, mocked_login, mocked_devices):
-        """Test async added to hass."""
-        setup_component(self.hass, dyson_parent.DOMAIN, {
-            dyson_parent.DOMAIN: {
-                dyson_parent.CONF_USERNAME: "email",
-                dyson_parent.CONF_PASSWORD: "password",
-                dyson_parent.CONF_LANGUAGE: "US",
-                }
-            })
-        self.hass.block_till_done()
-        assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
-        assert mocked_devices.return_value[0].add_message_listener.called
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_on_message(self, mocked_login, mocked_devices):
-        """Test on message for purecool fan."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.schedule_update_ha_state = mock.Mock()
-        fan.on_message(MockDysonV2State())
-        fan.schedule_update_ha_state.assert_called_with()
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_on_message(hass, mocked_devices):
+    """Test on message for purecool fan."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.schedule_update_ha_state = mock.Mock()
+    fan.on_message(MockDysonV2State())
+    fan.schedule_update_ha_state.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_turn_on(self, mocked_login, mocked_devices):
-        """Test turn on purecool fan."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.turn_on()
-        fan._device.turn_on.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_turn_on_with_speed(self, mocked_login, mocked_devices):
-        """Test turn on purecool fan with speed."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.turn_on(SPEED_LOW)
-        fan._device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_4)
-        fan.turn_on(SPEED_MEDIUM)
-        fan._device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_7)
-        fan.turn_on(SPEED_HIGH)
-        fan._device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_10)
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_turn_on(hass, mocked_devices):
+    """Test turn on purecool fan."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.turn_on()
+    fan._device.turn_on.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_turn_off(self, mocked_login, mocked_devices):
-        """Test turn off purecool fan."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.turn_off()
-        fan._device.turn_off.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_set_dyson_speed(self, mocked_login, mocked_devices):
-        """Test set exact speed for purecool fan."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.set_dyson_speed(4)
-        fan._device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_4)
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_turn_on_with_speed(hass, mocked_devices):
+    """Test turn on purecool fan with speed."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.turn_on(SPEED_LOW)
+    fan._device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_4)
+    fan.turn_on(SPEED_MEDIUM)
+    fan._device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_7)
+    fan.turn_on(SPEED_HIGH)
+    fan._device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_10)
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_oscillate(self, mocked_login, mocked_devices):
-        """Test set purecool fan oscillation."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.oscillate(True)
-        fan._device.enable_oscillation.assert_called_with()
-        fan.oscillate(False)
-        fan._device.disable_oscillation.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_set_night_mode(self, mocked_login, mocked_devices):
-        """Test set fan night mode."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.set_night_mode(True)
-        fan._device.enable_night_mode.assert_called_with()
-        fan.set_night_mode(False)
-        fan._device.disable_night_mode.assert_called_with()
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_turn_off(hass, mocked_devices):
+    """Test turn off purecool fan."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.turn_off()
+    fan._device.turn_off.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_set_auto_mode(self, mocked_login, mocked_devices):
-        """Test set fan auto mode."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.set_auto_mode(True)
-        fan._device.enable_auto_mode.assert_called_with()
-        fan.set_auto_mode(False)
-        fan._device.disable_auto_mode.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_set_angle(self, mocked_login, mocked_devices):
-        """Test set fan set angle."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.set_angle(10, 50)
-        fan._device.enable_oscillation.assert_called_with(10, 50)
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_set_dyson_speed(hass, mocked_devices):
+    """Test set exact speed for purecool fan."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.set_dyson_speed(4)
+    fan._device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_4)
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_flow_direction_front(self, mocked_login, mocked_devices):
-        """Test set fan frontal flow direction."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.set_flow_direction_front(True)
-        fan._device.enable_frontal_direction.assert_called_with()
-        fan.set_flow_direction_front(False)
-        fan._device.disable_frontal_direction.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_set_sleep_timer(self, mocked_login, mocked_devices):
-        """Test set fan sleep timer."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.set_timer(0)
-        fan._device.disable_sleep_timer.assert_called_with()
-        fan.set_timer(50)
-        fan._device.enable_sleep_timer.assert_called_with(50)
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_oscillate(hass, mocked_devices):
+    """Test set purecool fan oscillation."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.oscillate(True)
+    fan._device.enable_oscillation.assert_called_with()
+    fan.oscillate(False)
+    fan._device.disable_oscillation.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_oscillating(self, mocked_login, mocked_devices):
-        """Test purecool oscillation."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert device.oscillating is True
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_is_on(self, mocked_login, mocked_devices):
-        """Test purecool power status."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert device.is_on is True
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_set_night_mode(hass, mocked_devices):
+    """Test set fan night mode."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.set_night_mode(True)
+    fan._device.enable_night_mode.assert_called_with()
+    fan.set_night_mode(False)
+    fan._device.disable_night_mode.assert_called_with()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_speed_auto(self, mocked_login, mocked_devices):
-        """Test purecool auto speed status."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_set_auto_mode(hass, mocked_devices):
+    """Test set fan auto mode."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.set_auto_mode(True)
+    fan._device.enable_auto_mode.assert_called_with()
+    fan.set_auto_mode(False)
+    fan._device.disable_auto_mode.assert_called_with()
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_set_angle(hass, mocked_devices):
+    """Test set fan set angle."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.set_angle(10, 50)
+    fan._device.enable_oscillation.assert_called_with(10, 50)
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_flow_direction_front(hass, mocked_devices):
+    """Test set fan frontal flow direction."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.set_flow_direction_front(True)
+    fan._device.enable_frontal_direction.assert_called_with()
+    fan.set_flow_direction_front(False)
+    fan._device.disable_frontal_direction.assert_called_with()
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_set_sleep_timer(hass, mocked_devices):
+    """Test set fan sleep timer."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.set_timer(0)
+    fan._device.disable_sleep_timer.assert_called_with()
+    fan.set_timer(50)
+    fan._device.enable_sleep_timer.assert_called_with(50)
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_oscillating(hass, mocked_devices):
+    """Test purecool oscillation."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.oscillating is True
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_is_on(hass, mocked_devices):
+    """Test purecool power status."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.is_on is True
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_speed_auto(hass, mocked_devices):
+    """Test purecool auto speed status."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.speed is SPEED_MEDIUM
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+async def test_speed_low(hass):
+    """Test purecool low speed status."""
+    test_device = _get_dyson_purecool_device()
+    test_device.state.speed = FanSpeed.FAN_SPEED_4.value
+    with mock.patch.object(DysonAccount, 'devices',
+                           return_value=[test_device]):
+        dyson_parent.setup(hass, _get_config())
+        hass.block_till_done()
+        device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+        assert device.speed is SPEED_LOW
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+async def test_speed_medium(hass):
+    """Test purecool medium speed status."""
+    test_device = _get_dyson_purecool_device()
+    test_device.state.speed = FanSpeed.FAN_SPEED_7.value
+    with mock.patch.object(DysonAccount, 'devices',
+                           return_value=[test_device]):
+        dyson_parent.setup(hass, _get_config())
+        hass.block_till_done()
+        device = hass.data[dyson.DYSON_FAN_DEVICES][0]
         assert device.speed is SPEED_MEDIUM
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    def test_speed_low(self, mocked_login):
-        """Test purecool low speed status."""
-        test_device = _get_dyson_purecool_device()
-        test_device.state.speed = FanSpeed.FAN_SPEED_4.value
-        with mock.patch.object(DysonAccount, 'devices',
-                               return_value=[test_device]):
-            dyson_parent.setup(self.hass, _get_config())
-            self.hass.block_till_done()
-            device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-            assert device.speed is SPEED_LOW
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    def test_speed_medium(self, mocked_login):
-        """Test purecool medium speed status."""
-        test_device = _get_dyson_purecool_device()
-        test_device.state.speed = FanSpeed.FAN_SPEED_7.value
-        with mock.patch.object(DysonAccount, 'devices',
-                               return_value=[test_device]):
-            dyson_parent.setup(self.hass, _get_config())
-            self.hass.block_till_done()
-            device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-            assert device.speed is SPEED_MEDIUM
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+async def test_speed_high(hass):
+    """Test purecool high speed status."""
+    test_device = _get_dyson_purecool_device()
+    test_device.state.speed = FanSpeed.FAN_SPEED_10.value
+    with mock.patch.object(DysonAccount, 'devices',
+                           return_value=[test_device]):
+        dyson_parent.setup(hass, _get_config())
+        hass.block_till_done()
+        device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+        assert device.speed is SPEED_HIGH
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    def test_speed_high(self, mocked_login):
-        """Test purecool high speed status."""
-        test_device = _get_dyson_purecool_device()
-        test_device.state.speed = FanSpeed.FAN_SPEED_10.value
-        with mock.patch.object(DysonAccount, 'devices',
-                               return_value=[test_device]):
-            dyson_parent.setup(self.hass, _get_config())
-            self.hass.block_till_done()
-            device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-            assert device.speed is SPEED_HIGH
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_dyson_speed_auto(self, mocked_login, mocked_devices):
-        """Test purecool dyson auto speed status."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert device.dyson_speed is FanSpeed.FAN_SPEED_AUTO.value
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_dyson_speed_auto(hass, mocked_devices):
+    """Test purecool dyson auto speed status."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.dyson_speed is FanSpeed.FAN_SPEED_AUTO.value
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    def test_dyson_speed(self, mocked_login):
-        """Test purecool dyson speed status."""
-        test_device = _get_dyson_purecool_device()
-        test_device.state.speed = FanSpeed.FAN_SPEED_10.value
-        with mock.patch.object(DysonAccount, 'devices',
-                               return_value=[test_device]):
-            dyson_parent.setup(self.hass, _get_config())
-            self.hass.block_till_done()
-            device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-            assert device.dyson_speed is int(FanSpeed.FAN_SPEED_10.value)
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_night_mode(self, mocked_login, mocked_devices):
-        """Test purecool night mode status."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert device.night_mode is False
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+async def test_dyson_speed(hass):
+    """Test purecool dyson speed status."""
+    test_device = _get_dyson_purecool_device()
+    test_device.state.speed = FanSpeed.FAN_SPEED_10.value
+    with mock.patch.object(DysonAccount, 'devices',
+                           return_value=[test_device]):
+        dyson_parent.setup(hass, _get_config())
+        hass.block_till_done()
+        device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+        assert device.dyson_speed is int(FanSpeed.FAN_SPEED_10.value)
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_auto_mode(self, mocked_login, mocked_devices):
-        """Test purecool auto mode status."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert device.auto_mode is True
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_angles(self, mocked_login, mocked_devices):
-        """Test purecool angle states."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_night_mode(hass, mocked_devices):
+    """Test purecool night mode status."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.night_mode is False
 
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
 
-        assert device.angle_low == "0090"
-        assert device.angle_high == "0180"
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_auto_mode(hass, mocked_devices):
+    """Test purecool auto mode status."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.auto_mode is True
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_frontal_flow_direction(self, mocked_login, mocked_devices):
-        """Test purecool frontal flow direction status."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert device.flow_direction_front is True
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_timer(self, mocked_login, mocked_devices):
-        """Test purecool timer status."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert device.timer == "OFF"
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_angles(hass, mocked_devices):
+    """Test purecool angle states."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_speed_list(self, mocked_login, mocked_devices):
-        """Test purecool speed list."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert device.speed_list == [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_dyson_speed_list(self, mocked_login, mocked_devices):
-        """Test purecool dyson speed list."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert len(device.dyson_speed_list) == 10
+    assert device.angle_low == "0090"
+    assert device.angle_high == "0180"
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_dyson_supported_features(self, mocked_login, mocked_devices):
-        """Test purecool supported features."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        device = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        assert device.supported_features == 3
 
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_dyson_device_state_attributes(self,
-                                           mocked_devices, mocked_login):
-        """Test purecool device state attributes list."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        state = self.hass.states.get("{}.{}".format(
-            dyson.DOMAIN,
-            mocked_devices.return_value[0].name))
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_frontal_flow_direction(hass, mocked_devices):
+    """Test purecool frontal flow direction status."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.flow_direction_front is True
 
-        assert dyson.ATTR_NIGHT_MODE in state.attributes
-        assert dyson.ATTR_AUTO_MODE in state.attributes
-        assert dyson.ATTR_ANGLE_LOW in state.attributes
-        assert dyson.ATTR_ANGLE_HIGH in state.attributes
-        assert dyson.ATTR_FLOW_DIRECTION_FRONT in state.attributes
-        assert dyson.ATTR_TIMER in state.attributes
-        assert ATTR_SPEED in state.attributes
-        assert ATTR_SPEED_LIST in state.attributes
-        assert ATTR_OSCILLATING in state.attributes
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_timer(hass, mocked_devices):
+    """Test purecool timer status."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.timer == "OFF"
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_speed_list(hass, mocked_devices):
+    """Test purecool speed list."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.speed_list == [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_dyson_speed_list(hass, mocked_devices):
+    """Test purecool dyson speed list."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert len(device.dyson_speed_list) == 10
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_dyson_supported_features(hass, mocked_devices):
+    """Test purecool supported features."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    device = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    assert device.supported_features == 3
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_dyson_device_state_attributes(hass, mocked_devices):
+    """Test purecool device state attributes list."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    state = hass.states.get("{}.{}".format(
+        dyson.DOMAIN,
+        mocked_devices.return_value[0].name))
+
+    assert dyson.ATTR_NIGHT_MODE in state.attributes
+    assert dyson.ATTR_AUTO_MODE in state.attributes
+    assert dyson.ATTR_ANGLE_LOW in state.attributes
+    assert dyson.ATTR_ANGLE_HIGH in state.attributes
+    assert dyson.ATTR_FLOW_DIRECTION_FRONT in state.attributes
+    assert dyson.ATTR_TIMER in state.attributes
+    assert ATTR_SPEED in state.attributes
+    assert ATTR_SPEED_LIST in state.attributes
+    assert ATTR_OSCILLATING in state.attributes

@@ -47,23 +47,23 @@ DYSON_SET_AUTO_MODE_SCHEMA = vol.Schema({
 
 DYSON_SET_ANGLE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-    vol.Optional(ATTR_ANGLE_LOW): cv.positive_int,
-    vol.Optional(ATTR_ANGLE_HIGH): cv.positive_int
+    vol.Required(ATTR_ANGLE_LOW): cv.positive_int,
+    vol.Required(ATTR_ANGLE_HIGH): cv.positive_int
 })
 
 DYSON_SET_FLOW_DIRECTION_FRONT_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-    vol.Optional(ATTR_FLOW_DIRECTION_FRONT): cv.boolean
+    vol.Required(ATTR_FLOW_DIRECTION_FRONT): cv.boolean
 })
 
 DYSON_SET_TIMER_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-    vol.Optional(ATTR_TIMER): cv.positive_int
+    vol.Required(ATTR_TIMER): cv.positive_int
 })
 
 DYSON_SET_DYSON_SPEED_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-    vol.Optional(ATTR_DYSON_SPEED): cv.positive_int
+    vol.Required(ATTR_DYSON_SPEED): cv.positive_int
 })
 
 
@@ -72,20 +72,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
     from libpurecool.dyson_pure_cool import DysonPureCool
 
+    if discovery_info is None:
+        return
+
     _LOGGER.debug("Creating new Dyson fans")
     if DYSON_FAN_DEVICES not in hass.data:
         hass.data[DYSON_FAN_DEVICES] = []
 
     # Get Dyson Devices from parent component
     has_purecool_devices = False
+    device_names = (device.name for device in hass.data[DYSON_FAN_DEVICES])
     for device in hass.data[DYSON_DEVICES]:
-        if isinstance(device, DysonPureCool):
-            has_purecool_devices = True
-            dyson_entity = DysonPureCoolDevice(device)
-            hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
-        elif isinstance(device, DysonPureCoolLink):
-            dyson_entity = DysonPureCoolLinkDevice(hass, device)
-            hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
+        if device.name not in device_names:
+            if isinstance(device, DysonPureCool):
+                has_purecool_devices = True
+                dyson_entity = DysonPureCoolDevice(device)
+                hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
+            elif isinstance(device, DysonPureCoolLink):
+                dyson_entity = DysonPureCoolLinkDevice(hass, device)
+                hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
     add_entities(hass.data[DYSON_FAN_DEVICES])
 
@@ -338,7 +343,7 @@ class DysonPureCoolDevice(FanEntity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
