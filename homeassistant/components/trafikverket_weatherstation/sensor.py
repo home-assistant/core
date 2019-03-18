@@ -14,17 +14,20 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME)
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_MONITORED_CONDITIONS,
+    CONF_NAME, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pytrafikverket==0.1.5.8']
+REQUIREMENTS = ['pytrafikverket==0.1.5.9']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by Trafikverket API"
+ATTRIBUTION = "Data provided by Trafikverket"
+ATTR_MEASURE_TIME = 'measure_time'
+ATTR_ACTIVE = 'active'
 
 CONF_STATION = 'station'
 
@@ -33,13 +36,33 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
-    'air_temp': ['Air temperature', '°C', 'air_temp'],
-    'road_temp': ['Road temperature', '°C', 'road_temp'],
-    'precipitation': ['Precipitation type', None, 'precipitationtype'],
-    'wind_direction': ['Wind direction', '°', 'winddirection'],
-    'wind_direction_text': ['Wind direction text', None, 'winddirectiontext'],
-    'wind_speed': ['Wind speed', 'm/s', 'windforce'],
-    'humidity': ['Humidity', '%', 'humidity'],
+    'air_temp': [
+        'Air temperature', TEMP_CELSIUS,
+        'air_temp', 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
+    'road_temp': [
+        'Road temperature', TEMP_CELSIUS,
+        'road_temp', 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
+    'precipitation': [
+        'Precipitation type', None,
+        'precipitationtype', 'mdi:weather-snowy-rainy', None],
+    'wind_direction': [
+        'Wind direction', '°',
+        'winddirection', 'mdi:flag-triangle', None],
+    'wind_direction_text': [
+        'Wind direction text', None,
+        'winddirectiontext', 'mdi:flag-triangle', None],
+    'wind_speed': [
+        'Wind speed', 'm/s',
+        'windforce', 'mdi:weather-windy', None],
+    'humidity': [
+        'Humidity', '%',
+        'humidity', 'mdi:water-percent', DEVICE_CLASS_HUMIDITY],
+    'precipitation_amount': [
+        'Precipitation amount', 'mm',
+        'precipitation_amount', 'mdi:cup-water', None],
+    'precipitation_amountname': [
+        'Precipitation name', None,
+        'precipitation_amountname', 'mdi:weather-pouring', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -85,15 +108,33 @@ class TrafikverketWeatherStation(Entity):
         self._unit = SENSOR_TYPES[sensor_type][1]
         self._station = sensor_station
         self._weather_api = weather_api
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        self._icon = SENSOR_TYPES[sensor_type][3]
+        self._device_class = SENSOR_TYPES[sensor_type][4]
         self._weather = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return '{} {}'.format(self._client, self._name)
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return self._icon
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of Trafikverket Weatherstation."""
+        return {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ACTIVE: self._weather.active,
+            ATTR_MEASURE_TIME: self._weather.measure_time,
+        }
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def state(self):
@@ -116,4 +157,4 @@ class TrafikverketWeatherStation(Entity):
                 SENSOR_TYPES[self._type][2])
         except (asyncio.TimeoutError,
                 aiohttp.ClientError, ValueError) as error:
-            _LOGGER.error("Couldn't fetch weather data: %s", error)
+            _LOGGER.error("Could not fetch weather data: %s", error)

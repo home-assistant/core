@@ -1438,7 +1438,7 @@ pytrackr==0.0.5
 pytradfri[async]==6.0.1
 
 # homeassistant.components.trafikverket_weatherstation.sensor
-pytrafikverket==0.1.5.8
+pytrafikverket==0.1.5.9
 
 # homeassistant.components.ubee.device_tracker
 pyubee==0.2
