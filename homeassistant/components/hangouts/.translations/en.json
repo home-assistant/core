@@ -19,7 +19,8 @@
             "user": {
                 "data": {
                     "email": "E-Mail Address",
-                    "password": "Password"
+                    "password": "Password",
+                    "authorization_code": "Authorization Code"
                 },
                 "title": "Google Hangouts Login"
             }
