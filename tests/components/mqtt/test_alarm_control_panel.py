@@ -288,15 +288,61 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/command', 'DISARM', 0, False)
 
-    def test_disarm_not_publishes_mqtt_with_invalid_code(self):
-        """Test not publishing of MQTT messages with invalid code."""
+    def test_disarm_publishes_mqtt_with_template(self):
+        """Test publishing of MQTT messages while disarmed.
+
+        When command_template set to output json
+        """
         assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
             alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
-                'code': '1234'
+                'code': '1234',
+                'command_template': '{\"action\":\"{{ action }}\",\"code\":\"{{ code }}\"}',
+            }
+        })
+
+        common.alarm_disarm(self.hass, 1234)
+        self.hass.block_till_done()
+        self.mock_publish.async_publish.assert_called_once_with(
+                'alarm/command', '{\"action\":\"DISARM\",\"code\":\"1234\"}', 0, False)
+
+    def test_disarm_publishes_mqtt_when_code_not_req(self):
+        """Test publishing of MQTT messages while disarmed.
+
+        When code_disarm_required = False
+        """
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'code': '1234',
+                'code_disarm_required': False
+            }
+        })
+
+        common.alarm_disarm(self.hass)
+        self.hass.block_till_done()
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', 'DISARM', 0, False)
+
+    def test_disarm_not_publishes_mqtt_with_invalid_code_when_req(self):
+        """Test not publishing of MQTT messages with invalid code.
+
+        When code_disarm_required = True
+        """
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'code': '1234',
+                'code_disarm_required': True
             }
         })
 

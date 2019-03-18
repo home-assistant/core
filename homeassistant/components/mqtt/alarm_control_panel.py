@@ -238,7 +238,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
         if code_required and not self._validate_code(code, 'arming night'):
             return
-        action = self._config.get(CONF_PAYLOAD_ARM_AWAY)
+        action = self._config.get(CONF_PAYLOAD_ARM_NIGHT)
         self._publish(code, action)
 
     def _publish(self, code, action):
