@@ -103,11 +103,6 @@ class StreamLabsDailyUsage(Entity):
 class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
     """Monitors the monthly water usage."""
 
-    def __init__(self, location_name, streamlabs_usage_data):
-        """Initialize the monthly water usage device."""
-        super(StreamLabsMonthlyUsage, self)\
-            .__init__(location_name, streamlabs_usage_data)
-
     @property
     def name(self):
         """Return the name for monthly usage."""
@@ -121,11 +116,6 @@ class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
 
 class StreamLabsYearlyUsage(StreamLabsDailyUsage):
     """Monitors the yearly water usage."""
-
-    def __init__(self, location_name, streamlabs_usage_data):
-        """Initialize the yearly water usage device."""
-        super(StreamLabsYearlyUsage, self)\
-            .__init__(location_name, streamlabs_usage_data)
 
     @property
     def name(self):
