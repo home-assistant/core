@@ -1,11 +1,11 @@
 """Test Axis device."""
-import pytest
 from unittest.mock import Mock, patch
 
-from homeassistant.components import axis
-from homeassistant.components.axis import device, errors
+import pytest
 
 from tests.common import mock_coro
+
+from homeassistant.components.axis import device, errors
 
 DEVICE_DATA = {
     device.CONF_HOST: '1.2.3.4',
@@ -64,7 +64,8 @@ async def test_device_not_accessible():
 
     axis_device = device.AxisNetworkDevice(hass, entry)
 
-    with patch.object(device, 'get_device', side_effect=errors.CannotConnect), \
+    with patch.object(device, 'get_device',
+                      side_effect=errors.CannotConnect), \
             pytest.raises(device.ConfigEntryNotReady):
         await axis_device.async_setup()
 
@@ -124,29 +125,29 @@ async def test_get_device(hass):
 
 async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
-    import axis as axis_lib
+    import axis
 
     with patch('axis.vapix.Vapix.load_params',
-               side_effect=axis_lib.Unauthorized), \
+               side_effect=axis.Unauthorized), \
             pytest.raises(errors.AuthenticationRequired):
         await device.get_device(hass, DEVICE_DATA)
 
 
 async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
-    import axis as axis_lib
+    import axis
 
     with patch('axis.vapix.Vapix.load_params',
-               side_effect=axis_lib.RequestError), \
+               side_effect=axis.RequestError), \
             pytest.raises(errors.CannotConnect):
         await device.get_device(hass, DEVICE_DATA)
 
 
 async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
-    import axis as axis_lib
+    import axis
 
     with patch('axis.vapix.Vapix.load_params',
-               side_effect=axis_lib.AxisException), \
+               side_effect=axis.AxisException), \
             pytest.raises(errors.AuthenticationRequired):
         await device.get_device(hass, DEVICE_DATA)
