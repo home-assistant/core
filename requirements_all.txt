@@ -545,7 +545,7 @@ hipnotify==1.0.8
 hkavr==0.0.5
 
 # homeassistant.components.hlk_sw16
-hlk-sw16==0.0.6
+hlk-sw16==0.0.7
 
 # homeassistant.components.pi_hole.sensor
 hole==0.3.0
