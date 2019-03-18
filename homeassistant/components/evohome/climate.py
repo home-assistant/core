@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 
-from requests import ConnectionError, HTTPError
+import requests.exceptions
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -93,7 +93,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 
     # evohomeclient has exposed no means of accessing non-default location
     # (i.e. loc_idx > 0) other than using a protected member, such as below
-    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa E501; pylint: disable=protected-access
+    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]     # noqa: E501; pylint: disable=protected-access
 
     _LOGGER.debug(
         "Found Controller, id=%s [%s], name=%s (location_idx=%s)",
@@ -144,7 +144,7 @@ class EvoClimateDevice(ClimateDevice):
         try:
             raise err
 
-        except ConnectionError:
+        except requests.exceptions.ConnectionError:
             # this appears to be common with Honeywell's servers
             _LOGGER.warning(
                 "The vendor's web servers appear to be uncontactable, so "
@@ -153,7 +153,7 @@ class EvoClimateDevice(ClimateDevice):
             )
             return True
 
-        except HTTPError:
+        except requests.exceptions.HTTPError:
             if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
                 _LOGGER.warning(
                     "The vendor's API rate limit has been exceeded, so unable"
@@ -316,7 +316,7 @@ class EvoZone(EvoClimateDevice):
         """
         try:
             self._obj.set_temperature(temperature, until)
-        except HTTPError as err:
+        except requests.exceptions.HTTPError as err:
             self._handle_exception(err)
 
     def set_temperature(self, **kwargs):
@@ -366,7 +366,7 @@ class EvoZone(EvoClimateDevice):
         if operation_mode == EVO_FOLLOW:
             try:
                 self._obj.cancel_temp_override()
-            except HTTPError as err:
+            except requests.exceptions.HTTPError as err:
                 self._handle_exception(err)
 
         elif operation_mode == EVO_TEMPOVER:
@@ -528,7 +528,7 @@ class EvoController(EvoClimateDevice):
     def _set_operation_mode(self, operation_mode):
         try:
             self._obj._set_status(operation_mode)                                # noqa: E501; pylint: disable=protected-access
-        except HTTPError as err:
+        except requests.exceptions.HTTPError as err:
             self._handle_exception(err)
 
     def set_operation_mode(self, operation_mode):
@@ -565,7 +565,7 @@ class EvoController(EvoClimateDevice):
         try:
             self._status.update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])
-        except HTTPError as err:
+        except requests.exceptions.HTTPError as err:
             self._handle_exception(err)
         else:
             self._timers['statusUpdated'] = datetime.now()
