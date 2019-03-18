@@ -153,6 +153,8 @@ class LocalData:
             _LOGGER.info("Tego typu plików jeszcze nie obsługuję." + str(self.current_path))
             self.say("Tego typu plików jeszcze nie obsługuję.")
 
+        self.dispalay_current_path()
+
     def display_root_items(self, say):
         self.hass.states.set(
             "sensor.dyski", '', {
@@ -164,6 +166,11 @@ class LocalData:
                     "path": G_CLOUD_PREFIX}})
         if say:
             self.say("Dyski")
+
+    def dispalay_current_path(self):
+        state = self.hass.states.get('sensor.dyski')
+        items_info = state.attributes
+        self.hass.states.set("sensor.dyski", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), items_info)
 
     def display_current_items(self, say):
         local_items = []
@@ -203,7 +210,7 @@ class LocalData:
         self.hass.states.set(
             "sensor.dyski", self.current_path, items_info)
 
-    def display_current_remote_items(self, remote_items):
+    def display_current_remote_items(self):
         self.folders = []
         items_info = {0: {"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
                       1: {"name": "..", "icon": "", "path": ".."}}
@@ -213,7 +220,7 @@ class LocalData:
             items_info[2] = {"name":  ais_global.G_DRIVE_SHARED_WITH_ME, "icon": "account-supervisor-circle",
                              "path": self.current_path + ais_global.G_DRIVE_SHARED_WITH_ME}
         li = len(items_info)
-        for item in remote_items:
+        for item in self.folders_json:
             li = li + 1
             if self.current_path.endswith(':'):
                 path = self.current_path + item["Path"].strip()
@@ -273,6 +280,9 @@ class LocalData:
                     self.current_path = self.current_path[:k]
             # local drive
             else:
+                if os.path.isfile(self.current_path):
+                    k = self.current_path.rfind("/" + os.path.basename(self.current_path))
+                    self.current_path = self.current_path[:k]
                 k = self.current_path.rfind("/" + os.path.basename(self.current_path))
                 self.current_path = self.current_path[:k]
         else:
@@ -346,7 +356,7 @@ class LocalData:
         else:
             _LOGGER.error('G OK ' + path)
             self.folders_json = json.loads(proc.stdout)
-            self.display_current_remote_items(self.folders_json)
+            self.display_current_remote_items()
 
             if silent is False:
                 if self.text_to_say is not None:
@@ -430,11 +440,9 @@ class LocalData:
         timer.start()
 
     def rclone_browse(self, path, say):
-
         if path == G_CLOUD_PREFIX:
             self.rclone_append_listremotes(say)
             return
-
         if say:
             if path == G_CLOUD_PREFIX + self.rclone_remote_from_path(path):
                 self.text_to_say = self.rclone_remote_from_path(path)
@@ -443,7 +451,6 @@ class LocalData:
                 self.text_to_say = os.path.basename(path[k:])
         else:
             self.text_to_say = None
-
         is_dir = None
         mime_type = ""
         item_name = ""
@@ -457,7 +464,6 @@ class LocalData:
                 item_name = item["Name"]
                 if "MimeType" in item:
                     mime_type = item["MimeType"]
-
         if is_dir is None:
             # check if this is file selected from bookmarks
             bookmark = ais_global.G_BOOKMARK_MEDIA_CONTENT_ID.replace(G_RCLONE_URL_TO_STREAM, "")
@@ -478,6 +484,7 @@ class LocalData:
             self.rclone_browse_folder(path, False)
 
         else:
+            self.dispalay_current_path()
             # file was selected, check the MimeType
             # "MimeType":"audio/mp3" and "text/plain" are supported
             path = path.replace(G_CLOUD_PREFIX, "")
