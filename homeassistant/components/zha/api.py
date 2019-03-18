@@ -145,6 +145,7 @@ def async_get_device_info(hass, device, ha_device_registry=None):
         if reg_device is not None:
             ret_device['user_given_name'] = reg_device.name_by_user
             ret_device['device_reg_id'] = reg_device.id
+            ret_device['area_id'] = reg_device.area_id
     return ret_device
 
 
