@@ -872,7 +872,7 @@ prometheus_client==0.2.0
 protobuf==3.6.1
 
 # homeassistant.components.systemmonitor.sensor
-psutil==5.5.1
+psutil==5.6.1
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.3
