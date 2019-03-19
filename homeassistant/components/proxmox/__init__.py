@@ -80,7 +80,8 @@ async def setup_proxmox(hass, proxmox, config):
         vm_type = 'qemu'
         if 'type' in item:
             vm_type = item['type']
-        uri = '{}/{}/{}/status/start'.format(item['node'], vm_type, item['vmid'])
+        uri = '{}/{}/{}/status/start'.format(
+            item['node'], vm_type, item['vmid'])
         result = proxmox.nodes(uri).post()
         _LOGGER.info(result)
         fix_status(hass, item, 'running')
@@ -90,7 +91,8 @@ async def setup_proxmox(hass, proxmox, config):
         vm_type = 'qemu'
         if 'type' in item:
             vm_type = item['type']
-        uri = '{}/{}/{}/status/stop'.format(item['node'], vm_type, item['vmid'])
+        uri = '{}/{}/{}/status/stop'.format(
+            item['node'], vm_type, item['vmid'])
         result = proxmox.nodes(uri).post()
         _LOGGER.info(result)
         fix_status(hass, item, 'stopped')
