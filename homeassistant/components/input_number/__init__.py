@@ -3,11 +3,13 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ENTITY_ID, CONF_ICON,
     CONF_NAME, CONF_MODE, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_START,
     MATCH_ALL)
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -22,7 +24,7 @@ CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
 CONF_STEP = 'step'
-CONF_SET_VALUE = 'set_value'
+CONF_SET_VALUE = 'set_value_script'
 
 MODE_SLIDER = 'slider'
 MODE_BOX = 'box'
@@ -103,6 +105,7 @@ async def async_setup(hass, config):
         mode = cfg.get(CONF_MODE)
         template = cfg.get(CONF_VALUE_TEMPLATE)
         value_script = cfg.get(CONF_SET_VALUE)
+        _LOGGER.critical(value_script)
 
         template_entity_ids = set()
 
@@ -111,7 +114,7 @@ async def async_setup(hass, config):
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
-        entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
+        entity_ids = cfg.get(CONF_ENTITY_ID, template_entity_ids)
 
         entities.append(InputNumber(
             hass, object_id, name, initial, minimum, maximum, step, icon, unit,
@@ -156,10 +159,14 @@ class InputNumber(RestoreEntity):
         self._icon = icon
         self._unit = unit
         self._mode = mode
-        self._template = template
-        self._value_script = value_script
         self._entities = entity_ids
 
+        if value_script:
+            self._value_script = Script(hass, value_script)
+        else:
+            self._value_script = None
+
+        self._template = template
         if self._template is not None:
             self._template.hass = self.hass
 
@@ -202,21 +209,21 @@ class InputNumber(RestoreEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass and register callbacks."""
         @callback
-        def template_state_listener(entity, old_state, new_state):
+        def input_number_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
             self.async_schedule_update_ha_state(True)
 
         @callback
-        def template_startup(event):
+        def input_number_startup(event):
             """Update template on startup."""
             if self._template is not None:
                 async_track_state_change(
-                    self.hass, self._entities, template_state_listener)
+                    self.hass, self._entities, input_number_state_listener)
 
             self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_startup)
+            EVENT_HOMEASSISTANT_START, input_number_startup)
 
         await super().async_added_to_hass()
         if self._current_value is not None:
@@ -242,7 +249,7 @@ class InputNumber(RestoreEntity):
 
         if self._template:
             await self._value_script.async_run(
-                {"value": kwargs['value']}, context=self._context)
+                {"value": num_value}, context=self._context)
         await self.async_update_ha_state()
 
     async def async_increment(self):
@@ -275,55 +282,7 @@ class InputNumber(RestoreEntity):
         """Update the state from the template."""
         if self._template is not None:
             try:
-                state = self._template.async_render().lower()
+                self._current_value = float(self._template.async_render())
             except TemplateError as ex:
                 _LOGGER.error(ex)
-                self._state = None
-
-            if state in _VALID_STATES:
-                self._state = state in ('true', STATE_ON)
-            else:
-                _LOGGER.error(
-                    'Received invalid light is_on state: %s. Expected: %s',
-                    state, ', '.join(_VALID_STATES))
-                self._state = None
-
-        if self._level_template is not None:
-            try:
-                brightness = self._level_template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._state = None
-
-            if 0 <= int(brightness) <= 255:
-                self._brightness = int(brightness)
-            else:
-                _LOGGER.error(
-                    'Received invalid brightness : %s. Expected: 0-255',
-                    brightness)
-                self._brightness = None
-
-        for property_name, template in (
-                ('_icon', self._icon_template),
-                ('_entity_picture', self._entity_picture_template)):
-            if template is None:
-                continue
-
-            try:
-                setattr(self, property_name, template.async_render())
-            except TemplateError as ex:
-                friendly_property_name = property_name[1:].replace('_', ' ')
-                if ex.args and ex.args[0].startswith(
-                        "UndefinedError: 'None' has no attribute"):
-                    # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render %s template %s,'
-                                    ' the state is unknown.',
-                                    friendly_property_name, self._name)
-                    return
-
-                try:
-                    setattr(self, property_name,
-                            getattr(super(), property_name))
-                except AttributeError:
-                    _LOGGER.error('Could not render %s template %s: %s',
-                                  friendly_property_name, self._name, ex)
+                #self._state = None
