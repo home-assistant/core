@@ -1,6 +1,4 @@
-"""
-Support for Supla cover - curtains, rollershutters etc.
-"""
+"""Support for Supla cover - curtains, rollershutters etc."""
 import logging
 from pprint import pformat
 

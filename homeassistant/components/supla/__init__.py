@@ -1,6 +1,4 @@
-"""
-Support for the Supla devices.
-"""
+"""Support for the Supla devices."""
 
 import logging
 from typing import Optional
