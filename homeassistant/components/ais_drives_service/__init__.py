@@ -15,6 +15,7 @@ import subprocess
 import time
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
+from .config_flow import configured_drivers
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -66,6 +67,20 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, 'sync_locations', sync_locations)
 
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up drive as rclone config entry."""
+    # setup the Drive
+    # await async_setup(hass, hass.config)
+    _LOGGER.warning("Set up drive as rclone config entry.")
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    _LOGGER.warning("Remove the drive token from rclone conf")
     return True
 
 

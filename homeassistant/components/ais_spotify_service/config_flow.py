@@ -1,25 +1,23 @@
 """Config flow to configure the AIS Spotify Service component."""
 
-"""Config flow to configure zone component."""
-
-import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-from homeassistant.util import slugify
-
 from .const import DOMAIN
+G_AUTH_URL = None
 
+
+def setUrl(url):
+    global G_AUTH_URL
+    G_AUTH_URL = url
 
 @callback
 def configured_service(hass):
     """Return a set of the configured hosts."""
-    return set((slugify(entry.data[CONF_NAME])) for
-               entry in hass.config_entries.async_entries(DOMAIN))
+    return set('spotify' for entry in hass.config_entries.async_entries(DOMAIN))
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class ZoneFlowHandler(config_entries.ConfigFlow):
+class SpotifyFlowHandler(config_entries.ConfigFlow):
     """Spotify config flow."""
 
     VERSION = 1
@@ -53,12 +51,11 @@ class ZoneFlowHandler(config_entries.ConfigFlow):
                 data=user_input
             )
 
-        auth_url = "https://www.google.com"
         return self.async_show_form(
             step_id='init',
             errors=errors,
             description_placeholders={
-                'auth_url': auth_url,
+                'auth_url': G_AUTH_URL,
             },
         )
 

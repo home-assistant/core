@@ -288,6 +288,12 @@ class AisCloudWS:
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
         return ws_resp
 
+    def delete_key(self, service):
+        self.setCloudToken()
+        rest_url = self.url + "key?service=" + service
+        ws_resp = requests.delete(rest_url, headers=CLOUD_WS_HEADER)
+        return ws_resp
+
 
 class AisCacheData:
     def __init__(self, hass):
