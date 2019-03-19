@@ -9,7 +9,6 @@ loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 import json
 from datetime import timedelta
 import logging
-import os
 
 import voluptuous as vol
 
