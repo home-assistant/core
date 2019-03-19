@@ -441,7 +441,7 @@ async def test_setting_attribute_via_mqtt_message_template(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, 'test-topic', '100')
     await hass.async_block_till_done()
-    
+
     state = hass.states.get('alarm_control_panel.test')
     assert STATE_ALARM_ARMED_AWAY == state.state
 

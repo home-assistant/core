@@ -148,10 +148,11 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         @callback
         def message_received(msg):
             """Run when new MQTT message has been received."""
+            payload = msg.payload
             if value_template is not None:
-                msg.payload = value_template.async_render_with_possible_json_value(
+                payload = value_template.async_render_with_possible_json_value(
                     msg.payload, self._state)
-            if msg.payload not in (
+            if payload not in (
                     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
                     STATE_ALARM_ARMED_AWAY,
                     STATE_ALARM_ARMED_NIGHT,
@@ -159,7 +160,7 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                     STATE_ALARM_TRIGGERED):
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
-            self._state = msg.payload
+            self._state = payload
             self.async_write_ha_state()
 
         self._sub_state = await subscription.async_subscribe_topics(
