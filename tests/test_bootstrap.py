@@ -34,7 +34,7 @@ def test_from_config_file(hass):
     }
 
     with patch_yaml_files(files, True):
-        yield from bootstrap.async_from_config_file('config.yaml')
+        yield from bootstrap.async_from_config_file('config.yaml', hass)
 
     assert components == hass.config.components
 
@@ -103,3 +103,12 @@ async def test_async_from_config_file_not_mount_deps_folder(loop):
 
         await bootstrap.async_from_config_file('mock-path', hass)
         assert len(mock_mount.mock_calls) == 0
+
+
+async def test_load_hassio(hass):
+    """Test that we load Hass.io component."""
+    with patch.dict(os.environ, {}, clear=True):
+        assert bootstrap._get_components(hass, {}) == set()
+
+    with patch.dict(os.environ, {'HASSIO': '1'}):
+        assert bootstrap._get_components(hass, {}) == {'hassio'}
