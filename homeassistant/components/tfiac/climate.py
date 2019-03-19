@@ -1,7 +1,7 @@
 """Climate platform that offers a climate device for the TFIAC protocol."""
-from concurrent.futures import _base as futures
-import logging
+from concurrent import futures
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
@@ -13,7 +13,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.util.temperature import convert as convert_temperature
 
 DOMAIN = 'tfiac'
 
@@ -29,12 +28,19 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TEMP = 61
 MAX_TEMP = 88
-OPERATION_LIST = {
+OPERATION_MAP = {
     STATE_HEAT: 'heat',
     STATE_AUTO: 'selfFeel',
     STATE_DRY: 'dehumi',
     STATE_FAN_ONLY: 'fan',
     STATE_COOL: 'cool',
+}
+OPERATION_MAP_REV = {
+    'heat': STATE_HEAT,
+    'selfFeel': STATE_AUTO,
+    'dehumi': STATE_DRY,
+    'fan': STATE_FAN_ONLY,
+    'cool': STATE_COOL,
 }
 FAN_LIST = ['Auto', 'Low', 'Middle', 'High']
 SWING_LIST = [
@@ -57,11 +63,12 @@ async def async_setup_platform(hass, config, async_add_devices,
     """Set up the TFIAC climate device."""
     from pytfiac import Tfiac
 
-    host = config.get(CONF_HOST)
-    if host is not None:
-        tfiac_client = Tfiac(host)
+    tfiac_client = Tfiac(config[CONF_HOST])
+    try:
         await tfiac_client.update()
-        async_add_devices([TfiacClimate(hass, tfiac_client)])
+    except futures.TimeoutError:
+        return
+    async_add_devices([TfiacClimate(hass, tfiac_client)])
 
 
 class TfiacClimate(ClimateDevice):
@@ -69,7 +76,6 @@ class TfiacClimate(ClimateDevice):
 
     def __init__(self, hass, client):
         """Init class."""
-        hass.data[DOMAIN] = self
         self._client = client
         self._available = True
 
@@ -96,14 +102,12 @@ class TfiacClimate(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(MIN_TEMP, TEMP_FAHRENHEIT,
-                                   self.temperature_unit)
+        return MIN_TEMP
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(MAX_TEMP, TEMP_FAHRENHEIT,
-                                   self.temperature_unit)
+        return MAX_TEMP
 
     @property
     def name(self):
@@ -129,8 +133,7 @@ class TfiacClimate(ClimateDevice):
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         operation = self._client.status['operation']
-        return {v: k
-                for k, v in OPERATION_LIST.items()}.get(operation, operation)
+        return OPERATION_MAP_REV.get(operation, operation)
 
     @property
     def is_on(self):
@@ -140,7 +143,7 @@ class TfiacClimate(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return sorted(OPERATION_LIST)
+        return sorted(OPERATION_MAP)
 
     @property
     def current_fan_mode(self):
@@ -171,7 +174,7 @@ class TfiacClimate(ClimateDevice):
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
         await self._client.set_state(OPERATION_MODE,
-                                     OPERATION_LIST[operation_mode])
+                                     OPERATION_MAP[operation_mode])
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
