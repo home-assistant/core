@@ -1,6 +1,5 @@
 """The tests for the discovery component."""
 import asyncio
-import os
 from unittest.mock import patch, MagicMock
 
 import pytest
