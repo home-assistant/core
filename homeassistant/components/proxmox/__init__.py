@@ -75,25 +75,25 @@ async def setup_proxmox(hass, proxmox, config):
     conf_vms = conf.get(CONF_VMS)
     await update_data(hass, proxmox, conf_nodes, conf_vms)
 
-    async def start(vm):
+    async def start(item):
         """Start the VM or container"""
         vm_type = 'qemu'
-        if 'type' in vm:
-            vm_type = vm['type']
-        uri = '{}/{}/{}/status/start'.format(vm['node'], vm_type, vm['vmid'])
+        if 'type' in item:
+            vm_type = item['type']
+        uri = '{}/{}/{}/status/start'.format(item['node'], vm_type, item['vmid'])
         result = proxmox.nodes(uri).post()
         _LOGGER.info(result)
-        fix_status(hass, vm, 'running')
+        fix_status(hass, item, 'running')
 
-    async def stop(vm):
+    async def stop(item):
         """Stop the VM or container"""
         vm_type = 'qemu'
-        if 'type' in vm:
-            vm_type = vm['type']
-        uri = '{}/{}/{}/status/stop'.format(vm['node'], vm_type, vm['vmid'])
+        if 'type' in item:
+            vm_type = item['type']
+        uri = '{}/{}/{}/status/stop'.format(item['node'], vm_type, item['vmid'])
         result = proxmox.nodes(uri).post()
         _LOGGER.info(result)
-        fix_status(hass, vm, 'stopped')
+        fix_status(hass, item, 'stopped')
 
     hass.data[DATA_PROXMOX_CONTROL] = {'start': start, 'stop': stop}
     hass.async_create_task(
@@ -120,15 +120,17 @@ async def update_data(hass, proxmox, conf_nodes, conf_vms):
         if not bool(conf_nodes) or name in conf_nodes:
             node_dict[name] = node
             cts = proxmox.nodes(name).lxc.get()
-            for ct in cts:
-                if not bool(conf_vms) or int(ct['vmid']) in conf_vms:
-                    ct['node'] = name
-                    node_dict["{} - {}".format(ct['name'], ct['vmid'])] = ct
+            for item in cts:
+                if not bool(conf_vms) or int(item['vmid']) in conf_vms:
+                    item['node'] = name
+                    key = "{} - {}".format(item['name'], item['vmid'])
+                    node_dict[key] = item
             vms = proxmox.nodes(name).qemu.get()
-            for vm in vms:
-                if not bool(conf_vms) or int(vm['vmid']) in conf_vms:
-                    vm['node'] = name
-                    node_dict["{} - {}".format(vm['name'], vm['vmid'])] = vm
+            for item in vms:
+                if not bool(conf_vms) or int(item['vmid']) in conf_vms:
+                    item['node'] = name
+                    key = "{} - {}".format(item['name'], item['vmid'])
+                    node_dict[key] = item
     hass.data[DATA_PROXMOX_NODES] = node_dict
 
 

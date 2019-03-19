@@ -4,7 +4,7 @@ from homeassistant.components.switch import SwitchDevice
 
 
 async def async_setup_platform(
-                 hass, config, async_add_entities, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up Proxmox VE switch."""
     nodes = hass.data[proxmox.DATA_PROXMOX_NODES]
     control = hass.data[proxmox.DATA_PROXMOX_CONTROL]
@@ -67,7 +67,7 @@ class PXMXSwitch(SwitchDevice):
             self._state = None
             self._is_available = False
         else:
-            self._state = 'running' == node['status']
+            self._state = node['status'] == 'running'
             self._is_available = True
 
     def get_node(self):

@@ -4,7 +4,7 @@ from homeassistant.helpers.entity import Entity
 
 
 async def async_setup_platform(
-                 hass, config, async_add_entities, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up Proxmox VE sensors."""
     nodes = hass.data[proxmox.DATA_PROXMOX_NODES]
     sensors = []

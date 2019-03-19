@@ -4,7 +4,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 
 async def async_setup_platform(
-                 hass, config, async_add_entities, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up Proxmox VE binary sensor."""
     nodes = hass.data[proxmox.DATA_PROXMOX_NODES]
     sensors = []
@@ -52,5 +52,5 @@ class PXMXBinarySensor(BinarySensorDevice):
             self._state = None
             self._is_available = False
         else:
-            self._state = 'running' == node['status']
+            self._state = node['status'] == 'running'
             self._is_available = True
