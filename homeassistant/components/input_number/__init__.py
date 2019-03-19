@@ -61,7 +61,7 @@ def _cv_input_number(cfg):
     if state is not None and (state < minimum or state > maximum):
         raise vol.Invalid('Initial value {} not in range {}-{}'
                           .format(state, minimum, maximum))
-    if (CONF_VALUE_TEMPLATE in cfg) is not (CONF_SET_VALUE in cfg):
+    if (CONF_VALUE_TEMPLATE in cfg) is (CONF_SET_VALUE not in cfg):
         raise vol.Invalid('{} and {} must be provided together'
                           .format(CONF_VALUE_TEMPLATE, CONF_SET_VALUE))
     return cfg
@@ -285,4 +285,3 @@ class InputNumber(RestoreEntity):
                 self._current_value = float(self._template.async_render())
             except TemplateError as ex:
                 _LOGGER.error(ex)
-                #self._state = None
