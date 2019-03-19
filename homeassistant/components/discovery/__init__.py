@@ -9,7 +9,6 @@ loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 import json
 from datetime import timedelta
 import logging
-import os
 
 import voluptuous as vol
 
@@ -198,10 +197,6 @@ async def async_setup(hass, config):
     def schedule_first(event):
         """Schedule the first discovery when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
-
-        # Discovery for local services
-        if 'HASSIO' in os.environ:
-            hass.async_create_task(new_service_found(SERVICE_HASSIO, {}))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
 
