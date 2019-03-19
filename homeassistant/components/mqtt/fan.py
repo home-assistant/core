@@ -158,7 +158,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -212,14 +212,14 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 templates[key] = tpl.async_render_with_possible_json_value
 
         @callback
-        def state_received(topic, payload, qos):
+        def state_received(msg):
             """Handle new received MQTT message."""
-            payload = templates[CONF_STATE](payload)
+            payload = templates[CONF_STATE](msg.payload)
             if payload == self._payload[STATE_ON]:
                 self._state = True
             elif payload == self._payload[STATE_OFF]:
                 self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -228,16 +228,16 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 'qos': self._config.get(CONF_QOS)}
 
         @callback
-        def speed_received(topic, payload, qos):
+        def speed_received(msg):
             """Handle new received MQTT message for the speed."""
-            payload = templates[ATTR_SPEED](payload)
+            payload = templates[ATTR_SPEED](msg.payload)
             if payload == self._payload[SPEED_LOW]:
                 self._speed = SPEED_LOW
             elif payload == self._payload[SPEED_MEDIUM]:
                 self._speed = SPEED_MEDIUM
             elif payload == self._payload[SPEED_HIGH]:
                 self._speed = SPEED_HIGH
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_SPEED_STATE_TOPIC] is not None:
             topics[CONF_SPEED_STATE_TOPIC] = {
@@ -247,14 +247,14 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._speed = SPEED_OFF
 
         @callback
-        def oscillation_received(topic, payload, qos):
+        def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
-            payload = templates[OSCILLATION](payload)
+            payload = templates[OSCILLATION](msg.payload)
             if payload == self._payload[OSCILLATE_ON_PAYLOAD]:
                 self._oscillation = True
             elif payload == self._payload[OSCILLATE_OFF_PAYLOAD]:
                 self._oscillation = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
             topics[CONF_OSCILLATION_STATE_TOPIC] = {
@@ -360,7 +360,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         if self._optimistic_speed:
             self._speed = speed
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation.
@@ -381,7 +381,7 @@ class MqttFan(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         if self._optimistic_oscillation:
             self._oscillation = oscillating
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def unique_id(self):

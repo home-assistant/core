@@ -161,6 +161,7 @@ FLOWS = [
     'locative',
     'luftdaten',
     'mailgun',
+    'mobile_app',
     'mqtt',
     'nest',
     'openuv',
