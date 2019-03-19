@@ -304,13 +304,13 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self):
         """Return the ID of this device."""
-        serial = self._accessory_info.get('serial-number', 'unknown')
+        serial = self._accessory_info['serial-number']
         return "homekit-{}-{}".format(serial, self._iid)
 
     @property
     def name(self):
         """Return the name of the device if any."""
-        return self._accessory_info.get('name', None)
+        return self._accessory_info.get('name')
 
     @property
     def available(self) -> bool:
