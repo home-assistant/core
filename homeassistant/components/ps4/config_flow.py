@@ -26,7 +26,7 @@ PORT_MSG = {UDP_PORT: 'port_987_bind_error', TCP_PORT: 'port_997_bind_error'}
 class PlayStation4FlowHandler(config_entries.ConfigFlow):
     """Handle a PlayStation 4 config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
@@ -138,54 +138,39 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             self.region = user_input[CONF_REGION]
             self.name = user_input[CONF_NAME]
-            self.pin = user_input[CONF_CODE]
+            self.pin = str(user_input[CONF_CODE])
             self.host = user_input[CONF_IP_ADDRESS]
-            pin_valid = True
 
-            # Remove any whitespace from pin.
-            if ' ' in self.pin:
-                self.pin = self.pin.replace(' ', '')
-            # If pin length is greater than 8 show error.
-            if len(str(self.pin)) != 8:
-                errors['base'] = 'pin_length_incorrect'
-                pin_valid = False
-            # Ensure pin is a valid int.
-            try:
-                int(self.pin)
-            except ValueError:
-                errors['base'] = 'pin_invalid'
-                pin_valid = False
+            is_ready, is_login = await self.hass.async_add_executor_job(
+                self.helper.link, self.host, self.creds, self.pin)
 
-            if pin_valid:
-                is_ready, is_login = await self.hass.async_add_executor_job(
-                    self.helper.link, self.host, self.creds, self.pin)
+            if is_ready is False:
+                errors['base'] = 'not_ready'
+            elif is_login is False:
+                errors['base'] = 'login_failed'
+            else:
+                device = {
+                    CONF_HOST: self.host,
+                    CONF_NAME: self.name,
+                    CONF_REGION: self.region
+                }
 
-                if is_ready is False:
-                    errors['base'] = 'not_ready'
-                elif is_login is False:
-                    errors['base'] = 'login_failed'
-                else:
-                    device = {
-                        CONF_HOST: self.host,
-                        CONF_NAME: self.name,
-                        CONF_REGION: self.region
-                    }
-
-                    # Create entry.
-                    return self.async_create_entry(
-                        title='PlayStation 4',
-                        data={
-                            CONF_TOKEN: self.creds,
-                            'devices': [device],
-                        },
-                    )
+                # Create entry.
+                return self.async_create_entry(
+                    title='PlayStation 4',
+                    data={
+                        CONF_TOKEN: self.creds,
+                        'devices': [device],
+                    },
+                )
 
         # Show User Input form.
         link_schema = OrderedDict()
         link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(
             list(self.device_list))
         link_schema[vol.Required(CONF_REGION)] = vol.In(list(regions))
-        link_schema[vol.Required(CONF_CODE)] = str
+        link_schema[vol.Required(CONF_CODE)] = vol.All(
+            vol.Strip, vol.Length(min=8, max=8), vol.Coerce(int))
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 
         return self.async_show_form(
