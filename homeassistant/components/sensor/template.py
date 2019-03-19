@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, \
     PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE,
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE, ATTR_ENTITY_ID,
     CONF_SENSORS, EVENT_HOMEASSISTANT_START, CONF_FRIENDLY_NAME_TEMPLATE,
     MATCH_ALL, CONF_DEVICE_CLASS)
@@ -32,6 +32,7 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT_TEMPLATE): cv.template,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
@@ -53,6 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             CONF_ENTITY_PICTURE_TEMPLATE)
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
+        unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
         unit_of_measurement_template = device_config.get(
             CONF_UNIT_OF_MEASUREMENT_TEMPLATE)
         device_class = device_config.get(CONF_DEVICE_CLASS)
