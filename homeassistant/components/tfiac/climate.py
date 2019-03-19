@@ -59,6 +59,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     try:
         await tfiac_client.update()
     except futures.TimeoutError:
+        _LOGGER.error("Unable to connect to %s", config[CONF_HOST])
         return
     async_add_devices([TfiacClimate(hass, tfiac_client)])
 
