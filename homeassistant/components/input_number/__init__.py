@@ -5,9 +5,13 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME, CONF_MODE)
+    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ENTITY_ID, CONF_ICON,
+    CONF_NAME, CONF_MODE, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_START,
+    MATCH_ALL)
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,6 +22,7 @@ CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
 CONF_STEP = 'step'
+CONF_SET_VALUE = 'set_value'
 
 MODE_SLIDER = 'slider'
 MODE_BOX = 'box'
@@ -54,6 +59,9 @@ def _cv_input_number(cfg):
     if state is not None and (state < minimum or state > maximum):
         raise vol.Invalid('Initial value {} not in range {}-{}'
                           .format(state, minimum, maximum))
+    if (CONF_VALUE_TEMPLATE in cfg) is not (CONF_SET_VALUE in cfg):
+        raise vol.Invalid('{} and {} must be provided together'
+                          .format(CONF_VALUE_TEMPLATE, CONF_SET_VALUE))
     return cfg
 
 
@@ -70,6 +78,9 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_MODE, default=MODE_SLIDER):
                 vol.In([MODE_BOX, MODE_SLIDER]),
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids
         }, _cv_input_number)
     )
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -90,10 +101,21 @@ async def async_setup(hass, config):
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
         mode = cfg.get(CONF_MODE)
+        template = cfg.get(CONF_VALUE_TEMPLATE)
+        value_script = cfg.get(CONF_SET_VALUE)
+
+        template_entity_ids = set()
+
+        if template is not None:
+            temp_ids = template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
+        entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
 
         entities.append(InputNumber(
-            object_id, name, initial, minimum, maximum, step, icon, unit,
-            mode))
+            hass, object_id, name, initial, minimum, maximum, step, icon, unit,
+            mode, template, value_script, entity_ids))
 
     if not entities:
         return False
@@ -120,9 +142,10 @@ async def async_setup(hass, config):
 class InputNumber(RestoreEntity):
     """Representation of a slider."""
 
-    def __init__(self, object_id, name, initial, minimum, maximum, step, icon,
-                 unit, mode):
+    def __init__(self, hass, object_id, name, initial, minimum, maximum, step,
+                 icon, unit, mode, template, value_script, entity_ids):
         """Initialize an input number."""
+        self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._current_value = initial
@@ -133,6 +156,12 @@ class InputNumber(RestoreEntity):
         self._icon = icon
         self._unit = unit
         self._mode = mode
+        self._template = template
+        self._value_script = value_script
+        self._entities = entity_ids
+
+        if self._template is not None:
+            self._template.hass = self.hass
 
     @property
     def should_poll(self):
@@ -171,7 +200,24 @@ class InputNumber(RestoreEntity):
         }
 
     async def async_added_to_hass(self):
-        """Run when entity about to be added to hass."""
+        """Run when entity about to be added to hass and register callbacks."""
+        @callback
+        def template_state_listener(entity, old_state, new_state):
+            """Handle target device state changes."""
+            self.async_schedule_update_ha_state(True)
+
+        @callback
+        def template_startup(event):
+            """Update template on startup."""
+            if self._template is not None:
+                async_track_state_change(
+                    self.hass, self._entities, template_state_listener)
+
+            self.async_schedule_update_ha_state(True)
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, template_startup)
+
         await super().async_added_to_hass()
         if self._current_value is not None:
             return
@@ -193,6 +239,10 @@ class InputNumber(RestoreEntity):
                             num_value, self._minimum, self._maximum)
             return
         self._current_value = num_value
+
+        if self._template:
+            await self._value_script.async_run(
+                {"value": kwargs['value']}, context=self._context)
         await self.async_update_ha_state()
 
     async def async_increment(self):
@@ -203,6 +253,9 @@ class InputNumber(RestoreEntity):
                             new_value, self._minimum, self._maximum)
             return
         self._current_value = new_value
+        if self._template:
+            await self._value_script.async_run(
+                {"value": new_value}, context=self._context)
         await self.async_update_ha_state()
 
     async def async_decrement(self):
@@ -213,4 +266,7 @@ class InputNumber(RestoreEntity):
                             new_value, self._minimum, self._maximum)
             return
         self._current_value = new_value
+        if self._template:
+            await self._value_script.async_run(
+                {"value": new_value}, context=self._context)
         await self.async_update_ha_state()
