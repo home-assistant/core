@@ -9,6 +9,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 
+from .connection import get_accessory_information
 from .const import (
     CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_ACCESSORIES,
     KNOWN_DEVICES
@@ -204,11 +205,9 @@ class HomeKitEntity(Entity):
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
         self._available = True
-        self._name = accessory.model
         self._accessory = accessory
         self._aid = devinfo['aid']
         self._iid = devinfo['iid']
-        self._address = "homekit-{}-{}".format(devinfo['serial'], self._iid)
         self._features = 0
         self._chars = {}
         self.setup()
@@ -232,6 +231,7 @@ class HomeKitEntity(Entity):
         for accessory in pairing_data.get('accessories', []):
             if accessory['aid'] != self._aid:
                 continue
+            self._accessory_info = get_accessory_information(accessory)
             for service in accessory['services']:
                 if service['iid'] != self._iid:
                     continue
@@ -304,12 +304,13 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self):
         """Return the ID of this device."""
-        return self._address
+        serial = self._accessory_info['serial-number']
+        return "homekit-{}-{}".format(serial, self._iid)
 
     @property
     def name(self):
         """Return the name of the device if any."""
-        return self._name
+        return self._accessory_info.get('name')
 
     @property
     def available(self) -> bool:

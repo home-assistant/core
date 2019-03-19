@@ -74,20 +74,13 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
             CharacteristicsTypes.DOOR_STATE_CURRENT,
             CharacteristicsTypes.DOOR_STATE_TARGET,
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
-            CharacteristicsTypes.NAME,
         ]
-
-    def _setup_name(self, char):
-        self._name = char['value']
 
     def _update_door_state_current(self, value):
         self._state = CURRENT_GARAGE_STATE_MAP[value]
 
     def _update_obstruction_detected(self, value):
         self._obstruction_detected = value
-
-    def _update_name(self, value):
-        self._name = value
 
     @property
     def available(self):
@@ -172,11 +165,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
             CharacteristicsTypes.HORIZONTAL_TILT_CURRENT,
             CharacteristicsTypes.HORIZONTAL_TILT_TARGET,
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
-            CharacteristicsTypes.NAME,
         ]
-
-    def _setup_name(self, char):
-        self._name = char['value']
 
     def _update_position_state(self, value):
         self._state = CURRENT_WINDOW_STATE_MAP[value]
