@@ -151,10 +151,10 @@ class MailNotificationService(BaseNotificationService):
         if data:
             if ATTR_HTML in data:
                 msg = _build_html_msg(
-                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES))
+                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, []))
             else:
                 msg = _build_multipart_msg(
-                    message, images=data.get(ATTR_IMAGES))
+                    message, images=data.get(ATTR_IMAGES, []))
         else:
             msg = _build_text_msg(message)
 
