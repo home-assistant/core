@@ -36,12 +36,7 @@ OPERATION_MAP = {
     STATE_COOL: 'cool',
 }
 OPERATION_MAP_REV = {
-    'heat': STATE_HEAT,
-    'selfFeel': STATE_AUTO,
-    'dehumi': STATE_DRY,
-    'fan': STATE_FAN_ONLY,
-    'cool': STATE_COOL,
-}
+    v: k for k, v in OPERATION_MAP.items()}
 FAN_LIST = ['Auto', 'Low', 'Middle', 'High']
 SWING_LIST = [
     'Off',
