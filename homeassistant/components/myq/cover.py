@@ -45,7 +45,8 @@ async def async_setup_platform(
     # Specify socket
     conn = aiohttp.TCPConnector(
         family=socket.AF_INET,
-        verify_ssl=True,
+        limit_per_host=5,
+        enable_cleanup_closed=True,
     )
 
     session_timeout = aiohttp.ClientTimeout(connect=10)
