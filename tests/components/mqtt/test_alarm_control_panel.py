@@ -419,6 +419,33 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     assert '100' == state.attributes.get('val')
 
 
+async def test_setting_attribute_via_mqtt_message_template(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, {
+        alarm_control_panel.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'command_topic': 'test-topic',
+            'state_topic': 'test-topic',
+            'value_template': '\
+                {% if (value | int)  == 100 %}\
+                  armed_away\
+                {% else %}\
+                   disarmed\
+                {% endif %}'
+            }
+    })
+
+    state = hass.states.get('alarm_control_panel.test')
+    assert STATE_UNKNOWN == state.state
+
+    async_fire_mqtt_message(hass, 'test-topic', '100')
+    await hass.async_block_till_done()
+    
+    state = hass.states.get('alarm_control_panel.test')
+    assert STATE_ALARM_ARMED_AWAY == state.state
+
+
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, {

@@ -20,7 +20,7 @@ from homeassistant.components.mqtt.discovery import (
 from homeassistant.const import (
     CONF_CODE, CONF_DEVICE, CONF_NAME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, CONF_VALUE_TEMPLATE)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -57,6 +57,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_CODE_DISARM_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_COMMAND_TEMPLATE, default=DEFAULT_COMMAND_TEMPLATE): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
@@ -137,6 +138,9 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+        value_template = self._config.get(CONF_VALUE_TEMPLATE)
+        if value_template is not None:
+            value_template.hass = self.hass
         for tpl in self._templates.values():
             if tpl is not None:
                 tpl.hass = self.hass
@@ -144,6 +148,9 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         @callback
         def message_received(topic, payload, qos):
             """Run when new MQTT message has been received."""
+            if value_template is not None:
+                payload = value_template.async_render_with_possible_json_value(
+                    payload, self._state)
             if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
                                STATE_ALARM_ARMED_AWAY,
                                STATE_ALARM_ARMED_NIGHT,
