@@ -18,7 +18,7 @@ from .core.const import (
     DOMAIN, ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, ATTR_ATTRIBUTE, ATTR_VALUE,
     ATTR_MANUFACTURER, ATTR_COMMAND, ATTR_COMMAND_TYPE, ATTR_ARGS, IN, OUT,
     CLIENT_COMMANDS, SERVER_COMMANDS, SERVER, NAME, ATTR_ENDPOINT_ID,
-    DATA_ZHA_GATEWAY, DATA_ZHA)
+    DATA_ZHA_GATEWAY, DATA_ZHA, MFG_CLUSTER_ID_START)
 from .core.helpers import get_matched_clusters, async_is_bindable_target
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,10 +79,10 @@ SERVICE_SCHEMAS = {
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
-    vol.Required('type'): 'zha/devices/add'
+    vol.Required('type'): 'zha/devices/permit'
 })
-async def websocket_add_devices(hass, connection, msg):
-    """Add ZHA zigbee devices."""
+async def websocket_permit_devices(hass, connection, msg):
+    """Permit ZHA zigbee devices."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
     async def forward_messages(data):
@@ -105,7 +105,7 @@ async def websocket_add_devices(hass, connection, msg):
     zha_gateway.async_enable_debug_mode()
     await zha_gateway.application_controller.permit(60)
 
-    connection.send_message(websocket_api.result_message(msg['id']))
+    connection.send_result(msg['id'])
 
 
 @websocket_api.require_admin
@@ -312,7 +312,7 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
     attribute = msg[ATTR_ATTRIBUTE]
     manufacturer = None
     #  only use manufacturer code for manufacturer clusters
-    if cluster_id >= 0xfc00:
+    if cluster_id >= MFG_CLUSTER_ID_START:
         manufacturer = msg.get(ATTR_MANUFACTURER) or None
     zha_device = zha_gateway.get_device(ieee)
     success = failure = None
@@ -478,7 +478,7 @@ def async_load_api(hass):
         value = service.data.get(ATTR_VALUE)
         manufacturer = None
         #  only use manufacturer code for manufacturer clusters
-        if cluster_id >= 0xfc00:
+        if cluster_id >= MFG_CLUSTER_ID_START:
             manufacturer = service.data.get(ATTR_MANUFACTURER) or None
         zha_device = zha_gateway.get_device(ieee)
         response = None
@@ -519,7 +519,7 @@ def async_load_api(hass):
         args = service.data.get(ATTR_ARGS)
         manufacturer = None
         #  only use manufacturer code for manufacturer clusters
-        if cluster_id >= 0xfc00:
+        if cluster_id >= MFG_CLUSTER_ID_START:
             manufacturer = service.data.get(ATTR_MANUFACTURER) or None
         zha_device = zha_gateway.get_device(ieee)
         response = None
@@ -551,7 +551,7 @@ def async_load_api(hass):
             SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND
         ])
 
-    websocket_api.async_register_command(hass, websocket_add_devices)
+    websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)

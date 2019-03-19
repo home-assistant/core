@@ -346,19 +346,18 @@ class LogRelayHandler(logging.Handler):
 
     def emit(self, record):
         """Relay log message via dispatcher."""
-        if self.gateway.debug_enabled:
-            stack = []
-            if record.levelno >= logging.WARN:
-                if not record.exc_info:
-                    stack = [f for f, _, _, _ in traceback.extract_stack()]
+        stack = []
+        if record.levelno >= logging.WARN:
+            if not record.exc_info:
+                stack = [f for f, _, _, _ in traceback.extract_stack()]
 
-            entry = LogEntry(record, stack,
-                             _figure_out_source(record, stack, self.hass))
-            async_dispatcher_send(
-                self.hass,
-                ZHA_GW_MSG,
-                {
-                    TYPE: LOG_OUTPUT,
-                    LOG_ENTRY: entry.to_dict()
-                }
-            )
+        entry = LogEntry(record, stack,
+                         _figure_out_source(record, stack, self.hass))
+        async_dispatcher_send(
+            self.hass,
+            ZHA_GW_MSG,
+            {
+                TYPE: LOG_OUTPUT,
+                LOG_ENTRY: entry.to_dict()
+            }
+        )

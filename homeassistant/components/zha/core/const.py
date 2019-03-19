@@ -133,6 +133,7 @@ DEVICE_FULL_INIT = 'device_fully_initialized'
 DEVICE_JOINED = 'device_joined'
 LOG_OUTPUT = 'log_output'
 LOG_ENTRY = 'log_entry'
+MFG_CLUSTER_ID_START = 0xfc00
 
 
 class RadioType(enum.Enum):
