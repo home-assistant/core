@@ -154,7 +154,7 @@ class MailNotificationService(BaseNotificationService):
                     message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, []))
             else:
                 msg = _build_multipart_msg(
-                    message, images=data.get(ATTR_IMAGES))
+                    message, images=data.get(ATTR_IMAGES, []))
         else:
             msg = _build_text_msg(message)
 
