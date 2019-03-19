@@ -142,21 +142,6 @@ def test_discover_duplicates(hass):
         SERVICE_NO_PLATFORM_COMPONENT, BASE_CONFIG)
 
 
-@asyncio.coroutine
-def test_load_component_hassio(hass):
-    """Test load hassio component."""
-    def discover(netdisco):
-        """Fake discovery."""
-        return []
-
-    with patch.dict(os.environ, {'HASSIO': "FAKE_HASSIO"}), \
-            patch('homeassistant.components.hassio.async_setup',
-                  return_value=mock_coro(return_value=True)) as mock_hassio:
-        yield from mock_discovery(hass, discover)
-
-    assert mock_hassio.called
-
-
 async def test_discover_config_flow(hass):
     """Test discovery triggering a config flow."""
     discovery_info = {

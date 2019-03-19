@@ -199,10 +199,6 @@ async def async_setup(hass, config):
         """Schedule the first discovery when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
 
-        # Discovery for local services
-        if 'HASSIO' in os.environ:
-            hass.async_create_task(new_service_found(SERVICE_HASSIO, {}))
-
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
 
     return True
