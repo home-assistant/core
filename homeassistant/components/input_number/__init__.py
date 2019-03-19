@@ -270,3 +270,60 @@ class InputNumber(RestoreEntity):
             await self._value_script.async_run(
                 {"value": new_value}, context=self._context)
         await self.async_update_ha_state()
+
+    async def async_update(self):
+        """Update the state from the template."""
+        if self._template is not None:
+            try:
+                state = self._template.async_render().lower()
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._state = None
+
+            if state in _VALID_STATES:
+                self._state = state in ('true', STATE_ON)
+            else:
+                _LOGGER.error(
+                    'Received invalid light is_on state: %s. Expected: %s',
+                    state, ', '.join(_VALID_STATES))
+                self._state = None
+
+        if self._level_template is not None:
+            try:
+                brightness = self._level_template.async_render()
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._state = None
+
+            if 0 <= int(brightness) <= 255:
+                self._brightness = int(brightness)
+            else:
+                _LOGGER.error(
+                    'Received invalid brightness : %s. Expected: 0-255',
+                    brightness)
+                self._brightness = None
+
+        for property_name, template in (
+                ('_icon', self._icon_template),
+                ('_entity_picture', self._entity_picture_template)):
+            if template is None:
+                continue
+
+            try:
+                setattr(self, property_name, template.async_render())
+            except TemplateError as ex:
+                friendly_property_name = property_name[1:].replace('_', ' ')
+                if ex.args and ex.args[0].startswith(
+                        "UndefinedError: 'None' has no attribute"):
+                    # Common during HA startup - so just a warning
+                    _LOGGER.warning('Could not render %s template %s,'
+                                    ' the state is unknown.',
+                                    friendly_property_name, self._name)
+                    return
+
+                try:
+                    setattr(self, property_name,
+                            getattr(super(), property_name))
+                except AttributeError:
+                    _LOGGER.error('Could not render %s template %s: %s',
+                                  friendly_property_name, self._name, ex)
