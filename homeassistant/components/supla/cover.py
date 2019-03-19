@@ -1,20 +1,12 @@
 """
 Support for Supla cover - curtains, rollershutters etc.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.supla/
 """
 import logging
 from pprint import pformat
 
 from homeassistant.components.cover import (
-    CoverDevice,
-    ENTITY_ID_FORMAT,
-    ATTR_POSITION
-)
-from homeassistant.components.supla import (
-    SuplaChannel
-)
+    ATTR_POSITION, ENTITY_ID_FORMAT, CoverDevice)
+from homeassistant.components.supla import SuplaChannel
 
 DEPENDENCIES = ['supla']
 

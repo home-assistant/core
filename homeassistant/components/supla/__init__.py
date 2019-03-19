@@ -1,21 +1,16 @@
 """
 Support for the Supla devices.
-
-For more details about this platform, please refer to the documentation.
-https://home-assistant.io/components/supla/
 """
 
 import logging
 from typing import Optional
+
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN
-)
+from homeassistant.const import CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-
 
 REQUIREMENTS = ['pysupla==0.0.2']
 
