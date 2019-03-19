@@ -187,8 +187,7 @@ class NanoleafLight(Light):
             if brightness:  # tune to the required brightness in n seconds
                 self._light.brightness_transition(
                     int(brightness / 2.55), int(transition))
-            # If brightness is not specified, assume full brightness
-            else:
+            else:  # If brightness is not specified, assume full brightness
                 self._light.brightness_transition(100, int(transition))
         else:  # If no transition is occurring, turn on the light
             self._light.on = True
