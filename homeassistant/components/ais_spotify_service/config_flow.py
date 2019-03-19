@@ -1,28 +1,26 @@
 """Config flow to configure the AIS Spotify Service component."""
 
+"""Config flow to configure zone component."""
+
 import voluptuous as vol
-
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.util import slugify
 
+from .const import DOMAIN
 
 
 @callback
-def configured_instances(hass):
-    """Return a set of configured AIS Spotify Service instances."""
-    return set(
-        '{0}, {1}'.format(
-            entry.data.get(CONF_LATITUDE, hass.config.latitude),
-            entry.data.get(CONF_LONGITUDE, hass.config.longitude))
-        for entry in hass.config_entries.async_entries("ais_spotify_service"))
+def configured_service(hass):
+    """Return a set of the configured hosts."""
+    return set((slugify(entry.data[CONF_NAME])) for
+               entry in hass.config_entries.async_entries(DOMAIN))
 
 
-@config_entries.HANDLERS.register("ais_spotify_service")
-class AisSpotifyServiceFlowHandler(config_entries.ConfigFlow):
-    """Handle an AIS Spotify Service config flow."""
+@config_entries.HANDLERS.register(DOMAIN)
+class ZoneFlowHandler(config_entries.ConfigFlow):
+    """Spotify config flow."""
 
     VERSION = 1
 
@@ -32,25 +30,37 @@ class AisSpotifyServiceFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
+        if self._async_current_entries():
+            return self.async_abort(reason='single_instance_allowed')
+        return await self.async_step_confirm(user_input)
+
+    async def async_step_confirm(self, user_input=None):
+        """Handle a flow start."""
+        errors = {}
+        if user_input is not None:
+            return await self.async_step_init(user_input=None)
+        return self.async_show_form(
+            step_id='confirm',
+            errors=errors,
+        )
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         errors = {}
-
         if user_input is not None:
-            name = "jjjj"
-            errors['base'] = 'name_exists'
+            return self.async_create_entry(
+                title="Dostęp do Spotify",
+                data=user_input
+            )
 
+        auth_url = "https://www.google.com"
         return self.async_show_form(
             step_id='init',
-            data_schema=vol.Schema({
-                vol.Required("name"): str,
-                vol.Required(CONF_LATITUDE): cv.latitude,
-                vol.Required(CONF_LONGITUDE): cv.longitude,
-                vol.Optional("rad"): vol.Coerce(float),
-                vol.Optional("icon"): str,
-                vol.Optional("pass"): bool,
-            }),
             errors=errors,
+            description_placeholders={
+                'auth_url': auth_url,
+            },
         )
+
+
+

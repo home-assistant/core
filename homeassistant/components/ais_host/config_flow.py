@@ -17,7 +17,7 @@ def configured_host(hass):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class ZoneFlowHandler(config_entries.ConfigFlow):
+class HostFlowHandler(config_entries.ConfigFlow):
     """Zone config flow."""
 
     VERSION = 1
@@ -28,8 +28,8 @@ class ZoneFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason='single_instance_allowed')
+        # if self._async_current_entries():
+        #     return self.async_abort(reason='single_instance_allowed')
         return await self.async_step_confirm(user_input)
 
 
@@ -71,10 +71,11 @@ class ZoneFlowHandler(config_entries.ConfigFlow):
 
             """Finish config flow"""
             if l_valid:
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input
-                )
+                # return self.async_create_entry(
+                #     title=user_input[CONF_NAME],
+                #     data=user_input
+                # )
+                return self.async_abort(reason='do_the_restart')
 
         return self.async_show_form(
             step_id='init',
@@ -83,3 +84,6 @@ class ZoneFlowHandler(config_entries.ConfigFlow):
             }),
             errors=errors,
         )
+
+
+

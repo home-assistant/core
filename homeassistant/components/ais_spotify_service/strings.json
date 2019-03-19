@@ -1,20 +1,18 @@
 {
-  "config": {
-    "title": "AIS Spotify Service",
-    "step": {
-      "user": {
-        "title": "Fill in your information",
-        "data": {
-          "api_key": "OpenUV API Key",
-          "elevation": "Elevation",
-          "latitude": "Latitude",
-          "longitude": "Longitude"
+    "config": {
+        "title": "AIS Spotify Service",
+        "step": {
+            "init": {
+                "title": "Zazwól na dostęp dla Asystenta domowego",
+                "description": "Aby po\u0142\u0105czy\u0107 konto Spotify: \n 1. Kliknij poni\u017cszy link \n 2. Zaloguj si\u0119 do Spotify \n 3. Autoryzuj **Asystenta domowego**. \n 4. Wr\u00f3\u0107 tutaj i kliknij **SUBMIT**. \n\n [Uwierzytelnienie  na Spotify]({auth_url})"
+            },
+           "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 dostęp do serwisu Soptify?",
+                "title": "AIS Spotify Service"
+           }
+        },
+        "abort": {
+            "single_instance_allowed": "Only a single Spotify integration is allowed."
         }
-      }
-    },
-    "error": {
-      "identifier_exists": "Coordinates already registered",
-      "invalid_api_key": "Invalid API key"
     }
-  }
 }

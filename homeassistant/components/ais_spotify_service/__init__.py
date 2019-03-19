@@ -9,7 +9,7 @@ import asyncio
 from homeassistant.ais_dom import ais_global
 from homeassistant.components import ais_cloud
 from homeassistant.core import callback
-from .config_flow import configured_instances
+from .config_flow import configured_service
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -46,9 +46,7 @@ def async_setup_spotify(hass, config, configurator):
     """Set up the Spotify platform."""
     import spotipy.oauth2
     import json
-    global AIS_SPOTIFY_TOKEN, CONFIGURATOR_DESCRIPTION
-
-    # CONFIGURATOR_DESCRIPTION = 'Niestety coś poszło nie tak. Aby połączyć swoje konto Spotify, kliknij link:'
+    global AIS_SPOTIFY_TOKEN
 
     try:
         ws_resp = aisCloud.key("spotify_oauth")
@@ -190,12 +188,12 @@ def async_request_configuration(hass, config, oauth):
         description=CONFIGURATOR_DESCRIPTION,
         submit_caption=CONFIGURATOR_SUBMIT_CAPTION
     )
+    _LOGGER.error(oauth.get_authorize_url())
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up spotify token as config entry."""
     entry = config_entry.data
-    name = entry['name ais']
 
     return True
 
