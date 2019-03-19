@@ -9,7 +9,8 @@
         },
         "error": {
             "login_failed": "Failed to pair to PlayStation 4. Verify PIN is correct.",
-            "not_ready": "PlayStation 4 is not on or connected to network."
+            "not_ready": "PlayStation 4 is not on or connected to network.",
+            "no_ipaddress": "Enter the IP Address of the PlayStation 4 you would like to configure."
         },
         "step": {
             "creds": {
