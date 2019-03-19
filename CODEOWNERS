@@ -18,7 +18,7 @@ homeassistant/components/frontend/* @home-assistant/core
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/history/* @home-assistant/core
 homeassistant/components/http/* @home-assistant/core
-homeassistant/components/input_*.py @home-assistant/core
+homeassistant/components/input_*/* @home-assistant/core
 homeassistant/components/introduction/* @home-assistant/core
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/lovelace/* @home-assistant/core
@@ -49,9 +49,9 @@ homeassistant/components/hassio/* @home-assistant/hassio
 # Individual platforms
 homeassistant/components/alarm_control_panel/manual_mqtt.py @colinodell
 homeassistant/components/hikvision/binary_sensor.py @mezz64
-homeassistant/components/binary_sensor/threshold.py @fabaff
+homeassistant/components/threshold/binary_sensor.py @fabaff
 homeassistant/components/uptimerobot/binary_sensor.py @ludeeus
-homeassistant/components/camera/push.py @dgomes
+homeassistant/components/push/camera.py @dgomes
 homeassistant/components/yi/camera.py @bachya
 homeassistant/components/coolmaster/climate.py @OnFreund
 homeassistant/components/ephember/climate.py @ttroy50
@@ -60,9 +60,9 @@ homeassistant/components/mill/climate.py @danielhiversen
 homeassistant/components/sensibo/climate.py @andrey-git
 homeassistant/components/brunt/cover.py @eavanvalkenburg
 homeassistant/components/cover/group.py @cdce8p
-homeassistant/components/cover/template.py @PhracturedBlue
-homeassistant/components/device_tracker/asuswrt.py @kennedyshead
-homeassistant/components/device_tracker/automatic.py @armills
+homeassistant/components/template/cover.py @PhracturedBlue
+homeassistant/components/asuswrt/device_tracker.py @kennedyshead
+homeassistant/components/automatic/device_tracker.py @armills
 homeassistant/components/bt_smarthub/device_tracker.py @jxwolstenholme
 homeassistant/components/huawei_router/device_tracker.py @abmantis
 homeassistant/components/quantum_gateway/device_tracker.py @cisasteelersfan
@@ -81,7 +81,7 @@ homeassistant/components/emby/media_player.py @mezz64
 homeassistant/components/kodi/media_player.py @armills
 homeassistant/components/liveboxplaytv/media_player.py @pschmitt
 homeassistant/components/mediaroom/media_player.py @dgomes
-homeassistant/components/media_player/monoprice.py @etsinko
+homeassistant/components/monoprice/media_player.py @etsinko
 homeassistant/components/mpd/media_player.py @fabaff
 homeassistant/components/xiaomi_tv/media_player.py @fattdev
 homeassistant/components/yamaha_musiccast/media_player.py @jalmeroth
@@ -105,10 +105,10 @@ homeassistant/components/alpha_vantage/sensor.py @fabaff
 homeassistant/components/bitcoin/sensor.py @fabaff
 homeassistant/components/cpuspeed/sensor.py @fabaff
 homeassistant/components/cups/sensor.py @fabaff
-homeassistant/components/sensor/darksky.py @fabaff
+homeassistant/components/darksky/sensor.py @fabaff
 homeassistant/components/discogs/sensor.py @thibmaek
-homeassistant/components/sensor/file.py @fabaff
-homeassistant/components/sensor/filter.py @dgomes
+homeassistant/components/file/sensor.py @fabaff
+homeassistant/components/filter/sensor.py @dgomes
 homeassistant/components/fitbit/sensor.py @robbiet480
 homeassistant/components/fixer/sensor.py @fabaff
 homeassistant/components/flunearyou/sensor.py @bachya
@@ -118,17 +118,17 @@ homeassistant/components/glances/sensor.py @fabaff
 homeassistant/components/google_travel_time/sensor.py @robbiet480
 homeassistant/components/gpsd/sensor.py @fabaff
 homeassistant/components/gtfs/sensor.py @robbiet480
-homeassistant/components/sensor/integration.py @dgomes
+homeassistant/components/integration/sensor.py @dgomes
 homeassistant/components/irish_rail_transport/sensor.py @ttroy50
-homeassistant/components/sensor/jewish_calendar.py @tsvi
+homeassistant/components/jewish_calendar/sensor.py @tsvi
 homeassistant/components/launch_library/sensor.py @ludeeus
 homeassistant/components/linux_battery/sensor.py @fabaff
 homeassistant/components/miflora/sensor.py @danielhiversen @ChristianKuehnel
-homeassistant/components/sensor/min_max.py @fabaff
-homeassistant/components/sensor/moon.py @fabaff
+homeassistant/components/min_max/sensor.py @fabaff
+homeassistant/components/moon/sensor.py @fabaff
 homeassistant/components/netdata/sensor.py @fabaff
 homeassistant/components/nmbs/sensor.py @thibmaek
-homeassistant/components/sensor/nsw_fuel_station.py @nickw444
+homeassistant/components/nsw_fuel_station/sensor.py @nickw444
 homeassistant/components/ohmconnect/sensor.py @robbiet480
 homeassistant/components/pi_hole/sensor.py @fabaff
 homeassistant/components/pollen/sensor.py @bachya
@@ -140,22 +140,22 @@ homeassistant/components/serial/sensor.py @fabaff
 homeassistant/components/seventeentrack/sensor.py @bachya
 homeassistant/components/shodan/sensor.py @fabaff
 homeassistant/components/sma/sensor.py @kellerza
-homeassistant/components/sensor/sql.py @dgomes
-homeassistant/components/sensor/statistics.py @fabaff
-homeassistant/components/sensor/swiss*.py @fabaff
+homeassistant/components/sql/sensor.py @dgomes
+homeassistant/components/statistics/sensor.py @fabaff
+homeassistant/components/swiss_*/* @fabaff
 homeassistant/components/sytadin/sensor.py @gautric
 homeassistant/components/tautulli/sensor.py @ludeeus
-homeassistant/components/sensor/time_date.py @fabaff
+homeassistant/components/time_date/sensor.py @fabaff
 homeassistant/components/uber/sensor.py @robbiet480
-homeassistant/components/sensor/version.py @fabaff
+homeassistant/components/version/sensor.py @fabaff
 homeassistant/components/waqi/sensor.py @andrey-git
-homeassistant/components/sensor/worldclock.py @fabaff
+homeassistant/components/worldclock/sensor.py @fabaff
 homeassistant/components/switchbot/switch.py @danielhiversen
 homeassistant/components/switchmate/switch.py @danielhiversen
 homeassistant/components/tts/amazon_polly.py @robbiet480
 homeassistant/components/roomba/vacuum.py @pschmitt
 homeassistant/components/weather/__init__.py @fabaff
-homeassistant/components/weather/darksky.py @fabaff
+homeassistant/components/darksky/weather.py @fabaff
 homeassistant/components/demo/weather.py @fabaff
 homeassistant/components/met/weather.py @danielhiversen
 homeassistant/components/openweathermap/weather.py @fabaff
@@ -164,12 +164,12 @@ homeassistant/components/openweathermap/weather.py @fabaff
 homeassistant/components/ambient_station/* @bachya
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/axis/* @kane610
-homeassistant/components/*/arest.py @fabaff
+homeassistant/components/arest/* @fabaff
 
 # B
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmw_connected_drive/* @ChristianKuehnel
-homeassistant/components/*/broadlink.py @danielhiversen
+homeassistant/components/broadlink/* @danielhiversen
 
 # C
 homeassistant/components/cloudflare/* @ludeeus
@@ -186,10 +186,10 @@ homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/edp_redy/* @abmantis
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/egardia/* @jeroenterheerdt
-homeassistant/components/esphome/*.py @OttoWinter
+homeassistant/components/esphome/* @OttoWinter
 
 # F
-homeassistant/components/freebox/*.py @snoof85
+homeassistant/components/freebox/* @snoof85
 homeassistant/components/foursquare/* @robbiet480
 
 # G
@@ -203,7 +203,7 @@ homeassistant/components/homekit/* @cdce8p
 homeassistant/components/huawei_lte/* @scop
 
 # I
-homeassistant/components/influx/* @fabaff
+homeassistant/components/influxdb/* @fabaff
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/ipma/* @dgomes
 
@@ -219,12 +219,10 @@ homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/mobile_app/* @robbiet480
-homeassistant/components/*/melissa.py @kennedyshead
-homeassistant/components/*/mystrom.py @fabaff
+homeassistant/components/mystrom/* @fabaff
 
 # N
 homeassistant/components/ness_alarm/* @nickw444
-homeassistant/components/*/ness_alarm.py @nickw444
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/no_ip/* @fabaff
 
@@ -241,7 +239,7 @@ homeassistant/components/qwikswitch/* @kellerza
 # R
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/rfxtrx/* @danielhiversen
-homeassistant/components/*/random.py @fabaff
+homeassistant/components/random/* @fabaff
 
 # S
 homeassistant/components/shiftr/* @fabaff
@@ -253,7 +251,7 @@ homeassistant/components/spider/* @peternijssen
 
 # T
 homeassistant/components/tahoma/* @philklei
-homeassistant/components/tellduslive/*.py @fredrike
+homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/tesla/* @zabuldon
 homeassistant/components/thethingsnetwork/* @fabaff
 homeassistant/components/tibber/* @danielhiversen
