@@ -195,6 +195,7 @@ class NanoleafLight(Light):
 
     def update(self):
         """Fetch new state data for this light."""
+        from pynanoleaf import Unavailable
         try:
             self._available = self._light.available
             self._brightness = self._light.brightness
@@ -203,7 +204,7 @@ class NanoleafLight(Light):
             self._effects_list = self._light.effects
             self._hs_color = self._light.hue, self._light.saturation
             self._state = self._light.on
-        except Exception as err:  # pylint:disable=broad-except
+        except Unavailable as err:
             _LOGGER.error("Could not update status for %s (%s)",
                           self.name, err)
             self._available = False
