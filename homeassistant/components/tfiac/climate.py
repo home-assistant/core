@@ -12,13 +12,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-
-DOMAIN = 'tfiac'
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 REQUIREMENTS = ['pytfiac==0.3']
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -79,7 +76,6 @@ class TfiacClimate(ClimateDevice):
         """Return if the device is available."""
         return self._available
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update status via socket polling."""
         try:
