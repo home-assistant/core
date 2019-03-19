@@ -81,7 +81,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                     if device:
                         self.m_device = device
                 except KeyError:
-                    errors['base'] = 'no_ipaddress'
+                    errors[CONF_IP_ADDRESS] = 'no_ipaddress'
             if not errors:
                 return await self.async_step_link()
 
