@@ -1,7 +1,7 @@
 """The tests for the manual Alarm Control Panel component."""
 from datetime import timedelta
 from unittest.mock import patch, MagicMock
-from homeassistant.components.alarm_control_panel import demo
+from homeassistant.components.demo import alarm_control_panel as demo
 from homeassistant.setup import async_setup_component
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,

@@ -118,6 +118,16 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
         # pylint: disable=no-value-for-parameter
         return await super().post(request)
 
+    def _prepare_result_json(self, result):
+        """Convert result to JSON."""
+        if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return super()._prepare_result_json(result)
+
+        data = result.copy()
+        data['result'] = data['result'].entry_id
+        data.pop('data')
+        return data
+
 
 class ConfigManagerFlowResourceView(FlowManagerResourceView):
     """View to interact with the flow manager."""
@@ -142,6 +152,16 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
 
         # pylint: disable=no-value-for-parameter
         return await super().post(request, flow_id)
+
+    def _prepare_result_json(self, result):
+        """Convert result to JSON."""
+        if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return super()._prepare_result_json(result)
+
+        data = result.copy()
+        data['result'] = data['result'].entry_id
+        data.pop('data')
+        return data
 
 
 class ConfigManagerAvailableFlowView(HomeAssistantView):
@@ -175,7 +195,7 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
         return await super().post(request)
 
 
-class OptionManagerFlowResourceView(ConfigManagerFlowResourceView):
+class OptionManagerFlowResourceView(FlowManagerResourceView):
     """View to interact with the option flow manager."""
 
     url = '/api/config/config_entries/options/flow/{flow_id}'

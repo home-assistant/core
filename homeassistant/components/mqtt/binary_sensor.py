@@ -133,8 +133,9 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self.async_write_ha_state()
 
         @callback
-        def state_message_received(_topic, payload, _qos):
+        def state_message_received(msg):
             """Handle a new received MQTT state message."""
+            payload = msg.payload
             value_template = self._config.get(CONF_VALUE_TEMPLATE)
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(

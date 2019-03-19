@@ -17,9 +17,10 @@ from ..helpers import (
     bind_configure_reporting, construct_unique_id,
     safe_read, get_attr_id_by_name)
 from ..const import (
-    CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED,
-    ATTRIBUTE_CHANNEL, EVENT_RELAY_CHANNEL, ZDO_CHANNEL
+    REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED, ATTRIBUTE_CHANNEL,
+    EVENT_RELAY_CHANNEL, ZDO_CHANNEL
 )
+from ..registries import CLUSTER_REPORT_CONFIGS
 
 NODE_DESCRIPTOR_REQUEST = 0x0002
 MAINS_POWERED = 1

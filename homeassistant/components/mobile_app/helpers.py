@@ -3,7 +3,7 @@ import logging
 import json
 from typing import Callable, Dict, Tuple
 
-from aiohttp.web import Response
+from aiohttp.web import json_response, Response
 
 from homeassistant.core import Context
 from homeassistant.helpers.typing import HomeAssistantType
@@ -11,8 +11,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME,
                     ATTR_APP_VERSION, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
                     ATTR_MODEL, ATTR_OS_VERSION, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_SECRET, CONF_USER_ID, DATA_DELETED_IDS,
-                    DATA_REGISTRATIONS, DOMAIN)
+                    CONF_SECRET, CONF_USER_ID, DATA_BINARY_SENSOR,
+                    DATA_DELETED_IDS, DATA_SENSOR, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +84,18 @@ def empty_okay_response(headers: Dict = None, status: int = 200) -> Response:
                     headers=headers)
 
 
+def error_response(code: str, message: str, status: int = 400,
+                   headers: dict = None) -> Response:
+    """Return an error Response."""
+    return json_response({
+        'success': False,
+        'error': {
+            'code': code,
+            'message': message
+        }
+    }, status=status, headers=headers)
+
+
 def supports_encryption() -> bool:
     """Test if we support encryption."""
     try:
@@ -112,8 +124,9 @@ def safe_registration(registration: Dict) -> Dict:
 def savable_state(hass: HomeAssistantType) -> Dict:
     """Return a clean object containing things that should be saved."""
     return {
+        DATA_BINARY_SENSOR: hass.data[DOMAIN][DATA_BINARY_SENSOR],
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
-        DATA_REGISTRATIONS: hass.data[DOMAIN][DATA_REGISTRATIONS]
+        DATA_SENSOR: hass.data[DOMAIN][DATA_SENSOR],
     }
 
 
