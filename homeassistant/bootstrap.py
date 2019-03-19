@@ -127,10 +127,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await hass.config_entries.async_initialize()
 
-    # Filter out the repeating and common config section [homeassistant]
-    components = set(key.split(' ')[0] for key in config.keys()
-                     if key != core.DOMAIN)
-    components.update(hass.config_entries.async_domains())
+    components = _get_components(hass, config)
 
     # Resolve all dependencies of all components.
     for component in list(components):
@@ -391,3 +388,20 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     if lib_dir not in sys.path:
         sys.path.insert(0, lib_dir)
     return deps_dir
+
+
+@core.callback
+def _get_components(hass: core.HomeAssistant, config: Dict[str, Any]):
+    """Get components to set up."""
+    # Filter out the repeating and common config section [homeassistant]
+    components = set(key.split(' ')[0] for key in config.keys()
+                     if key != core.DOMAIN)
+
+    # Add config entry domains
+    components.update(hass.config_entries.async_domains())
+
+    # Make sure the Hass.io component is loaded
+    if 'HASSIO' in os.environ:
+        components.add('hassio')
+
+    return components
