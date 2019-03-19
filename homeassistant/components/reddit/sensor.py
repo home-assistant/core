@@ -51,7 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Reddit sensor platform."""
     import praw
-    from prawcore.exceptions import ResponseException
 
     subreddits = config[CONF_SUBREDDITS]
     user_agent = '{}_home_assistant_sensor'.format(config[CONF_USERNAME])
@@ -68,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         _LOGGER.debug('Connected to praw')
 
-    except ResponseException as err:
+    except praw.exceptions.PRAWException as err:
         _LOGGER.error("Reddit error %s", err)
         return
 
@@ -115,7 +114,7 @@ class RedditSensor(Entity):
 
     def update(self):
         """Update data from Reddit API."""
-        from prawcore.exceptions import ResponseException
+        import praw
 
         self._subreddit_data = []
 
@@ -135,5 +134,5 @@ class RedditSensor(Entity):
                         ATTR_BODY: submission.selftext
                     })
 
-        except ResponseException as err:
+        except praw.exceptions.PRAWException as err:
             _LOGGER.error("Reddit error %s", err)
