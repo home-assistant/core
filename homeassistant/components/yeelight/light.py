@@ -161,14 +161,20 @@ def _cmd(func):
 
 
 def _parse_custom_effects(effects_config):
+    import yeelight
+
     effects = {}
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
+        action = yeelight.Flow.actions[params[ATTR_ACTION]]
         transitions = YeelightLight.transitions_config_parser(
             params[ATTR_TRANSITIONS])
 
-        effects[config[CONF_NAME]] = \
-            {ATTR_COUNT: params[ATTR_COUNT], ATTR_TRANSITIONS: transitions}
+        effects[config[CONF_NAME]] = {
+            ATTR_COUNT: params[ATTR_COUNT],
+            ATTR_ACTION: action,
+            ATTR_TRANSITIONS: transitions
+        }
 
     return effects
 

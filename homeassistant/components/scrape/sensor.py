@@ -10,7 +10,7 @@ import voluptuous as vol
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.sensor.rest import RestData
+from homeassistant.components.rest.sensor import RestData
 from homeassistant.const import (
     CONF_NAME, CONF_RESOURCE, CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL, CONF_USERNAME, CONF_HEADERS,

@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 # Reuse data and API logic from the sensor implementation
-from homeassistant.components.sensor.bom import (
+from homeassistant.components.bom.sensor import (
     CONF_STATION, BOMCurrentData, closest_station, validate_station)
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
 from homeassistant.const import (
