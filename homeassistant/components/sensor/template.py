@@ -16,13 +16,15 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE, ATTR_ENTITY_ID,
     CONF_SENSORS, EVENT_HOMEASSISTANT_START, CONF_FRIENDLY_NAME_TEMPLATE,
-    CONF_UNIT_OF_MEASUREMENT_TEMPLATE, MATCH_ALL, CONF_DEVICE_CLASS)
+    MATCH_ALL, CONF_DEVICE_CLASS)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_UNIT_OF_MEASUREMENT_TEMPLATE = 'unit_of_measurement_template'
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
@@ -38,7 +40,6 @@ SENSOR_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
 })
-
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
