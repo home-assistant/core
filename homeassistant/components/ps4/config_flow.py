@@ -99,7 +99,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
     async def async_step_link(self, user_input=None):
         """Prompt user input. Create or edit entry."""
         from pyps4_homeassistant.media_art import COUNTRIES
-        REGIONS = sorted(COUNTRIES.keys())
+        regions = sorted(COUNTRIES.keys())
         errors = {}
 
         if user_input is None:
@@ -184,7 +184,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         link_schema = OrderedDict()
         link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(
             list(self.device_list))
-        link_schema[vol.Required(CONF_REGION)] = vol.In(list(REGIONS))
+        link_schema[vol.Required(CONF_REGION)] = vol.In(list(regions))
         link_schema[vol.Required(CONF_CODE)] = str
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 
