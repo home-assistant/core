@@ -2,7 +2,7 @@
 import unittest
 from unittest import mock
 
-from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
 from homeassistant.components.sensor import dyson
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, \

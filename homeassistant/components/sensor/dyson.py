@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     unit = hass.config.units.temperature_unit
     # Get Dyson Devices from parent component
-    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+    from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
     for device in [d for d in hass.data[DYSON_DEVICES] if
                    isinstance(d, DysonPureCoolLink)]:
         devices.append(DysonFilterLifeSensor(device))
