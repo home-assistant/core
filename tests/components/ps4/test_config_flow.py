@@ -345,28 +345,4 @@ async def test_manual_mode_no_ip_error(hass):
     result = await flow.async_step_mode(mock_input)
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'mode'
-    assert result['errors'] == {'base': 'no_ipaddress'}
-
-
-async def test_long_pin_error(hass):
-    """Test invalid pin throws an error."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
-    mock_config = MOCK_CONFIG
-
-    """Test that long pin throws an error."""
-    mock_config[CONF_CODE] = '123456789'
-    with patch('pyps4_homeassistant.Helper.has_devices',
-               return_value=[{'host-ip': MOCK_HOST}]):
-        result = await flow.async_step_link(mock_config)
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['step_id'] == 'link'
-    assert result['errors'] is not None
-    """Test that short pin throws an error."""
-    mock_config[CONF_CODE] = '1234567'
-    with patch('pyps4_homeassistant.Helper.has_devices',
-               return_value=[{'host-ip': MOCK_HOST}]):
-        result = await flow.async_step_link(mock_config)
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['step_id'] == 'link'
-    assert result['errors'] is not None
+    assert result['errors'] == {CONF_IP_ADDRESS: 'no_ipaddress'}
