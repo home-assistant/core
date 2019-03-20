@@ -138,7 +138,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             self.region = user_input[CONF_REGION]
             self.name = user_input[CONF_NAME]
-            self.pin = str(user_input[CONF_CODE])
+            self.pin = user_input[CONF_CODE]
             self.host = user_input[CONF_IP_ADDRESS]
 
             is_ready, is_login = await self.hass.async_add_executor_job(
@@ -170,7 +170,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             list(self.device_list))
         link_schema[vol.Required(CONF_REGION)] = vol.In(list(regions))
         link_schema[vol.Required(CONF_CODE)] = vol.All(
-            vol.Strip, vol.Length(min=8, max=8), vol.Coerce(int)
+            vol.Strip, vol.Length(min=8, max=8), vol.Coerce(str)
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 
         return self.async_show_form(
