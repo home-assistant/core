@@ -12,7 +12,7 @@ DATA_VELUX = "data_velux"
 SUPPORTED_DOMAINS = ['cover', 'scene']
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyvlx==0.2.9']
+REQUIREMENTS = ['pyvlx==0.2.10']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

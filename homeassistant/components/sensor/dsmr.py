@@ -350,7 +350,9 @@ class DerivativeDSMREntity(DSMREntity):
             else:
                 # Recalculate the rate
                 diff = current_reading - self._previous_reading
-                self._state = diff
+                timediff = timestamp - self._previous_timestamp
+                total_seconds = timediff.total_seconds()
+                self._state = round(float(diff) / total_seconds * 3600, 3)
 
             self._previous_reading = current_reading
             self._previous_timestamp = timestamp

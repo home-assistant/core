@@ -1,9 +1,4 @@
-"""
-Component that performs OpenCV classification on images.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.opencv/
-"""
+"""Support for OpenCV classification on images."""
 from datetime import timedelta
 import logging
 
@@ -16,7 +11,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.16.1']
+REQUIREMENTS = ['numpy==1.16.2']
 
 _LOGGER = logging.getLogger(__name__)
 

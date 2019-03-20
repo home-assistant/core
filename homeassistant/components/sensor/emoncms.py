@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_URL, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT,
-    CONF_ID, CONF_SCAN_INTERVAL, STATE_UNKNOWN)
+    CONF_ID, CONF_SCAN_INTERVAL, STATE_UNKNOWN, POWER_WATT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 from homeassistant.util import Throttle
@@ -34,7 +34,7 @@ CONF_ONLY_INCLUDE_FEEDID = 'include_only_feed_id'
 CONF_SENSOR_NAMES = 'sensor_names'
 
 DECIMALS = 2
-DEFAULT_UNIT = 'W'
+DEFAULT_UNIT = POWER_WATT
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 

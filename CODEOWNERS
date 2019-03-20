@@ -51,6 +51,7 @@ homeassistant/components/alarm_control_panel/manual_mqtt.py @colinodell
 homeassistant/components/binary_sensor/hikvision.py @mezz64
 homeassistant/components/binary_sensor/threshold.py @fabaff
 homeassistant/components/binary_sensor/uptimerobot.py @ludeeus
+homeassistant/components/camera/push.py @dgomes
 homeassistant/components/camera/yi.py @bachya
 homeassistant/components/climate/coolmaster.py @OnFreund
 homeassistant/components/climate/ephember.py @ttroy50
@@ -62,12 +63,13 @@ homeassistant/components/cover/group.py @cdce8p
 homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/asuswrt.py @kennedyshead
 homeassistant/components/device_tracker/automatic.py @armills
+homeassistant/components/device_tracker/bt_smarthub.py @jxwolstenholme
 homeassistant/components/device_tracker/huawei_router.py @abmantis
 homeassistant/components/device_tracker/quantum_gateway.py @cisasteelersfan
 homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/device_tracker/traccar.py @ludeeus
-homeassistant/components/device_tracker/bt_smarthub.py @jxwolstenholme
 homeassistant/components/device_tracker/synology_srm.py @aerialls
+homeassistant/components/device_tracker/xfinity.py @cisasteelersfan
 homeassistant/components/light/lifx_legacy.py @amelchio
 homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/light/yeelightsunflower.py @lindsaymarkward
@@ -95,6 +97,7 @@ homeassistant/components/sensor/bitcoin.py @fabaff
 homeassistant/components/sensor/cpuspeed.py @fabaff
 homeassistant/components/sensor/cups.py @fabaff
 homeassistant/components/sensor/darksky.py @fabaff
+homeassistant/components/sensor/discogs.py @thibmaek
 homeassistant/components/sensor/file.py @fabaff
 homeassistant/components/sensor/filter.py @dgomes
 homeassistant/components/sensor/fixer.py @fabaff
@@ -112,6 +115,7 @@ homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
 homeassistant/components/sensor/min_max.py @fabaff
 homeassistant/components/sensor/moon.py @fabaff
 homeassistant/components/sensor/netdata.py @fabaff
+homeassistant/components/sensor/nmbs.py @thibmaek
 homeassistant/components/sensor/nsw_fuel_station.py @nickw444
 homeassistant/components/sensor/pi_hole.py @fabaff
 homeassistant/components/sensor/pollen.py @bachya
