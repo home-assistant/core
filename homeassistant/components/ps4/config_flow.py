@@ -170,7 +170,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             list(self.device_list))
         link_schema[vol.Required(CONF_REGION)] = vol.In(list(regions))
         link_schema[vol.Required(CONF_CODE)] = vol.All(
-            vol.Strip, vol.Length(min=8, max=8), vol.Coerce(str)
+            vol.Strip, vol.Length(min=8, max=8), vol.Coerce(str))
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 
         return self.async_show_form(
