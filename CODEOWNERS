@@ -179,6 +179,7 @@ homeassistant/components/counter/* @fabaff
 homeassistant/components/daikin/* @fredrike @rofrantz
 homeassistant/components/deconz/* @kane610
 homeassistant/components/digital_ocean/* @fabaff
+homeassistant/components/doorbird/* @oblogic7
 homeassistant/components/dweet/* @fabaff
 
 # E
@@ -228,6 +229,7 @@ homeassistant/components/no_ip/* @fabaff
 
 # O
 homeassistant/components/openuv/* @bachya
+homeassistant/components/owlet/* @oblogic7
 
 # P
 homeassistant/components/plant/* @ChristianKuehnel
