@@ -6,8 +6,10 @@ https://home-assistant.io/components/ps4/
 """
 import logging
 
-from .config_flow import (  # noqa  pylint: disable=unused-import
-    PlayStation4FlowHandler)
+from homeassistant.const import CONF_REGION
+from homeassistant.util import location
+
+from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
 from .const import DOMAIN  # noqa: pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
