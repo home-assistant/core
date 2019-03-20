@@ -5,7 +5,7 @@ import os
 import sys
 from time import time
 from collections import OrderedDict
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Set
 
 import voluptuous as vol
 
@@ -391,14 +391,15 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 
 
 @core.callback
-def _get_components(hass: core.HomeAssistant, config: Dict[str, Any]):
+def _get_components(hass: core.HomeAssistant,
+                    config: Dict[str, Any]) -> Set[str]:
     """Get components to set up."""
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()
                      if key != core.DOMAIN)
 
     # Add config entry domains
-    components.update(hass.config_entries.async_domains())
+    components.update(hass.config_entries.async_domains())  # type: ignore
 
     # Make sure the Hass.io component is loaded
     if 'HASSIO' in os.environ:
