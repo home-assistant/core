@@ -33,17 +33,14 @@ class AxisBinarySensor(BinarySensorDevice):
 
     def __init__(self, event, device):
         """Initialize the Axis binary sensor."""
-        self.axis_event = event
+        self.event = event
         self.device = device
         self.delay = device.config_entry.options[CONF_TRIGGER_TIME]
         self.remove_timer = None
 
-        if not self.axis_event.id:
-            self.axis_event.id = self.axis_event.topic.split('/')[-1]
-
     async def async_added_to_hass(self):
         """Subscribe sensors events."""
-        self.axis_event.callback = self.update_callback
+        self.event.register_callback(self.update_callback)
 
     def update_callback(self):
         """Update the sensor's state, if needed."""
@@ -71,18 +68,18 @@ class AxisBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if event is active."""
-        return self.axis_event.is_tripped
+        return self.event.is_tripped
 
     @property
     def name(self):
         """Return the name of the event."""
         return '{} {} {}'.format(
-            self.device.name, self.axis_event.event_type, self.axis_event.id)
+            self.device.name, self.event.event_type, self.event.id)
 
     @property
     def device_class(self):
         """Return the class of the event."""
-        return self.axis_event.event_class
+        return self.event.event_class
 
     @property
     def should_poll(self):

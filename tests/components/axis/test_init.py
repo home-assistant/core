@@ -86,15 +86,12 @@ async def test_populate_options(hass):
     entry = MockConfigEntry(domain=axis.DOMAIN, data={'device': {}})
     entry.add_to_hass(hass)
 
-    with patch.object(axis, 'get_device',
-                      return_value=mock_coro(Mock())), \
-            patch('axis.event.get_event_list',
-                  new=Mock(return_value={'vmd3': '', 'pir': '', 'vmd4': ''})):
+    with patch.object(axis, 'get_device', return_value=mock_coro(Mock())):
 
         await axis.async_populate_options(hass, entry)
 
     assert entry.options == {
         axis.CONF_CAMERA: True,
-        axis.CONF_EVENTS: ['pir', 'vmd4'],
+        axis.CONF_EVENTS: True,
         axis.CONF_TRIGGER_TIME: axis.DEFAULT_TRIGGER_TIME
     }

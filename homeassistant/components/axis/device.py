@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL_ID, LOGGER
+from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -37,9 +37,9 @@ class AxisNetworkDevice:
         return self.config_entry.data[CONF_DEVICE][CONF_HOST]
 
     @property
-    def model_id(self):
+    def model(self):
         """Return the model of this device."""
-        return self.config_entry.data[CONF_MODEL_ID]
+        return self.config_entry.data[CONF_MODEL]
 
     @property
     def name(self):
@@ -60,8 +60,7 @@ class AxisNetworkDevice:
         try:
             self.api = await get_device(
                 hass, self.config_entry.data[CONF_DEVICE],
-                event_types=self.config_entry.options[CONF_EVENTS],
-                signal_callback=self.async_signal_callback)
+                event_types='on', signal_callback=self.async_signal_callback)
 
         except CannotConnect:
             raise ConfigEntryNotReady

@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json
 
-from .const import CONF_MODEL_ID, DOMAIN
+from .const import CONF_MODEL, DOMAIN
 from .device import get_device
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
@@ -54,7 +54,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
     def __init__(self):
         """Initialize the Axis config flow."""
         self.device_config = {}
-        self.model_id = None
+        self.model = None
         self.name = None
         self.serial_number = None
 
@@ -84,7 +84,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
 
                 self.serial_number = device.vapix.get_param(
                     VAPIX_SERIAL_NUMBER)
-                self.model_id = device.vapix.get_param(VAPIX_MODEL_ID)
+                self.model = device.vapix.get_param(VAPIX_MODEL_ID)
 
                 return await self._create_entry()
 
@@ -120,12 +120,12 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             same_model = [
                 entry.data[CONF_NAME] for entry
                 in self.hass.config_entries.async_entries(DOMAIN)
-                if entry.data[CONF_MODEL_ID] == self.model_id
+                if entry.data[CONF_MODEL] == self.model
             ]
 
-            self.name = "{}".format(self.model_id)
+            self.name = "{}".format(self.model)
             for idx in range(len(same_model) + 1):
-                self.name = "{} {}".format(self.model_id, idx)
+                self.name = "{} {}".format(self.model, idx)
                 if self.name not in same_model:
                     break
 
@@ -133,10 +133,10 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             CONF_DEVICE: self.device_config,
             CONF_NAME: self.name,
             CONF_MAC: self.serial_number,
-            CONF_MODEL_ID: self.model_id,
+            CONF_MODEL: self.model,
         }
 
-        title = "{} - {}".format(self.model_id, self.serial_number)
+        title = "{} - {}".format(self.model, self.serial_number)
         return self.async_create_entry(
             title=title,
             data=data

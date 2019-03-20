@@ -67,7 +67,7 @@ async def test_flow_works(hass):
             config_flow.CONF_PORT: 81
         },
         config_flow.CONF_MAC: axis_lib.vapix.VAPIX_SERIAL_NUMBER,
-        config_flow.CONF_MODEL_ID: axis_lib.vapix.VAPIX_MODEL_ID,
+        config_flow.CONF_MODEL: axis_lib.vapix.VAPIX_MODEL_ID,
         config_flow.CONF_NAME: 'Brand.ProdNbr 0'
     }
 
@@ -130,7 +130,7 @@ async def test_flow_create_entry(hass):
     """Test that create entry can generate a name without other entries."""
     flow = config_flow.AxisFlowHandler()
     flow.hass = hass
-    flow.model_id = 'model'
+    flow.model = 'model'
 
     result = await flow._create_entry()
 
@@ -141,16 +141,16 @@ async def test_flow_create_entry_more_entries(hass):
     """Test that create entry can generate a name with other entries."""
     entry = MockConfigEntry(
         domain=axis.DOMAIN, data={config_flow.CONF_NAME: 'model 0',
-                                  config_flow.CONF_MODEL_ID: 'model'})
+                                  config_flow.CONF_MODEL: 'model'})
     entry.add_to_hass(hass)
     entry2 = MockConfigEntry(
         domain=axis.DOMAIN, data={config_flow.CONF_NAME: 'model 1',
-                                  config_flow.CONF_MODEL_ID: 'model'})
+                                  config_flow.CONF_MODEL: 'model'})
     entry2.add_to_hass(hass)
 
     flow = config_flow.AxisFlowHandler()
     flow.hass = hass
-    flow.model_id = 'model'
+    flow.model = 'model'
 
     result = await flow._create_entry()
 
@@ -314,6 +314,6 @@ async def test_import_flow_works(hass):
             config_flow.CONF_PORT: 81
         },
         config_flow.CONF_MAC: axis_lib.vapix.VAPIX_SERIAL_NUMBER,
-        config_flow.CONF_MODEL_ID: axis_lib.vapix.VAPIX_MODEL_ID,
+        config_flow.CONF_MODEL: axis_lib.vapix.VAPIX_MODEL_ID,
         config_flow.CONF_NAME: 'name'
     }

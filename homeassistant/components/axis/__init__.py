@@ -58,23 +58,10 @@ async def async_setup_entry(hass, config_entry):
 
 
 async def async_populate_options(hass, config_entry):
-    """Populate default options for device.
-
-    Take all events, but filter out video motion events to just one topic.
-    """
-    from axis.event import get_event_list
+    """Populate default options for device."""
     from axis.vapix import VAPIX_IMAGE_FORMAT
 
     device = await get_device(hass, config_entry.data[CONF_DEVICE])
-    supported_events = await hass.async_add_executor_job(
-        get_event_list, device.config)
-
-    video_motion = ['vmd4', 'vmd3', 'motion']
-
-    events = set(supported_events.keys())
-    for event in video_motion[1:]:
-        if event in events and len(set(video_motion).intersection(events)) > 1:
-            events.remove(event)
 
     supported_formats = device.vapix.get_param(VAPIX_IMAGE_FORMAT)
 
@@ -82,7 +69,7 @@ async def async_populate_options(hass, config_entry):
 
     options = {
         CONF_CAMERA: camera,
-        CONF_EVENTS: sorted(list(events)),
+        CONF_EVENTS: True,
         CONF_TRIGGER_TIME: DEFAULT_TRIGGER_TIME
     }
 

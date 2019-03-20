@@ -22,7 +22,7 @@ ENTRY_OPTIONS = {
 ENTRY_CONFIG = {
     device.CONF_DEVICE: DEVICE_DATA,
     device.CONF_MAC: 'mac',
-    device.CONF_MODEL_ID: 'model',
+    device.CONF_MODEL: 'model',
     device.CONF_NAME: 'name'
 }
 
@@ -38,8 +38,7 @@ async def test_device_setup():
     axis_device = device.AxisNetworkDevice(hass, entry)
 
     assert axis_device.host == DEVICE_DATA[device.CONF_HOST]
-    assert axis_device.serial == ENTRY_CONFIG[device.CONF_MAC]
-    assert axis_device.model_id == ENTRY_CONFIG[device.CONF_MODEL_ID]
+    assert axis_device.model == ENTRY_CONFIG[device.CONF_MODEL]
     assert axis_device.name == ENTRY_CONFIG[device.CONF_NAME]
     assert axis_device.serial == ENTRY_CONFIG[device.CONF_MAC]
 
