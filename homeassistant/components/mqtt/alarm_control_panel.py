@@ -18,9 +18,9 @@ from homeassistant.components.mqtt import (
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import (
-    CONF_CODE, CONF_DEVICE, CONF_NAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, CONF_VALUE_TEMPLATE)
+    CONF_CODE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE,
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -105,13 +105,6 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
-        self._templates = None
-
-        self._templates = {
-            key: config.get(key) for key in (
-                CONF_COMMAND_TEMPLATE,
-            )
-        }
 
         device_config = config.get(CONF_DEVICE)
 
@@ -141,9 +134,9 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = self.hass
-        for tpl in self._templates.values():
-            if tpl is not None:
-                tpl.hass = self.hass
+        command_template = self._config.get(CONF_COMMAND_TEMPLATE)
+        if command_template is not None:
+            command_template.hass = self.hass
 
         @callback
         def message_received(msg):
@@ -252,9 +245,9 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     def _publish(self, code, action):
         """Publish via mqtt."""
-        values = {'action': action}
-        values['code'] = code
-        payload = self._templates[CONF_COMMAND_TEMPLATE].async_render(**values)
+        command_template = self._config.get(CONF_COMMAND_TEMPLATE)
+        values = {'action': action, 'code': code}
+        payload = command_template.async_render(**values)
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),
             payload,

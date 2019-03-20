@@ -419,8 +419,8 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     assert '100' == state.attributes.get('val')
 
 
-async def test_setting_attribute_via_mqtt_message_template(hass, mqtt_mock):
-    """Test the setting of attribute via MQTT with JSON payload."""
+async def test_update_state_via_state_topic_template(hass, mqtt_mock):
+    """Test updating with template_value via state topic."""
     assert await async_setup_component(hass, alarm_control_panel.DOMAIN, {
         alarm_control_panel.DOMAIN: {
             'platform': 'mqtt',
