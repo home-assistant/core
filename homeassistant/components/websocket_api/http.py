@@ -13,7 +13,10 @@ from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import MAX_PENDING_MSG, CANCELLATION_ERRORS, URL, ERR_UNKNOWN_ERROR
+from .const import (
+    MAX_PENDING_MSG, CANCELLATION_ERRORS, URL, ERR_UNKNOWN_ERROR,
+    EVENT_WEBSOCKET_CONNECTED, EVENT_WEBSOCKET_DISCONNECTED,
+    EVENT_WEBSOCKET_REQUEST)
 from .auth import AuthPhase, auth_required_message
 from .error import Disconnect
 from .messages import error_message
@@ -142,6 +145,8 @@ class WebSocketHandler:
 
             self._logger.debug("Received %s", msg)
             connection = await auth.async_handle(msg)
+            self.hass.bus.async_fire(EVENT_WEBSOCKET_CONNECTED, {},
+                                     context=connection.context(msg))
 
             # Command phase
             while not wsock.closed:
@@ -161,6 +166,10 @@ class WebSocketHandler:
                     break
 
                 self._logger.debug("Received %s", msg)
+                self.hass.bus.async_fire(
+                    EVENT_WEBSOCKET_REQUEST,
+                    {'request': msg},
+                    context=connection.context(msg))
                 connection.async_handle(msg)
 
         except asyncio.CancelledError:
@@ -189,7 +198,14 @@ class WebSocketHandler:
 
             if disconnect_warn is None:
                 self._logger.debug("Disconnected")
+                self.hass.bus.async_fire(
+                    EVENT_WEBSOCKET_DISCONNECTED, {},
+                    context=connection.context(msg))
             else:
                 self._logger.warning("Disconnected: %s", disconnect_warn)
+                self.hass.bus.async_fire(
+                    EVENT_WEBSOCKET_DISCONNECTED,
+                    {'disconnect_warn', disconnect_warn},
+                    context=connection.context(msg))
 
         return wsock
