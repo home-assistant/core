@@ -10,6 +10,7 @@ from homeassistant.components.zha.core.gateway import establish_device_mappings
 from homeassistant.components.zha.core.channels.registry \
     import populate_channel_registry
 from .common import async_setup_entry
+from homeassistant.components.zha.core.store import async_get_registry
 
 
 @pytest.fixture(name='config_entry')
@@ -22,7 +23,7 @@ def config_entry_fixture(hass):
 
 
 @pytest.fixture(name='zha_gateway')
-def zha_gateway_fixture(hass):
+async def zha_gateway_fixture(hass):
     """Fixture representing a zha gateway.
 
     Create a ZHAGateway object that can be used to interact with as if we
@@ -34,7 +35,8 @@ def zha_gateway_fixture(hass):
         hass.data[DATA_ZHA][component] = (
             hass.data[DATA_ZHA].get(component, {})
         )
-    return ZHAGateway(hass, {})
+    zha_storage = await async_get_registry(hass)
+    return ZHAGateway(hass, {}, zha_storage)
 
 
 @pytest.fixture(autouse=True)

@@ -10,7 +10,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_CURRENCY
+from homeassistant.const import (CONF_CURRENCY, POWER_WATT,
+                                 ENERGY_KILO_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -34,11 +35,11 @@ DEFAULT_PERIOD = 'year'
 DEFAULT_UTC_OFFSET = '0'
 
 SENSOR_TYPES = {
-    CONF_INSTANT: ['Energy Usage', 'W'],
-    CONF_AMOUNT: ['Energy Consumed', 'kWh'],
+    CONF_INSTANT: ['Energy Usage', POWER_WATT],
+    CONF_AMOUNT: ['Energy Consumed', ENERGY_KILO_WATT_HOUR],
     CONF_BUDGET: ['Energy Budget', None],
     CONF_COST: ['Energy Cost', None],
-    CONF_CURRENT_VALUES: ['Per-Device Usage', 'W']
+    CONF_CURRENT_VALUES: ['Per-Device Usage', POWER_WATT]
 }
 
 TYPES_SCHEMA = vol.In(SENSOR_TYPES)

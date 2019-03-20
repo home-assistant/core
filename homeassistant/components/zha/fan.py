@@ -6,6 +6,7 @@ at https://home-assistant.io/components/fan.zha/
 """
 import logging
 
+from homeassistant.core import callback
 from homeassistant.components.fan import (
     DOMAIN, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
     FanEntity)
@@ -92,6 +93,11 @@ class ZhaFan(ZhaEntity, FanEntity):
         await self.async_accept_signal(
             self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
 
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = VALUE_TO_SPEED.get(last_state.state, last_state.state)
+
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
@@ -139,3 +145,11 @@ class ZhaFan(ZhaEntity, FanEntity):
         """Set the speed of the fan."""
         await self._fan_channel.async_set_speed(SPEED_TO_VALUE[speed])
         self.async_set_state(speed)
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the fan."""
+        await super().async_update()
+        if self._fan_channel:
+            state = await self._fan_channel.get_attribute_value('fan_mode')
+            if state is not None:
+                self._state = VALUE_TO_SPEED.get(state, self._state)

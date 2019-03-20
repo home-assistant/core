@@ -9,6 +9,7 @@ from datetime import datetime
 from datetime import timedelta
 import functools
 import logging
+from typing import Optional
 
 import aiohttp
 import voluptuous as vol
@@ -22,13 +23,13 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_NAME, CONF_URL, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
     STATE_ON, STATE_PAUSED, STATE_PLAYING)
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['async-upnp-client==0.14.4']
+REQUIREMENTS = ['async-upnp-client==0.14.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,12 +40,14 @@ DEFAULT_LISTEN_PORT = 8301
 
 CONF_LISTEN_IP = 'listen_ip'
 CONF_LISTEN_PORT = 'listen_port'
+CONF_CALLBACK_URL_OVERRIDE = 'callback_url_override'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_LISTEN_IP): cv.string,
     vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_CALLBACK_URL_OVERRIDE): cv.url,
 })
 
 HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
@@ -82,7 +85,12 @@ def catch_request_errors():
     return call_wrapper
 
 
-async def async_start_event_handler(hass, server_host, server_port, requester):
+async def async_start_event_handler(
+        hass: HomeAssistantType,
+        server_host: str,
+        server_port: int,
+        requester,
+        callback_url_override: Optional[str] = None):
     """Register notify view."""
     hass_data = hass.data[DLNA_DMR_DATA]
     if 'event_handler' in hass_data:
@@ -91,10 +99,14 @@ async def async_start_event_handler(hass, server_host, server_port, requester):
     # start event handler
     from async_upnp_client.aiohttp import AiohttpNotifyServer
     server = AiohttpNotifyServer(
-        requester, server_port, server_host, hass.loop)
+        requester,
+        listen_port=server_port,
+        listen_host=server_host,
+        loop=hass.loop,
+        callback_url=callback_url_override)
     await server.start_server()
     _LOGGER.info(
-        'UPNP/DLNA event handler listening on: %s', server.callback_url)
+        'UPNP/DLNA event handler listening, url: %s', server.callback_url)
     hass_data['notify_server'] = server
     hass_data['event_handler'] = server.event_handler
 
@@ -109,7 +121,10 @@ async def async_start_event_handler(hass, server_host, server_port, requester):
 
 
 async def async_setup_platform(
-        hass: HomeAssistant, config, async_add_entities, discovery_info=None):
+        hass: HomeAssistantType,
+        config,
+        async_add_entities,
+        discovery_info=None):
     """Set up DLNA DMR platform."""
     if config.get(CONF_URL) is not None:
         url = config[CONF_URL]
@@ -135,8 +150,9 @@ async def async_setup_platform(
         if server_host is None:
             server_host = get_local_ip()
         server_port = config.get(CONF_LISTEN_PORT, DEFAULT_LISTEN_PORT)
+        callback_url_override = config.get(CONF_CALLBACK_URL_OVERRIDE)
         event_handler = await async_start_event_handler(
-            hass, server_host, server_port, requester)
+            hass, server_host, server_port, requester, callback_url_override)
 
     # create upnp device
     from async_upnp_client import UpnpFactory

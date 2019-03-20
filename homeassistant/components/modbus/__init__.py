@@ -60,7 +60,9 @@ SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema({
     vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(ATTR_UNIT): cv.positive_int,
     vol.Required(ATTR_ADDRESS): cv.positive_int,
-    vol.Required(ATTR_VALUE): vol.All(cv.ensure_list, [cv.positive_int])
+    vol.Required(ATTR_VALUE): vol.Any(
+        cv.positive_int,
+        vol.All(cv.ensure_list, [cv.positive_int]))
 })
 
 SERVICE_WRITE_COIL_SCHEMA = vol.Schema({

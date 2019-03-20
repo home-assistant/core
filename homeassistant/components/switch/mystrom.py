@@ -1,9 +1,4 @@
-"""
-Support for myStrom switches.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.mystrom/
-"""
+"""Support for myStrom switches."""
 import logging
 
 import voluptuous as vol
@@ -12,7 +7,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-mystrom==0.4.4']
+REQUIREMENTS = ['python-mystrom==0.5.0']
 
 DEFAULT_NAME = 'myStrom Switch'
 

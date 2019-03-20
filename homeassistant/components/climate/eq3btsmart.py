@@ -184,7 +184,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat."""
-        from bluepy.btle import BTLEException  # pylint: disable=import-error
+        # pylint: disable=import-error,no-name-in-module
+        from bluepy.btle import BTLEException
         try:
             self._thermostat.update()
         except BTLEException as ex:

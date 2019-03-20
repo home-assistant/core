@@ -68,12 +68,8 @@ turn_off:
 toggle:
   description: Toggles a light.
   fields:
-    entity_id:
-      description: Name(s) of entities to toggle.
-      example: 'light.kitchen'
-    transition:
-      description: Duration in seconds it takes to get to next state.
-      example: 60
+    '...':
+      description: All turn_on parameters can be used.
 
 hue_activate_scene:
   description: Activate a hue scene stored in the hue hub.

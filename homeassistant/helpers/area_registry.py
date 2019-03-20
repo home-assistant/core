@@ -38,6 +38,11 @@ class AreaRegistry:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
+    def async_get_area(self, area_id: str) -> Optional[AreaEntry]:
+        """Get all areas."""
+        return self.areas.get(area_id)
+
+    @callback
     def async_list_areas(self) -> Iterable[AreaEntry]:
         """Get all areas."""
         return self.areas.values()

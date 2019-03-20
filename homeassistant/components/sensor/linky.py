@@ -10,7 +10,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT,
+                                 ENERGY_KILO_WATT_HOUR)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -71,7 +72,7 @@ class LinkySensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return 'kWh'
+        return ENERGY_KILO_WATT_HOUR
 
     @Throttle(SCAN_INTERVAL)
     def update(self):

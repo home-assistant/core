@@ -310,6 +310,7 @@ class TestEvent(unittest.TestCase):
             'time_fired': now,
             'context': {
                 'id': event.context.id,
+                'parent_id': None,
                 'user_id': event.context.user_id,
             },
         }
@@ -1114,3 +1115,16 @@ async def test_service_call_event_contains_original_data(hass):
     assert len(calls) == 1
     assert calls[0].data['number'] == 23
     assert calls[0].context is context
+
+
+def test_context():
+    """Test context init."""
+    c = ha.Context()
+    assert c.user_id is None
+    assert c.parent_id is None
+    assert c.id is not None
+
+    c = ha.Context(23, 100)
+    assert c.user_id == 23
+    assert c.parent_id == 100
+    assert c.id is not None
