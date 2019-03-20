@@ -832,7 +832,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
             result = await self._try_command(
                 "Setting color failed: %s",
-                self._light.raw_command, 'set_rgb', list(rgb))
+                self._light.set_rgb, rgb)
 
             if result:
                 self._hs_color = hs_color
