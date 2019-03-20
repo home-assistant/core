@@ -5,7 +5,7 @@ from homeassistant.components.media_player.const import (
     DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 
 from . import DOMAIN as HEOS_DOMAIN
 
@@ -18,7 +18,7 @@ SUPPORT_HEOS = SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_PAUSE | \
 PLAY_STATE_TO_STATE = {
     'play': STATE_PLAYING,
     'pause': STATE_PAUSED,
-    'stop': STATE_OFF
+    'stop': STATE_IDLE
 }
 
 
@@ -37,7 +37,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
     def __init__(self, player):
         """Initialize."""
         self._player = player
-        self._player.state_change_callback = None
 
     def _update_state(self):
         self.async_schedule_update_ha_state()
