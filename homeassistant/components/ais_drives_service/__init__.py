@@ -17,6 +17,8 @@ from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 from .config_flow import configured_drivers
 
+REQUIREMENTS = ['pexpect==4.2']
+
 aisCloud = ais_cloud.AisCloudWS()
 
 DOMAIN = 'ais_drives_service'
@@ -124,28 +126,36 @@ def rclone_get_remotes_long():
 
 
 def rclone_get_auth_url(drive_name, drive_type):
-    code, icon = DRIVES_TYPES[drive_type]
-    rclone_cmd = ["rclone", "config", "create", drive_name, drive_type, G_RCLONE_CONF, "config_is_local", "false"]
-    rclone_cmd = ["rclone", "config", "create", "xxx", "drive", G_RCLONE_CONF, "config_is_local", "false"]
-    proc = subprocess.call(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    info = ""
-    #  will wait for the process to complete and then we are going to return the output
-    # if "" != proc.stderr:
-    #     _LOGGER.error("Nie można pobrać informacji o połączeniach do dysków: " + proc.stderr)
-    # else:
-    #     out = proc.stdout
-
-    while True:
-        out = proc.stdout.read(1)
-        if out == '' and proc.poll() != None:
-            break
-        if out != '':
-            info = info + out
-    _LOGGER.error(info)
-    return info
+    import pexpect
+    # code, icon = DRIVES_TYPES[drive_type]
+    rclone_cmd = "rclone config create " + drive_name + " " + drive_type\
+                 + " " + G_RCLONE_CONF + " config_is_local false"
+    child = pexpect.spawn(rclone_cmd)
+    child.expect('Enter verification code>', timeout=10)
+    info = child.before
+    child.kill(0)
+    info = str(info, 'utf-8')
+    _LOGGER.info(info)
+    s = info.find('https://')
+    url = info[s:]
+    e = url.find('\r')
+    url = url[:e]
+    return url
 
 
-
+def rclone_set_auth_code(drive_name, drive_type, code):
+    import pexpect
+    # code, icon = DRIVES_TYPES[drive_type]
+    rclone_cmd = "rclone config create " + drive_name + " " + drive_type\
+                 + " " + G_RCLONE_CONF + " config_is_local false"
+    child = pexpect.spawn(rclone_cmd)
+    child.expect('Enter verification code>', timeout=10)
+    child.sendline(code)
+    child.expect('"}', timeout=10)
+    info = child.before
+    child.kill(0)
+    info = str(info, 'utf-8')
+    _LOGGER.info(info)
 
 
 class LocalData:

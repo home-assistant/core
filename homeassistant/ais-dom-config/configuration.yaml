@@ -17,6 +17,7 @@ homeassistant:
     - 0.0.0.0/0
   - type: homeassistant
   - type: legacy_api_password
+    api_password: dom
   whitelist_external_dirs:
   - /data/data/pl.sviete.dom/files/home/AIS/
 

@@ -23,13 +23,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
         drive_type = remote["type"]
         code, icon = DRIVES_TYPES[drive_type]
         srn = slugify(remote["name"])
-        if srn in conf_drives:
-            _LOGGER.info('Drive exists ' + srn)
-        else:
-            # check if sensor exists
-            #state = hass.states.get('sensor.ais_drives_service_' + srn)
-            #if state is None:
-            sensors.append(DriveSensor(srn, icon))
+        # if srn in conf_drives:
+        #     _LOGGER.info('Drive exists ' + srn)
+        # else:
+        #     # check if sensor exists
+        #     #state = hass.states.get('sensor.ais_drives_service_' + srn)
+        #     #if state is None:
+        sensors.append(DriveSensor(srn, icon))
 
     async_add_entities(sensors, True)
 
