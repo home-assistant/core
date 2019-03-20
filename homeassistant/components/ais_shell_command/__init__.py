@@ -116,7 +116,10 @@ def async_setup(hass, config):
 
 @asyncio.coroutine
 def _change_host_name(hass, call):
-    new_host_name = hass.states.get('input_text.new_host_name').state
+    if "hostname" not in call.data:
+        _LOGGER.error("No host name provided")
+        return
+    new_host_name = call.data["hostname"]
     file = '/data/data/pl.sviete.dom/.ais/ais-hostname'
     command = 'echo "net.hostname = ' + new_host_name + '" > ' + file
     import subprocess

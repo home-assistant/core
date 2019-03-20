@@ -12,9 +12,6 @@ sensor:
     state_topic: "+/stat/#"
 
 input_text:
-  new_host_name:
-    name: Nowa nazwa hosta
-    initial: ais-dom
   buttons_ais_remote:
     name: Buttons AIS Remote
 

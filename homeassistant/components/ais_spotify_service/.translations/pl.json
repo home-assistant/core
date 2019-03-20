@@ -1,0 +1,19 @@
+{
+    "config": {
+        "title": "AIS Serwis Spotify",
+        "step": {
+            "init": {
+                "description": "Aby po\u0142\u0105czy\u0107 konto Spotify: \n 1. Kliknij poni\u017cszy link \n 2. Zaloguj si\u0119 do Spotify \n 3. Autoryzuj **Asystenta domowego**. \n 4. Wr\u00f3\u0107 tutaj i kliknij **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png) [Uwierzytelnienie  na Spotify]({auth_url})",
+                "title": "Uwierzytelnienie  na Spotify"
+            },
+           "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 dostęp do serwisu Soptify?",
+                "title": "Serwis Spotify",
+                "test": "ok"
+           }
+        },
+        "abort": {
+            "single_instance_allowed": "Masz już skonfigurowany serwis Spotify.\n\n Jeśli chcesz skonfigurować ponownie to najpierw usuń bieżącą integrację z serwisem Spotify."
+        }
+    }
+}

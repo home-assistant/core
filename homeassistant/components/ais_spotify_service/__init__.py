@@ -9,6 +9,7 @@ import asyncio
 from homeassistant.ais_dom import ais_global
 from homeassistant.components import ais_cloud
 from homeassistant.core import callback
+from .config_flow import configured_service, setUrl
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -24,6 +25,7 @@ CONF_CACHE_PATH = 'cache_path'
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 AIS_SPOTIFY_TOKEN = None
+OAUTH_CLIENT_ID = None
 
 CONFIGURATOR_DESCRIPTION = 'Aby połączyć swoje konto Spotify, kliknij link:'
 CONFIGURATOR_LINK_NAME = 'Połącz konto Spotify'
@@ -43,62 +45,8 @@ _CONFIGURING = {}
 
 def async_setup_spotify(hass, config, configurator):
     """Set up the Spotify platform."""
-    import spotipy.oauth2
-    import json
-    global AIS_SPOTIFY_TOKEN, CONFIGURATOR_DESCRIPTION
+    return async_setup(hass, config)
 
-    # CONFIGURATOR_DESCRIPTION = 'Niestety coś poszło nie tak. Aby połączyć swoje konto Spotify, kliknij link:'
-
-    try:
-        ws_resp = aisCloud.key("spotify_oauth")
-        json_ws_resp = ws_resp.json()
-        spotify_redirect_url = json_ws_resp["SPOTIFY_REDIRECT_URL"]
-        spotify_client_id = json_ws_resp["SPOTIFY_CLIENT_ID"]
-        spotify_client_secret = json_ws_resp["SPOTIFY_CLIENT_SECRET"]
-        spotify_scope = json_ws_resp["SPOTIFY_SCOPE"]
-        try:
-            ws_resp = aisCloud.key("spotify_token")
-            key = ws_resp.json()["key"]
-            AIS_SPOTIFY_TOKEN = json.loads(key)
-        except:
-            AIS_SPOTIFY_TOKEN = None
-            _LOGGER.info("No AIS_SPOTIFY_TOKEN")
-    except Exception as e:
-        _LOGGER.error("No spotify oauth info: " + str(e))
-        return False
-
-    cache = hass.config.path(DEFAULT_CACHE_PATH)
-    gate_id = ais_global.get_sercure_android_id_dom()
-    oauth = spotipy.oauth2.SpotifyOAuth(spotify_client_id, spotify_client_secret, spotify_redirect_url,
-                                        scope=spotify_scope, cache_path=cache, state=gate_id)
-    token_info = oauth.get_cached_token()
-    if not token_info:
-        _LOGGER.info("no spotify token in cache;")
-        if AIS_SPOTIFY_TOKEN is not None:
-            with open(cache, 'w') as outfile:
-                json.dump(AIS_SPOTIFY_TOKEN, outfile)
-            token_info = oauth.get_cached_token()
-        if not token_info:
-            _LOGGER.info("no spotify token; run configurator")
-            async_request_configuration(hass, config, oauth)
-            return
-
-    # register services
-    data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
-
-    @asyncio.coroutine
-    def search(call):
-        _LOGGER.info("search")
-        yield from data.process_search_async(call)
-
-    def select_track_name(call):
-        _LOGGER.info("select_track_name")
-        data.process_select_track_name(call)
-
-    hass.services.async_register(DOMAIN, 'search', search)
-    hass.services.async_register(DOMAIN, 'select_track_name', select_track_name)
-
-    return True
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -149,6 +97,8 @@ def async_setup(hass, config):
     # register services
     data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
 
+    # service = configured_service(hass)
+
     @asyncio.coroutine
     def search(call):
         _LOGGER.info("search " + str(call))
@@ -167,7 +117,11 @@ def async_setup(hass, config):
 @callback
 def async_request_configuration(hass, config, oauth):
     """Request configuration steps from the user."""
+    if len(_CONFIGURING) > 0:
+        return
     configurator = hass.components.configurator
+    global OAUTH_CLIENT_ID
+    OAUTH_CLIENT_ID = oauth.client_id
 
     async def async_configuration_callback(data):
         """Handle configuration changes."""
@@ -175,13 +129,13 @@ def async_request_configuration(hass, config, oauth):
 
         def success():
             """Signal successful setup."""
-            req_config = _CONFIGURING.pop(oauth.client_id)
+            req_config = _CONFIGURING.pop(OAUTH_CLIENT_ID)
             configurator.request_done(req_config)
 
         hass.async_add_job(success)
         async_setup_spotify(hass, config, configurator)
 
-    _CONFIGURING[oauth.client_id] = configurator.async_request_config(
+    _CONFIGURING[OAUTH_CLIENT_ID] = configurator.async_request_config(
         DEFAULT_NAME,
         async_configuration_callback,
         link_name=CONFIGURATOR_LINK_NAME,
@@ -189,6 +143,41 @@ def async_request_configuration(hass, config, oauth):
         description=CONFIGURATOR_DESCRIPTION,
         submit_caption=CONFIGURATOR_SUBMIT_CAPTION
     )
+    setUrl(oauth.get_authorize_url())
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up spotify token as config entry."""
+    # setup the Spotify
+    if AIS_SPOTIFY_TOKEN is None:
+        # remove configurator
+        # configurator = hass.components.configurator
+        # req_config = _CONFIGURING.pop(OAUTH_CLIENT_ID)
+        # configurator.request_done(req_config)
+
+        await async_setup(hass, hass.config)
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    _LOGGER.info("Remove the Spotify token from AIS gate and cloud")
+    try:
+        import os
+        os.remove(hass.config.path(DEFAULT_CACHE_PATH))
+        _LOGGER.info("Token from cache file removed")
+    except Exception as e:
+        _LOGGER.error("Error removing token cache file " + str(e))
+    try:
+        ws_resp = aisCloud.delete_key("spotify_token")
+        key = ws_resp.json()["key"]
+        _LOGGER.info("Token from AIS cloud removed " + str(key))
+    except Exception as e:
+        _LOGGER.error("Error removing token from cloud " + str(e))
+
+    # setup the Spotify
+    await async_setup(hass, hass.config)
+    return True
 
 
 class SpotifyData:
