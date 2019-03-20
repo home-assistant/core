@@ -2,14 +2,12 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.satel_integra import (CONF_ZONES,
-                                                    CONF_OUTPUTS,
-                                                    CONF_ZONE_NAME,
-                                                    CONF_ZONE_TYPE,
-                                                    SIGNAL_ZONES_UPDATED,
-                                                    SIGNAL_OUTPUTS_UPDATED)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
+    CONF_OUTPUTS, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES, DATA_SATEL,
+    SIGNAL_OUTPUTS_UPDATED, SIGNAL_ZONES_UPDATED)
 
 DEPENDENCIES = ['satel_integra']
 
@@ -58,6 +56,18 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+        if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
+            if self._device_number in\
+               self.hass.data[DATA_SATEL].violated_outputs:
+                self._state = 1
+            else:
+                self._state = 0
+        else:
+            if self._device_number in\
+               self.hass.data[DATA_SATEL].violated_zones:
+                self._state = 1
+            else:
+                self._state = 0
         async_dispatcher_connect(
             self.hass, self._react_to_signal, self._devices_updated)
 

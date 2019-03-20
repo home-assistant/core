@@ -40,17 +40,17 @@ SENSOR_RANDOM_RECORD_TYPE = 'random_record'
 SENSORS = {
     SENSOR_COLLECTION_TYPE: {
         'name': 'Collection',
-        'icon': 'mdi:album',
-        'unit_of_measurement': 'records'
+        'icon': ICON_RECORD,
+        'unit_of_measurement': UNIT_RECORDS
     },
     SENSOR_WANTLIST_TYPE: {
         'name': 'Wantlist',
-        'icon': 'mdi:album',
-        'unit_of_measurement': 'records'
+        'icon': ICON_RECORD,
+        'unit_of_measurement': UNIT_RECORDS
     },
     SENSOR_RANDOM_RECORD_TYPE: {
         'name': 'Random Record',
-        'icon': 'mdi:record_player',
+        'icon': ICON_PLAYER,
         'unit_of_measurement': None
     },
 }

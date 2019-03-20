@@ -1,21 +1,22 @@
 """The tests the for GPSLogger device tracker platform."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
-from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 
 from homeassistant import data_entry_flow
-from homeassistant.components import zone, gpslogger
-from homeassistant.components.device_tracker import \
-    DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components import gpslogger, zone
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
-from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, \
-    STATE_HOME, STATE_NOT_HOME, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, STATE_HOME, STATE_NOT_HOME)
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-from tests.common import MockConfigEntry
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
+
+# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(autouse=True)
@@ -158,29 +159,39 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
     assert req.status == HTTP_OK
     state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                            data['device']))
-    assert STATE_NOT_HOME == state.state
-    assert 10.5 == state.attributes['gps_accuracy']
-    assert 10.0 == state.attributes['battery']
-    assert 100.0 == state.attributes['speed']
-    assert 105.32 == state.attributes['direction']
-    assert 102.0 == state.attributes['altitude']
-    assert 'gps' == state.attributes['provider']
-    assert 'running' == state.attributes['activity']
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes['gps_accuracy'] == 10.5
+    assert state.attributes['battery'] == 10.0
+    assert state.attributes['speed'] == 100.0
+    assert state.attributes['direction'] == 105.32
+    assert state.attributes['altitude'] == 102.0
+    assert state.attributes['provider'] == 'gps'
+    assert state.attributes['activity'] == 'running'
 
 
 @pytest.mark.xfail(
     reason='The device_tracker component does not support unloading yet.'
 )
-async def test_load_unload_entry(hass):
+async def test_load_unload_entry(hass, gpslogger_client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
-    entry = MockConfigEntry(domain=DOMAIN, data={
-        CONF_WEBHOOK_ID: 'gpslogger_test'
-    })
+    url = '/api/webhook/{}'.format(webhook_id)
+    data = {
+        'latitude': HOME_LATITUDE,
+        'longitude': HOME_LONGITUDE,
+        'device': '123',
+    }
 
-    await gpslogger.async_setup_entry(hass, entry)
+    # Enter the Home
+    req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
-    assert 1 == len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE])
+    assert req.status == HTTP_OK
+    state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
+                                                data['device'])).state
+    assert STATE_HOME == state_name
+    assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 
-    await gpslogger.async_unload_entry(hass, entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert await gpslogger.async_unload_entry(hass, entry)
     await hass.async_block_till_done()
-    assert 0 == len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE])
+    assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]

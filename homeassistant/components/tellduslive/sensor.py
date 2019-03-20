@@ -5,7 +5,7 @@ from homeassistant.components import sensor, tellduslive
 from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS)
+    TEMP_CELSIUS, POWER_WATT)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ SENSOR_TYPES = {
     SENSOR_TYPE_WINDAVERAGE: ['Wind average', 'm/s', '', None],
     SENSOR_TYPE_WINDGUST: ['Wind gust', 'm/s', '', None],
     SENSOR_TYPE_UV: ['UV', 'UV', '', None],
-    SENSOR_TYPE_WATT: ['Power', 'W', '', None],
+    SENSOR_TYPE_WATT: ['Power', POWER_WATT, '', None],
     SENSOR_TYPE_LUMINANCE: ['Luminance', 'lx', None, DEVICE_CLASS_ILLUMINANCE],
     SENSOR_TYPE_DEW_POINT:
     ['Dew Point', TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],

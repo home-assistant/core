@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_MONITORED_CONDITIONS)
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_MONITORED_CONDITIONS, POWER_WATT,
+    ENERGY_WATT_HOUR)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -31,10 +32,10 @@ DEFAULT_PORT = 80
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES = {
-    'average': ['Average', 'W', 'mdi:power-off'],
-    'consumption': ['Consumption', 'Wh', 'mdi:power-plug'],
-    'max': ['Max', 'W', 'mdi:arrow-up'],
-    'min': ['Min', 'W', 'mdi:arrow-down'],
+    'average': ['Average', POWER_WATT, 'mdi:power-off'],
+    'consumption': ['Consumption', ENERGY_WATT_HOUR, 'mdi:power-plug'],
+    'max': ['Max', POWER_WATT, 'mdi:arrow-up'],
+    'min': ['Min', POWER_WATT, 'mdi:arrow-down'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

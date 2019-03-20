@@ -119,6 +119,7 @@ should follow the same return values as a normal step.
 If the result of the step is to show a form, the user will be able to continue
 the flow from the config panel.
 """
+import asyncio
 import logging
 import functools
 import uuid
@@ -160,6 +161,7 @@ FLOWS = [
     'locative',
     'luftdaten',
     'mailgun',
+    'mobile_app',
     'mqtt',
     'nest',
     'openuv',
@@ -205,6 +207,11 @@ ENTRY_STATE_NOT_LOADED = 'not_loaded'
 # An error occurred when trying to unload the entry
 ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
+UNRECOVERABLE_STATES = (
+    ENTRY_STATE_MIGRATION_ERROR,
+    ENTRY_STATE_FAILED_UNLOAD,
+)
+
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
 DISCOVERY_SOURCES = (
     SOURCE_DISCOVERY,
@@ -221,6 +228,18 @@ CONN_CLASS_ASSUMED = 'assumed'
 CONN_CLASS_UNKNOWN = 'unknown'
 
 
+class ConfigError(HomeAssistantError):
+    """Error while configuring an account."""
+
+
+class UnknownEntry(ConfigError):
+    """Unknown entry specified."""
+
+
+class OperationNotAllowed(ConfigError):
+    """Raised when a config entry operation is not allowed."""
+
+
 class ConfigEntry:
     """Hold a configuration entry."""
 
@@ -228,7 +247,7 @@ class ConfigEntry:
                  'source', 'connection_class', 'state', '_setup_lock',
                  'update_listeners', '_async_cancel_retry_setup')
 
-    def __init__(self, version: str, domain: str, title: str, data: dict,
+    def __init__(self, version: int, domain: str, title: str, data: dict,
                  source: str, connection_class: str,
                  options: Optional[dict] = None,
                  entry_id: Optional[str] = None,
@@ -283,7 +302,7 @@ class ConfigEntry:
             result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):
-                _LOGGER.error('%s.async_config_entry did not return boolean',
+                _LOGGER.error('%s.async_setup_entry did not return boolean',
                               component.DOMAIN)
                 result = False
         except ConfigEntryNotReady:
@@ -316,7 +335,7 @@ class ConfigEntry:
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
-    async def async_unload(self, hass, *, component=None):
+    async def async_unload(self, hass, *, component=None) -> bool:
         """Unload an entry.
 
         Returns if unload is possible and was successful.
@@ -325,17 +344,22 @@ class ConfigEntry:
             component = getattr(hass.components, self.domain)
 
         if component.DOMAIN == self.domain:
-            if self._async_cancel_retry_setup is not None:
-                self._async_cancel_retry_setup()
-                self.state = ENTRY_STATE_NOT_LOADED
-                return True
+            if self.state in UNRECOVERABLE_STATES:
+                return False
 
             if self.state != ENTRY_STATE_LOADED:
+                if self._async_cancel_retry_setup is not None:
+                    self._async_cancel_retry_setup()
+                    self._async_cancel_retry_setup = None
+
+                self.state = ENTRY_STATE_NOT_LOADED
                 return True
 
         supports_unload = hasattr(component, 'async_unload_entry')
 
         if not supports_unload:
+            if component.DOMAIN == self.domain:
+                self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
         try:
@@ -354,6 +378,17 @@ class ConfigEntry:
             if component.DOMAIN == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
+
+    async def async_remove(self, hass: HomeAssistant) -> None:
+        """Invoke remove callback on component."""
+        component = getattr(hass.components, self.domain)
+        if not hasattr(component, 'async_remove_entry'):
+            return
+        try:
+            await component.async_remove_entry(hass, self)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error calling entry remove callback %s for %s',
+                              self.title, component.DOMAIN)
 
     async def async_migrate(self, hass: HomeAssistant) -> bool:
         """Migrate an entry.
@@ -420,14 +455,6 @@ class ConfigEntry:
         }
 
 
-class ConfigError(HomeAssistantError):
-    """Error while configuring an account."""
-
-
-class UnknownEntry(ConfigError):
-    """Unknown entry specified."""
-
-
 class ConfigEntries:
     """Manage the configuration entries.
 
@@ -474,34 +501,35 @@ class ConfigEntries:
 
     async def async_remove(self, entry_id):
         """Remove an entry."""
-        found = None
-        for index, entry in enumerate(self._entries):
-            if entry.entry_id == entry_id:
-                found = index
-                break
+        entry = self.async_get_entry(entry_id)
 
-        if found is None:
+        if entry is None:
             raise UnknownEntry
 
-        entry = self._entries.pop(found)
+        if entry.state in UNRECOVERABLE_STATES:
+            unload_success = entry.state != ENTRY_STATE_FAILED_UNLOAD
+        else:
+            unload_success = await self.async_unload(entry_id)
+
+        await entry.async_remove(self.hass)
+
+        self._entries.remove(entry)
         self._async_schedule_save()
 
-        unloaded = await entry.async_unload(self.hass)
+        dev_reg, ent_reg = await asyncio.gather(
+            self.hass.helpers.device_registry.async_get_registry(),
+            self.hass.helpers.entity_registry.async_get_registry(),
+        )
 
-        device_registry = await \
-            self.hass.helpers.device_registry.async_get_registry()
-        device_registry.async_clear_config_entry(entry_id)
-
-        entity_registry = await \
-            self.hass.helpers.entity_registry.async_get_registry()
-        entity_registry.async_clear_config_entry(entry_id)
+        dev_reg.async_clear_config_entry(entry_id)
+        ent_reg.async_clear_config_entry(entry_id)
 
         return {
-            'require_restart': not unloaded
+            'require_restart': not unload_success
         }
 
-    async def async_load(self) -> None:
-        """Handle loading the config."""
+    async def async_initialize(self) -> None:
+        """Initialize config entry config."""
         # Migrating for config entries stored before 0.73
         config = await self.hass.helpers.storage.async_migrator(
             self.hass.config.path(PATH_CONFIG), self._store,
@@ -526,6 +554,56 @@ class ConfigEntries:
                 # New in 0.89
                 options=entry.get('options'))
             for entry in config['entries']]
+
+    async def async_setup(self, entry_id: str) -> bool:
+        """Set up a config entry.
+
+        Return True if entry has been successfully loaded.
+        """
+        entry = self.async_get_entry(entry_id)
+
+        if entry is None:
+            raise UnknownEntry
+
+        if entry.state != ENTRY_STATE_NOT_LOADED:
+            raise OperationNotAllowed
+
+        # Setup Component if not set up yet
+        if entry.domain in self.hass.config.components:
+            await entry.async_setup(self.hass)
+        else:
+            # Setting up the component will set up all its config entries
+            result = await async_setup_component(
+                self.hass, entry.domain, self._hass_config)
+
+            if not result:
+                return result
+
+        return entry.state == ENTRY_STATE_LOADED
+
+    async def async_unload(self, entry_id: str) -> bool:
+        """Unload a config entry."""
+        entry = self.async_get_entry(entry_id)
+
+        if entry is None:
+            raise UnknownEntry
+
+        if entry.state in UNRECOVERABLE_STATES:
+            raise OperationNotAllowed
+
+        return await entry.async_unload(self.hass)
+
+    async def async_reload(self, entry_id: str) -> bool:
+        """Reload an entry.
+
+        If an entry was not loaded, will just load.
+        """
+        unload_result = await self.async_unload(entry_id)
+
+        if not unload_result:
+            return unload_result
+
+        return await self.async_setup(entry_id)
 
     @callback
     def async_update_entry(self, entry, *, data=_UNDEF, options=_UNDEF):
@@ -597,14 +675,7 @@ class ConfigEntries:
         self._entries.append(entry)
         self._async_schedule_save()
 
-        # Setup entry
-        if entry.domain in self.hass.config.components:
-            # Component already set up, just need to call setup_entry
-            await entry.async_setup(self.hass)
-        else:
-            # Setting up component will also load the entries
-            await async_setup_component(
-                self.hass, entry.domain, self._hass_config)
+        await self.async_setup(entry.entry_id)
 
         result['result'] = entry
         return result

@@ -1,4 +1,5 @@
 """Support for monitoring the local system."""
+from datetime import datetime
 import logging
 import os
 import socket
@@ -34,6 +35,10 @@ SENSOR_TYPES = {
     'network_out': ['Network out', 'MiB', 'mdi:server-network', None],
     'packets_in': ['Packets in', ' ', 'mdi:server-network', None],
     'packets_out': ['Packets out', ' ', 'mdi:server-network', None],
+    'throughput_network_in': ['Network throughput in', 'MB/s',
+                              'mdi:server-network', None],
+    'throughput_network_out': ['Network throughput out', 'MB/s',
+                               'mdi:server-network', None],
     'process': ['Process', ' ', 'mdi:memory', None],
     'processor_use': ['Processor use', '%', 'mdi:memory', None],
     'swap_free': ['Swap free', 'MiB', 'mdi:harddisk', None],
@@ -54,6 +59,8 @@ IO_COUNTER = {
     'network_in': 1,
     'packets_out': 2,
     'packets_in': 3,
+    'throughput_network_out': 0,
+    'throughput_network_in': 1,
 }
 
 IF_ADDRS_FAMILY = {
@@ -84,6 +91,9 @@ class SystemMonitorSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        if sensor_type in ['throughput_network_out', 'throughput_network_in']:
+            self._last_value = None
+            self._last_update_time = None
 
     @property
     def name(self):
@@ -160,6 +170,22 @@ class SystemMonitorSensor(Entity):
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 self._state = counters[self.argument][IO_COUNTER[self.type]]
+            else:
+                self._state = None
+        elif self.type == 'throughput_network_out' or\
+                self.type == 'throughput_network_in':
+            counters = psutil.net_io_counters(pernic=True)
+            if self.argument in counters:
+                counter = counters[self.argument][IO_COUNTER[self.type]]
+                now = datetime.now()
+                if self._last_value and self._last_value < counter:
+                    self._state = round(
+                        (counter - self._last_value) / 1000**2 /
+                        (now - self._last_update_time).seconds, 3)
+                else:
+                    self._state = None
+                self._last_update_time = now
+                self._last_value = counter
             else:
                 self._state = None
         elif self.type == 'ipv4_address' or self.type == 'ipv6_address':

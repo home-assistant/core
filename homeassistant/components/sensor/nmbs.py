@@ -194,7 +194,6 @@ class NMBSSensor(Entity):
             'departure': "In {} minutes".format(departure),
             'destination': self._station_to,
             'direction': self._attrs['departure']['direction']['name'],
-            'occupancy': self._attrs['departure']['occupancy']['name'],
             "platform_arriving": self._attrs['arrival']['platform'],
             "platform_departing": self._attrs['departure']['platform'],
             "vehicle_id": self._attrs['departure']['vehicle'],
