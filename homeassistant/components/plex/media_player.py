@@ -312,6 +312,8 @@ class PlexClient(MediaPlayerDevice):
         self._media_image_url = None
         self._media_title = None
         self._media_position = None
+        self._last_media_position = None
+        self._media_position_updated_at = None
         # Music
         self._media_album_artist = None
         self._media_album_name = None
@@ -407,7 +409,12 @@ class PlexClient(MediaPlayerDevice):
                 self._make = self._player.device
             else:
                 self._is_player_available = False
-            self._media_position = self._session.viewOffset
+
+            position = self._session.viewOffset
+            if self._last_media_position != position:
+                self._media_position_updated_at = dt_util.utcnow()
+                self._media_position = self._last_media_position = position
+
             self._media_content_id = self._session.ratingKey
             self._media_content_rating = getattr(
                 self._session, 'contentRating', None)
@@ -610,6 +617,16 @@ class PlexClient(MediaPlayerDevice):
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         return self._media_duration
+
+    @property
+    def media_position(self):
+        """Return the duration of current playing media in seconds."""
+        return self._media_position
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid."""
+        return self._media_position_updated_at
 
     @property
     def media_image_url(self):
