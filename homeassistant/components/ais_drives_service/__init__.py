@@ -16,6 +16,7 @@ import time
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 from .config_flow import configured_drivers
+from homeassistant.const import CONF_NAME
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -72,9 +73,21 @@ def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up drive as rclone config entry."""
-    # setup the Drive
-    # await async_setup(hass, hass.config)
-    _LOGGER.warning("Set up drive as rclone config entry.")
+    # setup the remote drive
+    _LOGGER.warning("Set up drive as rclone config entry: " + str(config_entry))
+    # dev_reg = await hass.helpers.device_registry.async_get_registry()
+    # dev_reg.async_get_or_create(
+    #     config_entry_id=config_entry.entry_id,
+    #     connections=set(),
+    #     identifiers={(DOMAIN, config_entry.data['token_key'])},
+    #     manufacturer='AI-Speaker',
+    #     name='Drive',
+    #     model='M1',
+    #     sw_version='0.1',
+    # )
+    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+        config_entry, 'sensor'
+    ))
     return True
 
 

@@ -1,28 +1,23 @@
 """Config flow to configure the AIS Drive Service component."""
 
 import voluptuous as vol
-
+import logging
+import asyncio
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.const import (CONF_NAME, CONF_TYPE)
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN
 
-
-def setUrl(url):
-    global G_AUTH_URL
-    G_AUTH_URL = url
+_LOGGER = logging.getLogger(__name__)
+DRIVE_NAME = None
+DRIVE_TYPE = None
 
 @callback
 def configured_drivers(hass):
     """Return a set of configured Drives instances."""
-    return set(
-        '{0}, {1}'.format(
-            entry.data.get(CONF_LATITUDE, hass.config.latitude),
-            entry.data.get(CONF_LONGITUDE, hass.config.longitude))
-        for entry in hass.config_entries.async_entries(DOMAIN))
+    return set(entry.data.get(CONF_NAME)
+               for entry in hass.config_entries.async_entries(DOMAIN))
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -52,15 +47,21 @@ class DriveFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_drive_name(self, user_input=None):
         """Handle a flow start."""
+        global DRIVE_NAME, DRIVE_TYPE
         errors = {}
         data_schema = vol.Schema({
-            vol.Required('service'): vol.In(list(["Amazon Drive", "Dropbox", "Google Drive",
-                                                  "Mega", "Microsoft OneDrive", "Yandex Disk"])),
-            vol.Required('name'): str,
+            vol.Required(CONF_TYPE): vol.In(list(["Dropbox", "Google Drive", "Mega", "Microsoft OneDrive"])),
+            vol.Required(CONF_NAME): str,
         })
         if user_input is not None:
-            # rclone config create mydrive drive config_is_local false
-            return await self.async_step_token(user_input=None)
+            DRIVE_NAME = user_input.get(CONF_NAME)
+            DRIVE_TYPE = user_input.get(CONF_TYPE)
+            if DRIVE_NAME in configured_drivers(self.hass):
+                errors = {CONF_NAME: 'identifier_exists'}
+
+            if errors == {}:
+                # rclone config create mydrive drive config_is_local false
+                return await self.async_step_token(user_input=None)
 
         return self.async_show_form(
             step_id='drive_name',
@@ -74,9 +75,17 @@ class DriveFlowHandler(config_entries.ConfigFlow):
         data_schema = vol.Schema({
             vol.Required('token_key'): str,
         })
-        if user_input is not None:
+        if user_input is not None and 'token_key' in user_input:
+            # remove if exists
+            exists_entries = [entry.entry_id for entry in self._async_current_entries()]
+            if exists_entries:
+                await asyncio.wait([self.hass.config_entries.async_remove(entry_id)
+                                    for entry_id in exists_entries])
+            # add new one
+            user_input[CONF_NAME] = DRIVE_NAME
+            user_input[CONF_TYPE] = DRIVE_TYPE
             return self.async_create_entry(
-                title="Dysk",
+                title="Zdalne dyski",
                 data=user_input,
             )
 
@@ -88,5 +97,3 @@ class DriveFlowHandler(config_entries.ConfigFlow):
             },
             data_schema=data_schema,
         )
-
-

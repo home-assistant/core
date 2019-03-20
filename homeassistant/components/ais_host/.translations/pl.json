@@ -16,7 +16,7 @@
         },
         "error": {
             "name_not_correct": "Nazwa nie jest poprawna",
-            "name_the_same": "Nazwa jest taka sama"
+            "name_the_same": "Nazwa jest taka sama jak aktualna nazwa hosta"
         },
         "abort": {
             "do_the_restart": "OK, teraz trzeba zrestartować urządzenie, żeby zmiany były widoczne w sieci.",
