@@ -96,8 +96,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def service_handle(service):
         """Handle the Dyson services."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        night_mode = service.data.get(ATTR_NIGHT_MODE)
+        entity_id = service.data[ATTR_ENTITY_ID]
+        night_mode = service.data[ATTR_NIGHT_MODE]
         fan_device = next((fan for fan in hass.data[DYSON_FAN_DEVICES] if
                            fan.entity_id == entity_id), None)
         if fan_device is None:

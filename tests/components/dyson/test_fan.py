@@ -9,9 +9,10 @@ from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 from libpurecool.dyson_pure_state import DysonPureCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
 
+import homeassistant.components.dyson.fan as dyson
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import DYSON_DEVICES
-from homeassistant.components.fan import (dyson, ATTR_SPEED, ATTR_SPEED_LIST,
+from homeassistant.components.fan import (ATTR_SPEED, ATTR_SPEED_LIST,
                                           ATTR_OSCILLATING, SPEED_LOW,
                                           SPEED_MEDIUM, SPEED_HIGH)
 from homeassistant.setup import setup_component
@@ -144,141 +145,6 @@ class DysonSetupTest(unittest.TestCase):
                                                device_purecool_fan,
                                                device_non_fan]
         dyson.setup_platform(self.hass, None, _add_device)
-
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_purecool_service_set_night_mode(self,
-                                             mocked_login, mocked_devices):
-        """Test set night mode service."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.entity_id = 'fan.living_room'
-        fan.set_night_mode = mock.MagicMock()
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
-                                {"entity_id": "fan.bed_room",
-                                 "night_mode": True}, True)
-        assert not fan.set_night_mode.called
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
-                                {"entity_id": "fan.living_room",
-                                 "night_mode": True}, True)
-        fan.set_night_mode.assert_called_with(True)
-
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_purecool_service_set_auto_mode(self,
-                                            mocked_login, mocked_devices):
-        """Test set auto mode service."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.entity_id = 'fan.living_room'
-        fan.set_auto_mode = mock.MagicMock()
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_AUTO_MODE,
-                                {"entity_id": "fan.bed_room",
-                                 "auto_mode": True}, True)
-        assert not fan.set_auto_mode.called
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_AUTO_MODE,
-                                {"entity_id": "fan.living_room",
-                                 "auto_mode": True}, True)
-        fan.set_auto_mode.assert_called_with(True)
-
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_purecool_service_set_angle(self, mocked_login, mocked_devices):
-        """Test set purecool angle service."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.entity_id = 'fan.living_room'
-        fan.set_angle = mock.MagicMock()
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_ANGLE,
-                                {"entity_id": "fan.bed_room",
-                                 "angle_low": 90,
-                                 "angle_high": 180}, True)
-        assert not fan.set_angle.called
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_ANGLE,
-                                {"entity_id": "fan.living_room",
-                                 "angle_low": 90,
-                                 "angle_high": 180}, True)
-        assert not fan.set_angle.assert_called_with(90, 180)
-
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_purecool_service_set_flow_direction_front(self,
-                                                       mocked_login,
-                                                       mocked_devices):
-        """Test set purecool flow direction front service."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.entity_id = 'fan.living_room'
-        fan.set_flow_direction_front = mock.MagicMock()
-
-        self.hass.services.call(dyson.DOMAIN,
-                                dyson.SERVICE_SET_FLOW_DIRECTION_FRONT,
-                                {"entity_id": "fan.bed_room",
-                                 "flow_direction_front": True}, True)
-        assert not fan.set_flow_direction_front.called
-
-        self.hass.services.call(dyson.DOMAIN,
-                                dyson.SERVICE_SET_FLOW_DIRECTION_FRONT,
-                                {"entity_id": "fan.living_room",
-                                 "flow_direction_front": True}, True)
-        fan.set_flow_direction_front.assert_called_with(True)
-
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_purecool_service_set_timer(self, mocked_login, mocked_devices):
-        """Test set purecool timer service."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.entity_id = 'fan.living_room'
-        fan.set_timer = mock.MagicMock()
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_TIMER,
-                                {"entity_id": "fan.bed_room",
-                                 "timer": 60}, True)
-        assert not fan.set_timer.called
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_TIMER,
-                                {"entity_id": "fan.living_room",
-                                 "timer": 60}, True)
-        assert not fan.set_timer.assert_called_with(60)
-
-    @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
-    @mock.patch('libpurecool.dyson.DysonAccount.devices',
-                return_value=[_get_dyson_purecool_device()])
-    def test_purecool_service_set_dyson_speed(self,
-                                              mocked_login, mocked_devices):
-        """Test set purecool exact speed service."""
-        dyson_parent.setup(self.hass, _get_config())
-        self.hass.block_till_done()
-        fan = self.hass.data[dyson.DYSON_FAN_DEVICES][0]
-        fan.entity_id = 'fan.living_room'
-        fan.set_dyson_speed = mock.MagicMock()
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_DYSON_SPEED,
-                                {"entity_id": "fan.bed_room",
-                                 "dyson_speed": 1}, True)
-        assert not fan.set_dyson_speed.called
-
-        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_DYSON_SPEED,
-                                {"entity_id": "fan.living_room",
-                                 "dyson_speed": 1}, True)
-        assert not fan.set_dyson_speed.assert_called_with(1)
 
 
 class DysonTest(unittest.TestCase):
@@ -533,6 +399,143 @@ class DysonTest(unittest.TestCase):
 
 
 @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_purecool_service_set_night_mode(hass, mocked_devices):
+    """Test set night mode service."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.entity_id = 'fan.living_room'
+    fan.set_night_mode = mock.MagicMock()
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
+                       {"entity_id": "fan.bed_room",
+                        "night_mode": True}, True)
+    assert not fan.set_night_mode.called
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
+                       {"entity_id": "fan.living_room",
+                        "night_mode": True}, True)
+    fan.set_night_mode.assert_called_with(True)
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_purecool_service_set_auto_mode(hass, mocked_devices):
+    """Test set auto mode service."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.entity_id = 'fan.living_room'
+    fan.set_auto_mode = mock.MagicMock()
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_AUTO_MODE,
+                       {"entity_id": "fan.bed_room",
+                        "auto_mode": True}, True)
+    assert not fan.set_auto_mode.called
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_AUTO_MODE,
+                       {"entity_id": "fan.living_room",
+                        "auto_mode": True}, True)
+    fan.set_auto_mode.assert_called_with(True)
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_purecool_service_set_angle(hass, mocked_devices):
+    """Test set purecool angle service."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.entity_id = 'fan.living_room'
+    fan.set_angle = mock.MagicMock()
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_ANGLE,
+                       {"entity_id": "fan.bed_room",
+                        "angle_low": 90,
+                        "angle_high": 180}, True)
+    assert not fan.set_angle.called
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_ANGLE,
+                       {"entity_id": "fan.living_room",
+                        "angle_low": 90,
+                        "angle_high": 180}, True)
+    assert not fan.set_angle.assert_called_with(90, 180)
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_purecool_service_set_flow_direction_front(hass,
+                                                         mocked_devices):
+    """Test set purecool flow direction front service."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.entity_id = 'fan.living_room'
+    fan.set_flow_direction_front = mock.MagicMock()
+
+    hass.services.call(dyson.DOMAIN,
+                       dyson.SERVICE_SET_FLOW_DIRECTION_FRONT,
+                       {"entity_id": "fan.bed_room",
+                        "flow_direction_front": True}, True)
+    assert not fan.set_flow_direction_front.called
+
+    hass.services.call(dyson.DOMAIN,
+                       dyson.SERVICE_SET_FLOW_DIRECTION_FRONT,
+                       {"entity_id": "fan.living_room",
+                        "flow_direction_front": True}, True)
+    fan.set_flow_direction_front.assert_called_with(True)
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_purecool_service_set_timer(hass, mocked_devices):
+    """Test set purecool timer service."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.entity_id = 'fan.living_room'
+    fan.set_timer = mock.MagicMock()
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_TIMER,
+                       {"entity_id": "fan.bed_room",
+                        "timer": 60}, True)
+    assert not fan.set_timer.called
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_TIMER,
+                       {"entity_id": "fan.living_room",
+                        "timer": 60}, True)
+    assert not fan.set_timer.assert_called_with(60)
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@mock.patch('libpurecool.dyson.DysonAccount.devices',
+            return_value=[_get_dyson_purecool_device()])
+async def test_purecool_service_set_dyson_speed(hass, mocked_devices):
+    """Test set purecool exact speed service."""
+    dyson_parent.setup(hass, _get_config())
+    hass.block_till_done()
+    fan = hass.data[dyson.DYSON_FAN_DEVICES][0]
+    fan.entity_id = 'fan.living_room'
+    fan.set_dyson_speed = mock.MagicMock()
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_DYSON_SPEED,
+                       {"entity_id": "fan.bed_room",
+                        "dyson_speed": 1}, True)
+    assert not fan.set_dyson_speed.called
+
+    hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_DYSON_SPEED,
+                       {"entity_id": "fan.living_room",
+                        "dyson_speed": 1}, True)
+    assert not fan.set_dyson_speed.assert_called_with(1)
+
+
+@mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
 async def test_empty_state(hass):
     """Test purecool fan with no status."""
     test_device = _get_dyson_purecool_device()
@@ -551,9 +554,9 @@ async def test_empty_state(hass):
 @mock.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
 @mock.patch('libpurecool.dyson.DysonAccount.devices',
             return_value=[_get_dyson_purecool_device()])
-async def test_async_purecool_added_to_hass(self, mocked_devices):
+async def test_async_purecool_added_to_hass(hass, mocked_devices):
     """Test async added to hass."""
-    setup_component(self.hass, dyson_parent.DOMAIN, {
+    setup_component(hass, dyson_parent.DOMAIN, {
         dyson_parent.DOMAIN: {
             dyson_parent.CONF_USERNAME: "email",
             dyson_parent.CONF_PASSWORD: "password",
@@ -561,8 +564,8 @@ async def test_async_purecool_added_to_hass(self, mocked_devices):
             }
         })
 
-    self.hass.block_till_done()
-    assert len(self.hass.data[dyson.DYSON_DEVICES]) == 1
+    hass.block_till_done()
+    assert len(hass.data[dyson.DYSON_DEVICES]) == 1
     assert mocked_devices.return_value[0].add_message_listener.called
 
 
