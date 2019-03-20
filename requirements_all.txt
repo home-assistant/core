@@ -871,6 +871,9 @@ prometheus_client==0.2.0
 # homeassistant.components.tensorflow.image_processing
 protobuf==3.6.1
 
+# homeassistant.components.proxmox
+proxmoxer==1.0.3
+
 # homeassistant.components.systemmonitor.sensor
 psutil==5.5.1
 
