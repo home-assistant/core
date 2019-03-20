@@ -253,11 +253,7 @@ def test_updated_state_used_for_entity_id(hass):
 
 async def test_parallel_updates_async_platform(hass):
     """Test async platform does not have parallel_updates limit by default."""
-    async def mock_update(*args, **kwargs):
-        pass
-
-    platform = MockPlatform(async_update=mock_update)
-    platform.async_setup_platform = mock_update
+    platform = MockPlatform()
 
     loader.set_component(hass, 'test_domain.platform', platform)
 
@@ -271,16 +267,22 @@ async def test_parallel_updates_async_platform(hass):
     })
 
     handle = list(component._platforms.values())[-1]
-
     assert handle.parallel_updates is None
+
+    class AsyncEntity(MockEntity):
+        """Mock entity that has async_update."""
+
+        async def async_update(self):
+            pass
+
+    entity = AsyncEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is None
 
 
 async def test_parallel_updates_async_platform_with_constant(hass):
     """Test async platform can set parallel_updates limit."""
-    async def mock_update(*args, **kwargs):
-        pass
-
-    platform = MockPlatform(async_update=mock_update)
+    platform = MockPlatform()
     platform.PARALLEL_UPDATES = 2
 
     loader.set_component(hass, 'test_domain.platform', platform)
@@ -296,13 +298,23 @@ async def test_parallel_updates_async_platform_with_constant(hass):
 
     handle = list(component._platforms.values())[-1]
 
-    assert handle.parallel_updates is not None
-    assert handle.parallel_updates._value == 2
+    assert handle.parallel_updates == 2
+
+    class AsyncEntity(MockEntity):
+        """Mock entity that has async_update."""
+
+        async def async_update(self):
+            pass
+
+    entity = AsyncEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is not None
+    assert entity.parallel_updates._value == 2
 
 
 async def test_parallel_updates_sync_platform(hass):
     """Test sync platform parallel_updates default set to 1."""
-    platform = MockPlatform(update=lambda *args: None)
+    platform = MockPlatform()
 
     loader.set_component(hass, 'test_domain.platform', platform)
 
@@ -316,14 +328,23 @@ async def test_parallel_updates_sync_platform(hass):
     })
 
     handle = list(component._platforms.values())[-1]
+    assert handle.parallel_updates is None
 
-    assert handle.parallel_updates is not None
-    assert handle.parallel_updates._value == 1
+    class SyncEntity(MockEntity):
+        """Mock entity that has update."""
+
+        async def update(self):
+            pass
+
+    entity = SyncEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is not None
+    assert entity.parallel_updates._value == 1
 
 
 async def test_parallel_updates_sync_platform_with_constant(hass):
     """Test sync platform can set parallel_updates limit."""
-    platform = MockPlatform(update=lambda *args: None)
+    platform = MockPlatform()
     platform.PARALLEL_UPDATES = 2
 
     loader.set_component(hass, 'test_domain.platform', platform)
@@ -338,9 +359,18 @@ async def test_parallel_updates_sync_platform_with_constant(hass):
     })
 
     handle = list(component._platforms.values())[-1]
+    assert handle.parallel_updates == 2
 
-    assert handle.parallel_updates is not None
-    assert handle.parallel_updates._value == 2
+    class SyncEntity(MockEntity):
+        """Mock entity that has update."""
+
+        async def update(self):
+            pass
+
+    entity = SyncEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is not None
+    assert entity.parallel_updates._value == 2
 
 
 @asyncio.coroutine
