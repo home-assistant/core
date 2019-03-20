@@ -8,8 +8,6 @@ from homeassistant.setup import async_setup_component
 
 import homeassistant.components.binary_sensor as binary_sensor
 
-
-
 EVENTS = [
     {
         'operation': 'Initialized',
@@ -27,7 +25,6 @@ EVENTS = [
     }
 ]
 
-
 ENTRY_CONFIG = {
     axis.CONF_DEVICE: {
         axis.config_flow.CONF_HOST: '1.2.3.4',
@@ -36,7 +33,7 @@ ENTRY_CONFIG = {
         axis.config_flow.CONF_PORT: 80
     },
     axis.config_flow.CONF_MAC: '1234ABCD',
-    axis.config_flow.CONF_MODEL_ID: 'model',
+    axis.config_flow.CONF_MODEL: 'model',
     axis.config_flow.CONF_NAME: 'model 0'
 }
 
@@ -45,6 +42,7 @@ ENTRY_OPTIONS = {
     axis.CONF_EVENTS: True,
     axis.CONF_TRIGGER_TIME: 0
 }
+
 
 async def setup_device(hass):
     """Load the Axis binary sensor platform."""
