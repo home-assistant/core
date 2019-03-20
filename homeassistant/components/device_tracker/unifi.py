@@ -156,7 +156,8 @@ class UnifiScanner(DeviceScanner):
         attributes = {}
         for variable in self._monitored_conditions:
             if variable == "ap_name" and "ap_mac" in client:
-                attributes["ap_name"] = self._apnames.get(client["ap_mac"], "unknown")
+                attributes["ap_name"] = self._apnames.get(
+                    client["ap_mac"], "unknown")
             if variable in client:
                 attributes[variable] = client[variable]
 
