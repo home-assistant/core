@@ -799,13 +799,11 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
                 "%s %s%%, %s",
                 brightness, percent_brightness, rgb)
 
-            # FIXME: set_brightness_and_rgb(self, brightness: int, rgb: int): <-- int vs. Tuple
-            params = list(rgb)
-            params.append(percent_brightness)
             result = await self._try_command(
                 "Setting brightness and color failed: "
                 "%s bri, %s color",
-                self._light.raw_command, 'set_brirgb', params)
+                self._light.set_brightness_and_rgb,
+                percent_brightness, rgb)
 
             if result:
                 self._hs_color = hs_color
