@@ -367,19 +367,22 @@ class DysonPureCoolDevice(FanEntity):
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
-        from libpurecool.const import FanSpeed
-
         _LOGGER.debug("Turn on fan %s", self.name)
 
         if speed is not None:
-            if speed == SPEED_LOW:
-                self._device.set_fan_speed(FanSpeed.FAN_SPEED_4)
-            elif speed == SPEED_MEDIUM:
-                self._device.set_fan_speed(FanSpeed.FAN_SPEED_7)
-            elif speed == SPEED_HIGH:
-                self._device.set_fan_speed(FanSpeed.FAN_SPEED_10)
+            self.set_speed(speed)
         else:
             self._device.turn_on()
+
+    def set_speed(self, speed: str) -> None:
+        """Set the speed of the fan."""
+        from libpurecool.const import FanSpeed
+        if speed == SPEED_LOW:
+            self._device.set_fan_speed(FanSpeed.FAN_SPEED_4)
+        elif speed == SPEED_MEDIUM:
+            self._device.set_fan_speed(FanSpeed.FAN_SPEED_7)
+        elif speed == SPEED_HIGH:
+            self._device.set_fan_speed(FanSpeed.FAN_SPEED_10)
 
     def turn_off(self, **kwargs):
         """Turn off the fan."""
