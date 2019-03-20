@@ -1,7 +1,9 @@
 """Test auth of websocket API."""
+import asyncio
 from unittest.mock import patch
 
-from homeassistant.components.websocket_api.const import URL
+from homeassistant.components.websocket_api.const import (
+    URL, EVENT_WEBSOCKET_CONNECTED, EVENT_WEBSOCKET_DISCONNECTED)
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_INVALID, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED)
 
@@ -24,6 +26,26 @@ async def test_auth_via_msg(no_auth_websocket_client, legacy_auth):
     assert msg['type'] == TYPE_AUTH_OK
 
 
+async def test_auth_events(hass, no_auth_websocket_client, legacy_auth):
+    """Test authenticating."""
+    connected_evt = []
+    hass.bus.async_listen(EVENT_WEBSOCKET_CONNECTED, connected_evt.append)
+    disconnected_evt = []
+    hass.bus.async_listen(EVENT_WEBSOCKET_DISCONNECTED,
+                          disconnected_evt.append)
+
+    await test_auth_via_msg(no_auth_websocket_client, legacy_auth)
+
+    await asyncio.sleep(0.1)
+    assert len(connected_evt) == 1
+    assert not disconnected_evt
+
+    await no_auth_websocket_client.close()
+    await hass.async_block_till_done()
+
+    assert len(disconnected_evt) == 1
+
+
 async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
     """Test authenticating."""
     with patch('homeassistant.components.websocket_api.auth.'
@@ -39,6 +61,27 @@ async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
     assert mock_process_wrong_login.called
     assert msg['type'] == TYPE_AUTH_INVALID
     assert msg['message'] == 'Invalid access token or password'
+
+
+async def test_auth_events_incorrect_pass(hass, no_auth_websocket_client):
+    """Test authenticating."""
+    connected_evt = []
+    hass.bus.async_listen(EVENT_WEBSOCKET_CONNECTED, connected_evt.append)
+    disconnected_evt = []
+    hass.bus.async_listen(EVENT_WEBSOCKET_DISCONNECTED,
+                          disconnected_evt.append)
+
+    await test_auth_via_msg_incorrect_pass(no_auth_websocket_client)
+
+    await asyncio.sleep(0.1)
+    assert not connected_evt
+    assert not disconnected_evt
+
+    await no_auth_websocket_client.close()
+    await hass.async_block_till_done()
+
+    assert not connected_evt
+    assert not disconnected_evt
 
 
 async def test_pre_auth_only_auth_allowed(no_auth_websocket_client):
