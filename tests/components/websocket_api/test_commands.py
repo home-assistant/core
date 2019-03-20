@@ -49,16 +49,6 @@ async def test_call_service(hass, websocket_client):
     assert call.data == {'hello': 'world'}
 
 
-async def test_events_call_service(hass, websocket_client):
-    """Test call service command raises events."""
-    events = []
-    hass.bus.async_listen(EVENT_WEBSOCKET_REQUEST, events.append)
-
-    await test_call_service(hass, websocket_client)
-
-    assert len(events) == 1
-
-
 async def test_call_service_not_found(hass, websocket_client):
     """Test call service command."""
     await websocket_client.send_json({

@@ -23,5 +23,4 @@ CANCELLATION_ERRORS = (asyncio.CancelledError, futures.CancelledError)
 
 # Event types
 EVENT_WEBSOCKET_CONNECTED = 'websocket_connected'
-EVENT_WEBSOCKET_REQUEST = 'websocket_request'
 EVENT_WEBSOCKET_DISCONNECTED = 'websocket_disconnected'

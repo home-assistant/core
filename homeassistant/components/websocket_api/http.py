@@ -166,10 +166,6 @@ class WebSocketHandler:
                     break
 
                 self._logger.debug("Received %s", msg)
-                self.hass.bus.async_fire(
-                    EVENT_WEBSOCKET_REQUEST,
-                    {'request': msg},
-                    context=connection.context(msg))
                 connection.async_handle(msg)
 
         except asyncio.CancelledError:
