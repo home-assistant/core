@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME)
+from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, POWER_WATT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,7 +27,7 @@ ICON = 'mdi:gauge'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-UNIT_OF_MEASUREMENT = 'W'
+UNIT_OF_MEASUREMENT = POWER_WATT
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN): cv.string,

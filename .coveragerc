@@ -27,6 +27,7 @@ omit =
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
     homeassistant/components/android_ip_webcam/*
+    homeassistant/components/androidtv/*
     homeassistant/components/apcupsd/*
     homeassistant/components/apiai/*
     homeassistant/components/apple_tv/*
@@ -68,6 +69,7 @@ omit =
     homeassistant/components/camera/xiaomi.py
     homeassistant/components/camera/yi.py
     homeassistant/components/cast/*
+    homeassistant/components/cisco_mobility_express/device_tracker.py
     homeassistant/components/climate/coolmaster.py
     homeassistant/components/climate/ephember.py
     homeassistant/components/climate/eq3btsmart.py
@@ -109,6 +111,7 @@ omit =
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/bt_smarthub.py
     homeassistant/components/device_tracker/cisco_ios.py
+    homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/google_maps.py
@@ -138,6 +141,7 @@ omit =
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubee.py
     homeassistant/components/device_tracker/ubus.py
+    homeassistant/components/device_tracker/xfinity.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/dominos/*
     homeassistant/components/doorbird/*
@@ -154,6 +158,7 @@ omit =
     homeassistant/components/elkm1/*
     homeassistant/components/emoncms_history/*
     homeassistant/components/emulated_hue/upnp.py
+    homeassistant/components/enigma2/media_player.py
     homeassistant/components/enocean/*
     homeassistant/components/envisalink/*
     homeassistant/components/esphome/__init__.py
@@ -233,7 +238,7 @@ omit =
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/lw12wifi.py
     homeassistant/components/light/mystrom.py
-    homeassistant/components/light/nanoleaf_aurora.py
+    homeassistant/components/light/nanoleaf.py
     homeassistant/components/light/niko_home_control.py
     homeassistant/components/light/opple.py
     homeassistant/components/light/osramlightify.py
@@ -280,7 +285,6 @@ omit =
     homeassistant/components/media_player/dunehd.py
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/epson.py
-    homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/frontier_silicon.py
     homeassistant/components/media_player/gpmdp.py
     homeassistant/components/media_player/gstreamer.py
@@ -632,6 +636,7 @@ omit =
     homeassistant/components/thingspeak/*
     homeassistant/components/thinkingcleaner/*
     homeassistant/components/tibber/*
+    homeassistant/components/tof/sensor.py
     homeassistant/components/toon/*
     homeassistant/components/tplink_lte/*
     homeassistant/components/tradfri/*

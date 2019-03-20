@@ -226,6 +226,7 @@ def test_abort(hass, client):
     data = yield from resp.json()
     data.pop('flow_id')
     assert data == {
+        'description_placeholders': None,
         'handler': 'test',
         'reason': 'bla',
         'type': 'abort'
@@ -254,6 +255,10 @@ def test_create_account(hass, client):
                                       json={'handler': 'test'})
 
     assert resp.status == 200
+
+    entries = hass.config_entries.async_entries('test')
+    assert len(entries) == 1
+
     data = yield from resp.json()
     data.pop('flow_id')
     assert data == {
@@ -261,6 +266,7 @@ def test_create_account(hass, client):
         'title': 'Test Entry',
         'type': 'create_entry',
         'version': 1,
+        'result': entries[0].entry_id,
         'description': None,
         'description_placeholders': None,
     }
@@ -316,6 +322,10 @@ def test_two_step_flow(hass, client):
             '/api/config/config_entries/flow/{}'.format(flow_id),
             json={'user_title': 'user-title'})
         assert resp.status == 200
+
+        entries = hass.config_entries.async_entries('test')
+        assert len(entries) == 1
+
         data = yield from resp.json()
         data.pop('flow_id')
         assert data == {
@@ -323,6 +333,7 @@ def test_two_step_flow(hass, client):
             'type': 'create_entry',
             'title': 'user-title',
             'version': 1,
+            'result': entries[0].entry_id,
             'description': None,
             'description_placeholders': None,
         }
