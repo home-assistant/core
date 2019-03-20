@@ -2,8 +2,7 @@
 from async_timeout import timeout
 
 from homeassistant.core import callback
-from homeassistant.components.websocket_api.const import (
-    URL, EVENT_WEBSOCKET_REQUEST)
+from homeassistant.components.websocket_api.const import URL
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED
 )
@@ -66,16 +65,6 @@ async def test_call_service_not_found(hass, websocket_client):
     assert msg['type'] == const.TYPE_RESULT
     assert not msg['success']
     assert msg['error']['code'] == const.ERR_NOT_FOUND
-
-
-async def test_events_call_service_not_found(hass, websocket_client):
-    """Test call service command raises events."""
-    events = []
-    hass.bus.async_listen(EVENT_WEBSOCKET_REQUEST, events.append)
-
-    await test_call_service_not_found(hass, websocket_client)
-
-    assert len(events) == 1
 
 
 async def test_call_service_error(hass, websocket_client):

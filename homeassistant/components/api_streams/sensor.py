@@ -17,8 +17,10 @@ async def async_setup_platform(
     entity = APICount()
 
     # pylint: disable=protected-access
-    hass.bus.async_listen(EVENT_WEBSOCKET_CONNECTED, entity._increment)
-    hass.bus.async_listen(EVENT_WEBSOCKET_DISCONNECTED, entity._decrement)
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        EVENT_WEBSOCKET_CONNECTED, entity._increment)
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        EVENT_WEBSOCKET_DISCONNECTED, entity._decrement)
 
     async_add_entities([entity])
 
@@ -46,11 +48,11 @@ class APICount(Entity):
         return "clients"
 
     @callback
-    def _increment(self, msg):
+    def _increment(self, connection):
         self.count += 1
         self.schedule_update_ha_state()
 
     @callback
-    def _decrement(self, msg):
+    def _decrement(self, connection, fail_msg):
         self.count -= 1
         self.schedule_update_ha_state()

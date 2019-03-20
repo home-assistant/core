@@ -29,14 +29,16 @@ async def test_auth_via_msg(no_auth_websocket_client, legacy_auth):
 async def test_auth_events(hass, no_auth_websocket_client, legacy_auth):
     """Test authenticating."""
     connected_evt = []
-    hass.bus.async_listen(EVENT_WEBSOCKET_CONNECTED, connected_evt.append)
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        EVENT_WEBSOCKET_CONNECTED,
+        lambda conn: connected_evt.append(conn))
     disconnected_evt = []
-    hass.bus.async_listen(EVENT_WEBSOCKET_DISCONNECTED,
-                          disconnected_evt.append)
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        EVENT_WEBSOCKET_DISCONNECTED,
+        lambda conn, msg: disconnected_evt.append((conn, msg)))
 
     await test_auth_via_msg(no_auth_websocket_client, legacy_auth)
 
-    await asyncio.sleep(0.1)
     assert len(connected_evt) == 1
     assert not disconnected_evt
 
@@ -66,10 +68,13 @@ async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
 async def test_auth_events_incorrect_pass(hass, no_auth_websocket_client):
     """Test authenticating."""
     connected_evt = []
-    hass.bus.async_listen(EVENT_WEBSOCKET_CONNECTED, connected_evt.append)
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        EVENT_WEBSOCKET_CONNECTED,
+        lambda conn: connected_evt.append(conn))
     disconnected_evt = []
-    hass.bus.async_listen(EVENT_WEBSOCKET_DISCONNECTED,
-                          disconnected_evt.append)
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        EVENT_WEBSOCKET_DISCONNECTED,
+        lambda conn, msg: disconnected_evt.append((conn, msg)))
 
     await test_auth_via_msg_incorrect_pass(no_auth_websocket_client)
 
