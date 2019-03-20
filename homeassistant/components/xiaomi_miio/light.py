@@ -81,7 +81,7 @@ XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({
 
 SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_SCENE):
-        vol.All(vol.Coerce(int), vol.Clamp(min=1, max=4))
+        vol.All(vol.Coerce(int), vol.Clamp(min=1, max=6))
 })
 
 SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
