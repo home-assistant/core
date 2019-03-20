@@ -23,7 +23,7 @@ def init_config_flow(hass, valid_code=True):
     )
 
     flow._get_authorize_url = Mock(  # pylint: disable=W0212
-        return_value='test',
+        return_value=mock_coro('test'),
     )
 
     flow._get_token_info = Mock(  # pylint: disable=W0212
@@ -67,7 +67,7 @@ async def test_full_flow_implementation(hass):
     result = await flow.async_step_user()
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
-    assert result['description_placeholders']['cb_link'] == 'https://hass.com'
+    assert result['description_placeholders']['cb_url'] == 'https://hass.com'
     assert result['description_placeholders']['authorization_url'] == 'test'
 
     result = await flow.async_step_code('123ABC')
@@ -85,5 +85,4 @@ async def test_abort_no_code(hass):
 
     result = await flow.async_step_code('invalid')
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    print(result)
     assert result['reason'] == 'access_token'

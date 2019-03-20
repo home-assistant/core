@@ -59,7 +59,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                                          websession)
 
     try:
-        _token_info = await oauth.refresh_access_token()
+        _token_info = await oauth.refresh_access_token(token_info)
         if _token_info:
             await store.async_save(token_info)
             token_info = _token_info
@@ -130,8 +130,8 @@ class AmbiclimateEntity(ClimateDevice):
     def __init__(self, heater, store):
         """Initialize the thermostat."""
         self._heater = heater
-        self._data = {}
         self._store = store
+        self._data = {}
 
     @property
     def unique_id(self):

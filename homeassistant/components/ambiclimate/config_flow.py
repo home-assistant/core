@@ -69,12 +69,10 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         if not self._registered_view:
             await self._generate_view()
 
-        oauth = await self._generate_oauth()
-
         return self.async_show_form(
             step_id='auth',
             description_placeholders={'authorization_url':
-                                      self._get_authorize_url(oauth),
+                                      await self._get_authorize_url(),
                                       'cb_url': self._cb_url()},
             errors=errors,
         )
@@ -128,11 +126,11 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         return oauth
 
     def _cb_url(self):
-        return "https://server1.dahoiv.net/api/ambiclimate"
         return '{}{}'.format(self.hass.config.api.base_url,
                              AUTH_CALLBACK_PATH)
 
-    def _get_authorize_url(self, oauth):
+    async def _get_authorize_url(self):
+        oauth = await self._generate_oauth()
         if oauth is None:
             return ""
         return oauth.get_authorize_url()
