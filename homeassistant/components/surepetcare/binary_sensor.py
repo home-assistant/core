@@ -8,9 +8,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE, DEFAULT_DEVICE_CLASS,
-                    DEFAULT_ICON, SURE_IDS, TOPIC_UPDATE,
-                    SureLocationID, SureLockStateID, SureProductID,
-                    SureThingType)
+                    DEFAULT_ICON, SURE_IDS, TOPIC_UPDATE, SureLocationID,
+                    SureLockStateID, SureProductID, SureThingType)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +41,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SurePetcareBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Sure Petcare Entities."""
 
-    def __init__(self, _id: int, name: int, icon=None, device_class=None, sure_type=None, hass=None):
+    def __init__(self, _id: int, name: int,
+                 icon=None, device_class=None, sure_type=None, hass=None):
+
         self._hass = hass
 
         self._household_id = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
@@ -148,7 +149,8 @@ class Flap(SurePetcareBinarySensor):
     def is_on(self):
         """Return true if light is on."""
         try:
-            return bool(self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
+            return bool(
+                self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
         except (KeyError, TypeError):
             # return False
             return "unknown"
@@ -176,12 +178,12 @@ class Flap(SurePetcareBinarySensor):
                 locking_mode=self._state["locking"]["mode"],
                 device_rssi=self._state["signal"]["device_rssi"],
                 hub_rssi=self._state["signal"]["hub_rssi"],
-                device_hardware_version=self._state["version"]["device"]["hardware"],
-                device_firmware_version=self._state["version"]["device"]["firmware"],
-                lcd_hardware_version=self._state["version"]["lcd"]["hardware"],
-                lcd_firmware_version=self._state["version"]["lcd"]["firmware"],
-                rf_hardware_version=self._state["version"]["rf"]["hardware"],
-                rf_firmware_version=self._state["version"]["rf"]["firmware"],
+                device_hw_version=self._state["version"]["device"]["hardware"],
+                device_fw_version=self._state["version"]["device"]["firmware"],
+                lcd_hw_version=self._state["version"]["lcd"]["hardware"],
+                lcd_fw_version=self._state["version"]["lcd"]["firmware"],
+                rf_hw_version=self._state["version"]["rf"]["hardware"],
+                rf_fw_version=self._state["version"]["rf"]["firmware"],
             )
         else:
             attributes = dict(error=self._state)
