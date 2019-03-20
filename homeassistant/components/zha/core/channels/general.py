@@ -64,6 +64,13 @@ class OnOffChannel(ZigbeeChannel):
             await self.get_attribute_value(self.ON_OFF, from_cache=from_cache))
         await super().async_initialize(from_cache)
 
+    async def async_update(self):
+        """Initialize channel."""
+        _LOGGER.debug("Attempting to update onoff state")
+        self._state = bool(
+            await self.get_attribute_value(self.ON_OFF, from_cache=False))
+        await super().async_update()
+
 
 class LevelControlChannel(ZigbeeChannel):
     """Channel for the LevelControl Zigbee cluster."""

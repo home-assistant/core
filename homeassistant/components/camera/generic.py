@@ -28,12 +28,14 @@ _LOGGER = logging.getLogger(__name__)
 CONF_CONTENT_TYPE = 'content_type'
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = 'limit_refetch_to_url_change'
 CONF_STILL_IMAGE_URL = 'still_image_url'
+CONF_STREAM_SOURCE = 'stream_source'
 CONF_FRAMERATE = 'framerate'
 
 DEFAULT_NAME = 'Generic Camera'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STILL_IMAGE_URL): cv.template,
+    vol.Optional(CONF_STREAM_SOURCE, default=None): vol.Any(None, cv.string),
     vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE, default=False): cv.boolean,
@@ -62,6 +64,7 @@ class GenericCamera(Camera):
         self._authentication = device_info.get(CONF_AUTHENTICATION)
         self._name = device_info.get(CONF_NAME)
         self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
+        self._stream_source = device_info[CONF_STREAM_SOURCE]
         self._still_image_url.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._frame_interval = 1 / device_info[CONF_FRAMERATE]
@@ -128,7 +131,7 @@ class GenericCamera(Camera):
                         url, auth=self._auth)
                 self._last_image = await response.read()
             except asyncio.TimeoutError:
-                _LOGGER.error("Timeout getting camera image")
+                _LOGGER.error("Timeout getting image from: %s", self._name)
                 return self._last_image
             except aiohttp.ClientError as err:
                 _LOGGER.error("Error getting new camera image: %s", err)
@@ -141,3 +144,8 @@ class GenericCamera(Camera):
     def name(self):
         """Return the name of this device."""
         return self._name
+
+    @property
+    def stream_source(self):
+        """Return the source of the stream."""
+        return self._stream_source

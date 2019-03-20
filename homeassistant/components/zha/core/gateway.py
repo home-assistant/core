@@ -18,17 +18,17 @@ from .const import (
     ZHA_DISCOVERY_NEW, DEVICE_CLASS, SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS, COMPONENT_CLUSTERS, HUMIDITY,
     TEMPERATURE, ILLUMINANCE, PRESSURE, METERING, ELECTRICAL_MEASUREMENT,
-    GENERIC, SENSOR_TYPE, EVENT_RELAY_CLUSTERS, UNKNOWN,
-    OPENING, ZONE, OCCUPANCY, CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_IMMEDIATE,
+    GENERIC, SENSOR_TYPE, EVENT_RELAY_CLUSTERS, UNKNOWN, OPENING, ZONE,
+    OCCUPANCY, CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_IMMEDIATE,
     REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_MIN_INT,
-    REPORT_CONFIG_MAX_INT, REPORT_CONFIG_OP, SIGNAL_REMOVE, NO_SENSOR_CLUSTERS,
-    POWER_CONFIGURATION_CHANNEL)
+    REPORT_CONFIG_MAX_INT, REPORT_CONFIG_OP, SIGNAL_REMOVE,
+    NO_SENSOR_CLUSTERS, POWER_CONFIGURATION_CHANNEL, BINDABLE_CLUSTERS,
+    DATA_ZHA_GATEWAY, ACCELERATION)
 from .device import ZHADevice, DeviceStatus
 from ..device_entity import ZhaDeviceEntity
 from .channels import (
-    AttributeListeningChannel, EventRelayChannel, ZDOChannel
+    AttributeListeningChannel, EventRelayChannel, ZDOChannel, MAINS_POWERED
 )
-from .channels.general import BasicChannel
 from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .helpers import convert_ieee
 
@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {}
 BINARY_SENSOR_TYPES = {}
 SMARTTHINGS_HUMIDITY_CLUSTER = 64581
+SMARTTHINGS_ACCELERATION_CLUSTER = 64514
 EntityReference = collections.namedtuple(
     'EntityReference', 'reference_id zha_device cluster_channels device_info')
 
@@ -44,14 +45,16 @@ EntityReference = collections.namedtuple(
 class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, config, zha_storage):
         """Initialize the gateway."""
         self._hass = hass
         self._config = config
         self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._devices = {}
         self._device_registry = collections.defaultdict(list)
+        self.zha_storage = zha_storage
         hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
+        hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
 
     def device_joined(self, device):
         """Handle device joined.
@@ -123,12 +126,16 @@ class ZHAGateway:
         )
 
     @callback
-    def _async_get_or_create_device(self, zigpy_device):
+    def _async_get_or_create_device(self, zigpy_device, is_new_join):
         """Get or create a ZHA device."""
         zha_device = self._devices.get(zigpy_device.ieee)
         if zha_device is None:
             zha_device = ZHADevice(self._hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device
+        if not is_new_join:
+            entry = self.zha_storage.async_get_or_create(zha_device)
+            zha_device.async_update_last_seen(entry.last_seen)
+            zha_device.set_power_source(entry.power_source)
         return zha_device
 
     @callback
@@ -147,9 +154,16 @@ class ZHAGateway:
             if device.status is DeviceStatus.INITIALIZED:
                 device.update_available(True)
 
+    async def async_update_device_storage(self):
+        """Update the devices in the store."""
+        for device in self.devices.values():
+            self.zha_storage.async_update(device)
+        await self.zha_storage.async_save()
+
     async def async_device_initialized(self, device, is_new_join):
         """Handle device joined and basic information discovered (async)."""
-        zha_device = self._async_get_or_create_device(device)
+        zha_device = self._async_get_or_create_device(device, is_new_join)
+
         discovery_infos = []
         for endpoint_id, endpoint in device.endpoints.items():
             self._async_process_endpoint(
@@ -160,16 +174,16 @@ class ZHAGateway:
         if is_new_join:
             # configure the device
             await zha_device.async_configure()
-        elif not zha_device.available and zha_device.power_source is not None\
-                and zha_device.power_source != BasicChannel.BATTERY\
-                and zha_device.power_source != BasicChannel.UNKNOWN:
-            # the device is currently marked unavailable and it isn't a battery
-            # powered device so we should be able to update it now
+            zha_device.update_available(True)
+        elif zha_device.power_source is not None\
+                and zha_device.power_source == MAINS_POWERED:
+            # the device isn't a battery powered device so we should be able
+            # to update it now
             _LOGGER.debug(
                 "attempting to request fresh state for %s %s",
                 zha_device.name,
                 "with power source: {}".format(
-                    BasicChannel.POWER_SOURCES.get(zha_device.power_source)
+                    ZDOChannel.POWER_SOURCES.get(zha_device.power_source)
                 )
             )
             await zha_device.async_initialize(from_cache=False)
@@ -185,11 +199,6 @@ class ZHAGateway:
 
         device_entity = _async_create_device_entity(zha_device)
         await self._component.async_add_entities([device_entity])
-
-        if is_new_join:
-            # because it's a new join we can immediately mark the device as
-            # available. We do it here because the entities didn't exist above
-            zha_device.update_available(True)
 
     @callback
     def _async_process_endpoint(
@@ -450,6 +459,11 @@ def establish_device_mappings():
     NO_SENSOR_CLUSTERS.append(zcl.clusters.general.Basic.cluster_id)
     NO_SENSOR_CLUSTERS.append(
         zcl.clusters.general.PowerConfiguration.cluster_id)
+    NO_SENSOR_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
+
+    BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
+    BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
+    BINDABLE_CLUSTERS.append(zcl.clusters.lighting.Color.cluster_id)
 
     DEVICE_CLASS[zha.PROFILE_ID].update({
         zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
@@ -494,6 +508,7 @@ def establish_device_mappings():
         zcl.clusters.security.IasZone: 'binary_sensor',
         zcl.clusters.measurement.OccupancySensing: 'binary_sensor',
         zcl.clusters.hvac.Fan: 'fan',
+        SMARTTHINGS_ACCELERATION_CLUSTER: 'binary_sensor',
     })
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update({
@@ -516,7 +531,8 @@ def establish_device_mappings():
     BINARY_SENSOR_TYPES.update({
         zcl.clusters.measurement.OccupancySensing.cluster_id: OCCUPANCY,
         zcl.clusters.security.IasZone.cluster_id: ZONE,
-        zcl.clusters.general.OnOff.cluster_id: OPENING
+        zcl.clusters.general.OnOff.cluster_id: OPENING,
+        SMARTTHINGS_ACCELERATION_CLUSTER: ACCELERATION,
     })
 
     CLUSTER_REPORT_CONFIGS.update({
@@ -533,6 +549,7 @@ def establish_device_mappings():
         zcl.clusters.general.PollControl.cluster_id: [],
         zcl.clusters.general.GreenPowerProxy.cluster_id: [],
         zcl.clusters.general.OnOffConfiguration.cluster_id: [],
+        zcl.clusters.lightlink.LightLink.cluster_id: [],
         zcl.clusters.general.OnOff.cluster_id: [{
             'attr': 'on_off',
             'config': REPORT_CONFIG_IMMEDIATE
@@ -560,6 +577,27 @@ def establish_device_mappings():
             )
         }],
         zcl.clusters.measurement.TemperatureMeasurement.cluster_id: [{
+            'attr': 'measured_value',
+            'config': (
+                REPORT_CONFIG_MIN_INT,
+                REPORT_CONFIG_MAX_INT,
+                50
+            )
+        }],
+        SMARTTHINGS_ACCELERATION_CLUSTER: [{
+            'attr': 'acceleration',
+            'config': REPORT_CONFIG_ASAP
+        }, {
+            'attr': 'x_axis',
+            'config': REPORT_CONFIG_ASAP
+        }, {
+            'attr': 'y_axis',
+            'config': REPORT_CONFIG_ASAP
+        }, {
+            'attr': 'z_axis',
+            'config': REPORT_CONFIG_ASAP
+        }],
+        SMARTTHINGS_HUMIDITY_CLUSTER: [{
             'attr': 'measured_value',
             'config': (
                 REPORT_CONFIG_MIN_INT,

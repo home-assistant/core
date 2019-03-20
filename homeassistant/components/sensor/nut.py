@@ -13,7 +13,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    TEMP_CELSIUS, CONF_RESOURCES, CONF_ALIAS, ATTR_STATE, STATE_UNKNOWN)
+    TEMP_CELSIUS, CONF_RESOURCES, CONF_ALIAS, ATTR_STATE, STATE_UNKNOWN,
+    POWER_WATT)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -63,8 +64,8 @@ SENSOR_TYPES = {
     'ups.efficiency': ['Efficiency', '%', 'mdi:gauge'],
     'ups.power': ['Current Apparent Power', 'VA', 'mdi:flash'],
     'ups.power.nominal': ['Nominal Power', 'VA', 'mdi:flash'],
-    'ups.realpower': ['Current Real Power', 'W', 'mdi:flash'],
-    'ups.realpower.nominal': ['Nominal Real Power', 'W', 'mdi:flash'],
+    'ups.realpower': ['Current Real Power', POWER_WATT, 'mdi:flash'],
+    'ups.realpower.nominal': ['Nominal Real Power', POWER_WATT, 'mdi:flash'],
     'ups.beeper.status': ['Beeper Status', '', 'mdi:information-outline'],
     'ups.type': ['UPS Type', '', 'mdi:information-outline'],
     'ups.watchdog.status': ['Watchdog Status', '', 'mdi:information-outline'],

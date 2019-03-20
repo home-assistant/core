@@ -200,8 +200,10 @@ def clear_discovery_hash(hass, discovery_hash):
 async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                       config_entry=None) -> bool:
     """Initialize of MQTT Discovery."""
-    async def async_device_message_received(topic, payload, qos):
+    async def async_device_message_received(msg):
         """Process the received message."""
+        payload = msg.payload
+        topic = msg.topic
         match = TOPIC_MATCHER.match(topic)
 
         if not match:
@@ -235,8 +237,8 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                 key = DEVICE_ABBREVIATIONS.get(key, key)
                 device[key] = device.pop(abbreviated_key)
 
-        base = payload.pop(TOPIC_BASE, None)
-        if base:
+        if TOPIC_BASE in payload:
+            base = payload.pop(TOPIC_BASE)
             for key, value in payload.items():
                 if isinstance(value, str) and value:
                     if value[0] == TOPIC_BASE and key.endswith('_topic'):
