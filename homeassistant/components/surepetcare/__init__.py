@@ -155,7 +155,7 @@ async def async_setup_entry(hass, entry: ConfigEntry):
             elif sure_type == SureThingType.PET.name:
                 response = await surepy.get_pet_data(sure_id)
 
-            _LOGGER.debug(f"surepy response: {sure_type}/{sure_id}: {response}")
+            _LOGGER.debug(f"api response: {sure_type}/{sure_id}: {response}")
 
             if response:
                 hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = response[

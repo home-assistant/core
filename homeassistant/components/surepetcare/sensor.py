@@ -7,8 +7,8 @@ from homeassistant.helpers.entity import Entity
 
 from .const import (BATTERY_DEFAULT_DEVICE_CLASS, BATTERY_DEFAULT_ICON,
                     CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE,
-                    SURE_BATTERY_VOLTAGE_DIFF, SURE_BATTERY_VOLTAGE_LOW,
-                    SURE_IDS, SureProductID, SureThingType)
+                    SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW, SURE_IDS,
+                    SureProductID, SureThingType)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,9 +60,9 @@ class FlapBattery(Entity):
         """Return battery level in percent."""
         try:
             per_battery_voltage = self._state["battery"] / 4
-            voltage_diff_to_low = per_battery_voltage - SURE_BATTERY_VOLTAGE_LOW
+            voltage_diff_low = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
 
-            return int(voltage_diff_to_low / SURE_BATTERY_VOLTAGE_DIFF * 100)
+            return int(voltage_diff_low / SURE_BATT_VOLTAGE_DIFF * 100)
         except (KeyError, TypeError):
             return False
 
