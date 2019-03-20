@@ -45,8 +45,7 @@ class FbxWifiSwitch(SwitchDevice):
         except InsufficientPermissionsError:
             _LOGGER.warning('Home Assistant does not have permissions to'
                             ' modify the Freebox settings. Please refer'
-                            ' to documentation. https://home-assistant.'
-                            '.io/components/switch.freebox/')
+                            ' to documentation.')
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
