@@ -609,7 +609,6 @@ omit =
     homeassistant/components/switch/telnet.py
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/vesync.py
-    homeassistant/components/switcher_kis/*
     homeassistant/components/tado/*
     homeassistant/components/tahoma/*
     homeassistant/components/telegram_bot/*

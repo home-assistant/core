@@ -1,6 +1,8 @@
-"""Test case for the switcher_kis component."""
+"""Test case for the switcher_kis component.
 
-# pylint: disable=invalid-sequence-index,broad-except
+Author: Tomer Figenblat
+"""
+
 from random import choice, randint, sample
 from string import ascii_lowercase, digits
 from traceback import format_exc
@@ -8,15 +10,11 @@ from typing import Dict, List, Tuple
 from unittest import TestCase
 from unittest.mock import patch
 
-from aioswitcher.consts import DAYS_INT_DICT, WEEKDAY_TUP
-from aioswitcher.schedules import calc_next_run_for_schedule
-from aioswitcher.tools import (create_weekdays_value,
-                               timedelta_str_to_schedule_time)
 from homeassistant.components.switcher_kis import (
     CONF_DEVICE_ID, CONF_DEVICE_PASSWORD, CONF_INCLUDE_SCHEDULE_SENSORS,
     CONF_PHONE_ID, CONF_SCHEDULE_SCAN_INTERVAL, DOMAIN)
-from homeassistant.const import CONF_FRIENDLY_NAME, CONF_ICON, CONF_NAME
-from homeassistant.setup import setup_component
+from homeassistant.const import CONF_ICON, CONF_NAME
+from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
@@ -45,7 +43,6 @@ def create_configuration() -> Tuple[Dict, Dict]:
                 'minutes': dummy_minutes_interval
             },
             CONF_NAME: 'boiler',
-            CONF_FRIENDLY_NAME: "my boiler",
             CONF_ICON: 'mdi:dummy-icon'
         }}
 
@@ -62,17 +59,20 @@ def create_random_time() -> str:
 
 def create_random_weekdays_list() -> List[int]:
     """Use to create a random list of int represnations of the weekdays."""
+    from aioswitcher.consts import DAY_TO_INT_DICT, WEEKDAY_TUP
+
     days_list = [0]
     rand_days = sample(WEEKDAY_TUP, randint(0, 7))
 
     for day in rand_days:
-        days_list.append(DAYS_INT_DICT[day])
+        days_list.append(DAY_TO_INT_DICT[day])
 
     return days_list
 
 
 def create_rand_recur_days_list() -> List[str]:
     """Use to create a random list of str represnations of the weekdays."""
+    from aioswitcher.consts import WEEKDAY_TUP
     return sample(WEEKDAY_TUP, randint(1, 7))
 
 
@@ -85,7 +85,7 @@ class TestSwitcherKisComponent(TestCase):
     def setUpClass(cls) -> None:
         """Set up things to be run before setup are started."""
         cls.patcher = patch(
-            'aioswitcher.bridge.SwitcherV2Thread.start')
+            'aioswitcher.bridge.SwitcherV2Bridge.start')
         cls.patcher.start()
         cls.minimal_config, cls.full_config = create_configuration()
 
@@ -103,36 +103,44 @@ class TestSwitcherKisComponent(TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_minimal_config(self) -> None:
+    async def test_minimal_config(self) -> None:
         """Test setup with configuration minimal entries."""
-        with assert_setup_component(6):
-            assert setup_component(
+        with assert_setup_component(5):
+            assert await async_setup_component(
                 self.hass, DOMAIN, TestSwitcherKisComponent.minimal_config)
 
-    def test_full_config(self) -> None:
+    async def test_full_config(self) -> None:
         """Test setup with configuration maximum entries."""
-        with assert_setup_component(8):
-            assert setup_component(
+        with assert_setup_component(7):
+            assert await async_setup_component(
                 self.hass, DOMAIN, TestSwitcherKisComponent.full_config)
 
-    def test_convert_timedelta_schedule(self) -> None:
+    async def test_convert_timedelta_schedule(self) -> None:
         """Test the timedelta_str_to_schedule_time tool."""
+        from aioswitcher.tools import timedelta_str_to_schedule_time
+
         try:
-            result = timedelta_str_to_schedule_time(create_random_time())
+            result = await timedelta_str_to_schedule_time(
+                self.hass.loop, create_random_time())
             self.assertTrue(isinstance(result, str))
-        except Exception:
+        except (ValueError, IndexError, RuntimeError):
             self.fail(format_exc())
 
-    def test_converter_create_week_days(self) -> None:
+    async def test_converter_create_week_days(self) -> None:
         """Test the create_weekdays_value tool."""
+        from aioswitcher.tools import create_weekdays_value
+
         try:
-            result = create_weekdays_value(create_random_weekdays_list())
+            result = await create_weekdays_value(
+                self.hass.loop, create_random_weekdays_list())
             self.assertTrue(isinstance(result, str))
-        except Exception:
+        except (ValueError, IndexError, RuntimeError):
             self.fail(format_exc())
 
-    def test_schedule_next_runtime_calc(self) -> None:
+    async def test_schedule_next_runtime_calc(self) -> None:
         """Test the calc_next_run_for_schedule tool."""
+        from aioswitcher.schedules import calc_next_run_for_schedule
+
         recurring_patch = non_recurring_patch = None
         try:
             recurring_patch = patch(
@@ -147,15 +155,16 @@ class TestSwitcherKisComponent(TestCase):
                 start_time=create_random_time())
 
             recurring_schedule = recurring_patch.start()
-            recurring_result = calc_next_run_for_schedule(recurring_schedule)
+            recurring_result = await calc_next_run_for_schedule(
+                self.hass.loop, recurring_schedule)
             self.assertTrue(isinstance(recurring_result, str))
 
             non_recurring_schedule = non_recurring_patch.start()
-            non_recurring_result = calc_next_run_for_schedule(
-                non_recurring_schedule)
+            non_recurring_result = await calc_next_run_for_schedule(
+                self.hass.loop, non_recurring_schedule)
             self.assertTrue(isinstance(non_recurring_result, str))
 
-        except Exception:
+        except (ValueError, IndexError, RuntimeError):
             self.fail(format_exc())
         finally:
             if recurring_patch:

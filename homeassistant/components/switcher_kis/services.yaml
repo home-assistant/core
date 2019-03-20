@@ -1,8 +1,5 @@
-turn_on:
-  description: 'Turn on the Switcher device.'
-
-turn_off:
-  description: 'Turn off the Switcher device.'
+update_schedules:
+  description: 'Manually retrieve schedules data from the device.'
 
 turn_on_15_minutes:
   description: 'Turn on the Switcher device for 15 minutes.'
@@ -44,10 +41,10 @@ create_schedule:
       example: true
     days:
       description: >
-        Name(s) of the days for the schedule to run in,
+        Name(s) of the days for the schedule to run on,
         This is an optional field that must be passed if recurring=true.
         Possible values are: Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday.
-      example: '"Monday", "Wednesday", "Saturday"'
+      example: ["Monday", "Wednesday", "Saturday"]
 
 delete_schedule:
   description: 'Delete specific schedule.'

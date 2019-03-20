@@ -133,7 +133,7 @@ aiolifx_effects==0.2.1
 aiopvapi==1.6.14
 
 # homeassistant.components.switcher_kis
-aioswitcher==2019.2.6
+aioswitcher==2019.3.21
 
 # homeassistant.components.unifi
 aiounifi==4

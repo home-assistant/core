@@ -1,53 +1,33 @@
-"""Home Assistant Switcher Component.
+"""Home Assistant Switcher Component Switch platform.
 
 For controlling the Switcher Boiler Device (https://www.switcher.co.il/).
 Please follow configuring instructions here:
     https://www.home-assistant.io/components/switcher_kis/
 
 Author: Tomer Figenblat
-
-This cannot be configured as a sensor platform,
-Please follow the instruction of configuring the switcher_kis component.
 """
 
-from asyncio import TimeoutError as AsyncioTimeoutError
-from asyncio import wait_for
 from datetime import datetime
-from functools import partial
 from logging import getLogger
-from typing import Any, Awaitable, Callable, Dict, Optional
+from typing import Callable, cast, Dict, Optional
 
-from aioswitcher.consts import COMMAND_OFF, COMMAND_ON
-from aioswitcher.consts import STATE_OFF as SWITCHER_STATE_OFF
-from aioswitcher.consts import STATE_ON as SWITCHER_STATE_ON
-from aioswitcher.devices import SwitcherV2Device
-from aioswitcher.swapi import send_command_to_device
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W
-from homeassistant.components.switch import ENTITY_ID_FORMAT as SWITCH_FORMAT
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_ICON, CONF_NAME,
-                                 STATE_OFF, STATE_ON, STATE_UNKNOWN)
-from homeassistant.core import HomeAssistant
+from homeassistant.components.switch import (
+    ATTR_CURRENT_POWER_W, ENTITY_ID_FORMAT as SWITCH_FORMAT, SwitchDevice)
+from homeassistant.const import CONF_ICON, CONF_NAME
+from homeassistant.core import HomeAssistant, Event
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import async_generate_entity_id
 
-from . import ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT
-from ._service_registration import (DISCOVERY_CONFIG, DISCOVERY_DEVICE,
-                                    async_register_switch_entity)
-
-DEPENDENCIES = ['switcher_kis']
+from . import (
+    ATTR_AUTO_OFF_SET, ATTR_DEVICE_NAME, ATTR_ELECTRIC_CURRNET,
+    ATTR_IP_ADDRESS, ATTR_LAST_DATA_UPDATE, ATTR_LAST_STATE_CHANGE,
+    ATTR_REMAINING_TIME, DISCOVERY_CONFIG, DISCOVERY_DEVICE, DOMAIN,
+    ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT, EVENT_SWITCHER_DEVICE_UPDATED,
+    UPDATED_DEVICE)
 
 _LOGGER = getLogger(__name__)
 
+DEPENDENCIES = ['switcher_kis']
 ENTITY_ID_FORMAT = SWITCH_FORMAT.format(SWITCHER_KIS_FORMAT)
-
-ATTR_IP_ADDRESS = 'ip_address'
-ATTR_ELECTRIC_CURRNET = 'electric_current'
-ATTR_REMAINING_TIME = 'remaining_time'
-ATTR_AUTO_OFF_SET = 'auto_off_set'
-ATTR_LAST_DATA_UPDATE = 'last_data_update'
-ATTR_LAST_STATE_CHANGE = 'last_state_change'
-ATTR_DEVICE_NAME = 'device_name'
 
 PROPERTIES_TO_ATTRIBUTES = {
     'current_power_w': ATTR_CURRENT_POWER_W,
@@ -65,104 +45,81 @@ async def async_setup_platform(hass: HomeAssistant, config: Dict,
                                async_add_entities: Callable,
                                discovery_info: Dict) -> None:
     """Set up the switcher platform for the switch component."""
-    if discovery_info.get(DISCOVERY_CONFIG):
-        name = str(discovery_info[DISCOVERY_CONFIG].get(CONF_NAME))
-
-        friendly_name = discovery_info[DISCOVERY_CONFIG].get(
-            CONF_FRIENDLY_NAME, name.title())
-
-        icon = discovery_info[DISCOVERY_CONFIG].get(CONF_ICON)
-
+    if hass.data[DOMAIN][DISCOVERY_CONFIG]:
+        name = hass.data[DOMAIN][DISCOVERY_CONFIG][CONF_NAME].title()
+        icon = hass.data[DOMAIN][DISCOVERY_CONFIG].get(CONF_ICON)
     else:
         raise PlatformNotReady("No config data found")
 
-    if discovery_info.get(DISCOVERY_DEVICE):
-        switcher_entity = SwitcherControl(hass, name, friendly_name, icon,
-                                          discovery_info.get(DISCOVERY_DEVICE))
-
+    if hass.data[DOMAIN].get(DISCOVERY_DEVICE):
+        switcher_entity = SwitcherControl(
+            hass, name, icon, hass.data[DOMAIN].get(DISCOVERY_DEVICE))
     else:
         raise PlatformNotReady("No device data discoverd")
 
     async_add_entities([switcher_entity], False)
 
-    try:
-        await wait_for(async_register_switch_entity(switcher_entity),
-                       timeout=1)
-
-    except AsyncioTimeoutError:
-        raise PlatformNotReady("Unable to register for data updates")
-
     return None
 
 
 class SwitcherControl(SwitchDevice):
-    """Home Assistant entity.
+    """Home Assistant switch entity."""
 
-    Data updates is handled by the bridge thread,
-    Therefore no polling by ha is needed.
-    """
+    from aioswitcher.devices import SwitcherV2Device
 
-    def __init__(self, hass: HomeAssistant, name: str, friendly_name: str,
-                 icon: Optional[str], device_data: SwitcherV2Device) -> None:
+    def __init__(self, hass: HomeAssistant, name: str, icon: Optional[str],
+                 device_data: SwitcherV2Device) -> None:
         """Initialize the entity."""
         self._hass = hass
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, name, hass=hass)
-        self._name = friendly_name
+        self._name = name
         self._icon = icon
         self._self_initiated = False
 
         self._device_data = device_data
         self._state = device_data.state
+        hass.bus.async_listen(EVENT_SWITCHER_DEVICE_UPDATED,
+                              self.async_update_data)
 
     @property
     def device_ip_addr(self) -> str:
         """Return the device's ip address."""
-        ret = self._device_data.ip_addr  # type: str
-        return ret
+        return cast(str, self._device_data.ip_addr)
 
     @property
-    def electric_current(self) -> Optional[float]:
+    def electric_current(self) -> float:
         """Return the electric current."""
-        ret = self._device_data.electric_current  # type: Optional[float]
-        return ret
+        return cast(float, self._device_data.electric_current)
 
     @property
     def remaining_time(self) -> Optional[str]:
         """Return the remaining time to off command."""
-        ret = self._device_data.remaining_time  # type: Optional[str]
-        return ret
+        return self._device_data.remaining_time \
+            if isinstance(self._device_data.remaining_time, str) \
+            else None
 
     @property
     def auto_off_set(self) -> str:
         """Return the auto off configuration set."""
-        ret = self._device_data.auto_off_set  # type: str
-        return ret
+        return cast(str, self._device_data.auto_off_set)
 
     @property
     def last_data_update(self) -> datetime:
         """Return the datetime for the last update received by the device."""
-        ret = self._device_data.last_data_update  # type: datetime
-        return ret
+        return cast(datetime, self._device_data.last_data_update)
 
     @property
     def last_state_change(self) -> datetime:
         """Return the datetime for the last state change."""
-        ret = self._device_data.last_state_change  # type: datetime
-        return ret
+        return cast(datetime, self._device_data.last_state_change)
 
     @property
     def device_name(self) -> str:
         """Return the device's name."""
-        ret = self._device_data.name  # type: str
-        return ret
+        return cast(str, self._device_data.name)
 
     @property
     def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
+        """Return False, entity pushes its state to HA."""
         return False
 
     @property
@@ -177,32 +134,26 @@ class SwitcherControl(SwitchDevice):
         return self._name
 
     @property
-    def state(self) -> str:
-        """Return the state of the entity."""
-        return (
-            STATE_ON if self._state == SWITCHER_STATE_ON
-            else STATE_OFF if self._state == SWITCHER_STATE_OFF
-            else STATE_UNKNOWN)
-
-    @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.state == STATE_ON
+        from aioswitcher.consts import STATE_ON as SWITCHER_STATE_ON
+        return cast(bool, self._state == SWITCHER_STATE_ON)
 
     @property
-    def current_power_w(self) -> Optional[int]:
+    def current_power_w(self) -> int:
         """Return the current power usage in W."""
-        ret = self._device_data.power_consumption  # type: Optional[int]
-        return ret
+        return cast(int, self._device_data.power_consumption)
 
     @property
-    def state_attributes(self) -> Dict:
+    def device_state_attributes(self) -> Dict:
         """Return the optional state attributes."""
+        from aioswitcher.consts import WAITING_TEXT
+
         attribs = {}
 
         for prop, attr in PROPERTIES_TO_ATTRIBUTES.items():
             value = getattr(self, prop)
-            if value:
+            if value and value is not WAITING_TEXT:
                 attribs[attr] = value
 
         return attribs
@@ -215,80 +166,69 @@ class SwitcherControl(SwitchDevice):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return not self.state == STATE_UNKNOWN
+        from aioswitcher.consts import (STATE_OFF as SWITCHER_STATE_OFF,
+                                        STATE_ON as SWITCHER_STATE_ON)
+        return self._state in [SWITCHER_STATE_ON, SWITCHER_STATE_OFF]
 
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return False
-
-    async def async_update_data(self, device_data: SwitcherV2Device) -> None:
-        """Update the entity data.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        if self._self_initiated:
-            self._self_initiated = False
-        else:
-            self._device_data = device_data
-            self._state = self._device_data.state
-            await self._hass.async_create_task(self.async_update_ha_state())
+    async def async_update_data(self, event: Event) -> None:
+        """Update the entity data."""
+        device_data = event.data.get(UPDATED_DEVICE)
+        if device_data:
+            if self._self_initiated:
+                self._self_initiated = False
+            else:
+                self._device_data = device_data
+                self._state = self._device_data.state
+                self.async_schedule_update_ha_state()
 
         return None
-
-    def turn_on(self, **kwargs: Dict) -> None:
-        """Turn the entity on."""
-        self._hass.async_add_job(partial(self.async_turn_on, **kwargs))
 
     async def async_turn_on(self, **kwargs: Dict) -> None:
         """Turn the entity on.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        response = await send_command_to_device(
-            self.device_ip_addr, self._device_data.phone_id,
-            self._device_data.device_id, self._device_data.device_password,
-            COMMAND_ON)
+        from aioswitcher.api import SwitcherV2Api
+        # pylint: disable=unused-import
+        from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
+        # pylint: enable=unused-import
+        from aioswitcher.consts import (COMMAND_ON,
+                                        STATE_ON as SWITCHER_STATE_ON)
+        response = None  # type: SwitcherV2ControlResponseMSG
+        async with SwitcherV2Api(
+                self._hass.loop, self.device_ip_addr,
+                self._device_data.phone_id, self._device_data.device_id,
+                self._device_data.device_password) as swapi:
+            response = await swapi.control_device(COMMAND_ON)
 
-        if response.successful:
+        if response and response.successful:
             self._self_initiated = True
-            self._state = STATE_ON
-            await self._hass.async_create_task(self.async_update_ha_state())
+            self._state = SWITCHER_STATE_ON
+            self.async_schedule_update_ha_state()
 
         return None
-
-    def turn_off(self, **kwargs: Dict) -> None:
-        """Turn the entity off."""
-        self._hass.async_add_job(partial(self.async_turn_off, **kwargs))
 
     async def async_turn_off(self, **kwargs: Dict) -> None:
         """Turn the entity off.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        response = await send_command_to_device(
-            self.device_ip_addr, self._device_data.phone_id,
-            self._device_data.device_id, self._device_data.device_password,
-            COMMAND_OFF)
+        from aioswitcher.api import SwitcherV2Api
+        # pylint: disable=unused-import
+        from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
+        # pylint: enable=unused-import
+        from aioswitcher.consts import (COMMAND_OFF,
+                                        STATE_OFF as SWITCHER_STATE_OFF)
+        response = None  # type: SwitcherV2ControlResponseMSG
+        async with SwitcherV2Api(
+                self._hass.loop, self.device_ip_addr,
+                self._device_data.phone_id, self._device_data.device_id,
+                self._device_data.device_password) as swapi:
+            response = await swapi.control_device(COMMAND_OFF)
 
-        if response.successful:
+        if response and response.successful:
             self._self_initiated = True
-            self._state = STATE_OFF
-            await self._hass.async_create_task(self.async_update_ha_state())
+            self._state = SWITCHER_STATE_OFF
+            self.async_schedule_update_ha_state()
 
         return None
-
-    def toggle(self, **kwargs: Dict) -> None:
-        """Toggle the entity."""
-        if self.is_on:
-            return self.turn_off(**kwargs)
-        return self.turn_on(**kwargs)
-
-    async def async_toggle(self, **kwargs: Dict) -> Optional[Awaitable[Any]]:
-        """Toggle the entity.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        if self.is_on:
-            return await self.async_turn_off(**kwargs)
-        return await self.async_turn_on(**kwargs)
