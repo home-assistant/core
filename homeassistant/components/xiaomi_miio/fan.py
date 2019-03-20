@@ -305,6 +305,7 @@ FEATURE_FLAGS_AIRPURIFIER_V3 = (FEATURE_SET_BUZZER |
 
 FEATURE_FLAGS_AIRHUMIDIFIER = (FEATURE_SET_BUZZER |
                                FEATURE_SET_CHILD_LOCK |
+                               FEATURE_SET_LED |
                                FEATURE_SET_LED_BRIGHTNESS |
                                FEATURE_SET_TARGET_HUMIDITY)
 
