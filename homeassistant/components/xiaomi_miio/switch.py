@@ -36,6 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'chuangmi.plug.v2',
          'chuangmi.plug.v3',
          'chuangmi.plug.hmi205',
+         'lumi.acpartner.v3',
          ]),
 })
 
@@ -148,6 +149,12 @@ async def async_setup_platform(hass, config, async_add_entities,
         from miio import ChuangmiPlug
         plug = ChuangmiPlug(host, token, model=model)
         device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)
+        devices.append(device)
+        hass.data[DATA_KEY][host] = device
+    elif model in ['lumi.acpartner.v3']:
+        from miio import AirConditioningCompanionV3
+        plug = AirConditioningCompanionV3(host, token)
+        device = XiaomiAirConditioningCompanionSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
     else:
@@ -480,6 +487,60 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 
             if self._channel_usb is False and state.load_power:
                 self._state_attrs[ATTR_LOAD_POWER] = state.load_power
+
+        except DeviceException as ex:
+            self._available = False
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+
+class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
+    """Representation of a Xiaomi AirConditioning Companion."""
+
+    def __init__(self, name, plug, model, unique_id):
+        """Initialize the acpartner switch."""
+        super().__init__(name, plug, model, unique_id)
+
+        self._state_attrs[ATTR_TEMPERATURE] = None
+        self._state_attrs.update({
+            ATTR_LOAD_POWER: None,
+        })
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the socket on."""
+        result = await self._try_command(
+            "Turning the socket on failed.", self._plug.socket_on)
+
+        if result:
+            self._state = True
+            self._skip_update = True
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the socket off."""
+        result = await self._try_command(
+            "Turning the socket off failed.", self._plug.socket_off)
+
+        if result:
+            self._state = False
+            self._skip_update = True
+
+    async def async_update(self):
+        """Fetch state from the device."""
+        from miio import DeviceException
+
+        # On state change the device doesn't provide the new state immediately.
+        if self._skip_update:
+            self._skip_update = False
+            return
+
+        try:
+            state = await self.hass.async_add_executor_job(self._plug.status)
+            _LOGGER.debug("Got new state: %s", state)
+
+            self._available = True
+            self._state = state.power_socket == 'on'
+            self._state_attrs.update({
+                ATTR_LOAD_POWER: state.load_power,
+            })
 
         except DeviceException as ex:
             self._available = False
