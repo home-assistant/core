@@ -7,8 +7,8 @@ https://home-assistant.io/components/sensor.api_streams/
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.websocket_api.const import (
-    EVENT_WEBSOCKET_CONNECTED, EVENT_WEBSOCKET_DISCONNECTED)
+
+from .const import EVENT_WEBSOCKET_CONNECTED, EVENT_WEBSOCKET_DISCONNECTED
 
 
 async def async_setup_platform(
