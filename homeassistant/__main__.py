@@ -372,7 +372,7 @@ def main() -> int:
 
     if args.script is not None:
         from homeassistant import scripts
-        return scripts.run(args.script)
+        return scripts.run(args.script)  # type: ignore
 
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
@@ -390,7 +390,7 @@ def main() -> int:
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 
-    return exit_code  # type: ignore # mypy cannot yet infer it
+    return exit_code
 
 
 if __name__ == "__main__":
