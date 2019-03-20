@@ -17,7 +17,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (CONF_FLAPS, CONF_HOUSEHOLD_ID, CONF_PETS, DATA_SURE_DATA,
                     DATA_SURE_HOUSEHOLD_NAME, DATA_SURE_LISTENER,
                     DATA_SURE_PETCARE, DATA_SUREPY, DEFAULT_SCAN_INTERVAL,
-                    DOMAIN, SURE_IDS, TOPIC_UPDATE)
+                    DOMAIN, SURE_IDS, TOPIC_UPDATE, SureThingType)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,22 +72,20 @@ async def async_setup(hass, config):
         hass.loop, async_get_clientsession(hass), debug=True)
     hass.data[DATA_SURE_PETCARE][DATA_SUREPY] = surepy
 
-    flaps: list = [
+    hass.data[DATA_SURE_PETCARE][SURE_IDS]: list = [
         {
             CONF_NAME: flap[CONF_NAME],
             CONF_ID: flap[CONF_ID],
-            CONF_TYPE: CONF_FLAPS
+            CONF_TYPE: SureThingType.FLAP.name,
         }
         for flap in conf[CONF_FLAPS]]
 
-    pets: list = [
+    hass.data[DATA_SURE_PETCARE][SURE_IDS].extend([
         {
             CONF_NAME: pet[CONF_NAME],
             CONF_ID: pet[CONF_ID],
-            CONF_TYPE: CONF_PETS
-        } for pet in conf[CONF_PETS]]
-
-    things: list = flaps + pets
+            CONF_TYPE: SureThingType.PET.name,
+        } for pet in conf[CONF_PETS]])
 
     # User has configured household or flaps
     if CONF_HOUSEHOLD_ID not in conf:
@@ -97,16 +95,15 @@ async def async_setup(hass, config):
 
     if conf[CONF_HOUSEHOLD_ID] in configured_households:
         _LOGGER.debug(
-            "%s already configured in %s",
-            conf[CONF_HOUSEHOLD_ID], configured_households)
+            f"{conf[CONF_HOUSEHOLD_ID]} already configured "
+            f"in {configured_households}")
+
         return True
 
     sure_entry_data[CONF_USERNAME] = conf[CONF_USERNAME]
     sure_entry_data[CONF_PASSWORD] = conf[CONF_PASSWORD]
     sure_entry_data[CONF_HOUSEHOLD_ID] = conf[CONF_HOUSEHOLD_ID]
     sure_entry_data[DATA_SURE_HOUSEHOLD_NAME] = "SyBe"
-    sure_entry_data[SURE_IDS] = list(things)
-    hass.data[DATA_SURE_PETCARE][SURE_IDS] = list(things)
 
     # No existing config entry found, try importing it or trigger link
     # config flow if no existing auth. Because we're inside the setup of
@@ -141,26 +138,33 @@ async def async_setup_entry(hass, entry: ConfigEntry):
                 entry.data[CONF_HOUSEHOLD_ID],
                 hass.loop, async_get_clientsession(hass), debug=True)
 
-        if CONF_FLAPS not in hass.data[DATA_SURE_PETCARE]:
-            hass.data[DATA_SURE_PETCARE][CONF_FLAPS] = dict()
+        if SureThingType.FLAP.name not in hass.data[DATA_SURE_PETCARE]:
+            hass.data[DATA_SURE_PETCARE][SureThingType.FLAP.name] = dict()
 
-        if CONF_PETS not in hass.data[DATA_SURE_PETCARE]:
-            hass.data[DATA_SURE_PETCARE][CONF_PETS] = dict()
+        if SureThingType.PET.name not in hass.data[DATA_SURE_PETCARE]:
+            hass.data[DATA_SURE_PETCARE][SureThingType.PET.name] = dict()
 
         response = None
 
-        for thing in entry.data[SURE_IDS]:
+        for thing in hass.data[DATA_SURE_PETCARE][SURE_IDS]:
             sure_id = thing[CONF_ID]
             sure_type = thing[CONF_TYPE]
-            if sure_type == CONF_FLAPS:
+
+            if sure_type == SureThingType.FLAP.name:
                 response = await surepy.get_flap_data(sure_id)
-            elif sure_type == CONF_PETS:
+            elif sure_type == SureThingType.PET.name:
                 response = await surepy.get_pet_data(sure_id)
 
-            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = response[
-                DATA_SURE_DATA]
+            _LOGGER.debug(f"surepy response: {sure_type}/{sure_id}: {response}")
+
+            if response:
+                hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = response[
+                    DATA_SURE_DATA]
 
         async_dispatcher_send(hass, TOPIC_UPDATE)
+
+    # initial sensor refresh
+    # async_track_time_interval(hass, refresh_sensors, timedelta(seconds=30))
 
     hass.data[DATA_SURE_PETCARE][DATA_SURE_LISTENER] = {}
 
@@ -172,6 +176,9 @@ async def async_setup_entry(hass, entry: ConfigEntry):
 
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'binary_sensor'))
+
+    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+        entry, 'sensor'))
 
     return True
 

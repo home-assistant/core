@@ -1,10 +1,15 @@
 """Constants used by the Sure Petcare component."""
 from datetime import timedelta
+from enum import IntEnum
 
 DOMAIN = "surepetcare"
 
-DEFAULT_DEVICE_CLASS = "door"
+DEFAULT_DEVICE_CLASS = "lock"
 DEFAULT_ICON = "mdi:cat"
+
+BATTERY_DEFAULT_DEVICE_CLASS = "battery"
+BATTERY_DEFAULT_ICON = "mdi:battery"
+
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 DEFAULT_TIMEOUT = 10
 
@@ -21,4 +26,50 @@ DATA_SUREPY = "surepy"
 DATA_SURE_DATA = "data"
 
 SURE_IDS = "sure_ids"
-SURE_TYPES = [CONF_FLAPS, CONF_PETS]
+
+SURE_BATTERY_VOLTAGE_FULL = 1.6  # voltage
+SURE_BATTERY_VOLTAGE_LOW = 1.25  # voltage
+SURE_BATTERY_VOLTAGE_DIFF = SURE_BATTERY_VOLTAGE_FULL - SURE_BATTERY_VOLTAGE_LOW
+
+
+class SureProductID(IntEnum):
+    ROUTER = 1      # Sure Hub
+    PET_FLAP = 3    # Pet Door Connect
+    CAT_FLAP = 6    # Cat Door Connect
+
+
+# Thanks to @rcastberg for discovering the IDs used by the Sure Petcare API."""
+class SureLocationID(IntEnum):
+    INSIDE = 1
+    OUTSIDE = 2
+    UNKNOWN = -1
+
+
+class SureLockStateID(IntEnum):
+    """Sure Petcare API State IDs."""
+    UNLOCKED = 0
+    LOCKED_IN = 1
+    LOCKED_OUT = 2
+    LOCKED_ALL = 3
+    CURFEW = 4
+    CURFEW_LOCKED = -1
+    CURFEW_UNLOCKED = -2
+    CURFEW_UNKNOWN = -3
+
+
+class SureEventID(IntEnum):
+    """Sure Petcare API Event IDs."""
+    MOVE = 0
+    MOVE_UNKNOWN_ANIMAL = 7     # movement of unknown animal
+    BATTERY_WARNING = 1
+    LOCK_ST = 6
+    USR_IFO = 12
+    USR_NEW = 17
+    CURFEW = 20
+
+
+class SureThingType(IntEnum):
+    """Sure Petcare API Thing Types."""
+    HUB = 0
+    FLAP = 1
+    PET = 2
