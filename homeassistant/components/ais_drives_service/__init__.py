@@ -16,7 +16,6 @@ import time
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 from .config_flow import configured_drivers
-from homeassistant.const import CONF_NAME
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -29,12 +28,23 @@ G_LAST_BROWSE_CALL = None
 _LOGGER = logging.getLogger(__name__)
 
 
+TYPE_DRIVE = 'drive'
+TYPE_DROPBOX = 'dropbox'
+TYPE_MEGA = 'mega'
+TYPE_ONE_DRIVE = 'onedrive'
+DRIVES_TYPES = {
+    TYPE_DRIVE: ('Google Drive', 'mdi:google-drive'),
+    TYPE_DROPBOX: ('Dropbox', 'mdi:dropbox'),
+    TYPE_MEGA: ('Mega', 'mdi:weather-sunny'),
+    TYPE_ONE_DRIVE: ('Microsoft OneDrive', 'mdi:onedrive'),
+}
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Register the service."""
     config = config.get(DOMAIN, {})
     _LOGGER.info("Initialize the folders and files list.")
-    data = hass.data[DOMAIN] = LocalData(hass, config)
+    data = hass.data[DOMAIN] = LocalData(hass)
     yield from data.async_load_all()
 
     # register services
@@ -85,27 +95,67 @@ async def async_setup_entry(hass, config_entry):
     #     model='M1',
     #     sw_version='0.1',
     # )
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-        config_entry, 'sensor'
-    ))
+
+    #
+    hass.async_create_task(hass.config_entries.async_forward_entry_setup(config_entry, 'sensor'))
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     _LOGGER.warning("Remove the drive token from rclone conf")
+    await hass.config_entries.async_forward_entry_unload(config_entry, 'sensor')
     return True
+
+
+def rclone_get_remotes_long():
+    rclone_cmd = ["rclone", "listremotes", "--long", G_RCLONE_CONF]
+    proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #  will wait for the process to complete and then we are going to return the output
+    if "" != proc.stderr:
+        _LOGGER.error("Nie można pobrać informacji o połączeniach do dysków: " + proc.stderr)
+    else:
+        remotes = []
+        for l in proc.stdout.split("\n"):
+            if len(l) > 0:
+                ri = l.split(':')
+                remotes.append({"name": ri[0].strip(), "type": ri[1].strip()})
+    return remotes
+
+
+def rclone_get_auth_url(drive_name, drive_type):
+    code, icon = DRIVES_TYPES[drive_type]
+    rclone_cmd = ["rclone", "config", "create", drive_name, drive_type, G_RCLONE_CONF, "config_is_local", "false"]
+    rclone_cmd = ["rclone", "config", "create", "xxx", "drive", G_RCLONE_CONF, "config_is_local", "false"]
+    proc = subprocess.call(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    info = ""
+    #  will wait for the process to complete and then we are going to return the output
+    # if "" != proc.stderr:
+    #     _LOGGER.error("Nie można pobrać informacji o połączeniach do dysków: " + proc.stderr)
+    # else:
+    #     out = proc.stdout
+
+    while True:
+        out = proc.stdout.read(1)
+        if out == '' and proc.poll() != None:
+            break
+        if out != '':
+            info = info + out
+    _LOGGER.error(info)
+    return info
+
+
+
 
 
 class LocalData:
     """Class to hold local folders and files data."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass):
         """Initialize the books authors."""
         self.hass = hass
         self.folders = []
         self.folders_json = []
-        self.config = config
         self.current_path = os.path.abspath(G_LOCAL_FILES_ROOT)
         self.text_to_say = None
         self.rclone_url_to_stream = None
@@ -366,6 +416,7 @@ class LocalData:
                 self.say("Masz " + str(len(remotes)) + " zdalnych dysków")
             else:
                 self.beep()
+
 
     def rclone_browse_folder(self, path, silent):
         if ais_global.G_DRIVE_SHARED_WITH_ME in path:

@@ -6,7 +6,7 @@ import asyncio
 from homeassistant import config_entries
 from homeassistant.const import (CONF_NAME, CONF_TYPE)
 from homeassistant.core import callback
-
+from homeassistant.util import slugify
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,18 +49,29 @@ class DriveFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         global DRIVE_NAME, DRIVE_TYPE
         errors = {}
+        from homeassistant.components.ais_drives_service import DRIVES_TYPES
+        names = []
+        for obj in DRIVES_TYPES.values():
+            names.append(obj[0])
         data_schema = vol.Schema({
-            vol.Required(CONF_TYPE): vol.In(list(["Dropbox", "Google Drive", "Mega", "Microsoft OneDrive"])),
+            vol.Required(CONF_TYPE): vol.In(list(names)),
             vol.Required(CONF_NAME): str,
         })
         if user_input is not None:
             DRIVE_NAME = user_input.get(CONF_NAME)
             DRIVE_TYPE = user_input.get(CONF_TYPE)
-            if DRIVE_NAME in configured_drivers(self.hass):
+            if slugify(DRIVE_NAME) in configured_drivers(self.hass):
                 errors = {CONF_NAME: 'identifier_exists'}
 
             if errors == {}:
-                # rclone config create mydrive drive config_is_local false
+                # get url from rclone
+                from homeassistant.components.ais_drives_service import rclone_get_auth_url
+                d_type = ""
+                for k, item in DRIVES_TYPES.items():
+                    if item[0] == DRIVE_TYPE:
+                        d_type = k
+                url = rclone_get_auth_url(DRIVE_NAME, d_type)
+                #
                 return await self.async_step_token(user_input=None)
 
         return self.async_show_form(
@@ -81,9 +92,11 @@ class DriveFlowHandler(config_entries.ConfigFlow):
             if exists_entries:
                 await asyncio.wait([self.hass.config_entries.async_remove(entry_id)
                                     for entry_id in exists_entries])
+
             # add new one
             user_input[CONF_NAME] = DRIVE_NAME
             user_input[CONF_TYPE] = DRIVE_TYPE
+
             return self.async_create_entry(
                 title="Zdalne dyski",
                 data=user_input,
