@@ -349,7 +349,7 @@ SERVICE_SCHEMA_LED_BRIGHTNESS = AIRPURIFIER_SERVICE_SCHEMA.extend({
 
 SERVICE_SCHEMA_FAVORITE_LEVEL = AIRPURIFIER_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_LEVEL):
-        vol.All(vol.Coerce(int), vol.Clamp(min=0, max=16))
+        vol.All(vol.Coerce(int), vol.Clamp(min=0, max=17))
 })
 
 SERVICE_SCHEMA_VOLUME = AIRPURIFIER_SERVICE_SCHEMA.extend({
