@@ -1424,7 +1424,7 @@ pytradfri[async]==6.0.1
 pytrafikverket==0.1.5.8
 
 # homeassistant.components.device_tracker.ubee
-pyubee==0.2
+pyubee==0.3
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.16
