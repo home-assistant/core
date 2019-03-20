@@ -98,5 +98,5 @@ async def test_binary_sensors(hass):
     assert pir.name == 'model 0 PIR 0'
 
     vmd4 = hass.states.get('binary_sensor.model_0_vmd4_camera1profile1')
-    assert vmd4.state == 'off'
+    assert vmd4.state == 'on'
     assert vmd4.name == 'model 0 VMD4 Camera1Profile1'
