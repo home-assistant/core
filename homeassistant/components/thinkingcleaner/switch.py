@@ -1,10 +1,10 @@
 """Support for ThinkingCleaner switches."""
 import time
 import logging
+from datetime import timedelta
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from datetime import timedelta
 from homeassistant import util
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.helpers.entity import ToggleEntity
