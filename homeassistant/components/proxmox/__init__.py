@@ -21,13 +21,17 @@ _LOGGER = logging.getLogger(__name__)
 DATA_PROXMOX_NODES = 'proxmox_nodes'
 DATA_PROXMOX_CONTROL = 'proxmox_control'
 SIGNAL_PROXMOX_UPDATED = 'proxmox_updated'
-DEFAULT_PORT = 8006
-DEFAULT_REALM = 'pam'
-DEFAULT_VERIFY_SSL = True
 
 CONF_REALM = 'realm'
 CONF_NODES = 'nodes'
 CONF_VMS = 'vms'
+CONF_START_STOP_ALL_VMS = 'start_stop_all_vms'
+CONF_START_STOP_VMS = 'start_stop_vms'
+
+DEFAULT_PORT = 8006
+DEFAULT_REALM = 'pam'
+DEFAULT_VERIFY_SSL = True
+DEFAULT_CONTROL_ALL_VMS = False
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -39,6 +43,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_NODES, default=[]): [cv.string],
         vol.Optional(CONF_VMS, default=[]): [int],
+        vol.Optional(
+            CONF_START_STOP_ALL_VMS,
+            default=DEFAULT_CONTROL_ALL_VMS): cv.boolean,
+        vol.Optional(CONF_START_STOP_VMS, default=[]): [int]
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -73,7 +81,11 @@ async def setup_proxmox(hass, proxmox, config):
     conf = config.get(DOMAIN)
     conf_nodes = conf.get(CONF_NODES)
     conf_vms = conf.get(CONF_VMS)
-    await update_data(hass, proxmox, conf_nodes, conf_vms)
+    conf_control_all = conf.get(CONF_START_STOP_ALL_VMS)
+    conf_control_vms = conf.get(CONF_START_STOP_VMS)
+    await update_data(
+        hass, proxmox, conf_nodes, conf_vms,
+        conf_control_all, conf_control_vms)
 
     async def start(item):
         """Start the VM or container."""
@@ -86,18 +98,18 @@ async def setup_proxmox(hass, proxmox, config):
         _LOGGER.info(result)
         fix_status(hass, item, 'running')
 
-    async def stop(item):
+    async def shutdown(item):
         """Stop the VM or container."""
         vm_type = 'qemu'
         if 'type' in item:
             vm_type = item['type']
-        uri = '{}/{}/{}/status/stop'.format(
+        uri = '{}/{}/{}/status/shutdown'.format(
             item['node'], vm_type, item['vmid'])
         result = proxmox.nodes(uri).post()
         _LOGGER.info(result)
         fix_status(hass, item, 'stopped')
 
-    hass.data[DATA_PROXMOX_CONTROL] = {'start': start, 'stop': stop}
+    hass.data[DATA_PROXMOX_CONTROL] = {'start': start, 'shutdown': shutdown}
     hass.async_create_task(
         discovery.async_load_platform(hass, 'sensor', DOMAIN, {}, config))
     hass.async_create_task(
@@ -107,13 +119,17 @@ async def setup_proxmox(hass, proxmox, config):
             hass, 'binary_sensor', DOMAIN, {}, config))
 
     async def async_update_proxmox(now):
-        await update_data(hass, proxmox, conf_nodes, conf_vms)
+        await update_data(
+            hass, proxmox, conf_nodes, conf_vms,
+            conf_control_all, conf_control_vms)
         async_dispatcher_send(hass, SIGNAL_PROXMOX_UPDATED, None)
 
     async_track_time_interval(hass, async_update_proxmox, UPDATE_INTERVAL)
 
 
-async def update_data(hass, proxmox, conf_nodes, conf_vms):
+async def update_data(
+        hass, proxmox, conf_nodes, conf_vms,
+        control_all, control_vms):
     """Update Proxmox VE data."""
     nodes = proxmox.nodes.get()
     node_dict = {}
@@ -123,15 +139,19 @@ async def update_data(hass, proxmox, conf_nodes, conf_vms):
             node_dict[name] = node
             cts = proxmox.nodes(name).lxc.get()
             for item in cts:
-                if not bool(conf_vms) or int(item['vmid']) in conf_vms:
+                vm_id = item['vmid']
+                if not bool(conf_vms) or int(vm_id) in conf_vms:
                     item['node'] = name
-                    key = "{} - {}".format(item['name'], item['vmid'])
+                    key = "{} - {}".format(item['name'], vm_id)
+                    item['control'] = control_all or int(vm_id) in control_vms
                     node_dict[key] = item
             vms = proxmox.nodes(name).qemu.get()
             for item in vms:
-                if not bool(conf_vms) or int(item['vmid']) in conf_vms:
+                vm_id = item['vmid']
+                if not bool(conf_vms) or int(vm_id) in conf_vms:
                     item['node'] = name
-                    key = "{} - {}".format(item['name'], item['vmid'])
+                    key = "{} - {}".format(item['name'], vm_id)
+                    item['control'] = control_all or int(vm_id) in control_vms
                     node_dict[key] = item
     hass.data[DATA_PROXMOX_NODES] = node_dict
 

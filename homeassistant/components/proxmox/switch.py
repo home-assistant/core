@@ -2,6 +2,8 @@
 import homeassistant.components.proxmox as proxmox
 from homeassistant.components.switch import SwitchDevice
 
+DEVICE_CLASS = 'connectivity'
+
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -10,12 +12,13 @@ async def async_setup_platform(
     control = hass.data[proxmox.DATA_PROXMOX_CONTROL]
     sensors = []
 
-    for node_name in nodes.keys():
-        item = nodes[node_name]
+    for name in nodes.keys():
+        item = nodes[name]
         if 'type' not in item or item['type'] != 'node':
-            sensor = PXMXSwitch(
-                hass, node_name, 'Switch', control['start'], control['stop'])
-            sensors.append(sensor)
+            if item['control']:
+                sensor = PXMXSwitch(
+                    hass, name, control['start'], control['shutdown'], item)
+                sensors.append(sensor)
 
     async_add_entities(sensors)
 
@@ -23,20 +26,26 @@ async def async_setup_platform(
 class PXMXSwitch(SwitchDevice):
     """Switch to turn on / turn off a Proxmox VE Virtual Machine/Container."""
 
-    def __init__(self, hass, node_name, sensor_name, start, stop):
+    def __init__(self, hass, name, start, shutdown, item):
         """Initialize monitor sensor."""
         self._hass = hass
-        self._node_name = node_name
-        self._sensor_name = sensor_name
+        self._name = name
         self._start = start
-        self._stop = stop
+        self._shutdown = shutdown
+        self._vm_id = item['vmid']
+        self._unique_id = proxmox.DOMAIN + '_switch_' + item['vmid']
         self._state = None
         self._is_available = False
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} ({})'.format(self._sensor_name, self._node_name)
+        return '{} ({})'.format('Switch', self._name)
 
     @property
     def is_on(self):
@@ -55,10 +64,22 @@ class PXMXSwitch(SwitchDevice):
             await self._start(node)
 
     async def async_turn_off(self, **kwargs):
-        """Turn the VM/Container off."""
+        """Shutdown the VM/Container."""
         node = self.get_node()
         if node:
-            await self._stop(node)
+            await self._shutdown(node)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device."""
+        return DEVICE_CLASS
+
+    @property
+    def device_state_attributes(self):
+        """Return device attributes of the vm."""
+        return {
+            'vmid': self._vm_id
+        }
 
     def update(self):
         """Update the sensor."""
@@ -73,5 +94,5 @@ class PXMXSwitch(SwitchDevice):
     def get_node(self):
         """Get current status."""
         nodes = self._hass.data[proxmox.DATA_PROXMOX_NODES]
-        node = nodes[self._node_name]
+        node = nodes[self._name]
         return node

@@ -13,31 +13,24 @@ async def async_setup_platform(
         item = nodes[name]
         if 'type' in item and item['type'] == 'node':
             sensors.append(
+                PXMXSensor(hass, name, 'CPU', cpu, '%', 'mdi:chip', item, {}))
+            sensors.append(
                 PXMXSensor(
-                    hass, name, 'Uptime', uptime, "min", 'mdi:clock-outline'))
+                    hass, name, 'Uptime', uptime, 'days',
+                    'mdi:clock-outline', item, {}))
         else:
             sensors.append(
-                PXMXSensor(hass, name, 'VCPU Count', vcpus, None, 'mdi:chip'))
-        sensors.append(
-            PXMXSensor(hass, name, 'Memory', ram, "%", 'mdi:memory'))
-        sensors.append(
-            PXMXSensor(hass, name, 'Disk', disk, "%", 'mdi:harddisk'))
-        sensors.append(
-            PXMXSensor(hass, name, 'CPU', cpu, "%", 'mdi:chip'))
+                PXMXSensor(
+                    hass, name, 'CPU', cpu, '%', 'mdi:chip', item,
+                    {'vcpu_count': 'cpus'}))
         sensors.append(
             PXMXSensor(
-                hass, name, 'Max. Memory', mem_max, 'GB', 'mdi:memory'))
+                hass, name, 'Memory', ram, '%', 'mdi:memory', item,
+                {'mem_used': 'mem', 'max_memory': 'maxmem'}))
         sensors.append(
             PXMXSensor(
-                hass, name, 'Memory Used', mem_used, 'GB', 'mdi:memory'))
-        sensors.append(
-            PXMXSensor(
-                hass, name, 'Max. Disk', disk_max, 'GB', 'mdi:harddisk'))
-        sensors.append(
-            PXMXSensor(
-                hass, name, 'Disk Used', disk_used, 'GB', 'mdi:harddisk'))
-        sensors.append(
-            PXMXSensor(hass, name, 'Status', status, None, None))
+                hass, name, 'Disk', disk, '%', 'mdi:harddisk', item,
+                {'disk_used': 'disk', 'max_disk': 'maxdisk'}))
 
     async_add_entities(sensors)
 
@@ -45,21 +38,30 @@ async def async_setup_platform(
 class PXMXSensor(Entity):
     """Sensors to show the resource usages of Proxmox VE nodes & VMs."""
 
-    def __init__(self, hass, node_name, sensor_name, value, unit, icon):
+    def __init__(
+            self, hass, name, sensor_name, value, unit, icon, node,
+            attributes):
         """Initialize Proxmox VE sensor."""
         self._hass = hass
-        self._node_name = node_name
+        self._name = name
         self._unit = unit
         self._icon = icon
+        self._attributes = attributes
+        self._node = node
         self._sensor_name = sensor_name
         self._value = value
         self._state = None
         self._is_available = False
 
     @property
+    def unique_id(self):
+        """Return the name of the sensor."""
+        return
+
+    @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} ({})'.format(self._sensor_name, self._node_name)
+        return '{} ({})'.format(self._sensor_name, self._name)
 
     @property
     def state(self):
@@ -81,10 +83,30 @@ class PXMXSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return self._icon
 
+    @property
+    def state_attributes(self):
+        """Return state attributes of the vm."""
+        attributes = {}
+        for key in self._attributes.keys():
+            attributes[key] = self._node[self._attributes[key]]
+        return attributes
+
+    @property
+    def device_state_attributes(self):
+        """Return device attributes of the vm."""
+        if 'type' in self._node and self._node['type'] == 'node':
+            return {
+                'node': self._node['node']
+            }
+        return {
+            'vmid': self._node['vmid']
+        }
+
     def update(self):
         """Update the sensor."""
         nodes = self._hass.data[proxmox.DATA_PROXMOX_NODES]
-        node = nodes[self._node_name]
+        node = nodes[self._name]
+        self._node = node
         if not node:
             self._state = None
             self._is_available = False
@@ -94,8 +116,8 @@ class PXMXSensor(Entity):
 
 
 def uptime(node):
-    """Return uptime of the given node in minutes."""
-    return "{:.0f}".format(node['uptime']/60)
+    """Return uptime of the given node in days."""
+    return "{:.2f}".format(node['uptime']/86400)
 
 
 def vcpus(node):
