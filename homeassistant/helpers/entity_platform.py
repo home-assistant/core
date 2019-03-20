@@ -51,20 +51,25 @@ class EntityPlatform:
         # which powers entity_component.add_entities
         if platform is None:
             self.parallel_updates = None
-            self.parallel_updates_semaphore = asyncio.Semaphore(
-                1, loop=hass.loop)
+            self.parallel_updates_semaphore = None
             return
 
         self.parallel_updates = getattr(platform, 'PARALLEL_UPDATES', None)
+        # semaphore will be created on demand
+        self.parallel_updates_semaphore = None
 
-        # Even if self.parallel_updates is 0 or None, we still create
-        # a semaphore its default value is 1. We will make decision whether
-        # apply this semaphore to entity later in _async_add_entity() base on
-        # if entity has `async_update` method
-        self.parallel_updates_semaphore = asyncio.Semaphore(
-            self.parallel_updates if self.parallel_updates else 1,
-            loop=hass.loop
-        )
+    def _get_parallel_updates_semaphore(self):
+        """Get or create a semaphore for parallel updates."""
+        if self.parallel_updates_semaphore is None:
+            # Even if self.parallel_updates is 0 or None, we still create
+            # a semaphore its default value is 1. The decision whether
+            # apply this semaphore to entity is in _async_add_entity() base on
+            # if entity has `async_update` method
+            self.parallel_updates_semaphore = asyncio.Semaphore(
+                self.parallel_updates if self.parallel_updates else 1,
+                loop=self.hass.loop
+            )
+        return self.parallel_updates_semaphore
 
     async def async_setup(self, platform_config, discovery_info=None):
         """Set up the platform from a config file."""
@@ -252,7 +257,7 @@ class EntityPlatform:
               and self.parallel_updates == 0):
             entity.parallel_updates = None
         else:
-            entity.parallel_updates = self.parallel_updates_semaphore
+            entity.parallel_updates = self._get_parallel_updates_semaphore()
 
         # Update properties before we generate the entity_id
         if update_before_add:
