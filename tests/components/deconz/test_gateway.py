@@ -35,18 +35,20 @@ async def test_gateway_setup():
         assert await deconz_gateway.async_setup() is True
 
     assert deconz_gateway.api is api
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 6
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 7
     assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == \
         (entry, 'binary_sensor')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == \
-        (entry, 'cover')
+        (entry, 'climate')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[2][1] == \
-        (entry, 'light')
+        (entry, 'cover')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[3][1] == \
-        (entry, 'scene')
+        (entry, 'light')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[4][1] == \
-        (entry, 'sensor')
+        (entry, 'scene')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[5][1] == \
+        (entry, 'sensor')
+    assert hass.config_entries.async_forward_entry_setup.mock_calls[6][1] == \
         (entry, 'switch')
     assert len(api.start.mock_calls) == 1
 
@@ -150,7 +152,7 @@ async def test_reset_after_successful_setup():
         mock_coro(True)
     assert await deconz_gateway.async_reset() is True
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 6
+    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 7
 
     assert len(listener.mock_calls) == 1
     assert len(deconz_gateway.listeners) == 0

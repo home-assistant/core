@@ -32,7 +32,12 @@ def _platform_validator(config):
             'homeassistant.components.scene.{}'.format(
                 config[CONF_PLATFORM]))
     except ImportError:
-        raise vol.Invalid('Invalid platform specified') from None
+        try:
+            platform = importlib.import_module(
+                'homeassistant.components.{}.scene'.format(
+                    config[CONF_PLATFORM]))
+        except ImportError:
+            raise vol.Invalid('Invalid platform specified') from None
 
     if not hasattr(platform, 'PLATFORM_SCHEMA'):
         return config
@@ -63,7 +68,7 @@ async def async_setup(hass, config):
 
     async def async_handle_scene_service(service):
         """Handle calls to the switch services."""
-        target_scenes = component.async_extract_from_service(service)
+        target_scenes = await component.async_extract_from_service(service)
 
         tasks = [scene.async_activate() for scene in target_scenes]
         if tasks:

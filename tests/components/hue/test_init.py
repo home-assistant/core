@@ -97,10 +97,8 @@ async def test_config_passed_to_config_entry(hass):
         mock_bridge.return_value.api.config = Mock(
             mac='mock-mac',
             bridgeid='mock-bridgeid',
-            raw={
-                'modelid': 'mock-modelid',
-                'swversion': 'mock-swversion',
-            }
+            modelid='mock-modelid',
+            swversion='mock-swversion'
         )
         # Can't set name via kwargs
         mock_bridge.return_value.api.config.name = 'mock-name'

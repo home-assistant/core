@@ -44,11 +44,14 @@ class TelldusLiveCover(TelldusLiveEntity, CoverDevice):
     def close_cover(self, **kwargs):
         """Close the cover."""
         self.device.down()
+        self._update_callback()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
         self.device.up()
+        self._update_callback()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self.device.stop()
+        self._update_callback()

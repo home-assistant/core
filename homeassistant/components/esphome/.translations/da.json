@@ -13,8 +13,12 @@
                 "data": {
                     "password": "Adgangskode"
                 },
-                "description": "Indtast venligst den adgangskode, du har angivet i din konfiguration.",
+                "description": "Indtast venligst den adgangskode du har angivet i din konfiguration for {name}.",
                 "title": "Indtast adgangskode"
+            },
+            "discovery_confirm": {
+                "description": "Vil du tilf\u00f8je ESPHome node `{name}` til Home Assistant?",
+                "title": "Fandt ESPHome node"
             },
             "user": {
                 "data": {

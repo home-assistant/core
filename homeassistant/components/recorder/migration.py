@@ -220,6 +220,15 @@ def _apply_update(engine, new_version, old_version):
         _create_index(engine, "states", "ix_states_context_user_id")
     elif new_version == 7:
         _create_index(engine, "states", "ix_states_entity_id")
+    elif new_version == 8:
+        # Pending migration, want to group a few.
+        pass
+        # _add_columns(engine, "events", [
+        #     'context_parent_id CHARACTER(36)',
+        # ])
+        # _add_columns(engine, "states", [
+        #     'context_parent_id CHARACTER(36)',
+        # ])
     else:
         raise ValueError("No schema migration defined for version {}"
                          .format(new_version))

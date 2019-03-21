@@ -293,7 +293,7 @@ def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
     if isinstance(value, int):
         raise vol.Invalid('Make sure you wrap time values in quotes')
-    elif not isinstance(value, str):
+    if not isinstance(value, str):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     negative_offset = False
@@ -440,7 +440,7 @@ def template(value):
     """Validate a jinja2 template."""
     if value is None:
         raise vol.Invalid('template value is None')
-    elif isinstance(value, (list, dict, template_helper.Template)):
+    if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid('template value should be a string')
 
     value = template_helper.Template(str(value))

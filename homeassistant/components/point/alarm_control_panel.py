@@ -1,14 +1,23 @@
 """Support for Minut Point."""
 import logging
 
-from homeassistant.components.alarm_control_panel import (DOMAIN,
-                                                          AlarmControlPanel)
-from homeassistant.const import (STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED)
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN, AlarmControlPanel)
 from homeassistant.components.point.const import (
-    DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW)
+    DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK)
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
+
+
+EVENT_MAP = {
+    'off': STATE_ALARM_DISARMED,
+    'alarm_silenced': STATE_ALARM_ARMED_AWAY,
+    'alarm_grace_period_expired': STATE_ALARM_TRIGGERED,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -30,6 +39,32 @@ class MinutPointAlarmControl(AlarmControlPanel):
         """Initialize the entity."""
         self._client = point_client
         self._home_id = home_id
+        self._async_unsub_hook_dispatcher_connect = None
+        self._changed_by = None
+
+    async def async_added_to_hass(self):
+        """Call when entity is added to HOme Assistant."""
+        await super().async_added_to_hass()
+        self._async_unsub_hook_dispatcher_connect = async_dispatcher_connect(
+            self.hass, SIGNAL_WEBHOOK, self._webhook_event)
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        await super().async_will_remove_from_hass()
+        if self._async_unsub_hook_dispatcher_connect:
+            self._async_unsub_hook_dispatcher_connect()
+
+    @callback
+    def _webhook_event(self, data, webhook):
+        """Process new event from the webhook."""
+        _type = data.get('event', {}).get('type')
+        _device_id = data.get('event', {}).get('device_id')
+        if _device_id not in self._home['devices'] or _type not in EVENT_MAP:
+            return
+        _LOGGER.debug("Recieved webhook: %s", _type)
+        self._home['alarm_status'] = EVENT_MAP[_type]
+        self._changed_by = _device_id
+        self.async_schedule_update_ha_state()
 
     @property
     def _home(self):
@@ -44,8 +79,15 @@ class MinutPointAlarmControl(AlarmControlPanel):
     @property
     def state(self):
         """Return state of the device."""
-        return STATE_ALARM_DISARMED if self._home[
-            'alarm_status'] == 'off' else STATE_ALARM_ARMED_AWAY
+        return EVENT_MAP.get(
+            self._home['alarm_status'],
+            STATE_ALARM_ARMED_AWAY,
+        )
+
+    @property
+    def changed_by(self):
+        """Return the user the last change was triggered by."""
+        return self._changed_by
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

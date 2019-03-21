@@ -6,16 +6,17 @@ DEPENDENCIES = (
     'cloud',
     'config',
     'conversation',
-    'discovery',
     'frontend',
     'history',
     'logbook',
     'map',
+    'mobile_app',
     'person',
     'script',
     'sun',
     'system_health',
     'updater',
+    'zeroconf',
 )
 
 

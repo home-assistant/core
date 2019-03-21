@@ -1,5 +1,6 @@
 """Support for tracking consumption over given periods of time."""
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -12,9 +13,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from .const import (
     DOMAIN, SIGNAL_RESET_METER, METER_TYPES, CONF_SOURCE_SENSOR,
-    CONF_METER_TYPE, CONF_METER_OFFSET, CONF_TARIFF_ENTITY, CONF_TARIFF,
-    CONF_TARIFFS, CONF_METER, DATA_UTILITY, SERVICE_RESET,
-    SERVICE_SELECT_TARIFF, SERVICE_SELECT_NEXT_TARIFF,
+    CONF_METER_TYPE, CONF_METER_OFFSET, CONF_METER_NET_CONSUMPTION,
+    CONF_TARIFF_ENTITY, CONF_TARIFF, CONF_TARIFFS, CONF_METER, DATA_UTILITY,
+    SERVICE_RESET, SERVICE_SELECT_TARIFF, SERVICE_SELECT_NEXT_TARIFF,
     ATTR_TARIFF)
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 TARIFF_ICON = 'mdi:clock-outline'
 
 ATTR_TARIFFS = 'tariffs'
+
+DEFAULT_OFFSET = timedelta(hours=0)
 
 SERVICE_METER_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -35,7 +38,9 @@ METER_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
-    vol.Optional(CONF_METER_OFFSET, default=0): cv.positive_int,
+    vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET):
+        vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
     vol.Optional(CONF_TARIFFS, default=[]): vol.All(
         cv.ensure_list, [cv.string]),
 })

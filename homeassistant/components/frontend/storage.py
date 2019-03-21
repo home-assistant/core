@@ -11,7 +11,7 @@ STORAGE_KEY_USER_DATA = 'frontend.user_data_{}'
 
 async def async_setup_frontend_storage(hass):
     """Set up frontend storage."""
-    hass.data[DATA_STORAGE] = {}
+    hass.data[DATA_STORAGE] = ({}, {})
     hass.components.websocket_api.async_register_command(
         websocket_set_user_data
     )
@@ -25,12 +25,16 @@ def with_store(orig_func):
     @wraps(orig_func)
     async def with_store_func(hass, connection, msg):
         """Provide user specific data and store to function."""
-        store = hass.helpers.storage.Store(
-            STORAGE_VERSION_USER_DATA,
-            STORAGE_KEY_USER_DATA.format(connection.user.id)
-        )
-        data = hass.data[DATA_STORAGE]
+        stores, data = hass.data[DATA_STORAGE]
         user_id = connection.user.id
+        store = stores.get(user_id)
+
+        if store is None:
+            store = stores[user_id] = hass.helpers.storage.Store(
+                STORAGE_VERSION_USER_DATA,
+                STORAGE_KEY_USER_DATA.format(connection.user.id)
+            )
+
         if user_id not in data:
             data[user_id] = await store.async_load() or {}
 

@@ -45,6 +45,7 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
     def changed(self):
         """Define a property of the device that might have changed."""
         self._last_brightness = self.brightness
+        self._update_callback()
 
     @property
     def brightness(self):

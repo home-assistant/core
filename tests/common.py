@@ -452,8 +452,9 @@ class MockModule:
                  requirements=None, config_schema=None, platform_schema=None,
                  platform_schema_base=None, async_setup=None,
                  async_setup_entry=None, async_unload_entry=None,
-                 async_migrate_entry=None):
+                 async_migrate_entry=None, async_remove_entry=None):
         """Initialize the mock module."""
+        self.__name__ = 'homeassistant.components.{}'.format(domain)
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
@@ -485,6 +486,9 @@ class MockModule:
 
         if async_migrate_entry is not None:
             self.async_migrate_entry = async_migrate_entry
+
+        if async_remove_entry is not None:
+            self.async_remove_entry = async_remove_entry
 
 
 class MockPlatform:
@@ -608,13 +612,14 @@ class MockConfigEntry(config_entries.ConfigEntry):
 
     def __init__(self, *, domain='test', data=None, version=1, entry_id=None,
                  source=config_entries.SOURCE_USER, title='Mock Title',
-                 state=None,
+                 state=None, options={},
                  connection_class=config_entries.CONN_CLASS_UNKNOWN):
         """Initialize a mock config entry."""
         kwargs = {
             'entry_id': entry_id or 'mock-id',
             'domain': domain,
             'data': data or {},
+            'options': options,
             'version': version,
             'title': title,
             'connection_class': connection_class,
