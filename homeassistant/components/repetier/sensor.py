@@ -55,14 +55,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                                 printers[id]['slug'] +
                                                 '_nozzle_' + str(nozzle))
                         if not state:
-                            new_sensor = RepetierSensor('nozzle',
-                                    {'nozzle': nozzle,
-                                     'name': printers[id]['slug'],
-                                     'id': id,
-                                     'server': {'url': url,
-                                                'port': port,
-                                                'apikey': apikey},
-                                     'sens_type': sens_type})
+                            svar = {'nozzle': nozzle,
+                                    'name': printers[id]['slug'],
+                                    'id': id,
+                                    'server': {'url': url,
+                                               'port': port,
+                                               'apikey': apikey},
+                                    'sens_type': sens_type}
+                            new_sensor = RepetierSensor('nozzle', svar)
                             devices.append(new_sensor)
                 else:
                     _LOGGER.debug("No nozzles found - is printer %s offline?",
@@ -75,14 +75,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                                 printers[id]['slug'] +
                                                 '_bed_' + str(bed))
                         if not state:
-                            new_sensor = RepetierSensor('bed', 
-                                    {'bed': bed,
-                                     'name': printers[id]['slug'],
-                                     'id': id,
-                                     'server': {'url': url,
-                                                'port': port,
-                                                'apikey': apikey},
-                                     'sens_type': sens_type})
+                            svar = {'bed': bed,
+                                    'name': printers[id]['slug'],
+                                    'id': id,
+                                    'server': {'url': url,
+                                               'port': port,
+                                               'apikey:' apikey},
+                                    'sens_type': sens_type}
+                            new_sensor = RepetierSensor('bed', svar)
                             devices.append(new_sensor)
                 else:
                     _LOGGER.debug("No beds found - is printer %s offline?",

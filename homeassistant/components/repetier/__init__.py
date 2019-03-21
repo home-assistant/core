@@ -43,7 +43,6 @@ def has_all_unique_names(value):
 
 
 BINARY_SENSOR_TYPES = {
-    #Type, Unit
     'Printing': ['state', None],
 }
 
