@@ -31,7 +31,7 @@ SCOPE_DEVICE = 'device'
 SCOPE_SYSTEM = 'system'
 
 DEFAULT_SCOPE = SCOPE_DEVICE
-DEFAULT_DEVICE = None
+DEFAULT_DEVICE = 0
 
 SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
@@ -41,22 +41,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
         vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
-    vol.Optional(CONF_DEVICEID): cv.positive_int,
+    vol.Optional(CONF_DEVICEID, default=DEFAULT_DEVICE): cv.positive_int,
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up of Fronius platform."""
-    import pyfronius
+    from pyfronius import Fronius
 
     session = async_get_clientsession(hass)
-    fronius = pyfronius.Fronius(session, config[CONF_HOST])
+    fronius = Fronius(session, config[CONF_HOST])
 
     name = "fronius_{}_{}".format(config[CONF_TYPE], config[CONF_HOST])
     if CONF_DEVICEID in config.keys():
         device = config[CONF_DEVICEID]
-        name = name + "_{}".format(device)
+        name = "{}_{}".format(name, device)
     else:
         device = DEFAULT_DEVICE
 
