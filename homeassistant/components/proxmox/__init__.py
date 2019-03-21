@@ -163,7 +163,7 @@ async def update_data(hass, conf):
 
 
 def fix_status(hass, item, status):
-    """Update the currently cached data with the new status of the vm."""
+    """Update cached data with the new status of the vm."""
     data = hass.data[DATA_PROXMOX_NODES]
     item['status'] = status
     data["{} - {}".format(item['name'], item['vmid'])] = item
