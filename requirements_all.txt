@@ -752,7 +752,11 @@ niko-home-control==0.1.8
 # homeassistant.components.nilu.air_quality
 niluclient==0.1.2
 
+<<<<<<< HEAD
 # homeassistant.components.nederlandse_spoorwegen.sensor
+=======
+# homeassistant.components.sensor.nederlandse_spoorwegen
+>>>>>>> Resolved conflicts
 nsapi==2.7.4
 
 # homeassistant.components.nsw_fuel_station.sensor
