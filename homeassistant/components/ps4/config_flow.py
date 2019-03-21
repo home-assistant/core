@@ -5,10 +5,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ps4.const import (
-    DEFAULT_NAME, DEFAULT_REGION, DOMAIN, REGIONS)
 from homeassistant.const import (
     CONF_CODE, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_REGION, CONF_TOKEN)
+
+from .const import DEFAULT_NAME, DEFAULT_REGION, DOMAIN, REGIONS
 
 _LOGGER = logging.getLogger(__name__)
 

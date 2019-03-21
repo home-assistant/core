@@ -14,7 +14,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyhomematic==0.1.57']
+REQUIREMENTS = ['pyhomematic==0.1.58']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ HM_DEVICE_TYPES = {
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP', 'IPWeatherSensor', 'IPPassageSensor',
         'SmartwareMotion', 'IPWeatherSensorPlus', 'MotionIPV2', 'WaterIP',
-        'IPMultiIO', 'TiltIP'],
+        'IPMultiIO', 'TiltIP', 'IPShutterContactSabotage'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
     DISCOVER_LOCKS: ['KeyMatic']
 }

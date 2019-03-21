@@ -2,29 +2,25 @@
 Support for PlayStation 4 consoles.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.ps4/
+https://home-assistant.io/components/ps4/
 """
-from datetime import timedelta
 import logging
 import socket
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, ENTITY_IMAGE_URL)
+    ENTITY_IMAGE_URL, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-)
-from homeassistant.components.ps4.const import DOMAIN as PS4_DOMAIN
+    MEDIA_TYPE_MUSIC, SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_COMMAND, CONF_HOST, CONF_NAME, CONF_REGION,
-    CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING,
-)
+    ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
+    CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
+from .const import DOMAIN as PS4_DOMAIN
 
 DEPENDENCIES = ['ps4']
 
@@ -37,9 +33,6 @@ PS4_DATA = 'ps4_data'
 ICON = 'mdi:playstation'
 GAMES_FILE = '.ps4-games.json'
 MEDIA_IMAGE_DEFAULT = None
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=10)
 
 COMMANDS = (
     'up',
@@ -139,7 +132,6 @@ class PS4Device(MediaPlayerDevice):
         """Subscribe PS4 events."""
         self.hass.data[PS4_DATA].devices.append(self)
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data."""
         try:

@@ -1,7 +1,8 @@
 """Support for Tuya covers."""
 from homeassistant.components.cover import (
-    CoverDevice, ENTITY_ID_FORMAT, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP)
-from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
+    ENTITY_ID_FORMAT, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP, CoverDevice)
+
+from . import DATA_TUYA, TuyaDevice
 
 DEPENDENCIES = ['tuya']
 

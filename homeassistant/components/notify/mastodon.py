@@ -8,10 +8,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
+
+from . import PLATFORM_SCHEMA, BaseNotificationService
 
 REQUIREMENTS = ['Mastodon.py==1.3.1']
 

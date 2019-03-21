@@ -1,11 +1,11 @@
 """Support for HomematicIP Cloud lights."""
 import logging
 
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, Light)
+
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 DEPENDENCIES = ['homematicip_cloud']
 

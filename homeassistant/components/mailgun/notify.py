@@ -3,13 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.mailgun import (
-    CONF_SANDBOX, DOMAIN as MAILGUN_DOMAIN)
 from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService, ATTR_TITLE, ATTR_TITLE_DEFAULT,
-    ATTR_DATA)
+    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 from homeassistant.const import (
     CONF_API_KEY, CONF_DOMAIN, CONF_RECIPIENT, CONF_SENDER)
+
+from . import CONF_SANDBOX, DOMAIN as MAILGUN_DOMAIN
 
 REQUIREMENTS = ['pymailgunner==1.4']
 

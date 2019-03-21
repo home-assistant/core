@@ -8,11 +8,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_RECIPIENT
+from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
+from . import PLATFORM_SCHEMA, BaseNotificationService
 
 REQUIREMENTS = ['YesssSMS==0.2.3']
 

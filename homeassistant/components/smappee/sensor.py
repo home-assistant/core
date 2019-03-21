@@ -1,10 +1,11 @@
 """Support for monitoring a Smappee energy sensor."""
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.components.smappee import DATA_SMAPPEE
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import POWER_WATT
+
+from . import DATA_SMAPPEE
 
 DEPENDENCIES = ['smappee']
 
@@ -24,11 +25,14 @@ SENSOR_TYPES = {
     'active_cosfi':
         ['Power Factor', 'mdi:gauge', 'local', '%', 'active_cosfi'],
     'alwayson_today':
-        ['Always On Today', 'mdi:gauge', 'remote', 'kWh', 'alwaysOn'],
+        ['Always On Today', 'mdi:gauge', 'remote', ENERGY_KILO_WATT_HOUR,
+         'alwaysOn'],
     'solar_today':
-        ['Solar Today', 'mdi:white-balance-sunny', 'remote', 'kWh', 'solar'],
+        ['Solar Today', 'mdi:white-balance-sunny', 'remote',
+         ENERGY_KILO_WATT_HOUR, 'solar'],
     'power_today':
-        ['Power Today', 'mdi:power-plug', 'remote', 'kWh', 'consumption'],
+        ['Power Today', 'mdi:power-plug', 'remote', ENERGY_KILO_WATT_HOUR,
+         'consumption'],
     'water_sensor_1':
         ['Water Sensor 1', 'mdi:water', 'water', 'm3', 'value1'],
     'water_sensor_2':

@@ -2,42 +2,61 @@
 # pylint: disable=redefined-outer-name,unused-import
 import pytest
 
+from tests.common import mock_device_registry
+
 from homeassistant.setup import async_setup_component
 
-from homeassistant.components.mobile_app.const import (DATA_DELETED_IDS,
-                                                       DATA_REGISTRATIONS,
-                                                       CONF_SECRET,
-                                                       CONF_USER_ID, DOMAIN,
+from homeassistant.components.mobile_app.const import (DATA_BINARY_SENSOR,
+                                                       DATA_DELETED_IDS,
+                                                       DATA_SENSOR,
+                                                       DOMAIN,
                                                        STORAGE_KEY,
                                                        STORAGE_VERSION)
-from homeassistant.const import CONF_WEBHOOK_ID
+
+from .const import REGISTER, REGISTER_CLEARTEXT
 
 
 @pytest.fixture
-def webhook_client(hass, aiohttp_client, hass_storage, hass_admin_user):
+def registry(hass):
+    """Return a configured device registry."""
+    return mock_device_registry(hass)
+
+
+@pytest.fixture
+async def create_registrations(authed_api_client):
+    """Return two new registrations."""
+    enc_reg = await authed_api_client.post(
+        '/api/mobile_app/registrations', json=REGISTER
+    )
+
+    assert enc_reg.status == 201
+    enc_reg_json = await enc_reg.json()
+
+    clear_reg = await authed_api_client.post(
+        '/api/mobile_app/registrations', json=REGISTER_CLEARTEXT
+    )
+
+    assert clear_reg.status == 201
+    clear_reg_json = await clear_reg.json()
+
+    return (enc_reg_json, clear_reg_json)
+
+
+@pytest.fixture
+async def webhook_client(hass, aiohttp_client, hass_storage, hass_admin_user):
     """mobile_app mock client."""
     hass_storage[STORAGE_KEY] = {
         'version': STORAGE_VERSION,
         'data': {
-            DATA_REGISTRATIONS: {
-                'mobile_app_test': {
-                    CONF_SECRET: '58eb127991594dad934d1584bdee5f27',
-                    'supports_encryption': True,
-                    CONF_WEBHOOK_ID: 'mobile_app_test',
-                    'device_name': 'Test Device',
-                    CONF_USER_ID: hass_admin_user.id,
-                }
-            },
+            DATA_BINARY_SENSOR: {},
             DATA_DELETED_IDS: [],
+            DATA_SENSOR: {}
         }
     }
 
-    assert hass.loop.run_until_complete(async_setup_component(
-        hass, DOMAIN, {
-            DOMAIN: {}
-        }))
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+    return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture

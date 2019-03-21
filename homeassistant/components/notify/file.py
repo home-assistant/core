@@ -9,11 +9,12 @@ import os
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_FILENAME
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
+
+from . import (
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
 CONF_TIMESTAMP = 'timestamp'
 
