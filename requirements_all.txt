@@ -753,8 +753,14 @@ niko-home-control==0.1.8
 niluclient==0.1.2
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # homeassistant.components.nederlandse_spoorwegen.sensor
 =======
+=======
+# homeassistant.components.sensor.nordpool
+nordpool==0.2
+
+>>>>>>> Resolved conflicts
 # homeassistant.components.sensor.nederlandse_spoorwegen
 >>>>>>> Resolved conflicts
 nsapi==2.7.4
