@@ -44,7 +44,7 @@ async def async_migrate_entry(hass, entry):
     data = entry.data
     version = entry.version
 
-    reason = {1: "Region codes have changed"}
+    reason = {1: "Region codes have changed"}  # From 0.89
 
     # Migrate Version 1 -> Version 2
     if version == 1:
