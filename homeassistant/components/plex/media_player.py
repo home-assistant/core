@@ -312,8 +312,8 @@ class PlexClient(MediaPlayerDevice):
         self._media_image_url = None
         self._media_title = None
         self._media_position = None
-        self._last_media_position = None
         self._media_position_updated_at = None
+        self._last_position = None
         # Music
         self._media_album_artist = None
         self._media_album_name = None
@@ -410,10 +410,21 @@ class PlexClient(MediaPlayerDevice):
             else:
                 self._is_player_available = False
 
+            # Calculate throttled position for proper progress display.
             position = self._session.viewOffset
-            if self._last_media_position != position:
-                self._media_position_updated_at = dt_util.utcnow()
-                self._media_position = self._last_media_position = position
+            now = dt_util.utcnow()
+            if self._last_position and self._media_position_updated_at:
+                pos_diff = (position - self._last_position) / 1000.0
+                time_diff = now - self._media_position_updated_at
+                if (pos_diff != 0 and
+                        abs(time_diff.total_seconds() - pos_diff) > 5):
+                    self._media_position_updated_at = now
+                    self._media_position = self._last_position = position
+                else:
+                    self._media_position = self._last_position
+            else:
+                self._media_position_updated_at = now
+                self._media_position = self._last_position = position
 
             self._media_content_id = self._session.ratingKey
             self._media_content_rating = getattr(
