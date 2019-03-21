@@ -123,7 +123,7 @@ hbmqtt==0.9.4
 hdate==0.8.7
 
 # homeassistant.components.workday.binary_sensor
-holidays==0.9.9
+holidays==0.9.10
 
 # homeassistant.components.frontend
 home-assistant-frontend==20190320.0
