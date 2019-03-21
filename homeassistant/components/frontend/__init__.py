@@ -486,9 +486,11 @@ def websocket_get_panels(hass, connection, msg):
 
     Async friendly.
     """
+    user_is_admin = connection.user.is_admin
     panels = {
-        panel: connection.hass.data[DATA_PANELS][panel].to_response()
-        for panel in connection.hass.data[DATA_PANELS]}
+        panel_key: panel.to_response()
+        for panel_key, panel in connection.hass.data[DATA_PANELS].items()
+        if user_is_admin or not panel.require_admin}
 
     connection.send_message(websocket_api.result_message(
         msg['id'], panels))
