@@ -4,16 +4,16 @@ SynologyChat platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.synology_chat/
 """
-import logging
 import json
+import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    BaseNotificationService, PLATFORM_SCHEMA, ATTR_DATA)
 from homeassistant.const import CONF_RESOURCE, CONF_VERIFY_SSL
 import homeassistant.helpers.config_validation as cv
+
+from . import ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService
 
 ATTR_FILE_URL = 'file_url'
 

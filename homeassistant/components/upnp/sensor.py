@@ -10,9 +10,8 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.upnp.const import DOMAIN as DOMAIN_UPNP
-from homeassistant.components.upnp.const import SIGNAL_REMOVE_SENSOR
 
+from .const import DOMAIN as DOMAIN_UPNP, SIGNAL_REMOVE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 

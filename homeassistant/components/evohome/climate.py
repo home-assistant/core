@@ -6,30 +6,18 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_MANUAL,
-    SUPPORT_AWAY_MODE,
-    SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-)
-from homeassistant.components.evohome import (
-    DATA_EVOHOME, DISPATCHER_EVOHOME,
-    CONF_LOCATION_IDX, SCAN_INTERVAL_DEFAULT,
-    EVO_PARENT, EVO_CHILD,
-    GWS, TCS,
-)
+    STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    HTTP_TOO_MANY_REQUESTS,
-    PRECISION_HALVES,
-    STATE_OFF,
-    TEMP_CELSIUS
-)
+    CONF_SCAN_INTERVAL, HTTP_TOO_MANY_REQUESTS, PRECISION_HALVES, STATE_OFF,
+    TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    dispatcher_send,
-    async_dispatcher_connect
-)
+    async_dispatcher_connect, dispatcher_send)
+
+from . import (
+    CONF_LOCATION_IDX, DATA_EVOHOME, DISPATCHER_EVOHOME, EVO_CHILD, EVO_PARENT,
+    GWS, SCAN_INTERVAL_DEFAULT, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 

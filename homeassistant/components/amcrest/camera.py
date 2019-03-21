@@ -2,15 +2,14 @@
 import asyncio
 import logging
 
-from homeassistant.components.amcrest import (
-    DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT)
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession, async_aiohttp_proxy_web,
-    async_aiohttp_proxy_stream)
+    async_aiohttp_proxy_stream, async_aiohttp_proxy_web,
+    async_get_clientsession)
 
+from . import DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT
 
 DEPENDENCIES = ['amcrest', 'ffmpeg']
 

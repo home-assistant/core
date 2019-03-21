@@ -7,11 +7,12 @@ https://home-assistant.io/components/binary_sensor.ness_alarm/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.ness_alarm import (
-    CONF_ZONES, CONF_ZONE_TYPE, CONF_ZONE_NAME, CONF_ZONE_ID,
-    SIGNAL_ZONE_CHANGED, ZoneChangedData)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
+    CONF_ZONE_ID, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES,
+    SIGNAL_ZONE_CHANGED, ZoneChangedData)
 
 DEPENDENCIES = ['ness_alarm']
 _LOGGER = logging.getLogger(__name__)

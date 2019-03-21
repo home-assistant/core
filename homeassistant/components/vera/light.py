@@ -2,11 +2,11 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ENTITY_ID_FORMAT, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, Light)
 import homeassistant.util.color as color_util
+
+from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
 

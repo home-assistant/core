@@ -7,8 +7,6 @@ from typing import Dict, List
 import aiohttp
 import async_timeout
 
-from homeassistant.components.smhi.const import (
-    ATTR_SMHI_CLOUDINESS, ENTITY_ID_SENSOR_FORMAT)
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, WeatherEntity)
@@ -18,6 +16,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import Throttle, slugify
+
+from .const import ATTR_SMHI_CLOUDINESS, ENTITY_ID_SENSOR_FORMAT
 
 DEPENDENCIES = ['smhi']
 

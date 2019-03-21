@@ -1,10 +1,10 @@
 """Support for monitoring an SABnzbd NZB client."""
 import logging
 
-from homeassistant.components.sabnzbd import DATA_SABNZBD, \
-    SIGNAL_SABNZBD_UPDATED, SENSOR_TYPES
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+
+from . import DATA_SABNZBD, SENSOR_TYPES, SIGNAL_SABNZBD_UPDATED
 
 DEPENDENCIES = ['sabnzbd']
 

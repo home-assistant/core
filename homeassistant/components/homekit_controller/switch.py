@@ -1,9 +1,9 @@
 """Support for Homekit switches."""
 import logging
 
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.components.switch import SwitchDevice
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 

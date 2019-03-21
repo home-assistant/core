@@ -1,10 +1,10 @@
 """Allows reading temperatures from ecoal/esterownik.pl controller."""
 import logging
 
-from homeassistant.components.ecoal_boiler import (
-    DATA_ECOAL_BOILER, AVAILABLE_SENSORS, )
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+from . import AVAILABLE_SENSORS, DATA_ECOAL_BOILER
 
 _LOGGER = logging.getLogger(__name__)
 

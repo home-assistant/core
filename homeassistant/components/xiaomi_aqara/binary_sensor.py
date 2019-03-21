@@ -2,10 +2,10 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
+
+from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,13 +8,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.homematic import (
-    ATTR_ADDRESS, ATTR_CHANNEL, ATTR_INTERFACE, ATTR_PARAM, ATTR_VALUE, DOMAIN,
-    SERVICE_SET_DEVICE_VALUE)
 from homeassistant.components.notify import (
     ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
+
+from . import (
+    ATTR_ADDRESS, ATTR_CHANNEL, ATTR_INTERFACE, ATTR_PARAM, ATTR_VALUE, DOMAIN,
+    SERVICE_SET_DEVICE_VALUE)
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ["homematic"]

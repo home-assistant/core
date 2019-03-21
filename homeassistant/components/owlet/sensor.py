@@ -1,10 +1,10 @@
 """Support for Owlet sensors."""
 from datetime import timedelta
 
-from homeassistant.components.owlet import DOMAIN as OWLET_DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
+from . import DOMAIN as OWLET_DOMAIN
 from .const import SENSOR_HEART_RATE, SENSOR_OXYGEN_LEVEL
 
 SCAN_INTERVAL = timedelta(seconds=120)

@@ -1,10 +1,9 @@
 """Demo platform that offers a fake water heater device."""
-from homeassistant.components.water_heater import (
-    WaterHeaterDevice,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE)
-from homeassistant.const import TEMP_FAHRENHEIT, ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+
+from . import (
+    SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    WaterHeaterDevice)
 
 SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                         SUPPORT_AWAY_MODE)

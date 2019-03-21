@@ -1,8 +1,9 @@
 """Support for Wink switches."""
 import logging
 
-from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.helpers.entity import ToggleEntity
+
+from . import DOMAIN, WinkDevice
 
 DEPENDENCIES = ['wink']
 

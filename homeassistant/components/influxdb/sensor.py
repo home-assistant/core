@@ -9,7 +9,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.influxdb import CONF_DB_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
@@ -19,6 +18,8 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+
+from . import CONF_DB_NAME
 
 _LOGGER = logging.getLogger(__name__)
 

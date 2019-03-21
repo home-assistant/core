@@ -1,7 +1,7 @@
 """Constants for the deCONZ component."""
 import logging
 
-_LOGGER = logging.getLogger('homeassistant.components.deconz')
+_LOGGER = logging.getLogger('.')
 
 DOMAIN = 'deconz'
 
