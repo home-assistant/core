@@ -3,16 +3,18 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.envisalink import (
-    DATA_EVL, EnvisalinkDevice, PARTITION_SCHEMA, CONF_CODE, CONF_PANIC,
-    CONF_PARTITIONNAME, SIGNAL_KEYPAD_UPDATE, SIGNAL_PARTITION_UPDATE)
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN, STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING, ATTR_ENTITY_ID)
+    ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED,
+    STATE_UNKNOWN)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
+    CONF_CODE, CONF_PANIC, CONF_PARTITIONNAME, DATA_EVL, PARTITION_SCHEMA,
+    SIGNAL_KEYPAD_UPDATE, SIGNAL_PARTITION_UPDATE, EnvisalinkDevice)
 
 _LOGGER = logging.getLogger(__name__)
 

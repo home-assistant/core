@@ -3,14 +3,11 @@ import logging
 
 import voluptuous as vol
 
-
-from homeassistant.components.wirelesstag import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    WirelessTagBaseSensor)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
+
+from . import DOMAIN as WIRELESSTAG_DOMAIN, WirelessTagBaseSensor
 
 DEPENDENCIES = ['wirelesstag']
 

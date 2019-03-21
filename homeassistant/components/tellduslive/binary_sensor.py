@@ -3,8 +3,9 @@ import logging
 
 from homeassistant.components import binary_sensor, tellduslive
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 

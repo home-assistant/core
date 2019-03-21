@@ -1,11 +1,11 @@
 """Support for HomeKit Controller locks."""
 import logging
 
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED)
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 

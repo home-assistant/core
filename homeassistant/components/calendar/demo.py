@@ -6,9 +6,10 @@ https://home-assistant.io/components/demo/
 """
 import copy
 
-import homeassistant.util.dt as dt_util
-from homeassistant.components.calendar import CalendarEventDevice, get_date
 from homeassistant.components.google import CONF_DEVICE_ID, CONF_NAME
+import homeassistant.util.dt as dt_util
+
+from . import CalendarEventDevice, get_date
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

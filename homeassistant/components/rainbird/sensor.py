@@ -8,11 +8,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.rainbird import DATA_RAINBIRD
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_MONITORED_CONDITIONS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from . import DATA_RAINBIRD
 
 DEPENDENCIES = ['rainbird']
 

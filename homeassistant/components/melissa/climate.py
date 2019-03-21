@@ -8,16 +8,15 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_ON_OFF, STATE_AUTO, STATE_HEAT, STATE_COOL, STATE_DRY,
-    STATE_FAN_ONLY, SUPPORT_FAN_MODE
-)
-from homeassistant.components.fan import SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
-from homeassistant.components.melissa import DATA_MELISSA
+    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT,
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
-    TEMP_CELSIUS, STATE_ON, STATE_OFF, STATE_IDLE, ATTR_TEMPERATURE,
-    PRECISION_WHOLE
-)
+    ATTR_TEMPERATURE, PRECISION_WHOLE, STATE_IDLE, STATE_OFF, STATE_ON,
+    TEMP_CELSIUS)
+
+from . import DATA_MELISSA
 
 DEPENDENCIES = ['melissa']
 

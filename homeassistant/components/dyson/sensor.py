@@ -6,9 +6,10 @@ https://home-assistant.io/components/sensor.dyson/
 """
 import logging
 
-from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.const import STATE_OFF, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+from . import DYSON_DEVICES
 
 DEPENDENCIES = ['dyson']
 

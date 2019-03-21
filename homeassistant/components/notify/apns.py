@@ -9,13 +9,14 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.helpers.event import track_state_change
 from homeassistant.config import load_yaml_config_file
-from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService, DOMAIN, PLATFORM_SCHEMA)
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, ATTR_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_NAME, CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import template as template_helper
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_state_change
+
+from . import (
+    ATTR_DATA, ATTR_TARGET, DOMAIN, PLATFORM_SCHEMA, BaseNotificationService)
 
 REQUIREMENTS = ['apns2==0.3.0']
 
