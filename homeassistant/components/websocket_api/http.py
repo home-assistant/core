@@ -15,7 +15,7 @@ from homeassistant.helpers.json import JSONEncoder
 
 from .const import (
     MAX_PENDING_MSG, CANCELLATION_ERRORS, URL, ERR_UNKNOWN_ERROR,
-    EVENT_WEBSOCKET_CONNECTED, EVENT_WEBSOCKET_DISCONNECTED)
+    SIGNAL_WEBSOCKET_CONNECTED, SIGNAL_WEBSOCKET_DISCONNECTED)
 from .auth import AuthPhase, auth_required_message
 from .error import Disconnect
 from .messages import error_message
@@ -145,7 +145,7 @@ class WebSocketHandler:
             self._logger.debug("Received %s", msg)
             connection = await auth.async_handle(msg)
             self.hass.helpers.dispatcher.async_dispatcher_send(
-                EVENT_WEBSOCKET_CONNECTED, connection)
+                SIGNAL_WEBSOCKET_CONNECTED)
 
             # Command phase
             while not wsock.closed:
@@ -197,6 +197,6 @@ class WebSocketHandler:
                 self._logger.warning("Disconnected: %s", disconnect_warn)
 
             self.hass.helpers.dispatcher.async_dispatcher_send(
-                EVENT_WEBSOCKET_DISCONNECTED, connection, disconnect_warn)
+                SIGNAL_WEBSOCKET_DISCONNECTED)
 
         return wsock

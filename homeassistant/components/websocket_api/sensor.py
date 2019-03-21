@@ -1,14 +1,9 @@
-"""
-Entity to track connections to stream API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.api_streams/
-"""
+"""Entity to track connections to websocket API."""
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
-from .const import EVENT_WEBSOCKET_CONNECTED, EVENT_WEBSOCKET_DISCONNECTED
+from .const import SIGNAL_WEBSOCKET_CONNECTED, SIGNAL_WEBSOCKET_DISCONNECTED
 
 
 async def async_setup_platform(
@@ -18,9 +13,9 @@ async def async_setup_platform(
 
     # pylint: disable=protected-access
     hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_WEBSOCKET_CONNECTED, entity._increment)
+        SIGNAL_WEBSOCKET_CONNECTED, entity._increment)
     hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_WEBSOCKET_DISCONNECTED, entity._decrement)
+        SIGNAL_WEBSOCKET_DISCONNECTED, entity._decrement)
 
     async_add_entities([entity])
 
@@ -48,11 +43,11 @@ class APICount(Entity):
         return "clients"
 
     @callback
-    def _increment(self, connection):
+    def _increment(self):
         self.count += 1
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @callback
-    def _decrement(self, connection, fail_msg):
+    def _decrement(self):
         self.count -= 1
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
