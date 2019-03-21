@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 

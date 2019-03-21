@@ -3,11 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.ads import CONF_ADS_VAR, DATA_ADS
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
+
+from . import CONF_ADS_VAR, DATA_ADS
 
 _LOGGER = logging.getLogger(__name__)
 

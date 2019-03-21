@@ -4,10 +4,11 @@ Demo fan platform that has a fake fan.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-                                          FanEntity, SUPPORT_SET_SPEED,
-                                          SUPPORT_OSCILLATE, SUPPORT_DIRECTION)
 from homeassistant.const import STATE_OFF
+
+from . import (
+    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SUPPORT_DIRECTION, SUPPORT_OSCILLATE,
+    SUPPORT_SET_SPEED, FanEntity)
 
 FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED

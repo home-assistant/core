@@ -2,11 +2,11 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 

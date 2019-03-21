@@ -9,10 +9,11 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_PASSWORD, CONF_PORT
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
 REQUIREMENTS = ['gntp==1.0.3']
 

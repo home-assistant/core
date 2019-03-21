@@ -4,27 +4,28 @@ This platform allows several lights to be grouped into one light.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.group/
 """
-import logging
-import itertools
-from typing import List, Tuple, Optional, Iterator, Any, Callable
 from collections import Counter
+import itertools
+import logging
+from typing import Any, Callable, Iterator, List, Optional, Tuple
 
 import voluptuous as vol
 
-from homeassistant.core import State, callback
 from homeassistant.components import light
-from homeassistant.const import (STATE_ON, ATTR_ENTITY_ID, CONF_NAME,
-                                 CONF_ENTITIES, STATE_UNAVAILABLE,
-                                 ATTR_SUPPORTED_FEATURES)
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.components.light import (
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_TRANSITION,
-    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_WHITE_VALUE, PLATFORM_SCHEMA,
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, ATTR_COLOR_TEMP,
-    ATTR_MIN_MIREDS, ATTR_MAX_MIREDS, ATTR_EFFECT_LIST, ATTR_EFFECT,
-    ATTR_FLASH, ATTR_TRANSITION)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_ENTITIES, CONF_NAME,
+    STATE_ON, STATE_UNAVAILABLE)
+from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import (
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_EFFECT_LIST,
+    ATTR_FLASH, ATTR_HS_COLOR, ATTR_MAX_MIREDS, ATTR_MIN_MIREDS,
+    ATTR_TRANSITION, ATTR_WHITE_VALUE, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
+    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 
 _LOGGER = logging.getLogger(__name__)
 

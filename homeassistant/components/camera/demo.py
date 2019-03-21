@@ -7,7 +7,7 @@ https://home-assistant.io/components/demo/
 import logging
 import os
 
-from homeassistant.components.camera import Camera, SUPPORT_ON_OFF
+from . import SUPPORT_ON_OFF, Camera
 
 _LOGGER = logging.getLogger(__name__)
 

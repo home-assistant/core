@@ -8,8 +8,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.tts import Provider, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
+
+from . import PLATFORM_SCHEMA, Provider
 
 REQUIREMENTS = ['boto3==1.9.16']
 

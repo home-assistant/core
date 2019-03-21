@@ -1,7 +1,7 @@
 """Support for Homekit sensors."""
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.const import TEMP_CELSIUS
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 

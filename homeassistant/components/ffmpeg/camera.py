@@ -9,13 +9,12 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_NAME
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-from homeassistant.components.ffmpeg import (
-    DATA_FFMPEG, CONF_INPUT, CONF_EXTRA_ARGUMENTS)
+from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import (
-    async_aiohttp_proxy_stream)
+
+from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG
 
 _LOGGER = logging.getLogger(__name__)
 

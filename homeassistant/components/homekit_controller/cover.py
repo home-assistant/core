@@ -5,10 +5,10 @@ from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION, CoverDevice)
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.const import (
     STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING)
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 STATE_STOPPED = 'stopped'
 

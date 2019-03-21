@@ -5,8 +5,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.speedtestdotnet.const import (
-    DATA_UPDATED, DOMAIN, SENSOR_TYPES)
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL, CONF_UPDATE_INTERVAL,
     CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
@@ -14,6 +12,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+
+from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
 
 REQUIREMENTS = ['speedtest-cli==2.1.1']
 

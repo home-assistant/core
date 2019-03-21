@@ -3,11 +3,11 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
-from homeassistant.components.homekit_controller import (
-    HomeKitEntity, KNOWN_ACCESSORIES)
-from homeassistant.const import TEMP_CELSIUS, STATE_OFF, ATTR_TEMPERATURE
+    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 

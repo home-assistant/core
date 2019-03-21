@@ -3,12 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.lcn.const import (
-    CONF_CONNECTIONS, CONF_DIM_MODE, CONF_DIMMABLE, CONF_MOTOR, CONF_OUTPUT,
-    CONF_SK_NUM_TRIES, CONF_SOURCE, CONF_TRANSITION, DATA_LCN, DEFAULT_NAME,
-    DIM_MODES, DOMAIN, LED_PORTS, LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS,
-    PATTERN_ADDRESS, RELAY_PORTS, S0_INPUTS, SETPOINTS, THRESHOLDS, VAR_UNITS,
-    VARIABLES)
 from homeassistant.const import (
     CONF_ADDRESS, CONF_COVERS, CONF_HOST, CONF_LIGHTS, CONF_NAME,
     CONF_PASSWORD, CONF_PORT, CONF_SENSORS, CONF_SWITCHES,
@@ -16,6 +10,13 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
+
+from .const import (
+    CONF_CONNECTIONS, CONF_DIM_MODE, CONF_DIMMABLE, CONF_MOTOR, CONF_OUTPUT,
+    CONF_SK_NUM_TRIES, CONF_SOURCE, CONF_TRANSITION, DATA_LCN, DEFAULT_NAME,
+    DIM_MODES, DOMAIN, LED_PORTS, LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS,
+    PATTERN_ADDRESS, RELAY_PORTS, S0_INPUTS, SETPOINTS, THRESHOLDS, VAR_UNITS,
+    VARIABLES)
 
 _LOGGER = logging.getLogger(__name__)
 
