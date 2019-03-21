@@ -189,6 +189,7 @@ async def async_setup(hass, config):
             sidebar_icon='hass:home-assistant',
             js_url='/api/hassio/app/entrypoint.js',
             embed_iframe=True,
+            require_admin=True,
         )
 
     await hassio.update_hass_api(config.get('http', {}), refresh_token.token)
