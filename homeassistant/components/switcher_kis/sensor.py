@@ -9,7 +9,7 @@ Author: Tomer Figenblat
 
 from asyncio import Future
 from logging import getLogger
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional  # noqa F401
 from datetime import datetime
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT as SENSOR_FORMAT
@@ -47,7 +47,7 @@ async def async_setup_platform(hass: HomeAssistant, config: Dict,
                                     DAY_TO_INT_DICT)
     from aioswitcher.api import SwitcherV2Api
     # pylint: disable=unused-import
-    from aioswitcher.api.messages import (
+    from aioswitcher.api.messages import (  # noaq F401
         SwitcherV2GetScheduleResponseMSG, SwitcherV2DeleteScheduleResponseMSG,
         SwitcherV2DisableEnableScheduleResponseMSG)
     # pylint: enable=unused-import

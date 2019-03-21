@@ -190,7 +190,8 @@ class SwitcherControl(SwitchDevice):
         """
         from aioswitcher.api import SwitcherV2Api
         # pylint: disable=unused-import
-        from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
+        from aioswitcher.api.messages import (  # noqa F401
+            SwitcherV2ControlResponseMSG)
         # pylint: enable=unused-import
         from aioswitcher.consts import (COMMAND_ON,
                                         STATE_ON as SWITCHER_STATE_ON)
@@ -215,7 +216,8 @@ class SwitcherControl(SwitchDevice):
         """
         from aioswitcher.api import SwitcherV2Api
         # pylint: disable=unused-import
-        from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
+        from aioswitcher.api.messages import (  # noqa F401
+            SwitcherV2ControlResponseMSG)
         # pylint: enable=unused-import
         from aioswitcher.consts import (COMMAND_OFF,
                                         STATE_OFF as SWITCHER_STATE_OFF)
