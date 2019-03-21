@@ -2,10 +2,11 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sense import SENSE_DATA
-from homeassistant.const import POWER_WATT
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+
+from . import SENSE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,21 +46,21 @@ SENSOR_TYPES = {
 SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Sense sensor."""
     if discovery_info is None:
         return
-
     data = hass.data[SENSE_DATA]
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
-    def update_trends():
+    async def update_trends():
         """Update the daily power usage."""
-        data.update_trend_data()
+        await data.update_trend_data()
 
-    def update_active():
+    async def update_active():
         """Update the active power usage."""
-        data.get_realtime()
+        await data.update_realtime()
 
     devices = []
     for typ in SENSOR_TYPES.values():
@@ -74,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             devices.append(Sense(
                 data, name, sensor_type, is_production, update_call))
 
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class Sense(Entity):
@@ -93,7 +94,7 @@ class Sense(Entity):
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
         else:
-            self._unit_of_measurement = 'kWh'
+            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     @property
     def name(self):
@@ -115,11 +116,11 @@ class Sense(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data, update state."""
         from sense_energy import SenseAPITimeoutException
         try:
-            self.update_sensor()
+            await self.update_sensor()
         except SenseAPITimeoutException:
             _LOGGER.error("Timeout retrieving data")
             return

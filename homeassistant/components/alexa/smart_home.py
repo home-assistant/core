@@ -1,21 +1,21 @@
 """Support for alexa Smart Home Skill API."""
 import asyncio
-from collections import OrderedDict
-from datetime import datetime
 import json
 import logging
 import math
+from collections import OrderedDict
+from datetime import datetime
 from uuid import uuid4
 
 import aiohttp
 import async_timeout
 
+import homeassistant.core as ha
+import homeassistant.util.color as color_util
 from homeassistant.components import (
     alert, automation, binary_sensor, cover, fan, group, http,
     input_boolean, light, lock, media_player, scene, script, sensor, switch)
 from homeassistant.components.climate import const as climate
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.event import async_track_state_change
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CLOUD_NEVER_EXPOSED_ENTITIES,
@@ -25,14 +25,14 @@ from homeassistant.const import (
     SERVICE_UNLOCK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP, SERVICE_VOLUME_SET,
     SERVICE_VOLUME_MUTE, STATE_LOCKED, STATE_ON, STATE_OFF, STATE_UNAVAILABLE,
     STATE_UNLOCKED, TEMP_CELSIUS, TEMP_FAHRENHEIT, MATCH_ALL)
-import homeassistant.core as ha
-import homeassistant.util.color as color_util
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util.decorator import Registry
 from homeassistant.util.temperature import convert as convert_temperature
 
+from .auth import Auth
 from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_ENDPOINT, \
     CONF_ENTITY_CONFIG, CONF_FILTER, DATE_FORMAT, DEFAULT_TIMEOUT
-from .auth import Auth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1115,12 +1115,15 @@ class SmartHomeView(http.HomeAssistantView):
         the response.
         """
         hass = request.app['hass']
+        user = request[http.KEY_HASS_USER]
         message = await request.json()
 
         _LOGGER.debug("Received Alexa Smart Home request: %s", message)
 
         response = await async_handle_message(
-            hass, self.smart_home_config, message)
+            hass, self.smart_home_config, message,
+            context=ha.Context(user_id=user.id)
+        )
         _LOGGER.debug("Sending Alexa Smart Home response: %s", response)
         return b'' if response is None else self.json(response)
 

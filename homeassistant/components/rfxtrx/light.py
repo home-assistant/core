@@ -5,12 +5,13 @@ import voluptuous as vol
 
 from homeassistant.components import rfxtrx
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import CONF_NAME
-from homeassistant.components.rfxtrx import (
-    CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT, DEFAULT_SIGNAL_REPETITIONS,
-    CONF_SIGNAL_REPETITIONS, CONF_DEVICES)
 from homeassistant.helpers import config_validation as cv
+
+from . import (
+    CONF_AUTOMATIC_ADD, CONF_DEVICES, CONF_FIRE_EVENT, CONF_SIGNAL_REPETITIONS,
+    DEFAULT_SIGNAL_REPETITIONS)
 
 DEPENDENCIES = ['rfxtrx']
 

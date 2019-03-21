@@ -4,10 +4,11 @@ Demo platform for the cover component.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION,
-    ATTR_TILT_POSITION)
 from homeassistant.helpers.event import track_utc_time_change
+
+from . import (
+    ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN,
+    CoverDevice)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

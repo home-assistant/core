@@ -16,7 +16,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
 
-REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.5', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({
 
 SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_SCENE):
-        vol.All(vol.Coerce(int), vol.Clamp(min=1, max=4))
+        vol.All(vol.Coerce(int), vol.Clamp(min=1, max=6))
 })
 
 SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend({

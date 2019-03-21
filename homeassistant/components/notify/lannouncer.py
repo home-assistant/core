@@ -5,15 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.lannouncer/
 """
 import logging
-
-from urllib.parse import urlencode
 import socket
+from urllib.parse import urlencode
+
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, ATTR_DATA, BaseNotificationService)
-from homeassistant.const import (CONF_HOST, CONF_PORT)
+from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
+
+from . import ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService
 
 ATTR_METHOD = 'method'
 ATTR_METHOD_DEFAULT = 'speak'

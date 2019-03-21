@@ -1,13 +1,14 @@
 """Support for Tado to create a climate device for each zone."""
 import logging
 
-from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.components.tado import DATA_TADO
+
+from . import DATA_TADO
 
 _LOGGER = logging.getLogger(__name__)
 

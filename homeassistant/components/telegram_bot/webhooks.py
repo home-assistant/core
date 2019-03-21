@@ -7,13 +7,13 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
-from homeassistant.components.telegram_bot import (
-    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA,
-    initialize_bot)
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
-    HTTP_UNAUTHORIZED, CONF_URL)
+    CONF_URL, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    CONF_ALLOWED_CHAT_IDS, PLATFORM_SCHEMA, BaseTelegramBotEntity,
+    initialize_bot)
 
 DEPENDENCIES = ['http']
 

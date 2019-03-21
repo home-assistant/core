@@ -1,7 +1,7 @@
 """Support for Volvo On Call sensors."""
 import logging
 
-from homeassistant.components.volvooncall import VolvoEntity, DATA_KEY
+from . import DATA_KEY, VolvoEntity
 
 _LOGGER = logging.getLogger(__name__)
 

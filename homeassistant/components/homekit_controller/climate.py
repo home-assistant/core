@@ -3,11 +3,11 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
-from homeassistant.components.homekit_controller import (
-    HomeKitEntity, KNOWN_ACCESSORIES)
-from homeassistant.const import TEMP_CELSIUS, STATE_OFF, ATTR_TEMPERATURE
+    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -80,21 +80,21 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def _update_temperature_target(self, value):
         self._target_temp = value
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
 
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['temperature.target'],
                             'value': temp}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['heating-cooling.target'],
                             'value': MODE_HASS_TO_HOMEKIT[operation_mode]}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
     @property
     def state(self):

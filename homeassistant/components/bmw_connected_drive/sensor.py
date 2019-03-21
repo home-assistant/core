@@ -1,12 +1,13 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 import logging
 
-from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
+from homeassistant.const import (
+    CONF_UNIT_SYSTEM_IMPERIAL, LENGTH_KILOMETERS, LENGTH_MILES, VOLUME_GALLONS,
+    VOLUME_LITERS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.const import (CONF_UNIT_SYSTEM_IMPERIAL, VOLUME_LITERS,
-                                 VOLUME_GALLONS, LENGTH_KILOMETERS,
-                                 LENGTH_MILES)
+
+from . import DOMAIN as BMW_DOMAIN
 
 DEPENDENCIES = ['bmw_connected_drive']
 
