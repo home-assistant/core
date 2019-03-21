@@ -1,9 +1,4 @@
-"""
-Support for Waterfurnace component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/waterfurnace/
-"""
+"""Support for Waterfurnaces."""
 from datetime import timedelta
 import logging
 import time
@@ -18,12 +13,11 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-
-REQUIREMENTS = ["waterfurnace==1.1.0"]
+REQUIREMENTS = ['waterfurnace==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "waterfurnace"
+DOMAIN = 'waterfurnace'
 UPDATE_TOPIC = DOMAIN + "_update"
 SCAN_INTERVAL = timedelta(seconds=10)
 ERROR_INTERVAL = timedelta(seconds=300)
@@ -35,7 +29,7 @@ NOTIFICATION_TITLE = 'WaterFurnace website status'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string
+        vol.Required(CONF_USERNAME): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 

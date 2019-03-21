@@ -1,15 +1,10 @@
-"""
-Support for Lutron lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lutron/
-"""
+"""Support for Lutron lights."""
 import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.lutron import (
-    LutronDevice, LUTRON_DEVICES, LUTRON_CONTROLLER)
+
+from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 

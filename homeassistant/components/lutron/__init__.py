@@ -1,9 +1,4 @@
-"""
-Component for interacting with a Lutron RadioRA 2 system.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/lutron/
-"""
+"""Component for interacting with a Lutron RadioRA 2 system."""
 import logging
 
 import voluptuous as vol
@@ -129,7 +124,8 @@ class LutronButton:
         """Register callback for activity on the button."""
         name = '{}: {}'.format(keypad.name, button.name)
         self._hass = hass
-        self._has_release_event = 'RaiseLower' in button.button_type
+        self._has_release_event = (button.button_type is not None and
+                                   'RaiseLower' in button.button_type)
         self._id = slugify(name)
         self._event = 'lutron_event'
 
@@ -139,19 +135,18 @@ class LutronButton:
         """Fire an event about a button being pressed or released."""
         from pylutron import Button
 
+        # Events per button type:
+        #   RaiseLower -> pressed/released
+        #   SingleAction -> single
+        action = None
         if self._has_release_event:
-            # A raise/lower button; we will get callbacks when the button is
-            # pressed and when it's released, so fire events for each.
             if event == Button.Event.PRESSED:
                 action = 'pressed'
             else:
                 action = 'released'
-        else:
-            # A single-action button; the Lutron controller won't tell us
-            # when the button is released, so use a different action name
-            # than for buttons where we expect a release event.
+        elif event == Button.Event.PRESSED:
             action = 'single'
 
-        data = {ATTR_ID: self._id, ATTR_ACTION: action}
-
-        self._hass.bus.fire(self._event, data)
+        if action:
+            data = {ATTR_ID: self._id, ATTR_ACTION: action}
+            self._hass.bus.fire(self._event, data)

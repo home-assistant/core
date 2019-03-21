@@ -1,9 +1,4 @@
-"""
-Support for ASUSWRT devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/asuswrt/
-"""
+"""Support for ASUSWRT devices."""
 import logging
 
 import voluptuous as vol
@@ -14,19 +9,20 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aioasuswrt==1.1.20']
+REQUIREMENTS = ['aioasuswrt==1.1.21']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_PUB_KEY = 'pub_key'
+CONF_REQUIRE_IP = 'require_ip'
+CONF_SENSORS = 'sensors'
+CONF_SSH_KEY = 'ssh_key'
+
 DOMAIN = "asuswrt"
 DATA_ASUSWRT = DOMAIN
-
-CONF_PUB_KEY = 'pub_key'
-CONF_SSH_KEY = 'ssh_key'
-CONF_REQUIRE_IP = 'require_ip'
 DEFAULT_SSH_PORT = 22
+
 SECRET_GROUP = 'Password or SSH Key'
-CONF_SENSORS = 'sensors'
 SENSOR_TYPES = ['upload_speed', 'download_speed', 'download', 'upload']
 
 CONFIG_SCHEMA = vol.Schema({

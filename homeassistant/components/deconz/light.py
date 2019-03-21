@@ -1,9 +1,4 @@
-"""
-Support for deCONZ light.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.deconz/
-"""
+"""Support for deCONZ lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -14,15 +9,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 from .const import (
-    CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DECONZ_DOMAIN, COVER_TYPES,
-    SWITCH_TYPES)
+    CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DECONZ_DOMAIN, COVER_TYPES, NEW_GROUP,
+    NEW_LIGHT, SWITCH_TYPES)
 from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ lights and group."""
     pass
 
@@ -41,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities, True)
 
     gateway.listeners.append(
-        async_dispatcher_connect(hass, 'deconz_new_light', async_add_light))
+        async_dispatcher_connect(hass, NEW_LIGHT, async_add_light))
 
     @callback
     def async_add_group(groups):
@@ -54,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities, True)
 
     gateway.listeners.append(
-        async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))
+        async_dispatcher_connect(hass, NEW_GROUP, async_add_group))
 
     async_add_light(gateway.api.lights.values())
     async_add_group(gateway.api.groups.values())

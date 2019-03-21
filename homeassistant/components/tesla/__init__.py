@@ -1,9 +1,4 @@
-"""
-Support for Tesla cars.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tesla/
-"""
+"""Support for Tesla cars."""
 from collections import defaultdict
 import logging
 
@@ -16,7 +11,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.23']
+REQUIREMENTS = ['teslajsonpy==0.0.25']
 
 DOMAIN = 'tesla'
 

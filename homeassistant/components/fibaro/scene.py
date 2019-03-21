@@ -1,15 +1,9 @@
-"""
-Support for Fibaro scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.fibaro/
-"""
+"""Support for Fibaro scenes."""
 import logging
 
-from homeassistant.components.scene import (
-    Scene)
-from homeassistant.components.fibaro import (
-    FIBARO_DEVICES, FibaroDevice)
+from homeassistant.components.scene import Scene
+
+from . import FIBARO_DEVICES, FibaroDevice
 
 DEPENDENCIES = ['fibaro']
 

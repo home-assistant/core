@@ -1,49 +1,43 @@
-"""
-Notifier for LaMetric time.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.lametric/
-"""
+"""Support for LaMetric notifications."""
 import logging
 
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ICON
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.lametric import DOMAIN as LAMETRIC_DOMAIN
+from . import DOMAIN as LAMETRIC_DOMAIN
 
 REQUIREMENTS = ['lmnotify==0.0.4']
-DEPENDENCIES = ['lametric']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LIFETIME = "lifetime"
-CONF_CYCLES = "cycles"
-CONF_PRIORITY = "priority"
+AVAILABLE_PRIORITIES = ['info', 'warning', 'critical']
 
-AVAILABLE_PRIORITIES = ["info", "warning", "critical"]
+CONF_CYCLES = 'cycles'
+CONF_LIFETIME = 'lifetime'
+CONF_PRIORITY = 'priority'
+
+DEPENDENCIES = ['lametric']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ICON, default="i555"): cv.string,
+    vol.Optional(CONF_ICON, default='a7956'): cv.string,
     vol.Optional(CONF_LIFETIME, default=10): cv.positive_int,
     vol.Optional(CONF_CYCLES, default=1): cv.positive_int,
-    vol.Optional(CONF_PRIORITY, default="warning"):
-        vol.In(AVAILABLE_PRIORITIES)
+    vol.Optional(CONF_PRIORITY, default='warning'):
+        vol.In(AVAILABLE_PRIORITIES),
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the LaMetric notification service."""
     hlmn = hass.data.get(LAMETRIC_DOMAIN)
-    return LaMetricNotificationService(hlmn,
-                                       config[CONF_ICON],
-                                       config[CONF_LIFETIME] * 1000,
-                                       config[CONF_CYCLES],
-                                       config[CONF_PRIORITY])
+    return LaMetricNotificationService(
+        hlmn, config[CONF_ICON], config[CONF_LIFETIME] * 1000,
+        config[CONF_CYCLES], config[CONF_PRIORITY])
 
 
 class LaMetricNotificationService(BaseNotificationService):

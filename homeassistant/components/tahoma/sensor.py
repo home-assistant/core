@@ -1,17 +1,11 @@
-"""
-Support for Tahoma sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tahoma/
-"""
-
-import logging
+"""Support for Tahoma sensors."""
 from datetime import timedelta
+import logging
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.tahoma import (
-    DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
 DEPENDENCIES = ['tahoma']
 

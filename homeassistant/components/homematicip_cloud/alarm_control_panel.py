@@ -1,19 +1,12 @@
-"""
-Support for HomematicIP Cloud alarm control panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.homematicip_cloud/
-"""
-
+"""Support for HomematicIP Cloud alarm control panel."""
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.homematicip_cloud import (
-    HMIPC_HAPID, HomematicipGenericDevice)
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED)
+
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +42,7 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     def __init__(self, home, device):
         """Initialize the security zone group."""
         device.modelType = 'Group-SecurityZone'
-        device.windowState = ''
+        device.windowState = None
         super().__init__(home, device)
 
     @property
@@ -59,7 +52,8 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
 
         if self._device.active:
             if (self._device.sabotage or self._device.motionDetected or
-                    self._device.windowState == WindowState.OPEN):
+                    self._device.windowState == WindowState.OPEN or
+                    self._device.windowState == WindowState.TILTED):
                 return STATE_ALARM_TRIGGERED
 
             active = self._home.get_security_zones_activation()

@@ -1,9 +1,4 @@
-"""
-A component which allows you to send data to an Influx database.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/influxdb/
-"""
+"""Support for sending data to an Influx database."""
 import logging
 import re
 import queue

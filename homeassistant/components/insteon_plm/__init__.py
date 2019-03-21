@@ -1,9 +1,4 @@
-"""
-Support for INSTEON PowerLinc Modem.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/insteon_plm/
-"""
+"""Support for INSTEON PowerLinc Modem."""
 import logging
 
 _LOGGER = logging.getLogger(__name__)

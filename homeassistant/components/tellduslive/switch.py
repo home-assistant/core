@@ -1,18 +1,11 @@
-"""
-Support for Tellstick switches using Tellstick Net.
-
-This platform uses the Telldus Live online service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.tellduslive/
-
-"""
+"""Support for Tellstick switches using Tellstick Net."""
 import logging
 
 from homeassistant.components import switch, tellduslive
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
+
+from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +45,9 @@ class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.device.turn_on()
+        self._update_callback()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.device.turn_off()
+        self._update_callback()

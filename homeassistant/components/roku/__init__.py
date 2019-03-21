@@ -1,9 +1,4 @@
-"""
-Support for Roku platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/roku/
-"""
+"""Support for Roku."""
 import logging
 
 import voluptuous as vol

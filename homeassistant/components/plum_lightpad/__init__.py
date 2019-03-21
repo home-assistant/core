@@ -1,9 +1,4 @@
-"""
-Support for Plum Lightpad switches.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/plum_lightpad
-"""
+"""Support for Plum Lightpad devices."""
 import asyncio
 import logging
 

@@ -1,23 +1,16 @@
-"""
-Sensor support for Wireless Sensor Tags platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.wirelesstag/
-"""
-
+"""Sensor support for Wireless Sensor Tags platform."""
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS)
-from homeassistant.components.wirelesstag import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    SIGNAL_TAG_UPDATE,
-    WirelessTagBaseSensor)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
+    DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_TAG_UPDATE, WirelessTagBaseSensor)
 
 DEPENDENCIES = ['wirelesstag']
 
@@ -32,7 +25,7 @@ SENSOR_TYPES = [
     SENSOR_TEMPERATURE,
     SENSOR_HUMIDITY,
     SENSOR_MOISTURE,
-    SENSOR_LIGHT
+    SENSOR_LIGHT,
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -69,9 +62,9 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
-        self._entity_id = '{}.{}_{}_{}'.format('sensor', WIRELESSTAG_DOMAIN,
-                                               self.underscored_name,
-                                               self._sensor_type)
+        self._entity_id = '{}.{}_{}_{}'.format(
+            'sensor', WIRELESSTAG_DOMAIN, self.underscored_name,
+            self._sensor_type)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -118,8 +111,8 @@ class WirelessTagSensor(WirelessTagBaseSensor):
     @callback
     def _update_tag_info_callback(self, event):
         """Handle push notification sent by tag manager."""
-        _LOGGER.info("Entity to update state: %s event data: %s",
-                     self, event.data)
+        _LOGGER.debug(
+            "Entity to update state: %s event data: %s", self, event.data)
         new_value = self._sensor.value_from_update_event(event.data)
         self._state = self.decorate_value(new_value)
         self.async_schedule_update_ha_state()

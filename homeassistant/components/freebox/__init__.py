@@ -1,9 +1,4 @@
-"""
-Support for Freebox devices (Freebox v6 and Freebox mini 4K).
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/freebox/
-"""
+"""Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 import socket
 
@@ -26,7 +21,7 @@ FREEBOX_CONFIG_FILE = 'freebox.conf'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port
+        vol.Required(CONF_PORT): cv.port,
     })
 }, extra=vol.ALLOW_EXTRA)
 

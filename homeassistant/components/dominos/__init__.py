@@ -1,23 +1,17 @@
-"""
-Support for Dominos Pizza ordering.
-
-The Dominos Pizza component creates a service which can be invoked to order
-from their menu
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/dominos/.
-"""
-import logging
+"""Support for Dominos Pizza ordering."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components import http
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import Throttle
+
+REQUIREMENTS = ['pizzapi==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +33,6 @@ ATTR_ORDER_CODES = 'codes'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 MIN_TIME_BETWEEN_STORE_UPDATES = timedelta(minutes=3330)
-
-REQUIREMENTS = ['pizzapi==0.0.3']
 
 DEPENDENCIES = ['http']
 

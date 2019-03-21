@@ -1,21 +1,17 @@
-"""
-Support for monitoring OctoPrint sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.octoprint/
-"""
+"""Support for monitoring OctoPrint sensors."""
 import logging
 
 import requests
 
-from homeassistant.components.octoprint import (SENSOR_TYPES,
-                                                DOMAIN as COMPONENT_DOMAIN)
-from homeassistant.const import (TEMP_CELSIUS)
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN as COMPONENT_DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
+
 NOTIFICATION_ID = 'octoprint_notification'
 NOTIFICATION_TITLE = 'OctoPrint sensor setup error'
 

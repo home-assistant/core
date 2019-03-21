@@ -1,9 +1,4 @@
-"""
-Support for the SpaceAPI.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/spaceapi/
-"""
+"""Support for the SpaceAPI."""
 import logging
 
 import voluptuous as vol

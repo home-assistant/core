@@ -235,6 +235,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'test_light_rgb',
                             '{"state":"ON", "color":{"x":0.135,"y":0.135}}')
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     light_state = hass.states.get('light.test')
     assert (0.141, 0.14) == \

@@ -1,18 +1,14 @@
-"""
-This component provides HA light support for Abode Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.abode/
-"""
+"""Support for Abode Security System lights."""
 import logging
 from math import ceil
-from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
+
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_COLOR_TEMP,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired, color_temperature_mired_to_kelvin)
 
+from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 DEPENDENCIES = ['abode']
 

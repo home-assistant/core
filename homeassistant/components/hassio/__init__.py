@@ -1,9 +1,4 @@
-"""
-Exposes regular REST commands as services.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/hassio/
-"""
+"""Support for Hass.io."""
 from datetime import timedelta
 import logging
 import os
@@ -12,18 +7,18 @@ import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import SERVICE_CHECK_CONFIG
+import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_NAME, SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP)
-from homeassistant.core import DOMAIN as HASS_DOMAIN
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
-from homeassistant.exceptions import HomeAssistantError
 
 from .auth import async_setup_auth
-from .handler import HassIO, HassioAPIError
 from .discovery import async_setup_discovery
+from .handler import HassIO, HassioAPIError
 from .http import HassIOView
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,23 +129,6 @@ def is_hassio(hass):
     Async friendly.
     """
     return DOMAIN in hass.config.components
-
-
-@bind_hass
-async def async_check_config(hass):
-    """Check configuration over Hass.io API."""
-    hassio = hass.data[DOMAIN]
-
-    try:
-        result = await hassio.check_homeassistant_config()
-    except HassioAPIError as err:
-        _LOGGER.error("Error on Hass.io API: %s", err)
-        raise HomeAssistantError() from None
-    else:
-        if result['result'] == "error":
-            return result['message']
-
-    return None
 
 
 async def async_setup(hass, config):
@@ -265,9 +243,13 @@ async def async_setup(hass, config):
             await hassio.stop_homeassistant()
             return
 
-        error = await async_check_config(hass)
-        if error:
-            _LOGGER.error(error)
+        try:
+            errors = await conf_util.async_check_ha_config_file(hass)
+        except HomeAssistantError:
+            return
+
+        if errors:
+            _LOGGER.error(errors)
             hass.components.persistent_notification.async_create(
                 "Config error. See dev-info panel for details.",
                 "Config validating", "{0}.check_config".format(HASS_DOMAIN))

@@ -1,9 +1,4 @@
-"""
-Support for Nest Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.nest/
-"""
+"""Support for Nest Cameras."""
 import logging
 from datetime import timedelta
 

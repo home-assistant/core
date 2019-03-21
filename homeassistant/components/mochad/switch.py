@@ -1,10 +1,4 @@
-"""
-Contains functionality to use a X10 switch over Mochad.
-
-For more details about this platform, please refer to the documentation at
-https://home.assistant.io/components/switch.mochad
-"""
-
+"""Support for X10 switch over Mochad."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +9,9 @@ from homeassistant.const import (CONF_NAME, CONF_DEVICES,
                                  CONF_PLATFORM, CONF_ADDRESS)
 from homeassistant.helpers import config_validation as cv
 
-DEPENDENCIES = ['mochad']
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['mochad']
 
 
 PLATFORM_SCHEMA = vol.Schema({
@@ -48,8 +43,8 @@ class MochadSwitch(SwitchDevice):
         self._address = dev[CONF_ADDRESS]
         self._name = dev.get(CONF_NAME, 'x10_switch_dev_%s' % self._address)
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
-        self.switch = device.Device(ctrl, self._address,
-                                    comm_type=self._comm_type)
+        self.switch = device.Device(
+            ctrl, self._address, comm_type=self._comm_type)
         # Init with false to avoid locking HA for long on CM19A (goes from rf
         # to pl via TM751, but not other way around)
         if self._comm_type == 'pl':

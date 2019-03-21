@@ -1,18 +1,13 @@
-"""
-Support for Ecovacs Ecovacs Vaccums.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/vacuum.ecovacs/
-"""
+"""Support for Ecovacs Ecovacs Vaccums."""
 import logging
 
 from homeassistant.components.vacuum import (
-    VacuumDevice, SUPPORT_BATTERY, SUPPORT_RETURN_HOME, SUPPORT_CLEAN_SPOT,
-    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_LOCATE, SUPPORT_FAN_SPEED, SUPPORT_SEND_COMMAND, )
-from homeassistant.components.ecovacs import (
-    ECOVACS_DEVICES)
+    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE,
+    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VacuumDevice)
 from homeassistant.helpers.icon import icon_for_battery_level
+
+from . import ECOVACS_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Support for local control of entities by emulating the Phillips Hue bridge.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/emulated_hue/
-"""
+"""Support for local control of entities by emulating a Phillips Hue bridge."""
 import logging
 
 from aiohttp import web
@@ -31,18 +26,18 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBERS_FILE = 'emulated_hue_ids.json'
 
-CONF_HOST_IP = 'host_ip'
-CONF_LISTEN_PORT = 'listen_port'
 CONF_ADVERTISE_IP = 'advertise_ip'
 CONF_ADVERTISE_PORT = 'advertise_port'
-CONF_UPNP_BIND_MULTICAST = 'upnp_bind_multicast'
-CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
+CONF_ENTITIES = 'entities'
+CONF_ENTITY_HIDDEN = 'hidden'
+CONF_ENTITY_NAME = 'name'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
+CONF_HOST_IP = 'host_ip'
+CONF_LISTEN_PORT = 'listen_port'
+CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
 CONF_TYPE = 'type'
-CONF_ENTITIES = 'entities'
-CONF_ENTITY_NAME = 'name'
-CONF_ENTITY_HIDDEN = 'hidden'
+CONF_UPNP_BIND_MULTICAST = 'upnp_bind_multicast'
 
 TYPE_ALEXA = 'alexa'
 TYPE_GOOGLE = 'google_home'

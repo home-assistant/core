@@ -1,21 +1,16 @@
-"""
-Binary sensor support for the Skybell HD Doorbell.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.skybell/
-"""
+"""Binary sensor support for the Skybell HD Doorbell."""
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.skybell import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
+
+from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 DEPENDENCIES = ['skybell']
 

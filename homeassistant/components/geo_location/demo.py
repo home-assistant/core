@@ -1,17 +1,13 @@
-"""
-Demo platform for the geolocation component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform for the geolocation component."""
 from datetime import timedelta
 import logging
 from math import cos, pi, radians, sin
 import random
 from typing import Optional
 
-from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.helpers.event import track_time_interval
+
+from . import GeolocationEvent
 
 _LOGGER = logging.getLogger(__name__)
 

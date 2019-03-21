@@ -1,9 +1,4 @@
-"""
-Support for RSS/Atom feeds.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/feedreader/
-"""
+"""Support for RSS/Atom feeds."""
 from datetime import datetime, timedelta
 from logging import getLogger
 from os.path import exists
@@ -16,7 +11,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
 from homeassistant.helpers.event import track_time_interval
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['feedparser==5.2.1']
+REQUIREMENTS = ['feedparser-homeassistant==5.2.2.dev1']
 
 _LOGGER = getLogger(__name__)
 

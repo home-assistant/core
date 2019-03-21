@@ -1,17 +1,11 @@
-"""
-Support for HomeKit Controller locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.homekit_controller/
-"""
-
+"""Support for HomeKit Controller locks."""
 import logging
 
-from homeassistant.components.homekit_controller import (HomeKitEntity,
-                                                         KNOWN_ACCESSORIES)
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED,
-                                 ATTR_BATTERY_LEVEL)
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED)
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -28,7 +22,7 @@ CURRENT_STATE_MAP = {
 
 TARGET_STATE_MAP = {
     STATE_UNLOCKED: 0,
-    STATE_LOCKED: 1
+    STATE_LOCKED: 1,
 }
 
 
@@ -37,8 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
     accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
-    add_entities([HomeKitLock(accessory, discovery_info)],
-                 True)
+    add_entities([HomeKitLock(accessory, discovery_info)], True)
 
 
 class HomeKitLock(HomeKitEntity, LockDevice):
@@ -82,20 +75,20 @@ class HomeKitLock(HomeKitEntity, LockDevice):
         """Return True if entity is available."""
         return self._state is not None
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the device."""
-        self._set_lock_state(STATE_LOCKED)
+        await self._set_lock_state(STATE_LOCKED)
 
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the device."""
-        self._set_lock_state(STATE_UNLOCKED)
+        await self._set_lock_state(STATE_UNLOCKED)
 
-    def _set_lock_state(self, state):
+    async def _set_lock_state(self, state):
         """Send state command."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['lock-mechanism.target-state'],
                             'value': TARGET_STATE_MAP[state]}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
     @property
     def device_state_attributes(self):

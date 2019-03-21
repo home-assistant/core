@@ -1,15 +1,9 @@
-"""
-Support for LCN switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.lcn/
-"""
-
-from homeassistant.components.lcn import (
-    CONF_CONNECTIONS, CONF_OUTPUT, DATA_LCN, OUTPUT_PORTS, LcnDevice,
-    get_connection)
+"""Support for LCN switches."""
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_ADDRESS
+
+from . import LcnDevice, get_connection
+from .const import CONF_CONNECTIONS, CONF_OUTPUT, DATA_LCN, OUTPUT_PORTS
 
 DEPENDENCIES = ['lcn']
 

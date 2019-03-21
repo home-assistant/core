@@ -7,9 +7,11 @@ at https://home-assistant.io/components/switch.zha/
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.const import STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, LISTENER_ON_OFF,
+    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, ON_OFF_CHANNEL,
     SIGNAL_ATTR_UPDATED
 )
 from .entity import ZhaEntity
@@ -60,7 +62,7 @@ class Switch(ZhaEntity, SwitchDevice):
     def __init__(self, **kwargs):
         """Initialize the ZHA switch."""
         super().__init__(**kwargs)
-        self._on_off_listener = self.cluster_listeners.get(LISTENER_ON_OFF)
+        self._on_off_channel = self.cluster_channels.get(ON_OFF_CHANNEL)
 
     @property
     def is_on(self) -> bool:
@@ -71,14 +73,22 @@ class Switch(ZhaEntity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self._on_off_listener.on()
+        success = await self._on_off_channel.on()
+        if not success:
+            return
+        self._state = True
+        self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self._on_off_listener.off()
+        success = await self._on_off_channel.off()
+        if not success:
+            return
+        self._state = False
+        self.async_schedule_update_ha_state()
 
     def async_set_state(self, state):
-        """Handle state update from listener."""
+        """Handle state update from channel."""
         self._state = bool(state)
         self.async_schedule_update_ha_state()
 
@@ -91,4 +101,16 @@ class Switch(ZhaEntity, SwitchDevice):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
-            self._on_off_listener, SIGNAL_ATTR_UPDATED, self.async_set_state)
+            self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = last_state.state == STATE_ON
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the switch."""
+        await super().async_update()
+        if self._on_off_channel:
+            self._state = await self._on_off_channel.get_attribute_value(
+                'on_off')

@@ -17,11 +17,12 @@ from .common import (
 async def test_fan(hass, config_entry, zha_gateway):
     """Test zha fan platform."""
     from zigpy.zcl.clusters.hvac import Fan
+    from zigpy.zcl.clusters.general import Basic
     from zigpy.zcl.foundation import Status
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [Fan.cluster_id], [], None, zha_gateway)
+        hass, [Fan.cluster_id, Basic.cluster_id], [], None, zha_gateway)
 
     # load up fan domain
     await hass.config_entries.async_forward_entry_setup(

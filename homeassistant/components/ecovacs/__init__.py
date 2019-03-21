@@ -1,19 +1,14 @@
-"""Parent component for Ecovacs Deebot vacuums.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/ecovacs/
-"""
-
+"""Support for Ecovacs Deebot vacuums."""
 import logging
 import random
 import string
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, \
-    EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['sucks==0.9.3']
 

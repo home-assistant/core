@@ -1,20 +1,14 @@
-"""
-Support for the Roku remote.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/remote.roku/
-"""
+"""Support for the Roku remote."""
 import requests.exceptions
 
 from homeassistant.components import remote
 from homeassistant.const import (CONF_HOST)
 
-
 DEPENDENCIES = ['roku']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Roku remote platform."""
     if not discovery_info:
         return

@@ -1,14 +1,9 @@
-"""
-This component provides HA lock support for Abode Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.abode/
-"""
+"""Support for Abode Security System locks."""
 import logging
 
-from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.lock import LockDevice
 
+from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 DEPENDENCIES = ['abode']
 

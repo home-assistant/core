@@ -1,18 +1,11 @@
-"""
-Support for binary sensors using Tellstick Net.
-
-This platform uses the Telldus Live online service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.tellduslive/
-
-"""
+"""Support for binary sensors using Tellstick Net."""
 import logging
 
 from homeassistant.components import binary_sensor, tellduslive
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,8 +28,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_dispatcher_connect(
         hass,
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(binary_sensor.DOMAIN,
-                                                 tellduslive.DOMAIN),
+        tellduslive.TELLDUS_DISCOVERY_NEW.format(
+            binary_sensor.DOMAIN, tellduslive.DOMAIN),
         async_discover_binary_sensor)
 
 

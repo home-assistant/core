@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 import homeassistant.const as const
 from homeassistant.components.ecobee import climate as ecobee
-from homeassistant.components.climate import STATE_OFF
+from homeassistant.const import STATE_OFF
 
 
 class TestEcobee(unittest.TestCase):

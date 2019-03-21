@@ -1,17 +1,15 @@
-"""
-Component for monitoring activity on a folder.
-
-For more details about this platform, refer to the documentation at
-https://home-assistant.io/components/folder_watcher/
-"""
-import os
+"""Component for monitoring activity on a folder."""
 import logging
+import os
+
 import voluptuous as vol
+
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['watchdog==0.8.3']
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FOLDER = 'folder'

@@ -11,12 +11,6 @@ import voluptuous as vol
 from homeassistant.components import binary_sensor, mqtt
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, BinarySensorDevice)
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, CONF_UNIQUE_ID,
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import (
     CONF_DEVICE, CONF_DEVICE_CLASS, CONF_FORCE_UPDATE, CONF_NAME,
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, CONF_VALUE_TEMPLATE)
@@ -25,6 +19,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, CONF_UNIQUE_ID,
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo, subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +117,7 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -130,11 +130,12 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             """Switch device off after a delay."""
             self._delay_listener = None
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         @callback
-        def state_message_received(_topic, payload, _qos):
+        def state_message_received(msg):
             """Handle a new received MQTT state message."""
+            payload = msg.payload
             value_template = self._config.get(CONF_VALUE_TEMPLATE)
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(
@@ -159,7 +160,7 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self._delay_listener = evt.async_call_later(
                     self.hass, off_delay, off_delay_listener)
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,

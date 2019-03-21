@@ -1,21 +1,15 @@
-"""
-Support for Eufy devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/eufy/
-"""
+"""Support for Eufy devices."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS, \
-    CONF_DEVICES, CONF_USERNAME, CONF_PASSWORD, CONF_TYPE, CONF_NAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN, CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PASSWORD,
+    CONF_TYPE, CONF_USERNAME)
 from homeassistant.helpers import discovery
-
 import homeassistant.helpers.config_validation as cv
 
-
-REQUIREMENTS = ['lakeside==0.11']
+REQUIREMENTS = ['lakeside==0.12']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +24,8 @@ DEVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list,
-                                                        [DEVICE_SCHEMA]),
+        vol.Optional(CONF_DEVICES, default=[]):
+            vol.All(cv.ensure_list, [DEVICE_SCHEMA]),
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     }),

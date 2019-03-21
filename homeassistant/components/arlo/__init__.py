@@ -1,9 +1,4 @@
-"""
-This component provides support for Netgear Arlo IP cameras.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/arlo/
-"""
+"""Support for Netgear Arlo IP cameras."""
 import logging
 from datetime import timedelta
 
@@ -20,7 +15,7 @@ REQUIREMENTS = ['pyarlo==0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by arlo.netgear.com"
+ATTRIBUTION = "Data provided by arlo.netgear.com"
 
 DATA_ARLO = 'data_arlo'
 DEFAULT_BRAND = 'Netgear Arlo'

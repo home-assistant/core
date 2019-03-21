@@ -13,7 +13,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON)
 
 from . import TYPES
-from .accessories import debounce, HomeAccessory
+from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED, CHAR_SWING_MODE,
     SERV_FANV2)

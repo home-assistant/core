@@ -1,19 +1,15 @@
-"""
-Support for DoorBird device.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/doorbird/
-"""
+"""Support for DoorBird devices."""
 import logging
-
 from urllib.error import HTTPError
+
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CONF_HOST, CONF_USERNAME, \
-    CONF_PASSWORD, CONF_NAME, CONF_DEVICES, CONF_MONITORED_CONDITIONS
+from homeassistant.const import (
+    CONF_DEVICES, CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME,
+    CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify, dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 REQUIREMENTS = ['doorbirdpy==2.0.6']
 
@@ -28,7 +24,6 @@ CONF_DOORBELL_EVENTS = 'doorbell_events'
 CONF_DOORBELL_NUMS = 'doorbell_numbers'
 CONF_RELAY_NUMS = 'relay_numbers'
 CONF_MOTION_EVENTS = 'motion_events'
-CONF_TOKEN = 'token'
 
 SENSOR_TYPES = {
     'doorbell': {

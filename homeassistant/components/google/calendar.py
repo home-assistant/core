@@ -1,18 +1,13 @@
-"""
-Support for Google Calendar Search binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/calendar.google/
-"""
-import logging
+"""Support for Google Calendar Search binary sensors."""
 from datetime import timedelta
+import logging
 
 from homeassistant.components.calendar import CalendarEventDevice
-from homeassistant.components.google import (
-    CONF_CAL_ID, CONF_ENTITIES, CONF_TRACK, TOKEN_FILE,
-    CONF_IGNORE_AVAILABILITY, CONF_SEARCH,
-    GoogleCalendarService)
 from homeassistant.util import Throttle, dt
+
+from . import (
+    CONF_CAL_ID, CONF_ENTITIES, CONF_IGNORE_AVAILABILITY, CONF_SEARCH,
+    CONF_TRACK, TOKEN_FILE, GoogleCalendarService)
 
 _LOGGER = logging.getLogger(__name__)
 

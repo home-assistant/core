@@ -1,15 +1,10 @@
-"""
-Allows to configuration ecoal (esterownik.pl) pumps as switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.ecoal_boiler/
-"""
+"""Allows to configuration ecoal (esterownik.pl) pumps as switches."""
 import logging
 from typing import Optional
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.ecoal_boiler import (
-    DATA_ECOAL_BOILER, AVAILABLE_PUMPS, )
+
+from . import AVAILABLE_PUMPS, DATA_ECOAL_BOILER
 
 _LOGGER = logging.getLogger(__name__)
 

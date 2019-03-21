@@ -1,16 +1,9 @@
-"""
-This component provides basic support for Amcrest IP cameras.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/amcrest/
-"""
+"""Support for Amcrest IP cameras."""
 import logging
 from datetime import timedelta
 
 import aiohttp
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectTimeout
-from requests.exceptions import ConnectionError as ConnectError
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
@@ -18,7 +11,8 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['amcrest==1.2.3']
+
+REQUIREMENTS = ['amcrest==1.2.7']
 DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +90,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
-    from amcrest import AmcrestCamera
+    from amcrest import AmcrestCamera, AmcrestError
 
     hass.data[DATA_AMCREST] = {}
     amcrest_cams = config[DOMAIN]
@@ -110,7 +104,7 @@ def setup(hass, config):
             # pylint: disable=pointless-statement
             camera.current_time
 
-        except (ConnectError, ConnectTimeout, HTTPError) as ex:
+        except AmcrestError as ex:
             _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
             hass.components.persistent_notification.create(
                 'Error: {}<br />'

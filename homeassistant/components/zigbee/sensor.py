@@ -1,18 +1,14 @@
-"""
-Support for functionality to use a ZigBee device as a sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.zigbee/
-"""
-import logging
+"""Support for Zigbee sensors."""
 from binascii import hexlify
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components import zigbee
-from homeassistant.components.zigbee import PLATFORM_SCHEMA
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+from . import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 

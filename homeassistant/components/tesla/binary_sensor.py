@@ -1,14 +1,10 @@
-"""
-Support for Tesla binary sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.tesla/
-"""
+"""Support for Tesla binary sensor."""
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, ENTITY_ID_FORMAT)
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN, TeslaDevice
+    ENTITY_ID_FORMAT, BinarySensorDevice)
+
+from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 

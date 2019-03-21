@@ -1,20 +1,15 @@
-"""
-Support for IP Webcam sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.android_ip_webcam/
-"""
-
-from homeassistant.components.android_ip_webcam import (
-    KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
-    CONF_NAME, CONF_SENSORS)
+"""Support for Android IP Webcam sensors."""
 from homeassistant.helpers.icon import icon_for_battery_level
+
+from . import (
+    CONF_HOST, CONF_NAME, CONF_SENSORS, DATA_IP_WEBCAM, ICON_MAP, KEY_MAP,
+    AndroidIPCamEntity)
 
 DEPENDENCIES = ['android_ip_webcam']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the IP Webcam Sensor."""
     if discovery_info is None:
         return

@@ -1,13 +1,9 @@
-"""
-Support for interacting with Smappee Comport Plugs.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.smappee/
-"""
+"""Support for interacting with Smappee Comport Plugs."""
 import logging
 
-from homeassistant.components.smappee import DATA_SMAPPEE
-from homeassistant.components.switch import (SwitchDevice)
+from homeassistant.components.switch import SwitchDevice
+
+from . import DATA_SMAPPEE
 
 DEPENDENCIES = ['smappee']
 
@@ -26,17 +22,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             for items in smappee.info[location_id].get('actuators'):
                 if items.get('name') != '':
                     _LOGGER.debug("Remote actuator %s", items)
-                    dev.append(SmappeeSwitch(smappee,
-                                             items.get('name'),
-                                             location_id,
-                                             items.get('id')))
+                    dev.append(SmappeeSwitch(
+                        smappee, items.get('name'), location_id,
+                        items.get('id')))
     elif smappee.is_local_active:
         for items in smappee.local_devices:
             _LOGGER.debug("Local actuator %s", items)
-            dev.append(SmappeeSwitch(smappee,
-                                     items.get('value'),
-                                     None,
-                                     items.get('key')))
+            dev.append(SmappeeSwitch(
+                smappee, items.get('value'), None, items.get('key')))
     add_entities(dev)
 
 

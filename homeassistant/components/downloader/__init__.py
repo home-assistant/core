@@ -1,9 +1,4 @@
-"""
-Support for functionality to download files.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/downloader/
-"""
+"""Support for functionality to download files."""
 import logging
 import os
 import re

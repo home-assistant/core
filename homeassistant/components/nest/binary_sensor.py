@@ -1,16 +1,14 @@
-"""
-Support for Nest Thermostat Binary Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.nest/
-"""
+"""Support for Nest Thermostat binary sensors."""
 from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.nest import (
-    DATA_NEST, DATA_NEST_CONFIG, CONF_BINARY_SENSORS, NestSensorDevice)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+
+from . import (
+    CONF_BINARY_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice)
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['nest']
 
@@ -48,10 +46,12 @@ _BINARY_TYPES_DEPRECATED = [
     'hvac_emer_heat_state',
 ]
 
-_VALID_BINARY_SENSOR_TYPES = {**BINARY_TYPES, **CLIMATE_BINARY_TYPES,
-                              **CAMERA_BINARY_TYPES, **STRUCTURE_BINARY_TYPES}
-
-_LOGGER = logging.getLogger(__name__)
+_VALID_BINARY_SENSOR_TYPES = {
+    **BINARY_TYPES,
+    **CLIMATE_BINARY_TYPES,
+    **CAMERA_BINARY_TYPES,
+    **STRUCTURE_BINARY_TYPES,
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -89,9 +89,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
             sensors += [NestBinarySensor(structure, None, variable)
                         for variable in conditions
                         if variable in STRUCTURE_BINARY_TYPES]
-        device_chain = chain(nest.thermostats(),
-                             nest.smoke_co_alarms(),
-                             nest.cameras())
+        device_chain = chain(
+            nest.thermostats(), nest.smoke_co_alarms(), nest.cameras())
         for structure, device in device_chain:
             sensors += [NestBinarySensor(structure, device, variable)
                         for variable in conditions
@@ -106,9 +105,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
                             for variable in conditions
                             if variable in CAMERA_BINARY_TYPES]
                 for activity_zone in device.activity_zones:
-                    sensors += [NestActivityZoneSensor(structure,
-                                                       device,
-                                                       activity_zone)]
+                    sensors += [NestActivityZoneSensor(
+                        structure, device, activity_zone)]
 
         return sensors
 

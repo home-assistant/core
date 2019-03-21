@@ -21,7 +21,7 @@ class ActiveConnection:
         else:
             self.refresh_token_id = None
 
-        self.event_listeners = {}
+        self.subscriptions = {}
         self.last_id = 0
 
     def context(self, msg):
@@ -30,6 +30,16 @@ class ActiveConnection:
         if user is None:
             return Context()
         return Context(user_id=user.id)
+
+    @callback
+    def send_result(self, msg_id, result=None):
+        """Send a result message."""
+        self.send_message(messages.result_message(msg_id, result))
+
+    @callback
+    def send_error(self, msg_id, code, message):
+        """Send a error message."""
+        self.send_message(messages.error_message(msg_id, code, message))
 
     @callback
     def async_handle(self, msg):
@@ -72,7 +82,7 @@ class ActiveConnection:
     @callback
     def async_close(self):
         """Close down connection."""
-        for unsub in self.event_listeners.values():
+        for unsub in self.subscriptions.values():
             unsub()
 
     @callback

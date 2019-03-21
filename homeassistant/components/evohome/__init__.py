@@ -1,19 +1,10 @@
-"""Support for (EMEA/EU-based) Honeywell evohome systems.
-
-Support for a temperature control system (TCS, controller) with 0+ heating
-zones (e.g. TRVs, relays) and, optionally, a DHW controller.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/evohome/
-"""
-
+"""Support for (EMEA/EU-based) Honeywell evohome systems."""
 # Glossary:
 #   TCS - temperature control system (a.k.a. Controller, Parent), which can
 #   have up to 13 Children:
 #     0-12 Heating zones (a.k.a. Zone), and
 #     0-1 DHW controller, (a.k.a. Boiler)
 # The TCS & Zones are implemented as Climate devices, Boiler as a WaterHeater
-
 from datetime import timedelta
 import logging
 
@@ -46,8 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_LOCATION_IDX, default=0):
-            cv.positive_int,
+        vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT):
             vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
     }),
@@ -109,9 +99,9 @@ def setup(hass, hass_config):
             )
 
         else:
-            raise  # we dont expect/handle any other HTTPErrors
+            raise  # We don't expect/handle any other HTTPErrors
 
-        return False  # unable to continue
+        return False
 
     finally:  # Redact username, password as no longer needed
         evo_data['params'][CONF_USERNAME] = 'REDACTED'
@@ -136,11 +126,8 @@ def setup(hass, hass_config):
     except IndexError:
         _LOGGER.warning(
             "setup(): Parameter '%s'=%s, is outside its range (0-%s)",
-            CONF_LOCATION_IDX,
-            loc_idx,
-            len(client.installation_info) - 1
-        )
-        return False  # unable to continue
+            CONF_LOCATION_IDX, loc_idx, len(client.installation_info) - 1)
+        return False
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         tmp_loc = dict(evo_data['config'])
@@ -154,7 +141,7 @@ def setup(hass, hass_config):
 
     @callback
     def _first_update(event):
-        # When HA has started, the hub knows to retreive it's first update
+        """When HA has started, the hub knows to retrieve it's first update."""
         pkt = {'sender': 'setup()', 'signal': 'refresh', 'to': EVO_PARENT}
         async_dispatcher_send(hass, DISPATCHER_EVOHOME, pkt)
 

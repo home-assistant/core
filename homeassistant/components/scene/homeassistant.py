@@ -1,20 +1,16 @@
-"""
-Allow users to set and activate scenes.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/scene/
-"""
+"""Allow users to set and activate scenes."""
 from collections import namedtuple
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.scene import Scene, STATES
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_STATE, CONF_ENTITIES, CONF_NAME, CONF_PLATFORM,
     STATE_OFF, STATE_ON)
 from homeassistant.core import State
-from homeassistant.helpers.state import async_reproduce_state, HASS_DOMAIN
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.state import HASS_DOMAIN, async_reproduce_state
+
+from . import STATES, Scene
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): HASS_DOMAIN,

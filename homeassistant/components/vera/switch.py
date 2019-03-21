@@ -1,19 +1,14 @@
-"""
-Support for Vera switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.vera/
-"""
+"""Support for Vera switches."""
 import logging
 
-from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+from homeassistant.util import convert
 
-DEPENDENCIES = ['vera']
+from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['vera']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

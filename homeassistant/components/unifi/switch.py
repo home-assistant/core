@@ -1,24 +1,17 @@
-"""
-Support for devices connected to UniFi POE.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.unifi/
-"""
-
+"""Support for devices connected to UniFi POE."""
 import asyncio
-import logging
-
 from datetime import timedelta
+import logging
 
 import async_timeout
 
 from homeassistant.components import unifi
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.unifi.const import (
-    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+
+from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN
 
 DEPENDENCIES = [DOMAIN]
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -39,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """
     controller_id = CONTROLLER_ID.format(
         host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
     )
     controller = hass.data[unifi.DOMAIN][controller_id]
     switches = {}

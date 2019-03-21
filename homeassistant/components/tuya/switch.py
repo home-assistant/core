@@ -1,11 +1,7 @@
-"""
-Support for Tuya switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.tuya/
-"""
+"""Support for Tuya switches."""
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
+
+from . import DATA_TUYA, TuyaDevice
 
 DEPENDENCIES = ['tuya']
 

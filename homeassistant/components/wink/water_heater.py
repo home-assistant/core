@@ -1,20 +1,13 @@
-"""
-Support for Wink water heaters.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/water_heater.wink/
-"""
+"""Support for Wink water heaters."""
 import logging
 
 from homeassistant.components.water_heater import (
-    ATTR_TEMPERATURE, STATE_ECO, STATE_ELECTRIC,
-    STATE_PERFORMANCE, SUPPORT_AWAY_MODE, STATE_HEAT_PUMP,
-    STATE_GAS, STATE_HIGH_DEMAND,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice)
-from homeassistant.components.wink import DOMAIN, WinkDevice
-from homeassistant.const import (
-    STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, STATE_ECO, STATE_ELECTRIC, STATE_GAS, STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND, STATE_PERFORMANCE, SUPPORT_AWAY_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, WaterHeaterDevice)
+from homeassistant.const import STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS
+
+from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 

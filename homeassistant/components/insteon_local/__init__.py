@@ -1,9 +1,4 @@
-"""
-Local support for Insteon.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/insteon_local/
-"""
+"""Local support for Insteon."""
 import logging
 
 _LOGGER = logging.getLogger(__name__)

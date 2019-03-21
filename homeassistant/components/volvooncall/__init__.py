@@ -1,9 +1,4 @@
-"""
-Support for Volvo On Call.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/volvooncall/
-"""
+"""Support for Volvo On Call."""
 from datetime import timedelta
 import logging
 
@@ -11,7 +6,8 @@ import voluptuous as vol
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_NAME, CONF_RESOURCES,
-                                 CONF_UPDATE_INTERVAL)
+                                 CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL,
+                                 CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -45,7 +41,7 @@ COMPONENTS = {
     'binary_sensor': 'binary_sensor',
     'lock': 'lock',
     'device_tracker': 'device_tracker',
-    'switch': 'switch'
+    'switch': 'switch',
 }
 
 RESOURCES = [
@@ -88,20 +84,30 @@ RESOURCES = [
 ]
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
-            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
-        vol.Optional(CONF_NAME, default={}):
-            cv.schema_with_slug_keys(cv.string),
-        vol.Optional(CONF_RESOURCES): vol.All(
-            cv.ensure_list, [vol.In(RESOURCES)]),
-        vol.Optional(CONF_REGION): cv.string,
-        vol.Optional(CONF_SERVICE_URL): cv.string,
-        vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
-        vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
-    }),
+    DOMAIN: vol.All(
+        vol.Schema({
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_UPDATE_INTERVAL):
+                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL):
+                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
+            vol.Optional(CONF_NAME, default={}):
+                cv.schema_with_slug_keys(cv.string),
+            vol.Optional(CONF_RESOURCES): vol.All(
+                cv.ensure_list, [vol.In(RESOURCES)]),
+            vol.Optional(CONF_REGION): cv.string,
+            vol.Optional(CONF_SERVICE_URL): cv.string,
+            vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
+            vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
+        }),
+        cv.deprecated(
+            CONF_UPDATE_INTERVAL,
+            replacement_key=CONF_SCAN_INTERVAL,
+            invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
+            default=DEFAULT_UPDATE_INTERVAL
+        )
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -117,7 +123,7 @@ async def async_setup(hass, config):
         service_url=config[DOMAIN].get(CONF_SERVICE_URL),
         region=config[DOMAIN].get(CONF_REGION))
 
-    interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
+    interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
     data = hass.data[DATA_KEY] = VolvoData(config)
 

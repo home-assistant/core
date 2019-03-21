@@ -1,20 +1,14 @@
-"""
-Switch support for the Skybell HD Doorbell.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.skybell/
-"""
+"""Switch support for the Skybell HD Doorbell."""
 import logging
 
 import voluptuous as vol
 
-
-from homeassistant.components.skybell import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
+
+from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 DEPENDENCIES = ['skybell']
 
@@ -53,8 +47,8 @@ class SkybellSwitch(SkybellDevice, SwitchDevice):
         """Initialize a light for a Skybell device."""
         super().__init__(device)
         self._switch_type = switch_type
-        self._name = "{0} {1}".format(self._device.name,
-                                      SWITCH_TYPES[self._switch_type][0])
+        self._name = "{0} {1}".format(
+            self._device.name, SWITCH_TYPES[self._switch_type][0])
 
     @property
     def name(self):

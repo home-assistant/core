@@ -1,9 +1,4 @@
-"""
-Support for MySensors covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.mysensors/
-"""
+"""Support for MySensors covers."""
 from homeassistant.components import mysensors
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverDevice
 from homeassistant.const import STATE_OFF, STATE_ON

@@ -1,22 +1,17 @@
-"""
-Support for Netgear Arlo IP cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.arlo/
-"""
+"""Support for Netgear Arlo IP cameras."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.arlo import (
-    DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 
 _LOGGER = logging.getLogger(__name__)
 

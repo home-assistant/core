@@ -8,9 +8,10 @@ https://home-assistant.io/components/zha/
 import logging
 import time
 
+from homeassistant.core import callback
 from homeassistant.util import slugify
 from .entity import ZhaEntity
-from .const import LISTENER_BATTERY, SIGNAL_STATE_ATTR
+from .const import POWER_CONFIGURATION_CHANNEL, SIGNAL_STATE_ATTR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,11 +31,14 @@ BATTERY_SIZES = {
     255: 'Unknown'
 }
 
+STATE_ONLINE = 'online'
+STATE_OFFLINE = 'offline'
+
 
 class ZhaDeviceEntity(ZhaEntity):
     """A base class for ZHA devices."""
 
-    def __init__(self, zha_device, listeners, keepalive_interval=7200,
+    def __init__(self, zha_device, channels, keepalive_interval=7200,
                  **kwargs):
         """Init ZHA endpoint entity."""
         ieee = zha_device.ieee
@@ -51,7 +55,7 @@ class ZhaDeviceEntity(ZhaEntity):
             unique_id = str(ieeetail)
 
         kwargs['component'] = 'zha'
-        super().__init__(unique_id, zha_device, listeners, skip_entity_id=True,
+        super().__init__(unique_id, zha_device, channels, skip_entity_id=True,
                          **kwargs)
 
         self._keepalive_interval = keepalive_interval
@@ -62,7 +66,8 @@ class ZhaDeviceEntity(ZhaEntity):
             'rssi': zha_device.rssi,
         })
         self._should_poll = True
-        self._battery_listener = self.cluster_listeners.get(LISTENER_BATTERY)
+        self._battery_channel = self.cluster_channels.get(
+            POWER_CONFIGURATION_CHANNEL)
 
     @property
     def state(self) -> str:
@@ -93,9 +98,10 @@ class ZhaDeviceEntity(ZhaEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        if self._battery_listener:
+        await self.async_check_recently_seen()
+        if self._battery_channel:
             await self.async_accept_signal(
-                self._battery_listener, SIGNAL_STATE_ATTR,
+                self._battery_channel, SIGNAL_STATE_ATTR,
                 self.async_update_state_attribute)
             # only do this on add to HA because it is static
             await self._async_init_battery_values()
@@ -108,22 +114,29 @@ class ZhaDeviceEntity(ZhaEntity):
             difference = time.time() - self._zha_device.last_seen
             if difference > self._keepalive_interval:
                 self._zha_device.update_available(False)
-                self._state = None
             else:
                 self._zha_device.update_available(True)
-                self._state = 'online'
-                if self._battery_listener:
+                if self._battery_channel:
                     await self.async_get_latest_battery_reading()
 
+    @callback
+    def async_set_available(self, available):
+        """Set entity availability."""
+        if available:
+            self._state = STATE_ONLINE
+        else:
+            self._state = STATE_OFFLINE
+        super().async_set_available(available)
+
     async def _async_init_battery_values(self):
-        """Get initial battery level and battery info from listener cache."""
-        battery_size = await self._battery_listener.get_attribute_value(
+        """Get initial battery level and battery info from channel cache."""
+        battery_size = await self._battery_channel.get_attribute_value(
             'battery_size')
         if battery_size is not None:
             self._device_state_attributes['battery_size'] = BATTERY_SIZES.get(
                 battery_size, 'Unknown')
 
-        battery_quantity = await self._battery_listener.get_attribute_value(
+        battery_quantity = await self._battery_channel.get_attribute_value(
             'battery_quantity')
         if battery_quantity is not None:
             self._device_state_attributes['battery_quantity'] = \
@@ -131,8 +144,11 @@ class ZhaDeviceEntity(ZhaEntity):
         await self.async_get_latest_battery_reading()
 
     async def async_get_latest_battery_reading(self):
-        """Get the latest battery reading from listeners cache."""
-        battery = await self._battery_listener.get_attribute_value(
+        """Get the latest battery reading from channels cache."""
+        battery = await self._battery_channel.get_attribute_value(
             'battery_percentage_remaining')
         if battery is not None:
+            # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
+            battery = battery / 2
+            battery = int(round(battery))
             self._device_state_attributes['battery_level'] = battery

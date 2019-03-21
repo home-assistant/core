@@ -1,9 +1,4 @@
-"""
-Support to graphs card in the UI.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/history_graph/
-"""
+"""Support to graphs card in the UI."""
 import logging
 
 import voluptuous as vol
@@ -34,7 +29,7 @@ GRAPH_SCHEMA = vol.Schema({
 
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.schema_with_slug_keys(GRAPH_SCHEMA)
+    DOMAIN: cv.schema_with_slug_keys(GRAPH_SCHEMA),
 }, extra=vol.ALLOW_EXTRA)
 
 

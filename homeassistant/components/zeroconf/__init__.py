@@ -1,9 +1,4 @@
-"""
-This module exposes Home Assistant via Zeroconf.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zeroconf/
-"""
+"""Support for exposing Home Assistant via Zeroconf."""
 import logging
 import socket
 
@@ -35,11 +30,11 @@ def setup(hass, config):
 
     zeroconf_name = '{}.{}'.format(hass.config.location_name, ZEROCONF_TYPE)
 
-    requires_api_password = hass.config.api.api_password is not None
     params = {
         'version': __version__,
         'base_url': hass.config.api.base_url,
-        'requires_api_password': requires_api_password,
+        # always needs authentication
+        'requires_api_password': True,
     }
 
     host_ip = util.get_local_ip()

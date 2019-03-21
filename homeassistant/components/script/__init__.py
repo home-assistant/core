@@ -1,12 +1,4 @@
-"""
-Support for scripts.
-
-Scripts are a sequence of actions that can be triggered manually
-by the user or automatically based upon automation events, etc.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/script/
-"""
+"""Support for scripts."""
 import asyncio
 import logging
 
@@ -82,20 +74,21 @@ async def async_setup(hass, config):
         # We could turn on script directly here, but we only want to offer
         # one way to do it. Otherwise no easy way to detect invocations.
         var = service.data.get(ATTR_VARIABLES)
-        for script in component.async_extract_from_service(service):
+        for script in await component.async_extract_from_service(service):
             await hass.services.async_call(DOMAIN, script.object_id, var,
                                            context=service.context)
 
     async def turn_off_service(service):
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
-        await asyncio.wait(
-            [script.async_turn_off() for script
-             in component.async_extract_from_service(service)], loop=hass.loop)
+        await asyncio.wait([
+            script.async_turn_off() for script
+            in await component.async_extract_from_service(service)
+        ], loop=hass.loop)
 
     async def toggle_service(service):
         """Toggle a script."""
-        for script in component.async_extract_from_service(service):
+        for script in await component.async_extract_from_service(service):
             await script.async_toggle(context=service.context)
 
     hass.services.async_register(DOMAIN, SERVICE_RELOAD, reload_service,
@@ -124,7 +117,7 @@ async def _async_process_config(hass, config, component):
 
     scripts = []
 
-    for object_id, cfg in config[DOMAIN].items():
+    for object_id, cfg in config.get(DOMAIN, {}).items():
         alias = cfg.get(CONF_ALIAS, object_id)
         script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
         scripts.append(script)

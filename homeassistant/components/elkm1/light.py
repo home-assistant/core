@@ -1,20 +1,14 @@
-"""
-Support for control of ElkM1 lighting (X10, UPB, etc).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.elkm1/
-"""
-
+"""Support for control of ElkM1 lighting (X10, UPB, etc)."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.elkm1 import (
-    DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities)
+
+from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 DEPENDENCIES = [ELK_DOMAIN]
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Elk light platform."""
     if discovery_info is None:
         return
@@ -24,10 +18,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class ElkLight(ElkEntity, Light):
-    """Elk lighting device."""
+    """Representation of an Elk lighting device."""
 
     def __init__(self, element, elk, elk_data):
-        """Initialize light."""
+        """Initialize the Elk light."""
         super().__init__(element, elk, elk_data)
         self._brightness = self._element.status
 

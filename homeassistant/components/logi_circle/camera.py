@@ -1,24 +1,19 @@
-"""
-This component provides support to the Logi Circle camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.logi_circle/
-"""
-import logging
+"""Support to the Logi Circle cameras."""
 import asyncio
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
-from homeassistant.components.logi_circle import (
-    DOMAIN as LOGI_CIRCLE_DOMAIN, CONF_ATTRIBUTION)
 from homeassistant.components.camera import (
-    Camera, PLATFORM_SCHEMA, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
-    ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN)
+    ATTR_ENTITY_ID, ATTR_FILENAME, CAMERA_SERVICE_SCHEMA, DOMAIN,
+    PLATFORM_SCHEMA, SUPPORT_ON_OFF, Camera)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
-    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF)
+    CONF_SCAN_INTERVAL, STATE_OFF, STATE_ON)
+from homeassistant.helpers import config_validation as cv
+
+from . import ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN
 
 DEPENDENCIES = ['logi_circle']
 
@@ -133,7 +128,7 @@ class LogiCam(Camera):
     def device_state_attributes(self):
         """Return the state attributes."""
         state = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'battery_saving_mode': (
                 STATE_ON if self._camera.battery_saving else STATE_OFF),
             'ip_address': self._camera.ip_address,

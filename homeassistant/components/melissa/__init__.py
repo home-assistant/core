@@ -1,9 +1,4 @@
-"""
-Support for Melissa climate.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/melissa/
-"""
+"""Support for Melissa climate."""
 import logging
 
 import voluptuous as vol
@@ -16,7 +11,7 @@ REQUIREMENTS = ["py-melissa-climate==2.0.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "melissa"
+DOMAIN = 'melissa'
 DATA_MELISSA = 'MELISSA'
 
 

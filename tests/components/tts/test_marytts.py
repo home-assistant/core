@@ -5,7 +5,7 @@ import shutil
 
 import homeassistant.components.tts as tts
 from homeassistant.setup import setup_component
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
 
 from tests.common import (

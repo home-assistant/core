@@ -1,22 +1,17 @@
-"""
-Support for Velbus switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.velbus/
-"""
+"""Support for Velbus switches."""
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.velbus import (
-    DOMAIN as VELBUS_DOMAIN, VelbusEntity)
+
+from . import DOMAIN as VELBUS_DOMAIN, VelbusEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['velbus']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Velbus Switch platform."""
     if discovery_info is None:
         return

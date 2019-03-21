@@ -1,21 +1,15 @@
-"""Netgear LTE platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.netgear_lte/
-"""
-
+"""Suport for Netgear LTE notifications."""
 import logging
 
-import voluptuous as vol
 import attr
+import voluptuous as vol
 
 from homeassistant.components.notify import (
-    BaseNotificationService, ATTR_TARGET, PLATFORM_SCHEMA)
+    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
 from ..netgear_lte import DATA_KEY
-
 
 DEPENDENCIES = ['netgear_lte']
 

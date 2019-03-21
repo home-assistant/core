@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Mi Air Quality Monitor (PM2.5).
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/sensor.xiaomi_miio/
-"""
+"""Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
 import logging
 
 import voluptuous as vol
@@ -14,7 +9,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.5', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 

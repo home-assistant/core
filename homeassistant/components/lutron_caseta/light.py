@@ -1,25 +1,20 @@
-"""
-Support for Lutron Caseta lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lutron_caseta/
-"""
+"""Support for Lutron Caseta lights."""
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, DOMAIN)
+    ATTR_BRIGHTNESS, DOMAIN, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.lutron.light import (
     to_hass_level, to_lutron_level)
-from homeassistant.components.lutron_caseta import (
-    LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
+
+from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['lutron_caseta']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Lutron Caseta lights."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]

@@ -1,14 +1,9 @@
-"""
-Support for Eight Sleep binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.eight_sleep/
-"""
+"""Support for Eight Sleep binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.eight_sleep import (
-    DATA_EIGHT, EightSleepHeatEntity, CONF_BINARY_SENSORS, NAME_MAP)
+
+from . import CONF_BINARY_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity
 
 _LOGGER = logging.getLogger(__name__)
 

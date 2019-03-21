@@ -1,16 +1,13 @@
-"""
-Register a custom front end panel.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/panel_custom/
-"""
+"""Register a custom front end panel."""
 import logging
 import os
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'panel_custom'
 DEPENDENCIES = ['frontend']
@@ -58,8 +55,6 @@ CONFIG_SCHEMA = vol.Schema({
     })])
 }, extra=vol.ALLOW_EXTRA)
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @bind_hass
 async def async_register_panel(
@@ -86,7 +81,7 @@ async def async_register_panel(
     """Register a new custom panel."""
     if js_url is None and html_url is None and module_url is None:
         raise ValueError('Either js_url, module_url or html_url is required.')
-    elif (js_url and html_url) or (module_url and html_url):
+    if (js_url and html_url) or (module_url and html_url):
         raise ValueError('Pass in only one of JS url, Module url or HTML url.')
 
     if config is not None and not isinstance(config, dict):
@@ -154,8 +149,8 @@ async def async_setup(hass, config):
             kwargs['module_url'] = panel[CONF_MODULE_URL]
 
         elif not await hass.async_add_job(os.path.isfile, panel_path):
-            _LOGGER.error('Unable to find webcomponent for %s: %s',
-                          name, panel_path)
+            _LOGGER.error(
+                "Unable to find webcomponent for %s: %s", name, panel_path)
             continue
 
         else:

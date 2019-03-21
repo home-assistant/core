@@ -1,23 +1,18 @@
-"""
-Interfaces with Egardia/Woonveilig alarm control panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.egardia/
-"""
+"""Interfaces with Egardia/Woonveilig alarm control panel."""
 import logging
 
 import requests
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED,
-    STATE_ALARM_ARMED_NIGHT)
-from homeassistant.components.egardia import (
-    EGARDIA_DEVICE, EGARDIA_SERVER,
-    REPORT_SERVER_CODES_IGNORE, CONF_REPORT_SERVER_CODES,
-    CONF_REPORT_SERVER_ENABLED, CONF_REPORT_SERVER_PORT
-    )
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+
+from . import (
+    CONF_REPORT_SERVER_CODES, CONF_REPORT_SERVER_ENABLED,
+    CONF_REPORT_SERVER_PORT, EGARDIA_DEVICE, EGARDIA_SERVER,
+    REPORT_SERVER_CODES_IGNORE)
+
 DEPENDENCIES = ['egardia']
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +29,7 @@ STATES = {
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Egardia platform."""
+    """Set up the Egardia Alarm Control Panael platform."""
     if discovery_info is None:
         return
     device = EgardiaAlarm(
@@ -43,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         discovery_info[CONF_REPORT_SERVER_ENABLED],
         discovery_info.get(CONF_REPORT_SERVER_CODES),
         discovery_info[CONF_REPORT_SERVER_PORT])
-    # add egardia alarm device
+
     add_entities([device], True)
 
 

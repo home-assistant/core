@@ -1,9 +1,4 @@
-"""
-Support for a camera of a BloomSky weather station.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/camera.bloomsky/
-"""
+"""Support for a camera of a BloomSky weather station."""
 import logging
 
 import requests

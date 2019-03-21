@@ -1,14 +1,9 @@
-"""
-Support for Homekit switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.homekit_controller/
-"""
+"""Support for Homekit switches."""
 import logging
 
-from homeassistant.components.homekit_controller import (HomeKitEntity,
-                                                         KNOWN_ACCESSORIES)
 from homeassistant.components.switch import SwitchDevice
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -53,20 +48,20 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
         """Return true if device is on."""
         return self._on
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the specified switch on."""
         self._on = True
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['on'],
                             'value': True}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the specified switch off."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['on'],
                             'value': False}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
     @property
     def device_state_attributes(self):

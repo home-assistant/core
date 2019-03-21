@@ -10,7 +10,7 @@ from unittest.mock import patch, MagicMock
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.components import zwave
-from homeassistant.components.binary_sensor.zwave import get_device
+from homeassistant.components.zwave.binary_sensor import get_device
 from homeassistant.components.zwave import (
     const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, DATA_NETWORK)
 from homeassistant.setup import setup_component

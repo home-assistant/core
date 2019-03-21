@@ -203,6 +203,11 @@ async def test_discovery_initiation(hass, mock_client):
         MockDeviceInfo(False, "test8266"))
 
     result = await flow.async_step_discovery(user_input=service_info)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'discovery_confirm'
+    assert result['description_placeholders']['name'] == 'test8266'
+
+    result = await flow.async_step_discovery_confirm(user_input={})
     assert result['type'] == 'create_entry'
     assert result['title'] == 'test8266'
     assert result['data']['host'] == 'test8266.local'
@@ -242,7 +247,9 @@ async def test_discovery_already_configured_ip(hass, mock_client):
         'host': '192.168.43.183',
         'port': 6053,
         'hostname': 'test8266.local.',
-        'properties': {}
+        'properties': {
+            "address": "192.168.43.183"
+        }
     }
     result = await flow.async_step_discovery(user_input=service_info)
     assert result['type'] == 'abort'

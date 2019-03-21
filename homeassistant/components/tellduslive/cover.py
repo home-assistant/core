@@ -1,17 +1,11 @@
-"""
-Support for Tellstick covers using Tellstick Net.
-
-This platform uses the Telldus Live online service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.tellduslive/
-"""
+"""Support for Tellstick covers using Tellstick Net."""
 import logging
 
 from homeassistant.components import cover, tellduslive
 from homeassistant.components.cover import CoverDevice
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,11 +45,14 @@ class TelldusLiveCover(TelldusLiveEntity, CoverDevice):
     def close_cover(self, **kwargs):
         """Close the cover."""
         self.device.down()
+        self._update_callback()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
         self.device.up()
+        self._update_callback()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self.device.stop()
+        self._update_callback()

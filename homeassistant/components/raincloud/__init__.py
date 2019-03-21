@@ -24,7 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
 
-CONF_ATTRIBUTION = "Data provided by Melnor Aquatimer.com"
+ATTRIBUTION = "Data provided by Melnor Aquatimer.com"
+
 CONF_WATERING_TIME = 'watering_minutes'
 
 NOTIFICATION_ID = 'raincloud_notification'
@@ -165,7 +166,7 @@ class RainCloudEntity(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'identifier': self.data.serial,
         }
 

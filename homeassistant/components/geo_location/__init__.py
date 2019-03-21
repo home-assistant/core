@@ -1,9 +1,4 @@
-"""
-Geolocation component.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/geo_location/
-"""
+"""Support for Geolocation."""
 from datetime import timedelta
 import logging
 from typing import Optional

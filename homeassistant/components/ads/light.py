@@ -1,18 +1,14 @@
-"""
-Support for ADS light sources.
-
-For more details about this platform, please refer to the documentation.
-https://home-assistant.io/components/light.ads/
-
-"""
+"""Support for ADS light sources."""
 import logging
+
 import voluptuous as vol
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
-    SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import CONF_NAME
-from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR, \
-    CONF_ADS_VAR_BRIGHTNESS
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_ADS_VAR, CONF_ADS_VAR_BRIGHTNESS, DATA_ADS
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
@@ -46,6 +42,7 @@ class AdsLight(Light):
         self._on_state = False
         self._brightness = None
         self._name = name
+        self._unique_id = ads_var_enable
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
 
@@ -78,6 +75,11 @@ class AdsLight(Light):
     def name(self):
         """Return the name of the device if any."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return an unique identifier for this entity."""
+        return self._unique_id
 
     @property
     def brightness(self):

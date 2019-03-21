@@ -1,26 +1,21 @@
-"""
-Support for wired switches attached to a Konnected device.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.konnected/
-"""
-
+"""Support for wired switches attached to a Konnected device."""
 import logging
 
-from homeassistant.components.konnected import (
-    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, CONF_ACTIVATION, CONF_MOMENTARY,
-    CONF_PAUSE, CONF_REPEAT, STATE_LOW, STATE_HIGH)
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
-    CONF_DEVICES, CONF_SWITCHES, CONF_PIN, ATTR_STATE)
+    ATTR_STATE, CONF_DEVICES, CONF_NAME, CONF_PIN, CONF_SWITCHES)
+from homeassistant.helpers.entity import ToggleEntity
+
+from . import (
+    CONF_ACTIVATION, CONF_MOMENTARY, CONF_PAUSE, CONF_REPEAT,
+    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, STATE_HIGH, STATE_LOW)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['konnected']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set switches attached to a Konnected device."""
     if discovery_info is None:
         return
@@ -37,7 +32,7 @@ class KonnectedSwitch(ToggleEntity):
     """Representation of a Konnected switch."""
 
     def __init__(self, device_id, pin_num, data):
-        """Initialize the switch."""
+        """Initialize the Konnected switch."""
         self._data = data
         self._device_id = device_id
         self._pin_num = pin_num
@@ -46,10 +41,13 @@ class KonnectedSwitch(ToggleEntity):
         self._pause = self._data.get(CONF_PAUSE)
         self._repeat = self._data.get(CONF_REPEAT)
         self._state = self._boolean_state(self._data.get(ATTR_STATE))
-        self._name = self._data.get(
-            'name', 'Konnected {} Actuator {}'.format(
-                device_id, PIN_TO_ZONE[pin_num]))
-        _LOGGER.debug('Created new switch: %s', self._name)
+        self._unique_id = '{}-{}'.format(device_id, PIN_TO_ZONE[pin_num])
+        self._name = self._data.get(CONF_NAME)
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def name(self):

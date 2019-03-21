@@ -1,9 +1,4 @@
-"""
-Component that will help set the level of logging for components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/logger/
-"""
+"""Support for settting the level of logging for components."""
 import logging
 from collections import OrderedDict
 

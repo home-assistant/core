@@ -1,9 +1,9 @@
-"""Support for Xiaomi aqara binary sensors."""
+"""Support for Xiaomi Aqara binary sensors."""
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
+
+from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,39 +31,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     data_key = 'status'
                 else:
                     data_key = 'channel_0'
-                devices.append(XiaomiGenericSwitch(device, "Plug", data_key,
-                                                   True, gateway))
+                devices.append(XiaomiGenericSwitch(
+                    device, "Plug", data_key, True, gateway))
             elif model in ['ctrl_neutral1', 'ctrl_neutral1.aq1']:
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch',
-                                                   'channel_0',
-                                                   False, gateway))
+                devices.append(XiaomiGenericSwitch(
+                    device, 'Wall Switch', 'channel_0', False, gateway))
             elif model in ['ctrl_ln1', 'ctrl_ln1.aq1']:
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch LN',
-                                                   'channel_0',
-                                                   False, gateway))
+                devices.append(XiaomiGenericSwitch(
+                    device, 'Wall Switch LN', 'channel_0', False, gateway))
             elif model in ['ctrl_neutral2', 'ctrl_neutral2.aq1']:
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch Left',
-                                                   'channel_0',
-                                                   False, gateway))
-                devices.append(XiaomiGenericSwitch(device, 'Wall Switch Right',
-                                                   'channel_1',
-                                                   False, gateway))
+                devices.append(XiaomiGenericSwitch(
+                    device, 'Wall Switch Left', 'channel_0', False, gateway))
+                devices.append(XiaomiGenericSwitch(
+                    device, 'Wall Switch Right', 'channel_1', False, gateway))
             elif model in ['ctrl_ln2', 'ctrl_ln2.aq1']:
-                devices.append(XiaomiGenericSwitch(device,
-                                                   'Wall Switch LN Left',
-                                                   'channel_0',
-                                                   False, gateway))
-                devices.append(XiaomiGenericSwitch(device,
-                                                   'Wall Switch LN Right',
-                                                   'channel_1',
-                                                   False, gateway))
+                devices.append(XiaomiGenericSwitch(
+                    device, 'Wall Switch LN Left', 'channel_0', False,
+                    gateway))
+                devices.append(XiaomiGenericSwitch(
+                    device, 'Wall Switch LN Right', 'channel_1',
+                    False, gateway))
             elif model in ['86plug', 'ctrl_86plug', 'ctrl_86plug.aq1']:
                 if 'proto' not in device or int(device['proto'][0:1]) == 1:
                     data_key = 'status'
                 else:
                     data_key = 'channel_0'
-                devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
-                                                   data_key, True, gateway))
+                devices.append(XiaomiGenericSwitch(
+                    device, 'Wall Plug', data_key, True, gateway))
     add_entities(devices)
 
 
@@ -96,9 +90,11 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._supports_power_consumption:
-            attrs = {ATTR_IN_USE: self._in_use,
-                     ATTR_LOAD_POWER: self._load_power,
-                     ATTR_POWER_CONSUMED: self._power_consumed}
+            attrs = {
+                ATTR_IN_USE: self._in_use,
+                ATTR_LOAD_POWER: self._load_power,
+                ATTR_POWER_CONSUMED: self._power_consumed,
+            }
         else:
             attrs = {}
         attrs.update(super().device_state_attributes)

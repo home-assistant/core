@@ -1,9 +1,4 @@
-"""
-Component that sends data to a Graphite installation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/graphite/
-"""
+"""Support for sending data to a Graphite installation."""
 import logging
 import queue
 import socket
@@ -69,10 +64,8 @@ class GraphiteFeeder(threading.Thread):
         self._quit_object = object()
         self._we_started = False
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
-                             self.start_listen)
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                             self.shutdown)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self.start_listen)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         hass.bus.listen(EVENT_STATE_CHANGED, self.event_listener)
         _LOGGER.debug("Graphite feeding to %s:%i initialized",
                       self._host, self._port)
@@ -95,7 +88,7 @@ class GraphiteFeeder(threading.Thread):
             self._queue.put(event)
         else:
             _LOGGER.error(
-                "Graphite feeder thread has died, not queuing event!")
+                "Graphite feeder thread has died, not queuing event")
 
     def _send_to_graphite(self, data):
         """Send data to Graphite."""

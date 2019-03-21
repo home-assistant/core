@@ -1,16 +1,11 @@
-"""
-Support for ISY994 switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.isy994/
-"""
+"""Support for ISY994 switches."""
 import logging
 from typing import Callable
 
-from homeassistant.components.switch import SwitchDevice, DOMAIN
-from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
-                                             ISYDevice)
+from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.helpers.typing import ConfigType
+
+from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 

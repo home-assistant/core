@@ -1,9 +1,4 @@
-"""
-Allows to configure a switch using RPi GPIO.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rpi_gpio/
-"""
+"""Allows to configure a switch using RPi GPIO."""
 import logging
 
 import voluptuous as vol

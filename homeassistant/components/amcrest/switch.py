@@ -1,23 +1,18 @@
-"""
-Support for toggling Amcrest IP camera settings.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.amcrest/
-"""
+"""Support for toggling Amcrest IP camera settings."""
 import logging
 
-from homeassistant.components.amcrest import DATA_AMCREST, SWITCHES
-from homeassistant.const import (
-    CONF_NAME, CONF_SWITCHES, STATE_OFF, STATE_ON)
+from homeassistant.const import CONF_NAME, CONF_SWITCHES, STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
+
+from . import DATA_AMCREST, SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['amcrest']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the IP Amcrest camera switch platform."""
     if discovery_info is None:
         return

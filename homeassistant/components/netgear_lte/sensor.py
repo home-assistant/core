@@ -1,17 +1,12 @@
-"""Netgear LTE sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.netgear_lte/
-"""
-
-import voluptuous as vol
+"""Support for Netgear LTE sensors."""
 import attr
+import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_SENSORS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST, CONF_SENSORS
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 from ..netgear_lte import DATA_KEY
 
@@ -23,7 +18,7 @@ SENSOR_USAGE = 'usage'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Required(CONF_SENSORS): vol.All(
-        cv.ensure_list, [vol.In([SENSOR_SMS, SENSOR_USAGE])])
+        cv.ensure_list, [vol.In([SENSOR_SMS, SENSOR_USAGE])]),
 })
 
 

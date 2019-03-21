@@ -1,30 +1,27 @@
-"""
-Support for OpenTherm Gateway climate devices.
-
-For more details about this platform, please refer to the documentation at
-http://home-assistant.io/components/climate.opentherm_gw/
-"""
+"""Support for OpenTherm Gateway climate devices."""
 import logging
 
-from homeassistant.components.climate import (ClimateDevice, STATE_IDLE,
-                                              STATE_HEAT, STATE_COOL,
-                                              SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.opentherm_gw import (
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
+    PRECISION_WHOLE, TEMP_CELSIUS)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
     CONF_FLOOR_TEMP, CONF_PRECISION, DATA_DEVICE, DATA_GW_VARS,
     DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE)
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES,
-                                 PRECISION_TENTHS, PRECISION_WHOLE,
-                                 TEMP_CELSIUS)
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['opentherm_gw']
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
-_LOGGER = logging.getLogger(__name__)
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the opentherm_gw device."""
     gateway = OpenThermGateway(hass, discovery_info)
     async_add_entities([gateway])
@@ -41,8 +38,8 @@ class OpenThermGateway(ClimateDevice):
         self.floor_temp = config.get(CONF_FLOOR_TEMP)
         self.temp_precision = config.get(CONF_PRECISION)
         self._current_operation = STATE_IDLE
-        self._current_temperature = 0.0
-        self._target_temperature = 0.0
+        self._current_temperature = None
+        self._target_temperature = None
         self._away_mode_a = None
         self._away_mode_b = None
         self._away_state_a = False
@@ -128,6 +125,8 @@ class OpenThermGateway(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
+        if self._current_temperature is None:
+            return
         if self.floor_temp is True:
             if self.temp_precision == PRECISION_HALVES:
                 return int(2 * self._current_temperature) / 2

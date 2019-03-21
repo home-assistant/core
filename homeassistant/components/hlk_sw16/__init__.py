@@ -1,9 +1,4 @@
-"""
-Support for HLK-SW16 relay switch.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/hlk_sw16/
-"""
+"""Support for HLK-SW16 relay switches."""
 import logging
 
 import voluptuous as vol
@@ -18,7 +13,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 
-REQUIREMENTS = ['hlk-sw16==0.0.6']
+REQUIREMENTS = ['hlk-sw16==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 

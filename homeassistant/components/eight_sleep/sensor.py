@@ -1,14 +1,9 @@
-"""
-Support for Eight Sleep sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.eight_sleep/
-"""
+"""Support for Eight Sleep sensors."""
 import logging
 
-from homeassistant.components.eight_sleep import (
-    DATA_EIGHT, EightSleepHeatEntity, EightSleepUserEntity,
-    CONF_SENSORS, NAME_MAP)
+from . import (
+    CONF_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity,
+    EightSleepUserEntity)
 
 DEPENDENCIES = ['eight_sleep']
 

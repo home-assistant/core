@@ -1,9 +1,4 @@
-"""
-Support for functionality to keep track of the sun.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sun/
-"""
+"""Support for functionality to keep track of the sun."""
 import logging
 from datetime import timedelta
 

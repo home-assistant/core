@@ -1,13 +1,9 @@
-"""
-Support for Wink binary sensors.
-
-For more details about this platform, please refer to the documentation at
-at https://home-assistant.io/components/binary_sensor.wink/
-"""
+"""Support for Wink binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.wink import DOMAIN, WinkDevice
+
+from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 

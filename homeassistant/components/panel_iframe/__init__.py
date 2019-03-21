@@ -1,12 +1,7 @@
-"""
-Register an iFrame front end panel.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/panel_iframe/
-"""
+"""Register an iFrame front end panel."""
 import voluptuous as vol
 
-from homeassistant.const import (CONF_ICON, CONF_URL)
+from homeassistant.const import CONF_ICON, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['frontend']

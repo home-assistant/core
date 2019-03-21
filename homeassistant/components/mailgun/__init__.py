@@ -1,9 +1,4 @@
-"""
-Support for Mailgun.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mailgun/
-"""
+"""Support for Mailgun."""
 import hashlib
 import hmac
 import json
@@ -15,12 +10,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 
-DOMAIN = 'mailgun'
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['webhook']
-MESSAGE_RECEIVED = '{}_message_received'.format(DOMAIN)
+
 CONF_SANDBOX = 'sandbox'
+
 DEFAULT_SANDBOX = False
+DEPENDENCIES = ['webhook']
+DOMAIN = 'mailgun'
+
+MESSAGE_RECEIVED = '{}_message_received'.format(DOMAIN)
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): vol.Schema({

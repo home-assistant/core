@@ -1,13 +1,9 @@
-"""
-Support for AlarmDecoder Sensors (Shows Panel Display).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.alarmdecoder/
-"""
+"""Support for AlarmDecoder sensors (Shows Panel Display)."""
 import logging
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.alarmdecoder import (SIGNAL_PANEL_MESSAGE)
+
+from . import SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 

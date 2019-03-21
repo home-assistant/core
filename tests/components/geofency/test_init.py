@@ -10,11 +10,10 @@ from homeassistant.components.geofency import (
     CONF_MOBILE_BEACONS, DOMAIN, TRACKER_UPDATE)
 from homeassistant.const import (
     HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, STATE_HOME,
-    STATE_NOT_HOME, CONF_WEBHOOK_ID)
+    STATE_NOT_HOME)
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
-from tests.common import MockConfigEntry
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -288,16 +287,22 @@ async def test_beacon_enter_and_exit_car(hass, geofency_client, webhook_id):
 @pytest.mark.xfail(
     reason='The device_tracker component does not support unloading yet.'
 )
-async def test_load_unload_entry(hass, geofency_client):
+async def test_load_unload_entry(hass, geofency_client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
-    entry = MockConfigEntry(domain=DOMAIN, data={
-        CONF_WEBHOOK_ID: 'geofency_test'
-    })
+    url = '/api/webhook/{}'.format(webhook_id)
 
-    await geofency.async_setup_entry(hass, entry)
+    # Enter the Home zone
+    req = await geofency_client.post(url, data=GPS_ENTER_HOME)
     await hass.async_block_till_done()
-    assert 1 == len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE])
+    assert req.status == HTTP_OK
+    device_name = slugify(GPS_ENTER_HOME['device'])
+    state_name = hass.states.get('{}.{}'.format(
+        'device_tracker', device_name)).state
+    assert STATE_HOME == state_name
+    assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 
-    await geofency.async_unload_entry(hass, entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert await geofency.async_unload_entry(hass, entry)
     await hass.async_block_till_done()
-    assert 0 == len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE])
+    assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]

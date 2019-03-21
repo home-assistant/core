@@ -1,9 +1,4 @@
-"""
-Set up the demo environment that mimics interaction with devices.
-
-For more details about this component, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Set up the demo environment that mimics interaction with devices."""
 import asyncio
 import time
 

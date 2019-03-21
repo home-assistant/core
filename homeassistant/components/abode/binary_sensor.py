@@ -1,19 +1,13 @@
-"""
-This component provides HA binary_sensor support for Abode Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.abode/
-"""
+"""Support for Abode Security System binary sensors."""
 import logging
 
-from homeassistant.components.abode import (AbodeDevice, AbodeAutomation,
-                                            DOMAIN as ABODE_DOMAIN)
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-
-DEPENDENCIES = ['abode']
+from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['abode']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

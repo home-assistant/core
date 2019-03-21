@@ -1,9 +1,4 @@
-"""
-Support for EnOcean light sources.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.enocean/
-"""
+"""Support for EnOcean light sources."""
 import logging
 import math
 

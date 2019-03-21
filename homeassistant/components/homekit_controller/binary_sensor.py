@@ -1,14 +1,9 @@
-"""
-Support for Homekit motion sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.homekit_controller/
-"""
+"""Support for Homekit motion sensors."""
 import logging
 
-from homeassistant.components.homekit_controller import (HomeKitEntity,
-                                                         KNOWN_ACCESSORIES)
 from homeassistant.components.binary_sensor import BinarySensorDevice
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 

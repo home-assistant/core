@@ -1,9 +1,4 @@
-"""
-Support for Verisure components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/verisure/
-"""
+"""Support for Verisure devices."""
 import logging
 import threading
 from datetime import timedelta

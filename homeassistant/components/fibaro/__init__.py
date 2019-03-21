@@ -1,10 +1,4 @@
-"""
-Support for the Fibaro devices.
-
-For more details about this platform, please refer to the documentation.
-https://home-assistant.io/components/fibaro/
-"""
-
+"""Support for the Fibaro devices."""
 import logging
 from collections import defaultdict
 from typing import Optional
@@ -22,20 +16,30 @@ from homeassistant.util import convert, slugify
 REQUIREMENTS = ['fiblary3==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = 'fibaro'
-FIBARO_DEVICES = 'fibaro_devices'
-FIBARO_CONTROLLERS = 'fibaro_controllers'
-ATTR_CURRENT_POWER_W = "current_power_w"
-ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
-CONF_PLUGINS = "plugins"
-CONF_GATEWAYS = 'gateways'
-CONF_DIMMING = "dimming"
-CONF_COLOR = "color"
-CONF_RESET_COLOR = "reset_color"
-CONF_DEVICE_CONFIG = "device_config"
 
-FIBARO_COMPONENTS = ['binary_sensor', 'cover', 'light',
-                     'scene', 'sensor', 'switch']
+ATTR_CURRENT_ENERGY_KWH = 'current_energy_kwh'
+ATTR_CURRENT_POWER_W = 'current_power_w'
+
+CONF_COLOR = 'color'
+CONF_DEVICE_CONFIG = 'device_config'
+CONF_DIMMING = 'dimming'
+CONF_GATEWAYS = 'gateways'
+CONF_PLUGINS = 'plugins'
+CONF_RESET_COLOR = 'reset_color'
+
+DOMAIN = 'fibaro'
+
+FIBARO_CONTROLLERS = 'fibaro_controllers'
+FIBARO_DEVICES = 'fibaro_devices'
+
+FIBARO_COMPONENTS = [
+    'binary_sensor',
+    'cover',
+    'light',
+    'scene',
+    'sensor',
+    'switch',
+]
 
 FIBARO_TYPEMAP = {
     'com.fibaro.multilevelSensor': "sensor",
@@ -78,8 +82,7 @@ GATEWAY_CONFIG = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_GATEWAYS):
-            vol.All(cv.ensure_list, [GATEWAY_CONFIG])
+        vol.Required(CONF_GATEWAYS): vol.All(cv.ensure_list, [GATEWAY_CONFIG]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -91,20 +94,19 @@ class FibaroController():
         """Initialize the Fibaro controller."""
         from fiblary3.client.v4.client import Client as FibaroClient
 
-        self._client = FibaroClient(config[CONF_URL],
-                                    config[CONF_USERNAME],
-                                    config[CONF_PASSWORD])
+        self._client = FibaroClient(
+            config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD])
         self._scene_map = None
         # Whether to import devices from plugins
         self._import_plugins = config[CONF_PLUGINS]
         self._device_config = config[CONF_DEVICE_CONFIG]
-        self._room_map = None         # Mapping roomId to room object
-        self._device_map = None       # Mapping deviceId to device object
-        self.fibaro_devices = None    # List of devices by type
-        self._callbacks = {}          # Update value callbacks by deviceId
-        self._state_handler = None    # Fiblary's StateHandler object
+        self._room_map = None  # Mapping roomId to room object
+        self._device_map = None  # Mapping deviceId to device object
+        self.fibaro_devices = None  # List of devices by type
+        self._callbacks = {}  # Update value callbacks by deviceId
+        self._state_handler = None  # Fiblary's StateHandler object
         self._excluded_devices = config[CONF_EXCLUDE]
-        self.hub_serial = None          # Unique serial number of the hub
+        self.hub_serial = None   # Unique serial number of the hub
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
@@ -118,7 +120,7 @@ class FibaroController():
             return False
         if login is None or login.status is False:
             _LOGGER.error("Invalid login for Fibaro HC. "
-                          "Please check username and password.")
+                          "Please check username and password")
             return False
 
         self._room_map = {room.id: room for room in self._client.rooms.list()}

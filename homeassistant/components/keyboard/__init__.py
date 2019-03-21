@@ -1,9 +1,4 @@
-"""
-Provides functionality to emulate keyboard presses on host machine.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/keyboard/
-"""
+"""Support to emulate keyboard presses on host machine."""
 import voluptuous as vol
 
 from homeassistant.const import (

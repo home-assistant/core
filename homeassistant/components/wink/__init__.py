@@ -1,9 +1,4 @@
-"""
-Support for Wink hubs.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/wink/
-"""
+"""Support for Wink hubs."""
 from datetime import timedelta
 import json
 import logging
@@ -56,7 +51,7 @@ USER_AGENT = "Manufacturer/Home-Assistant{} python/3 Wink/3".format(
 
 DEFAULT_CONFIG = {
     'client_id': 'CLIENT_ID_HERE',
-    'client_secret': 'CLIENT_SECRET_HERE'
+    'client_secret': 'CLIENT_SECRET_HERE',
 }
 
 SERVICE_ADD_NEW_DEVICES = 'pull_newly_added_devices_from_wink'
@@ -115,42 +110,42 @@ CONFIG_SCHEMA = vol.Schema({
 
 RENAME_DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_NAME): cv.string
+    vol.Required(ATTR_NAME): cv.string,
 }, extra=vol.ALLOW_EXTRA)
 
 DELETE_DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 }, extra=vol.ALLOW_EXTRA)
 
 SET_PAIRING_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_HUB_NAME): cv.string,
     vol.Required(ATTR_PAIRING_MODE): cv.string,
-    vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string
+    vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string,
 }, extra=vol.ALLOW_EXTRA)
 
 SET_VOLUME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VOLUME): vol.In(VOLUMES)
+    vol.Required(ATTR_VOLUME): vol.In(VOLUMES),
 })
 
 SET_SIREN_TONE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TONE): vol.In(TONES)
+    vol.Required(ATTR_TONE): vol.In(TONES),
 })
 
 SET_CHIME_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TONE): vol.In(CHIME_TONES)
+    vol.Required(ATTR_TONE): vol.In(CHIME_TONES),
 })
 
 SET_AUTO_SHUTOFF_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES)
+    vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES),
 })
 
 SET_STROBE_ENABLED_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_ENABLED): cv.boolean
+    vol.Required(ATTR_ENABLED): cv.boolean,
 })
 
 ENABLED_SIREN_SCHEMA = vol.Schema({
@@ -166,13 +161,13 @@ DIAL_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MAX_POSITION): cv.positive_int,
     vol.Optional(ATTR_ROTATION): vol.In(ROTATIONS),
     vol.Optional(ATTR_SCALE): vol.In(SCALES),
-    vol.Optional(ATTR_TICKS): cv.positive_int
+    vol.Optional(ATTR_TICKS): cv.positive_int,
 })
 
 DIAL_STATE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_VALUE): vol.Coerce(int),
-    vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string)
+    vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string),
 })
 
 WINK_COMPONENTS = [

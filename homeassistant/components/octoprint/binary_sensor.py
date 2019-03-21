@@ -1,16 +1,11 @@
-"""
-Support for monitoring OctoPrint binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.octoprint/
-"""
+"""Support for monitoring OctoPrint binary sensors."""
 import logging
 
 import requests
 
-from homeassistant.components.octoprint import (BINARY_SENSOR_TYPES,
-                                                DOMAIN as COMPONENT_DOMAIN)
 from homeassistant.components.binary_sensor import BinarySensorDevice
+
+from . import BINARY_SENSOR_TYPES, DOMAIN as COMPONENT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

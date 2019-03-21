@@ -1,20 +1,15 @@
-"""
-Support for Velbus covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.velbus/
-"""
+"""Support for Velbus covers."""
 import logging
 import time
 
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE,
-    SUPPORT_STOP)
-from homeassistant.components.velbus import DOMAIN
-from homeassistant.const import (CONF_COVERS, CONF_NAME)
+    PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP, CoverDevice)
+from homeassistant.const import CONF_COVERS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Support for controlling Global Cache gc100.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/gc100/
-"""
+"""Support for controlling Global Cache gc100."""
 import logging
 
 import voluptuous as vol

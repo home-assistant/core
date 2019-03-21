@@ -409,6 +409,10 @@ class Context:
         type=str,
         default=None,
     )
+    parent_id = attr.ib(
+        type=Optional[str],
+        default=None
+    )
     id = attr.ib(
         type=str,
         default=attr.Factory(lambda: uuid.uuid4().hex),
@@ -418,6 +422,7 @@ class Context:
         """Return a dictionary representation of the context."""
         return {
             'id': self.id,
+            'parent_id': self.parent_id,
             'user_id': self.user_id,
         }
 
@@ -744,7 +749,10 @@ class State:
 
         context = json_dict.get('context')
         if context:
-            context = Context(**context)
+            context = Context(
+                id=context.get('id'),
+                user_id=context.get('user_id'),
+            )
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated,
@@ -1117,7 +1125,7 @@ class ServiceRegistry:
             ATTR_DOMAIN: domain.lower(),
             ATTR_SERVICE: service.lower(),
             ATTR_SERVICE_DATA: service_data,
-        })
+        }, context=context)
 
         if not blocking:
             self._hass.async_create_task(
@@ -1172,7 +1180,7 @@ class Config:
         # List of loaded components
         self.components = set()  # type: set
 
-        # API (HTTP) server configuration
+        # API (HTTP) server configuration, see components.http.ApiConfig
         self.api = None  # type: Optional[Any]
 
         # Directory that holds the configuration

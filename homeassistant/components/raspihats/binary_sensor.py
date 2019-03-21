@@ -1,21 +1,17 @@
-"""
-Configure a binary_sensor using a digital input from a raspihats board.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.raspihats/
-"""
+"""Support for raspihats board binary sensors."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.components.raspihats import (
-    CONF_ADDRESS, CONF_BOARD, CONF_CHANNELS, CONF_I2C_HATS, CONF_INDEX,
-    CONF_INVERT_LOGIC, I2C_HAT_NAMES, I2C_HATS_MANAGER, I2CHatsException)
 from homeassistant.const import (
-    CONF_DEVICE_CLASS, CONF_NAME, DEVICE_DEFAULT_NAME)
+    CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, DEVICE_DEFAULT_NAME)
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    CONF_BOARD, CONF_CHANNELS, CONF_I2C_HATS, CONF_INDEX, CONF_INVERT_LOGIC,
+    I2C_HAT_NAMES, I2C_HATS_MANAGER, I2CHatsException)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +30,7 @@ _CHANNELS_SCHEMA = vol.Schema([{
 _I2C_HATS_SCHEMA = vol.Schema([{
     vol.Required(CONF_BOARD): vol.In(I2C_HAT_NAMES),
     vol.Required(CONF_ADDRESS): vol.Coerce(int),
-    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA
+    vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA,
 }])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

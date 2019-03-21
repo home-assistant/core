@@ -5,12 +5,13 @@ import os
 import sys
 from time import time
 from collections import OrderedDict
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Set
 
 import voluptuous as vol
 
 from homeassistant import (
-    core, config as conf_util, config_entries, components as core_components)
+    core, config as conf_util, config_entries, components as core_components,
+    loader)
 from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
@@ -27,8 +28,16 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
-FIRST_INIT_COMPONENT = {'system_log', 'recorder', 'mqtt', 'mqtt_eventstream',
-                        'logger', 'introduction', 'frontend', 'history'}
+LOGGING_COMPONENT = {'logger', 'system_log'}
+
+FIRST_INIT_COMPONENT = {
+    'recorder',
+    'mqtt',
+    'mqtt_eventstream',
+    'introduction',
+    'frontend',
+    'history',
+}
 
 
 def from_config_dict(config: Dict[str, Any],
@@ -84,14 +93,18 @@ async def async_from_config_dict(config: Dict[str, Any],
         async_enable_logging(hass, verbose, log_rotate_days, log_file,
                              log_no_color)
 
+    hass.config.skip_pip = skip_pip
+    if skip_pip:
+        _LOGGER.warning("Skipping pip installation of required modules. "
+                        "This may cause issues")
+
     core_config = config.get(core.DOMAIN, {})
-    has_api_password = bool((config.get('http') or {}).get('api_password'))
-    has_trusted_networks = bool((config.get('http') or {})
-                                .get('trusted_networks'))
+    api_password = config.get('http', {}).get('api_password')
+    trusted_networks = config.get('http', {}).get('trusted_networks')
 
     try:
         await conf_util.async_process_ha_core_config(
-            hass, core_config, has_api_password, has_trusted_networks)
+            hass, core_config, api_password, trusted_networks)
     except vol.Invalid as config_err:
         conf_util.async_log_exception(
             config_err, 'homeassistant', core_config, hass)
@@ -104,11 +117,6 @@ async def async_from_config_dict(config: Dict[str, Any],
     await hass.async_add_executor_job(
         conf_util.process_ha_config_upgrade, hass)
 
-    hass.config.skip_pip = skip_pip
-    if skip_pip:
-        _LOGGER.warning("Skipping pip installation of required modules. "
-                        "This may cause issues")
-
     # Make a copy because we are mutating it.
     config = OrderedDict(config)
 
@@ -117,12 +125,18 @@ async def async_from_config_dict(config: Dict[str, Any],
         hass, config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_load()
+    await hass.config_entries.async_initialize()
 
-    # Filter out the repeating and common config section [homeassistant]
-    components = set(key.split(' ')[0] for key in config.keys()
-                     if key != core.DOMAIN)
-    components.update(hass.config_entries.async_domains())
+    components = _get_components(hass, config)
+
+    # Resolve all dependencies of all components.
+    for component in list(components):
+        try:
+            components.update(loader.component_dependencies(hass, component))
+        except loader.LoaderError:
+            # Ignore it, or we'll break startup
+            # It will be properly handled during setup.
+            pass
 
     # setup components
     res = await core_components.async_setup(hass, config)
@@ -135,17 +149,25 @@ async def async_from_config_dict(config: Dict[str, Any],
 
     _LOGGER.info("Home Assistant core initialized")
 
+    # stage 0, load logging components
+    for component in components:
+        if component in LOGGING_COMPONENT:
+            hass.async_create_task(
+                async_setup_component(hass, component, config))
+
+    await hass.async_block_till_done()
+
     # stage 1
     for component in components:
-        if component not in FIRST_INIT_COMPONENT:
-            continue
-        hass.async_create_task(async_setup_component(hass, component, config))
+        if component in FIRST_INIT_COMPONENT:
+            hass.async_create_task(
+                async_setup_component(hass, component, config))
 
     await hass.async_block_till_done()
 
     # stage 2
     for component in components:
-        if component in FIRST_INIT_COMPONENT:
+        if component in FIRST_INIT_COMPONENT or component in LOGGING_COMPONENT:
             continue
         hass.async_create_task(async_setup_component(hass, component, config))
 
@@ -177,6 +199,23 @@ async def async_from_config_dict(config: Dict[str, Any],
             )
             msg.append('\n'.join('- {} -> {}'.format(*item)
                                  for item in cv.INVALID_SLUGS_FOUND.items()))
+
+        hass.components.persistent_notification.async_create(
+            '\n\n'.join(msg), "Config Warning", "config_warning"
+        )
+
+    # TEMP: warn users of invalid extra keys
+    # Remove after 0.92
+    if cv.INVALID_EXTRA_KEYS_FOUND:
+        msg = []
+        msg.append(
+            "Your configuration contains extra keys "
+            "that the platform does not support (but were silently "
+            "accepted before 0.88). Please find and remove the following."
+            "This will become a breaking change."
+        )
+        msg.append('\n'.join('- {}'.format(it)
+                             for it in cv.INVALID_EXTRA_KEYS_FOUND))
 
         hass.components.persistent_notification.async_create(
             '\n\n'.join(msg), "Config Warning", "config_warning"
@@ -349,3 +388,21 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     if lib_dir not in sys.path:
         sys.path.insert(0, lib_dir)
     return deps_dir
+
+
+@core.callback
+def _get_components(hass: core.HomeAssistant,
+                    config: Dict[str, Any]) -> Set[str]:
+    """Get components to set up."""
+    # Filter out the repeating and common config section [homeassistant]
+    components = set(key.split(' ')[0] for key in config.keys()
+                     if key != core.DOMAIN)
+
+    # Add config entry domains
+    components.update(hass.config_entries.async_domains())  # type: ignore
+
+    # Make sure the Hass.io component is loaded
+    if 'HASSIO' in os.environ:
+        components.add('hassio')
+
+    return components

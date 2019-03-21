@@ -1,18 +1,13 @@
-"""
-Sensors for the Tesla sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tesla/
-"""
+"""Support for the Tesla sensors."""
 from datetime import timedelta
 import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
-from homeassistant.components.tesla import TeslaDevice
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES)
+    LENGTH_KILOMETERS, LENGTH_MILES, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 

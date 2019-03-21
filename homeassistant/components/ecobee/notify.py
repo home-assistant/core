@@ -1,9 +1,4 @@
-"""
-Support for ecobee Send Message service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.ecobee/
-"""
+"""Support for Ecobee Send Message service."""
 import logging
 
 import voluptuous as vol

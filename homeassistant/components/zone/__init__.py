@@ -1,10 +1,4 @@
-"""
-Support for the definition of zones.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zone/
-"""
-
+"""Support for the definition of zones."""
 import logging
 
 import voluptuous as vol

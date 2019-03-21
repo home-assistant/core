@@ -1,11 +1,7 @@
-"""
-Support for the Hive devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hive/
-"""
+"""Support for the Hive switches."""
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
+
+from . import DATA_HIVE, DOMAIN
 
 DEPENDENCIES = ['hive']
 
@@ -29,8 +25,8 @@ class HiveDevicePlug(SwitchDevice):
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
         self.attributes = {}
-        self.data_updatesource = '{}.{}'.format(self.device_type,
-                                                self.node_id)
+        self.data_updatesource = '{}.{}'.format(
+            self.device_type, self.node_id)
         self._unique_id = '{}-{}'.format(self.node_id, self.device_type)
         self.session.entities.append(self)
 
