@@ -7,7 +7,7 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 
-from ..netgear_lte import CONF_MONITORED_CONDITIONS, DATA_KEY
+from . import CONF_MONITORED_CONDITIONS, DATA_KEY
 
 DEPENDENCIES = ['netgear_lte']
 

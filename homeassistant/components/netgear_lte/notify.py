@@ -6,7 +6,7 @@ import attr
 from homeassistant.components.notify import (
     ATTR_TARGET, BaseNotificationService, DOMAIN)
 
-from ..netgear_lte import CONF_RECIPIENT, DATA_KEY
+from . import CONF_RECIPIENT, DATA_KEY
 
 DEPENDENCIES = ['netgear_lte']
 

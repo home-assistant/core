@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(NOTIFY_DOMAIN, default=NOTIFY_SCHEMA({})):
+        vol.Optional(NOTIFY_DOMAIN, default={}):
             vol.All(cv.ensure_list, [NOTIFY_SCHEMA]),
         vol.Optional(SENSOR_DOMAIN): SENSOR_SCHEMA,
     })])
