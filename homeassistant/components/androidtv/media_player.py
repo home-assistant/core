@@ -163,7 +163,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             output = target_device.adb_command(cmd)
 
             # log the output if there is any
-            if output:
+            if output and (not isinstance(output, str) or output.strip()):
                 _LOGGER.info("Output of command '%s' from '%s': %s",
                              cmd, target_device.entity_id, repr(output))
 
@@ -223,7 +223,7 @@ class ADBDevice(MediaPlayerDevice):
                                TcpTimeoutException)
         else:
             # Using "pure-python-adb" (communicate with ADB server)
-            self.exceptions = (ConnectionResetError,)
+            self.exceptions = (ConnectionResetError, RuntimeError)
 
         # Property attributes
         self._available = self.aftv.available
