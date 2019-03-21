@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-tado==0.2.8']
+REQUIREMENTS = ['python-tado==0.2.9']
 
 _LOGGER = logging.getLogger(__name__)
 
