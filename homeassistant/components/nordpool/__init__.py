@@ -1,0 +1,1 @@
+"""Nordpool elspot price platform."""

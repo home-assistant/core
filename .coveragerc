@@ -1224,6 +1224,7 @@ omit =
     homeassistant/components/kankun/switch.py
     homeassistant/components/mystrom/switch.py
     homeassistant/components/netio/switch.py
+    homeassistant/components/nordpool/sensor.py
     homeassistant/components/orvibo/switch.py
     homeassistant/components/pencom/switch.py
     homeassistant/components/pulseaudio_loopback/switch.py
