@@ -44,71 +44,102 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devices = []
 
         for sens_type in monitored_conditions:
-            _LOGGER.debug("Checking for %s sensor types on %s", sens_type, printers[id]['name'])
+            _LOGGER.debug("Checking for %s sensor types on %s",
+                          sens_type,
+                          printers[id]['name'])
             if sens_type == 'Temperatures':
                 nozzles = server.Nozzle(id)
                 if nozzles != None:
                     for nozzle in nozzles:
-                        state = hass.states.get('sensor.' + printers[id]['slug'] + '_nozzle_' + str(nozzle))
+                        state = hass.states.get('sensor.' +
+                                                printers[id]['slug'] +
+                                                '_nozzle_' + str(nozzle))
                         if not state:
-                            new_sensor = RepetierSensor('nozzle', {'nozzle': nozzle,
-                                                                   'name': printers[id]['slug'],
-                                                                   'id': id,
-                                                                   'server': {'url': url, 'port': port, 'apikey': apikey},
-                                                                   'sens_type': sens_type})
+                            new_sensor = RepetierSensor('nozzle',
+                                    {'nozzle': nozzle,
+                                     'name': printers[id]['slug'],
+                                     'id': id,
+                                     'server': {'url': url,
+                                                'port': port,
+                                                'apikey': apikey},
+                                     'sens_type': sens_type})
                             devices.append(new_sensor)
                 else:
-                    _LOGGER.debug("No nozzles found - is printer %s offline?", printers[id]['name'])
+                    _LOGGER.debug("No nozzles found - is printer %s offline?",
+                                  printers[id]['name'])
 
                 beds = server.Bed(id)
                 if beds != None:
                     for bed in beds:
-                        state = hass.states.get('sensor.' + printers[id]['slug'] + '_bed_' + str(bed))
+                        state = hass.states.get('sensor.' +
+                                                printers[id]['slug'] +
+                                                '_bed_' + str(bed))
                         if not state:
-                            new_sensor = RepetierSensor('bed', {'bed': bed,
-                                                                'name': printers[id]['slug'],
-                                                                'id': id,
-                                                                'server': {'url': url, 'port': port, 'apikey': apikey},
-                                                                'sens_type': sens_type})
+                            new_sensor = RepetierSensor('bed', 
+                                    {'bed': bed,
+                                     'name': printers[id]['slug'],
+                                     'id': id,
+                                     'server': {'url': url,
+                                                'port': port,
+                                                'apikey': apikey},
+                                     'sens_type': sens_type})
                             devices.append(new_sensor)
                 else:
-                    _LOGGER.debug("No beds found - is printer %s offline?", printers[id]['name'])
-
+                    _LOGGER.debug("No beds found - is printer %s offline?",
+                                  printers[id]['name'])
             elif sens_type == "Current State":
                 state = hass.states.get('sensor.' + printers[id]['slug'])
                 if not state:
                     _LOGGER.debug("State sensor initiating...")
-                    new_sensor = RepetierSensor('state', {'name': printers[id]['slug'],
-                                                          'id': id,
-                                                          'server': {'url': url, 'port': port, 'apikey': apikey},
-                                                          'sens_type': sens_type})
+                    new_sensor = RepetierSensor('state',
+                                                {'name': printers[id]['slug'],
+                                                 'id': id,
+                                                 'server': {'url': url,
+                                                            'port': port,
+                                                            'apikey': apikey},
+                                                 'sens_type': sens_type})
                     devices.append(new_sensor)
             elif sens_type == "Job Percentage":
-                state = hass.states.get('sensor.' + printers[id]['slug'] + '_current_job')
+                state = hass.states.get('sensor.' +
+                                        printers[id]['slug'] +
+                                        '_current_job')
                 if not state:
                     _LOGGER.debug("Job percentage sensor initiating...")
-                    new_sensor = RepetierSensor('percentage', {'name': printers[id]['slug'],
-                                                               'id': id,
-                                                               'server': {'url': url, 'port': port, 'apikey': apikey},
-                                                               'sens_type': sens_type})
+                    new_sensor = RepetierSensor('percentage',
+                                                {'name': printers[id]['slug'],
+                                                 'id': id,
+                                                 'server': {'url': url,
+                                                            'port': port,
+                                                            'apikey': apikey},
+                                                 'sens_type': sens_type})
                     devices.append(new_sensor)
             elif sens_type == "Time Remaining":
-                state = hass.states.get('sensor.' + printers[id]['slug'] + '_current_job_remaining')
+                state = hass.states.get('sensor.' +
+                                        printers[id]['slug'] +
+                                        '_current_job_remaining')
                 if not state:
                     _LOGGER.debug("Time remaining sensor initiating...")
-                    new_sensor = RepetierSensor('remaining', {'name': printers[id]['slug'],
-                                                              'id': id,
-                                                              'server': {'url': url, 'port': port, 'apikey': apikey},
-                                                              'sens_type': sens_type})
+                    new_sensor = RepetierSensor('remaining',
+                                                {'name': printers[id]['slug'],
+                                                 'id': id,
+                                                 'server': {'url': url,
+                                                            'port': port,
+                                                            'apikey': apikey},
+                                                 'sens_type': sens_type})
                     devices.append(new_sensor)
             elif sens_type == "Time Elapsed":
-                state = hass.states.get('sensor.' + printers[id]['slug'] + '_current_job_elapsed')
+                state = hass.states.get('sensor.' +
+                                        printers[id]['slug'] +
+                                        '_current_job_elapsed')
                 if not state:
                     _LOGGER.debug("Time elapsed sensor initiating...")
-                    new_sensor = RepetierSensor('elapsed', {'name': printers[id]['slug'],
-                                                              'id': id,
-                                                              'server': {'url': url, 'port': port, 'apikey': apikey},
-                                                              'sens_type': sens_type})
+                    new_sensor = RepetierSensor('elapsed',
+                                                {'name': printers[id]['slug'],
+                                                 'id': id,
+                                                 'server': {'url': url,
+                                                            'port': port,
+                                                            'apikey': apikey},
+                                                 'sens_type': sens_type})
                     devices.append(new_sensor)
 
         add_entities(devices, True)
