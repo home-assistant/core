@@ -306,7 +306,7 @@ async def test_credential_abort(hass):
 
 
 async def test_wrong_pin_error(hass):
-    """Test that incorect pin throws an error."""
+    """Test that incorrect pin throws an error."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
