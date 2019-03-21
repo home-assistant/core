@@ -98,7 +98,9 @@ class FroniusSensor(Entity):
         except ConnectionError:
             _LOGGER.error("Sensor data cannot be updated: connection error.")
         except ValueError:
-            _LOGGER.error("Sensor data cannot be updated: Host returned invalid response.")
+            _LOGGER.error(
+                "Sensor data cannot be updated: Host returned invalid response."
+            )
 
         if values:
             self._state = values['status']['Code']
