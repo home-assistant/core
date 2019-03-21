@@ -524,7 +524,7 @@ habitipy==0.2.0
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.8
+hass-nabucasa==0.10
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -554,7 +554,7 @@ hole==0.3.0
 holidays==0.9.9
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190320.0
+home-assistant-frontend==20190321.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
@@ -1394,7 +1394,7 @@ python-songpal==0.0.9.1
 python-synology==0.2.0
 
 # homeassistant.components.tado
-python-tado==0.2.8
+python-tado==0.2.9
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==11.1.0
@@ -1710,7 +1710,7 @@ todoist-python==7.0.17
 toonapilib==3.2.2
 
 # homeassistant.components.alarm_control_panel.totalconnect
-total_connect_client==0.24
+total_connect_client==0.25
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
