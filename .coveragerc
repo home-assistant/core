@@ -433,7 +433,8 @@ omit =
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
-    homeassistant/components/repetier/*
+    homeassistant/components/repetier/__init__.py
+    homeassistant/components/repetier/sensor.py
     homeassistant/components/rfxtrx/*
     homeassistant/components/roku/*
     homeassistant/components/route53/*
