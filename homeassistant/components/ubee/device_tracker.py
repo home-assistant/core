@@ -14,47 +14,48 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyubee==0.2']
+REQUIREMENTS = ['pyubee==0.3']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_MODEL = 'model'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_MODEL): cv.string,
 })
 
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Ubee scanner."""
-    try:
-        return UbeeDeviceScanner(config[DOMAIN])
-    except ConnectionError:
-        return None
+    info = config[DOMAIN]
+    host = info.get(CONF_HOST)
+    username = info.get(CONF_USERNAME)
+    password = info.get(CONF_PASSWORD)
+    model = info.get(CONF_MODEL)
+
+    scanner = UbeeDeviceScanner(host, username, password, model)
+
+    return scanner if scanner.success_init else None
 
 
 class UbeeDeviceScanner(DeviceScanner):
     """This class queries a wireless Ubee router."""
 
-    def __init__(self, config):
+    def __init__(self, host, username, password, model):
         """Initialize the Ubee scanner."""
         from pyubee import Ubee
-
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
 
         self.last_results = {}
         self.mac2name = {}
 
-        self.ubee = Ubee(self.host, self.username, self.password)
-        _LOGGER.info("Logging in")
-        results = self.get_connected_devices()
-        self.success_init = results is not None
+        self.ubee = Ubee(host, username, password, model)
 
-        if self.success_init:
-            self.last_results = results
-        else:
+        self.success_init = self.ubee.login()
+
+        if not self.success_init:
             _LOGGER.error("Login failed")
 
     def scan_devices(self):
@@ -76,7 +77,7 @@ class UbeeDeviceScanner(DeviceScanner):
             return
 
         _LOGGER.debug("Scanning")
-        results = self.get_connected_devices()
+        results = self._get_connected_devices()
 
         if results is None:
             _LOGGER.warning("Error scanning devices")
@@ -84,7 +85,7 @@ class UbeeDeviceScanner(DeviceScanner):
 
         self.last_results = results or []
 
-    def get_connected_devices(self):
+    def _get_connected_devices(self):
         """List connected devices with pyubee."""
         if not self.ubee.session_active():
             self.ubee.login()
