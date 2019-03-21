@@ -105,9 +105,12 @@ aioasuswrt==1.1.21
 # homeassistant.components.automatic.device_tracker
 aioautomatic==0.6.5
 
+<<<<<<< HEAD
 # homeassistant.components.aws
 aiobotocore==0.10.2
 
+=======
+>>>>>>> Resolved conflicts
 # homeassistant.components.dnsip.sensor
 aiodns==1.1.1
 
@@ -156,10 +159,17 @@ alpha_vantage==2.1.0
 
 # homeassistant.components.amcrest
 amcrest==1.2.7
+<<<<<<< HEAD
 
 # homeassistant.components.androidtv.media_player
 androidtv==0.0.14
 
+=======
+
+# homeassistant.components.androidtv.media_player
+androidtv==0.0.12
+
+>>>>>>> Resolved conflicts
 # homeassistant.components.anel_pwrctrl.switch
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
@@ -183,11 +193,19 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.dlna_dmr.media_player
+<<<<<<< HEAD
 async-upnp-client==0.14.7
 
 # homeassistant.components.stream
 av==6.1.2
 
+=======
+async-upnp-client==0.14.6
+
+# homeassistant.components.stream
+av==6.1.2
+
+>>>>>>> Resolved conflicts
 # homeassistant.components.avion.light
 # avion==0.10
 
@@ -242,6 +260,12 @@ blockchain==1.4.4
 # homeassistant.components.aws_sqs.notify
 boto3==1.9.16
 
+<<<<<<< HEAD
+=======
+# homeassistant.scripts.credstash
+botocore==1.7.34
+
+>>>>>>> Resolved conflicts
 # homeassistant.components.braviatv.media_player
 braviarc-homeassistant==0.3.7.dev0
 
@@ -272,9 +296,15 @@ buienradar==0.91
 caldav==0.5.0
 
 # homeassistant.components.cisco_mobility_express.device_tracker
+<<<<<<< HEAD
 ciscomobilityexpress==0.1.5
 
 # homeassistant.components.ciscospark.notify
+=======
+ciscomobilityexpress==0.1.2
+
+# homeassistant.components.notify.ciscospark
+>>>>>>> Resolved conflicts
 ciscosparkapi==0.4.2
 
 # homeassistant.components.cppm_tracker.device_tracker
@@ -392,7 +422,11 @@ emulated_roku==0.1.8
 enocean==0.40
 
 # homeassistant.components.entur_public_transport.sensor
+<<<<<<< HEAD
 enturclient==0.2.0
+=======
+enturclient==0.1.3
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.envirophat.sensor
 # envirophat==0.0.6
@@ -521,7 +555,11 @@ habitipy==0.2.0
 hangups==0.4.6
 
 # homeassistant.components.cloud
+<<<<<<< HEAD
 hass-nabucasa==0.11
+=======
+hass-nabucasa==0.8
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -551,7 +589,11 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
+<<<<<<< HEAD
 home-assistant-frontend==20190329.0
+=======
+home-assistant-frontend==20190320.0
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.3
@@ -606,7 +648,11 @@ ipify==1.0.0
 jsonpath==0.75
 
 # homeassistant.components.kodi.media_player
+<<<<<<< HEAD
 # homeassistant.components.kodi.notify
+=======
+# homeassistant.components.notify.kodi
+>>>>>>> Resolved conflicts
 jsonrpc-async==0.6
 
 # homeassistant.components.kodi.media_player
@@ -713,7 +759,11 @@ millheater==0.3.4
 # homeassistant.components.mitemp_bt.sensor
 mitemp_bt==0.0.1
 
+<<<<<<< HEAD
 # homeassistant.components.mopar
+=======
+# homeassistant.components.mopar.sensor
+>>>>>>> Resolved conflicts
 motorparts==1.1.0
 
 # homeassistant.components.tts
@@ -735,7 +785,11 @@ nad_receiver==0.0.11
 ndms2_client==0.0.6
 
 # homeassistant.components.ness_alarm
+<<<<<<< HEAD
 nessclient==0.9.15
+=======
+nessclient==0.9.14
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.netdata.sensor
 netdata==0.1.2
@@ -754,6 +808,7 @@ niluclient==0.1.2
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # homeassistant.components.nederlandse_spoorwegen.sensor
 =======
 =======
@@ -762,6 +817,9 @@ nordpool==0.2
 
 >>>>>>> Resolved conflicts
 # homeassistant.components.sensor.nederlandse_spoorwegen
+>>>>>>> Resolved conflicts
+=======
+# homeassistant.components.nederlandse_spoorwegen.sensor
 >>>>>>> Resolved conflicts
 nsapi==2.7.4
 
@@ -799,7 +857,11 @@ openhomedevice==0.4.2
 opensensemap-api==0.1.5
 
 # homeassistant.components.enigma2.media_player
+<<<<<<< HEAD
 openwebifpy==3.1.0
+=======
+openwebifpy==1.2.7
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.luci.device_tracker
 openwrt-luci-rpc==1.0.5
@@ -815,7 +877,11 @@ paho-mqtt==1.4.0
 panacotta==0.1
 
 # homeassistant.components.panasonic_viera.media_player
+<<<<<<< HEAD
 panasonic_viera==0.3.2
+=======
+panasonic_viera==0.3.1
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.dunehd.media_player
 pdunehd==1.3
@@ -890,7 +956,11 @@ psutil==5.6.1
 # homeassistant.components.wink
 pubnubsub-handler==1.0.3
 
+<<<<<<< HEAD
 # homeassistant.components.pushbullet.notify
+=======
+# homeassistant.components.notify.pushbullet
+>>>>>>> Resolved conflicts
 # homeassistant.components.pushbullet.sensor
 pushbullet.py==0.11.0
 
@@ -907,7 +977,11 @@ py-august==0.7.0
 py-canary==0.5.0
 
 # homeassistant.components.cpuspeed.sensor
+<<<<<<< HEAD
 py-cpuinfo==5.0.0
+=======
+py-cpuinfo==4.0.0
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.melissa
 py-melissa-climate==2.0.0
@@ -935,7 +1009,11 @@ pyRFXtrx==0.23
 # pySwitchmate==0.4.5
 
 # homeassistant.components.tibber
+<<<<<<< HEAD
 pyTibber==0.10.0
+=======
+pyTibber==0.9.8
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.dlink.switch
 pyW215==0.6.0
@@ -990,7 +1068,11 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
+<<<<<<< HEAD
 pychromecast==3.1.0
+=======
+pychromecast==3.0.0
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.cmus.media_player
 pycmus==0.1.1
@@ -1008,7 +1090,11 @@ pycsspeechtts==1.0.2
 # pycups==1.9.73
 
 # homeassistant.components.daikin
+<<<<<<< HEAD
 pydaikin==1.3.1
+=======
+pydaikin==1.1.0
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.0.7
@@ -1086,9 +1172,12 @@ pygtt==1.1.2
 # homeassistant.components.version.sensor
 pyhaversion==2.0.3
 
+<<<<<<< HEAD
 # homeassistant.components.heos
 pyheos==0.2.0
 
+=======
+>>>>>>> Resolved conflicts
 # homeassistant.components.hikvision.binary_sensor
 pyhik==0.2.2
 
@@ -1132,7 +1221,11 @@ pykwb==0.0.8
 pylacrosse==0.3.1
 
 # homeassistant.components.lastfm.sensor
+<<<<<<< HEAD
 pylast==3.1.0
+=======
+pylast==3.0.0
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.launch_library.sensor
 pylaunches==0.2.0
@@ -1145,13 +1238,21 @@ pylgnetcast-homeassistant==0.2.0.dev0
 pylgtv==0.1.9
 
 # homeassistant.components.linky.sensor
+<<<<<<< HEAD
 pylinky==0.3.3
+=======
+pylinky==0.3.0
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.litejet
 pylitejet==0.1
 
 # homeassistant.components.loopenergy.sensor
+<<<<<<< HEAD
 pyloopenergy==0.1.2
+=======
+pyloopenergy==0.1.0
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.5.0
@@ -1218,7 +1319,11 @@ pyoppleio==1.0.5
 pyota==2.0.5
 
 # homeassistant.components.opentherm_gw
+<<<<<<< HEAD
 pyotgw==0.4b3
+=======
+pyotgw==0.4b2
+>>>>>>> Resolved conflicts
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -1410,7 +1515,11 @@ python-songpal==0.0.9.1
 python-synology==0.2.0
 
 # homeassistant.components.tado
+<<<<<<< HEAD
 python-tado==0.2.9
+=======
+python-tado==0.2.8
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==11.1.0
@@ -1446,7 +1555,11 @@ pytile==2.0.6
 pytouchline==0.7
 
 # homeassistant.components.traccar.device_tracker
+<<<<<<< HEAD
 pytraccar==0.5.0
+=======
+pytraccar==0.3.0
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.trackr.device_tracker
 pytrackr==0.0.5
@@ -1651,10 +1764,17 @@ spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql.sensor
+<<<<<<< HEAD
 sqlalchemy==1.3.0
 
 # homeassistant.components.srp_energy.sensor
 srpenergy==1.0.6
+=======
+sqlalchemy==1.2.18
+
+# homeassistant.components.srp_energy.sensor
+srpenergy==1.0.5
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.starlingbank.sensor
 starlingbank==3.1
@@ -1665,9 +1785,13 @@ statsd==3.2.1
 # homeassistant.components.steam_online.sensor
 steamodd==4.21
 
+<<<<<<< HEAD
 # homeassistant.components.solaredge.sensor
 # homeassistant.components.thermoworks_smoke.sensor
 # homeassistant.components.traccar.device_tracker
+=======
+# homeassistant.components.thermoworks_smoke.sensor
+>>>>>>> Resolved conflicts
 stringcase==1.2.0
 
 # homeassistant.components.ecovacs
@@ -1728,7 +1852,11 @@ todoist-python==7.0.17
 toonapilib==3.2.2
 
 # homeassistant.components.totalconnect.alarm_control_panel
+<<<<<<< HEAD
 total_connect_client==0.25
+=======
+total_connect_client==0.24
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
@@ -1834,8 +1962,13 @@ yahooweather==0.10
 # homeassistant.components.yale_smart_alarm.alarm_control_panel
 yalesmartalarmclient==0.1.6
 
+<<<<<<< HEAD
 # homeassistant.components.yeelight
 yeelight==0.4.4
+=======
+# homeassistant.components.yeelight.light
+yeelight==0.4.3
+>>>>>>> Resolved conflicts
 
 # homeassistant.components.yeelightsunflower.light
 yeelightsunflower==0.0.10
