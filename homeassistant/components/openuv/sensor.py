@@ -1,15 +1,16 @@
 """Support for OpenUV sensors."""
 import logging
 
-from homeassistant.components.openuv import (
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.dt import as_local, parse_datetime
+
+from . import (
     DATA_OPENUV_CLIENT, DATA_UV, DOMAIN, SENSORS, TOPIC_UPDATE,
     TYPE_CURRENT_OZONE_LEVEL, TYPE_CURRENT_UV_INDEX, TYPE_CURRENT_UV_LEVEL,
     TYPE_MAX_UV_INDEX, TYPE_SAFE_EXPOSURE_TIME_1, TYPE_SAFE_EXPOSURE_TIME_2,
     TYPE_SAFE_EXPOSURE_TIME_3, TYPE_SAFE_EXPOSURE_TIME_4,
     TYPE_SAFE_EXPOSURE_TIME_5, TYPE_SAFE_EXPOSURE_TIME_6, OpenUvEntity)
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.dt import as_local, parse_datetime
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -4,7 +4,8 @@ import logging
 
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService)
-from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
+
+from . import DOMAIN as TIBBER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -9,15 +9,15 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService,
-    PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_AUTHENTICATION, CONF_HEADERS,
-                                 CONF_METHOD, CONF_NAME, CONF_PASSWORD,
-                                 CONF_RESOURCE, CONF_USERNAME, CONF_VERIFY_SSL,
-                                 HTTP_BASIC_AUTHENTICATION,
-                                 HTTP_DIGEST_AUTHENTICATION)
+from homeassistant.const import (
+    CONF_AUTHENTICATION, CONF_HEADERS, CONF_METHOD, CONF_NAME, CONF_PASSWORD,
+    CONF_RESOURCE, CONF_USERNAME, CONF_VERIFY_SSL, HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 CONF_DATA = 'data'
 CONF_DATA_TEMPLATE = 'data_template'

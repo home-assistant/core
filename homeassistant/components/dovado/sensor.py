@@ -1,15 +1,16 @@
 """Support for sensors from the Dovado router."""
+from datetime import timedelta
 import logging
 import re
-from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.dovado import DOMAIN as DOVADO_DOMAIN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_SENSORS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN as DOVADO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

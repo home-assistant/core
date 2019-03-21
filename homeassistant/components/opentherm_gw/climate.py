@@ -3,14 +3,15 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_IDLE, STATE_HEAT, STATE_COOL, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.opentherm_gw import (
+    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
+    PRECISION_WHOLE, TEMP_CELSIUS)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
     CONF_FLOOR_TEMP, CONF_PRECISION, DATA_DEVICE, DATA_GW_VARS,
     DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE)
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES,
-                                 PRECISION_TENTHS, PRECISION_WHOLE,
-                                 TEMP_CELSIUS)
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -4,11 +4,11 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE)
-from homeassistant.components.spider import DOMAIN as SPIDER_DOMAIN
+    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+
+from . import DOMAIN as SPIDER_DOMAIN
 
 DEPENDENCIES = ['spider']
 

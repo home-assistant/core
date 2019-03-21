@@ -5,22 +5,18 @@ For more information about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.switch/
 """
 import logging
+
 import voluptuous as vol
 
-from homeassistant.core import State, callback
-from homeassistant.components.light import (
-    Light, PLATFORM_SCHEMA)
 from homeassistant.components import switch
 from homeassistant.const import (
-    STATE_ON,
-    ATTR_ENTITY_ID,
-    CONF_NAME,
-    CONF_ENTITY_ID,
-    STATE_UNAVAILABLE
-)
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.helpers.event import async_track_state_change
+    ATTR_ENTITY_ID, CONF_ENTITY_ID, CONF_NAME, STATE_ON, STATE_UNAVAILABLE)
+from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import PLATFORM_SCHEMA, Light
 
 _LOGGER = logging.getLogger(__name__)
 

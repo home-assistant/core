@@ -1,9 +1,9 @@
 """Support for XS1 sensors."""
 import logging
 
-from homeassistant.components.xs1 import (
-    ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity)
 from homeassistant.helpers.entity import Entity
+
+from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
 
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)

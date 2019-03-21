@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.twilio import DATA_TWILIO
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (
-    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+
+from . import ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
