@@ -1,9 +1,4 @@
-"""
-Sensor to indicate whether the current day is a workday.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.workday/
-"""
+"""Sensor to indicate whether the current day is a workday."""
 import logging
 from datetime import datetime, timedelta
 
@@ -14,7 +9,7 @@ from homeassistant.const import CONF_NAME, WEEKDAYS
 from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['holidays==0.9.9']
+REQUIREMENTS = ['holidays==0.9.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,15 +17,22 @@ _LOGGER = logging.getLogger(__name__)
 # There seems to be no way to get the list out at runtime
 ALL_COUNTRIES = [
     'Argentina', 'AR', 'Australia', 'AU', 'Austria', 'AT',
-    'Brazil', 'BR', 'Belarus', 'BY', 'Belgium', 'BE',
+    'Brazil', 'BR', 'Belarus', 'BY', 'Belgium', 'BE', 'Bulgaria', 'BG',
     'Canada', 'CA', 'Colombia', 'CO', 'Croatia', 'HR', 'Czech', 'CZ',
-    'Denmark', 'DK', 'England', 'EuropeanCentralBank', 'ECB', 'TAR',
-    'Finland', 'FI', 'France', 'FRA', 'Germany', 'DE', 'Hungary', 'HU',
-    'Honduras', 'HUD',
-    'India', 'IND', 'Ireland', 'Isle of Man', 'Italy', 'IT', 'Japan', 'JP',
-    'Mexico', 'MX', 'Netherlands', 'NL', 'NewZealand', 'NZ',
-    'Northern Ireland', 'Norway', 'NO', 'Polish', 'PL', 'Portugal', 'PT',
-    'PortugalExt', 'PTE', 'Scotland', 'Slovenia', 'SI', 'Slovakia', 'SK',
+    'Denmark', 'DK',
+    'England', 'EuropeanCentralBank', 'ECB', 'TAR',
+    'Finland', 'FI', 'France', 'FRA',
+    'Germany', 'DE',
+    'Hungary', 'HU', 'Honduras', 'HUD',
+    'India', 'IND', 'Ireland', 'IE', 'Isle of Man', 'Italy', 'IT',
+    'Japan', 'JP',
+    'Lithuania', 'LT', 'Luxembourg', 'LU',
+    'Mexico', 'MX',
+    'Netherlands', 'NL', 'NewZealand', 'NZ', 'Northern Ireland',
+    'Norway', 'NO',
+    'Polish', 'PL', 'Portugal', 'PT', 'PortugalExt', 'PTE',
+    'Russia', 'RU',
+    'Scotland', 'Slovenia', 'SI', 'Slovakia', 'SK',
     'South Africa', 'ZA', 'Spain', 'ES', 'Sweden', 'SE', 'Switzerland', 'CH',
     'Ukraine', 'UA', 'UnitedKingdom', 'UK', 'UnitedStates', 'US', 'Wales',
 ]
