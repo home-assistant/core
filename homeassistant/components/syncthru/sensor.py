@@ -26,10 +26,18 @@ TONER_COLORS = COLORS
 TRAYS = range(1, 6)
 OUTPUT_TRAYS = range(0, 6)
 DEFAULT_MONITORED_CONDITIONS = []
-DEFAULT_MONITORED_CONDITIONS.extend(['toner_{}'.format(key) for key in TONER_COLORS])
-DEFAULT_MONITORED_CONDITIONS.extend(['drum_{}'.format(key) for key in DRUM_COLORS])
-DEFAULT_MONITORED_CONDITIONS.extend(['trays_{}'.format(key) for key in TRAYS])
-DEFAULT_MONITORED_CONDITIONS.extend(['output_trays_{}'.format(key) for key in OUTPUT_TRAYS])
+DEFAULT_MONITORED_CONDITIONS.extend(
+    ['toner_{}'.format(key) for key in TONER_COLORS]
+)
+DEFAULT_MONITORED_CONDITIONS.extend(
+    ['drum_{}'.format(key) for key in DRUM_COLORS]
+)
+DEFAULT_MONITORED_CONDITIONS.extend(
+    ['trays_{}'.format(key) for key in TRAYS]
+)
+DEFAULT_MONITORED_CONDITIONS.extend(
+    ['output_trays_{}'.format(key) for key in OUTPUT_TRAYS]
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -81,7 +89,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         # If the printer was discovered automatically, no warning or error
         # should be issued and printer should not be set up
         if discovery_info is not None:
-            _LOGGER.info("Samsung printer at %s does not support SyncThru", host)
+            _LOGGER.info(
+                "Samsung printer at %s does not support SyncThru", host
+            )
             return
         # Otherwise, emulate printer that supports everything
         supp_toner = TONER_COLORS
