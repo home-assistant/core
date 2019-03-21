@@ -3,7 +3,7 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant.components.websocket_api.const import (
-    URL, EVENT_WEBSOCKET_CONNECTED, EVENT_WEBSOCKET_DISCONNECTED)
+    URL, SIGNAL_WEBSOCKET_CONNECTED, SIGNAL_WEBSOCKET_DISCONNECTED)
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_INVALID, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED)
 
@@ -30,12 +30,12 @@ async def test_auth_events(hass, no_auth_websocket_client, legacy_auth):
     """Test authenticating."""
     connected_evt = []
     hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_WEBSOCKET_CONNECTED,
-        lambda conn: connected_evt.append(conn))
+        SIGNAL_WEBSOCKET_CONNECTED,
+        lambda: connected_evt.append(1))
     disconnected_evt = []
     hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_WEBSOCKET_DISCONNECTED,
-        lambda conn, msg: disconnected_evt.append((conn, msg)))
+        SIGNAL_WEBSOCKET_DISCONNECTED,
+        lambda: disconnected_evt.append(1))
 
     await test_auth_via_msg(no_auth_websocket_client, legacy_auth)
 
@@ -69,12 +69,12 @@ async def test_auth_events_incorrect_pass(hass, no_auth_websocket_client):
     """Test authenticating."""
     connected_evt = []
     hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_WEBSOCKET_CONNECTED,
-        lambda conn: connected_evt.append(conn))
+        SIGNAL_WEBSOCKET_CONNECTED,
+        lambda: connected_evt.append(1))
     disconnected_evt = []
     hass.helpers.dispatcher.async_dispatcher_connect(
-        EVENT_WEBSOCKET_DISCONNECTED,
-        lambda conn, msg: disconnected_evt.append((conn, msg)))
+        SIGNAL_WEBSOCKET_DISCONNECTED,
+        lambda: disconnected_evt.append(1))
 
     await test_auth_via_msg_incorrect_pass(no_auth_websocket_client)
 
