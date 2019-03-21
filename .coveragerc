@@ -431,14 +431,9 @@ omit =
     homeassistant/components/raspyrfm/*
     homeassistant/components/reddit/*
     homeassistant/components/remember_the_milk/__init__.py
-<<<<<<< HEAD
-    homeassistant/components/harmony/remote.py
-    homeassistant/components/itach/remote.py
-=======
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
     homeassistant/components/repetier/*
->>>>>>> Added Repetier to .coveragerc
     homeassistant/components/rfxtrx/*
     homeassistant/components/roku/*
     homeassistant/components/route53/*

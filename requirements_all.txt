@@ -1272,7 +1272,14 @@ pyrainbird==0.1.6
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
 
+<<<<<<< HEAD
 # homeassistant.components.ruter
+=======
+# homeassistant.components.repetier
+pyrepetier==2.0.0
+
+# homeassistant.components.ruter.sensor
+>>>>>>> Updated requirements and coveragerc
 pyruter==1.1.0
 
 # homeassistant.components.sabnzbd
