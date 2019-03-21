@@ -18,7 +18,7 @@ class AxisNetworkDevice:
     """Manages a Axis device."""
 
     def __init__(self, hass, config_entry):
-        """"""
+        """Initialize the device."""
         self.hass = hass
         self.config_entry = config_entry
         self.available = True

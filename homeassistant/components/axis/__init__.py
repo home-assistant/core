@@ -65,7 +65,7 @@ async def async_populate_options(hass, config_entry):
 
     supported_formats = device.vapix.get_param(VAPIX_IMAGE_FORMAT)
 
-    camera = True if supported_formats else False
+    camera = bool(supported_formats)
 
     options = {
         CONF_CAMERA: camera,
