@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['async-upnp-client==0.14.5']
+REQUIREMENTS = ['async-upnp-client==0.14.6']
 
 _LOGGER = logging.getLogger(__name__)
 
