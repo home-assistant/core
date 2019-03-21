@@ -63,7 +63,7 @@ def stream_worker(hass, stream, quit_event):
     first_packet = True
     sequence = 1
     audio_packets = {}
-    last_dts = 0
+    last_dts = None
 
     while not quit_event.is_set():
         try:
@@ -82,7 +82,7 @@ def stream_worker(hass, stream, quit_event):
             break
 
         # Skip non monotonically increasing dts in feed
-        if last_dts >= packet.dts:
+        if not first_packet and last_dts >= packet.dts:
             continue
         last_dts = packet.dts
 
