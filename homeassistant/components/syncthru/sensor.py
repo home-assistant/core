@@ -82,6 +82,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     printer = SyncThru(host, session)
     # Test if the discovered device actually is a syncthru printer
+    # and fetch the available toner/drum/etc
     try:
         # No error is thrown when the device is off
         # (only after user added it manually)
@@ -89,8 +90,11 @@ async def async_setup_platform(hass, config, async_add_entities,
         await printer.update()
     except ValueError:
         # if an exception is thrown, printer does not support syncthru
-        _LOGGER.info("Samsung printer at %s does not support SyncThru", host)
-        return
+        # and should not be set up
+        # If the printer was discovered automatically, no warning or error
+        # should be issued
+        if discovery_info is not None:
+            _LOGGER.info("Samsung printer at %s does not support SyncThru", host)
 
     devices = [SyncThruMainSensor(printer, name)]
 
