@@ -3,6 +3,7 @@ import homeassistant.components.proxmox as proxmox
 from homeassistant.components.switch import SwitchDevice
 
 DEVICE_CLASS = 'connectivity'
+POWER_ICON = 'mdi:power'
 
 
 async def async_setup_platform(
@@ -51,6 +52,11 @@ class PXMXSwitch(SwitchDevice):
     def is_on(self):
         """Return true if sensor is on."""
         return self._state
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return POWER_ICON
 
     @property
     def available(self):
