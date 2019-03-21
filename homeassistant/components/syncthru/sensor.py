@@ -107,7 +107,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         if 'output_tray_{}'.format(key) in monitored:
             devices.append(SyncThruOutputTraySensor(printer, name, key))
 
-    await async_add_entities(devices, True)
+    async_add_entities(devices, True)
 
 
 class SyncThruSensor(Entity):
