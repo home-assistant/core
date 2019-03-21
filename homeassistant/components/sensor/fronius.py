@@ -9,19 +9,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['pyfronius==0.4.8']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TYPE = 'type'
-CONF_DEVICEID = 'device'
 CONF_SCOPE = 'scope'
+CONF_DEVICEID = 'device'
 
 TYPE_INVERTER = 'inverter'
 TYPE_STORAGE = 'storage'
@@ -50,30 +49,17 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     from pyfronius import Fronius
 
     session = async_get_clientsession(hass)
-    fronius = Fronius(session, config[CONF_HOST])
+    fronius = Fronius(session, config.get(CONF_HOST))
 
-    name = "fronius_{}_{}".format(config[CONF_TYPE], config[CONF_HOST])
+    name = "fronius_{}_{}".format(config.get(CONF_TYPE), config.get(CONF_HOST))
+    device = config.get(CONF_DEVICEID)
     if CONF_DEVICEID in config.keys():
-        device = config[CONF_DEVICEID]
         name = "{}_{}".format(name, device)
-    else:
-        device = DEFAULT_DEVICE
 
     sensor = FroniusSensor(
-        fronius, name, config[CONF_TYPE], config[CONF_SCOPE], device)
+        fronius, name, config.get(CONF_TYPE), config.get(CONF_SCOPE), device)
 
     async_add_devices([sensor])
-
-    @asyncio.coroutine
-    def async_fronius(event):
-        """Update all the fronius sensors."""
-        try:
-            yield from sensor.async_update()
-        except Exception:
-            _LOGGER.error("Update of sensor data failed.")
-
-    interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=10)
-    async_track_time_interval(hass, async_fronius, interval)
 
 
 class FroniusSensor(Entity):
@@ -104,44 +90,39 @@ class FroniusSensor(Entity):
         """Return the state attributes."""
         return self._attributes
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve and update latest state."""
-        _LOGGER.debug("Update {}".format(self.name))
-
         values = {}
-
         try:
-            values = yield from self._update()
-        except ServerDisconnectedError:
+            values = await self._update()
+        except ConnectionError:
             _LOGGER.error("Sensor data cannot be updated: connection error.")
-        except TimeoutError:
-            _LOGGER.error("Sensor data cannot be updated: timeout.")
-
-        _LOGGER.debug(values)
+        except ValueError:
+            _LOGGER.error("Sensor data cannot be updated: Host returned invalid response.")
 
         if values:
             self._state = values['status']['Code']
             self._attributes = self._get_attributes(values)
 
-    @asyncio.coroutine
-    def _update(self):
+    async def _update(self):
         """Get the values for the current state."""
         if self._type == TYPE_INVERTER:
             if self._scope == SCOPE_SYSTEM:
-                return self.data.current_system_inverter_data()
-            elif self._scope == SCOPE_DEVICE and self._device:
-                return self.data.current_inverter_data(self._device)
-            elif self._scope == SCOPE_DEVICE:
-                return self.data.current_inverter_data()
+                await self.data.current_system_inverter_data()
+            else:
+                await self.data.current_inverter_data(self._device)
         elif self._type == TYPE_STORAGE:
-            return self.data.current_storage_data()
+            await self.data.current_storage_data(self._device)
         elif self._type == TYPE_METER:
-            return self.data.current_meter_data()
+            if self._scope == SCOPE_SYSTEM:
+                await self.data.current_system_meter_data()
+            else:
+                await self.data.current_meter_data()
         elif self._type == TYPE_POWER_FLOW:
-            return self.data.current_power_flow()
+            await self.data.current_power_flow()
 
-    def _get_attributes(self, values):
+    @staticmethod
+    def _get_attributes(values):
         """Map the attributes and ensure proper values."""
         attributes = {}
         for key in values:
