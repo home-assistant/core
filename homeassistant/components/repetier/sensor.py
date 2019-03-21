@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                     'id': id,
                                     'server': {'url': url,
                                                'port': port,
-                                               'apikey:' apikey},
+                                               'apikey': apikey},
                                     'sens_type': sens_type}
                             new_sensor = RepetierSensor('bed', svar)
                             devices.append(new_sensor)
