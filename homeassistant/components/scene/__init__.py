@@ -27,9 +27,8 @@ def _hass_domain_validator(config):
 def _platform_validator(config):
     """Validate it is a valid  platform."""
     try:
-        platform = importlib.import_module(
-            '..{}'.format(
-                config[CONF_PLATFORM]))
+        platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
+                                           __name__)
     except ImportError:
         try:
             platform = importlib.import_module(
