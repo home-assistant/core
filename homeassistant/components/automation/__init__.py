@@ -54,9 +54,8 @@ _LOGGER = logging.getLogger(__name__)
 def _platform_validator(config):
     """Validate it is a valid  platform."""
     try:
-        platform = importlib.import_module(
-            '..{}'.format(
-                config[CONF_PLATFORM]))
+        platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
+                                           __name__)
     except ImportError:
         raise vol.Invalid('Invalid platform specified') from None
 
