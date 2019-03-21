@@ -21,6 +21,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_LOCKED,
     STATE_OFF,
+    STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     ATTR_SUPPORTED_FEATURES,
@@ -199,8 +200,6 @@ class OnOffTrait(_Trait):
     @staticmethod
     def supported(domain, features):
         """Test if state is supported."""
-        if domain == climate.DOMAIN:
-            return features & climate.SUPPORT_ON_OFF != 0
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
@@ -537,10 +536,18 @@ class TemperatureSettingTrait(_Trait):
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
         modes = []
-        for mode in self.state.attributes.get(climate.ATTR_OPERATION_LIST, []):
-            google_mode = self.hass_to_google.get(mode)
-            if google_mode is not None:
-                modes.append(google_mode)
+        supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        if supported & climate.SUPPORT_ON_OFF != 0:
+            modes.append(STATE_OFF)
+            modes.append(STATE_ON)
+
+        if supported & climate.SUPPORT_OPERATION_MODE != 0:
+            for mode in self.state.attributes.get(climate.ATTR_OPERATION_LIST,
+                                                  []):
+                google_mode = self.hass_to_google.get(mode)
+                if google_mode and google_mode not in modes:
+                    modes.append(google_mode)
 
         return {
             'availableThermostatModes': ','.join(modes),
@@ -554,8 +561,16 @@ class TemperatureSettingTrait(_Trait):
         response = {}
 
         operation = attrs.get(climate.ATTR_OPERATION_MODE)
-        if operation is not None and operation in self.hass_to_google:
+        supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        if (supported & climate.SUPPORT_ON_OFF
+                and self.state.state == STATE_OFF):
+            response['thermostatMode'] = 'off'
+        elif (supported & climate.SUPPORT_OPERATION_MODE and
+              operation in self.hass_to_google):
             response['thermostatMode'] = self.hass_to_google[operation]
+        elif supported & climate.SUPPORT_ON_OFF:
+            response['thermostatMode'] = 'on'
 
         unit = self.hass.config.units.temperature_unit
 
@@ -644,12 +659,27 @@ class TemperatureSettingTrait(_Trait):
                 }, blocking=True, context=data.context)
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
-            await self.hass.services.async_call(
-                climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    climate.ATTR_OPERATION_MODE:
-                        self.google_to_hass[params['thermostatMode']],
-                }, blocking=True, context=data.context)
+            target_mode = params['thermostatMode']
+            supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+            if (target_mode in [STATE_ON, STATE_OFF] and
+                    supported & climate.SUPPORT_ON_OFF):
+                await self.hass.services.async_call(
+                    climate.DOMAIN,
+                    (SERVICE_TURN_ON
+                     if target_mode == STATE_ON
+                     else SERVICE_TURN_OFF),
+                    {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        climate.ATTR_OPERATION_MODE: target_mode,
+                    }, blocking=True, context=data.context)
+            elif supported & climate.SUPPORT_OPERATION_MODE:
+                await self.hass.services.async_call(
+                    climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE, {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        climate.ATTR_OPERATION_MODE:
+                            self.google_to_hass[target_mode],
+                    }, blocking=True, context=data.context)
 
 
 @register_trait

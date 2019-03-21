@@ -5,17 +5,21 @@
             "app_setup_error": "Impossible de configurer la SmartApp.  Veuillez r\u00e9essayer.",
             "base_url_not_https": "Le param\u00e8tre `base_url` du composant` http` doit \u00eatre configur\u00e9 et commencer par `https: //`.",
             "token_already_setup": "Le jeton a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9.",
+            "token_forbidden": "Le jeton n'a pas les port\u00e9es OAuth requises.",
             "token_invalid_format": "Le jeton doit \u00eatre au format UID / GUID",
-            "token_unauthorized": "Le jeton est invalide ou n'est plus autoris\u00e9."
+            "token_unauthorized": "Le jeton est invalide ou n'est plus autoris\u00e9.",
+            "webhook_error": "SmartThings n'a pas pu valider le point de terminaison configur\u00e9 en \u00ab\u00a0base_url\u00a0\u00bb. Veuillez consulter les exigences du composant."
         },
         "step": {
             "user": {
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s"
                 },
+                "description": "Veuillez entrer un [jeton d'acc\u00e8s personnel SmartThings] ( {token_url} ) cr\u00e9\u00e9 selon les [instructions] ( {component_url} ).",
                 "title": "Entrer un jeton d'acc\u00e8s personnel"
             },
             "wait_install": {
+                "description": "Veuillez installer la SmartApp de Home Assistant dans au moins un emplacement et cliquez sur Soumettre.",
                 "title": "Installer SmartApp"
             }
         },

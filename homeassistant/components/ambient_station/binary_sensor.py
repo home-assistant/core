@@ -1,13 +1,13 @@
 """Support for Ambient Weather Station binary sensors."""
 import logging
 
-from homeassistant.components.ambient_station import (
-    SENSOR_TYPES, TYPE_BATT1, TYPE_BATT10, TYPE_BATT2, TYPE_BATT3, TYPE_BATT4,
-    TYPE_BATT5, TYPE_BATT6, TYPE_BATT7, TYPE_BATT8, TYPE_BATT9, TYPE_BATTOUT,
-    AmbientWeatherEntity)
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_NAME
 
+from . import (
+    SENSOR_TYPES, TYPE_BATT1, TYPE_BATT2, TYPE_BATT3, TYPE_BATT4, TYPE_BATT5,
+    TYPE_BATT6, TYPE_BATT7, TYPE_BATT8, TYPE_BATT9, TYPE_BATT10, TYPE_BATTOUT,
+    AmbientWeatherEntity)
 from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TYPE_BINARY_SENSOR
 
 _LOGGER = logging.getLogger(__name__)

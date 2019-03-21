@@ -127,9 +127,6 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==1.9.1
 
-# homeassistant.components.iliad_italy.sensor
-aioiliad==0.1.1
-
 # homeassistant.components.imap.sensor
 aioimaplib==0.7.15
 
@@ -180,7 +177,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.dlna_dmr.media_player
-async-upnp-client==0.14.5
+async-upnp-client==0.14.6
 
 # homeassistant.components.stream
 av==6.1.2
@@ -521,7 +518,7 @@ habitipy==0.2.0
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.7
+hass-nabucasa==0.9
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -548,10 +545,10 @@ hlk-sw16==0.0.7
 hole==0.3.0
 
 # homeassistant.components.workday.binary_sensor
-holidays==0.9.9
+holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190318.0
+home-assistant-frontend==20190321.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.2
@@ -875,7 +872,7 @@ prometheus_client==0.2.0
 protobuf==3.6.1
 
 # homeassistant.components.systemmonitor.sensor
-psutil==5.5.1
+psutil==5.6.1
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.3
@@ -1357,7 +1354,7 @@ python-juicenet==0.0.5
 # homeassistant.components.xiaomi_miio.sensor
 # homeassistant.components.xiaomi_miio.switch
 # homeassistant.components.xiaomi_miio.vacuum
-python-miio==0.4.4
+python-miio==0.4.5
 
 # homeassistant.components.mpd.media_player
 python-mpd2==1.0.0
@@ -1394,7 +1391,7 @@ python-songpal==0.0.9.1
 python-synology==0.2.0
 
 # homeassistant.components.tado
-python-tado==0.2.8
+python-tado==0.2.9
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==11.1.0
@@ -1622,7 +1619,7 @@ solaredge==0.0.2
 somecomfort==0.5.2
 
 # homeassistant.components.speedtestdotnet
-speedtest-cli==2.0.2
+speedtest-cli==2.1.1
 
 # homeassistant.components.spider
 spiderpy==1.3.1
@@ -1710,7 +1707,7 @@ todoist-python==7.0.17
 toonapilib==3.2.2
 
 # homeassistant.components.totalconnect.alarm_control_panel
-total_connect_client==0.24
+total_connect_client==0.25
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
@@ -1823,7 +1820,7 @@ yeelight==0.4.3
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.03.09
+youtube_dl==2019.03.18
 
 # homeassistant.components.zengge.light
 zengge==0.2

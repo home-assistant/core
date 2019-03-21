@@ -4,20 +4,18 @@ This component provides HA sensor support for Ring Door Bell/Chimes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.ring/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.ring import (
-    ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DATA_RING)
-
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, BinarySensorDevice)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
+import homeassistant.helpers.config_validation as cv
+
+from . import ATTRIBUTION, DATA_RING, DEFAULT_ENTITY_NAMESPACE
 
 DEPENDENCIES = ['ring']
 

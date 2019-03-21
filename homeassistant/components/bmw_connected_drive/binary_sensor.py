@@ -2,8 +2,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.const import LENGTH_KILOMETERS
+
+from . import DOMAIN as BMW_DOMAIN
 
 DEPENDENCIES = ['bmw_connected_drive']
 

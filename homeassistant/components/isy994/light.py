@@ -2,9 +2,10 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.isy994 import ISY994_NODES, ISYDevice
 from homeassistant.components.light import DOMAIN, SUPPORT_BRIGHTNESS, Light
 from homeassistant.helpers.typing import ConfigType
+
+from . import ISY994_NODES, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -114,7 +114,7 @@ ha-ffmpeg==1.11
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.7
+hass-nabucasa==0.9
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -123,10 +123,10 @@ hbmqtt==0.9.4
 hdate==0.8.7
 
 # homeassistant.components.workday.binary_sensor
-holidays==0.9.9
+holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190318.0
+home-assistant-frontend==20190321.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.13.0

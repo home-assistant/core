@@ -1,9 +1,9 @@
 """Support for Xiaomi curtain."""
 import logging
 
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+
+from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 

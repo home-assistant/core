@@ -8,12 +8,14 @@ import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_SERVICE
-from homeassistant.components.notify import (
-    DOMAIN, ATTR_MESSAGE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_DATA, ATTR_MESSAGE, DOMAIN, PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 

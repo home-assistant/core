@@ -8,13 +8,13 @@ https://home-assistant.io/components/alarm_control_panel.ness_alarm/
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.ness_alarm import (
-    DATA_NESS, SIGNAL_ARMING_STATE_CHANGED)
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMING,
-    STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING, STATE_ALARM_DISARMED)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMING, STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 

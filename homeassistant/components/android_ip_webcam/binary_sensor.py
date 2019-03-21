@@ -1,7 +1,7 @@
 """Support for Android IP Webcam binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.android_ip_webcam import (
-    KEY_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST, CONF_NAME)
+
+from . import CONF_HOST, CONF_NAME, DATA_IP_WEBCAM, KEY_MAP, AndroidIPCamEntity
 
 DEPENDENCIES = ['android_ip_webcam']
 
