@@ -1,15 +1,5 @@
 """Support for the definition of AIS hostname."""
-import logging
 
-from .config_flow import configured_host
-from .const import DOMAIN
-from homeassistant import config_entries
-
-_LOGGER = logging.getLogger(__name__)
-
-
-ICON_HOME = 'mdi:home'
-ICON_IMPORT = 'mdi:import'
 
 async def async_setup(hass, config):
     """Set up if necessary."""

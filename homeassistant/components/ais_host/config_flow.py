@@ -32,7 +32,6 @@ class HostFlowHandler(config_entries.ConfigFlow):
         #     return self.async_abort(reason='single_instance_allowed')
         return await self.async_step_confirm(user_input)
 
-
     async def async_step_confirm(self, user_input=None):
         """Handle a flow start."""
         errors = {}
@@ -42,7 +41,6 @@ class HostFlowHandler(config_entries.ConfigFlow):
             step_id='confirm',
             errors=errors,
         )
-
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""

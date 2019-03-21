@@ -24,27 +24,25 @@ aisCloud = ais_cloud.AisCloudWS()
 DOMAIN = 'ais_drives_service'
 G_LOCAL_FILES_ROOT = '/data/data/pl.sviete.dom/files/home/dom'
 G_CLOUD_PREFIX = 'dyski-zdalne:'
-G_RCLONE_CONF = '--config=/data/data/pl.sviete.dom/files/home/dom/rclone.conf'
+G_RCLONE_CONF_FILE = '/data/data/pl.sviete.dom/files/home/dom/rclone.conf'
+G_RCLONE_CONF = '--config=' + G_RCLONE_CONF_FILE
 G_RCLONE_URL_TO_STREAM = 'http://127.0.0.1:8080/'
 G_LAST_BROWSE_CALL = None
+G_DRIVE_CLIENT_ID = None
+G_DRIVE_SECRET = None
 _LOGGER = logging.getLogger(__name__)
 
 
 TYPE_DRIVE = 'drive'
-TYPE_DROPBOX = 'dropbox'
 TYPE_MEGA = 'mega'
-TYPE_ONE_DRIVE = 'onedrive'
 DRIVES_TYPES = {
     TYPE_DRIVE: ('Google Drive', 'mdi:google-drive'),
-    TYPE_DROPBOX: ('Dropbox', 'mdi:dropbox'),
-    TYPE_MEGA: ('Mega', 'mdi:weather-sunny'),
-    TYPE_ONE_DRIVE: ('Microsoft OneDrive', 'mdi:onedrive'),
+    TYPE_MEGA: ('Mega', 'mdi:cloud'),
 }
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Register the service."""
-    config = config.get(DOMAIN, {})
     _LOGGER.info("Initialize the folders and files list.")
     data = hass.data[DOMAIN] = LocalData(hass)
     yield from data.async_load_all()
@@ -85,29 +83,42 @@ def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up drive as rclone config entry."""
-    # setup the remote drive
-    _LOGGER.warning("Set up drive as rclone config entry: " + str(config_entry))
-    # dev_reg = await hass.helpers.device_registry.async_get_registry()
-    # dev_reg.async_get_or_create(
-    #     config_entry_id=config_entry.entry_id,
-    #     connections=set(),
-    #     identifiers={(DOMAIN, config_entry.data['token_key'])},
-    #     manufacturer='AI-Speaker',
-    #     name='Drive',
-    #     model='M1',
-    #     sw_version='0.1',
-    # )
-
-    #
+    _LOGGER.info("Set up drive as rclone config entry")
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(config_entry, 'sensor'))
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    _LOGGER.warning("Remove the drive token from rclone conf")
+    time_now = time.time()
+    if config_flow.G_DRIVE_CREATION_TIME_CALL is not None:
+        secs = time_now - config_flow.G_DRIVE_CREATION_TIME_CALL
+    else:
+        secs = 1
+
+    if secs > 5:
+        _LOGGER.info("Reloading entry: " + str(secs))
+    else:
+        _LOGGER.warning("Remove the drive token from rclone conf: " + str(secs))
+        open(G_RCLONE_CONF_FILE, 'w').close()
+
     await hass.config_entries.async_forward_entry_unload(config_entry, 'sensor')
     return True
+
+
+def get_remotes_types_by_name(remote_name):
+    # return all types
+    names = []
+    if remote_name is None:
+        for obj in DRIVES_TYPES.values():
+            names.append(obj[0])
+        return names
+    # return one type
+    drive_type = ""
+    for k, item in DRIVES_TYPES.items():
+        if item[0] == remote_name:
+            drive_type = k
+    return drive_type
 
 
 def rclone_get_remotes_long():
@@ -129,7 +140,8 @@ def rclone_get_auth_url(drive_name, drive_type):
     import pexpect
     # code, icon = DRIVES_TYPES[drive_type]
     rclone_cmd = "rclone config create " + drive_name + " " + drive_type\
-                 + " " + G_RCLONE_CONF + " config_is_local false"
+                 + " " + G_RCLONE_CONF + " --drive-client-id=" + G_DRIVE_CLIENT_ID\
+                 + " --drive-client-secret=" + G_DRIVE_SECRET + " config_is_local false"
     child = pexpect.spawn(rclone_cmd)
     child.expect('Enter verification code>', timeout=10)
     info = child.before
@@ -144,18 +156,76 @@ def rclone_get_auth_url(drive_name, drive_type):
 
 
 def rclone_set_auth_code(drive_name, drive_type, code):
-    import pexpect
-    # code, icon = DRIVES_TYPES[drive_type]
-    rclone_cmd = "rclone config create " + drive_name + " " + drive_type\
-                 + " " + G_RCLONE_CONF + " config_is_local false"
-    child = pexpect.spawn(rclone_cmd)
-    child.expect('Enter verification code>', timeout=10)
-    child.sendline(code)
-    child.expect('"}', timeout=10)
-    info = child.before
-    child.kill(0)
-    info = str(info, 'utf-8')
-    _LOGGER.info(info)
+    try:
+        import pexpect
+        # code, icon = DRIVES_TYPES[drive_type]
+        rclone_cmd = "rclone config create " + drive_name + " " + drive_type\
+                     + " " + G_RCLONE_CONF + " --drive-client-id=" + G_DRIVE_CLIENT_ID \
+                     + " --drive-client-secret=" + G_DRIVE_SECRET + " config_is_local false"
+        child = pexpect.spawn(rclone_cmd)
+        child.expect('Enter verification code>', timeout=10)
+        child.sendline(code)
+        child.expect('}', timeout=10)
+        s = str(child.before, 'utf-8')
+        _LOGGER.info(s)
+        if "error_description" in str(child.before, 'utf-8'):
+            return s[s.find('error_description'):]
+        child.kill(0)
+        return 'ok'
+    except Exception as e:
+        return 'ERROR: ' + str(e)
+
+
+def rclone_set_auth_passwd(drive_name, drive_type, user, passwd):
+    try:
+        import pexpect
+        rclone_cmd = "rclone config " + G_RCLONE_CONF
+        child = pexpect.spawn(rclone_cmd)
+        # Current remotes:
+        child.expect('/q>', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline('n')
+        # name
+        child.expect('name>', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline(drive_name)
+        # storage
+        child.expect('Storage>', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline(drive_type)
+        # user
+        child.expect('user>', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline(user)
+        # yes type in my own password
+        child.expect('y/g>', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline('y')
+        # password
+        child.expect('password:', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline(passwd)
+        # confirm password
+        child.expect('password:', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline(passwd)
+        # Edit advanced config? (y/n)
+        child.expect('y/n>', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline('n')
+        # Yes this is OK
+        child.expect('y/e/d>', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline('y')
+        # Quit config
+        child.expect('e/n/d/r/c/s/q>', timeout=10)
+        _LOGGER.info(str(child.before, 'utf-8'))
+        child.sendline('q')
+        #
+        child.kill(0)
+        return 'ok'
+    except Exception as e:
+        return 'ERROR: ' + str(e)
 
 
 class LocalData:
@@ -603,7 +673,7 @@ class LocalData:
 
         if say:
             self.say("Synchronizuję lokalizację " + call.data["source_path"] + " z " + call.data["dest_path"]
-                            + " modyfikuję tylko " + call.data["source_path"])
+                     + " modyfikuję tylko " + call.data["source_path"])
 
         rclone_cmd = ["rclone", "sync", call.data["source_path"], call.data["dest_path"],
                       "--transfers=1", "--stats=0", G_RCLONE_CONF]
@@ -618,8 +688,18 @@ class LocalData:
     @asyncio.coroutine
     def async_load_all(self):
         """Load all the folders and files."""
-
         def load():
             self.display_root_items(say=False)
+            global G_DRIVE_SECRET, G_DRIVE_CLIENT_ID
+            try:
+                ws_resp = aisCloud.key("gdrive_client_id")
+                json_ws_resp = ws_resp.json()
+                G_DRIVE_CLIENT_ID = json_ws_resp["key"]
+                ws_resp = aisCloud.key("gdrive_secret")
+                json_ws_resp = ws_resp.json()
+                G_DRIVE_SECRET = json_ws_resp["key"]
+            except Exception as e:
+                _LOGGER.error("Error " + str(e))
+                ais_global.G_OFFLINE_MODE = True
 
         yield from self.hass.async_add_job(load)
