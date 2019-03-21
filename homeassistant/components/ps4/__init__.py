@@ -48,7 +48,7 @@ async def async_migrate_entry(hass, entry):
 
     # Migrate Version 1 -> Version 2
     if version == 1:
-        loc = location.detect_location_info()
+        loc = hass.async_add_executor_job(location.detect_location_info)
         if loc:
             country = loc.country_name
             if country in COUNTRIES:
