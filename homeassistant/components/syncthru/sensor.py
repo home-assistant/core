@@ -20,33 +20,16 @@ REQUIREMENTS = ['pysyncthru==0.4.2']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Samsung Printer'
-DEFAULT_MONITORED_CONDITIONS = [
-    'toner_black',
-    'toner_cyan',
-    'toner_magenta',
-    'toner_yellow',
-    'drum_black',
-    'drum_cyan',
-    'drum_magenta',
-    'drum_yellow',
-    'tray_1',
-    'tray_2',
-    'tray_3',
-    'tray_4',
-    'tray_5',
-    'output_tray_0',
-    'output_tray_1',
-    'output_tray_2',
-    'output_tray_3',
-    'output_tray_4',
-    'output_tray_5',
-]
-COLORS = [
-    'black',
-    'cyan',
-    'magenta',
-    'yellow'
-]
+COLORS = ['black', 'cyan', 'magenta', 'yellow']
+DRUM_COLORS = COLORS
+TONER_COLORS = COLORS
+TRAYS = range(1, 6)
+OUTPUT_TRAYS = range(0, 6)
+DEFAULT_MONITORED_CONDITIONS = []
+DEFAULT_MONITORED_CONDITIONS.extend(['toner_{}'.format(key) for key in TONER_COLORS])
+DEFAULT_MONITORED_CONDITIONS.extend(['drum_{}'.format(key) for key in DRUM_COLORS])
+DEFAULT_MONITORED_CONDITIONS.extend(['trays_{}'.format(key) for key in TRAYS])
+DEFAULT_MONITORED_CONDITIONS.extend(['output_trays_{}'.format(key) for key in OUTPUT_TRAYS])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -88,26 +71,36 @@ async def async_setup_platform(hass, config, async_add_entities,
         # (only after user added it manually)
         # therefore additional catches are inside the Sensor below
         await printer.update()
+        supp_toner = printer.toner_status(filter_supported=True)
+        supp_drum = printer.drum_status(filter_supported=True)
+        supp_tray = printer.input_tray_status(filter_supported=True)
+        supp_output_tray = printer.output_tray_status()
     except ValueError:
         # if an exception is thrown, printer does not support syncthru
         # and should not be set up
         # If the printer was discovered automatically, no warning or error
-        # should be issued
+        # should be issued and printer should not be set up
         if discovery_info is not None:
             _LOGGER.info("Samsung printer at %s does not support SyncThru", host)
+            return
+        # Otherwise, emulate printer that supports everything
+        supp_toner = TONER_COLORS
+        supp_drum = DRUM_COLORS
+        supp_tray = TRAYS
+        supp_output_tray = OUTPUT_TRAYS
 
     devices = [SyncThruMainSensor(printer, name)]
 
-    for key in printer.toner_status(filter_supported=True):
+    for key in supp_toner:
         if 'toner_{}'.format(key) in monitored:
             devices.append(SyncThruTonerSensor(printer, name, key))
-    for key in printer.drum_status(filter_supported=True):
+    for key in supp_drum:
         if 'drum_{}'.format(key) in monitored:
             devices.append(SyncThruDrumSensor(printer, name, key))
-    for key in printer.input_tray_status(filter_supported=True):
+    for key in supp_tray:
         if 'tray_{}'.format(key) in monitored:
             devices.append(SyncThruInputTraySensor(printer, name, key))
-    for key in printer.output_tray_status():
+    for key in supp_output_tray:
         if 'output_tray_{}'.format(key) in monitored:
             devices.append(SyncThruOutputTraySensor(printer, name, key))
 
