@@ -11,17 +11,17 @@ async def async_setup_platform(
     """Set up Proxmox VE switch."""
     nodes = hass.data[proxmox.DATA_PROXMOX_NODES]
     control = hass.data[proxmox.DATA_PROXMOX_CONTROL]
-    sensors = []
+    switches = []
 
     for name in nodes.keys():
         item = nodes[name]
         if 'type' not in item or item['type'] != 'node':
             if item['control']:
-                sensor = PXMXSwitch(
+                switch = PXMXSwitch(
                     hass, name, control['start'], control['shutdown'], item)
-                sensors.append(sensor)
+                switches.append(switch)
 
-    async_add_entities(sensors)
+    async_add_entities(switches)
 
 
 class PXMXSwitch(SwitchDevice):
