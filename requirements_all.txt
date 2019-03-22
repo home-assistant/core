@@ -155,7 +155,7 @@ alpha_vantage==2.1.0
 amcrest==1.2.7
 
 # homeassistant.components.androidtv.media_player
-androidtv==0.0.12
+androidtv==0.0.13
 
 # homeassistant.components.anel_pwrctrl.switch
 anel_pwrctrl-homeassistant==0.0.1.dev2
