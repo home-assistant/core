@@ -747,6 +747,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         """Initialize the light device."""
         super().__init__(name, light, model, unique_id)
 
+        self._music_mode = False
         self._hs_color = None
         self._state_attrs.pop(ATTR_DELAYED_TURN_OFF)
         self._state_attrs.update({
@@ -871,19 +872,23 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
+        from miio import DeviceException, DeviceError
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            if "code" in ex and ex["code"] == -5001:
-                _LOGGER.debug("Device in music mode. Update skipped.")
-                return
-
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
             return
+        except DeviceError as ex:
+            if "code" in ex and ex["code"] == -5001:
+                if not self._music_mode:
+                    self._music_mode = True
+                    _LOGGER.info("Device in music mode. Update skipped.")
+                return
+            raise
 
         _LOGGER.debug("Got new state: %s", state)
+        self._music_mode = False
         self._available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
