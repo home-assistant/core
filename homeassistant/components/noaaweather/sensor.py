@@ -169,7 +169,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         locmetadata = requests.get(
             'https://api.weather.gov/points/{},{}'.format(
                 latitude, longitude))
-    except Exception:
+    except requests.RequestException:
         _LOGGER.error("Error getting metadata for location %s,%s",
                       latitude, longitude)
         return
@@ -186,21 +186,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     #
     try:
         obsstaurl = locmetadata.json()['properties']['observationStations']
-    except Exception:
+    except requests.RequestException:
         _LOGGER.error("No observations URL for location %s,%s",
                       latitude, longitude)
         return
 
     try:
         forecasturl = locmetadata.json()['properties']['forecast']
-    except Exception:
+    except requests.RequestException:
         _LOGGER.error("No forecast URL for location %s,%s",
                       latitude, longitude)
         return
 
     try:
         forecasthourlyurl = locmetadata.json()['properties']['forecastHourly']
-    except Exception:
+    except requests.RequestException:
         _LOGGER.error("No hourly forecast URL for location %s,%s",
                       latitude, longitude)
         return
@@ -251,7 +251,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         stationmeta = requests.get('https://api.weather.gov/stations/{}'
                                    .format(stationcode))
-    except Exception:
+    except requests.RequestException:
         _LOGGER.error("Can't get station metadata for station %s",
                       stationcode)
     if stationmeta.status_code != 200:
@@ -308,6 +308,91 @@ class NOAACurrentSensor(Entity):
         """Return the name of the sensor."""
         return '{} {}'.format(self._name, SENSOR_TYPES[self._condition][0])
 
+    def _unit_convert(self, variable, desiredunit):
+        """Check if value needs to be converted to different units."""
+        # This will do the appropriate conversion to get the value
+        # from unit it is supplied in to the standard metric or imperial
+        # value used for the measurement.
+
+        #
+        # No conversion needed if no value
+        #
+        if variable['value'] is None:
+            return None
+
+        result = variable['value']
+        #
+        # We check if a unit is supplied, and if so we try to covert
+        # the value to the desired unit (set at initialization).
+        # If we either don't get a unit, or get a unit we don't
+        # know how to convert, we will return a null value.
+        # Otherwise the value will be converted as required.
+        #
+        if 'unitCode' not in variable:
+            return None
+
+        if variable['unitCode'] not in UNIT_MAPPING:
+            _LOGGER.debug("No translation for unitCode %s",
+                          variable['unitCode'])
+            return None
+        #
+        # We have a unit mapping to use
+        #
+        srcunit = UNIT_MAPPING[variable['unitCode']][0]
+        _LOGGER.debug("srcunit=%s, desiredunit=%s", srcunit, desiredunit)
+        #
+        # If source and desired units are the same, no need to convert
+        #
+        if srcunit == self.desiredunit:
+            return result
+
+        # need to conver units, identify conversion required
+        #
+        # Do we have temperature in Celsius and need Fahrenheit?
+        #
+        if srcunit == TEMP_CELSIUS and desiredunit == TEMP_FAHRENHEIT:
+            return result * 9 / 5 + 32
+        #
+        # Do we have Fahrenheit and need Celsius
+        #
+        if srcunit == TEMP_FAHRENHEIT and desiredunit == TEMP_CELSIUS:
+            return (result - 32) * 5 / 9
+        #
+        # Do we have a length in meters?
+        #
+        if srcunit == LENGTH_METERS:
+            # Is the target miles? (Used for visibility)
+            if desiredunit == LENGTH_MILES:
+                return result / 1609.344
+            # Is the target kilometers? (Used for visibility)
+            if desiredunit == LENGTH_KILOMETERS:
+                return result / 1000
+            # Is the target unit millimeters? (Used for precipitation)
+            if desiredunit == 'mm':
+                return result * 1000
+            # Is the target unit inches? (Used for precipitation)
+            if desiredunit == LENGTH_INCHES:
+                return result * 39.37007874
+            # If we have some other target unit we have an error
+            # Return the original value
+            return result
+        #
+        # Do we have pressure in Pascals?
+        #
+        if srcunit == 'Pa' and desiredunit == 'mbar':
+            return result / 100
+        #
+        # Do we have a speed in meters/second (wind speed and gusts)
+        #
+        if srcunit == 'm/s' and desiredunit == 'mph':
+            return result * 2.236936292
+        #
+        # If we fall through to here we have a unit name in our mapping
+        # table but not in the conversion code above.
+        # Just return the original value.
+        #
+        return result
+
     @property
     def state(self):
         """Return the state of the sensor."""
@@ -318,7 +403,7 @@ class NOAACurrentSensor(Entity):
         #
         if self._condition in self.noaadata.data:
             variable = self.noaadata.data[self._condition]
-            _LOGGER.debug("Condition value=%s", variable)
+            _LOGGER.debug("Condition %s value=%s", self._condition, variable)
             #
             # Now check for type of value for this attribute
             #
@@ -327,66 +412,33 @@ class NOAACurrentSensor(Entity):
                 _LOGGER.debug("Condition %s is single value='%s'",
                               self._condition, variable)
                 return variable
-            elif SENSOR_TYPES[self._condition][1] == 'measurement':
+            if SENSOR_TYPES[self._condition][1] == 'measurement':
                 # value attribute of variable for measurements
                 _LOGGER.debug("Condition %s is measurement='%s',\
                                from string '%s'",
                               self._condition, variable['value'], variable)
                 if variable['value'] is None:
                     return None
-
-                res = variable['value']
-                # Check if we need to change units
-                if 'unitCode' in variable:
-                    if not variable['unitCode'] in UNIT_MAPPING:
-                        _LOGGER.debug("No translation for unitCode %s",
-                                      variable['unitCode'])
-                        self.desiredunit = None
-                        return res
-                    #
-                    # We have a unit mapping to use
-                    #
-                    srcunit = UNIT_MAPPING[variable['unitCode']][0]
-                    _LOGGER.debug("srcunit=%s, desiredunit=%s", srcunit,
-                                  self.desiredunit)
-                    if srcunit != self.desiredunit:
-                        # need to conver units, identify conversion required
-                        if srcunit == TEMP_CELSIUS and \
-                                self.desiredunit == TEMP_FAHRENHEIT:
-                            res = res * 9 / 5 + 32
-                        elif srcunit == TEMP_FAHRENHEIT and \
-                                self.desiredunit == TEMP_CELSIUS:
-                            res = (res - 32) * 5 / 9
-                        elif srcunit == LENGTH_METERS:
-                            if self.desiredunit == LENGTH_MILES:
-                                res = res / 1609.344
-                            elif self.desiredunit == LENGTH_KILOMETERS:
-                                res = res / 1000
-                            elif self.desiredunit == 'mm':
-                                res = res * 1000
-                            elif self.desiredunit == LENGTH_INCHES:
-                                res = res * 39.37007874
-                        elif srcunit == 'Pa' and \
-                                self.desiredunit == 'mbar':
-                            res = res / 100
-                        elif srcunit == 'm/s' and \
-                                self.desiredunit == 'mph':
-                            res = res * 2.236936292
+                #
+                # Convert to the target units (if required)
+                #
+                res = self._unit_convert(variable, self.desiredunit)
+                if res is None:
+                    return res
                 return round(res, 1)
 
-            elif SENSOR_TYPES[self._condition][1] == 'array':
-                # We only know how to handle cloudLayers
+            if SENSOR_TYPES[self._condition][1] == 'array':
+                # The only array types we know how to handle is cloudLayers
                 if self._condition == 'cloudLayers':
                     #
                     # The array for cloudLayers includes a height and
                     # text for each layer.  At this point we will
-                    # only deal with the text for the first layer (if anY) and
+                    # only deal with the text for the first layer (if any) and
                     # ignore the other values.
                     if variable:
                         return variable[0]['amount']
-                    else:
-                        return None
-            elif SENSOR_TYPE[self._condition][1] is not None:
+                    return None
+            if SENSOR_TYPES[self._condition][1] is not None:
                 # We only get here if the type of value is something we don't
                 # understand
                 #
@@ -436,8 +488,7 @@ class NOAACurrentSensor(Entity):
                     # doesn't have a map, return the value we recevied.
                     if variable['unitCode'] in UNIT_MAPPING:
                         return UNIT_MAPPING[variable['unitCode']][0]
-                    else:
-                        return variable['unitCode']
+                    return variable['unitCode']
         return None
 
     #
@@ -485,7 +536,7 @@ class NOAACurrentData(Entity):
 
         try:
             obslist = requests.get(self.obsurl)
-        except Exception:
+        except requests.RequestException:
             _LOGGER.error("Cannot get observations for station %s",
                           self.stationcode)
         #
