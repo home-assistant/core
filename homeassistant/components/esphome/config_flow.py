@@ -26,18 +26,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                               error: Optional[str] = None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            self._host = user_input['host']
-            self._port = user_input['port']
-            error, device_info = await self.fetch_device_info()
-            if error is not None:
-                return await self.async_step_user(error=error)
-            self._name = device_info.name
-
-            # Only show authentication step if device uses password
-            if device_info.uses_password:
-                return await self.async_step_authenticate()
-
-            return self._async_get_entry()
+            return await self._async_authenticate_or_add(user_input)
 
         fields = OrderedDict()
         fields[vol.Required('host', default=self._host or vol.UNDEFINED)] = str
@@ -53,6 +42,33 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
             errors=errors
         )
 
+    async def _async_authenticate_or_add(self, user_input,
+                                         from_discovery=False):
+        self._host = user_input['host']
+        self._port = user_input['port']
+        error, device_info = await self.fetch_device_info()
+        if error is not None:
+            return await self.async_step_user(error=error)
+        self._name = device_info.name
+        # Only show authentication step if device uses password
+        if device_info.uses_password:
+            return await self.async_step_authenticate()
+
+        if from_discovery:
+            # If from discovery, do not create entry immediately,
+            # First present user with message
+            return await self.async_step_discovery_confirm()
+        return self._async_get_entry()
+
+    async def async_step_discovery_confirm(self, user_input=None):
+        """Handle user-confirmation of discovered node."""
+        if user_input is not None:
+            return self._async_get_entry()
+        return self.async_show_form(
+            step_id='discovery_confirm',
+            description_placeholders={'name': self._name},
+        )
+
     async def async_step_discovery(self, user_input: ConfigType):
         """Handle discovery."""
         address = user_input['properties'].get(
@@ -63,12 +79,10 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                     reason='already_configured'
                 )
 
-        # Prefer .local addresses (mDNS is available after all, otherwise
-        # we wouldn't have received the discovery message)
-        return await self.async_step_user(user_input={
+        return await self._async_authenticate_or_add(user_input={
             'host': address,
             'port': user_input['port'],
-        })
+        }, from_discovery=True)
 
     def _async_get_entry(self):
         return self.async_create_entry(
@@ -99,6 +113,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
             data_schema=vol.Schema({
                 vol.Required('password'): str
             }),
+            description_placeholders={'name': self._name},
             errors=errors
         )
 

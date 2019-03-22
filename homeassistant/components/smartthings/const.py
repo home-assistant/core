@@ -8,6 +8,7 @@ APP_OAUTH_SCOPES = [
 ]
 APP_NAME_PREFIX = 'homeassistant.'
 CONF_APP_ID = 'app_id'
+CONF_CLOUDHOOK_URL = 'cloudhook_url'
 CONF_INSTALLED_APP_ID = 'installed_app_id'
 CONF_INSTALLED_APPS = 'installed_apps'
 CONF_INSTANCE_ID = 'instance_id'
@@ -34,7 +35,8 @@ SUPPORTED_PLATFORMS = [
     'cover',
     'switch',
     'binary_sensor',
-    'sensor'
+    'sensor',
+    'scene'
 ]
 TOKEN_REFRESH_INTERVAL = timedelta(days=14)
 VAL_UID = "^(?:([0-9a-fA-F]{32})|([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]" \

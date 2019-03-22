@@ -4,8 +4,9 @@ Demo lock platform that has two fake locks.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.components.lock import LockDevice, SUPPORT_OPEN
-from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+
+from . import SUPPORT_OPEN, LockDevice
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

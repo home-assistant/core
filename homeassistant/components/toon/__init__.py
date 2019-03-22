@@ -1,6 +1,7 @@
 """Support for Toon van Eneco devices."""
 import logging
 from typing import Any, Dict
+from functools import partial
 
 import voluptuous as vol
 
@@ -15,7 +16,7 @@ from .const import (
     CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DISPLAY, CONF_TENANT,
     DATA_TOON_CLIENT, DATA_TOON_CONFIG, DOMAIN)
 
-REQUIREMENTS = ['toonapilib==3.0.9']
+REQUIREMENTS = ['toonapilib==3.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,10 +49,11 @@ async def async_setup_entry(hass: HomeAssistantType,
 
     conf = hass.data.get(DATA_TOON_CONFIG)
 
-    toon = Toon(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD],
-                conf[CONF_CLIENT_ID], conf[CONF_CLIENT_SECRET],
-                tenant_id=entry.data[CONF_TENANT],
-                display_common_name=entry.data[CONF_DISPLAY])
+    toon = await hass.async_add_executor_job(partial(
+        Toon, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD],
+        conf[CONF_CLIENT_ID], conf[CONF_CLIENT_SECRET],
+        tenant_id=entry.data[CONF_TENANT],
+        display_common_name=entry.data[CONF_DISPLAY]))
 
     hass.data.setdefault(DATA_TOON_CLIENT, {})[entry.entry_id] = toon
 

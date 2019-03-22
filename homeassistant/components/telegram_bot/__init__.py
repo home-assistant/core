@@ -48,6 +48,7 @@ ATTR_TEXT = 'text'
 ATTR_URL = 'url'
 ATTR_USER_ID = 'user_id'
 ATTR_USERNAME = 'username'
+ATTR_VERIFY_SSL = 'verify_ssl'
 
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
 CONF_PROXY_URL = 'proxy_url'
@@ -84,6 +85,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PROXY_PARAMS): dict,
 })
 
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
+
 BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(ATTR_PARSER): cv.string,
@@ -106,6 +109,7 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_USERNAME): cv.string,
     vol.Optional(ATTR_PASSWORD): cv.string,
     vol.Optional(ATTR_AUTHENTICATION): cv.string,
+    vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
 })
 
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend({
@@ -162,7 +166,7 @@ SERVICE_MAP = {
 
 
 def load_data(hass, url=None, filepath=None, username=None, password=None,
-              authentication=None, num_retries=5):
+              authentication=None, num_retries=5, verify_ssl=None):
     """Load data into ByteIO/File container from a source."""
     try:
         if url is not None:
@@ -173,6 +177,8 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                     params["auth"] = HTTPDigestAuth(username, password)
                 else:
                     params["auth"] = HTTPBasicAuth(username, password)
+            if verify_ssl:
+                params["verify"] = verify_ssl
             retry_num = 0
             while retry_num < num_retries:
                 req = requests.get(url, **params)
@@ -534,6 +540,7 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL),
         )
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
@@ -628,7 +635,7 @@ class BaseTelegramBotEntity:
 
             self.hass.bus.async_fire(event, event_data)
             return True
-        elif ATTR_CALLBACK_QUERY in data:
+        if ATTR_CALLBACK_QUERY in data:
             event = EVENT_TELEGRAM_CALLBACK
             data = data.get(ATTR_CALLBACK_QUERY)
             message_ok, event_data = self._get_message_data(data)
@@ -642,6 +649,6 @@ class BaseTelegramBotEntity:
 
             self.hass.bus.async_fire(event, event_data)
             return True
-        else:
-            _LOGGER.warning("Message with unknown data received: %s", data)
-            return True
+
+        _LOGGER.warning("Message with unknown data received: %s", data)
+        return True

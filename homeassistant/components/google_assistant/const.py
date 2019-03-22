@@ -42,3 +42,8 @@ ERR_NOT_SUPPORTED = "notSupported"
 ERR_PROTOCOL_ERROR = 'protocolError'
 ERR_UNKNOWN_ERROR = 'unknownError'
 ERR_FUNCTION_NOT_SUPPORTED = 'functionNotSupported'
+
+# Event types
+EVENT_COMMAND_RECEIVED = 'google_assistant_command'
+EVENT_QUERY_RECEIVED = 'google_assistant_query'
+EVENT_SYNC_RECEIVED = 'google_assistant_sync'

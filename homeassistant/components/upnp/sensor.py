@@ -12,9 +12,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.components.upnp.const import DOMAIN as DOMAIN_UPNP
-from homeassistant.components.upnp.const import SIGNAL_REMOVE_SENSOR
 
+from .const import DOMAIN as DOMAIN_UPNP, SIGNAL_REMOVE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 

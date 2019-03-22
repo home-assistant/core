@@ -8,7 +8,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import ZigbeeChannel
-from ..const import FAN_CHANNEL, SIGNAL_ATTR_UPDATED
+from ..const import SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,11 +17,6 @@ class FanChannel(ZigbeeChannel):
     """Fan channel."""
 
     _value_attribute = 0
-
-    def __init__(self, cluster, device):
-        """Initialize FanChannel."""
-        super().__init__(cluster, device)
-        self.name = FAN_CHANNEL
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""

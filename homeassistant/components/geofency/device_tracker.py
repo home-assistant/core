@@ -8,9 +8,9 @@ import logging
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN)
-from homeassistant.components.geofency import (
-    DOMAIN as GEOFENCY_DOMAIN, TRACKER_UPDATE)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DOMAIN as GEOFENCY_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 

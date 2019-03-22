@@ -13,8 +13,12 @@
                 "data": {
                     "password": "Has\u0142o"
                 },
-                "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji.",
+                "description": "Wprowad\u017a has\u0142o ustawione w konfiguracji dla {nazwa}.",
                 "title": "Wprowad\u017a has\u0142o"
+            },
+            "discovery_confirm": {
+                "description": "Czy chcesz doda\u0107 w\u0119ze\u0142 ESPHome `{name}` do Home Assistant?",
+                "title": "Znaleziono w\u0119ze\u0142 ESPHome "
             },
             "user": {
                 "data": {

@@ -4,20 +4,20 @@ Notifications for Android TV notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.nfandroidtv/
 """
-import logging
-import io
 import base64
+import io
+import logging
 
 import requests
-from requests.auth import HTTPBasicAuth
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, BaseNotificationService,
-    PLATFORM_SCHEMA)
 from homeassistant.const import CONF_TIMEOUT
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -248,7 +248,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                     req = requests.get(url, timeout=DEFAULT_TIMEOUT)
                 return req.content
 
-            elif local_path is not None:
+            if local_path is not None:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
                     return open(local_path, "rb")

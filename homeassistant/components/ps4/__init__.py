@@ -6,12 +6,13 @@ https://home-assistant.io/components/ps4/
 """
 import logging
 
-from homeassistant.components.ps4.config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from homeassistant.components.ps4.const import DOMAIN  # noqa: pylint: disable=unused-import
+from .config_flow import (  # noqa  pylint: disable=unused-import
+    PlayStation4FlowHandler)
+from .const import DOMAIN  # noqa: pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyps4-homeassistant==0.3.0']
+REQUIREMENTS = ['pyps4-homeassistant==0.4.8']
 
 
 async def async_setup(hass, config):

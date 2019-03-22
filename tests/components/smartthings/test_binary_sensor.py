@@ -40,7 +40,7 @@ async def test_entity_state(hass, device_factory):
     """Tests the state attributes properly match the light types."""
     device = device_factory('Motion Sensor 1', [Capability.motion_sensor],
                             {Attribute.motion: 'inactive'})
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN, device)
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     state = hass.states.get('binary_sensor.motion_sensor_1_motion')
     assert state.state == 'off'
     assert state.attributes[ATTR_FRIENDLY_NAME] ==\
@@ -55,7 +55,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     device_registry = await hass.helpers.device_registry.async_get_registry()
     # Act
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN, device)
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get('binary_sensor.motion_sensor_1_motion')
     assert entry
@@ -73,7 +73,7 @@ async def test_update_from_signal(hass, device_factory):
     # Arrange
     device = device_factory('Motion Sensor 1', [Capability.motion_sensor],
                             {Attribute.motion: 'inactive'})
-    await setup_platform(hass, BINARY_SENSOR_DOMAIN, device)
+    await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
     device.status.apply_attribute_update(
         'main', Capability.motion_sensor, Attribute.motion, 'active')
     # Act
@@ -91,7 +91,8 @@ async def test_unload_config_entry(hass, device_factory):
     # Arrange
     device = device_factory('Motion Sensor 1', [Capability.motion_sensor],
                             {Attribute.motion: 'inactive'})
-    config_entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN, device)
+    config_entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN,
+                                        devices=[device])
     # Act
     await hass.config_entries.async_forward_entry_unload(
         config_entry, 'binary_sensor')

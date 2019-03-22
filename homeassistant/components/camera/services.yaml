@@ -38,6 +38,19 @@ snapshot:
       description: Template of a Filename. Variable is entity_id.
       example: '/tmp/snapshot_{{ entity_id }}'
 
+play_stream:
+  description: Play camera stream on supported media player.
+  fields:
+    entity_id:
+      description: Name(s) of entities to stream from.
+      example: 'camera.living_room_camera'
+    media_player:
+      description: Name(s) of media player to stream to.
+      example: 'media_player.living_room_tv'
+    format:
+      description: (Optional) Stream format supported by media player.
+      example: 'hls'
+
 local_file_update_file_path:
   description: Update the file_path for a local_file camera.
   fields:

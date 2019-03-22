@@ -8,10 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pushetta==1.0.15']

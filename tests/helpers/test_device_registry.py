@@ -1,6 +1,8 @@
 """Tests for the Device Registry."""
+import asyncio
 from unittest.mock import patch
 
+import asynctest
 import pytest
 
 from homeassistant.helpers import device_registry
@@ -133,7 +135,8 @@ async def test_loading_from_storage(hass, hass_storage):
                     'model': 'model',
                     'name': 'name',
                     'sw_version': 'version',
-                    'area_id': '12345A'
+                    'area_id': '12345A',
+                    'name_by_user': 'Test Friendly Name'
                 }
             ]
         }
@@ -148,6 +151,7 @@ async def test_loading_from_storage(hass, hass_storage):
         manufacturer='manufacturer', model='model')
     assert entry.id == 'abcdefghijklm'
     assert entry.area_id == '12345A'
+    assert entry.name_by_user == 'Test Friendly Name'
     assert isinstance(entry.config_entries, set)
 
 
@@ -360,8 +364,25 @@ async def test_update(registry):
         })
 
     assert not entry.area_id
+    assert not entry.name_by_user
 
-    updated_entry = registry.async_update_device(entry.id, area_id='12345A')
+    updated_entry = registry.async_update_device(
+        entry.id, area_id='12345A', name_by_user='Test Friendly Name')
 
     assert updated_entry != entry
     assert updated_entry.area_id == '12345A'
+    assert updated_entry.name_by_user == 'Test Friendly Name'
+
+
+async def test_loading_race_condition(hass):
+    """Test only one storage load called when concurrent loading occurred ."""
+    with asynctest.patch(
+        'homeassistant.helpers.device_registry.DeviceRegistry.async_load',
+    ) as mock_load:
+        results = await asyncio.gather(
+            device_registry.async_get_registry(hass),
+            device_registry.async_get_registry(hass),
+        )
+
+        mock_load.assert_called_once_with()
+        assert results[0] == results[1]

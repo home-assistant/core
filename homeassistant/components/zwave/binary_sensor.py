@@ -5,11 +5,14 @@ import homeassistant.util.dt as dt_util
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import track_point_in_time
-from homeassistant.components import zwave
-from homeassistant.components.zwave import workaround
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)
+from . import (
+    workaround,
+    ZWaveDeviceEntity
+)
+from .const import COMMAND_CLASS_SENSOR_BINARY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,17 +43,17 @@ def get_device(values, **kwargs):
     if workaround.get_device_component_mapping(values.primary) == DOMAIN:
         return ZWaveBinarySensor(values, None)
 
-    if values.primary.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
+    if values.primary.command_class == COMMAND_CLASS_SENSOR_BINARY:
         return ZWaveBinarySensor(values, None)
     return None
 
 
-class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
+class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
     """Representation of a binary sensor within Z-Wave."""
 
     def __init__(self, values, device_class):
         """Initialize the sensor."""
-        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._sensor_type = device_class
         self._state = self.values.primary.data
 

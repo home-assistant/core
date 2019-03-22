@@ -1,8 +1,9 @@
 """Support for IHC sensors."""
-from homeassistant.components.ihc import IHC_CONTROLLER, IHC_DATA, IHC_INFO
-from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers.entity import Entity
+
+from . import IHC_CONTROLLER, IHC_DATA, IHC_INFO
+from .ihcdevice import IHCDevice
 
 DEPENDENCIES = ['ihc']
 

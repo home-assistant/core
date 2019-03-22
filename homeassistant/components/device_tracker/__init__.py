@@ -291,7 +291,7 @@ class DeviceTracker:
         """
         if mac is None and dev_id is None:
             raise HomeAssistantError('Neither mac or device id passed in')
-        elif mac is not None:
+        if mac is not None:
             mac = str(mac).upper()
             device = self.mac_to_dev.get(mac)
             if not device:
