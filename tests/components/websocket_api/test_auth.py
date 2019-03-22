@@ -1,5 +1,4 @@
 """Test auth of websocket API."""
-import asyncio
 from unittest.mock import patch
 
 from homeassistant.components.websocket_api.const import (
