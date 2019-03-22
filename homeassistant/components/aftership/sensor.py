@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTRIBUTION = "Information provided by AfterShip"
 ATTR_TRACKINGS = "trackings"
 
-BASE_LINK = "https://track.aftership.com/"
+BASE = "https://track.aftership.com/"
 
 CONF_SLUG = "slug"
 CONF_TITLE = "title"
@@ -160,24 +160,21 @@ class AfterShipSensor(Entity):
         trackings = []
         not_delivered_count = 0
 
-        for tracking in self.aftership.trackings["trackings"]:
-            status = tracking["tag"].lower()
+        for track in self.aftership.trackings["trackings"]:
+            status = track["tag"].lower()
             name = (
-                tracking["tracking_number"]
-                if tracking["title"] is None
-                else tracking["title"]
+                track["tracking_number"]
+                if track["title"] is None
+                else track["title"]
             )
             status_counts[status] = status_counts.get(status, 0) + 1
             trackings.append({
                 "name": name,
-                "tracking_number": tracking["tracking_number"],
-                "slug": tracking["slug"],
-                "link": BASE_LINK
-                + tracking["slug"]
-                + "/"
-                + tracking["tracking_number"],
-                "last_update": tracking["updated_at"],
-                "status": tracking["tag"],
+                "tracking_number": track["tracking_number"],
+                "slug": track["slug"],
+                "link": BASE + track["slug"] + "/" + track["tracking_number"],
+                "last_update": track["updated_at"],
+                "status": track["tag"],
             })
 
             if status not in status_to_ignore:
