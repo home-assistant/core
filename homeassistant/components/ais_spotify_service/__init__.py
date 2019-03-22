@@ -283,7 +283,7 @@ class SpotifyData:
             text = "Znaleziono: %s, włączam pierwszy: %s" % (
                 str(len(G_SPOTIFY_FOUND)), G_SPOTIFY_FOUND[0]["title"])
         else:
-            text = "Brak wnyników na Spotify dla zapytania %s" % search_text
+            text = "Brak wyników na Spotify dla zapytania %s" % search_text
         yield from self.hass.services.async_call(
             'ais_ai_service', 'say_it', {
                 "text": text
