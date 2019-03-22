@@ -253,10 +253,6 @@ def create_default_config(config_dir: str, detect_location: bool = True)\
                 continue
             info[attr] = getattr(location_info, prop) or default
 
-        if location_info.latitude and location_info.longitude:
-            info[CONF_ELEVATION] = loc_util.elevation(
-                location_info.latitude, location_info.longitude)
-
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
     try:
@@ -570,13 +566,6 @@ async def async_process_ha_core_config(
         if hac.time_zone is None:
             set_time_zone(info.time_zone)
             discovered.append(('time_zone', info.time_zone))
-
-    if hac.elevation is None and hac.latitude is not None and \
-       hac.longitude is not None:
-        elevation = await hass.async_add_executor_job(
-            loc_util.elevation, hac.latitude, hac.longitude)
-        hac.elevation = elevation
-        discovered.append(('elevation', elevation))
 
     if discovered:
         _LOGGER.warning(
