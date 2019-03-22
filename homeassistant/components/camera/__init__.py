@@ -100,7 +100,7 @@ class Image:
 
 
 @bind_hass
-async def async_request_stream(hass, entity_id, format):
+async def async_request_stream(hass, entity_id, fmt):
     """Request a stream for a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
 
@@ -108,7 +108,7 @@ async def async_request_stream(hass, entity_id, format):
         raise HomeAssistantError("{} does not support play stream service"
                                  .format(camera.entity_id))
 
-    return request_stream(hass, camera.stream_source, fmt=format)
+    return request_stream(hass, camera.stream_source, fmt=fmt)
 
 
 @bind_hass
