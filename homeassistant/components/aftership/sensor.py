@@ -22,10 +22,7 @@ BASE_LINK = "https://track.aftership.com/"
 
 CONF_SLUG = "slug"
 CONF_TITLE = "title"
-
-TITLE = "title"
-SLUG = "slug"
-TRACKING_NUMBER = "tracking_number"
+CONF_TRACKING_NUMBER = "tracking_number"
 
 DEFAULT_NAME = "aftership"
 
@@ -38,14 +35,15 @@ SERVICE_REMOVE_TRACKING = "aftership_remove_tracking"
 
 ADD_TRACKING_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(TRACKING_NUMBER): cv.string,
-        vol.Optional(TITLE): cv.string,
-        vol.Optional(SLUG): cv.string,
+        vol.Required(CONF_TRACKING_NUMBER): cv.string,
+        vol.Optional(CONF_TITLE): cv.string,
+        vol.Optional(CONF_SLUG): cv.string,
     }
 )
 
 REMOVE_TRACKING_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(SLUG): cv.string, vol.Required(TRACKING_NUMBER): cv.string}
+    {vol.Required(CONF_SLUG): cv.string,
+     vol.Required(CONF_TRACKING_NUMBER): cv.string}
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -80,25 +78,11 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     async def handle_add_tracking(call):
         """Call when a user adds a new Aftership tracking from HASS."""
-        from pyaftership.tracker import Tracking
+        title = call.data.get(CONF_TITLE)
+        slug = call.data.get(CONF_SLUG)
+        tracking_number = call.data[CONF_TRACKING_NUMBER]
 
-        title = call.data[TITLE]
-        slug = call.data[SLUG]
-        tracking_number = call.data[TRACKING_NUMBER]
-
-        session = async_get_clientsession(hass)
-        aftership = Tracking(hass.loop, session, apikey)
         await aftership.add_package_tracking(slug, title, tracking_number)
-
-        if not aftership.meta:
-            _LOGGER.error("Unknown errors when adding new tracking")
-            return
-        if aftership.meta["code"] != 200:
-            _LOGGER.error(
-                "Errors when adding new AfterShip tracking. %s",
-                str(aftership.meta)
-            )
-            return
 
     hass.services.async_register(
         DOMAIN,
@@ -109,24 +93,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     async def handle_remove_tracking(call):
         """Call when a user removes an Aftership tracking from HASS."""
-        from pyaftership.tracker import Tracking
-
-        slug = call.data[SLUG]
-        tracking_number = call.data[TRACKING_NUMBER]
-
-        session = async_get_clientsession(hass)
-        aftership = Tracking(hass.loop, session, apikey)
+        slug = call.data[CONF_SLUG]
+        tracking_number = call.data[CONF_TRACKING_NUMBER]
+        
         await aftership.remove_package_tracking(slug, tracking_number)
-
-        if not aftership.meta:
-            _LOGGER.error("Unknown errors when removing tracking")
-            return
-        if aftership.meta["code"] != 200:
-            _LOGGER.error(
-                "Errors when removing AfterShip after. %s",
-                str(aftership.meta)
-            )
-            return
 
     hass.services.async_register(
         DOMAIN,
