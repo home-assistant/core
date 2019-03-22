@@ -1,7 +1,10 @@
 """Tests for the Google Assistant traits."""
+from unittest.mock import patch, Mock
+
 import pytest
 
 from homeassistant.components import (
+    camera,
     cover,
     fan,
     input_boolean,
@@ -21,7 +24,7 @@ from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE)
 from homeassistant.core import State, DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE
 from homeassistant.util import color
-from tests.common import async_mock_service
+from tests.common import async_mock_service, mock_coro
 
 BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
@@ -132,6 +135,35 @@ async def test_brightness_media_player(hass):
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'media_player.bla',
         media_player.ATTR_MEDIA_VOLUME_LEVEL: .6
+    }
+
+
+async def test_camera_stream(hass):
+    """Test camera stream trait support for camera domain."""
+    hass.config.api = Mock(base_url='http://1.1.1.1:8123')
+    assert trait.CameraStreamTrait.supported(camera.DOMAIN,
+                                             camera.SUPPORT_STREAM)
+
+    trt = trait.CameraStreamTrait(
+        hass, State('camera.bla', camera.STATE_IDLE, {}), BASIC_CONFIG
+    )
+
+    assert trt.sync_attributes() == {
+        'cameraStreamSupportedProtocols': [
+            "hls",
+        ],
+        'cameraStreamNeedAuthToken': False,
+        'cameraStreamNeedDrmEncryption': False,
+    }
+
+    assert trt.query_attributes() == {}
+
+    with patch('homeassistant.components.camera.async_request_stream',
+               return_value=mock_coro('/api/streams/bla')):
+        await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {})
+
+    assert trt.query_attributes() == {
+        'cameraStreamAccessUrl': 'http://1.1.1.1:8123/api/streams/bla'
     }
 
 
