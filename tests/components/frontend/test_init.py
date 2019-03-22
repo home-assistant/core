@@ -266,7 +266,7 @@ async def test_get_panels(hass, hass_ws_client):
     assert msg['result']['map']['url_path'] == 'map'
     assert msg['result']['map']['icon'] == 'mdi:tooltip-account'
     assert msg['result']['map']['title'] == 'Map'
-    assert msg['result']['map']['require_admin'] == True
+    assert msg['result']['map']['require_admin'] is True
 
 
 async def test_get_panels_non_admin(hass, hass_ws_client, hass_admin_user):
