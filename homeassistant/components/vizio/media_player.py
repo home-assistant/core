@@ -34,17 +34,17 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 SUPPORTED_COMMANDS  = {
-    'soundbar': (SUPPORT_PLAY | SUPPORT_PAUSE \
-        | SUPPORT_SELECT_SOURCE \
-        | SUPPORT_TURN_ON | SUPPORT_TURN_OFF \
-        | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP \
-        | SUPPORT_VOLUME_SET),
-    'tv': (SUPPORT_PLAY | SUPPORT_PAUSE \
-        | SUPPORT_SELECT_SOURCE \
-        | SUPPORT_TURN_ON | SUPPORT_TURN_OFF \
-        | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK \
-        | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP \
-        | SUPPORT_VOLUME_SET)
+    'soundbar': (SUPPORT_PLAY | SUPPORT_PAUSE
+                 | SUPPORT_SELECT_SOURCE
+                 | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+                 | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
+                 | SUPPORT_VOLUME_SET),
+    'tv': (SUPPORT_PLAY | SUPPORT_PAUSE
+           | SUPPORT_SELECT_SOURCE
+           | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+           | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+           | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
+           | SUPPORT_VOLUME_SET)
 }
 
 MAX_VOLUME = {
@@ -101,7 +101,8 @@ class VizioDevice(MediaPlayerDevice):
         self._device_type = device_type
         self._max_volume = MAX_VOLUME[device_type]
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
-        self._device = pyvizio.Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
+        self._device = pyvizio.Vizio(DEVICE_ID, host, DEFAULT_NAME, token,
+                                     device_type)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
