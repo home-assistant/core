@@ -520,6 +520,7 @@ omit =
     homeassistant/components/otp/sensor.py
     homeassistant/components/pi_hole/sensor.py
     homeassistant/components/plex/sensor.py
+    homeassistant/components/planifneige/*
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/pollen/sensor.py
     homeassistant/components/postnl/sensor.py
