@@ -8,15 +8,11 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY
+from .sensor_types import SENSOR_SMS, SENSOR_USAGE
 
 DEPENDENCIES = ['netgear_lte']
 
 _LOGGER = logging.getLogger(__name__)
-
-SENSOR_SMS = 'sms'
-SENSOR_USAGE = 'usage'
-
-DEFAULT_SENSORS = [SENSOR_SMS, SENSOR_USAGE]
 
 
 async def async_setup_platform(
@@ -31,10 +27,7 @@ async def async_setup_platform(
         raise PlatformNotReady
 
     sensor_conf = discovery_info[DOMAIN]
-    if sensor_conf:
-        monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
-    else:
-        monitored_conditions = DEFAULT_SENSORS
+    monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
 
     sensors = []
     for sensor_type in monitored_conditions:
@@ -42,8 +35,6 @@ async def async_setup_platform(
             sensors.append(SMSSensor(modem_data, sensor_type))
         elif sensor_type == SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
-        else:
-            _LOGGER.error("Unknown sensor type '%s'", sensor_type)
 
     async_add_entities(sensors, True)
 

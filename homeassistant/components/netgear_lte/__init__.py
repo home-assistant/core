@@ -17,6 +17,8 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.util import Throttle
 
+from . import sensor_types
+
 REQUIREMENTS = ['eternalegypt==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +37,12 @@ NOTIFY_SCHEMA = vol.Schema({
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [cv.string]),
+        vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_SENSORS)]),
 })
+
+DEFAULT_SENSOR = {
+    CONF_MONITORED_CONDITIONS: sensor_types.DEFAULT_SENSORS
+}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
@@ -44,7 +50,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(NOTIFY_DOMAIN, default={}):
             vol.All(cv.ensure_list, [NOTIFY_SCHEMA]),
-        vol.Optional(SENSOR_DOMAIN): SENSOR_SCHEMA,
+        vol.Optional(SENSOR_DOMAIN, default=DEFAULT_SENSOR):
+            SENSOR_SCHEMA,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
