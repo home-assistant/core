@@ -802,7 +802,7 @@ paho-mqtt==1.4.0
 panacotta==0.1
 
 # homeassistant.components.panasonic_viera.media_player
-panasonic_viera==0.3.1
+panasonic_viera==0.3.2
 
 # homeassistant.components.dunehd.media_player
 pdunehd==1.3

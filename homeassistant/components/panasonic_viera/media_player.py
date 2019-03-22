@@ -19,24 +19,28 @@ from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['panasonic_viera==0.3.1', 'wakeonlan==1.1.6']
+REQUIREMENTS = ['panasonic_viera==0.3.2', 'wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_APP_POWER = 'app_power'
+
 DEFAULT_NAME = 'Panasonic Viera TV'
 DEFAULT_PORT = 55000
+DEFAULT_APP_POWER = False
 
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_TURN_OFF | SUPPORT_PLAY | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_TURN_ON
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_MAC): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_APP_POWER, default=DEFAULT_APP_POWER): cv.boolean,
 })
 
 
@@ -47,6 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mac = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
+    app_power = config.get(CONF_APP_POWER)
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
@@ -86,6 +91,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self._remote = remote
         self._host = host
         self._volume = 0
+        self._app_power = app_power
 
     @property
     def unique_id(self) -> str:
@@ -134,15 +140,19 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
+        if self._mac or self._app_power:
+            return SUPPORT_VIERATV | SUPPORT_TURN_ON
         return SUPPORT_VIERATV
 
     def turn_on(self):
         """Turn on the media player."""
         if self._mac:
             self._wol.send_magic_packet(self._mac, ip_address=self._host)
-        else:
+            self._state = STATE_ON
+        elif self._app_power:
             self._remote.turn_on()
-        self._state = STATE_ON
+            self._state = STATE_ON
+
 
     def turn_off(self):
         """Turn off media player."""
