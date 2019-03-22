@@ -170,21 +170,31 @@ def setup_plexserver(
                     config, device, None, plex_sessions, update_devices,
                     update_sessions)
                 plex_clients[device.machineIdentifier] = new_client
+                _LOGGER.debug("New device: %s", device.machineIdentifier)
                 new_plex_clients.append(new_client)
             else:
+                _LOGGER.debug("Refreshing device: %s",
+                              device.machineIdentifier)
                 plex_clients[device.machineIdentifier].refresh(device, None)
 
         # add devices with a session and no client (ex. PlexConnect Apple TV's)
         if config.get(CONF_INCLUDE_NON_CLIENTS):
             for machine_identifier, (session, player) in plex_sessions.items():
+                if machine_identifier in available_client_ids:
+                    # Avoid using session if already added as a device.
+                    _LOGGER.debug("Skipping session, device exists: %s",
+                                  machine_identifier)
+                    continue
                 if (machine_identifier not in plex_clients
                         and machine_identifier is not None):
                     new_client = PlexClient(
                         config, player, session, plex_sessions, update_devices,
                         update_sessions)
                     plex_clients[machine_identifier] = new_client
+                    _LOGGER.debug("New session: %s", machine_identifier)
                     new_plex_clients.append(new_client)
                 else:
+                    _LOGGER.debug("Refreshing session: %s", machine_identifier)
                     plex_clients[machine_identifier].refresh(None, session)
 
         clients_to_remove = []
