@@ -36,13 +36,9 @@ NOTIFY_SCHEMA = vol.Schema({
 })
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_SENSORS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=sensor_types.DEFAULT):
+        vol.All(cv.ensure_list, [vol.In(sensor_types.ALL)]),
 })
-
-DEFAULT_SENSOR = {
-    CONF_MONITORED_CONDITIONS: sensor_types.DEFAULT_SENSORS
-}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
@@ -50,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(NOTIFY_DOMAIN, default={}):
             vol.All(cv.ensure_list, [NOTIFY_SCHEMA]),
-        vol.Optional(SENSOR_DOMAIN, default=DEFAULT_SENSOR):
+        vol.Optional(SENSOR_DOMAIN, default={}):
             SENSOR_SCHEMA,
     })])
 }, extra=vol.ALLOW_EXTRA)
