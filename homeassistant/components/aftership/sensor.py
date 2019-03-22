@@ -61,7 +61,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     apikey = config[CONF_API_KEY]
     name = config[CONF_NAME]
-
     session = async_get_clientsession(hass)
     aftership = Tracking(hass.loop, session, apikey)
 
@@ -82,7 +81,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         slug = call.data.get(CONF_SLUG)
         tracking_number = call.data[CONF_TRACKING_NUMBER]
 
-        await aftership.add_package_tracking(slug, title, tracking_number)
+        await aftership.add_package_tracking(tracking_number, title, slug)
 
     hass.services.async_register(
         DOMAIN,
