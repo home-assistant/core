@@ -16,7 +16,7 @@ REQUIREMENTS = ["pyaftership==0.1.2"]
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Information provided by AfterShip"
-ATTR_DETAILS = "details"
+ATTR_TRACKINGS = "trackings"
 
 BASE_LINK = "https://track.aftership.com/"
 
@@ -157,7 +157,7 @@ class AfterShipSensor(Entity):
 
         status_to_ignore = {"delivered"}
         status_counts = {}
-        details = {}
+        trackings = {}
         not_delivered_count = 0
 
         for tracking in self.aftership.trackings["trackings"]:
@@ -168,7 +168,7 @@ class AfterShipSensor(Entity):
                 else tracking["title"]
             )
             status_counts[status] = status_counts.get(status, 0) + 1
-            details[tracking["tracking_number"]] = {
+            trackings[tracking["tracking_number"]] = {
                 "name": name,
                 "tracking_number": tracking["tracking_number"],
                 "slug": tracking["slug"],
@@ -177,6 +177,7 @@ class AfterShipSensor(Entity):
                 + "/"
                 + tracking["tracking_number"],
                 "last_update": tracking["updated_at"],
+                "status": tracking["tag"],
             }
 
             if status not in status_to_ignore:
@@ -188,7 +189,7 @@ class AfterShipSensor(Entity):
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             **status_counts,
-            ATTR_DETAILS: details,
+            ATTR_TRACKINGS: trackings,
         }
 
         self._state = not_delivered_count
