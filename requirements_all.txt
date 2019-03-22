@@ -894,7 +894,7 @@ py-august==0.7.0
 py-canary==0.5.0
 
 # homeassistant.components.cpuspeed.sensor
-py-cpuinfo==4.0.0
+py-cpuinfo==5.0.0
 
 # homeassistant.components.melissa
 py-melissa-climate==2.0.0
