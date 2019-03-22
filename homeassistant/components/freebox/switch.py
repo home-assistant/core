@@ -1,8 +1,9 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 import logging
 
-from . import DATA_FREEBOX
 from homeassistant.components.switch import SwitchDevice
+
+from . import DATA_FREEBOX
 
 DEPENDENCIES = ['freebox']
 
