@@ -33,7 +33,7 @@ ICON = 'mdi:television'
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SUPPORTED_COMMANDS  = {
+SUPPORTED_COMMANDS = {
     'soundbar': (SUPPORT_PLAY | SUPPORT_PAUSE
                  | SUPPORT_SELECT_SOURCE
                  | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
