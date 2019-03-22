@@ -1456,7 +1456,7 @@ pyvera==0.2.45
 pyvesync_v2==0.9.6
 
 # homeassistant.components.vizio
-pyvizio==0.0.4
+pyvizio==0.0.6
 
 # homeassistant.components.velux
 pyvlx==0.2.10
