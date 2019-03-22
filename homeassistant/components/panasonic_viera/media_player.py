@@ -64,7 +64,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             uuid = None
         remote = RemoteControl(host, port)
-        add_entities([PanasonicVieraTVDevice(mac, name, remote, host, app_power, uuid)])
+        add_entities([PanasonicVieraTVDevice(
+            mac, name, remote, host, app_power, uuid)])
         return True
 
     host = config.get(CONF_HOST)
@@ -152,7 +153,6 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         elif self._app_power:
             self._remote.turn_on()
             self._state = STATE_ON
-
 
     def turn_off(self):
         """Turn off media player."""
