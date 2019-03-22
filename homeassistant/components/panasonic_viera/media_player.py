@@ -64,20 +64,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             uuid = None
         remote = RemoteControl(host, port)
-        add_entities([PanasonicVieraTVDevice(mac, name, remote, host, uuid)])
+        add_entities([PanasonicVieraTVDevice(mac, name, remote, host, app_power, uuid)])
         return True
 
     host = config.get(CONF_HOST)
     remote = RemoteControl(host, port)
 
-    add_entities([PanasonicVieraTVDevice(mac, name, remote, host)])
+    add_entities([PanasonicVieraTVDevice(mac, name, remote, host, app_power)])
     return True
 
 
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, mac, name, remote, host, uuid=None):
+    def __init__(self, mac, name, remote, host, app_power, uuid=None):
         """Initialize the Panasonic device."""
         import wakeonlan
         # Save a reference to the imported class
