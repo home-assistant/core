@@ -107,6 +107,8 @@ def hass_fixture(loop, hass):
 
     return hass
 
+# pylint: disable=redefined-outer-name
+
 
 @asyncio.coroutine
 def test_sync_request(hass_fixture, assistant_client, auth_header):
