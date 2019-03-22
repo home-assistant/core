@@ -575,8 +575,8 @@ class TelegramNotificationService:
         chat_id = self._get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
         leaved = self._send_msg(self.bot.leaveChat,
-                                 "Error leaving chat",
-                                 chat_id)
+                                "Error leaving chat",
+                                chat_id)
         return leaved
 
 
