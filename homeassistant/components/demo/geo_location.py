@@ -7,7 +7,7 @@ from typing import Optional
 
 from homeassistant.helpers.event import track_time_interval
 
-from . import GeolocationEvent
+from homeassistant.components.geo_location import GeolocationEvent
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 
-from . import (
+from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_CURRENT_TILT_POSITION, ATTR_POSITION,
     ATTR_TILT_POSITION, DOMAIN, PLATFORM_SCHEMA, SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT, SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,

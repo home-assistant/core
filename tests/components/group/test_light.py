@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import asynctest
 
-from homeassistant.components.light import group
+import homeassistant.components.group.light as group
 from homeassistant.setup import async_setup_component
 
 from tests.components.light import common

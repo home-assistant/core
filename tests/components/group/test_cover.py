@@ -6,7 +6,7 @@ import pytest
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_CURRENT_TILT_POSITION, ATTR_POSITION,
     ATTR_TILT_POSITION, DOMAIN)
-from homeassistant.components.cover.group import DEFAULT_NAME
+from homeassistant.components.group.cover import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES, CONF_ENTITIES,
