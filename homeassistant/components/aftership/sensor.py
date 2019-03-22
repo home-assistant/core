@@ -204,9 +204,9 @@ class AfterShipSensor(Entity):
                 "tracking_number": tracking["tracking_number"],
                 "slug": tracking["slug"],
                 "link": BASE_LINK
-                        + tracking["slug"]
-                        + "/"
-                        + tracking["tracking_number"],
+                + tracking["slug"]
+                + "/"
+                + tracking["tracking_number"],
                 "last_update": tracking["updated_at"],
             }
 
