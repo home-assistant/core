@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['PyRMVtransport==0.1.3']
+REQUIREMENTS = ['PyRMVtransport==0.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 
