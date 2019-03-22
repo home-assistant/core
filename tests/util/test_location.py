@@ -99,11 +99,10 @@ class TestLocationUtil(TestCase):
         assert info.longitude == -117.2073
         assert not info.use_metric
 
-    @patch('homeassistant.util.location.elevation', return_value=0)
     @patch('homeassistant.util.location._get_ipapi', return_value=None)
     @patch('homeassistant.util.location._get_ip_api', return_value=None)
     def test_detect_location_info_both_queries_fail(
-            self, mock_ipapi, mock_ip_api, mock_elevation):
+            self, mock_ipapi, mock_ip_api):
         """Ensure we return None if both queries fail."""
         info = location_util.detect_location_info(_test_real=True)
         assert info is None
@@ -121,24 +120,3 @@ class TestLocationUtil(TestCase):
         """Test ip api query when the request to API fails."""
         info = location_util._get_ip_api()
         assert info is None
-
-    @patch('homeassistant.util.location.requests.get',
-           side_effect=requests.RequestException)
-    def test_elevation_query_raises(self, mock_get):
-        """Test elevation when the request to API fails."""
-        elevation = location_util.elevation(10, 10, _test_real=True)
-        assert elevation == 0
-
-    @requests_mock.Mocker()
-    def test_elevation_query_fails(self, mock_req):
-        """Test elevation when the request to API fails."""
-        mock_req.get(location_util.ELEVATION_URL, text='{}', status_code=401)
-        elevation = location_util.elevation(10, 10, _test_real=True)
-        assert elevation == 0
-
-    @requests_mock.Mocker()
-    def test_elevation_query_nonjson(self, mock_req):
-        """Test if elevation API returns a non JSON value."""
-        mock_req.get(location_util.ELEVATION_URL, text='{ I am not JSON }')
-        elevation = location_util.elevation(10, 10, _test_real=True)
-        assert elevation == 0
