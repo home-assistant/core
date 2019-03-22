@@ -411,7 +411,7 @@ class PlexClient(MediaPlayerDevice):
             # Calculate throttled position for proper progress display.
             position = int(self._session.viewOffset / 1000)
             now = dt_util.utcnow()
-            if self._media_position and self._media_position_updated_at:
+            if self._media_position is not None:
                 pos_diff = (position - self._media_position)
                 time_diff = now - self._media_position_updated_at
                 if (pos_diff != 0 and
