@@ -176,16 +176,11 @@ aqualogic==1.0
 asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
-<<<<<<< HEAD
-# homeassistant.components.media_player.dlna_dmr
-async-upnp-client==0.14.5
-=======
 # homeassistant.components.dlna_dmr.media_player
 async-upnp-client==0.14.6
 
 # homeassistant.components.stream
 av==6.1.2
->>>>>>> upstream/dev
 
 # homeassistant.components.avion.light
 # avion==0.10
