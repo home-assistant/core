@@ -17,7 +17,7 @@ from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 from .config_flow import configured_drivers
 
-REQUIREMENTS = ['pexpect==4.2']
+REQUIREMENTS = ['pexpect==4.2', 'mutagen==1.42.0']
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -30,6 +30,7 @@ G_RCLONE_URL_TO_STREAM = 'http://127.0.0.1:8080/'
 G_LAST_BROWSE_CALL = None
 G_DRIVE_CLIENT_ID = None
 G_DRIVE_SECRET = None
+G_COVER_FILE = "/data/data/pl.sviete.dom/files/home/AIS/www/cover.jpg"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -85,6 +86,10 @@ async def async_setup_entry(hass, config_entry):
     """Set up drive as rclone config entry."""
     _LOGGER.info("Set up drive as rclone config entry")
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(config_entry, 'sensor'))
+    # refresh the ui
+    # hass.add_job(
+    #     hass.services.call('ais_drives_service', 'browse_path', {"path": G_CLOUD_PREFIX})
+    # )
     return True
 
 
@@ -103,6 +108,10 @@ async def async_unload_entry(hass, config_entry):
         open(G_RCLONE_CONF_FILE, 'w').close()
 
     await hass.config_entries.async_forward_entry_unload(config_entry, 'sensor')
+    # refresh the ui
+    # hass.add_job(
+    #     hass.services.call('ais_drives_service', 'browse_path', {"path": G_CLOUD_PREFIX})
+    # )
     return True
 
 
@@ -228,6 +237,30 @@ def rclone_set_auth_passwd(drive_name, drive_type, user, passwd):
         return 'ERROR: ' + str(e)
 
 
+def album_cover_extract(path):
+    import mutagen.id3
+    import mutagen.flac
+    import mutagen.mp4
+    global G_COVER_FILE
+    if G_COVER_FILE == "/data/data/pl.sviete.dom/files/home/AIS/www/cover.jpg":
+        G_COVER_FILE = "/data/data/pl.sviete.dom/files/home/AIS/www/cover2.jpg"
+        ret_path = '/local/cover2.jpg'
+    else:
+        G_COVER_FILE = "/data/data/pl.sviete.dom/files/home/AIS/www/cover.jpg"
+        ret_path = '/local/cover.jpg'
+    try:
+        id3 = mutagen.id3.ID3(path)
+        open(G_COVER_FILE, 'wb').write(id3.getall('APIC')[0].data)
+    except mutagen.id3.ID3NoHeaderError:
+        try:
+            flac = mutagen.flac.FLAC(path)
+            open(G_COVER_FILE, 'wb').write(flac.pictures[0].data)
+        except mutagen.flac.FLACNoHeaderError:
+            mp4 = mutagen.mp4.MP4(path)
+            open(G_COVER_FILE, 'wb').write(mp4['covr'][0])
+    return ret_path
+
+
 class LocalData:
     """Class to hold local folders and files data."""
 
@@ -271,11 +304,12 @@ class LocalData:
                 self.say(file.read())
         elif mime_type.startswith('audio/'):
             _url = self.current_path
-            # TODO search the image cover in the folder
-            # "IMAGE_URL": "file://sdcard/dom/.dom/dom.jpeg",
+            # TODO search the album and title ...
+            album_cover_path = album_cover_extract(self.current_path)
             _audio_info = {"NAME": os.path.basename(self.current_path),
                            "MEDIA_SOURCE": ais_global.G_AN_LOCAL,
-                           "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path))}
+                           "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path)),
+                           "IMAGE_URL": album_cover_path}
             _audio_info = json.dumps(_audio_info)
 
             if _url is not None:
