@@ -141,8 +141,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         if self._mac:
             self._wol.send_magic_packet(self._mac, ip_address=self._host)
         else:
-            # power button is actually power toggle
-            self._remote.turn_off()
+            self._remote.turn_on()
         self._state = STATE_ON
 
     def turn_off(self):
