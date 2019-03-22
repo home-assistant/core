@@ -78,7 +78,6 @@ async def test_auth_events_incorrect_pass(hass, no_auth_websocket_client):
 
     await test_auth_via_msg_incorrect_pass(no_auth_websocket_client)
 
-    await asyncio.sleep(0.1)
     assert not connected_evt
     assert not disconnected_evt
 
