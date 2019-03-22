@@ -989,12 +989,6 @@ class AisColudData:
                 'set_options', {
                     "entity_id": "input_select.tts_player",
                     "options": players_lv}))
-        hass.async_add_job(
-            hass.services.async_call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.file_player",
-                    "options": players_lv}))
         # rebuild the groups
         import homeassistant.components.ais_ai_service as ais_ai
         ais_ai.get_groups(hass)

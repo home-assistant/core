@@ -72,12 +72,24 @@ def async_setup(hass, config):
         _LOGGER.info("sync_locations")
         data.sync_locations(call)
 
+    def play_next(call):
+        _LOGGER.info("play_next")
+        data.play_next(call)
+
+    def play_prev(call):
+        _LOGGER.info("play_prev")
+        data.play_prev(call)
+
     hass.services.async_register(
         DOMAIN, 'browse_path', browse_path)
     hass.services.async_register(
         DOMAIN, 'refresh_files', refresh_files)
     hass.services.async_register(
         DOMAIN, 'sync_locations', sync_locations)
+    hass.services.async_register(
+        DOMAIN, 'play_next', play_next)
+    hass.services.async_register(
+        DOMAIN, 'play_prev', play_prev)
 
     return True
 
@@ -86,10 +98,6 @@ async def async_setup_entry(hass, config_entry):
     """Set up drive as rclone config entry."""
     _LOGGER.info("Set up drive as rclone config entry")
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(config_entry, 'sensor'))
-    # refresh the ui
-    # hass.add_job(
-    #     hass.services.call('ais_drives_service', 'browse_path', {"path": G_CLOUD_PREFIX})
-    # )
     return True
 
 
@@ -108,10 +116,6 @@ async def async_unload_entry(hass, config_entry):
         open(G_RCLONE_CONF_FILE, 'w').close()
 
     await hass.config_entries.async_forward_entry_unload(config_entry, 'sensor')
-    # refresh the ui
-    # hass.add_job(
-    #     hass.services.call('ais_drives_service', 'browse_path', {"path": G_CLOUD_PREFIX})
-    # )
     return True
 
 
@@ -242,12 +246,19 @@ def album_cover_extract(path):
     import mutagen.flac
     import mutagen.mp4
     global G_COVER_FILE
-    if G_COVER_FILE == "/data/data/pl.sviete.dom/files/home/AIS/www/cover.jpg":
-        G_COVER_FILE = "/data/data/pl.sviete.dom/files/home/AIS/www/cover2.jpg"
-        ret_path = '/local/cover2.jpg'
-    else:
-        G_COVER_FILE = "/data/data/pl.sviete.dom/files/home/AIS/www/cover.jpg"
-        ret_path = '/local/cover.jpg'
+    dir_www = "/data/data/pl.sviete.dom/files/home/AIS/www/"
+    dir_name = os.path.basename(os.path.dirname(path)).replace(' ', '')
+    ret_path = '/local/' + dir_name + "_cover.jpg"
+    if G_COVER_FILE == dir_www + dir_name + "_cover.jpg":
+        return ret_path
+    # remove all .jpg
+    jpgs = os.listdir(dir_www)
+    for jpg in jpgs:
+        if jpg.endswith("_cover.jpg"):
+            os.remove(os.path.join(dir_www, jpg))
+
+    # generate the cover
+    G_COVER_FILE = dir_www + dir_name + "_cover.jpg"
     try:
         id3 = mutagen.id3.ID3(path)
         open(G_COVER_FILE, 'wb').write(id3.getall('APIC')[0].data)
@@ -288,11 +299,6 @@ class LocalData:
         # # cloud remotes from rclone
         # self.folders.append(G_CLOUD_PREFIX)
         # """Load the folders and files synchronously."""
-        # self.hass.services.call(
-        #     'input_select',
-        #     'set_options', {
-        #         "entity_id": "input_select.folder_name",
-        #         "options": sorted(self.folders)})
 
     def play_file(self):
         mime_type = mimetypes.MimeTypes().guess_type(self.current_path)[0]
@@ -313,32 +319,28 @@ class LocalData:
             _audio_info = json.dumps(_audio_info)
 
             if _url is not None:
-                player_name = self.hass.states.get(
-                    'input_select.file_player').state
-                player = ais_cloud.get_player_data(player_name)
                 self.hass.services.call(
                     'media_player',
                     'play_media', {
-                        "entity_id": player["entity_id"],
+                        "entity_id": "media_player.wbudowany_glosnik",
                         "media_content_type": "audio/mp4",
                         "media_content_id": _url
                     })
                 # set stream image and title
-                if player["device_ip"] is not None:
-                    self.hass.services.call(
-                        'media_player',
-                        'play_media', {
-                            "entity_id": player["entity_id"],
-                            "media_content_type": "ais_info",
-                            "media_content_id": _audio_info
-                        })
+                self.hass.services.call(
+                    'media_player',
+                    'play_media', {
+                        "entity_id": "media_player.wbudowany_glosnik",
+                        "media_content_type": "ais_info",
+                        "media_content_id": _audio_info
+                    })
                 # skipTo
                 position = ais_global.get_bookmark_position(_url)
                 if position != 0:
                     self.hass.services.call(
                         'media_player',
                         'media_seek', {
-                            "entity_id": player["entity_id"],
+                            "entity_id": "media_player.wbudowany_glosnik",
                             "seek_position": position
                         })
         else:
@@ -350,12 +352,14 @@ class LocalData:
     def display_root_items(self, say):
         self.hass.states.set(
             "sensor.dyski", '', {
-                0: {"name": "Dysk wewnętrzny", "icon": "harddisk",
-                    "path": G_LOCAL_FILES_ROOT + "/dysk-wewnętrzny"},
-                1: {"name": "Dyski zewnętrzne", "icon": "sd",
-                    "path": G_LOCAL_FILES_ROOT + "/dyski-zewnętrzne"},
-                2: {"name": "Dyski zdalne", "icon": "onedrive",
-                    "path": G_CLOUD_PREFIX}})
+                'files': [
+                    {"name": "Dysk wewnętrzny", "icon": "harddisk",
+                     "path": G_LOCAL_FILES_ROOT + "/dysk-wewnętrzny"},
+                    {"name": "Dyski zewnętrzne", "icon": "sd",
+                     "path": G_LOCAL_FILES_ROOT + "/dyski-zewnętrzne"},
+                    {"name": "Dyski zdalne", "icon": "onedrive",
+                     "path": G_CLOUD_PREFIX}]
+            })
         if say:
             self.say("Dyski")
 
@@ -374,69 +378,53 @@ class LocalData:
         self.folders = []
         for i in si:
             self.folders.append(i)
-
-        items_info = {0: {"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
-                      1: {"name": "..", "icon": "", "path": ".."}}
-        for idx, entry in enumerate(si):
-            items_info[idx + 2] = {}
-            items_info[idx + 2]["name"] = entry.name
-            items_info[idx + 2]["icon"] = self.get_icon(entry)
-            items_info[idx + 2]["path"] = entry.path
-
-        self.hass.states.set(
-            "sensor.dyski", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), items_info)
+        items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
+                      {"name": "..", "icon": "", "path": ".."}]
+        for i in si:
+            items_info.append({"name": i.name, "icon": self.get_icon(i), "path": i.path})
+        self.hass.states.set("sensor.dyski", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), {'files': items_info})
         if say:
             self.say("ok")
 
     def display_current_remotes(self, remotes):
         self.folders = []
-        items_info = {0: {"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
-                      1: {"name": "..", "icon": "", "path": ".."}}
-        for idx, entry in enumerate(remotes):
-            items_info[idx + 2] = {}
-            items_info[idx + 2]["name"] = entry
-            items_info[idx + 2]["icon"] = "folder-google-drive"
-            items_info[idx + 2]["path"] = self.current_path + entry
-            self.folders.append(entry)
-
-        self.hass.states.set(
-            "sensor.dyski", self.current_path, items_info)
+        items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
+                      {"name": "..", "icon": "", "path": ".."}]
+        for i in remotes:
+            items_info.append({"name": i, "icon": "folder-google-drive", "path": self.current_path + i})
+            self.folders.append(i)
+        self.hass.states.set("sensor.dyski", self.current_path, {'files': items_info})
 
     def display_current_remote_items(self):
         self.folders = []
-        items_info = {0: {"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
-                      1: {"name": "..", "icon": "", "path": ".."}}
+        items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
+                      {"name": "..", "icon": "", "path": ".."}]
 
         if self.current_path.endswith(':'):
             self.folders.append(self.current_path + ais_global.G_DRIVE_SHARED_WITH_ME)
-            items_info[2] = {"name":  ais_global.G_DRIVE_SHARED_WITH_ME, "icon": "account-supervisor-circle",
-                             "path": self.current_path + ais_global.G_DRIVE_SHARED_WITH_ME}
-        li = len(items_info)
+            items_info.append({"name":  ais_global.G_DRIVE_SHARED_WITH_ME, "icon": "account-supervisor-circle",
+                               "path": self.current_path + ais_global.G_DRIVE_SHARED_WITH_ME})
         for item in self.folders_json:
-            li = li + 1
             if self.current_path.endswith(':'):
                 path = self.current_path + item["Path"].strip()
             else:
                 path = self.current_path + "/" + item["Path"].strip()
 
-            items_info[li] = {}
-            items_info[li]["name"] = item["Path"].strip()[:50]
+            l_icon = "file-outline"
             if item["IsDir"]:
-                items_info[li]["icon"] = "folder-google-drive"
+                l_icon = "folder-google-drive"
             else:
-                items_info[li]["icon"] = "file-outline"
                 if "MimeType" in item:
                     if item["MimeType"].startswith("text/"):
-                        items_info[li]["icon"] = "file-document-outline"
+                        l_icon = "file-document-outline"
                     elif item["MimeType"].startswith("audio/"):
-                        items_info[li]["icon"] = "music-circle"
+                        l_icon = "music-circle"
                     elif item["MimeType"].startswith("video/"):
-                        items_info[li]["icon"] = "file-video-outline"
-            items_info[li]["path"] = path
+                        l_icon = "file-video-outline"
+            items_info.append({"name": item["Path"].strip()[:50], "icon": l_icon, "path": path})
             self.folders.append(path)
 
-        self.hass.states.set(
-            "sensor.dyski", self.current_path, items_info)
+        self.hass.states.set("sensor.dyski", self.current_path, {'files': items_info})
 
     def get_icon(self, entry):
         if entry.is_dir():
@@ -456,8 +444,10 @@ class LocalData:
         if "path" not in call.data:
             _LOGGER.error("No path")
             return
+        self._browse_path(call.data["path"], say)
 
-        if call.data["path"] == "..":
+    def _browse_path(self, path, say):
+        if path == "..":
             # check if this is cloud drive
             if self.is_rclone_path(self.current_path):
                 if self.current_path == G_CLOUD_PREFIX:
@@ -478,7 +468,7 @@ class LocalData:
                 k = self.current_path.rfind("/" + os.path.basename(self.current_path))
                 self.current_path = self.current_path[:k]
         else:
-            self.current_path = call.data["path"]
+            self.current_path = path
 
         if self.current_path.startswith(G_CLOUD_PREFIX):
             self.rclone_browse(self.current_path, say)
@@ -578,13 +568,10 @@ class LocalData:
                 self.say("Nie udało się otworzyć pliku ")
 
     def rclone_play_the_stream(self):
-        player_name = self.hass.states.get(
-            'input_select.file_player').state
-        player = ais_cloud.get_player_data(player_name)
         self.hass.services.call(
             'media_player',
             'play_media', {
-                "entity_id": player["entity_id"],
+                "entity_id": "media_player.wbudowany_glosnik",
                 "media_content_type": "audio/mp4",
                 "media_content_id": self.rclone_url_to_stream
             })
@@ -593,20 +580,19 @@ class LocalData:
                        "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path))}
         _audio_info = json.dumps(_audio_info)
         # to set the stream image and title
-        if player["device_ip"] is not None:
-            self.hass.services.call(
-                'media_player',
-                'play_media', {
-                    "entity_id": player["entity_id"],
-                    "media_content_type": "ais_info",
-                    "media_content_id": _audio_info
-                })
+        self.hass.services.call(
+            'media_player',
+            'play_media', {
+                "entity_id": "media_player.wbudowany_glosnik",
+                "media_content_type": "ais_info",
+                "media_content_id": _audio_info
+            })
         position = ais_global.get_bookmark_position(self.rclone_url_to_stream)
         if position != 0:
             self.hass.services.call(
                 'media_player',
                 'media_seek', {
-                    "entity_id": player["entity_id"],
+                    "entity_id": "media_player.wbudowany_glosnik",
                     "seek_position": position
                 })
 
@@ -718,6 +704,36 @@ class LocalData:
             self.say("Błąd podczas synchronizacji: " + proc.stderr)
         else:
             self.say("Synchronizacja zakończona.")
+
+    def play_next(self, call):
+        state = self.hass.states.get('sensor.dyski')
+        attr = state.attributes
+        files = attr.get('files', [])
+        l_idx = 0
+        i = 0
+        for f in files:
+            i = i + 1
+            if f["path"].replace(G_LOCAL_FILES_ROOT, "") == state.state:
+                l_idx = i
+        if l_idx == len(files):
+            l_idx = min(2, len(files))
+        self._browse_path(files[l_idx]["path"], True)
+
+    def play_prev(self, call):
+        state = self.hass.states.get('sensor.dyski')
+        attr = state.attributes
+        files = attr.get('files', [])
+        l_idx = 0
+        i = 0
+        for f in files:
+            i = i + 1
+            if f["path"].replace(G_LOCAL_FILES_ROOT, "") == state.state:
+                l_idx = i
+        if l_idx == 3:
+            l_idx = len(files) - 1
+        else:
+            l_idx = l_idx - 2
+        self._browse_path(files[l_idx]["path"], True)
 
     @asyncio.coroutine
     def async_load_all(self):

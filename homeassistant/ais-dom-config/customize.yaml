@@ -145,8 +145,6 @@ sensor.network_devices_info_value:
   text: ""
 media_player.wbudowany_glosnik:
   friendly_name: Podłączony głośnik
-sensor.ais_drives_info:
-  friendly_name: "Stan dysków:"
 
 #
 sensor.dark_sky_hourly_summary:

@@ -374,12 +374,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 "ip": self._device_ip
                 }
             )
-
         self._playing = False
-        # if self._device_ip == 'localhost' and self._media_source == ais_global.G_AN_LOCAL and self._album_name is not None:
-        #     import threading
-        #     timer = threading.Timer(1, self.add_bookmark)
-        #     timer.start()
 
     def media_stop(self):
         """Service to send the ExoPlayer the command for stop."""
@@ -395,77 +390,75 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Service to send the ExoPlayer the command for next track."""
-        entity_id = ""
-        if self._media_source == ais_global.G_AN_RADIO:
-            entity_id = "input_select.radio_station_name"
-        elif self._media_source == ais_global.G_AN_PODCAST:
-            entity_id = "input_select.podcast_track"
-        elif self._media_source == ais_global.G_AN_MUSIC:
-            entity_id = "input_select.ais_music_track_name"
-        elif self._media_source == ais_global.G_AN_SPOTIFY:
-            entity_id = "input_select.ais_music_track_name"
-        elif self._media_source == ais_global.G_AN_AUDIOBOOK:
-            entity_id = "input_select.book_chapter"
-        elif self._media_source == ais_global.G_AN_LOCAL:
-            entity_id = "input_select.folder_name"
+        if self._media_source == ais_global.G_AN_LOCAL:
+            self.hass.services.call('ais_drives_service', 'play_next')
+        else:
+            entity_id = ""
+            if self._media_source == ais_global.G_AN_RADIO:
+                entity_id = "input_select.radio_station_name"
+            elif self._media_source == ais_global.G_AN_PODCAST:
+                entity_id = "input_select.podcast_track"
+            elif self._media_source == ais_global.G_AN_MUSIC:
+                entity_id = "input_select.ais_music_track_name"
+            elif self._media_source == ais_global.G_AN_SPOTIFY:
+                entity_id = "input_select.ais_music_track_name"
+            elif self._media_source == ais_global.G_AN_AUDIOBOOK:
+                entity_id = "input_select.book_chapter"
 
-        self.hass.services.call(
-            'input_select',
-            'select_next', {
-                "entity_id": entity_id})
-        self.hass.block_till_done()
-        name = self.hass.states.get(entity_id).state
-        self.hass.block_till_done()
-        if name == '-':
             self.hass.services.call(
                 'input_select',
                 'select_next', {
                     "entity_id": entity_id})
-        self.hass.block_till_done()
-        name = self.hass.states.get(entity_id).state
-        if self._media_source == ais_global.G_AN_LOCAL:
-            name = os.path.basename(name)
-        name = 'Odtwarzam kolejny: ' + name
-        self.hass.services.call(
-            'ais_ai_service',
-            'say_it', {
-                "text": name})
+            self.hass.block_till_done()
+            name = self.hass.states.get(entity_id).state
+            self.hass.block_till_done()
+            if name == '-':
+                self.hass.services.call(
+                    'input_select',
+                    'select_next', {
+                        "entity_id": entity_id})
+            self.hass.block_till_done()
+            name = self.hass.states.get(entity_id).state
+            name = 'Odtwarzam kolejny: ' + name
+            self.hass.services.call(
+                'ais_ai_service',
+                'say_it', {
+                    "text": name})
 
     def media_previous_track(self):
         """Service to send the ExoPlayer the command for previous track."""
-        entity_id = ""
-        if self._media_source == ais_global.G_AN_RADIO:
-            entity_id = "input_select.radio_station_name"
-        elif self._media_source == ais_global.G_AN_PODCAST:
-            entity_id = "input_select.podcast_track"
-        elif self._media_source == ais_global.G_AN_MUSIC:
-            entity_id = "input_select.ais_music_track_name"
-        elif self._media_source == ais_global.G_AN_SPOTIFY:
-            entity_id = "input_select.ais_music_track_name"
-        elif self._media_source == ais_global.G_AN_AUDIOBOOK:
-            entity_id = "input_select.book_chapter"
-        elif self._media_source == ais_global.G_AN_LOCAL:
-            entity_id = "input_select.folder_name"
-        self.hass.services.call(
-            'input_select',
-            'select_previous', {
-                "entity_id": entity_id})
-        self.hass.block_till_done()
-        name = self.hass.states.get(entity_id).state
-        if name == '-':
+        if self._media_source == ais_global.G_AN_LOCAL:
+            self.hass.services.call('ais_drives_service', 'play_prev')
+        else:
+            entity_id = ""
+            if self._media_source == ais_global.G_AN_RADIO:
+                entity_id = "input_select.radio_station_name"
+            elif self._media_source == ais_global.G_AN_PODCAST:
+                entity_id = "input_select.podcast_track"
+            elif self._media_source == ais_global.G_AN_MUSIC:
+                entity_id = "input_select.ais_music_track_name"
+            elif self._media_source == ais_global.G_AN_SPOTIFY:
+                entity_id = "input_select.ais_music_track_name"
+            elif self._media_source == ais_global.G_AN_AUDIOBOOK:
+                entity_id = "input_select.book_chapter"
             self.hass.services.call(
                 'input_select',
                 'select_previous', {
                     "entity_id": entity_id})
-        self.hass.block_till_done()
-        name = self.hass.states.get(entity_id).state
-        if self._media_source == ais_global.G_AN_LOCAL:
-            name = os.path.basename(name)
-        name = 'Odtwarzam poprzedni: ' + name
-        self.hass.services.call(
-            'ais_ai_service',
-            'say_it', {
-                "text": name})
+            self.hass.block_till_done()
+            name = self.hass.states.get(entity_id).state
+            if name == '-':
+                self.hass.services.call(
+                    'input_select',
+                    'select_previous', {
+                        "entity_id": entity_id})
+            self.hass.block_till_done()
+            name = self.hass.states.get(entity_id).state
+            name = 'Odtwarzam poprzedni: ' + name
+            self.hass.services.call(
+                'ais_ai_service',
+                'say_it', {
+                    "text": name})
 
     def play_media(self, media_type, media_content_id, **kwargs):
         """Send the media player the command for playing a media."""

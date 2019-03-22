@@ -428,20 +428,6 @@
         key: "setPlaybackSpeed"
         val: "{{ states('input_number.media_player_speed') }}"
 
-- id: '201807181643234'
-  alias: 'Select Local Folder'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.folder_name
-  condition:
-    condition: template
-    value_template: "{{ states.input_select.folder_name.state != '-' }}"
-  action:
-    - service: ais_drives_service.browse_path
-      data_template:
-        path: "{{ states('input_select.folder_name') }}"
 
 - id: '201808231519123'
   alias: 'Search For Sensors'

@@ -20,6 +20,4 @@ group:
   local_audio:
     name: Dyski
     entities:
-    - input_select.folder_name
-    - sensor.ais_drives_info
-    - input_select.file_player
+    - sensor.dyski
