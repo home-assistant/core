@@ -6,11 +6,7 @@ from collections import OrderedDict
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    ATTR_CREDENTIALS,
-    CONF_NAME,
-    CONF_PROFILE_NAME,
-)
+from homeassistant.const import ATTR_CREDENTIALS, CONF_NAME, CONF_PROFILE_NAME
 from homeassistant.helpers import config_validation as cv, discovery
 
 # Loading the config flow file will register the flow
@@ -39,13 +35,15 @@ AWS_CREDENTIAL_SCHEMA = vol.Schema(
     }
 )
 
+DEFAULT_CREDENTIAL = [{CONF_NAME: "default", CONF_PROFILE_NAME: "default"}]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(ATTR_CREDENTIALS): vol.All(
-                    cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]
-                ),
+                vol.Optional(
+                    ATTR_CREDENTIALS, default=DEFAULT_CREDENTIAL
+                ): vol.All(cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]),
                 vol.Optional(CONF_NOTIFY): vol.All(
                     cv.ensure_list, [NOTIFY_PLATFORM_SCHEMA]
                 ),
@@ -63,9 +61,7 @@ async def async_setup(hass, config):
     conf = config.get(DOMAIN)
     if conf is None:
         # create a default conf using default profile
-        conf = CONFIG_SCHEMA(
-            {CONF_NAME: "default", CONF_PROFILE_NAME: "default"}
-        )
+        conf = CONFIG_SCHEMA({ATTR_CREDENTIALS: DEFAULT_CREDENTIAL})
 
     hass.data[DATA_CONFIG] = conf
     hass.data[DATA_SESSIONS] = OrderedDict()
@@ -112,7 +108,8 @@ async def async_setup_entry(hass, entry):
             name = conf[ATTR_CREDENTIALS][index][CONF_NAME]
             if isinstance(result, Exception):
                 _LOGGER.error(
-                    "Validating credential [%s] failed: %s", name, result
+                    "Validating credential [%s] failed: %s",
+                    name, result, exc_info=result
                 )
                 validation = False
             else:
