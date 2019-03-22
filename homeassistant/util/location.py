@@ -9,7 +9,6 @@ from typing import Any, Optional, Tuple, Dict
 
 import requests
 
-ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
 IP_API = 'http://ip-api.com/json'
 IPAPI = 'https://ipapi.co/json/'
 
