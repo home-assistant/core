@@ -174,10 +174,9 @@ class TestConfig(unittest.TestCase):
                     '0.0.0.0', 'US', 'United States', 'CA', 'California',
                     'San Diego', '92122', 'America/Los_Angeles', 32.8594,
                     -117.2073, True))
-    @mock.patch('homeassistant.util.location.elevation', return_value=101)
     @mock.patch('builtins.print')
     def test_create_default_config_detect_location(self, mock_detect,
-                                                   mock_elev, mock_print):
+                                                   mock_print):
         """Test that detect location sets the correct config keys."""
         config_util.ensure_config_exists(CONFIG_DIR)
 
@@ -190,7 +189,7 @@ class TestConfig(unittest.TestCase):
         expected_values = {
             CONF_LATITUDE: 32.8594,
             CONF_LONGITUDE: -117.2073,
-            CONF_ELEVATION: 101,
+            CONF_ELEVATION: 0,
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             CONF_NAME: 'Home',
             CONF_TIME_ZONE: 'America/Los_Angeles',
@@ -486,9 +485,7 @@ class TestConfig(unittest.TestCase):
                     '0.0.0.0', 'US', 'United States', 'CA', 'California',
                     'San Diego', '92122', 'America/Los_Angeles', 32.8594,
                     -117.2073, True))
-    @mock.patch('homeassistant.util.location.elevation',
-                autospec=True, return_value=101)
-    def test_discovering_configuration(self, mock_detect, mock_elevation):
+    def test_discovering_configuration(self, mock_detect):
         """Test auto discovery for missing core configs."""
         self.hass.config.latitude = None
         self.hass.config.longitude = None
@@ -503,7 +500,6 @@ class TestConfig(unittest.TestCase):
 
         assert self.hass.config.latitude == 32.8594
         assert self.hass.config.longitude == -117.2073
-        assert self.hass.config.elevation == 101
         assert self.hass.config.location_name == 'San Diego'
         assert self.hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
         assert self.hass.config.units.is_metric
@@ -511,9 +507,7 @@ class TestConfig(unittest.TestCase):
 
     @mock.patch('homeassistant.util.location.detect_location_info',
                 autospec=True, return_value=None)
-    @mock.patch('homeassistant.util.location.elevation', return_value=0)
-    def test_discovering_configuration_auto_detect_fails(self, mock_detect,
-                                                         mock_elevation):
+    def test_discovering_configuration_auto_detect_fails(self, mock_detect):
         """Test config remains unchanged if discovery fails."""
         self.hass.config = Config()
         self.hass.config.config_dir = "/test/config"
@@ -526,7 +520,6 @@ class TestConfig(unittest.TestCase):
         blankConfig = Config()
         assert self.hass.config.latitude == blankConfig.latitude
         assert self.hass.config.longitude == blankConfig.longitude
-        assert self.hass.config.elevation == blankConfig.elevation
         assert self.hass.config.location_name == blankConfig.location_name
         assert self.hass.config.units == blankConfig.units
         assert self.hass.config.time_zone == blankConfig.time_zone

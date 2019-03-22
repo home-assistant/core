@@ -63,28 +63,6 @@ def distance(lat1: Optional[float], lon1: Optional[float],
     return result * 1000
 
 
-def elevation(latitude: float, longitude: float) -> int:
-    """Return elevation for given latitude and longitude."""
-    try:
-        req = requests.get(
-            ELEVATION_URL,
-            params={
-                'locations': '{},{}'.format(latitude, longitude),
-                'sensor': 'false',
-            },
-            timeout=10)
-    except requests.RequestException:
-        return 0
-
-    if req.status_code != 200:
-        return 0
-
-    try:
-        return int(float(req.json()['results'][0]['elevation']))
-    except (ValueError, KeyError, IndexError):
-        return 0
-
-
 # Author: https://github.com/maurycyp
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE

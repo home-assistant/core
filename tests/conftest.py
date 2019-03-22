@@ -43,7 +43,6 @@ def check_real(func):
 
 # Guard a few functions that would make network connections
 location.detect_location_info = check_real(location.detect_location_info)
-location.elevation = check_real(location.elevation)
 util.get_local_ip = lambda: '127.0.0.1'
 
 
