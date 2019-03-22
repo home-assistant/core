@@ -409,10 +409,10 @@ class PlexClient(MediaPlayerDevice):
                 self._is_player_available = False
 
             # Calculate throttled position for proper progress display.
-            position = self._session.viewOffset
+            position = int(self._session.viewOffset / 1000)
             now = dt_util.utcnow()
             if self._media_position and self._media_position_updated_at:
-                pos_diff = (position - self._last_position) / 1000.0
+                pos_diff = (position - self._media_position)
                 time_diff = now - self._media_position_updated_at
                 if (pos_diff != 0 and
                         abs(time_diff.total_seconds() - pos_diff) > 5):
@@ -430,7 +430,7 @@ class PlexClient(MediaPlayerDevice):
 
         if self._is_player_active and self._session is not None:
             self._session_type = self._session.type
-            self._media_duration = self._session.duration
+            self._media_duration = int(self._session.duration / 1000)
             #  title (movie name, tv episode name, music song name)
             self._media_title = self._session.title
             # media type
