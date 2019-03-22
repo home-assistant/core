@@ -95,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         """Call when a user removes an Aftership tracking from HASS."""
         slug = call.data[CONF_SLUG]
         tracking_number = call.data[CONF_TRACKING_NUMBER]
-        
+
         await aftership.remove_package_tracking(slug, tracking_number)
 
     hass.services.async_register(
