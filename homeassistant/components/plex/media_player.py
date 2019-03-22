@@ -313,7 +313,6 @@ class PlexClient(MediaPlayerDevice):
         self._media_title = None
         self._media_position = None
         self._media_position_updated_at = None
-        self._last_position = None
         # Music
         self._media_album_artist = None
         self._media_album_name = None
