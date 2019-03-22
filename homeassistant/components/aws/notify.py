@@ -52,21 +52,31 @@ def _in_avilable_region(config):
     return config
 
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_SERVICE): vol.All(
-                cv.string, vol.Lower, vol.In(SUPPORTED_SERVICES)
-            ),
-            vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
-            vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-            vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
-            vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-            vol.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
-            vol.Optional(CONF_CONTEXT, default=dict()): vol.Coerce(dict),
-        }
-    ),
-    _in_avilable_region,
+PLATFORM_SCHEMA = vol.Schema(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                # override notify.PLATFORM_SCHEMA.CONF_PLATFORM to Optional
+                # we don't need this field when we use discovery
+                vol.Optional(CONF_PLATFORM): cv.string,
+                vol.Required(CONF_SERVICE): vol.All(
+                    cv.string, vol.Lower, vol.In(SUPPORTED_SERVICES)
+                ),
+                vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
+                vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+                vol.Inclusive(
+                    CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS
+                ): cv.string,
+                vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+                vol.Exclusive(
+                    CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS
+                ): cv.string,
+                vol.Optional(CONF_CONTEXT): vol.Coerce(dict),
+            },
+            extra=vol.PREVENT_EXTRA,
+        ),
+        _in_avilable_region,
+    )
 )
 
 
@@ -76,16 +86,24 @@ async def async_get_service(hass, config, discovery_info=None):
 
     session = None
 
-    service = config[CONF_SERVICE]
-    region_name = config[CONF_REGION]
+    if discovery_info is not None:
+        conf = discovery_info
+    else:
+        conf = config
 
-    aws_config = config.copy()
+    service = conf[CONF_SERVICE]
+    region_name = conf[CONF_REGION]
+
+    aws_config = conf.copy()
 
     del aws_config[CONF_SERVICE]
     del aws_config[CONF_REGION]
-    del aws_config[CONF_PLATFORM]
-    del aws_config[CONF_NAME]
-    del aws_config[CONF_CONTEXT]
+    if CONF_PLATFORM in aws_config:
+        del aws_config[CONF_PLATFORM]
+    if CONF_NAME in aws_config:
+        del aws_config[CONF_NAME]
+    if CONF_CONTEXT in aws_config:
+        del aws_config[CONF_CONTEXT]
 
     if not aws_config:
         # no platform config, use aws component config instead
@@ -118,7 +136,7 @@ async def async_get_service(hass, config, discovery_info=None):
 
     if service == "lambda":
         context_str = json.dumps(
-            {"custom": config[CONF_CONTEXT]}, cls=JSONEncoder
+            {"custom": conf.get(CONF_CONTEXT, {})}, cls=JSONEncoder
         )
         context_b64 = base64.b64encode(context_str.encode("utf-8"))
         context = context_b64.decode("utf-8")

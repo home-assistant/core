@@ -6,8 +6,12 @@ from collections import OrderedDict
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_CREDENTIALS, CONF_NAME, CONF_PROFILE_NAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_NAME,
+    CONF_PROFILE_NAME,
+)
+from homeassistant.helpers import config_validation as cv, discovery
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa
@@ -15,9 +19,12 @@ from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_SECRET_ACCESS_KEY,
     DATA_CONFIG,
+    DATA_HASS_CONFIG,
     DATA_SESSIONS,
     DOMAIN,
+    CONF_NOTIFY,
 )
+from .notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
 
 REQUIREMENTS = ["aiobotocore==0.10.2"]
 
@@ -39,6 +46,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(ATTR_CREDENTIALS): vol.All(
                     cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]
                 ),
+                vol.Optional(CONF_NOTIFY): vol.All(
+                    cv.ensure_list, [NOTIFY_PLATFORM_SCHEMA]
+                ),
             }
         )
     },
@@ -48,13 +58,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up AWS component."""
+    hass.data[DATA_HASS_CONFIG] = config
+
     conf = config.get(DOMAIN)
     if conf is None:
         # create a default conf using default profile
-        conf = CONFIG_SCHEMA({
-            CONF_NAME: "default",
-            CONF_PROFILE_NAME: "default",
-        })
+        conf = CONFIG_SCHEMA(
+            {CONF_NAME: "default", CONF_PROFILE_NAME: "default"}
+        )
 
     hass.data[DATA_CONFIG] = conf
     hass.data[DATA_SESSIONS] = OrderedDict()
@@ -73,6 +84,7 @@ async def async_setup_entry(hass, entry):
 
     Validate and save sessions per aws credential.
     """
+    config = hass.data.get(DATA_HASS_CONFIG)
     conf = hass.data.get(DATA_CONFIG)
 
     if entry.source == config_entries.SOURCE_IMPORT:
@@ -90,11 +102,11 @@ async def async_setup_entry(hass, entry):
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: entry.data})[DOMAIN]
 
+    validation = True
     tasks = []
     for cred in conf.get(ATTR_CREDENTIALS):
         tasks.append(_validate_aws_credentials(hass, cred))
     if tasks:
-        validation = True
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for index, result in enumerate(results):
             name = conf[ATTR_CREDENTIALS][index][CONF_NAME]
@@ -105,10 +117,12 @@ async def async_setup_entry(hass, entry):
                 validation = False
             else:
                 hass.data[DATA_SESSIONS][name] = result
-        if not validation:
-            return False
 
-    return True
+    # No entry support for notify component yet
+    for notify_config in conf.get(CONF_NOTIFY, []):
+        discovery.load_platform(hass, "notify", DOMAIN, notify_config, config)
+
+    return validation
 
 
 async def _validate_aws_credentials(hass, credential):
