@@ -480,6 +480,7 @@ class HTML5NotificationService(BaseNotificationService):
                           ATTR_TAG: payload[ATTR_TAG]}
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
+            payload['android'] = {'priority': 'high'}
 
             if self._vapid_prv and self._vapid_claims:
                 response = webpush(
