@@ -415,7 +415,6 @@ omit =
     homeassistant/components/lifx_cloud/scene.py
     homeassistant/components/scsgate/*
     homeassistant/components/sense/*
-    homeassistant/components/api_streams/sensor.py
     homeassistant/components/aftership/sensor.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/alpha_vantage/sensor.py
