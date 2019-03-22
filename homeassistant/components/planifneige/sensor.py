@@ -34,6 +34,8 @@ STREET_STATE = {
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the PlanifNeige platform."""
+    if discovery_info is None:
+        return
     data = hass.data[DATA_PLANIFNEIGE]
     async_add_entities(
         [PlanifNeigeSensor(data, sensor) for sensor in discovery_info]
