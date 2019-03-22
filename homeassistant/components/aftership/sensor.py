@@ -157,7 +157,7 @@ class AfterShipSensor(Entity):
 
         status_to_ignore = {"delivered"}
         status_counts = {}
-        trackings = {}
+        trackings = []
         not_delivered_count = 0
 
         for tracking in self.aftership.trackings["trackings"]:
@@ -168,7 +168,7 @@ class AfterShipSensor(Entity):
                 else tracking["title"]
             )
             status_counts[status] = status_counts.get(status, 0) + 1
-            trackings[tracking["tracking_number"]] = {
+            trackings.append({
                 "name": name,
                 "tracking_number": tracking["tracking_number"],
                 "slug": tracking["slug"],
@@ -178,7 +178,7 @@ class AfterShipSensor(Entity):
                 + tracking["tracking_number"],
                 "last_update": tracking["updated_at"],
                 "status": tracking["tag"],
-            }
+            })
 
             if status not in status_to_ignore:
                 not_delivered_count += 1
