@@ -38,6 +38,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the AWS Lambda notification service."""
+    _LOGGER.warning(
+        "aws_lambda notify platform is deprecated, please replace it"
+        " with aws component. This config will become invalid in version 0.92."
+        " See https://www.home-assistant.io/components/aws/ for details."
+    )
+
     context_str = json.dumps({'custom': config[CONF_CONTEXT]}, cls=JSONEncoder)
     context_b64 = base64.b64encode(context_str.encode('utf-8'))
     context = context_b64.decode('utf-8')

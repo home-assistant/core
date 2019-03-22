@@ -35,6 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the AWS SNS notification service."""
+    _LOGGER.warning(
+        "aws_sns notify platform is deprecated, please replace it"
+        " with aws component. This config will become invalid in version 0.92."
+        " See https://www.home-assistant.io/components/aws/ for details."
+    )
+
     import boto3
 
     aws_config = config.copy()
