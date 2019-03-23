@@ -21,8 +21,8 @@ CONF_CONTRACT = 'contract'  # type: str
 DAYS = 'days'  # type: str
 DEFAULT_NAME = 'HydroQuebec'
 
-HOME_URL = '{}/portail/web/clientele/authentification'.format(HOST)
 HOST = 'https://www.hydroquebec.com'
+HOME_URL = '{}/portail/web/clientele/authentification'.format(HOST)
 
 KILOWATT_HOUR = ENERGY_KILO_WATT_HOUR
 
