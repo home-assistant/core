@@ -1,4 +1,4 @@
-"""Support for real-time departure information for Rhein-Main public transport."""
+"""Support for departure information for Rhein-Main public transport."""
 import asyncio
 import logging
 from datetime import timedelta
