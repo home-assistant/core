@@ -68,7 +68,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if device.setup():
         add_entities([device])
-    return
 
 
 class Hyperion(Light):
