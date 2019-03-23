@@ -89,7 +89,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Failed to set up Vizio platform, "
                       "please check if host and API key are correct")
         return
-    elif (token is None or token == "") and device_type == "tv":
+
+    if (token is None or token == "") and device_type == "tv":
         _LOGGER.error("Failed to set up Vizio platform, "
                       "if device_class is 'tv' then an auth_token needs "
                       "to be provided, otherwise if device_class is "
