@@ -32,13 +32,14 @@ HASS_VERISURE_OP_MODE = {
 def setup_platform(hass, config, add_entities, discovery_info=None):
     global heat_pumps
     hub.update_overview()
-    heat_pumps = hub.get('$.heatPumps')[0]
+    heat_pumps = hub.get('$.heatPumps')
 
-    for heat_pump in heat_pumps:
-        device_label = jsonpath(heat_pump, '$.deviceLabel')[0]
-        add_entities([
-            VerisureHeatPump(device_label)
-        ])
+    if len(heat_pumps) > 0:
+        for heat_pump in heat_pumps[0]:
+            device_label = jsonpath(heat_pump, '$.deviceLabel')[0]
+            add_entities([
+                VerisureHeatPump(device_label)
+            ])
 
 
 class VerisureHeatPump(ClimateDevice):
