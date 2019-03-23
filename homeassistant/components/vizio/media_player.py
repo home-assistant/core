@@ -97,8 +97,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     elif (token is None or token == "") and device_type == "tv":
         _LOGGER.error("Failed to set up Vizio platform, "
                       "if device_class is 'tv' then an auth_token needs "
-                      "to be provided, otherwise if device_class is 'soundbar' "
-                      "then add the right device_class to config")
+                      "to be provided, otherwise if device_class is "
+                      "'soundbar' then add the right device_class to config")
         return
 
     if config.get(CONF_SUPPRESS_WARNING):
