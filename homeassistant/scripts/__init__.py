@@ -52,15 +52,10 @@ def run(args: List) -> int:
     hass = HomeAssistant(loop)
     pkgload = PackageLoadable(hass)
     for req in getattr(script, 'REQUIREMENTS', []):
-        try:
-            loop.run_until_complete(pkgload.loadable(req))
+        if loop.run_until_complete(pkgload.loadable(req)):
             continue
-        except ImportError:
-            pass
 
-        returncode = install_package(req, **_pip_kwargs)
-
-        if not returncode:
+        if not install_package(req, **_pip_kwargs):
             print('Aborting script, could not install dependency', req)
             return 1
 

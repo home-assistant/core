@@ -13,12 +13,6 @@ from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_TILT_POSITION, DEVICE_CLASSES_SCHEMA, SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT, SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION, SUPPORT_STOP, SUPPORT_STOP_TILT, CoverDevice)
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
-    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import (
     CONF_DEVICE, CONF_DEVICE_CLASS, CONF_NAME, CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE, STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN)
@@ -27,6 +21,12 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -195,7 +195,7 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         self._config = config
@@ -216,19 +216,20 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         topics = {}
 
         @callback
-        def tilt_updated(topic, payload, qos):
+        def tilt_updated(msg):
             """Handle tilt updates."""
-            if (payload.isnumeric() and
-                    (self._config.get(CONF_TILT_MIN) <= int(payload) <=
+            if (msg.payload.isnumeric() and
+                    (self._config.get(CONF_TILT_MIN) <= int(msg.payload) <=
                      self._config.get(CONF_TILT_MAX))):
 
-                level = self.find_percentage_in_range(float(payload))
+                level = self.find_percentage_in_range(float(msg.payload))
                 self._tilt_value = level
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
         @callback
-        def state_message_received(topic, payload, qos):
+        def state_message_received(msg):
             """Handle new MQTT state messages."""
+            payload = msg.payload
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
                     payload)
@@ -240,11 +241,12 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             else:
                 _LOGGER.warning("Payload is not True or False: %s", payload)
                 return
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         @callback
-        def position_message_received(topic, payload, qos):
+        def position_message_received(msg):
             """Handle new MQTT state messages."""
+            payload = msg.payload
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
                     payload)
@@ -259,7 +261,7 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                     "Payload is not integer within range: %s",
                     payload)
                 return
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
             topics['get_position_topic'] = {
@@ -364,7 +366,7 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._position = self.find_percentage_in_range(
                     self._config.get(CONF_POSITION_OPEN), COVER_PAYLOAD)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs):
         """Move the cover down.
@@ -381,7 +383,7 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._position = self.find_percentage_in_range(
                     self._config.get(CONF_POSITION_CLOSED), COVER_PAYLOAD)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the device.
@@ -402,7 +404,7 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._config.get(CONF_RETAIN))
         if self._tilt_optimistic:
             self._tilt_value = self._config.get(CONF_TILT_OPEN_POSITION)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
@@ -413,7 +415,7 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._config.get(CONF_RETAIN))
         if self._tilt_optimistic:
             self._tilt_value = self._config.get(CONF_TILT_CLOSED_POSITION)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
@@ -458,7 +460,7 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self._state = percentage_position == \
                     self._config.get(CONF_POSITION_CLOSED)
                 self._position = percentage_position
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
     def find_percentage_in_range(self, position, range_type=TILT_PAYLOAD):
         """Find the 0-100% value within the specified range."""

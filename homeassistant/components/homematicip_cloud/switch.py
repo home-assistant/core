@@ -1,9 +1,10 @@
 """Support for HomematicIP Cloud switches."""
 import logging
 
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.switch import SwitchDevice
+
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
 DEPENDENCIES = ['homematicip_cloud']
 
@@ -30,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         AsyncOpenCollector8Module,
     )
 
-    from homematicip.group import SwitchingGroup
+    from homematicip.aio.group import AsyncSwitchingGroup
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
@@ -50,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 devices.append(HomematicipMultiSwitch(home, device, channel))
 
     for group in home.groups:
-        if isinstance(group, SwitchingGroup):
+        if isinstance(group, AsyncSwitchingGroup):
             devices.append(
                 HomematicipGroupSwitch(home, group))
 
@@ -91,6 +92,23 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
     def is_on(self):
         """Return true if group is on."""
         return self._device.on
+
+    @property
+    def available(self):
+        """Switch-Group available."""
+        # A switch-group must be available, and should not be affected by the
+        # individual availability of group members.
+        # This allows switching even when individual group members
+        # are not available.
+        return True
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the switch-group."""
+        attr = {}
+        if self._device.unreach:
+            attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
+        return attr
 
     async def async_turn_on(self, **kwargs):
         """Turn the group on."""

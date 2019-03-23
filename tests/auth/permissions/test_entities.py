@@ -6,8 +6,9 @@ from homeassistant.auth.permissions.entities import (
   compile_entities, ENTITY_POLICY_SCHEMA)
 from homeassistant.auth.permissions.models import PermissionLookup
 from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.device_registry import DeviceEntry
 
-from tests.common import mock_registry
+from tests.common import mock_registry, mock_device_registry
 
 
 def test_entities_none():
@@ -193,7 +194,7 @@ def test_entities_all_control():
 
 def test_entities_device_id_boolean(hass):
     """Test entity ID policy applying control on device id."""
-    registry = mock_registry(hass, {
+    entity_registry = mock_registry(hass, {
         'test_domain.allowed': RegistryEntry(
             entity_id='test_domain.allowed',
             unique_id='1234',
@@ -207,6 +208,7 @@ def test_entities_device_id_boolean(hass):
             device_id='mock-not-allowed-dev-id'
         ),
     })
+    device_registry = mock_device_registry(hass)
 
     policy = {
         'device_ids': {
@@ -216,8 +218,55 @@ def test_entities_device_id_boolean(hass):
         }
     }
     ENTITY_POLICY_SCHEMA(policy)
-    compiled = compile_entities(policy, PermissionLookup(registry))
+    compiled = compile_entities(policy, PermissionLookup(
+        entity_registry, device_registry
+    ))
     assert compiled('test_domain.allowed', 'read') is True
     assert compiled('test_domain.allowed', 'control') is False
     assert compiled('test_domain.not_allowed', 'read') is False
     assert compiled('test_domain.not_allowed', 'control') is False
+
+
+def test_entities_areas_true():
+    """Test entity ID policy for areas."""
+    policy = {
+        'area_ids': True
+    }
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(policy, None)
+    assert compiled('light.kitchen', 'read') is True
+
+
+def test_entities_areas_area_true(hass):
+    """Test entity ID policy for areas with specific area."""
+    entity_registry = mock_registry(hass, {
+        'light.kitchen': RegistryEntry(
+            entity_id='light.kitchen',
+            unique_id='1234',
+            platform='test_platform',
+            device_id='mock-dev-id'
+        ),
+    })
+    device_registry = mock_device_registry(hass, {
+        'mock-dev-id': DeviceEntry(
+            id='mock-dev-id',
+            area_id='mock-area-id'
+        )
+    })
+
+    policy = {
+        'area_ids': {
+            'mock-area-id': {
+                'read': True,
+                'control': True,
+            }
+        }
+    }
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(policy, PermissionLookup(
+        entity_registry, device_registry
+    ))
+    assert compiled('light.kitchen', 'read') is True
+    assert compiled('light.kitchen', 'control') is True
+    assert compiled('light.kitchen', 'edit') is False
+    assert compiled('switch.kitchen', 'read') is False

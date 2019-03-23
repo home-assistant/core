@@ -3,7 +3,8 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.camera import Camera
-from homeassistant.components.usps import DATA_USPS
+
+from . import DATA_USPS
 
 _LOGGER = logging.getLogger(__name__)
 

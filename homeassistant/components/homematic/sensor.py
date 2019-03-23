@@ -1,8 +1,9 @@
 """Support for HomeMatic sensors."""
 import logging
 
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
-from homeassistant.const import STATE_UNKNOWN, POWER_WATT
+from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, STATE_UNKNOWN
+
+from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ HM_UNIT_HA_CAST = {
     'POWER': POWER_WATT,
     'CURRENT': 'mA',
     'VOLTAGE': 'V',
-    'ENERGY_COUNTER': 'Wh',
+    'ENERGY_COUNTER': ENERGY_WATT_HOUR,
     'GAS_POWER': 'm3',
     'GAS_ENERGY_COUNTER': 'm3',
     'LUX': 'lx',

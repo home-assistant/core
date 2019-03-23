@@ -5,10 +5,11 @@ from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     STATE_DRY, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT, STATE_IDLE, STATE_MANUAL,
     SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+
+from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
 CONF_SETPOINT_SHIFT_ADDRESS = 'setpoint_shift_address'
 CONF_SETPOINT_SHIFT_STATE_ADDRESS = 'setpoint_shift_state_address'
@@ -17,6 +18,7 @@ CONF_SETPOINT_SHIFT_MAX = 'setpoint_shift_max'
 CONF_SETPOINT_SHIFT_MIN = 'setpoint_shift_min'
 CONF_TEMPERATURE_ADDRESS = 'temperature_address'
 CONF_TARGET_TEMPERATURE_ADDRESS = 'target_temperature_address'
+CONF_TARGET_TEMPERATURE_STATE_ADDRESS = 'target_temperature_state_address'
 CONF_OPERATION_MODE_ADDRESS = 'operation_mode_address'
 CONF_OPERATION_MODE_STATE_ADDRESS = 'operation_mode_state_address'
 CONF_CONTROLLER_STATUS_ADDRESS = 'controller_status_address'
@@ -57,7 +59,8 @@ OPERATION_MODES_INV = dict((
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_TEMPERATURE_ADDRESS): cv.string,
-    vol.Required(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
+    vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_SETPOINT_SHIFT_STEP,
@@ -136,9 +139,11 @@ def async_add_entities_config(hass, config, async_add_entities):
     climate = xknx.devices.Climate(
         hass.data[DATA_KNX].xknx,
         name=config.get(CONF_NAME),
-        group_address_temperature=config.get(CONF_TEMPERATURE_ADDRESS),
+        group_address_temperature=config[CONF_TEMPERATURE_ADDRESS],
         group_address_target_temperature=config.get(
             CONF_TARGET_TEMPERATURE_ADDRESS),
+        group_address_target_temperature_state=config[
+            CONF_TARGET_TEMPERATURE_STATE_ADDRESS],
         group_address_setpoint_shift=config.get(CONF_SETPOINT_SHIFT_ADDRESS),
         group_address_setpoint_shift_state=config.get(
             CONF_SETPOINT_SHIFT_STATE_ADDRESS),

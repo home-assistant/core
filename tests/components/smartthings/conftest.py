@@ -85,7 +85,8 @@ def app_fixture(hass, config_file):
         'appType': 'WEBHOOK_SMART_APP',
         'classifications': [CLASSIFICATION_AUTOMATION],
         'displayName': 'Home Assistant',
-        'description': "Home Assistant at " + hass.config.api.base_url,
+        'description':
+            hass.config.location_name + " at " + hass.config.api.base_url,
         'singleInstance': True,
         'webhookSmartApp': {
             'targetUrl': webhook.async_generate_url(
@@ -326,7 +327,7 @@ def scene_fixture(scene_factory):
 def event_factory_fixture():
     """Fixture for creating mock devices."""
     def _factory(device_id, event_type="DEVICE_EVENT", capability='',
-                 attribute='Updated', value='Value'):
+                 attribute='Updated', value='Value', data=None):
         event = Mock()
         event.event_type = event_type
         event.device_id = device_id
@@ -334,6 +335,7 @@ def event_factory_fixture():
         event.capability = capability
         event.attribute = attribute
         event.value = value
+        event.data = data
         event.location_id = str(uuid4())
         return event
     return _factory

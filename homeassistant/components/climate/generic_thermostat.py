@@ -9,22 +9,22 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.core import DOMAIN as HA_DOMAIN
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
-from homeassistant.components.climate.const import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_AUTO,
-    ATTR_OPERATION_MODE, ATTR_AWAY_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, ATTR_ENTITY_ID,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_UNKNOWN, PRECISION_HALVES,
-    PRECISION_TENTHS, PRECISION_WHOLE)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES,
+    PRECISION_TENTHS, PRECISION_WHOLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    STATE_OFF, STATE_ON, STATE_UNKNOWN)
+from homeassistant.core import DOMAIN as HA_DOMAIN, callback
 from homeassistant.helpers import condition
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from . import PLATFORM_SCHEMA, ClimateDevice
+from .const import (
+    ATTR_AWAY_MODE, ATTR_OPERATION_MODE, STATE_AUTO, STATE_COOL, STATE_HEAT,
+    STATE_IDLE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 

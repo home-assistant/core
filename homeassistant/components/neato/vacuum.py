@@ -1,22 +1,23 @@
 """Support for Neato Connected Vacuums."""
-import logging
 from datetime import timedelta
+import logging
+
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (ATTR_ENTITY_ID)
 from homeassistant.components.vacuum import (
-    StateVacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
-    SUPPORT_STATE, SUPPORT_STOP, SUPPORT_START, STATE_IDLE,
-    STATE_PAUSED, STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR,
-    SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON,
-    SUPPORT_LOCATE, SUPPORT_CLEAN_SPOT, DOMAIN)
-from homeassistant.components.neato import (
-    NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS,
-    NEATO_PERSISTENT_MAPS)
-
-from homeassistant.helpers.service import extract_entity_ids
+    ATTR_BATTERY_ICON, ATTR_BATTERY_LEVEL, ATTR_STATUS, DOMAIN, STATE_CLEANING,
+    STATE_DOCKED, STATE_ERROR, STATE_IDLE, STATE_PAUSED, STATE_RETURNING,
+    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_LOCATE, SUPPORT_MAP,
+    SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_START, SUPPORT_STATE,
+    SUPPORT_STOP, StateVacuumDevice)
+from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import extract_entity_ids
+
+from . import (
+    ACTION, ALERTS, ERRORS, MODE, NEATO_LOGIN, NEATO_MAP_DATA,
+    NEATO_PERSISTENT_MAPS, NEATO_ROBOTS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,10 +187,13 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._battery_level = self._state['details']['charge']
 
         if self._robot_has_map:
-            robot_map_id = self._robot_maps[self._robot_serial][0]['id']
+            if self._state['availableServices']['maps'] != "basic-1":
+                if self._robot_maps[self._robot_serial]:
+                    robot_map_id = (
+                        self._robot_maps[self._robot_serial][0]['id'])
 
-            self._robot_boundaries = self.robot.get_map_boundaries(
-                robot_map_id).json()
+                    self._robot_boundaries = self.robot.get_map_boundaries(
+                        robot_map_id).json()
 
     @property
     def name(self):

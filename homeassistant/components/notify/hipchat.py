@@ -8,10 +8,10 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_HOST, CONF_ROOM, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import CONF_TOKEN, CONF_HOST, CONF_ROOM
+
+from . import ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
 
 REQUIREMENTS = ['hipnotify==1.0.8']
 

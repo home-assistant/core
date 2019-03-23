@@ -1,6 +1,7 @@
 """Config flow to configure the Toon component."""
 from collections import OrderedDict
 import logging
+from functools import partial
 
 import voluptuous as vol
 
@@ -75,11 +76,10 @@ class ToonFlowHandler(config_entries.ConfigFlow):
 
         app = self.hass.data.get(DATA_TOON_CONFIG, {})
         try:
-            toon = Toon(user_input[CONF_USERNAME],
-                        user_input[CONF_PASSWORD],
-                        app[CONF_CLIENT_ID],
-                        app[CONF_CLIENT_SECRET],
-                        tenant_id=user_input[CONF_TENANT])
+            toon = await self.hass.async_add_executor_job(partial(
+                Toon, user_input[CONF_USERNAME], user_input[CONF_PASSWORD],
+                app[CONF_CLIENT_ID], app[CONF_CLIENT_SECRET],
+                tenant_id=user_input[CONF_TENANT]))
 
             displays = toon.display_names
 
@@ -136,12 +136,10 @@ class ToonFlowHandler(config_entries.ConfigFlow):
 
         app = self.hass.data.get(DATA_TOON_CONFIG, {})
         try:
-            Toon(self.username,
-                 self.password,
-                 app[CONF_CLIENT_ID],
-                 app[CONF_CLIENT_SECRET],
-                 tenant_id=self.tenant,
-                 display_common_name=user_input[CONF_DISPLAY])
+            await self.hass.async_add_executor_job(partial(
+                Toon, self.username, self.password, app[CONF_CLIENT_ID],
+                app[CONF_CLIENT_SECRET], tenant_id=self.tenant,
+                display_common_name=user_input[CONF_DISPLAY]))
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error while authenticating")

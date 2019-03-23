@@ -8,6 +8,8 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components import light
+from homeassistant.const import STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 from .const import (
@@ -156,6 +158,17 @@ class Light(ZhaEntity, light.Light):
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level)
 
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = last_state.state == STATE_ON
+        if 'brightness' in last_state.attributes:
+            self._brightness = last_state.attributes['brightness']
+        if 'color_temp' in last_state.attributes:
+            self._color_temp = last_state.attributes['color_temp']
+        if 'hs_color' in last_state.attributes:
+            self._hs_color = last_state.attributes['hs_color']
+
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
@@ -227,5 +240,10 @@ class Light(ZhaEntity, light.Light):
 
     async def async_update(self):
         """Attempt to retrieve on off state from the light."""
+        await super().async_update()
         if self._on_off_channel:
-            await self._on_off_channel.async_update()
+            self._state = await self._on_off_channel.get_attribute_value(
+                'on_off')
+        if self._level_channel:
+            self._brightness = await self._level_channel.get_attribute_value(
+                'current_level')

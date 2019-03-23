@@ -4,25 +4,26 @@ Mail (SMTP) notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.smtp/
 """
-import logging
-import smtplib
+from email.mime.application import MIMEApplication
+from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
-from email.mime.application import MIMEApplication
 import email.utils
+import logging
 import os
+import smtplib
 
 import voluptuous as vol
 
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_PORT, CONF_RECIPIENT, CONF_SENDER, CONF_TIMEOUT,
+    CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
+
+from . import (
+    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
-    CONF_SENDER, CONF_RECIPIENT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,10 +152,10 @@ class MailNotificationService(BaseNotificationService):
         if data:
             if ATTR_HTML in data:
                 msg = _build_html_msg(
-                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES))
+                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, []))
             else:
                 msg = _build_multipart_msg(
-                    message, images=data.get(ATTR_IMAGES))
+                    message, images=data.get(ATTR_IMAGES, []))
         else:
             msg = _build_text_msg(message)
 

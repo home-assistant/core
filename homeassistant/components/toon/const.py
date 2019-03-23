@@ -1,4 +1,6 @@
 """Constants for the Toon integration."""
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
+
 DOMAIN = 'toon'
 
 DATA_TOON = 'toon'
@@ -14,8 +16,8 @@ DEFAULT_MAX_TEMP = 30.0
 DEFAULT_MIN_TEMP = 6.0
 
 CURRENCY_EUR = 'EUR'
-POWER_WATT = 'Watt'
-POWER_KWH = 'kWh'
+POWER_WATT = 'W'
+POWER_KWH = ENERGY_KILO_WATT_HOUR
 RATIO_PERCENT = '%'
 VOLUME_CM3 = 'CM3'
 VOLUME_M3 = 'M3'

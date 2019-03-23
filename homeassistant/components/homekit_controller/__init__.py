@@ -1,4 +1,5 @@
 """Support for Homekit device discovery."""
+import asyncio
 import json
 import logging
 import os
@@ -8,37 +9,22 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 
-REQUIREMENTS = ['homekit==0.12.2']
+from .connection import get_accessory_information
+from .const import (
+    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_ACCESSORIES,
+    KNOWN_DEVICES
+)
 
-DOMAIN = 'homekit_controller'
+
+REQUIREMENTS = ['homekit[IP]==0.13.0']
+
 HOMEKIT_DIR = '.homekit'
-
-# Mapping from Homekit type to component.
-HOMEKIT_ACCESSORY_DISPATCH = {
-    'lightbulb': 'light',
-    'outlet': 'switch',
-    'switch': 'switch',
-    'thermostat': 'climate',
-    'security-system': 'alarm_control_panel',
-    'garage-door-opener': 'cover',
-    'window': 'cover',
-    'window-covering': 'cover',
-    'lock-mechanism': 'lock',
-    'motion': 'binary_sensor',
-    'humidity': 'sensor',
-    'light': 'sensor',
-    'temperature': 'sensor'
-}
 
 HOMEKIT_IGNORE = [
     'BSB002',
     'Home Assistant Bridge',
     'TRADFRI gateway',
 ]
-
-KNOWN_ACCESSORIES = "{}-accessories".format(DOMAIN)
-KNOWN_DEVICES = "{}-devices".format(DOMAIN)
-CONTROLLER = "{}-controller".format(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,6 +75,8 @@ class HKDevice():
         self.config = config
         self.configurator = hass.components.configurator
         self._connection_warning_logged = False
+
+        self.pairing_lock = asyncio.Lock(loop=hass.loop)
 
         self.pairing = self.controller.pairings.get(hkid)
 
@@ -184,17 +172,42 @@ class HKDevice():
                                                       'name': 'HomeKit code',
                                                       'type': 'string'}])
 
+    async def get_characteristics(self, *args, **kwargs):
+        """Read latest state from homekit accessory."""
+        async with self.pairing_lock:
+            chars = await self.hass.async_add_executor_job(
+                self.pairing.get_characteristics,
+                *args,
+                **kwargs,
+            )
+        return chars
+
+    async def put_characteristics(self, characteristics):
+        """Control a HomeKit device state from Home Assistant."""
+        chars = []
+        for row in characteristics:
+            chars.append((
+                row['aid'],
+                row['iid'],
+                row['value'],
+            ))
+
+        async with self.pairing_lock:
+            await self.hass.async_add_executor_job(
+                self.pairing.put_characteristics,
+                chars
+            )
+
 
 class HomeKitEntity(Entity):
     """Representation of a Home Assistant HomeKit device."""
 
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
-        self._name = accessory.model
+        self._available = True
         self._accessory = accessory
         self._aid = devinfo['aid']
         self._iid = devinfo['iid']
-        self._address = "homekit-{}-{}".format(devinfo['serial'], self._iid)
         self._features = 0
         self._chars = {}
         self.setup()
@@ -218,6 +231,7 @@ class HomeKitEntity(Entity):
         for accessory in pairing_data.get('accessories', []):
             if accessory['aid'] != self._aid:
                 continue
+            self._accessory_info = get_accessory_information(accessory)
             for service in accessory['services']:
                 if service['iid'] != self._iid:
                     continue
@@ -254,17 +268,27 @@ class HomeKitEntity(Entity):
         # pylint: disable=not-callable
         setup_fn(char)
 
-    def update(self):
+    async def async_update(self):
         """Obtain a HomeKit device's state."""
         # pylint: disable=import-error
-        from homekit.exceptions import AccessoryDisconnectedError
-
-        pairing = self._accessory.pairing
+        from homekit.exceptions import (
+            AccessoryDisconnectedError, AccessoryNotFoundError)
 
         try:
-            new_values_dict = pairing.get_characteristics(self._chars_to_poll)
-        except AccessoryDisconnectedError:
+            new_values_dict = await self._accessory.get_characteristics(
+                self._chars_to_poll
+            )
+        except AccessoryNotFoundError:
+            # Not only did the connection fail, but also the accessory is not
+            # visible on the network.
+            self._available = False
             return
+        except AccessoryDisconnectedError:
+            # Temporary connection failure. Device is still available but our
+            # connection was dropped.
+            return
+
+        self._available = True
 
         for (_, iid), result in new_values_dict.items():
             if 'value' not in result:
@@ -280,44 +304,29 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self):
         """Return the ID of this device."""
-        return self._address
+        serial = self._accessory_info['serial-number']
+        return "homekit-{}-{}".format(serial, self._iid)
 
     @property
     def name(self):
         """Return the name of the device if any."""
-        return self._name
+        return self._accessory_info.get('name')
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._accessory.pairing is not None
+        return self._available
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
-
-    def update_characteristics(self, characteristics):
-        """Synchronise a HomeKit device state with Home Assistant."""
-        pass
-
-    def put_characteristics(self, characteristics):
-        """Control a HomeKit device state from Home Assistant."""
-        chars = []
-        for row in characteristics:
-            chars.append((
-                row['aid'],
-                row['iid'],
-                row['value'],
-            ))
-
-        self._accessory.pairing.put_characteristics(chars)
 
 
 def setup(hass, config):
     """Set up for Homekit devices."""
     # pylint: disable=import-error
     import homekit
-    from homekit.controller import Pairing
+    from homekit.controller.ip_implementation import IpPairing
 
     hass.data[CONTROLLER] = controller = homekit.Controller()
 
@@ -338,7 +347,7 @@ def setup(hass, config):
             continue
         with open(os.path.join(data_dir, device)) as pairing_data_fp:
             pairing_data = json.load(pairing_data_fp)
-        controller.pairings[alias] = Pairing(pairing_data)
+        controller.pairings[alias] = IpPairing(pairing_data)
         controller.save_data(pairing_file)
 
     def discovery_dispatch(service, discovery_info):

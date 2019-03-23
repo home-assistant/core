@@ -3,14 +3,15 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_IDLE, STATE_HEAT, STATE_COOL, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.opentherm_gw import (
+    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
+    PRECISION_WHOLE, TEMP_CELSIUS)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
     CONF_FLOOR_TEMP, CONF_PRECISION, DATA_DEVICE, DATA_GW_VARS,
     DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE)
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES,
-                                 PRECISION_TENTHS, PRECISION_WHOLE,
-                                 TEMP_CELSIUS)
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +38,8 @@ class OpenThermGateway(ClimateDevice):
         self.floor_temp = config.get(CONF_FLOOR_TEMP)
         self.temp_precision = config.get(CONF_PRECISION)
         self._current_operation = STATE_IDLE
-        self._current_temperature = 0.0
-        self._target_temperature = 0.0
+        self._current_temperature = None
+        self._target_temperature = None
         self._away_mode_a = None
         self._away_mode_b = None
         self._away_state_a = False
@@ -124,6 +125,8 @@ class OpenThermGateway(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
+        if self._current_temperature is None:
+            return
         if self.floor_temp is True:
             if self.temp_precision == PRECISION_HALVES:
                 return int(2 * self._current_temperature) / 2
