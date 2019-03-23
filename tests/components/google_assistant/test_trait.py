@@ -82,6 +82,7 @@ async def test_brightness_light(hass):
         'service_data': {'brightness_pct': 50, 'entity_id': 'light.bla'}
     }
 
+
 async def test_brightness_media_player(hass):
     """Test brightness trait support for media player domain."""
     assert trait.BrightnessTrait.supported(media_player.DOMAIN,
@@ -329,7 +330,7 @@ async def test_onoff_light(hass):
         ATTR_ENTITY_ID: 'light.bla',
     }
 
-    
+
 async def test_onoff_media_player(hass):
     """Test OnOff trait support for media_player domain."""
     assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
@@ -1051,8 +1052,8 @@ async def test_modes(hass):
         'entity_id': 'media_player.living_room',
         'source': 'media'
     }
-    
-    
+
+
 async def test_openclose_cover(hass):
     """Test brightness trait support for cover domain."""
     assert trait.OpenCloseTrait.supported(cover.DOMAIN,
@@ -1062,7 +1063,7 @@ async def test_openclose_cover(hass):
         cover.ATTR_CURRENT_POSITION: 75
     }), BASIC_CONFIG)
 
-    assert trt.sync_attributes() == {'openDirection':['UP']}
+    assert trt.sync_attributes() == {'openDirection': ['UP']}
 
     assert trt.query_attributes() == {
         'openPercent': 75,
