@@ -4,7 +4,6 @@ Support for Fronius devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.fronius/
 """
-from datetime import timedelta
 import logging
 import voluptuous as vol
 
@@ -14,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyfronius==0.4.8']
+REQUIREMENTS = ['pyfronius==0.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,15 +35,21 @@ SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
+    vol.Required(CONF_HOST):
+    cv.string,
+    vol.Required(CONF_TYPE):
+    vol.In(SENSOR_TYPES),
     vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
-        vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
-    vol.Optional(CONF_DEVICEID, default=DEFAULT_DEVICE): cv.positive_int,
+    vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
+    vol.Optional(CONF_DEVICEID, default=DEFAULT_DEVICE):
+    cv.positive_int,
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass,
+                               config,
+                               async_add_devices,
+                               discovery_info=None):
     """Set up of Fronius platform."""
     from pyfronius import Fronius
 
@@ -56,8 +61,8 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     if CONF_DEVICEID in config.keys():
         name = "{}_{}".format(name, device)
 
-    sensor = FroniusSensor(
-        fronius, name, config.get(CONF_TYPE), config.get(CONF_SCOPE), device)
+    sensor = FroniusSensor(fronius, name, config.get(CONF_TYPE),
+                           config.get(CONF_SCOPE), device)
 
     async_add_devices([sensor])
 
@@ -96,10 +101,10 @@ class FroniusSensor(Entity):
         try:
             values = await self._update()
         except ConnectionError:
-            _LOGGER.error("Sensor data cannot be updated: connection error.")
+            _LOGGER.error("Failed to update: connection error.")
         except ValueError:
             _LOGGER.error(
-                "Sensor data cannot be updated: Host returned invalid response."
+                "Failed to update: invalid response returned."
             )
 
         if values:

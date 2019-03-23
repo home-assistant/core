@@ -1054,8 +1054,8 @@ pyfnip==0.2
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.0
 
-# homeassistant.components.sensor.fronius
-pyfronius==0.4.8
+# homeassistant.components.fronius.fronius
+pyfronius==0.4.6
 
 # homeassistant.components.ifttt
 pyfttt==0.3
