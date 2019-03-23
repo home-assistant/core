@@ -1,5 +1,4 @@
 import logging
-#from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -7,12 +6,11 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.const import CONF_VERIFY_SSL
-#import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['fortiosapi==0.10.4']
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_VERIFY_SSL = True
+DEFAULT_VERIFY_SSL = False
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
