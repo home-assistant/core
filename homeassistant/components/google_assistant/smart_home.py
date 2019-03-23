@@ -45,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN_TO_GOOGLE_TYPES = {
     camera.DOMAIN: TYPE_CAMERA,
     climate.DOMAIN: TYPE_THERMOSTAT,
-    cover.DOMAIN: TYPE_SWITCH,
+    cover.DOMAIN: TYPE_BLINDS,
     fan.DOMAIN: TYPE_FAN,
     group.DOMAIN: TYPE_SWITCH,
     input_boolean.DOMAIN: TYPE_SWITCH,
