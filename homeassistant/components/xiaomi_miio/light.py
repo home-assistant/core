@@ -872,20 +872,19 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio.device import DeviceException, DeviceError
+        from miio import DeviceException
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
-            return
-        except DeviceError as ex:
             if "code" in ex and ex["code"] == -5001:
                 if not self._music_mode:
                     self._music_mode = True
                     _LOGGER.info("Device in music mode. Update skipped.")
                 return
-            raise
+
+            self._available = False
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            return
 
         _LOGGER.debug("Got new state: %s", state)
         self._music_mode = False
