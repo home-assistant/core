@@ -1116,7 +1116,7 @@ pykwb==0.0.8
 pylacrosse==0.3.1
 
 # homeassistant.components.lastfm.sensor
-pylast==3.0.0
+pylast==3.1.0
 
 # homeassistant.components.launch_library.sensor
 pylaunches==0.2.0
