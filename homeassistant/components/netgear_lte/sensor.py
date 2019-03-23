@@ -6,8 +6,9 @@ import attr
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import CONF_MONITORED_CONDITIONS, DATA_KEY
+from . import CONF_MONITORED_CONDITIONS, DATA_KEY, DISPATCHER_NETGEAR_LTE
 from .sensor_types import SENSOR_SMS, SENSOR_USAGE
 
 DEPENDENCIES = ['netgear_lte']
@@ -36,7 +37,7 @@ async def async_setup_platform(
         elif sensor_type == SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 @attr.s
@@ -46,9 +47,19 @@ class LTESensor(Entity):
     modem_data = attr.ib()
     sensor_type = attr.ib()
 
+    async def async_added_to_hass(self):
+        """Register callback."""
+        async_dispatcher_connect(
+            self.hass, DISPATCHER_NETGEAR_LTE, self.async_write_ha_state)
+
     async def async_update(self):
-        """Update state."""
+        """Force update of state."""
         await self.modem_data.async_update()
+
+    @property
+    def should_poll(self):
+        """Return that the sensor should not be polled."""
+        return False
 
     @property
     def unique_id(self):
