@@ -93,8 +93,8 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             if not device_list:
                 return self.async_abort(reason='devices_configured')
             # Add existing creds for linking. Should be only 1.
-            if len(creds) != 1:
-                # Abort if creds is missing or more than 1.
+            if not creds:
+                # Abort if creds is missing.
                 return self.async_abort(reason='credential_error')
             self.creds = creds['data']
 
