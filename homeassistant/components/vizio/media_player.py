@@ -33,18 +33,16 @@ ICON = 'mdi:television'
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
+COMMON_SUPPORTED_COMMANDS = (SUPPORT_PLAY | SUPPORT_PAUSE
+                             | SUPPORT_SELECT_SOURCE
+                             | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+                             | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
+                             | SUPPORT_VOLUME_SET)
+
 SUPPORTED_COMMANDS = {
-    'soundbar': (SUPPORT_PLAY | SUPPORT_PAUSE
-                 | SUPPORT_SELECT_SOURCE
-                 | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
-                 | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
-                 | SUPPORT_VOLUME_SET),
-    'tv': (SUPPORT_PLAY | SUPPORT_PAUSE
-           | SUPPORT_SELECT_SOURCE
-           | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
-           | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
-           | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
-           | SUPPORT_VOLUME_SET)
+    'soundbar': COMMON_SUPPORTED_COMMANDS,
+    'tv': (COMMON_SUPPORTED_COMMANDS
+           | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP)
 }
 
 MAX_VOLUME = {
@@ -217,10 +215,10 @@ class VizioDevice(MediaPlayerDevice):
         """Set volume level."""
         if self._volume_level is not None:
             if volume > self._volume_level:
-                num = int(self._max_volume*(volume - self._volume_level))
+                num = int(self._max_volume * (volume - self._volume_level))
                 self._volume_level = volume
                 self._device.vol_up(num=num)
             elif volume < self._volume_level:
-                num = int(self._max_volume*(self._volume_level - volume))
+                num = int(self._max_volume * (self._volume_level - volume))
                 self._volume_level = volume
                 self._device.vol_down(num=num)
