@@ -152,7 +152,6 @@ class AfterShipSensor(Entity):
 
 async def update(self):
     """Get the latest data from the AfterShip API."""
-    _LOGGER.info("Calling update")
     await self.aftership.get_trackings()
 
     if not self.aftership.meta:
