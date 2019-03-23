@@ -65,11 +65,6 @@ SUPPORTED_COMMANDS = {
     )
 }
 
-MAX_VOLUME = {
-    'soundbar': 31.0,
-    'tv': 100.0
-}
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_ACCESS_TOKEN): cv.string,
@@ -123,10 +118,10 @@ class VizioDevice(MediaPlayerDevice):
         self._current_input = None
         self._available_inputs = None
         self._device_type = device_type
-        self._max_volume = MAX_VOLUME[device_type]
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
         self._device = pyvizio.Vizio(DEVICE_ID, host, DEFAULT_NAME, token,
                                      device_type)
+        self._max_volume = float(self._device.get_max_volume())
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):

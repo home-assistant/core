@@ -1455,8 +1455,8 @@ pyvera==0.2.45
 # homeassistant.components.vesync
 pyvesync_v2==0.9.6
 
-# homeassistant.components.vizio
-pyvizio==0.0.6
+# homeassistant.components.vizio.media_player
+pyvizio==0.0.7
 
 # homeassistant.components.velux
 pyvlx==0.2.10
