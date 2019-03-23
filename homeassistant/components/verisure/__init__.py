@@ -77,7 +77,7 @@ def setup(hass, config):
     HUB.update_overview()
 
     for component in ('sensor', 'switch', 'alarm_control_panel', 'lock',
-                      'camera', 'binary_sensor'):
+                      'camera', 'binary_sensor', 'climate'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def capture_smartcam(service):
