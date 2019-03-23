@@ -8,8 +8,8 @@ https://home-assistant.io/components/sensor.syncthru/
 import logging
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_RESOURCE, CONF_HOST, CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (CONF_RESOURCE, CONF_HOST, CONF_NAME,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -27,32 +27,27 @@ TRAYS = range(1, 6)
 OUTPUT_TRAYS = range(0, 6)
 DEFAULT_MONITORED_CONDITIONS = []
 DEFAULT_MONITORED_CONDITIONS.extend(
-    ['toner_{}'.format(key) for key in TONER_COLORS]
-)
+    ['toner_{}'.format(key) for key in TONER_COLORS])
 DEFAULT_MONITORED_CONDITIONS.extend(
-    ['drum_{}'.format(key) for key in DRUM_COLORS]
-)
+    ['drum_{}'.format(key) for key in DRUM_COLORS])
+DEFAULT_MONITORED_CONDITIONS.extend(['trays_{}'.format(key) for key in TRAYS])
 DEFAULT_MONITORED_CONDITIONS.extend(
-    ['trays_{}'.format(key) for key in TRAYS]
-)
-DEFAULT_MONITORED_CONDITIONS.extend(
-    ['output_trays_{}'.format(key) for key in OUTPUT_TRAYS]
-)
+    ['output_trays_{}'.format(key) for key in OUTPUT_TRAYS])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Required(CONF_RESOURCE):
+    cv.url,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+    cv.string,
     vol.Optional(
-        CONF_NAME,
-        default=DEFAULT_NAME
-    ): cv.string,
-    vol.Optional(
-        CONF_MONITORED_CONDITIONS,
-        default=DEFAULT_MONITORED_CONDITIONS
-    ): vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)])
+        CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED_CONDITIONS):
+    vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)])
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
+async def async_setup_platform(hass,
+                               config,
+                               async_add_entities,
                                discovery_info=None):
     """Set up the SyncThru component."""
     from pysyncthru import SyncThru
@@ -89,9 +84,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         # If the printer was discovered automatically, no warning or error
         # should be issued and printer should not be set up
         if discovery_info is not None:
-            _LOGGER.info(
-                "Samsung printer at %s does not support SyncThru", host
-            )
+            _LOGGER.info("Samsung printer at %s does not support SyncThru",
+                         host)
             return
         # Otherwise, emulate printer that supports everything
         supp_toner = TONER_COLORS
@@ -176,10 +170,8 @@ class SyncThruMainSensor(SyncThruSensor):
             await self.syncthru.update()
         except ValueError:
             # if an exception is thrown, printer does not support syncthru
-            _LOGGER.info(
-                "Samsung printer at %s does not support SyncThru",
-                self.syncthru.url
-            )
+            _LOGGER.info("Samsung printer at %s does not support SyncThru",
+                         self.syncthru.url)
         self._state = self.syncthru.device_status()
 
 
@@ -199,8 +191,8 @@ class SyncThruTonerSensor(SyncThruSensor):
         # Data fetching is taken care of through the Main sensor
 
         if self.syncthru.is_online():
-            self._attributes = self.syncthru.toner_status(
-                ).get(self._color, {})
+            self._attributes = self.syncthru.toner_status().get(
+                self._color, {})
             self._state = self._attributes.get('remaining')
 
 
@@ -220,8 +212,7 @@ class SyncThruDrumSensor(SyncThruSensor):
         # Data fetching is taken care of through the Main sensor
 
         if self.syncthru.is_online():
-            self._attributes = self.syncthru.drum_status(
-                ).get(self._color, {})
+            self._attributes = self.syncthru.drum_status().get(self._color, {})
             self._state = self._attributes.get('remaining')
 
 
@@ -240,8 +231,8 @@ class SyncThruInputTraySensor(SyncThruSensor):
         # Data fetching is taken care of through the Main sensor
 
         if self.syncthru.is_online():
-            self._attributes = self.syncthru.input_tray_status(
-                ).get(self._number, {})
+            self._attributes = self.syncthru.input_tray_status().get(
+                self._number, {})
             self._state = self._attributes.get('newError')
             if self._state == '':
                 self._state = 'Ready'
@@ -262,8 +253,8 @@ class SyncThruOutputTraySensor(SyncThruSensor):
         # Data fetching is taken care of through the Main sensor
 
         if self.syncthru.is_online():
-            self._attributes = self.syncthru.output_tray_status(
-                ).get(self._number, {})
+            self._attributes = self.syncthru.output_tray_status().get(
+                self._number, {})
             self._state = self._attributes.get('status')
             if self._state == '':
                 self._state = 'Ready'
