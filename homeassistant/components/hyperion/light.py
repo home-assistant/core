@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR):
         vol.All(list, vol.Length(min=3, max=3),
-        [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
+                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
     vol.Optional(CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY):
