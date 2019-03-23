@@ -619,6 +619,7 @@ omit =
     homeassistant/components/recswitch/switch.py
     homeassistant/components/rest/switch.py
     homeassistant/components/rpi_rf/switch.py
+    homeassistant/components/sensor/fronius.py
     homeassistant/components/snmp/switch.py
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/switchbot/switch.py
