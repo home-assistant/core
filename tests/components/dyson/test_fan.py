@@ -540,17 +540,20 @@ async def test_purecool_set_night_mode(devices, login, hass):
 
     await hass.async_block_till_done()
 
-    await hass.services.async_call(dyson.DYSON_DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
+    await hass.services.async_call(dyson.DYSON_DOMAIN,
+                                   dyson.SERVICE_SET_NIGHT_MODE,
                                    {"entity_id": "fan.bed_room",
                                     "night_mode": True}, True)
     assert not device.enable_night_mode.called
 
-    await hass.services.async_call(dyson.DYSON_DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
+    await hass.services.async_call(dyson.DYSON_DOMAIN,
+                                   dyson.SERVICE_SET_NIGHT_MODE,
                                    {"entity_id": "fan.living_room",
                                     "night_mode": True}, True)
     assert device.enable_night_mode.called
 
-    await hass.services.async_call(dyson.DYSON_DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
+    await hass.services.async_call(dyson.DYSON_DOMAIN,
+                                   dyson.SERVICE_SET_NIGHT_MODE,
                                    {"entity_id": "fan.living_room",
                                     "night_mode": False}, True)
     assert device.disable_night_mode.called
@@ -565,17 +568,20 @@ async def test_purecool_set_auto_mode(devices, login, hass):
     dyson_parent.setup(hass, _get_config())
     await hass.async_block_till_done()
 
-    await hass.services.async_call(dyson.DYSON_DOMAIN, dyson.SERVICE_SET_AUTO_MODE,
+    await hass.services.async_call(dyson.DYSON_DOMAIN,
+                                   dyson.SERVICE_SET_AUTO_MODE,
                                    {ATTR_ENTITY_ID: "fan.bed_room",
                                     dyson.ATTR_AUTO_MODE: True}, True)
     assert not device.enable_auto_mode.called
 
-    await hass.services.async_call(dyson.DYSON_DOMAIN, dyson.SERVICE_SET_AUTO_MODE,
+    await hass.services.async_call(dyson.DYSON_DOMAIN,
+                                   dyson.SERVICE_SET_AUTO_MODE,
                                    {ATTR_ENTITY_ID: "fan.living_room",
                                     dyson.ATTR_AUTO_MODE: True}, True)
     assert device.enable_auto_mode.called
 
-    await hass.services.async_call(dyson.DYSON_DOMAIN, dyson.SERVICE_SET_AUTO_MODE,
+    await hass.services.async_call(dyson.DYSON_DOMAIN,
+                                   dyson.SERVICE_SET_AUTO_MODE,
                                    {ATTR_ENTITY_ID: "fan.living_room",
                                     dyson.ATTR_AUTO_MODE: False}, True)
     assert device.disable_auto_mode.called
