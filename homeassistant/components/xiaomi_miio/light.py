@@ -872,7 +872,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException, DeviceError
+        from miio.device import DeviceException, DeviceError
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
