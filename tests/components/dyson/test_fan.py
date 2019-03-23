@@ -20,7 +20,7 @@ from homeassistant.components.fan import (DOMAIN, ATTR_SPEED, ATTR_SPEED_LIST,
 from homeassistant.const import (SERVICE_TURN_ON,
                                  SERVICE_TURN_OFF,
                                  ATTR_ENTITY_ID)
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from tests.common import get_test_home_assistant
 
 
@@ -418,7 +418,7 @@ class DysonTest(unittest.TestCase):
 async def test_purecool_turn_on(devices, login, hass):
     """Test turn on."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
@@ -436,7 +436,7 @@ async def test_purecool_turn_on(devices, login, hass):
 async def test_purecool_set_speed(devices, login, hass):
     """Test set speed."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
@@ -466,7 +466,7 @@ async def test_purecool_set_speed(devices, login, hass):
 async def test_purecool_turn_off(devices, login, hass):
     """Test turn off."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
@@ -484,7 +484,7 @@ async def test_purecool_turn_off(devices, login, hass):
 async def test_purecool_set_dyson_speed(devices, login, hass):
     """Test set exact dyson speed."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(dyson.DYSON_DOMAIN,
@@ -510,7 +510,7 @@ async def test_purecool_set_dyson_speed(devices, login, hass):
 async def test_purecool_oscillate(devices, login, hass):
     """Test set oscillation."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(DOMAIN, SERVICE_OSCILLATE,
@@ -534,9 +534,8 @@ async def test_purecool_oscillate(devices, login, hass):
                  return_value=[_get_dyson_purecool_device()])
 async def test_purecool_set_night_mode(devices, login, hass):
     """Test set night mode."""
-
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
 
     await hass.async_block_till_done()
 
@@ -565,7 +564,7 @@ async def test_purecool_set_night_mode(devices, login, hass):
 async def test_purecool_set_auto_mode(devices, login, hass):
     """Test set auto mode."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(dyson.DYSON_DOMAIN,
@@ -593,7 +592,7 @@ async def test_purecool_set_auto_mode(devices, login, hass):
 async def test_purecool_set_angle(devices, login, hass):
     """Test set angle."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(dyson.DYSON_DOMAIN, dyson.SERVICE_SET_ANGLE,
@@ -615,7 +614,7 @@ async def test_purecool_set_angle(devices, login, hass):
 async def test_purecool_set_flow_direction_front(devices, login, hass):
     """Test set frontal flow direction."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(dyson.DYSON_DOMAIN,
@@ -646,7 +645,7 @@ async def test_purecool_set_flow_direction_front(devices, login, hass):
 async def test_purecool_set_timer(devices, login, hass):
     """Test set timer."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
 
     await hass.services.async_call(dyson.DYSON_DOMAIN, dyson.SERVICE_SET_TIMER,
@@ -673,20 +672,20 @@ async def test_purecool_set_timer(devices, login, hass):
                  return_value=[_get_dyson_purecool_device()])
 async def test_purecool_attributes(devices, login, hass):
     """Test state attributes."""
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
     fan_state = hass.states.get("fan.living_room")
     attributes = fan_state.attributes
 
-    assert fan_state.state is "on"
+    assert fan_state.state == "on"
     assert attributes[dyson.ATTR_NIGHT_MODE] is False
     assert attributes[dyson.ATTR_AUTO_MODE] is True
-    assert attributes[dyson.ATTR_ANGLE_LOW] is 90
-    assert attributes[dyson.ATTR_ANGLE_HIGH] is 180
+    assert attributes[dyson.ATTR_ANGLE_LOW] == 90
+    assert attributes[dyson.ATTR_ANGLE_HIGH] == 180
     assert attributes[dyson.ATTR_FLOW_DIRECTION_FRONT] is True
-    assert attributes[dyson.ATTR_TIMER] is 60
-    assert attributes[dyson.ATTR_DYSON_SPEED] is FanSpeed.FAN_SPEED_AUTO.value
-    assert attributes[ATTR_SPEED] is SPEED_MEDIUM
+    assert attributes[dyson.ATTR_TIMER] == 60
+    assert attributes[dyson.ATTR_DYSON_SPEED] == FanSpeed.FAN_SPEED_AUTO.value
+    assert attributes[ATTR_SPEED] == SPEED_MEDIUM
     assert attributes[ATTR_OSCILLATING] is True
     assert attributes[dyson.ATTR_DYSON_SPEED_LIST] == _get_supported_speeds()
 
@@ -697,7 +696,7 @@ async def test_purecool_attributes(devices, login, hass):
 async def test_purecool_update_state(devices, login, hass):
     """Test state update."""
     device = devices.return_value[0]
-    dyson_parent.setup(hass, _get_config())
+    await  async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
     await hass.async_block_till_done()
     event = {"msg": "CURRENT-STATE",
              "product-state": {"fpwr": "OFF", "fdir": "OFF", "auto": "OFF",
@@ -715,14 +714,14 @@ async def test_purecool_update_state(devices, login, hass):
     fan_state = hass.states.get("fan.living_room")
     attributes = fan_state.attributes
 
-    assert fan_state.state is "off"
+    assert fan_state.state == "off"
     assert attributes[dyson.ATTR_NIGHT_MODE] is False
     assert attributes[dyson.ATTR_AUTO_MODE] is False
-    assert attributes[dyson.ATTR_ANGLE_LOW] is 45
-    assert attributes[dyson.ATTR_ANGLE_HIGH] is 95
+    assert attributes[dyson.ATTR_ANGLE_LOW] == 45
+    assert attributes[dyson.ATTR_ANGLE_HIGH] == 95
     assert attributes[dyson.ATTR_FLOW_DIRECTION_FRONT] is False
     assert attributes[dyson.ATTR_TIMER] == "OFF"
-    assert attributes[dyson.ATTR_DYSON_SPEED] is \
+    assert attributes[dyson.ATTR_DYSON_SPEED] == \
         int(FanSpeed.FAN_SPEED_2.value)
     assert attributes[ATTR_SPEED] is SPEED_LOW
     assert attributes[ATTR_OSCILLATING] is False
