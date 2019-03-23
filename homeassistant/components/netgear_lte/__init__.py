@@ -78,13 +78,14 @@ class ModemData:
             if not self.connected:
                 _LOGGER.warning("Connected to %s", self.host)
                 self.connected = True
-            async_dispatcher_send(self.hass, DISPATCHER_NETGEAR_LTE)
         except eternalegypt.Error:
             if self.connected:
                 _LOGGER.warning("Lost connection to %s", self.host)
                 self.connected = False
             self.unread_count = None
             self.usage = None
+
+        async_dispatcher_send(self.hass, DISPATCHER_NETGEAR_LTE)
 
 
 @attr.s
