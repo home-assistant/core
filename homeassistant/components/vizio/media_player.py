@@ -1,20 +1,32 @@
 """Vizio SmartCast Device support."""
 from datetime import timedelta
 import logging
-
 import voluptuous as vol
-
 from homeassistant import util
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    MediaPlayerDevice,
+    PLATFORM_SCHEMA
+)
 from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_PLAY, SUPPORT_PAUSE,
-    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP
+)
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, CONF_DEVICE_CLASS,
-    STATE_OFF, STATE_ON)
+    CONF_ACCESS_TOKEN,
+    CONF_DEVICE_CLASS,
+    CONF_HOST,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON
+)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,20 +45,24 @@ ICON = 'mdi:television'
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-COMMON_SUPPORTED_COMMANDS = (SUPPORT_PLAY
-                             | SUPPORT_PAUSE
-                             | SUPPORT_SELECT_SOURCE
-                             | SUPPORT_TURN_ON
-                             | SUPPORT_TURN_OFF
-                             | SUPPORT_VOLUME_MUTE
-                             | SUPPORT_VOLUME_STEP
-                             | SUPPORT_VOLUME_SET)
+COMMON_SUPPORTED_COMMANDS = (
+    SUPPORT_PLAY
+    | SUPPORT_PAUSE
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
+)
 
 SUPPORTED_COMMANDS = {
     'soundbar': COMMON_SUPPORTED_COMMANDS,
-    'tv': (COMMON_SUPPORTED_COMMANDS
-           | SUPPORT_VOLUME_MUTE
-           | SUPPORT_VOLUME_STEP)
+    'tv': (
+        COMMON_SUPPORTED_COMMANDS
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_VOLUME_STEP
+    )
 }
 
 MAX_VOLUME = {
