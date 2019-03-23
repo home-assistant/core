@@ -73,7 +73,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         )
         return
 
-    async_add_entities([AfterShipSensor(aftership, name)], True)
+    instance = AfterShipSensor(aftership, name)
+
+    async_add_entities([instance], True)
 
     async def handle_add_tracking(call):
         """Call when a user adds a new Aftership tracking from HASS."""
@@ -82,6 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         tracking_number = call.data[CONF_TRACKING_NUMBER]
 
         await aftership.add_package_tracking(tracking_number, title, slug)
+        await update(instance)
 
     hass.services.async_register(
         DOMAIN,
@@ -96,6 +99,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         tracking_number = call.data[CONF_TRACKING_NUMBER]
 
         await aftership.remove_package_tracking(slug, tracking_number)
+        await update(instance)
 
     hass.services.async_register(
         DOMAIN,
@@ -143,51 +147,57 @@ class AfterShipSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the AfterShip API."""
-        await self.aftership.get_trackings()
+        await update(self)
 
-        if not self.aftership.meta:
-            _LOGGER.error("Unknown errors when querying")
-            return
-        if self.aftership.meta["code"] != 200:
-            _LOGGER.error(
-                "Errors when querying AfterShip. %s",
-                str(self.aftership.meta)
-            )
-            return
 
-        status_to_ignore = {"delivered"}
-        status_counts = {}
-        trackings = []
-        not_delivered_count = 0
+async def update(self):
+    """Get the latest data from the AfterShip API."""
+    _LOGGER.info("Calling update")
+    await self.aftership.get_trackings()
 
-        for track in self.aftership.trackings["trackings"]:
-            status = track["tag"].lower()
-            name = (
-                track["tracking_number"]
-                if track["title"] is None
-                else track["title"]
-            )
-            status_counts[status] = status_counts.get(status, 0) + 1
-            trackings.append({
-                "name": name,
-                "tracking_number": track["tracking_number"],
-                "slug": track["slug"],
-                "link": BASE + track["slug"] + "/" + track["tracking_number"],
-                "last_update": track["updated_at"],
-                "expected_delivery": track["expected_delivery"],
-                "status": track["tag"],
-            })
+    if not self.aftership.meta:
+        _LOGGER.error("Unknown errors when querying")
+        return
+    if self.aftership.meta["code"] != 200:
+        _LOGGER.error(
+            "Errors when querying AfterShip. %s",
+            str(self.aftership.meta)
+        )
+        return
 
-            if status not in status_to_ignore:
-                not_delivered_count += 1
-            else:
-                _LOGGER.debug("Ignoring %s as it has status: %s",
-                              name, status)
+    status_to_ignore = {"delivered"}
+    status_counts = {}
+    trackings = []
+    not_delivered_count = 0
 
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            **status_counts,
-            ATTR_TRACKINGS: trackings,
-        }
+    for track in self.aftership.trackings["trackings"]:
+        status = track["tag"].lower()
+        name = (
+            track["tracking_number"]
+            if track["title"] is None
+            else track["title"]
+        )
+        status_counts[status] = status_counts.get(status, 0) + 1
+        trackings.append({
+            "name": name,
+            "tracking_number": track["tracking_number"],
+            "slug": track["slug"],
+            "link": BASE + track["slug"] + "/" + track["tracking_number"],
+            "last_update": track["updated_at"],
+            "expected_delivery": track["expected_delivery"],
+            "status": track["tag"],
+        })
 
-        self._state = not_delivered_count
+        if status not in status_to_ignore:
+            not_delivered_count += 1
+        else:
+            _LOGGER.debug("Ignoring %s as it has status: %s",
+                          name, status)
+
+    self._attributes = {
+        ATTR_ATTRIBUTION: ATTRIBUTION,
+        **status_counts,
+        ATTR_TRACKINGS: trackings,
+    }
+
+    self._state = not_delivered_count
