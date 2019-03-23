@@ -174,6 +174,7 @@ class AfterShipSensor(Entity):
                 "slug": track["slug"],
                 "link": BASE + track["slug"] + "/" + track["tracking_number"],
                 "last_update": track["updated_at"],
+                "expected_delivery": track["expected_delivery"],
                 "status": track["tag"],
             })
 
