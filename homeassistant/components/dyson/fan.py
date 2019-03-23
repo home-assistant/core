@@ -29,40 +29,40 @@ DEPENDENCIES = ['dyson']
 DYSON_DOMAIN = 'dyson'
 DYSON_FAN_DEVICES = 'dyson_fan_devices'
 
-SERVICE_SET_NIGHT_MODE = 'dyson_set_night_mode'
-SERVICE_SET_AUTO_MODE = 'dyson_set_auto_mode'
-SERVICE_SET_ANGLE = 'dyson_set_angle'
-SERVICE_SET_FLOW_DIRECTION_FRONT = 'dyson_flow_direction_front'
-SERVICE_SET_TIMER = 'dyson_set_timer'
-SERVICE_SET_DYSON_SPEED = 'dyson_set_speed'
+SERVICE_SET_NIGHT_MODE = 'set_night_mode'
+SERVICE_SET_AUTO_MODE = 'set_auto_mode'
+SERVICE_SET_ANGLE = 'set_angle'
+SERVICE_SET_FLOW_DIRECTION_FRONT = 'set_flow_direction_front'
+SERVICE_SET_TIMER = 'set_timer'
+SERVICE_SET_DYSON_SPEED = 'set_speed'
 
 DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Required(ATTR_NIGHT_MODE): cv.boolean,
 })
 
-DYSON_SET_AUTO_MODE_SCHEMA = vol.Schema({
+SET_AUTO_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Required(ATTR_AUTO_MODE): cv.boolean,
 })
 
-DYSON_SET_ANGLE_SCHEMA = vol.Schema({
+SET_ANGLE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Required(ATTR_ANGLE_LOW): cv.positive_int,
     vol.Required(ATTR_ANGLE_HIGH): cv.positive_int
 })
 
-DYSON_SET_FLOW_DIRECTION_FRONT_SCHEMA = vol.Schema({
+SET_FLOW_DIRECTION_FRONT_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Required(ATTR_FLOW_DIRECTION_FRONT): cv.boolean
 })
 
-DYSON_SET_TIMER_SCHEMA = vol.Schema({
+SET_TIMER_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Required(ATTR_TIMER): cv.positive_int
 })
 
-DYSON_SET_DYSON_SPEED_SCHEMA = vol.Schema({
+SET_DYSON_SPEED_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Required(ATTR_DYSON_SPEED): cv.positive_int
 })
@@ -132,23 +132,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if has_purecool_devices:
         hass.services.register(
             DYSON_DOMAIN, SERVICE_SET_AUTO_MODE, service_handle,
-            schema=DYSON_SET_AUTO_MODE_SCHEMA)
+            schema=SET_AUTO_MODE_SCHEMA)
 
         hass.services.register(
             DYSON_DOMAIN, SERVICE_SET_ANGLE, service_handle,
-            schema=DYSON_SET_ANGLE_SCHEMA)
+            schema=SET_ANGLE_SCHEMA)
 
         hass.services.register(
             DYSON_DOMAIN, SERVICE_SET_FLOW_DIRECTION_FRONT, service_handle,
-            schema=DYSON_SET_FLOW_DIRECTION_FRONT_SCHEMA)
+            schema=SET_FLOW_DIRECTION_FRONT_SCHEMA)
 
         hass.services.register(
             DYSON_DOMAIN, SERVICE_SET_TIMER, service_handle,
-            schema=DYSON_SET_TIMER_SCHEMA)
+            schema=SET_TIMER_SCHEMA)
 
         hass.services.register(
             DYSON_DOMAIN, SERVICE_SET_DYSON_SPEED, service_handle,
-            schema=DYSON_SET_DYSON_SPEED_SCHEMA)
+            schema=SET_DYSON_SPEED_SCHEMA)
 
 
 class DysonPureCoolLinkDevice(FanEntity):
