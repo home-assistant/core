@@ -28,6 +28,13 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 DOMAIN = 'netgear_lte'
 DATA_KEY = 'netgear_lte'
 
+EVENT_SMS = 'netgear_lte_sms'
+
+ATTR_HOST = 'host'
+ATTR_SMS_ID = 'sms_id'
+ATTR_FROM = 'from'
+ATTR_MESSAGE = 'message'
+
 
 NOTIFY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
@@ -163,6 +170,19 @@ async def _setup_lte(hass, lte_config):
 async def _login(hass, modem_data, password):
     """Log in and complete setup."""
     await modem_data.modem.login(password=password)
+
+    def fire_sms_event(sms):
+        """Send an SMS event."""
+        data = {
+            ATTR_HOST: modem_data.host,
+            ATTR_SMS_ID: sms.id,
+            ATTR_FROM: sms.sender,
+            ATTR_MESSAGE: sms.message,
+        }
+        hass.bus.async_fire(EVENT_SMS, data)
+
+    await modem_data.modem.add_sms_listener(fire_sms_event)
+
     await modem_data.async_update()
     hass.data[DATA_KEY].modem_data[modem_data.host] = modem_data
 
