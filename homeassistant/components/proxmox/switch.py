@@ -1,8 +1,10 @@
 """Support for switches to turn on/off Proxmox VE VMs/Containers."""
 import homeassistant.components.proxmox as proxmox
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import ATTR_ATTRIBUTION
 
 DEVICE_CLASS = 'connectivity'
+ATTRIBUTION = 'Data provided by Proxmox'
 POWER_ICON = 'mdi:power'
 
 
@@ -34,6 +36,7 @@ class PXMXSwitch(SwitchDevice):
         self._start = start
         self._shutdown = shutdown
         self._vm_id = item['vmid']
+        self._vm_name = item['name']
         self._unique_id = proxmox.DOMAIN + '_switch_' + item['vmid']
         self._state = None
         self._is_available = False
@@ -84,7 +87,9 @@ class PXMXSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return device attributes of the vm."""
         return {
-            'vmid': self._vm_id
+            'vmid': self._vm_id,
+            'name': self._vm_name,
+            ATTR_ATTRIBUTION: ATTRIBUTION
         }
 
     def update(self):

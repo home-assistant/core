@@ -1,8 +1,10 @@
 """Support for binary sensors to display Proxmox VE data."""
 import homeassistant.components.proxmox as proxmox
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import ATTR_ATTRIBUTION
 
 DEVICE_CLASS = 'connectivity'
+ATTRIBUTION = 'Data provided by Proxmox'
 
 
 async def async_setup_platform(
@@ -39,6 +41,7 @@ class PXMXBinarySensor(BinarySensorDevice):
         self._state = None
         self._attributes = attributes
         self._vm_id = item['vmid']
+        self._vm_name = item['name']
         self._item = item
         self._unique_id = proxmox.DOMAIN + '_status_' + item['vmid']
 
@@ -79,7 +82,9 @@ class PXMXBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return device attributes of the vm."""
         return {
-            'vmid': self._vm_id
+            'vmid': self._vm_id,
+            'name': self._vm_name,
+            ATTR_ATTRIBUTION: ATTRIBUTION
         }
 
     def update(self):

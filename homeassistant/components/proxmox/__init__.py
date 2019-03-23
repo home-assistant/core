@@ -142,7 +142,7 @@ async def update_data(hass, conf):
     for node in nodes:
         name = node['node']
         if not bool(conf_nodes) or name in conf_nodes:
-            node_dict[name] = node
+            node_dict[name] = format_values(node)
             cts = proxmox.nodes(name).lxc.get()
             for item in cts:
                 vm_id = item['vmid']
@@ -150,7 +150,7 @@ async def update_data(hass, conf):
                     item['node'] = name
                     key = "{} - {}".format(item['name'], vm_id)
                     item['control'] = control_all or int(vm_id) in control_vms
-                    node_dict[key] = item
+                    node_dict[key] = format_values(item)
             vms = proxmox.nodes(name).qemu.get()
             for item in vms:
                 vm_id = item['vmid']
@@ -158,8 +158,27 @@ async def update_data(hass, conf):
                     item['node'] = name
                     key = "{} - {}".format(item['name'], vm_id)
                     item['control'] = control_all or int(vm_id) in control_vms
-                    node_dict[key] = item
+                    node_dict[key] = format_values(item)
     hass.data[DATA_PROXMOX_NODES] = node_dict
+
+
+def format_values(item):
+    """Convert the data into a human readable format."""
+    item['uptime'] = "{:.2f}".format(item['uptime']/86400)
+    item['ram_usage'] = "{:.2f}".format(item['mem'] * 100 / item['maxmem'])
+    item['disk_usage'] = \
+        "{:.2f}".format(int(item['disk']) * 100 / int(item['maxdisk']))
+    item['cpu_usage'] = "{:.2f}".format(item['cpu'] * 100)
+    item['mem'] = to_gb(item['mem'])
+    item['maxmem'] = to_gb(item['maxmem'])
+    item['disk'] = to_gb(item['disk'])
+    item['maxdisk'] = to_gb(item['maxdisk'])
+    return item
+
+
+def to_gb(byte_value):
+    """Convert the given byte value to GB."""
+    return "{:.2f}".format(int(byte_value)/1073741824)
 
 
 def fix_status(hass, item, status):
