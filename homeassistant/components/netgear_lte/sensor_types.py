@@ -3,10 +3,12 @@
 from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
 
 SENSOR_SMS = 'sms'
+SENSOR_SMS_TOTAL = 'sms_total'
 SENSOR_USAGE = 'usage'
 
 SENSOR_UNITS = {
     SENSOR_SMS: 'unread',
+    SENSOR_SMS_TOTAL: 'messages',
     SENSOR_USAGE: 'MiB',
     'radio_quality': '%',
     'rx_level': 'dBm',

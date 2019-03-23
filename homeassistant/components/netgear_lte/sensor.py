@@ -5,7 +5,8 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
-from .sensor_types import SENSOR_SMS, SENSOR_USAGE, SENSOR_UNITS
+from .sensor_types import (
+    SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_USAGE, SENSOR_UNITS)
 
 DEPENDENCIES = ['netgear_lte']
 
@@ -29,7 +30,9 @@ async def async_setup_platform(
     sensors = []
     for sensor_type in monitored_conditions:
         if sensor_type == SENSOR_SMS:
-            sensors.append(SMSSensor(modem_data, sensor_type))
+            sensors.append(SMSUnreadSensor(modem_data, sensor_type))
+        elif sensor_type == SENSOR_SMS_TOTAL:
+            sensors.append(SMSTotalSensor(modem_data, sensor_type))
         elif sensor_type == SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
         else:
@@ -47,13 +50,22 @@ class LTESensor(LTEEntity):
         return SENSOR_UNITS[self.sensor_type]
 
 
-class SMSSensor(LTESensor):
+class SMSUnreadSensor(LTESensor):
     """Unread SMS sensor entity."""
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return sum(1 for x in self.modem_data.data.sms if x.unread)
+
+
+class SMSTotalSensor(LTESensor):
+    """Total SMS sensor entity."""
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return len(self.modem_data.data.sms)
 
 
 class UsageSensor(LTESensor):
