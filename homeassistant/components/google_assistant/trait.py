@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components import (
+    camera,
     cover,
     group,
     fan,
@@ -35,6 +36,7 @@ from .helpers import SmartHomeError
 _LOGGER = logging.getLogger(__name__)
 
 PREFIX_TRAITS = 'action.devices.traits.'
+TRAIT_CAMERA_STREAM = PREFIX_TRAITS + 'CameraStream'
 TRAIT_ONOFF = PREFIX_TRAITS + 'OnOff'
 TRAIT_DOCK = PREFIX_TRAITS + 'Dock'
 TRAIT_STARTSTOP = PREFIX_TRAITS + 'StartStop'
@@ -49,6 +51,7 @@ TRAIT_MODES = PREFIX_TRAITS + 'Modes'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
+COMMAND_GET_CAMERA_STREAM = PREFIX_COMMANDS + 'GetCameraStream'
 COMMAND_DOCK = PREFIX_COMMANDS + 'Dock'
 COMMAND_STARTSTOP = PREFIX_COMMANDS + 'StartStop'
 COMMAND_PAUSEUNPAUSE = PREFIX_COMMANDS + 'PauseUnpause'
@@ -183,6 +186,51 @@ class BrightnessTrait(_Trait):
                     media_player.ATTR_MEDIA_VOLUME_LEVEL:
                     params['brightness'] / 100
                 }, blocking=True, context=data.context)
+
+
+@register_trait
+class CameraStreamTrait(_Trait):
+    """Trait to stream from cameras.
+
+    https://developers.google.com/actions/smarthome/traits/camerastream
+    """
+
+    name = TRAIT_CAMERA_STREAM
+    commands = [
+        COMMAND_GET_CAMERA_STREAM
+    ]
+
+    stream_info = None
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        if domain == camera.DOMAIN:
+            return features & camera.SUPPORT_STREAM
+
+        return False
+
+    def sync_attributes(self):
+        """Return stream attributes for a sync request."""
+        return {
+            'cameraStreamSupportedProtocols': [
+                "hls",
+            ],
+            'cameraStreamNeedAuthToken': False,
+            'cameraStreamNeedDrmEncryption': False,
+        }
+
+    def query_attributes(self):
+        """Return camera stream attributes."""
+        return self.stream_info or {}
+
+    async def execute(self, command, data, params):
+        """Execute a get camera stream command."""
+        url = await self.hass.components.camera.async_request_stream(
+            self.state.entity_id, 'hls')
+        self.stream_info = {
+            'cameraStreamAccessUrl': self.hass.config.api.base_url + url
+        }
 
 
 @register_trait
