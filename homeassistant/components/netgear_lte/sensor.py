@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY, DISPATCHER_NETGEAR_LTE
-from .sensor_types import SENSOR_SMS, SENSOR_USAGE
+from .sensor_types import SENSOR_SMS, SENSOR_USAGE, SENSOR_UNITS
 
 DEPENDENCIES = ['netgear_lte']
 
@@ -79,14 +79,19 @@ class LTESensor(Entity):
         """Return a unique ID like 'usage_5TG365AB0078V'."""
         return self._unique_id
 
-
-class SMSSensor(LTESensor):
-    """Unread SMS sensor entity."""
-
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Netgear LTE SMS"
+        return "Netgear LTE {}".format(self.sensor_type)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return SENSOR_UNITS[self.sensor_type]
+
+
+class SMSSensor(LTESensor):
+    """Unread SMS sensor entity."""
 
     @property
     def state(self):
@@ -96,16 +101,6 @@ class SMSSensor(LTESensor):
 
 class UsageSensor(LTESensor):
     """Data usage sensor entity."""
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return "MiB"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "Netgear LTE usage"
 
     @property
     def state(self):
