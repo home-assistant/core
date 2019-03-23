@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "\u00c4r Home Assistant Instanz muss iwwert Internet accessibel si fir Geofency Noriichten z'empf\u00e4nken.",
+            "one_instance_allowed": "N\u00ebmmen eng eenzeg Instanz ass n\u00e9ideg."
+        },
+        "create_entry": {
+            "default": "Fir Plazen un Home Assistant ze sch\u00e9cken, muss den Webhook Feature an der Locative App ageriicht ginn.\n\nF\u00ebllt folgend Informatiounen aus:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nLiest [Dokumentatioun]({docs_url}) fir w\u00e9ider D\u00e9tailer."
+        },
+        "step": {
+            "user": {
+                "description": "S\u00e9cher fir Locative Webhook anzeriichten?",
+                "title": "Locative Webhook ariichten"
+            }
+        },
+        "title": "Locative Webhook"
+    }
+}

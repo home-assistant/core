@@ -1,13 +1,14 @@
 """Helper to help store data."""
 import asyncio
+from json import JSONEncoder
 import logging
 import os
-from typing import Dict, Optional, Callable
+from typing import Dict, List, Optional, Callable, Union
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
-from homeassistant.util import json
+from homeassistant.util import json as json_util
 from homeassistant.helpers.event import async_call_later
 
 STORAGE_DIR = '.storage'
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @bind_hass
 async def async_migrator(hass, old_path, store, *,
-                         old_conf_load_func=json.load_json,
+                         old_conf_load_func=json_util.load_json,
                          old_conf_migrate_func=None):
     """Migrate old data to a store and then load data.
 
@@ -46,23 +47,26 @@ async def async_migrator(hass, old_path, store, *,
 class Store:
     """Class to help storing data."""
 
-    def __init__(self, hass, version: int, key: str):
+    def __init__(self, hass, version: int, key: str, private: bool = False, *,
+                 encoder: JSONEncoder = None):
         """Initialize storage class."""
         self.version = version
         self.key = key
         self.hass = hass
+        self._private = private
         self._data = None
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
         self._write_lock = asyncio.Lock(loop=hass.loop)
         self._load_task = None
+        self._encoder = encoder
 
     @property
     def path(self):
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
 
-    async def async_load(self):
+    async def async_load(self) -> Optional[Union[Dict, List]]:
         """Load data.
 
         If the expected version does not match the given version, the migrate
@@ -87,7 +91,7 @@ class Store:
                 data['data'] = data.pop('data_func')()
         else:
             data = await self.hass.async_add_executor_job(
-                json.load_json, self.path)
+                json_util.load_json, self.path)
 
             if data == {}:
                 return None
@@ -102,7 +106,7 @@ class Store:
         self._load_task = None
         return stored
 
-    async def async_save(self, data):
+    async def async_save(self, data: Union[Dict, List]) -> None:
         """Save data."""
         self._data = {
             'version': self.version,
@@ -177,7 +181,7 @@ class Store:
             try:
                 await self.hass.async_add_executor_job(
                     self._write_data, self.path, data)
-            except (json.SerializationError, json.WriteError) as err:
+            except (json_util.SerializationError, json_util.WriteError) as err:
                 _LOGGER.error('Error writing config for %s: %s', self.key, err)
 
     def _write_data(self, path: str, data: Dict):
@@ -186,7 +190,7 @@ class Store:
             os.makedirs(os.path.dirname(path))
 
         _LOGGER.debug('Writing data for %s', self.key)
-        json.save_json(path, data)
+        json_util.save_json(path, data, self._private, encoder=self._encoder)
 
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""

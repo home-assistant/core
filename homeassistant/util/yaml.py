@@ -144,7 +144,7 @@ def _find_files(directory: str, pattern: str) -> Iterator[str]:
     """Recursively load files in a directory."""
     for root, dirs, files in os.walk(directory, topdown=True):
         dirs[:] = [d for d in dirs if _is_file_valid(d)]
-        for basename in files:
+        for basename in sorted(files):
             if _is_file_valid(basename) and fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
                 yield filename
@@ -272,8 +272,8 @@ def _load_secret_yaml(secret_path: str) -> JSON_TYPE:
     return secrets
 
 
-def _secret_yaml(loader: SafeLineLoader,
-                 node: yaml.nodes.Node) -> JSON_TYPE:
+def secret_yaml(loader: SafeLineLoader,
+                node: yaml.nodes.Node) -> JSON_TYPE:
     """Load secrets and embed it into the configuration YAML."""
     secret_path = os.path.dirname(loader.name)
     while True:
@@ -322,7 +322,7 @@ yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
 yaml.SafeLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
 yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)
-yaml.SafeLoader.add_constructor('!secret', _secret_yaml)
+yaml.SafeLoader.add_constructor('!secret', secret_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_list', _include_dir_list_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_merge_list',
                                 _include_dir_merge_list_yaml)

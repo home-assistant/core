@@ -4,18 +4,19 @@ Prowl notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.prowl/
 """
-import logging
 import asyncio
+import logging
 
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
-    BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://api.prowlapp.com/publicapi/'
@@ -25,8 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the Prowl notification service."""
     return ProwlNotificationService(hass, config[CONF_API_KEY])
 
@@ -39,8 +39,7 @@ class ProwlNotificationService(BaseNotificationService):
         self._hass = hass
         self._api_key = api_key
 
-    @asyncio.coroutine
-    def async_send_message(self, message, **kwargs):
+    async def async_send_message(self, message, **kwargs):
         """Send the message to the user."""
         response = None
         session = None
@@ -59,8 +58,8 @@ class ProwlNotificationService(BaseNotificationService):
 
         try:
             with async_timeout.timeout(10, loop=self._hass.loop):
-                response = yield from session.post(url, data=payload)
-                result = yield from response.text()
+                response = await session.post(url, data=payload)
+                result = await response.text()
 
             if response.status != 200 or 'error' in result:
                 _LOGGER.error("Prowl service returned http "

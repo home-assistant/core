@@ -1,24 +1,16 @@
 """Helpers to resolve client ID/secret."""
+import logging
 import asyncio
+from ipaddress import ip_address
 from html.parser import HTMLParser
-from ipaddress import ip_address, ip_network
 from urllib.parse import urlparse, urljoin
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
 
-# IP addresses of loopback interfaces
-ALLOWED_IPS = (
-    ip_address('127.0.0.1'),
-    ip_address('::1'),
-)
+from homeassistant.util.network import is_local
 
-# RFC1918 - Address allocation for Private Internets
-ALLOWED_NETWORKS = (
-    ip_network('10.0.0.0/8'),
-    ip_network('172.16.0.0/12'),
-    ip_network('192.168.0.0/16'),
-)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def verify_redirect_uri(hass, client_id, redirect_uri):
@@ -89,7 +81,8 @@ async def fetch_redirect_uris(hass, url):
                     if chunks == 10:
                         break
 
-    except (asyncio.TimeoutError, ClientError):
+    except (asyncio.TimeoutError, ClientError) as ex:
+        _LOGGER.error("Error while looking up redirect_uri %s: %s", url, ex)
         pass
 
     # Authorization endpoints verifying that a redirect_uri is allowed for use
@@ -185,9 +178,7 @@ def _parse_client_id(client_id):
         # Not an ip address
         pass
 
-    if (address is None or
-            address in ALLOWED_IPS or
-            any(address in network for network in ALLOWED_NETWORKS)):
+    if address is None or is_local(address):
         return parts
 
     raise ValueError('Hostname should be a domain name or local IP address')

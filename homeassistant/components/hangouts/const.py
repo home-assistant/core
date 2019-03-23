@@ -3,10 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.components.notify import (
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET)
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger('homeassistant.components.hangouts')
+_LOGGER = logging.getLogger('.')
 
 
 DOMAIN = 'hangouts'
@@ -38,6 +39,7 @@ CONF_CONVERSATION_NAME = 'name'
 
 SERVICE_SEND_MESSAGE = 'send_message'
 SERVICE_UPDATE = 'update'
+SERVICE_RECONNECT = 'reconnect'
 
 
 TARGETS_SCHEMA = vol.All(
@@ -56,10 +58,15 @@ MESSAGE_SEGMENT_SCHEMA = vol.Schema({
     vol.Optional('parse_str'): cv.boolean,
     vol.Optional('link_target'): cv.string
 })
+MESSAGE_DATA_SCHEMA = vol.Schema({
+    vol.Optional('image_file'): cv.string,
+    vol.Optional('image_url'): cv.string
+})
 
 MESSAGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_TARGET): [TARGETS_SCHEMA],
-    vol.Required(ATTR_MESSAGE): [MESSAGE_SEGMENT_SCHEMA]
+    vol.Required(ATTR_MESSAGE): [MESSAGE_SEGMENT_SCHEMA],
+    vol.Optional(ATTR_DATA): MESSAGE_DATA_SCHEMA
 })
 
 INTENT_SCHEMA = vol.All(

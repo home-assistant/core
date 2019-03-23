@@ -1,0 +1,16 @@
+{
+    "mfa_setup": {
+        "totp": {
+            "error": {
+                "invalid_code": "Ugyldig kode, pr\u00f8v igjen. Dersom du heile tida f\u00e5r denne feilen, m\u00e5 du s\u00f8rge for at klokka p\u00e5 Home Assistant-systemet ditt er n\u00f8yaktig."
+            },
+            "step": {
+                "init": {
+                    "description": "For \u00e5 aktivere tofaktorautentisering ved hjelp av tidsbaserte eingangspassord, skann QR-koden med autentiseringsappen din. Dersom du ikkje har ein, vil vi r\u00e5de deg til \u00e5 bruke anten [Google Authenticator] (https://support.google.com/accounts/answer/1066447) eller [Authy] (https://authy.com/). \n\n {qr_code} \n \nN\u00e5r du har skanna koda, skriv du inn den sekssifra koda fr\u00e5 appen din for \u00e5 stadfeste oppsettet. Dersom du har problemer med \u00e5 skanne QR-koda, gjer du eit manuelt oppsett med kode ** ` {code} ` **.",
+                    "title": "Konfigurer to-faktor-autentisering ved hjelp av TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

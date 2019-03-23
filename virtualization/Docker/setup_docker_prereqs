@@ -8,6 +8,7 @@ INSTALL_TELLSTICK="${INSTALL_TELLSTICK:-yes}"
 INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
+INSTALL_DLIB="${INSTALL_DLIB:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -27,6 +28,9 @@ PACKAGES=(
   libmpc-dev libmpfr-dev libgmp-dev
   # homeassistant.components.ffmpeg
   ffmpeg
+  # homeassistant.components.stream
+  libavformat-dev libavcodec-dev libavdevice-dev
+  libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
   # homeassistant.components.sensor.iperf3
   iperf3
 )
@@ -60,6 +64,10 @@ fi
 
 if [ "$INSTALL_SSOCR" == "yes" ]; then
   virtualization/Docker/scripts/ssocr
+fi
+
+if [ "$INSTALL_DLIB" == "yes" ]; then
+  pip3 install --no-cache-dir "dlib>=19.5"
 fi
 
 # Remove packages

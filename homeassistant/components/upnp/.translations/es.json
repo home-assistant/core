@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP / IGD ya est\u00e1 configurado",
+            "incomplete_device": "Ignorando el dispositivo UPnP incompleto",
+            "no_devices_discovered": "No se descubrieron UPnP / IGDs",
+            "no_devices_found": "No se encuentran dispositivos UPnP/IGD en la red.",
+            "no_sensors_or_port_mapping": "Habilitar al menos sensores o mapeo de puertos",
+            "single_instance_allowed": "S\u00f3lo se necesita una configuraci\u00f3n de UPnP/IGD."
+        },
+        "error": {
+            "one": "UNO",
+            "other": "OTRO"
+        },
+        "step": {
+            "confirm": {
+                "description": "\u00bfDesea configurar UPnP/IGD?",
+                "title": "UPnP/IGD"
+            },
+            "init": {
+                "title": "UPnP / IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_port_mapping": "Habilitar la asignaci\u00f3n de puertos para Home Assistant",
+                    "enable_sensors": "A\u00f1adir sensores de tr\u00e1fico",
+                    "igd": "UPnP / IGD"
+                },
+                "title": "Opciones de configuraci\u00f3n para UPnP/IGD"
+            }
+        },
+        "title": "UPnP / IGD"
+    }
+}

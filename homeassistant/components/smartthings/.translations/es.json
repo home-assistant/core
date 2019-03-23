@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "app_not_installed": "Por favor aseg\u00farese de haber instalado y autorizado Home Assistant SmartApp y vuelva a intentarlo.",
+            "app_setup_error": "No se pudo configurar el SmartApp.  Por favor, int\u00e9ntelo de nuevo.",
+            "token_already_setup": "El token ya ha sido configurado.",
+            "token_invalid_format": "El token debe estar en formato UID/GUID",
+            "token_unauthorized": "El token no es v\u00e1lido o ya no est\u00e1 autorizado."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token de acceso"
+                },
+                "title": "Ingresar token de acceso personal"
+            },
+            "wait_install": {
+                "title": "Instalar SmartApp"
+            }
+        },
+        "title": "SmartThings"
+    }
+}

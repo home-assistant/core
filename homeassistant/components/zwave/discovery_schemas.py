@@ -1,4 +1,4 @@
-"""Zwave discovery schemas."""
+"""Z-Wave discovery schemas."""
 from . import const
 
 DEFAULT_VALUES_SCHEMA = {
@@ -211,7 +211,8 @@ DISCOVERY_SCHEMAS = [
                  const.COMMAND_CLASS_SENSOR_MULTILEVEL,
                  const.COMMAND_CLASS_METER,
                  const.COMMAND_CLASS_ALARM,
-                 const.COMMAND_CLASS_SENSOR_ALARM],
+                 const.COMMAND_CLASS_SENSOR_ALARM,
+                 const.COMMAND_CLASS_INDICATOR],
              const.DISC_GENRE: const.GENRE_USER,
          }})},
     {const.DISC_COMPONENT: 'switch',

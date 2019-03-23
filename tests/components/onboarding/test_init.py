@@ -38,8 +38,7 @@ async def test_setup_views_if_not_onboarded(hass):
     assert len(mock_setup.mock_calls) == 1
     assert onboarding.DOMAIN in hass.data
 
-    with patch('homeassistant.auth.AuthManager.active', return_value=True):
-        assert not onboarding.async_is_onboarded(hass)
+    assert not onboarding.async_is_onboarded(hass)
 
 
 async def test_is_onboarded():
@@ -47,17 +46,13 @@ async def test_is_onboarded():
     hass = Mock()
     hass.data = {}
 
-    with patch('homeassistant.auth.AuthManager.active', return_value=False):
-        assert onboarding.async_is_onboarded(hass)
+    assert onboarding.async_is_onboarded(hass)
 
-    with patch('homeassistant.auth.AuthManager.active', return_value=True):
-        assert onboarding.async_is_onboarded(hass)
+    hass.data[onboarding.DOMAIN] = True
+    assert onboarding.async_is_onboarded(hass)
 
-        hass.data[onboarding.DOMAIN] = True
-        assert onboarding.async_is_onboarded(hass)
-
-        hass.data[onboarding.DOMAIN] = False
-        assert not onboarding.async_is_onboarded(hass)
+    hass.data[onboarding.DOMAIN] = False
+    assert not onboarding.async_is_onboarded(hass)
 
 
 async def test_having_owner_finishes_user_step(hass, hass_storage):

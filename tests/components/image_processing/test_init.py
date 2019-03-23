@@ -10,6 +10,7 @@ import homeassistant.components.image_processing as ip
 
 from tests.common import (
     get_test_home_assistant, get_test_instance_port, assert_setup_component)
+from tests.components.image_processing import common
 
 
 class TestSetupImageProcessing:
@@ -85,7 +86,7 @@ class TestImageProcessing:
         """Grab an image from camera entity."""
         self.hass.start()
 
-        ip.scan(self.hass, entity_id='image_processing.test')
+        common.scan(self.hass, entity_id='image_processing.test')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.test')
@@ -100,7 +101,7 @@ class TestImageProcessing:
         """Try to get image without exists camera."""
         self.hass.states.remove('camera.demo_camera')
 
-        ip.scan(self.hass, entity_id='image_processing.test')
+        common.scan(self.hass, entity_id='image_processing.test')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.test')
@@ -125,7 +126,7 @@ class TestImageProcessingAlpr:
             },
         }
 
-        with patch('homeassistant.components.image_processing.demo.'
+        with patch('homeassistant.components.demo.image_processing.'
                    'DemoImageProcessingAlpr.should_poll',
                    new_callable=PropertyMock(return_value=False)):
             setup_component(self.hass, ip.DOMAIN, config)
@@ -152,7 +153,7 @@ class TestImageProcessingAlpr:
         """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(self.url, content=b'image')
 
-        ip.scan(self.hass, entity_id='image_processing.demo_alpr')
+        common.scan(self.hass, entity_id='image_processing.demo_alpr')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.demo_alpr')
@@ -171,8 +172,8 @@ class TestImageProcessingAlpr:
         """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(self.url, content=b'image')
 
-        ip.scan(self.hass, entity_id='image_processing.demo_alpr')
-        ip.scan(self.hass, entity_id='image_processing.demo_alpr')
+        common.scan(self.hass, entity_id='image_processing.demo_alpr')
+        common.scan(self.hass, entity_id='image_processing.demo_alpr')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.demo_alpr')
@@ -187,7 +188,7 @@ class TestImageProcessingAlpr:
         assert event_data[0]['confidence'] == 98.3
         assert event_data[0]['entity_id'] == 'image_processing.demo_alpr'
 
-    @patch('homeassistant.components.image_processing.demo.'
+    @patch('homeassistant.components.demo.image_processing.'
            'DemoImageProcessingAlpr.confidence',
            new_callable=PropertyMock(return_value=95))
     def test_alpr_event_single_call_confidence(self, confidence_mock,
@@ -195,7 +196,7 @@ class TestImageProcessingAlpr:
         """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(self.url, content=b'image')
 
-        ip.scan(self.hass, entity_id='image_processing.demo_alpr')
+        common.scan(self.hass, entity_id='image_processing.demo_alpr')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.demo_alpr')
@@ -227,7 +228,7 @@ class TestImageProcessingFace:
             },
         }
 
-        with patch('homeassistant.components.image_processing.demo.'
+        with patch('homeassistant.components.demo.image_processing.'
                    'DemoImageProcessingFace.should_poll',
                    new_callable=PropertyMock(return_value=False)):
             setup_component(self.hass, ip.DOMAIN, config)
@@ -254,7 +255,7 @@ class TestImageProcessingFace:
         """Set up and scan a picture and test faces from event."""
         aioclient_mock.get(self.url, content=b'image')
 
-        ip.scan(self.hass, entity_id='image_processing.demo_face')
+        common.scan(self.hass, entity_id='image_processing.demo_face')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.demo_face')
@@ -272,14 +273,14 @@ class TestImageProcessingFace:
         assert event_data[0]['entity_id'] == \
             'image_processing.demo_face'
 
-    @patch('homeassistant.components.image_processing.demo.'
+    @patch('homeassistant.components.demo.image_processing.'
            'DemoImageProcessingFace.confidence',
            new_callable=PropertyMock(return_value=None))
     def test_face_event_call_no_confidence(self, mock_config, aioclient_mock):
         """Set up and scan a picture and test faces from event."""
         aioclient_mock.get(self.url, content=b'image')
 
-        ip.scan(self.hass, entity_id='image_processing.demo_face')
+        common.scan(self.hass, entity_id='image_processing.demo_face')
         self.hass.block_till_done()
 
         state = self.hass.states.get('image_processing.demo_face')

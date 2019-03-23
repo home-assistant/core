@@ -1,10 +1,10 @@
-"""Component to help onboard new users."""
+"""Support to help onboard new users."""
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
 from .const import DOMAIN, STEP_USER, STEPS
 
-DEPENDENCIES = ['http']
+DEPENDENCIES = ['auth', 'http']
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -14,16 +14,13 @@ STORAGE_VERSION = 1
 @callback
 def async_is_onboarded(hass):
     """Return if Home Assistant has been onboarded."""
-    # Temporarily: if auth not active, always set onboarded=True
-    if not hass.auth.active:
-        return True
-
     return hass.data.get(DOMAIN, True)
 
 
 async def async_setup(hass, config):
     """Set up the onboarding component."""
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = hass.helpers.storage.Store(
+        STORAGE_VERSION, STORAGE_KEY, private=True)
     data = await store.async_load()
 
     if data is None:

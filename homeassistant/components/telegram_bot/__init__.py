@@ -1,10 +1,4 @@
-"""
-Component to send and receive Telegram messages.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/telegram_bot/
-"""
-import asyncio
+"""Support to send and receive Telegram messages."""
 import io
 from functools import partial
 import logging
@@ -22,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==11.0.0']
+REQUIREMENTS = ['python-telegram-bot==11.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +48,7 @@ ATTR_TEXT = 'text'
 ATTR_URL = 'url'
 ATTR_USER_ID = 'user_id'
 ATTR_USERNAME = 'username'
+ATTR_VERIFY_SSL = 'verify_ssl'
 
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
 CONF_PROXY_URL = 'proxy_url'
@@ -90,6 +85,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PROXY_PARAMS): dict,
 })
 
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
+
 BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(ATTR_PARSER): cv.string,
@@ -112,6 +109,7 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_USERNAME): cv.string,
     vol.Optional(ATTR_PASSWORD): cv.string,
     vol.Optional(ATTR_AUTHENTICATION): cv.string,
+    vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
 })
 
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend({
@@ -168,7 +166,7 @@ SERVICE_MAP = {
 
 
 def load_data(hass, url=None, filepath=None, username=None, password=None,
-              authentication=None, num_retries=5):
+              authentication=None, num_retries=5, verify_ssl=None):
     """Load data into ByteIO/File container from a source."""
     try:
         if url is not None:
@@ -179,6 +177,8 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                     params["auth"] = HTTPDigestAuth(username, password)
                 else:
                     params["auth"] = HTTPBasicAuth(username, password)
+            if verify_ssl:
+                params["verify"] = verify_ssl
             retry_num = 0
             while retry_num < num_retries:
                 req = requests.get(url, **params)
@@ -210,8 +210,7 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
     return None
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Telegram bot component."""
     if not config[DOMAIN]:
         return False
@@ -220,7 +219,7 @@ def async_setup(hass, config):
 
     p_type = p_config.get(CONF_PLATFORM)
 
-    platform = yield from async_prepare_setup_platform(
+    platform = await async_prepare_setup_platform(
         hass, config, DOMAIN, p_type)
 
     if platform is None:
@@ -228,7 +227,7 @@ def async_setup(hass, config):
 
     _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
     try:
-        receiver_service = yield from \
+        receiver_service = await \
             platform.async_setup_platform(hass, p_config)
         if receiver_service is False:
             _LOGGER.error(
@@ -247,8 +246,7 @@ def async_setup(hass, config):
         p_config.get(ATTR_PARSER)
     )
 
-    @asyncio.coroutine
-    def async_send_telegram_message(service):
+    async def async_send_telegram_message(service):
         """Handle sending Telegram Bot message service calls."""
         def _render_template_attr(data, attribute):
             attribute_templ = data.get(attribute)
@@ -274,23 +272,23 @@ def async_setup(hass, config):
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
         if msgtype == SERVICE_SEND_MESSAGE:
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 partial(notify_service.send_message, **kwargs))
         elif msgtype in [SERVICE_SEND_PHOTO, SERVICE_SEND_STICKER,
                          SERVICE_SEND_VIDEO, SERVICE_SEND_DOCUMENT]:
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 partial(notify_service.send_file, msgtype, **kwargs))
         elif msgtype == SERVICE_SEND_LOCATION:
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 partial(notify_service.send_location, **kwargs))
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 partial(notify_service.answer_callback_query, **kwargs))
         elif msgtype == SERVICE_DELETE_MESSAGE:
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 partial(notify_service.delete_message, **kwargs))
         else:
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 partial(notify_service.edit_message, msgtype, **kwargs))
 
     # Register notification services
@@ -311,10 +309,11 @@ def initialize_bot(p_config):
     proxy_url = p_config.get(CONF_PROXY_URL)
     proxy_params = p_config.get(CONF_PROXY_PARAMS)
 
-    request = None
     if proxy_url is not None:
-        request = Request(proxy_url=proxy_url,
+        request = Request(con_pool_size=8, proxy_url=proxy_url,
                           urllib3_proxy_kwargs=proxy_params)
+    else:
+        request = Request(con_pool_size=8)
     return Bot(token=api_key, request=request)
 
 
@@ -541,6 +540,7 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL),
         )
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
@@ -635,7 +635,7 @@ class BaseTelegramBotEntity:
 
             self.hass.bus.async_fire(event, event_data)
             return True
-        elif ATTR_CALLBACK_QUERY in data:
+        if ATTR_CALLBACK_QUERY in data:
             event = EVENT_TELEGRAM_CALLBACK
             data = data.get(ATTR_CALLBACK_QUERY)
             message_ok, event_data = self._get_message_data(data)
@@ -649,6 +649,6 @@ class BaseTelegramBotEntity:
 
             self.hass.bus.async_fire(event, event_data)
             return True
-        else:
-            _LOGGER.warning("Message with unknown data received: %s", data)
-            return True
+
+        _LOGGER.warning("Message with unknown data received: %s", data)
+        return True

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Din Home Assistant forekomst m\u00e5 v\u00e6re tilgjengelig fra internett for \u00e5 motta Twilio-meldinger.",
+            "one_instance_allowed": "Kun \u00e9n enkelt forekomst er n\u00f8dvendig."
+        },
+        "create_entry": {
+            "default": "For \u00e5 sende hendelser til Home Assistant, m\u00e5 du sette opp [Webhooks with Twilio]({twilio_url}). \n\nFyll ut f\u00f8lgende informasjon: \n\n- URL: `{webhook_url}` \n- Metode: POST\n- Innholdstype: application/x-www-form-urlencoded \n\n Se [dokumentasjonen]({docs_url}) om hvordan du konfigurerer automatiseringer for \u00e5 h\u00e5ndtere innkommende data."
+        },
+        "step": {
+            "user": {
+                "description": "Er du sikker p\u00e5 at du \u00f8nsker \u00e5 sette opp Twilio?",
+                "title": "Sett opp Twilio Webhook"
+            }
+        },
+        "title": "Twilio"
+    }
+}

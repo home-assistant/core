@@ -1,8 +1,9 @@
 """Test different accessory types: Sensors."""
-from homeassistant.components.homekit.const import PROP_CELSIUS
+from homeassistant.components.homekit.const import (
+    PROP_CELSIUS, THRESHOLD_CO, THRESHOLD_CO2)
 from homeassistant.components.homekit.type_sensors import (
-    AirQualitySensor, BinarySensor, CarbonDioxideSensor, HumiditySensor,
-    LightSensor, TemperatureSensor, BINARY_SENSOR_SERVICE_MAP)
+    AirQualitySensor, BinarySensor, CarbonMonoxideSensor, CarbonDioxideSensor,
+    HumiditySensor, LightSensor, TemperatureSensor, BINARY_SENSOR_SERVICE_MAP)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT, STATE_HOME, STATE_NOT_HOME,
     STATE_OFF, STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -94,6 +95,45 @@ async def test_air_quality(hass, hk_driver):
     assert acc.char_quality.value == 5
 
 
+async def test_co(hass, hk_driver):
+    """Test if accessory is updated after state change."""
+    entity_id = 'sensor.co'
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = CarbonMonoxideSensor(hass, hk_driver, 'CO', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    assert acc.char_level.value == 0
+    assert acc.char_peak.value == 0
+    assert acc.char_detected.value == 0
+
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert acc.char_level.value == 0
+    assert acc.char_peak.value == 0
+    assert acc.char_detected.value == 0
+
+    value = 32
+    assert value > THRESHOLD_CO
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
+    assert acc.char_level.value == 32
+    assert acc.char_peak.value == 32
+    assert acc.char_detected.value == 1
+
+    value = 10
+    assert value < THRESHOLD_CO
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
+    assert acc.char_level.value == 10
+    assert acc.char_peak.value == 32
+    assert acc.char_detected.value == 0
+
+
 async def test_co2(hass, hk_driver):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.co2'
@@ -106,25 +146,29 @@ async def test_co2(hass, hk_driver):
     assert acc.aid == 2
     assert acc.category == 10  # Sensor
 
-    assert acc.char_co2.value == 0
+    assert acc.char_level.value == 0
     assert acc.char_peak.value == 0
     assert acc.char_detected.value == 0
 
     hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
-    assert acc.char_co2.value == 0
+    assert acc.char_level.value == 0
     assert acc.char_peak.value == 0
     assert acc.char_detected.value == 0
 
-    hass.states.async_set(entity_id, '1100')
+    value = 1100
+    assert value > THRESHOLD_CO2
+    hass.states.async_set(entity_id, str(value))
     await hass.async_block_till_done()
-    assert acc.char_co2.value == 1100
+    assert acc.char_level.value == 1100
     assert acc.char_peak.value == 1100
     assert acc.char_detected.value == 1
 
-    hass.states.async_set(entity_id, '800')
+    value = 800
+    assert value < THRESHOLD_CO2
+    hass.states.async_set(entity_id, str(value))
     await hass.async_block_till_done()
-    assert acc.char_co2.value == 800
+    assert acc.char_level.value == 800
     assert acc.char_peak.value == 1100
     assert acc.char_detected.value == 0
 

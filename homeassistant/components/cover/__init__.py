@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
 from homeassistant.helpers import intent
@@ -21,7 +22,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT,
     SERVICE_STOP_COVER_TILT, SERVICE_SET_COVER_TILT_POSITION, STATE_OPEN,
-    STATE_CLOSED, STATE_UNKNOWN, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
+    STATE_CLOSED, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,11 +35,27 @@ ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+# Refer to the cover dev docs for device class descriptions
+DEVICE_CLASS_AWNING = 'awning'
+DEVICE_CLASS_BLIND = 'blind'
+DEVICE_CLASS_CURTAIN = 'curtain'
+DEVICE_CLASS_DAMPER = 'damper'
+DEVICE_CLASS_DOOR = 'door'
+DEVICE_CLASS_GARAGE = 'garage'
+DEVICE_CLASS_SHADE = 'shade'
+DEVICE_CLASS_SHUTTER = 'shutter'
+DEVICE_CLASS_WINDOW = 'window'
 DEVICE_CLASSES = [
-    'window',        # Window control
-    'garage',        # Garage door control
+    DEVICE_CLASS_AWNING,
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_CURTAIN,
+    DEVICE_CLASS_DAMPER,
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHADE,
+    DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASS_WINDOW
 ]
-
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 SUPPORT_OPEN = 1
@@ -59,7 +76,7 @@ INTENT_OPEN_COVER = 'HassOpenCover'
 INTENT_CLOSE_COVER = 'HassCloseCover'
 
 COVER_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 COVER_SET_COVER_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
@@ -80,67 +97,9 @@ def is_closed(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_CLOSED)
 
 
-@bind_hass
-def open_cover(hass, entity_id=None):
-    """Open all or specified cover."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_OPEN_COVER, data)
-
-
-@bind_hass
-def close_cover(hass, entity_id=None):
-    """Close all or specified cover."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_CLOSE_COVER, data)
-
-
-@bind_hass
-def set_cover_position(hass, position, entity_id=None):
-    """Move to specific position all or specified cover."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_POSITION] = position
-    hass.services.call(DOMAIN, SERVICE_SET_COVER_POSITION, data)
-
-
-@bind_hass
-def stop_cover(hass, entity_id=None):
-    """Stop all or specified cover."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_STOP_COVER, data)
-
-
-@bind_hass
-def open_cover_tilt(hass, entity_id=None):
-    """Open all or specified cover tilt."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_OPEN_COVER_TILT, data)
-
-
-@bind_hass
-def close_cover_tilt(hass, entity_id=None):
-    """Close all or specified cover tilt."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_CLOSE_COVER_TILT, data)
-
-
-@bind_hass
-def set_cover_tilt_position(hass, tilt_position, entity_id=None):
-    """Move to specific tilt position all or specified cover."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_TILT_POSITION] = tilt_position
-    hass.services.call(DOMAIN, SERVICE_SET_COVER_TILT_POSITION, data)
-
-
-@bind_hass
-def stop_cover_tilt(hass, entity_id=None):
-    """Stop all or specified cover tilt."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_STOP_COVER_TILT, data)
-
-
 async def async_setup(hass, config):
     """Track states and offer events for covers."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_COVERS)
 
     await component.async_setup(config)
@@ -195,6 +154,16 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
 class CoverDevice(Entity):
     """Representation a cover."""
 
@@ -225,7 +194,7 @@ class CoverDevice(Entity):
         closed = self.is_closed
 
         if closed is None:
-            return STATE_UNKNOWN
+            return None
 
         return STATE_CLOSED if closed else STATE_OPEN
 

@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
     'homeassistant.bootstrap.conf_util.process_ha_config_upgrade', Mock())
 @patch('homeassistant.util.location.detect_location_info',
        Mock(return_value=None))
-@patch('homeassistant.bootstrap.async_register_signal_handling', Mock())
 @patch('os.path.isfile', Mock(return_value=True))
 @patch('os.access', Mock(return_value=True))
 @patch('homeassistant.bootstrap.async_enable_logging',
@@ -35,13 +34,12 @@ def test_from_config_file(hass):
     }
 
     with patch_yaml_files(files, True):
-        yield from bootstrap.async_from_config_file('config.yaml')
+        yield from bootstrap.async_from_config_file('config.yaml', hass)
 
     assert components == hass.config.components
 
 
 @patch('homeassistant.bootstrap.async_enable_logging', Mock())
-@patch('homeassistant.bootstrap.async_register_signal_handling', Mock())
 @asyncio.coroutine
 def test_home_assistant_core_config_validation(hass):
     """Test if we pass in wrong information for HA conf."""
@@ -105,3 +103,12 @@ async def test_async_from_config_file_not_mount_deps_folder(loop):
 
         await bootstrap.async_from_config_file('mock-path', hass)
         assert len(mock_mount.mock_calls) == 0
+
+
+async def test_load_hassio(hass):
+    """Test that we load Hass.io component."""
+    with patch.dict(os.environ, {}, clear=True):
+        assert bootstrap._get_components(hass, {}) == set()
+
+    with patch.dict(os.environ, {'HASSIO': '1'}):
+        assert bootstrap._get_components(hass, {}) == {'hassio'}

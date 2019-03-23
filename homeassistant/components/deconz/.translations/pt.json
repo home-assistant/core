@@ -25,9 +25,9 @@
                     "allow_clip_sensor": "Permitir a importa\u00e7\u00e3o de sensores virtuais",
                     "allow_deconz_groups": "Permitir a importa\u00e7\u00e3o de grupos deCONZ"
                 },
-                "title": "Op\u00e7\u00f5es extra de configura\u00e7\u00e3o para deCONZ"
+                "title": "Op\u00e7\u00f5es de configura\u00e7\u00e3o extra para deCONZ"
             }
         },
-        "title": "deCONZ"
+        "title": "Gateway Zigbee deCONZ"
     }
 }

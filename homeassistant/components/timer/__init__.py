@@ -1,23 +1,15 @@
-"""
-Timer component.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/timer/
-"""
-import logging
+"""Support for Timers."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
-from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
-
-from homeassistant.loader import bind_hass
+from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +27,9 @@ STATUS_PAUSED = 'paused'
 
 EVENT_TIMER_FINISHED = 'timer.finished'
 EVENT_TIMER_CANCELLED = 'timer.cancelled'
+EVENT_TIMER_STARTED = 'timer.started'
+EVENT_TIMER_RESTARTED = 'timer.restarted'
+EVENT_TIMER_PAUSED = 'timer.paused'
 
 SERVICE_START = 'start'
 SERVICE_PAUSE = 'pause'
@@ -42,83 +37,25 @@ SERVICE_CANCEL = 'cancel'
 SERVICE_FINISH = 'finish'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 SERVICE_SCHEMA_DURATION = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_DURATION,
                  default=timedelta(DEFAULT_DURATION)): cv.time_period,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        cv.slug: vol.Any({
+    DOMAIN: cv.schema_with_slug_keys(
+        vol.Any({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_DURATION, timedelta(DEFAULT_DURATION)):
                 cv.time_period,
         }, None)
-    })
+    )
 }, extra=vol.ALLOW_EXTRA)
-
-
-@bind_hass
-def start(hass, entity_id, duration):
-    """Start a timer."""
-    hass.add_job(async_start, hass, entity_id, {ATTR_ENTITY_ID: entity_id,
-                                                ATTR_DURATION: duration})
-
-
-@callback
-@bind_hass
-def async_start(hass, entity_id, duration):
-    """Start a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_START, {ATTR_ENTITY_ID: entity_id,
-                                ATTR_DURATION: duration}))
-
-
-@bind_hass
-def pause(hass, entity_id):
-    """Pause a timer."""
-    hass.add_job(async_pause, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_pause(hass, entity_id):
-    """Pause a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_PAUSE, {ATTR_ENTITY_ID: entity_id}))
-
-
-@bind_hass
-def cancel(hass, entity_id):
-    """Cancel a timer."""
-    hass.add_job(async_cancel, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_cancel(hass, entity_id):
-    """Cancel a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_CANCEL, {ATTR_ENTITY_ID: entity_id}))
-
-
-@bind_hass
-def finish(hass, entity_id):
-    """Finish a timer."""
-    hass.add_job(async_cancel, hass, entity_id)
-
-
-@callback
-@bind_hass
-def async_finish(hass, entity_id):
-    """Finish a timer."""
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_FINISH, {ATTR_ENTITY_ID: entity_id}))
 
 
 async def async_setup(hass, config):
@@ -157,7 +94,7 @@ async def async_setup(hass, config):
     return True
 
 
-class Timer(Entity):
+class Timer(RestoreEntity):
     """Representation of a timer."""
 
     def __init__(self, hass, object_id, name, icon, duration):
@@ -206,8 +143,7 @@ class Timer(Entity):
         if self._state is not None:
             return
 
-        restore_state = self._hass.helpers.restore_state
-        state = await restore_state.async_get_last_state(self.entity_id)
+        state = await self.async_get_last_state()
         self._state = state and state.state == state
 
     async def async_start(self, duration):
@@ -218,6 +154,10 @@ class Timer(Entity):
         newduration = None
         if duration:
             newduration = duration
+
+        event = EVENT_TIMER_STARTED
+        if self._state == STATUS_PAUSED:
+            event = EVENT_TIMER_RESTARTED
 
         self._state = STATUS_ACTIVE
         # pylint: disable=redefined-outer-name
@@ -231,6 +171,10 @@ class Timer(Entity):
             else:
                 self._remaining = self._duration
             self._end = start + self._duration
+
+        self._hass.bus.async_fire(event,
+                                  {"entity_id": self.entity_id})
+
         self._listener = async_track_point_in_utc_time(self._hass,
                                                        self.async_finished,
                                                        self._end)
@@ -246,6 +190,8 @@ class Timer(Entity):
         self._remaining = self._end - dt_util.utcnow()
         self._state = STATUS_PAUSED
         self._end = None
+        self._hass.bus.async_fire(EVENT_TIMER_PAUSED,
+                                  {"entity_id": self.entity_id})
         await self.async_update_ha_state()
 
     async def async_cancel(self):

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vum MQTT ass erlaabt"
+        },
+        "error": {
+            "cannot_connect": "Kann sech net mam Broker verbannen."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Entdeckung aktiv\u00e9ieren",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "description": "Gitt Verbindungs Informatioune vun \u00e4rem MQTT Broker an.",
+                "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Entdeckung aktiv\u00e9ieren"
+                },
+                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam MQTT broker ze verbannen dee vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
+                "title": "MQTT Broker via Hass.io add-on"
+            }
+        },
+        "title": "MQTT"
+    }
+}

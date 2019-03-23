@@ -6,11 +6,13 @@ https://home-assistant.io/components/tts.baidu/
 """
 
 import logging
+
 import voluptuous as vol
 
-from homeassistant.components.tts import Provider, CONF_LANG, PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_LANG, PLATFORM_SCHEMA, Provider
 
 REQUIREMENTS = ["baidu-aip==1.6.6"]
 

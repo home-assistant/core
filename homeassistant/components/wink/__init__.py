@@ -1,10 +1,4 @@
-"""
-Support for Wink hubs.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/wink/
-"""
-import asyncio
+"""Support for Wink hubs."""
 from datetime import timedelta
 import json
 import logging
@@ -26,7 +20,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['python-wink==1.10.1', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.10.3', 'pubnubsub-handler==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +51,7 @@ USER_AGENT = "Manufacturer/Home-Assistant{} python/3 Wink/3".format(
 
 DEFAULT_CONFIG = {
     'client_id': 'CLIENT_ID_HERE',
-    'client_secret': 'CLIENT_SECRET_HERE'
+    'client_secret': 'CLIENT_SECRET_HERE',
 }
 
 SERVICE_ADD_NEW_DEVICES = 'pull_newly_added_devices_from_wink'
@@ -116,42 +110,42 @@ CONFIG_SCHEMA = vol.Schema({
 
 RENAME_DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_NAME): cv.string
+    vol.Required(ATTR_NAME): cv.string,
 }, extra=vol.ALLOW_EXTRA)
 
 DELETE_DEVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 }, extra=vol.ALLOW_EXTRA)
 
 SET_PAIRING_MODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_HUB_NAME): cv.string,
     vol.Required(ATTR_PAIRING_MODE): cv.string,
-    vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string
+    vol.Optional(ATTR_KIDDE_RADIO_CODE): cv.string,
 }, extra=vol.ALLOW_EXTRA)
 
 SET_VOLUME_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VOLUME): vol.In(VOLUMES)
+    vol.Required(ATTR_VOLUME): vol.In(VOLUMES),
 })
 
 SET_SIREN_TONE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TONE): vol.In(TONES)
+    vol.Required(ATTR_TONE): vol.In(TONES),
 })
 
 SET_CHIME_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TONE): vol.In(CHIME_TONES)
+    vol.Required(ATTR_TONE): vol.In(CHIME_TONES),
 })
 
 SET_AUTO_SHUTOFF_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES)
+    vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES),
 })
 
 SET_STROBE_ENABLED_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_ENABLED): cv.boolean
+    vol.Required(ATTR_ENABLED): cv.boolean,
 })
 
 ENABLED_SIREN_SCHEMA = vol.Schema({
@@ -167,18 +161,18 @@ DIAL_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MAX_POSITION): cv.positive_int,
     vol.Optional(ATTR_ROTATION): vol.In(ROTATIONS),
     vol.Optional(ATTR_SCALE): vol.In(SCALES),
-    vol.Optional(ATTR_TICKS): cv.positive_int
+    vol.Optional(ATTR_TICKS): cv.positive_int,
 })
 
 DIAL_STATE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_VALUE): vol.Coerce(int),
-    vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string)
+    vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string),
 })
 
 WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
-    'fan', 'alarm_control_panel', 'scene'
+    'fan', 'alarm_control_panel', 'scene', 'water_heater'
 ]
 
 WINK_HUBS = []
@@ -359,7 +353,9 @@ def setup(hass, config):
         time.sleep(1)
         pywink.set_user_agent(USER_AGENT)
         _temp_response = pywink.wink_api_fetch()
-        _LOGGER.debug(str(json.dumps(_temp_response)))
+        _LOGGER.debug("%s", _temp_response)
+        _temp_response = pywink.post_session()
+        _LOGGER.debug("%s", _temp_response)
 
     # Call the Wink API every hour to keep PubNub updates flowing
     track_time_interval(hass, keep_alive_call, timedelta(minutes=60))
@@ -689,6 +685,15 @@ class WinkDevice(Entity):
         return self.wink.name()
 
     @property
+    def unique_id(self):
+        """Return the unique id of the Wink device."""
+        if hasattr(self.wink, 'capability') and \
+                self.wink.capability() is not None:
+            return "{}_{}".format(self.wink.object_id(),
+                                  self.wink.capability())
+        return self.wink.object_id()
+
+    @property
     def available(self):
         """Return true if connection == True."""
         return self.wink.available()
@@ -763,8 +768,7 @@ class WinkDevice(Entity):
 class WinkSirenDevice(WinkDevice):
     """Representation of a Wink siren device."""
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['switch'].append(self)
 
@@ -824,8 +828,7 @@ class WinkNimbusDialDevice(WinkDevice):
         super().__init__(dial, hass)
         self.parent = nimbus
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['sensor'].append(self)
 

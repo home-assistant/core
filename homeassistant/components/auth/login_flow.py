@@ -226,8 +226,9 @@ class LoginFlowResourceView(HomeAssistantView):
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             # @log_invalid_auth does not work here since it returns HTTP 200
             # need manually log failed login attempts
-            if result['errors'] is not None and \
-                    result['errors'].get('base') == 'invalid_auth':
+            if (result.get('errors') is not None and
+                    result['errors'].get('base') in ['invalid_auth',
+                                                     'invalid_code']):
                 await process_wrong_login(request)
             return self.json(_prepare_result_json(result))
 

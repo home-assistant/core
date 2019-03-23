@@ -4,14 +4,15 @@ Support for the Microsoft Cognitive Services text-to-speech service.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tts.microsoft/
 """
-import logging
 from http.client import HTTPException
+import logging
 
 import voluptuous as vol
 
-from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
-from homeassistant.const import CONF_TYPE, CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_LANG, PLATFORM_SCHEMA, Provider
 
 CONF_GENDER = 'gender'
 CONF_OUTPUT = 'output'
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORTED_LANGUAGES = [
     'ar-eg', 'ar-sa', 'ca-es', 'cs-cz', 'da-dk', 'de-at', 'de-ch', 'de-de',
     'el-gr', 'en-au', 'en-ca', 'en-gb', 'en-ie', 'en-in', 'en-us', 'es-es',
-    'en-mx', 'fi-fi', 'fr-ca', 'fr-ch', 'fr-fr', 'he-il', 'hi-in', 'hu-hu',
+    'es-mx', 'fi-fi', 'fr-ca', 'fr-ch', 'fr-fr', 'he-il', 'hi-in', 'hu-hu',
     'id-id', 'it-it', 'ja-jp', 'ko-kr', 'nb-no', 'nl-nl', 'pl-pl', 'pt-br',
     'pt-pt', 'ro-ro', 'ru-ru', 'sk-sk', 'sv-se', 'th-th', 'tr-tr', 'zh-cn',
     'zh-hk', 'zh-tw',

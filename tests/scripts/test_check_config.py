@@ -80,45 +80,6 @@ class TestCheckConfig(unittest.TestCase):
             assert len(res['yaml_files']) == 1
 
     @patch('os.path.isfile', return_value=True)
-    def test_config_component_platform_fail_validation(self, isfile_patch):
-        """Test errors if component & platform not found."""
-        files = {
-            YAML_CONFIG_FILE: BASE_CONFIG + 'http:\n  password: err123',
-        }
-        with patch_yaml_files(files):
-            res = check_config.check(get_test_config_dir())
-            assert res['components'].keys() == {'homeassistant'}
-            assert res['except'].keys() == {'http'}
-            assert res['except']['http'][1] == {'http': {'password': 'err123'}}
-            assert res['secret_cache'] == {}
-            assert res['secrets'] == {}
-            assert len(res['yaml_files']) == 1
-
-        files = {
-            YAML_CONFIG_FILE: (BASE_CONFIG + 'mqtt:\n\n'
-                               'light:\n  platform: mqtt_json'),
-        }
-        with patch_yaml_files(files):
-            res = check_config.check(get_test_config_dir())
-            assert res['components'].keys() == {
-                'homeassistant', 'light', 'mqtt'}
-            assert res['components']['light'] == []
-            assert res['components']['mqtt'] == {
-                'keepalive': 60,
-                'port': 1883,
-                'protocol': '3.1.1',
-                'discovery': False,
-                'discovery_prefix': 'homeassistant',
-                'tls_version': 'auto',
-            }
-            assert res['except'].keys() == {'light.mqtt_json'}
-            assert res['except']['light.mqtt_json'][1] == {
-                'platform': 'mqtt_json'}
-            assert res['secret_cache'] == {}
-            assert res['secrets'] == {}
-            assert len(res['yaml_files']) == 1
-
-    @patch('os.path.isfile', return_value=True)
     def test_component_platform_not_found(self, isfile_patch):
         """Test errors if component or platform not found."""
         # Make sure they don't exist

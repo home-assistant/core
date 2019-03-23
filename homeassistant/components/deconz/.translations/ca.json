@@ -12,9 +12,9 @@
             "init": {
                 "data": {
                     "host": "Amfitri\u00f3",
-                    "port": "Port (predeterminat: '80')"
+                    "port": "Port"
                 },
-                "title": "Definiu la passarel\u00b7la deCONZ"
+                "title": "Definici\u00f3 de la passarel\u00b7la deCONZ"
             },
             "link": {
                 "description": "Desbloqueja la teva passarel\u00b7la d'enlla\u00e7 deCONZ per a registrar-te amb Home Assistant.\n\n1. V\u00e9s a la configuraci\u00f3 del sistema deCONZ\n2. Prem el bot\u00f3 \"Desbloquejar passarel\u00b7la\"",
@@ -23,11 +23,11 @@
             "options": {
                 "data": {
                     "allow_clip_sensor": "Permet la importaci\u00f3 de sensors virtuals",
-                    "allow_deconz_groups": "Permet la importaci\u00f3 de grups deCONZ"
+                    "allow_deconz_groups": "Permetre la importaci\u00f3 de grups deCONZ"
                 },
                 "title": "Opcions de configuraci\u00f3 addicionals per deCONZ"
             }
         },
-        "title": "deCONZ"
+        "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee"
     }
 }

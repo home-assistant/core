@@ -65,56 +65,27 @@ DEFAULT_CORE_CONFIG = (
     (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
 )  # type: Tuple[Tuple[str, Any, Any, Optional[str]], ...]
 DEFAULT_CONFIG = """
-# Show links to resources in log and frontend
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+# Show the introduction message on startup.
 introduction:
-
-# Enables the frontend
-frontend:
-
-# Enables configuration UI
-config:
 
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 # http:
 #   base_url: example.duckdns.org:8123
 
-# Checks for available updates
-# Note: This component will send some information about your system to
-# the developers to assist with development of Home Assistant.
-# For more information, please see:
-# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
-updater:
-  # Optional, allows Home Assistant developers to focus on popular components.
-  # include_used_components: true
-
 # Discover some devices automatically
 discovery:
 
-# Allows you to issue voice commands from the frontend in enabled browsers
-conversation:
-
-# Enables support for tracking state changes over time
-history:
-
-# View all events in a logbook
-logbook:
-
-# Enables a map showing the location of tracked devices
-map:
-
-# Track the sun
-sun:
-
-# Weather prediction
+# Sensors
 sensor:
+  # Weather prediction
   - platform: yr
 
 # Text to speech
 tts:
   - platform: google
-
-# Cloud
-cloud:
 
 group: !include groups.yaml
 automation: !include automations.yaml
@@ -169,10 +140,9 @@ def _no_duplicate_auth_mfa_module(configs: Sequence[Dict[str, Any]]) \
     return configs
 
 
-PACKAGES_CONFIG_SCHEMA = vol.Schema({
-    cv.slug: vol.Schema(  # Package names are slugs
-        {cv.slug: vol.Any(dict, list, None)})  # Only slugs for component names
-})
+PACKAGES_CONFIG_SCHEMA = cv.schema_with_slug_keys(  # Package names are slugs
+    vol.Schema({cv.string: vol.Any(dict, list, None)})  # Component config
+)
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -331,7 +301,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
     """Load YAML from a Home Assistant configuration file.
 
     This function allow a component inside the asyncio loop to reload its
-    configuration by itself.
+    configuration by itself. Include package merge.
 
     This method is a coroutine.
     """
@@ -340,7 +310,10 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
         if path is None:
             raise HomeAssistantError(
                 "Config file not found in: {}".format(hass.config.config_dir))
-        return load_yaml_config_file(path)
+        config = load_yaml_config_file(path)
+        core_config = config.get(CONF_CORE, {})
+        merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
+        return config
 
     return await hass.async_add_executor_job(_load_hass_yaml_config)
 
@@ -433,18 +406,23 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
     """
     message = "Invalid config for [{}]: ".format(domain)
     if 'extra keys not allowed' in ex.error_message:
-        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
-                   .format(ex.path[-1], domain, domain,
-                           '->'.join(str(m) for m in ex.path))
+        message += '[{option}] is an invalid option for [{domain}]. ' \
+            'Check: {domain}->{path}.'.format(
+                option=ex.path[-1], domain=domain,
+                path='->'.join(str(m) for m in ex.path))
     else:
         message += '{}.'.format(humanize_error(config, ex))
 
-    domain_config = config.get(domain, config)
+    try:
+        domain_config = config.get(domain, config)
+    except AttributeError:
+        domain_config = config
+
     message += " (See {}, line {}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 
-    if domain != 'homeassistant':
+    if domain != CONF_CORE:
         message += ('Please check the docs at '
                     'https://home-assistant.io/components/{}/'.format(domain))
 
@@ -453,8 +431,8 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
 async def async_process_ha_core_config(
         hass: HomeAssistant, config: Dict,
-        has_api_password: bool = False,
-        has_trusted_networks: bool = False) -> None:
+        api_password: Optional[str] = None,
+        trusted_networks: Optional[Any] = None) -> None:
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -469,13 +447,19 @@ async def async_process_ha_core_config(
             auth_conf = [
                 {'type': 'homeassistant'}
             ]
-            if has_api_password:
-                auth_conf.append({'type': 'legacy_api_password'})
-            if has_trusted_networks:
-                auth_conf.append({'type': 'trusted_networks'})
+            if api_password:
+                auth_conf.append({
+                    'type': 'legacy_api_password',
+                    'api_password': api_password,
+                })
+            if trusted_networks:
+                auth_conf.append({
+                    'type': 'trusted_networks',
+                    'trusted_networks': trusted_networks,
+                })
 
         mfa_conf = config.get(CONF_AUTH_MFA_MODULES, [
-            {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'}
+            {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'},
         ])
 
         setattr(hass, 'auth', await auth.auth_manager_from_config(
@@ -622,7 +606,7 @@ def _identify_config_schema(module: ModuleType) -> \
     except (AttributeError, KeyError):
         return None, None
     t_schema = str(schema)
-    if t_schema.startswith('{'):
+    if t_schema.startswith('{') or 'schema_with_slug_keys' in t_schema:
         return ('dict', schema)
     if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
@@ -662,7 +646,10 @@ def merge_packages_config(hass: HomeAssistant, config: Dict, packages: Dict,
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
-            component = get_component(hass, comp_name)
+            # If component name is given with a trailing description, remove it
+            # when looking for component
+            domain = comp_name.split(' ')[0]
+            component = get_component(hass, domain)
 
             if component is None:
                 _log_pkg_error(pack_name, comp_name, config, "does not exist")
@@ -735,15 +722,21 @@ def async_process_component_config(
             async_log_exception(ex, domain, config, hass)
             return None
 
-    elif hasattr(component, 'PLATFORM_SCHEMA'):
+    elif (hasattr(component, 'PLATFORM_SCHEMA') or
+          hasattr(component, 'PLATFORM_SCHEMA_BASE')):
         platforms = []
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                p_validated = component.PLATFORM_SCHEMA(  # type: ignore
-                    p_config)
+                if hasattr(component, 'PLATFORM_SCHEMA_BASE'):
+                    p_validated = \
+                        component.PLATFORM_SCHEMA_BASE(  # type: ignore
+                            p_config)
+                else:
+                    p_validated = component.PLATFORM_SCHEMA(  # type: ignore
+                        p_config)
             except vol.Invalid as ex:
-                async_log_exception(ex, domain, config, hass)
+                async_log_exception(ex, domain, p_config, hass)
                 continue
 
             # Not all platform components follow same pattern for platforms
@@ -763,10 +756,10 @@ def async_process_component_config(
                 # pylint: disable=no-member
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                        p_validated)
+                        p_config)
                 except vol.Invalid as ex:
                     async_log_exception(ex, '{}.{}'.format(domain, p_name),
-                                        p_validated, hass)
+                                        p_config, hass)
                     continue
 
             platforms.append(p_validated)

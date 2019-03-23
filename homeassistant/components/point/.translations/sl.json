@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Nastavite lahko samo en ra\u010dun Point.",
+            "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
+            "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
+            "external_setup": "To\u010dka uspe\u0161no konfigurirana iz drugega toka.",
+            "no_flows": "Preden lahko preverite pristnost, morate konfigurirati Point. [Preberite navodila](https://www.home-assistant.io/components/point/)."
+        },
+        "create_entry": {
+            "default": "Uspe\u0161no overjen z Minut-om za va\u0161e Point naprave"
+        },
+        "error": {
+            "follow_link": "Prosimo, sledite povezavi in \u200b\u200bpreverite pristnost, preden pritisnete Po\u0161lji",
+            "no_token": "Ni potrjeno z Minutom"
+        },
+        "step": {
+            "auth": {
+                "description": "Prosimo, sledite spodnji povezavi in <b> Sprejmite </b> dostop do va\u0161ega Minut ra\u010duna, nato se vrnite in pritisnite <b> Po\u0161lji </b> spodaj. \n\n [Povezava] ( {authorization_url} )",
+                "title": "To\u010dka za overovitev"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Ponudnik"
+                },
+                "description": "Izberite prek katerega ponudnika overjanja, ki ga \u017eelite overiti z Point-om.",
+                "title": "Ponudnik za preverjanje pristnosti"
+            }
+        },
+        "title": "Minut Point"
+    }
+}

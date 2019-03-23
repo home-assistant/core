@@ -7,6 +7,8 @@ import attr
 
 from homeassistant.util import dt as dt_util
 
+from . import permissions as perm_mdl
+from .const import GROUP_ID_ADMIN
 from .util import generate_secret
 
 TOKEN_TYPE_NORMAL = 'normal'
@@ -15,24 +17,75 @@ TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = 'long_lived_access_token'
 
 
 @attr.s(slots=True)
+class Group:
+    """A group."""
+
+    name = attr.ib(type=str)  # type: Optional[str]
+    policy = attr.ib(type=perm_mdl.PolicyType)
+    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
+    system_generated = attr.ib(type=bool, default=False)
+
+
+@attr.s(slots=True)
 class User:
     """A user."""
 
     name = attr.ib(type=str)  # type: Optional[str]
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    perm_lookup = attr.ib(
+        type=perm_mdl.PermissionLookup, cmp=False,
+    )  # type: perm_mdl.PermissionLookup
+    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)
     system_generated = attr.ib(type=bool, default=False)
 
+    groups = attr.ib(type=List, factory=list, cmp=False)  # type: List[Group]
+
     # List of credentials of a user.
     credentials = attr.ib(
-        type=list, default=attr.Factory(list), cmp=False
+        type=list, factory=list, cmp=False
     )  # type: List[Credentials]
 
     # Tokens associated with a user.
     refresh_tokens = attr.ib(
-        type=dict, default=attr.Factory(dict), cmp=False
+        type=dict, factory=dict, cmp=False
     )  # type: Dict[str, RefreshToken]
+
+    _permissions = attr.ib(
+        type=Optional[perm_mdl.PolicyPermissions],
+        init=False,
+        cmp=False,
+        default=None,
+    )
+
+    @property
+    def permissions(self) -> perm_mdl.AbstractPermissions:
+        """Return permissions object for user."""
+        if self.is_owner:
+            return perm_mdl.OwnerPermissions
+
+        if self._permissions is not None:
+            return self._permissions
+
+        self._permissions = perm_mdl.PolicyPermissions(
+            perm_mdl.merge_policies([
+                group.policy for group in self.groups]),
+            self.perm_lookup)
+
+        return self._permissions
+
+    @property
+    def is_admin(self) -> bool:
+        """Return if user is part of the admin group."""
+        if self.is_owner:
+            return True
+
+        return self.is_active and any(
+            gr.id == GROUP_ID_ADMIN for gr in self.groups)
+
+    def invalidate_permission_cache(self) -> None:
+        """Invalidate permission cache."""
+        self._permissions = None
 
 
 @attr.s(slots=True)
@@ -48,12 +101,10 @@ class RefreshToken:
                          validator=attr.validators.in_((
                              TOKEN_TYPE_NORMAL, TOKEN_TYPE_SYSTEM,
                              TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN)))
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
-    created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
-    token = attr.ib(type=str,
-                    default=attr.Factory(lambda: generate_secret(64)))
-    jwt_key = attr.ib(type=str,
-                      default=attr.Factory(lambda: generate_secret(64)))
+    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
+    created_at = attr.ib(type=datetime, factory=dt_util.utcnow)
+    token = attr.ib(type=str, factory=lambda: generate_secret(64))
+    jwt_key = attr.ib(type=str, factory=lambda: generate_secret(64))
 
     last_used_at = attr.ib(type=Optional[datetime], default=None)
     last_used_ip = attr.ib(type=Optional[str], default=None)
@@ -69,7 +120,7 @@ class Credentials:
     # Allow the auth provider to store data to represent their auth.
     data = attr.ib(type=dict)
 
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     is_new = attr.ib(type=bool, default=True)
 
 

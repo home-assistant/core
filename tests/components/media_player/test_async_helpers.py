@@ -133,43 +133,43 @@ class TestAsyncMediaPlayer(unittest.TestCase):
 
     def test_volume_up(self):
         """Test the volume_up helper function."""
-        self.assertEqual(self.player.volume_level, 0)
+        assert self.player.volume_level == 0
         run_coroutine_threadsafe(
             self.player.async_set_volume_level(0.5), self.hass.loop).result()
-        self.assertEqual(self.player.volume_level, 0.5)
+        assert self.player.volume_level == 0.5
         run_coroutine_threadsafe(
             self.player.async_volume_up(), self.hass.loop).result()
-        self.assertEqual(self.player.volume_level, 0.6)
+        assert self.player.volume_level == 0.6
 
     def test_volume_down(self):
         """Test the volume_down helper function."""
-        self.assertEqual(self.player.volume_level, 0)
+        assert self.player.volume_level == 0
         run_coroutine_threadsafe(
             self.player.async_set_volume_level(0.5), self.hass.loop).result()
-        self.assertEqual(self.player.volume_level, 0.5)
+        assert self.player.volume_level == 0.5
         run_coroutine_threadsafe(
             self.player.async_volume_down(), self.hass.loop).result()
-        self.assertEqual(self.player.volume_level, 0.4)
+        assert self.player.volume_level == 0.4
 
     def test_media_play_pause(self):
         """Test the media_play_pause helper function."""
-        self.assertEqual(self.player.state, STATE_OFF)
+        assert self.player.state == STATE_OFF
         run_coroutine_threadsafe(
             self.player.async_media_play_pause(), self.hass.loop).result()
-        self.assertEqual(self.player.state, STATE_PLAYING)
+        assert self.player.state == STATE_PLAYING
         run_coroutine_threadsafe(
             self.player.async_media_play_pause(), self.hass.loop).result()
-        self.assertEqual(self.player.state, STATE_PAUSED)
+        assert self.player.state == STATE_PAUSED
 
     def test_toggle(self):
         """Test the toggle helper function."""
-        self.assertEqual(self.player.state, STATE_OFF)
+        assert self.player.state == STATE_OFF
         run_coroutine_threadsafe(
             self.player.async_toggle(), self.hass.loop).result()
-        self.assertEqual(self.player.state, STATE_ON)
+        assert self.player.state == STATE_ON
         run_coroutine_threadsafe(
             self.player.async_toggle(), self.hass.loop).result()
-        self.assertEqual(self.player.state, STATE_OFF)
+        assert self.player.state == STATE_OFF
 
 
 class TestSyncMediaPlayer(unittest.TestCase):
@@ -186,38 +186,38 @@ class TestSyncMediaPlayer(unittest.TestCase):
 
     def test_volume_up(self):
         """Test the volume_up helper function."""
-        self.assertEqual(self.player.volume_level, 0)
+        assert self.player.volume_level == 0
         self.player.set_volume_level(0.5)
-        self.assertEqual(self.player.volume_level, 0.5)
+        assert self.player.volume_level == 0.5
         run_coroutine_threadsafe(
             self.player.async_volume_up(), self.hass.loop).result()
-        self.assertEqual(self.player.volume_level, 0.7)
+        assert self.player.volume_level == 0.7
 
     def test_volume_down(self):
         """Test the volume_down helper function."""
-        self.assertEqual(self.player.volume_level, 0)
+        assert self.player.volume_level == 0
         self.player.set_volume_level(0.5)
-        self.assertEqual(self.player.volume_level, 0.5)
+        assert self.player.volume_level == 0.5
         run_coroutine_threadsafe(
             self.player.async_volume_down(), self.hass.loop).result()
-        self.assertEqual(self.player.volume_level, 0.3)
+        assert self.player.volume_level == 0.3
 
     def test_media_play_pause(self):
         """Test the media_play_pause helper function."""
-        self.assertEqual(self.player.state, STATE_OFF)
+        assert self.player.state == STATE_OFF
         run_coroutine_threadsafe(
             self.player.async_media_play_pause(), self.hass.loop).result()
-        self.assertEqual(self.player.state, STATE_PLAYING)
+        assert self.player.state == STATE_PLAYING
         run_coroutine_threadsafe(
             self.player.async_media_play_pause(), self.hass.loop).result()
-        self.assertEqual(self.player.state, STATE_PAUSED)
+        assert self.player.state == STATE_PAUSED
 
     def test_toggle(self):
         """Test the toggle helper function."""
-        self.assertEqual(self.player.state, STATE_OFF)
+        assert self.player.state == STATE_OFF
         run_coroutine_threadsafe(
             self.player.async_toggle(), self.hass.loop).result()
-        self.assertEqual(self.player.state, STATE_ON)
+        assert self.player.state == STATE_ON
         run_coroutine_threadsafe(
             self.player.async_toggle(), self.hass.loop).result()
-        self.assertEqual(self.player.state, STATE_OFF)
+        assert self.player.state == STATE_OFF

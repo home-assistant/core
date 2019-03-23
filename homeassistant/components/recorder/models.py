@@ -17,7 +17,7 @@ from homeassistant.helpers.json import JSONEncoder
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,16 +34,20 @@ class Events(Base):  # type: ignore
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
+    # context_parent_id = Column(String(36), index=True)
 
     @staticmethod
     def from_event(event):
         """Create an event database object from a native event."""
-        return Events(event_type=event.event_type,
-                      event_data=json.dumps(event.data, cls=JSONEncoder),
-                      origin=str(event.origin),
-                      time_fired=event.time_fired,
-                      context_id=event.context.id,
-                      context_user_id=event.context.user_id)
+        return Events(
+            event_type=event.event_type,
+            event_data=json.dumps(event.data, cls=JSONEncoder),
+            origin=str(event.origin),
+            time_fired=event.time_fired,
+            context_id=event.context.id,
+            context_user_id=event.context.user_id,
+            # context_parent_id=event.context.parent_id,
+        )
 
     def to_native(self):
         """Convert to a natve HA Event."""
@@ -71,7 +75,7 @@ class States(Base):   # type: ignore
     __tablename__ = 'states'
     state_id = Column(Integer, primary_key=True)
     domain = Column(String(64))
-    entity_id = Column(String(255))
+    entity_id = Column(String(255), index=True)
     state = Column(String(255))
     attributes = Column(Text)
     event_id = Column(Integer, ForeignKey('events.event_id'), index=True)
@@ -81,12 +85,14 @@ class States(Base):   # type: ignore
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
+    # context_parent_id = Column(String(36), index=True)
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index(
-            'ix_states_entity_id_last_updated', 'entity_id', 'last_updated'),)
+            'ix_states_entity_id_last_updated', 'entity_id', 'last_updated'),
+    )
 
     @staticmethod
     def from_event(event):
@@ -98,6 +104,7 @@ class States(Base):   # type: ignore
             entity_id=entity_id,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
+            # context_parent_id=event.context.parent_id,
         )
 
         # State got deleted
@@ -130,6 +137,9 @@ class States(Base):   # type: ignore
                 _process_timestamp(self.last_changed),
                 _process_timestamp(self.last_updated),
                 context=context,
+                # Temp, because database can still store invalid entity IDs
+                # Remove with 1.0 or in 2020.
+                temp_invalid_id_bypass=True
             )
         except ValueError:
             # When json.loads fails

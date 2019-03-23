@@ -676,3 +676,99 @@ async def test_entity_registry_updates_invalid_entity_id(hass):
     assert hass.states.get('test_domain.world') is not None
     assert hass.states.get('invalid_entity_id') is None
     assert hass.states.get('diff_domain.world') is None
+
+
+async def test_device_info_called(hass):
+    """Test device info is forwarded correctly."""
+    registry = await hass.helpers.device_registry.async_get_registry()
+    hub = registry.async_get_or_create(
+        config_entry_id='123',
+        connections=set(),
+        identifiers={('hue', 'hub-id')},
+        manufacturer='manufacturer', model='hub'
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([
+            # Invalid device info
+            MockEntity(unique_id='abcd', device_info={}),
+            # Valid device info
+            MockEntity(unique_id='qwer', device_info={
+                'identifiers': {('hue', '1234')},
+                'connections': {('mac', 'abcd')},
+                'manufacturer': 'test-manuf',
+                'model': 'test-model',
+                'name': 'test-name',
+                'sw_version': 'test-sw',
+                'via_hub': ('hue', 'hub-id'),
+            }),
+        ])
+        return True
+
+    platform = MockPlatform(
+        async_setup_entry=async_setup_entry
+    )
+    config_entry = MockConfigEntry(entry_id='super-mock-id')
+    entity_platform = MockEntityPlatform(
+        hass,
+        platform_name=config_entry.domain,
+        platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 2
+
+    device = registry.async_get_device({('hue', '1234')}, set())
+    assert device is not None
+    assert device.identifiers == {('hue', '1234')}
+    assert device.connections == {('mac', 'abcd')}
+    assert device.manufacturer == 'test-manuf'
+    assert device.model == 'test-model'
+    assert device.name == 'test-name'
+    assert device.sw_version == 'test-sw'
+    assert device.hub_device_id == hub.id
+
+
+async def test_device_info_not_overrides(hass):
+    """Test device info is forwarded correctly."""
+    registry = await hass.helpers.device_registry.async_get_registry()
+    device = registry.async_get_or_create(
+        config_entry_id='bla',
+        connections={('mac', 'abcd')},
+        manufacturer='test-manufacturer',
+        model='test-model'
+    )
+
+    assert device.manufacturer == 'test-manufacturer'
+    assert device.model == 'test-model'
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([
+            MockEntity(unique_id='qwer', device_info={
+                'connections': {('mac', 'abcd')},
+            }),
+        ])
+        return True
+
+    platform = MockPlatform(
+        async_setup_entry=async_setup_entry
+    )
+    config_entry = MockConfigEntry(entry_id='super-mock-id')
+    entity_platform = MockEntityPlatform(
+        hass,
+        platform_name=config_entry.domain,
+        platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    device2 = registry.async_get_device(set(), {('mac', 'abcd')})
+    assert device2 is not None
+    assert device.id == device2.id
+    assert device2.manufacturer == 'test-manufacturer'
+    assert device2.model == 'test-model'

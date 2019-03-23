@@ -1,14 +1,18 @@
 """Service calling related helpers."""
 import asyncio
+from functools import wraps
 import logging
 from os import path
+from typing import Callable
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.auth.permissions.const import POLICY_CONTROL
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ATTR_AREA_ID)
 import homeassistant.core as ha
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.exceptions import TemplateError, Unauthorized, UnknownUser
+from homeassistant.helpers import template, typing
 from homeassistant.loader import get_component, bind_hass
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
@@ -54,9 +58,13 @@ async def async_call_from_config(hass, config, blocking=False, variables=None,
                 variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
+            if blocking:
+                raise
             _LOGGER.error('Error rendering service name template: %s', ex)
             return
-        except vol.Invalid as ex:
+        except vol.Invalid:
+            if blocking:
+                raise
             _LOGGER.error('Template rendered invalid service: %s',
                           domain_service)
             return
@@ -85,29 +93,63 @@ def extract_entity_ids(hass, service_call, expand_group=True):
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
+    """
+    return run_coroutine_threadsafe(
+        async_extract_entity_ids(hass, service_call, expand_group), hass.loop
+    ).result()
+
+
+@bind_hass
+async def async_extract_entity_ids(hass, service_call, expand_group=True):
+    """Extract a list of entity ids from a service call.
+
+    Will convert group entity ids to the entity ids it represents.
 
     Async friendly.
     """
-    if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
+    entity_ids = service_call.data.get(ATTR_ENTITY_ID)
+    area_ids = service_call.data.get(ATTR_AREA_ID)
+
+    if not entity_ids and not area_ids:
         return []
 
-    group = hass.components.group
+    extracted = set()
 
-    # Entity ID attr can be a list or a string
-    service_ent_id = service_call.data[ATTR_ENTITY_ID]
+    if entity_ids:
+        # Entity ID attr can be a list or a string
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
 
-    if expand_group:
+        if expand_group:
+            entity_ids = \
+                hass.components.group.expand_entity_ids(entity_ids)
 
-        if isinstance(service_ent_id, str):
-            return group.expand_entity_ids([service_ent_id])
+        extracted.update(entity_ids)
 
-        return [ent_id for ent_id in
-                group.expand_entity_ids(service_ent_id)]
+    if area_ids:
+        if isinstance(area_ids, str):
+            area_ids = [area_ids]
 
-    if isinstance(service_ent_id, str):
-        return [service_ent_id]
+        dev_reg, ent_reg = await asyncio.gather(
+            hass.helpers.device_registry.async_get_registry(),
+            hass.helpers.entity_registry.async_get_registry(),
+        )
+        devices = [
+            device
+            for area_id in area_ids
+            for device in
+            hass.helpers.device_registry.async_entries_for_area(
+                dev_reg, area_id)
+        ]
+        extracted.update(
+            entry.entity_id
+            for device in devices
+            for entry in
+            hass.helpers.entity_registry.async_entries_for_device(
+                ent_reg, device.id)
+        )
 
-    return service_ent_id
+    return extracted
 
 
 @bind_hass
@@ -182,32 +224,94 @@ async def async_get_all_descriptions(hass):
 
 
 @bind_hass
-async def entity_service_call(hass, platforms, func, call):
+async def entity_service_call(hass, platforms, func, call, service_name=''):
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
     """
-    tasks = []
-    all_entities = ATTR_ENTITY_ID not in call.data
-    if not all_entities:
-        entity_ids = set(
-            extract_entity_ids(hass, call, True))
+    if call.context.user_id:
+        user = await hass.auth.async_get_user(call.context.user_id)
+        if user is None:
+            raise UnknownUser(context=call.context)
+        entity_perms = user.permissions.check_entity
+    else:
+        entity_perms = None
 
+    # Are we trying to target all entities
+    if ATTR_ENTITY_ID in call.data:
+        target_all_entities = call.data[ATTR_ENTITY_ID] == ENTITY_MATCH_ALL
+    else:
+        # Remove the service_name parameter along with this warning
+        _LOGGER.warning(
+            'Not passing an entity ID to a service to target all '
+            'entities is deprecated. Update your call to %s to be '
+            'instead: entity_id: %s', service_name, ENTITY_MATCH_ALL)
+        target_all_entities = True
+
+    if not target_all_entities:
+        # A set of entities we're trying to target.
+        entity_ids = await async_extract_entity_ids(hass, call, True)
+
+    # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
         data = {key: val for key, val in call.data.items()
                 if key != ATTR_ENTITY_ID}
+    # If the service function is not a string, we pass the service call
     else:
         data = call
 
+    # Check the permissions
+
+    # A list with for each platform in platforms a list of entities to call
+    # the service on.
+    platforms_entities = []
+
+    if entity_perms is None:
+        for platform in platforms:
+            if target_all_entities:
+                platforms_entities.append(list(platform.entities.values()))
+            else:
+                platforms_entities.append([
+                    entity for entity in platform.entities.values()
+                    if entity.entity_id in entity_ids
+                ])
+
+    elif target_all_entities:
+        # If we target all entities, we will select all entities the user
+        # is allowed to control.
+        for platform in platforms:
+            platforms_entities.append([
+                entity for entity in platform.entities.values()
+                if entity_perms(entity.entity_id, POLICY_CONTROL)])
+
+    else:
+        for platform in platforms:
+            platform_entities = []
+            for entity in platform.entities.values():
+                if entity.entity_id not in entity_ids:
+                    continue
+
+                if not entity_perms(entity.entity_id, POLICY_CONTROL):
+                    raise Unauthorized(
+                        context=call.context,
+                        entity_id=entity.entity_id,
+                        permission=POLICY_CONTROL
+                    )
+
+                platform_entities.append(entity)
+
+            platforms_entities.append(platform_entities)
+
     tasks = [
-        _handle_service_platform_call(func, data, [
-            entity for entity in platform.entities.values()
-            if all_entities or entity.entity_id in entity_ids
-        ], call.context) for platform in platforms
+        _handle_service_platform_call(func, data, entities, call.context)
+        for platform, entities in zip(platforms, platforms_entities)
     ]
 
     if tasks:
-        await asyncio.wait(tasks)
+        done, pending = await asyncio.wait(tasks)
+        assert not pending
+        for future in done:
+            future.result()  # pop exception if have
 
 
 async def _handle_service_platform_call(func, data, entities, context):
@@ -229,4 +333,29 @@ async def _handle_service_platform_call(func, data, entities, context):
             tasks.append(entity.async_update_ha_state(True))
 
     if tasks:
-        await asyncio.wait(tasks)
+        done, pending = await asyncio.wait(tasks)
+        assert not pending
+        for future in done:
+            future.result()  # pop exception if have
+
+
+@bind_hass
+@ha.callback
+def async_register_admin_service(hass: typing.HomeAssistantType, domain: str,
+                                 service: str, service_func: Callable,
+                                 schema: vol.Schema) -> None:
+    """Register a service that requires admin access."""
+    @wraps(service_func)
+    async def admin_handler(call):
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(context=call.context)
+            if not user.is_admin:
+                raise Unauthorized(context=call.context)
+
+        await hass.async_add_job(service_func, call)
+
+    hass.services.async_register(
+        domain, service, admin_handler, schema
+    )

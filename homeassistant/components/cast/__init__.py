@@ -2,9 +2,9 @@
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 
+REQUIREMENTS = ['pychromecast==3.0.0']
 
 DOMAIN = 'cast'
-REQUIREMENTS = ['pychromecast==2.1.0']
 
 
 async def async_setup(hass, config):
@@ -35,4 +35,5 @@ async def _async_has_devices(hass):
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN, 'Google Cast', _async_has_devices)
+    DOMAIN, 'Google Cast', _async_has_devices,
+    config_entries.CONN_CLASS_LOCAL_PUSH)

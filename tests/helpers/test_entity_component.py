@@ -131,7 +131,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component.setup({})
 
         discovery.load_platform(self.hass, DOMAIN, 'platform_test',
-                                {'msg': 'discovery_info'})
+                                {'msg': 'discovery_info'}, {DOMAIN: {}})
 
         self.hass.block_till_done()
 
@@ -206,7 +206,7 @@ def test_extract_from_service_available_device(hass):
 
     assert ['test_domain.test_1', 'test_domain.test_3'] == \
         sorted(ent.entity_id for ent in
-               component.async_extract_from_service(call_1))
+               (yield from component.async_extract_from_service(call_1)))
 
     call_2 = ha.ServiceCall('test', 'service', data={
         'entity_id': ['test_domain.test_3', 'test_domain.test_4'],
@@ -214,7 +214,7 @@ def test_extract_from_service_available_device(hass):
 
     assert ['test_domain.test_3'] == \
         sorted(ent.entity_id for ent in
-               component.async_extract_from_service(call_2))
+               (yield from component.async_extract_from_service(call_2)))
 
 
 @asyncio.coroutine
@@ -275,7 +275,7 @@ def test_extract_from_service_returns_all_if_no_entity_id(hass):
 
     assert ['test_domain.test_1', 'test_domain.test_2'] == \
         sorted(ent.entity_id for ent in
-               component.async_extract_from_service(call))
+               (yield from component.async_extract_from_service(call)))
 
 
 @asyncio.coroutine
@@ -293,7 +293,7 @@ def test_extract_from_service_filter_out_non_existing_entities(hass):
 
     assert ['test_domain.test_2'] == \
            [ent.entity_id for ent
-            in component.async_extract_from_service(call)]
+            in (yield from component.async_extract_from_service(call))]
 
 
 @asyncio.coroutine
@@ -308,7 +308,8 @@ def test_extract_from_service_no_group_expand(hass):
         'entity_id': ['group.test_group']
     })
 
-    extracted = component.async_extract_from_service(call, expand_group=False)
+    extracted = yield from component.async_extract_from_service(
+        call, expand_group=False)
     assert extracted == [test_group]
 
 
@@ -415,3 +416,74 @@ async def test_unload_entry_fails_if_never_loaded(hass):
 
     with pytest.raises(ValueError):
         await component.async_unload_entry(entry)
+
+
+async def test_update_entity(hass):
+    """Test that we can update an entity with the helper."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity = MockEntity()
+    entity.async_update_ha_state = Mock(return_value=mock_coro())
+    await component.async_add_entities([entity])
+
+    # Called as part of async_add_entities
+    assert len(entity.async_update_ha_state.mock_calls) == 1
+
+    await hass.helpers.entity_component.async_update_entity(entity.entity_id)
+
+    assert len(entity.async_update_ha_state.mock_calls) == 2
+    assert entity.async_update_ha_state.mock_calls[-1][1][0] is True
+
+
+async def test_set_service_race(hass):
+    """Test race condition on setting service."""
+    exception = False
+
+    def async_loop_exception_handler(_, _2) -> None:
+        """Handle all exception inside the core loop."""
+        nonlocal exception
+        exception = True
+
+    hass.loop.set_exception_handler(async_loop_exception_handler)
+
+    await async_setup_component(hass, 'group', {})
+    component = EntityComponent(_LOGGER, DOMAIN, hass, group_name='yo')
+
+    for i in range(2):
+        hass.async_create_task(component.async_add_entities([MockEntity()]))
+
+    await hass.async_block_till_done()
+    assert not exception
+
+
+async def test_extract_all_omit_entity_id(hass, caplog):
+    """Test extract all with None and *."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_add_entities([
+        MockEntity(name='test_1'),
+        MockEntity(name='test_2'),
+    ])
+
+    call = ha.ServiceCall('test', 'service')
+
+    assert ['test_domain.test_1', 'test_domain.test_2'] == \
+        sorted(ent.entity_id for ent in
+               await component.async_extract_from_service(call))
+    assert ('Not passing an entity ID to a service to target all entities is '
+            'deprecated') in caplog.text
+
+
+async def test_extract_all_use_match_all(hass, caplog):
+    """Test extract all with None and *."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_add_entities([
+        MockEntity(name='test_1'),
+        MockEntity(name='test_2'),
+    ])
+
+    call = ha.ServiceCall('test', 'service', {'entity_id': 'all'})
+
+    assert ['test_domain.test_1', 'test_domain.test_2'] == \
+        sorted(ent.entity_id for ent in
+               await component.async_extract_from_service(call))
+    assert ('Not passing an entity ID to a service to target all entities is '
+            'deprecated') not in caplog.text

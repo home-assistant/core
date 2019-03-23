@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Controller-Site ist bereits konfiguriert",
+            "user_privilege": "Der Benutzer muss Administrator sein"
+        },
+        "error": {
+            "faulty_credentials": "Ung\u00fcltige Anmeldeinformationen",
+            "service_unavailable": "Kein Dienst verf\u00fcgbar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "site": "Site-ID",
+                    "username": "Benutzername",
+                    "verify_ssl": "Controller mit ordnungsgem\u00e4ssem Zertifikat"
+                },
+                "title": "UniFi-Controller einrichten"
+            }
+        },
+        "title": "UniFi-Controller"
+    }
+}

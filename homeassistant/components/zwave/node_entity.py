@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
     ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED,
-    COMMAND_CLASS_CENTRAL_SCENE)
+    COMMAND_CLASS_CENTRAL_SCENE, DOMAIN)
 from .util import node_name, is_node_parsed
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,6 +109,18 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
     def unique_id(self):
         """Return unique ID of Z-wave node."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            'identifiers': {
+                (DOMAIN, self.node_id)
+            },
+            'manufacturer': self.node.manufacturer_name,
+            'model': self.node.product_name,
+            'name': node_name(self.node)
+        }
 
     def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""

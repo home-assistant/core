@@ -9,11 +9,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_COMPONENT_LOADED)
 import homeassistant.config as config_util
 from homeassistant import setup, loader
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers.config_validation import (
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers import discovery
 
 from tests.common import \
@@ -88,41 +90,52 @@ class TestSetup:
                 }
             })
 
-    def test_validate_platform_config(self):
+    def test_validate_platform_config(self, caplog):
         """Test validating platform configuration."""
         platform_schema = PLATFORM_SCHEMA.extend({
             'hello': str,
         })
+        platform_schema_base = PLATFORM_SCHEMA_BASE.extend({
+        })
         loader.set_component(
             self.hass,
             'platform_conf',
-            MockModule('platform_conf', platform_schema=platform_schema))
+            MockModule('platform_conf',
+                       platform_schema_base=platform_schema_base))
 
         loader.set_component(
             self.hass,
-            'platform_conf.whatever', MockPlatform('whatever'))
-
-        with assert_setup_component(0):
-            assert setup.setup_component(self.hass, 'platform_conf', {
-                'platform_conf': {
-                    'hello': 'world',
-                    'invalid': 'extra',
-                }
-            })
-
-        self.hass.data.pop(setup.DATA_SETUP)
-        self.hass.config.components.remove('platform_conf')
+            'platform_conf.whatever',
+            MockPlatform('whatever',
+                         platform_schema=platform_schema))
 
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'platform_conf', {
                 'platform_conf': {
                     'platform': 'whatever',
                     'hello': 'world',
+                    'invalid': 'extra',
+                }
+            })
+            assert caplog.text.count('Your configuration contains '
+                                     'extra keys') == 1
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
+
+        with assert_setup_component(2):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'platform': 'whatever',
+                    'hello': 'world',
                 },
                 'platform_conf 2': {
+                    'platform': 'whatever',
                     'invalid': True
                 }
             })
+            assert caplog.text.count('Your configuration contains '
+                                     'extra keys') == 2
 
         self.hass.data.pop(setup.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
@@ -173,6 +186,139 @@ class TestSetup:
             })
             assert 'platform_conf' in self.hass.config.components
             assert not config['platform_conf']  # empty
+
+    def test_validate_platform_config_2(self, caplog):
+        """Test component PLATFORM_SCHEMA_BASE prio over PLATFORM_SCHEMA."""
+        platform_schema = PLATFORM_SCHEMA.extend({
+            'hello': str,
+        })
+        platform_schema_base = PLATFORM_SCHEMA_BASE.extend({
+            'hello': 'world',
+        })
+        loader.set_component(
+            self.hass,
+            'platform_conf',
+            MockModule('platform_conf',
+                       platform_schema=platform_schema,
+                       platform_schema_base=platform_schema_base))
+
+        loader.set_component(
+            self.hass,
+            'platform_conf.whatever',
+            MockPlatform('whatever',
+                         platform_schema=platform_schema))
+
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                # fail: no extra keys allowed in platform schema
+                'platform_conf': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                    'invalid': 'extra',
+                }
+            })
+            assert caplog.text.count('Your configuration contains '
+                                     'extra keys') == 1
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
+
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                # pass
+                'platform_conf': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                },
+                # fail: key hello violates component platform_schema_base
+                'platform_conf 2': {
+                    'platform': 'whatever',
+                    'hello': 'there'
+                }
+            })
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
+
+    def test_validate_platform_config_3(self, caplog):
+        """Test fallback to component PLATFORM_SCHEMA."""
+        component_schema = PLATFORM_SCHEMA_BASE.extend({
+            'hello': str,
+        })
+        platform_schema = PLATFORM_SCHEMA.extend({
+            'cheers': str,
+            'hello': 'world',
+        })
+        loader.set_component(
+            self.hass,
+            'platform_conf',
+            MockModule('platform_conf',
+                       platform_schema=component_schema))
+
+        loader.set_component(
+            self.hass,
+            'platform_conf.whatever',
+            MockPlatform('whatever',
+                         platform_schema=platform_schema))
+
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                    'invalid': 'extra',
+                }
+            })
+            assert caplog.text.count('Your configuration contains '
+                                     'extra keys') == 1
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
+
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                # pass
+                'platform_conf': {
+                    'platform': 'whatever',
+                    'hello': 'world',
+                },
+                # fail: key hello violates component platform_schema
+                'platform_conf 2': {
+                    'platform': 'whatever',
+                    'hello': 'there'
+                }
+            })
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
+
+    def test_validate_platform_config_4(self):
+        """Test entity_namespace in PLATFORM_SCHEMA."""
+        component_schema = PLATFORM_SCHEMA_BASE
+        platform_schema = PLATFORM_SCHEMA
+        loader.set_component(
+            self.hass,
+            'platform_conf',
+            MockModule('platform_conf',
+                       platform_schema_base=component_schema))
+
+        loader.set_component(
+            self.hass,
+            'platform_conf.whatever',
+            MockPlatform('whatever',
+                         platform_schema=platform_schema))
+
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'platform_conf', {
+                'platform_conf': {
+                    # pass: entity_namespace accepted by PLATFORM_SCHEMA
+                    'platform': 'whatever',
+                    'entity_namespace': 'yummy',
+                }
+            })
+
+        self.hass.data.pop(setup.DATA_SETUP)
+        self.hass.config.components.remove('platform_conf')
 
     def test_component_not_found(self):
         """setup_component should not crash if component doesn't exist."""
@@ -459,3 +605,35 @@ def test_platform_no_warn_slow(hass):
             hass, 'test_component1', {})
         assert result
         assert not mock_call.called
+
+
+async def test_when_setup_already_loaded(hass):
+    """Test when setup."""
+    calls = []
+
+    async def mock_callback(hass, component):
+        """Mock callback."""
+        calls.append(component)
+
+    setup.async_when_setup(hass, 'test', mock_callback)
+    await hass.async_block_till_done()
+    assert calls == []
+
+    hass.config.components.add('test')
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {
+        'component': 'test'
+    })
+    await hass.async_block_till_done()
+    assert calls == ['test']
+
+    # Event listener should be gone
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {
+        'component': 'test'
+    })
+    await hass.async_block_till_done()
+    assert calls == ['test']
+
+    # Should be called right away
+    setup.async_when_setup(hass, 'test', mock_callback)
+    await hass.async_block_till_done()
+    assert calls == ['test', 'test']

@@ -74,6 +74,7 @@ class UserOnboardingView(_BaseOnboardingView):
         vol.Required('name'): str,
         vol.Required('username'): str,
         vol.Required('password'): str,
+        vol.Required('client_id'): str,
     }))
     async def post(self, request, data):
         """Return the manifest.json."""
@@ -94,7 +95,20 @@ class UserOnboardingView(_BaseOnboardingView):
             })
             await provider.data.async_save()
             await hass.auth.async_link_user(user, credentials)
+            if 'person' in hass.config.components:
+                await hass.components.person.async_create_person(
+                    data['name'], user_id=user.id
+                )
+
             await self._async_mark_done(hass)
+
+            # Return an authorization code to allow fetching tokens.
+            auth_code = hass.components.auth.create_auth_code(
+                data['client_id'], user
+            )
+            return self.json({
+                'auth_code': auth_code
+            })
 
 
 @callback

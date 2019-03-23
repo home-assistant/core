@@ -1,4 +1,5 @@
 """Test the Time-based One Time Password (MFA) auth module."""
+import asyncio
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
@@ -17,7 +18,7 @@ async def test_validating_mfa(hass):
     await totp_auth_module.async_setup_user('test-user', {})
 
     with patch('pyotp.TOTP.verify', return_value=True):
-        assert await totp_auth_module.async_validation(
+        assert await totp_auth_module.async_validate(
             'test-user', {'code': MOCK_CODE})
 
 
@@ -29,7 +30,7 @@ async def test_validating_mfa_invalid_code(hass):
     await totp_auth_module.async_setup_user('test-user', {})
 
     with patch('pyotp.TOTP.verify', return_value=False):
-        assert await totp_auth_module.async_validation(
+        assert await totp_auth_module.async_validate(
             'test-user', {'code': MOCK_CODE}) is False
 
 
@@ -40,7 +41,7 @@ async def test_validating_mfa_invalid_user(hass):
     })
     await totp_auth_module.async_setup_user('test-user', {})
 
-    assert await totp_auth_module.async_validation(
+    assert await totp_auth_module.async_validate(
         'invalid-user', {'code': MOCK_CODE}) is False
 
 
@@ -128,3 +129,26 @@ async def test_login_flow_validates_mfa(hass):
             result['flow_id'], {'code': MOCK_CODE})
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result['data'].id == 'mock-user'
+
+
+async def test_race_condition_in_data_loading(hass):
+    """Test race condition in the data loading."""
+    counter = 0
+
+    async def mock_load(_):
+        """Mock of homeassistant.helpers.storage.Store.async_load."""
+        nonlocal counter
+        counter += 1
+        await asyncio.sleep(0)
+
+    totp_auth_module = await auth_mfa_module_from_config(hass, {
+        'type': 'totp'
+    })
+    with patch('homeassistant.helpers.storage.Store.async_load',
+               new=mock_load):
+        task1 = totp_auth_module.async_validate('user', {'code': 'value'})
+        task2 = totp_auth_module.async_validate('user', {'code': 'value'})
+        results = await asyncio.gather(task1, task2, return_exceptions=True)
+        assert counter == 1
+        assert results[0] is False
+        assert results[1] is False

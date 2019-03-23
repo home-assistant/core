@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "P\u0159\u00edstupov\u00fd bod je ji\u017e nakonfigurov\u00e1n",
-            "conection_aborted": "Nelze se p\u0159ipojit k serveru HMIP",
             "connection_aborted": "Nelze se p\u0159ipojit k HMIP serveru",
             "unknown": "Do\u0161lo k nezn\u00e1m\u00e9 chyb\u011b"
         },

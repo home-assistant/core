@@ -1,0 +1,25 @@
+[
+  {
+    "uuid": "awair_12345",
+    "deviceType": "awair",
+    "deviceId": "12345",
+    "name": "Awair",
+    "preference": "GENERAL",
+    "macAddress": "FFFFFFFFFFFF",
+    "room": {
+      "id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+      "name": "My Room",
+      "kind": "LIVING_ROOM",
+      "Space": {
+        "id": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+        "kind": "HOME",
+        "location": {
+          "name": "Chicago, IL",
+          "timezone": "",
+          "lat": 0,
+          "lon": -0
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,37 @@
+addon_install:
+  description: Install a HassIO docker addon.
+  fields:
+    addon: {description: Name of addon., example: smb_config}
+    version: {description: Optional or it will be use the latest version., example: '0.2'}
+addon_start:
+  description: Start a HassIO docker addon.
+  fields:
+    addon: {description: Name of addon., example: smb_config}
+addon_stop:
+  description: Stop a HassIO docker addon.
+  fields:
+    addon: {description: Name of addon., example: smb_config}
+addon_uninstall:
+  description: Uninstall a HassIO docker addon.
+  fields:
+    addon: {description: Name of addon., example: smb_config}
+addon_update:
+  description: Update a HassIO docker addon.
+  fields:
+    addon: {description: Name of addon., example: smb_config}
+    version: {description: Optional or it will be use the latest version., example: '0.2'}
+homeassistant_update:
+  description: Update HomeAssistant docker image.
+  fields:
+    version: {description: Optional or it will be use the latest version., example: 0.40.1}
+host_reboot: {description: Reboot host computer.}
+host_shutdown: {description: Poweroff host computer.}
+host_update:
+  description: Update host computer.
+  fields:
+    version: {description: Optional or it will be use the latest version., example: '0.3'}
+supervisor_reload: {description: Reload HassIO supervisor addons/updates/configs.}
+supervisor_update:
+  description: Update HassIO supervisor.
+  fields:
+    version: {description: Optional or it will be use the latest version., example: '0.3'}

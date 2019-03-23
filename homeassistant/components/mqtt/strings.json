@@ -9,7 +9,15 @@
           "broker": "Broker",
           "port": "Port",
           "username": "Username",
-          "password": "Password"
+          "password": "Password",
+          "discovery": "Enable discovery"
+        }
+      },
+      "hassio_confirm": {
+        "title": "MQTT Broker via Hass.io add-on",
+        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the hass.io add-on {addon}?",
+        "data": {
+          "discovery": "Enable discovery"
         }
       }
     },

@@ -4,15 +4,16 @@ Demo implementation of the media player.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.components.media_player import (
+from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+import homeassistant.util.dt as dt_util
+
+from . import MediaPlayerDevice
+from .const import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
-import homeassistant.util.dt as dt_util
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -34,7 +35,7 @@ DEFAULT_SOUND_MODE = 'Dummy Music'
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | \
-    SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOUND_MODE
+    SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOUND_MODE | SUPPORT_SELECT_SOURCE
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \

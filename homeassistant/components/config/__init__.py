@@ -1,19 +1,22 @@
 """Component to configure Home Assistant via an API."""
 import asyncio
+import importlib
 import os
 
 import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
-from homeassistant.setup import (
-    async_prepare_setup_platform, ATTR_COMPONENT)
+from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.util.yaml import load_yaml, dump
 
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
 SECTIONS = (
+    'area_registry',
+    'auth',
+    'auth_provider_homeassistant',
     'automation',
     'config_entries',
     'core',
@@ -21,7 +24,6 @@ SECTIONS = (
     'device_registry',
     'entity_registry',
     'group',
-    'hassbian',
     'script',
 )
 ON_DEMAND = ('zwave',)
@@ -34,8 +36,7 @@ async def async_setup(hass, config):
 
     async def setup_panel(panel_name):
         """Set up a panel."""
-        panel = await async_prepare_setup_platform(
-            hass, config, DOMAIN, panel_name)
+        panel = importlib.import_module('.{}'.format(panel_name), __name__)
 
         if not panel:
             return
@@ -52,15 +53,11 @@ async def async_setup(hass, config):
         """Respond to components being loaded."""
         panel_name = event.data.get(ATTR_COMPONENT)
         if panel_name in ON_DEMAND:
-            hass.async_add_job(setup_panel(panel_name))
+            hass.async_create_task(setup_panel(panel_name))
 
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
 
     tasks = [setup_panel(panel_name) for panel_name in SECTIONS]
-
-    if hass.auth.active:
-        tasks.append(setup_panel('auth'))
-        tasks.append(setup_panel('auth_provider_homeassistant'))
 
     for panel_name in ON_DEMAND:
         if panel_name in hass.config.components:
@@ -136,7 +133,7 @@ class BaseEditConfigView(HomeAssistantView):
         await hass.async_add_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_add_job(self.post_write_hook(hass))
+            hass.async_create_task(self.post_write_hook(hass))
 
         return self.json({
             'result': 'ok',

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 LIFX.",
+            "single_instance_allowed": "Wymagana jest tylko jedna konfiguracja LIFX."
+        },
+        "step": {
+            "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 LIFX?",
+                "title": "LIFX"
+            }
+        },
+        "title": "LIFX"
+    }
+}

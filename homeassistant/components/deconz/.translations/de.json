@@ -12,12 +12,12 @@
             "init": {
                 "data": {
                     "host": "Host",
-                    "port": "Port (Standartwert : '80')"
+                    "port": "Port"
                 },
-                "title": "Definieren Sie den deCONZ-Gateway"
+                "title": "Definiere das deCONZ-Gateway"
             },
             "link": {
-                "description": "Entsperren Sie Ihr deCONZ-Gateway, um sich bei Home Assistant zu registrieren. \n\n 1. Gehen Sie zu den deCONZ-Systemeinstellungen \n 2. Dr\u00fccken Sie die Taste \"Gateway entsperren\"",
+                "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
                 "title": "Mit deCONZ verbinden"
             },
             "options": {

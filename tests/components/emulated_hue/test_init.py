@@ -1,98 +1,108 @@
 """Test the Emulated Hue component."""
-import json
-
-from unittest.mock import patch, Mock, mock_open
+from unittest.mock import patch, Mock, MagicMock
 
 from homeassistant.components.emulated_hue import Config
 
 
 def test_config_google_home_entity_id_to_number():
     """Test config adheres to the type."""
-    conf = Config(Mock(), {
+    mock_hass = Mock()
+    mock_hass.config.path = MagicMock("path", return_value="test_path")
+    conf = Config(mock_hass, {
         'type': 'google_home'
     })
 
-    mop = mock_open(read_data=json.dumps({'1': 'light.test2'}))
-    handle = mop()
+    with patch('homeassistant.components.emulated_hue.load_json',
+               return_value={'1': 'light.test2'}) as json_loader:
+        with patch('homeassistant.components.emulated_hue'
+                   '.save_json') as json_saver:
+            number = conf.entity_id_to_number('light.test')
+            assert number == '2'
 
-    with patch('homeassistant.util.json.open', mop, create=True):
-        number = conf.entity_id_to_number('light.test')
-        assert number == '2'
-        assert handle.write.call_count == 1
-        assert json.loads(handle.write.mock_calls[0][1][0]) == {
-            '1': 'light.test2',
-            '2': 'light.test',
-        }
+            assert json_saver.mock_calls[0][1][1] == {
+                '1': 'light.test2', '2': 'light.test'
+            }
 
-        number = conf.entity_id_to_number('light.test')
-        assert number == '2'
-        assert handle.write.call_count == 1
+            assert json_saver.call_count == 1
+            assert json_loader.call_count == 1
 
-        number = conf.entity_id_to_number('light.test2')
-        assert number == '1'
-        assert handle.write.call_count == 1
+            number = conf.entity_id_to_number('light.test')
+            assert number == '2'
+            assert json_saver.call_count == 1
 
-        entity_id = conf.number_to_entity_id('1')
-        assert entity_id == 'light.test2'
+            number = conf.entity_id_to_number('light.test2')
+            assert number == '1'
+            assert json_saver.call_count == 1
+
+            entity_id = conf.number_to_entity_id('1')
+            assert entity_id == 'light.test2'
 
 
 def test_config_google_home_entity_id_to_number_altered():
     """Test config adheres to the type."""
-    conf = Config(Mock(), {
+    mock_hass = Mock()
+    mock_hass.config.path = MagicMock("path", return_value="test_path")
+    conf = Config(mock_hass, {
         'type': 'google_home'
     })
 
-    mop = mock_open(read_data=json.dumps({'21': 'light.test2'}))
-    handle = mop()
+    with patch('homeassistant.components.emulated_hue.load_json',
+               return_value={'21': 'light.test2'}) as json_loader:
+        with patch('homeassistant.components.emulated_hue'
+                   '.save_json') as json_saver:
+            number = conf.entity_id_to_number('light.test')
+            assert number == '22'
+            assert json_saver.call_count == 1
+            assert json_loader.call_count == 1
 
-    with patch('homeassistant.util.json.open', mop, create=True):
-        number = conf.entity_id_to_number('light.test')
-        assert number == '22'
-        assert handle.write.call_count == 1
-        assert json.loads(handle.write.mock_calls[0][1][0]) == {
-            '21': 'light.test2',
-            '22': 'light.test',
-        }
+            assert json_saver.mock_calls[0][1][1] == {
+                '21': 'light.test2',
+                '22': 'light.test',
+            }
 
-        number = conf.entity_id_to_number('light.test')
-        assert number == '22'
-        assert handle.write.call_count == 1
+            number = conf.entity_id_to_number('light.test')
+            assert number == '22'
+            assert json_saver.call_count == 1
 
-        number = conf.entity_id_to_number('light.test2')
-        assert number == '21'
-        assert handle.write.call_count == 1
+            number = conf.entity_id_to_number('light.test2')
+            assert number == '21'
+            assert json_saver.call_count == 1
 
-        entity_id = conf.number_to_entity_id('21')
-        assert entity_id == 'light.test2'
+            entity_id = conf.number_to_entity_id('21')
+            assert entity_id == 'light.test2'
 
 
 def test_config_google_home_entity_id_to_number_empty():
     """Test config adheres to the type."""
-    conf = Config(Mock(), {
+    mock_hass = Mock()
+    mock_hass.config.path = MagicMock("path", return_value="test_path")
+    conf = Config(mock_hass, {
         'type': 'google_home'
     })
 
-    mop = mock_open(read_data='')
-    handle = mop()
+    with patch('homeassistant.components.emulated_hue.load_json',
+               return_value={}) as json_loader:
+        with patch('homeassistant.components.emulated_hue'
+                   '.save_json') as json_saver:
+            number = conf.entity_id_to_number('light.test')
+            assert number == '1'
+            assert json_saver.call_count == 1
+            assert json_loader.call_count == 1
 
-    with patch('homeassistant.util.json.open', mop, create=True):
-        number = conf.entity_id_to_number('light.test')
-        assert number == '1'
-        assert handle.write.call_count == 1
-        assert json.loads(handle.write.mock_calls[0][1][0]) == {
-            '1': 'light.test',
-        }
+            assert json_saver.mock_calls[0][1][1] == {
+                '1': 'light.test',
+            }
 
-        number = conf.entity_id_to_number('light.test')
-        assert number == '1'
-        assert handle.write.call_count == 1
+            number = conf.entity_id_to_number('light.test')
+            assert number == '1'
+            assert json_saver.call_count == 1
 
-        number = conf.entity_id_to_number('light.test2')
-        assert number == '2'
-        assert handle.write.call_count == 2
+            number = conf.entity_id_to_number('light.test2')
+            assert number == '2'
+            assert json_saver.call_count == 2
 
-        entity_id = conf.number_to_entity_id('2')
-        assert entity_id == 'light.test2'
+            entity_id = conf.number_to_entity_id('2')
+            assert entity_id == 'light.test2'
 
 
 def test_config_alexa_entity_id_to_number():

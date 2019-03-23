@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Nom\u00e9s es permet una \u00fanica configuraci\u00f3 de MQTT."
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar amb el broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Habilita el descobriment autom\u00e0tic",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT.",
+                "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Habilitar descobriment autom\u00e0tic"
+                },
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb el broker MQTT proporcionat pel complement de hass.io {addon}?",
+                "title": "Broker MQTT a trav\u00e9s del complement de Hass.io"
+            }
+        },
+        "title": "MQTT"
+    }
+}

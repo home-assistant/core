@@ -1,5 +1,5 @@
 update:
-  description: Updates the list of users and conversations.
+  description: Updates the list of conversations.
 
 send_message:
   description: Send a notification to a specific target.
@@ -10,3 +10,9 @@ send_message:
     message:
       description: List of message segments, only the "text" field is required in every segment. [Required]
       example: '[{"text":"test", "is_bold": false, "is_italic": false, "is_strikethrough": false, "is_underline": false, "parse_str": false, "link_target": "http://google.com"}, ...]'
+    data:
+      description: Other options ['image_file' / 'image_url']
+      example: '{ "image_file": "file" }  or  { "image_url": "url" }'
+
+reconnect:
+  description: Reconnect the bot.

@@ -4,20 +4,20 @@ Kodi notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.kodi/
 """
-import asyncio
 import logging
 
 import aiohttp
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ICON, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_PROXY_SSL)
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
-    BaseNotificationService)
+    ATTR_ICON, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_PROXY_SSL,
+    CONF_USERNAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 REQUIREMENTS = ['jsonrpc-async==0.6']
 
@@ -38,8 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 ATTR_DISPLAYTIME = 'displaytime'
 
 
-@asyncio.coroutine
-def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Return the notify service."""
     url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 
@@ -86,17 +85,16 @@ class KodiNotificationService(BaseNotificationService):
 
         self._server = jsonrpc_async.Server(self._url, **kwargs)
 
-    @asyncio.coroutine
-    def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send a message to Kodi."""
         import jsonrpc_async
         try:
             data = kwargs.get(ATTR_DATA) or {}
 
-            displaytime = data.get(ATTR_DISPLAYTIME, 10000)
+            displaytime = int(data.get(ATTR_DISPLAYTIME, 10000))
             icon = data.get(ATTR_ICON, "info")
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-            yield from self._server.GUI.ShowNotification(
+            await self._server.GUI.ShowNotification(
                 title, message, icon, displaytime)
 
         except jsonrpc_async.TransportError:

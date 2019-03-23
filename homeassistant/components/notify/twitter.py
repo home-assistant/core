@@ -4,22 +4,22 @@ Twitter platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.twitter/
 """
+from datetime import datetime, timedelta
+from functools import partial
 import json
 import logging
 import mimetypes
 import os
-from datetime import timedelta, datetime
-from functools import partial
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (
-    ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_time
 
-REQUIREMENTS = ['TwitterAPI==2.5.4']
+from . import ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService
+
+REQUIREMENTS = ['TwitterAPI==2.5.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,10 +78,25 @@ class TwitterNotificationService(BaseNotificationService):
     def send_message_callback(self, message, media_id=None):
         """Tweet a message, optionally with media."""
         if self.user:
-            resp = self.api.request('direct_messages/new',
-                                    {'user': self.user,
-                                     'text': message,
-                                     'media_ids': media_id})
+            user_resp = self.api.request(
+                'users/lookup', {'screen_name': self.user})
+            user_id = user_resp.json()[0]['id']
+            if user_resp.status_code != 200:
+                self.log_error_resp(user_resp)
+            else:
+                _LOGGER.debug("Message posted: %s", user_resp.json())
+
+            event = {
+                'event': {
+                    'type': 'message_create',
+                    'message_create': {
+                        'target': {'recipient_id': user_id},
+                        'message_data': {'text': message},
+                    }
+                }
+            }
+            resp = self.api.request(
+                'direct_messages/events/new', json.dumps(event))
         else:
             resp = self.api.request('statuses/update',
                                     {'status': message,

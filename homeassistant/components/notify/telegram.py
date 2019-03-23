@@ -8,10 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, ATTR_TARGET,
-    PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import ATTR_LOCATION
+
+from . import (
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class TelegramNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        service_data = dict(target=kwargs.get(ATTR_TARGET, self._chat_id))
+        service_data = {ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id)}
         if ATTR_TITLE in kwargs:
             service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
         if message:

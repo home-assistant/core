@@ -114,8 +114,7 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     user.credentials.append(credential)
     assert len(user.credentials) == 1
 
-    with patch('homeassistant.auth.AuthManager.active', return_value=True):
-        client = await hass_ws_client(hass, hass_access_token)
+    client = await hass_ws_client(hass, hass_access_token)
 
     await client.send_json({
         'id': 5,
@@ -347,3 +346,30 @@ async def test_ws_delete_refresh_token(hass, hass_ws_client,
     refresh_token = await hass.auth.async_validate_access_token(
         hass_access_token)
     assert refresh_token is None
+
+
+async def test_ws_sign_path(hass, hass_ws_client, hass_access_token):
+    """Test signing a path."""
+    assert await async_setup_component(hass, 'auth', {'http': {}})
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+
+    with patch('homeassistant.components.auth.async_sign_path',
+               return_value='hello_world') as mock_sign:
+        await ws_client.send_json({
+            'id': 5,
+            'type': auth.WS_TYPE_SIGN_PATH,
+            'path': '/api/hello',
+            'expires': 20
+        })
+
+        result = await ws_client.receive_json()
+    assert result['success'], result
+    assert result['result'] == {'path': 'hello_world'}
+    assert len(mock_sign.mock_calls) == 1
+    hass, p_refresh_token, path, expires = mock_sign.mock_calls[0][1]
+    assert p_refresh_token == refresh_token.id
+    assert path == '/api/hello'
+    assert expires.total_seconds() == 20

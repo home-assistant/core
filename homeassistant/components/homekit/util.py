@@ -1,18 +1,20 @@
 """Collection of useful functions for the HomeKit component."""
+from collections import OrderedDict, namedtuple
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components import media_player
-from homeassistant.core import split_entity_id
+from homeassistant.components import fan, media_player
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, TEMP_CELSIUS)
+from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
+
 from .const import (
-    CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, TYPE_OUTLET,
-    TYPE_SWITCH)
+    CONF_FEATURE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, HOMEKIT_NOTIFY_ID, TYPE_FAUCET,
+    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +40,17 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
 
 SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=TYPE_SWITCH): vol.All(
-        cv.string, vol.In((TYPE_OUTLET, TYPE_SWITCH))),
+        cv.string, vol.In((
+            TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
+            TYPE_SWITCH, TYPE_VALVE))),
 })
 
 
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
+    if not isinstance(values, dict):
+        raise vol.Invalid('expected a dictionary')
+
     entities = {}
     for entity_id, config in values.items():
         entity = cv.entity_id(entity_id)
@@ -56,7 +63,7 @@ def validate_entity_config(values):
         if domain in ('alarm_control_panel', 'lock'):
             config = CODE_SCHEMA(config)
 
-        elif domain == media_player.DOMAIN:
+        elif domain == media_player.const.DOMAIN:
             config = FEATURE_SCHEMA(config)
             feature_list = {}
             for feature in config[CONF_FEATURE_LIST]:
@@ -83,14 +90,16 @@ def validate_media_player_features(state, feature_list):
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     supported_modes = []
-    if features & (media_player.SUPPORT_TURN_ON |
-                   media_player.SUPPORT_TURN_OFF):
+    if features & (media_player.const.SUPPORT_TURN_ON |
+                   media_player.const.SUPPORT_TURN_OFF):
         supported_modes.append(FEATURE_ON_OFF)
-    if features & (media_player.SUPPORT_PLAY | media_player.SUPPORT_PAUSE):
+    if features & (media_player.const.SUPPORT_PLAY |
+                   media_player.const.SUPPORT_PAUSE):
         supported_modes.append(FEATURE_PLAY_PAUSE)
-    if features & (media_player.SUPPORT_PLAY | media_player.SUPPORT_STOP):
+    if features & (media_player.const.SUPPORT_PLAY |
+                   media_player.const.SUPPORT_STOP):
         supported_modes.append(FEATURE_PLAY_STOP)
-    if features & media_player.SUPPORT_VOLUME_MUTE:
+    if features & media_player.const.SUPPORT_VOLUME_MUTE:
         supported_modes.append(FEATURE_TOGGLE_MUTE)
 
     error_list = []
@@ -99,10 +108,54 @@ def validate_media_player_features(state, feature_list):
             error_list.append(feature)
 
     if error_list:
-        _LOGGER.error("%s does not support features: %s",
+        _LOGGER.error('%s does not support features: %s',
                       state.entity_id, error_list)
         return False
     return True
+
+
+SpeedRange = namedtuple('SpeedRange', ('start', 'target'))
+SpeedRange.__doc__ += """ Maps Home Assistant speed \
+values to percentage based HomeKit speeds.
+start: Start of the range (inclusive).
+target: Percentage to use to determine HomeKit percentages \
+from HomeAssistant speed.
+"""
+
+
+class HomeKitSpeedMapping:
+    """Supports conversion between Home Assistant and HomeKit fan speeds."""
+
+    def __init__(self, speed_list):
+        """Initialize a new SpeedMapping object."""
+        if speed_list[0] != fan.SPEED_OFF:
+            _LOGGER.warning("%s does not contain the speed setting "
+                            "%s as its first element. "
+                            "Assuming that %s is equivalent to 'off'.",
+                            speed_list, fan.SPEED_OFF, speed_list[0])
+        self.speed_ranges = OrderedDict()
+        list_size = len(speed_list)
+        for index, speed in enumerate(speed_list):
+            # By dividing by list_size -1 the following
+            # desired attributes hold true:
+            # * index = 0 => 0%, equal to "off"
+            # * index = len(speed_list) - 1 => 100 %
+            # * all other indices are equally distributed
+            target = index * 100 / (list_size - 1)
+            start = index * 100 / list_size
+            self.speed_ranges[speed] = SpeedRange(start, target)
+
+    def speed_to_homekit(self, speed):
+        """Map Home Assistant speed state to HomeKit speed."""
+        speed_range = self.speed_ranges[speed]
+        return speed_range.target
+
+    def speed_to_states(self, speed):
+        """Map HomeKit speed to Home Assistant speed state."""
+        for state, speed_range in reversed(self.speed_ranges.items()):
+            if speed_range.start <= speed:
+                return state
+        return list(self.speed_ranges.keys())[0]
 
 
 def show_setup_message(hass, pincode):
@@ -130,12 +183,12 @@ def convert_to_float(state):
 
 def temperature_to_homekit(temperature, unit):
     """Convert temperature to Celsius for HomeKit."""
-    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS), 1)
+    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS) * 2) / 2
 
 
 def temperature_to_states(temperature, unit):
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return round(temp_util.convert(temperature, TEMP_CELSIUS, unit), 1)
+    return round(temp_util.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
 
 
 def density_to_air_quality(density):

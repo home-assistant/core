@@ -14,6 +14,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['hbmqtt==0.9.4']
+
+_LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['http']
 
 # None allows custom config to be created through generate_config
@@ -27,8 +30,6 @@ HBMQTT_CONFIG_SCHEMA = vol.Any(None, vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA))
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @asyncio.coroutine
 def async_start(hass, password, server_config):
@@ -39,12 +40,12 @@ def async_start(hass, password, server_config):
     from hbmqtt.broker import Broker, BrokerException
 
     passwd = tempfile.NamedTemporaryFile()
+
+    gen_server_config, client_config = generate_config(hass, passwd, password)
+
     try:
         if server_config is None:
-            server_config, client_config = generate_config(
-                hass, passwd, password)
-        else:
-            client_config = None
+            server_config = gen_server_config
 
         broker = Broker(server_config, hass.loop)
         yield from broker.start()

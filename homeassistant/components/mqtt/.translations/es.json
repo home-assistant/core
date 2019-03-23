@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "S\u00f3lo se permite una \u00fanica configuraci\u00f3n de MQTT."
+        },
+        "error": {
+            "cannot_connect": "No se puede conectar con el agente"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Agente",
+                    "discovery": "Habilitar descubrimiento",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
+                "description": "Por favor, introduce la informaci\u00f3n de tu agente MQTT",
+                "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Habilitar descubrimiento"
+                },
+                "description": "\u00bfDesea configurar Home Assistant para conectarse al agente MQTT provisto por el complemento hass.io {addon} ?",
+                "title": "MQTT Broker a trav\u00e9s del complemento Hass.io"
+            }
+        },
+        "title": "MQTT"
+    }
+}

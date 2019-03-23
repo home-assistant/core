@@ -1,7 +1,8 @@
 """Tests for the storage helper."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+import json
+from unittest.mock import patch, Mock
 
 import pytest
 
@@ -15,6 +16,7 @@ from tests.common import async_fire_time_changed, mock_coro
 MOCK_VERSION = 1
 MOCK_KEY = 'storage-test'
 MOCK_DATA = {'hello': 'world'}
+MOCK_DATA2 = {'goodbye': 'cruel world'}
 
 
 @pytest.fixture
@@ -28,6 +30,21 @@ async def test_loading(hass, store):
     await store.async_save(MOCK_DATA)
     data = await store.async_load()
     assert data == MOCK_DATA
+
+
+async def test_custom_encoder(hass):
+    """Test we can save and load data."""
+    class JSONEncoder(json.JSONEncoder):
+        """Mock JSON encoder."""
+
+        def default(self, o):
+            """Mock JSON encode method."""
+            return "9"
+
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY, encoder=JSONEncoder)
+    await store.async_save(Mock())
+    data = await store.async_load()
+    assert data == "9"
 
 
 async def test_loading_non_existing(hass, store):

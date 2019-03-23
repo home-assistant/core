@@ -4,19 +4,18 @@ AWS SQS platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.aws_sqs/
 """
-import logging
 import json
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PLATFORM, CONF_NAME)
-from homeassistant.components.notify import (
-    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 
+from . import ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
+
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ["boto3==1.4.7"]
+REQUIREMENTS = ["boto3==1.9.16"]
 
 CONF_REGION = 'region_name'
 CONF_ACCESS_KEY_ID = 'aws_access_key_id'

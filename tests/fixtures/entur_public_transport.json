@@ -1,0 +1,111 @@
+{
+  "data": {
+    "stopPlaces": [
+      {
+        "id": "NSR:StopPlace:548",
+        "name": "Bergen stasjon",
+        "estimatedCalls": [
+          {
+            "realtime": false,
+            "aimedArrivalTime": "2018-10-10T09:28:00+0200",
+            "aimedDepartureTime": "2018-10-10T09:28:00+0200",
+            "expectedArrivalTime": "2018-10-10T09:28:00+0200",
+            "expectedDepartureTime": "2018-10-10T09:28:00+0200",
+            "requestStop": false,
+            "notices": [],
+            "destinationDisplay": {
+              "frontText": "Bergen"
+            },
+            "serviceJourney": {
+              "journeyPattern": {
+                "line": {
+                  "id": "NSB:Line:45",
+                  "name": "Vossabanen",
+                  "transportMode": "rail",
+                  "publicCode": "59"
+                }
+              }
+            }
+          },
+          {
+            "realtime": false,
+            "aimedArrivalTime": "2018-10-10T09:35:00+0200",
+            "aimedDepartureTime": "2018-10-10T09:35:00+0200",
+            "expectedArrivalTime": "2018-10-10T09:35:00+0200",
+            "expectedDepartureTime": "2018-10-10T09:35:00+0200",
+            "requestStop": false,
+            "notices": [],
+            "destinationDisplay": {
+              "frontText": "Arna"
+            },
+            "serviceJourney": {
+              "journeyPattern": {
+                "line": {
+                  "id": "NSB:Line:45",
+                  "name": "Vossabanen",
+                  "transportMode": "rail",
+                  "publicCode": "58"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "quays": [
+      {
+        "id": "NSR:Quay:48550",
+        "name": "Fiskepiren",
+        "publicCode": "2",
+        "latitude": 59.960904,
+        "longitude": 10.882942,
+        "estimatedCalls": [
+          {
+            "realtime": false,
+            "aimedArrivalTime": "2018-10-10T09:00:00+0200",
+            "aimedDepartureTime": "2018-10-10T09:00:00+0200",
+            "expectedArrivalTime": "2018-10-10T09:00:00+0200",
+            "expectedDepartureTime": "2018-10-10T09:00:00+0200",
+            "requestStop": false,
+            "notices": [],
+            "destinationDisplay": {
+              "frontText": "Stavanger Airport via Forum"
+            },
+            "serviceJourney": {
+              "journeyPattern": {
+                "line": {
+                  "id": "KOL:Line:2900_234",
+                  "name": "Flybussen",
+                  "transportMode": "bus",
+                  "publicCode": "5"
+                }
+              }
+            }
+          },
+          {
+            "realtime": false,
+            "aimedArrivalTime": "2018-10-10T09:06:00+0200",
+            "aimedDepartureTime": "2018-10-10T09:06:00+0200",
+            "expectedArrivalTime": "2018-10-10T09:06:00+0200",
+            "expectedDepartureTime": "2018-10-10T09:06:00+0200",
+            "requestStop": false,
+            "notices": [],
+            "destinationDisplay": {
+              "frontText": "Stavanger"
+            },
+            "serviceJourney": {
+              "journeyPattern": {
+                "line": {
+                  "id": "KOL:Line:1000_234",
+                  "name": "1",
+                  "transportMode": "bus",
+                  "publicCode": "1"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,6 +1,9 @@
 """The tests for the climate component."""
 import asyncio
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.components.climate import SET_TEMPERATURE_SCHEMA
 from tests.common import async_mock_service
 
@@ -14,12 +17,11 @@ def test_set_temp_schema_no_req(hass, caplog):
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {'operation_mode': 'test', 'entity_id': ['climate.test_id']}
-    yield from hass.services.async_call(domain, service, data)
+    with pytest.raises(vol.Invalid):
+        yield from hass.services.async_call(domain, service, data)
     yield from hass.async_block_till_done()
 
     assert len(calls) == 0
-    assert 'ERROR' in caplog.text
-    assert 'Invalid service data' in caplog.text
 
 
 @asyncio.coroutine

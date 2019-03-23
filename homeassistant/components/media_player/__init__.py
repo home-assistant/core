@@ -27,19 +27,66 @@ from homeassistant.const import (
     SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP, SERVICE_SHUFFLE_SET,
     SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE,
-    STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
-from homeassistant.core import callback
+    STATE_OFF, STATE_PLAYING)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 
+from .const import (
+    ATTR_APP_ID,
+    ATTR_APP_NAME,
+    ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_ALBUM_ARTIST,
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EPISODE,
+    ATTR_MEDIA_PLAYLIST,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_SEASON,
+    ATTR_MEDIA_SEEK_POSITION,
+    ATTR_MEDIA_SERIES_TITLE,
+    ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_TRACK,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
+    DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
+    SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOUND_MODE,
+    SERVICE_SELECT_SOURCE,
+    SUPPORT_PAUSE,
+    SUPPORT_SEEK,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
+    SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_PLAY,
+    SUPPORT_SHUFFLE_SET,
+    SUPPORT_SELECT_SOUND_MODE,
+)
+from .reproduce_state import async_reproduce_states  # noqa
+
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
 
-DOMAIN = 'media_player'
 DEPENDENCIES = ['http']
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -55,70 +102,11 @@ ENTITY_IMAGE_CACHE = {
     CACHE_MAXSIZE: 16
 }
 
-SERVICE_PLAY_MEDIA = 'play_media'
-SERVICE_SELECT_SOURCE = 'select_source'
-SERVICE_SELECT_SOUND_MODE = 'select_sound_mode'
-SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
-
-ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
-ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
-ATTR_MEDIA_SEEK_POSITION = 'seek_position'
-ATTR_MEDIA_CONTENT_ID = 'media_content_id'
-ATTR_MEDIA_CONTENT_TYPE = 'media_content_type'
-ATTR_MEDIA_DURATION = 'media_duration'
-ATTR_MEDIA_POSITION = 'media_position'
-ATTR_MEDIA_POSITION_UPDATED_AT = 'media_position_updated_at'
-ATTR_MEDIA_TITLE = 'media_title'
-ATTR_MEDIA_ARTIST = 'media_artist'
-ATTR_MEDIA_ALBUM_NAME = 'media_album_name'
-ATTR_MEDIA_ALBUM_ARTIST = 'media_album_artist'
-ATTR_MEDIA_TRACK = 'media_track'
-ATTR_MEDIA_SERIES_TITLE = 'media_series_title'
-ATTR_MEDIA_SEASON = 'media_season'
-ATTR_MEDIA_EPISODE = 'media_episode'
-ATTR_MEDIA_CHANNEL = 'media_channel'
-ATTR_MEDIA_PLAYLIST = 'media_playlist'
-ATTR_APP_ID = 'app_id'
-ATTR_APP_NAME = 'app_name'
-ATTR_INPUT_SOURCE = 'source'
-ATTR_INPUT_SOURCE_LIST = 'source_list'
-ATTR_SOUND_MODE = 'sound_mode'
-ATTR_SOUND_MODE_LIST = 'sound_mode_list'
-ATTR_MEDIA_ENQUEUE = 'enqueue'
-ATTR_MEDIA_SHUFFLE = 'shuffle'
-
-MEDIA_TYPE_MUSIC = 'music'
-MEDIA_TYPE_TVSHOW = 'tvshow'
-MEDIA_TYPE_MOVIE = 'movie'
-MEDIA_TYPE_VIDEO = 'video'
-MEDIA_TYPE_EPISODE = 'episode'
-MEDIA_TYPE_CHANNEL = 'channel'
-MEDIA_TYPE_PLAYLIST = 'playlist'
-MEDIA_TYPE_URL = 'url'
-
 SCAN_INTERVAL = timedelta(seconds=10)
-
-SUPPORT_PAUSE = 1
-SUPPORT_SEEK = 2
-SUPPORT_VOLUME_SET = 4
-SUPPORT_VOLUME_MUTE = 8
-SUPPORT_PREVIOUS_TRACK = 16
-SUPPORT_NEXT_TRACK = 32
-
-SUPPORT_TURN_ON = 128
-SUPPORT_TURN_OFF = 256
-SUPPORT_PLAY_MEDIA = 512
-SUPPORT_VOLUME_STEP = 1024
-SUPPORT_SELECT_SOURCE = 2048
-SUPPORT_STOP = 4096
-SUPPORT_CLEAR_PLAYLIST = 8192
-SUPPORT_PLAY = 16384
-SUPPORT_SHUFFLE_SET = 32768
-SUPPORT_SELECT_SOUND_MODE = 65536
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_ENTITY_ID: cv.comp_entity_ids,
 })
 
 MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -190,168 +178,6 @@ def is_on(hass, entity_id=None):
     entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
     return any(not hass.states.is_state(entity_id, STATE_OFF)
                for entity_id in entity_ids)
-
-
-@bind_hass
-def turn_on(hass, entity_id=None):
-    """Turn on specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-@bind_hass
-def turn_off(hass, entity_id=None):
-    """Turn off specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def toggle(hass, entity_id=None):
-    """Toggle specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
-
-
-@bind_hass
-def volume_up(hass, entity_id=None):
-    """Send the media player the command for volume up."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_VOLUME_UP, data)
-
-
-@bind_hass
-def volume_down(hass, entity_id=None):
-    """Send the media player the command for volume down."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
-
-
-@bind_hass
-def mute_volume(hass, mute, entity_id=None):
-    """Send the media player the command for muting the volume."""
-    data = {ATTR_MEDIA_VOLUME_MUTED: mute}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, data)
-
-
-@bind_hass
-def set_volume_level(hass, volume, entity_id=None):
-    """Send the media player the command for setting the volume."""
-    data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_VOLUME_SET, data)
-
-
-@bind_hass
-def media_play_pause(hass, entity_id=None):
-    """Send the media player the command for play/pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data)
-
-
-@bind_hass
-def media_play(hass, entity_id=None):
-    """Send the media player the command for play/pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY, data)
-
-
-@bind_hass
-def media_pause(hass, entity_id=None):
-    """Send the media player the command for pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
-
-
-@bind_hass
-def media_stop(hass, entity_id=None):
-    """Send the media player the stop command."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_STOP, data)
-
-
-@bind_hass
-def media_next_track(hass, entity_id=None):
-    """Send the media player the command for next track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
-
-
-@bind_hass
-def media_previous_track(hass, entity_id=None):
-    """Send the media player the command for prev track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
-
-
-@bind_hass
-def media_seek(hass, position, entity_id=None):
-    """Send the media player the command to seek in current playing media."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_MEDIA_SEEK_POSITION] = position
-    hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
-
-
-@bind_hass
-def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
-    """Send the media player the command for playing media."""
-    data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    if enqueue:
-        data[ATTR_MEDIA_ENQUEUE] = enqueue
-
-    hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
-
-
-@bind_hass
-def select_source(hass, source, entity_id=None):
-    """Send the media player the command to select input source."""
-    data = {ATTR_INPUT_SOURCE: source}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
-
-
-@bind_hass
-def select_sound_mode(hass, sound_mode, entity_id=None):
-    """Send the media player the command to select sound mode."""
-    data = {ATTR_SOUND_MODE: sound_mode}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SELECT_SOUND_MODE, data)
-
-
-@bind_hass
-def clear_playlist(hass, entity_id=None):
-    """Send the media player the command for clear playlist."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
-
-
-@bind_hass
-def set_shuffle(hass, shuffle, entity_id=None):
-    """Send the media player the command to enable/disable shuffle mode."""
-    data = {ATTR_MEDIA_SHUFFLE: shuffle}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SHUFFLE_SET, data)
 
 
 WS_TYPE_MEDIA_PLAYER_THUMBNAIL = 'media_player_thumbnail'
@@ -480,7 +306,7 @@ class MediaPlayerDevice(Entity):
     @property
     def state(self):
         """State of the player."""
-        return STATE_UNKNOWN
+        return None
 
     @property
     def access_token(self):
@@ -1027,8 +853,8 @@ class MediaPlayerImageView(HomeAssistantView):
             body=data, content_type=content_type, headers=headers)
 
 
-@callback
-def websocket_handle_thumbnail(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_handle_thumbnail(hass, connection, msg):
     """Handle get media player cover command.
 
     Async friendly.
@@ -1037,24 +863,20 @@ def websocket_handle_thumbnail(hass, connection, msg):
     player = component.get_entity(msg['entity_id'])
 
     if player is None:
-        connection.send_message_outside(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], 'entity_not_found', 'Entity not found'))
         return
 
-    async def send_image():
-        """Send image."""
-        data, content_type = await player.async_get_media_image()
+    data, content_type = await player.async_get_media_image()
 
-        if data is None:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'thumbnail_fetch_failed',
-                'Failed to fetch thumbnail'))
-            return
+    if data is None:
+        connection.send_message(websocket_api.error_message(
+            msg['id'], 'thumbnail_fetch_failed',
+            'Failed to fetch thumbnail'))
+        return
 
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], {
-                'content_type': content_type,
-                'content': base64.b64encode(data).decode('utf-8')
-            }))
-
-    hass.async_add_job(send_image())
+    connection.send_message(websocket_api.result_message(
+        msg['id'], {
+            'content_type': content_type,
+            'content': base64.b64encode(data).decode('utf-8')
+        }))

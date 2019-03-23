@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken met bridge",
+            "invalid_key": "Mislukt om te registreren met de meegeleverde sleutel. Als dit blijft gebeuren, probeer dan de gateway opnieuw op te starten.",
+            "timeout": "Time-out bij validatie van code"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Host",
+                    "security_code": "Beveiligingscode"
+                },
+                "description": "U vindt de beveiligingscode op de achterkant van uw gateway.",
+                "title": "Voer beveiligingscode in"
+            }
+        },
+        "title": "IKEA TR\u00c5DFRI"
+    }
+}

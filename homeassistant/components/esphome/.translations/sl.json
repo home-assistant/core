@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP je \u017ee konfiguriran"
+        },
+        "error": {
+            "connection_error": "Ne morem se povezati z ESP. Poskrbite, da va\u0161a datoteka YAML vsebuje vrstico \"api:\".",
+            "invalid_password": "Neveljavno geslo!",
+            "resolve_error": "Ne moremo razre\u0161iti naslova ESP. \u010ce se napaka ponovi, prosimo nastavite stati\u010dni IP naslov: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Geslo"
+                },
+                "description": "Vnesite geslo, ki ste ga nastavili v svoji konfiguraciji.",
+                "title": "Vnesite geslo"
+            },
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata"
+                },
+                "description": "Prosimo, vnesite nastavitve povezave va\u0161ega vozli\u0161\u010da [ESPHome] (https://esphomelib.com/).",
+                "title": "ESPHome"
+            }
+        },
+        "title": "ESPHome"
+    }
+}

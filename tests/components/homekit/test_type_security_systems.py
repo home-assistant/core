@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN
+from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import \
     SecuritySystem
 from homeassistant.const import (
@@ -12,7 +13,7 @@ from homeassistant.const import (
 from tests.common import async_mock_service
 
 
-async def test_switch_set_state(hass, hk_driver):
+async def test_switch_set_state(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
     code = '1234'
     config = {ATTR_CODE: code}
@@ -72,6 +73,8 @@ async def test_switch_set_state(hass, hk_driver):
     assert call_arm_home[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_arm_home[0].data[ATTR_CODE] == code
     assert acc.char_target_state.value == 0
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 1)
     await hass.async_block_till_done()
@@ -79,6 +82,8 @@ async def test_switch_set_state(hass, hk_driver):
     assert call_arm_away[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_arm_away[0].data[ATTR_CODE] == code
     assert acc.char_target_state.value == 1
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 2)
     await hass.async_block_till_done()
@@ -86,6 +91,8 @@ async def test_switch_set_state(hass, hk_driver):
     assert call_arm_night[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_arm_night[0].data[ATTR_CODE] == code
     assert acc.char_target_state.value == 2
+    assert len(events) == 3
+    assert events[-1].data[ATTR_VALUE] is None
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 3)
     await hass.async_block_till_done()
@@ -93,10 +100,12 @@ async def test_switch_set_state(hass, hk_driver):
     assert call_disarm[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_disarm[0].data[ATTR_CODE] == code
     assert acc.char_target_state.value == 3
+    assert len(events) == 4
+    assert events[-1].data[ATTR_VALUE] is None
 
 
 @pytest.mark.parametrize('config', [{}, {ATTR_CODE: None}])
-async def test_no_alarm_code(hass, hk_driver, config):
+async def test_no_alarm_code(hass, hk_driver, config, events):
     """Test accessory if security_system doesn't require an alarm_code."""
     entity_id = 'alarm_control_panel.test'
 
@@ -114,3 +123,5 @@ async def test_no_alarm_code(hass, hk_driver, config):
     assert call_arm_home[0].data[ATTR_ENTITY_ID] == entity_id
     assert ATTR_CODE not in call_arm_home[0].data
     assert acc.char_target_state.value == 0
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
