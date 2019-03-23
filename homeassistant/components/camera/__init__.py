@@ -60,6 +60,7 @@ STATE_IDLE = 'idle'
 
 # Bitfield of features supported by the camera entity
 SUPPORT_ON_OFF = 1
+SUPPORT_STREAM = 2
 
 DEFAULT_CONTENT_TYPE = 'image/jpeg'
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
@@ -96,6 +97,18 @@ class Image:
 
     content_type = attr.ib(type=str)
     content = attr.ib(type=bytes)
+
+
+@bind_hass
+async def async_request_stream(hass, entity_id, fmt):
+    """Request a stream for a camera entity."""
+    camera = _get_camera_from_entity_id(hass, entity_id)
+
+    if not camera.stream_source:
+        raise HomeAssistantError("{} does not support play stream service"
+                                 .format(camera.entity_id))
+
+    return request_stream(hass, camera.stream_source, fmt=fmt)
 
 
 @bind_hass
