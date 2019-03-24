@@ -147,7 +147,7 @@ class TraccarScanner:
                 attr[ATTR_TRACCAR_ID] = device['traccar_id']
             for custom_attr in self._custom_attributes:
                 if device.get(custom_attr) is not None:
-                    attr[custom_attr] = device[custom_attr] 
+                    attr[custom_attr] = device[custom_attr]
             await self._async_see(
                 dev_id=slugify(device['device_id']),
                 gps=(device.get('latitude'), device.get('longitude')),
@@ -158,15 +158,14 @@ class TraccarScanner:
         device_ids = [device['id'] for device in self._api.devices]
         end_interval = datetime.utcnow()
         start_interval = end_interval - self._scan_interval
-        events = await self._api.get_events(device_ids=device_ids, 
+        events = await self._api.get_events(device_ids=device_ids,
                                             from_time=start_interval,
                                             to_time=end_interval,
                                             event_types=self._event_types)
         if events is not None:
             for event in events:
-                device_name = list(filter(lambda dev: dev.get('id') == event['deviceId'], 
-                                          self._api._devices)
-                                  )[0].get('name')
+                device_name = list(filter(lambda dev: dev.get(
+                    'id') == event['deviceId'], self._api._devices))[0].get('name')
                 self._hass.bus.fire('traccar_' + event["type"], {
                     'device_traccar_id': event['deviceId'],
                     'device_name': device_name,
