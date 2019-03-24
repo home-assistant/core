@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not discovery_info:
         return
 
-    if data_key not in hass.data.keys():
+    if data_key not in hass.data:
         hass.data[data_key] = []
 
     device = hass.data[DATA_YEELIGHT][discovery_info[CONF_HOST]]
