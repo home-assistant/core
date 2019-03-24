@@ -1,18 +1,11 @@
-import asyncio
 import logging
-
-import aiohttp
 import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN,
-                                 CONF_NAME)
+from homeassistant.const import (CONF_ACCESS_TOKEN,CONF_NAME)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 import sectoralarmlib.sector as sectorlib
-
-
 
 DOMAIN = 'sector_alarm'
 
@@ -36,8 +29,10 @@ CONFIG_SCHEMA = vol.Schema({
         }),
 },
                            extra=vol.ALLOW_EXTRA)
+
+
 async def async_setup(hass, config):
-    ''' Initial setup '''
+    """ Initial setup """
 
     try:
         alarm = sectorlib.SectorAlarm(config[DOMAIN].get(CONF_EMAIL),config[DOMAIN].get(CONF_PASSWORD), config[DOMAIN].get(CONF_ALARM_ID), config[DOMAIN].get(CONF_CODE))
