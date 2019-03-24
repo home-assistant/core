@@ -689,6 +689,7 @@ omit =
     homeassistant/components/ziggo_mediabox_xl/media_player.py
     homeassistant/components/zoneminder/*
     homeassistant/components/zwave/util.py
+    homeassistant/components/sector_alarm/*
 
 [report]
 # Regexes for lines to exclude from consideration
