@@ -1,7 +1,6 @@
 """Constants for the homekit_controller component."""
 DOMAIN = 'homekit_controller'
 
-KNOWN_ACCESSORIES = "{}-accessories".format(DOMAIN)
 KNOWN_DEVICES = "{}-devices".format(DOMAIN)
 CONTROLLER = "{}-controller".format(DOMAIN)
 
