@@ -58,6 +58,7 @@ def gcm_api_deprecated(value):
         " see https://www.home-assistant.io/components/notify.html5/")
     return value
 
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(ATTR_GCM_SENDER_ID):
         vol.All(cv.string, gcm_api_deprecated),
