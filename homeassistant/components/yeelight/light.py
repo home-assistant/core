@@ -20,7 +20,7 @@ from homeassistant.components.yeelight import (
     CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED,
     YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
     YEELIGHT_FLOW_TRANSITION_SCHEMA, _transitions_config_parser,
-    ACTION_RECOVER)
+    ACTION_RECOVER, CONF_POWER_MODE_ICON)
 
 DEPENDENCIES = ['yeelight']
 
@@ -192,6 +192,17 @@ class YeelightLight(Light):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        if not self.config[CONF_POWER_MODE_ICON]:
+            return None
+
+        if self._get_property('flowing') == '1':
+            return 'mdi:waves'
+        elif self._is_nightlight_enabled:
+            return 'mdi:weather-night'
 
     @property
     def available(self) -> bool:
@@ -482,6 +493,8 @@ class YeelightLight(Light):
                 self._bulb.start_flow(flow, light_type=self.light_type)
             except BulbException as ex:
                 _LOGGER.error("Unable to set effect: %s", ex)
+
+            self.device.update()
 
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""

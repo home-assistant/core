@@ -33,6 +33,7 @@ CONF_SAVE_ON_CHANGE = 'save_on_change'
 CONF_MODE_MUSIC = 'use_music_mode'
 CONF_FLOW_PARAMS = 'flow_params'
 CONF_CUSTOM_EFFECTS = 'custom_effects'
+CONF_POWER_MODE_ICON = 'power_mode_icon'
 
 ATTR_COUNT = 'count'
 ATTR_ACTION = 'action'
@@ -71,6 +72,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
     vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
     vol.Optional(CONF_MODEL): cv.string,
+    vol.Optional(CONF_POWER_MODE_ICON, default=False): cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -98,6 +100,7 @@ UPDATE_REQUEST_PROPERTIES = [
     "hue",
     "sat",
     "color_mode",
+    "flowing",
     "bg_power",
     "bg_lmode",
     "bg_flowing",
