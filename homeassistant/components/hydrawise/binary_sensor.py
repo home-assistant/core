@@ -3,13 +3,14 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.hydrawise import (
-    BINARY_SENSORS, DATA_HYDRAWISE, HydrawiseEntity, DEVICE_MAP,
-    DEVICE_MAP_INDEX)
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+import homeassistant.helpers.config_validation as cv
+
+from . import (
+    BINARY_SENSORS, DATA_HYDRAWISE, DEVICE_MAP, DEVICE_MAP_INDEX,
+    HydrawiseEntity)
 
 DEPENDENCIES = ['hydrawise']
 

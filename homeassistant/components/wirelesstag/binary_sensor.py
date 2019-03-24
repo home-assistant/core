@@ -3,17 +3,16 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.wirelesstag import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    SIGNAL_BINARY_EVENT_UPDATE,
-    WirelessTagBaseSensor)
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, STATE_ON, STATE_OFF)
+    PLATFORM_SCHEMA, BinarySensorDevice)
+from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
+    DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_BINARY_EVENT_UPDATE,
+    WirelessTagBaseSensor)
 
 DEPENDENCIES = ['wirelesstag']
 

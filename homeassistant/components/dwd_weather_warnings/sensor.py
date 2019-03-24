@@ -25,7 +25,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
-from homeassistant.components.sensor.rest import RestData
+from homeassistant.components.rest.sensor import RestData
 
 _LOGGER = logging.getLogger(__name__)
 

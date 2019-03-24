@@ -1,9 +1,9 @@
 """Support for LCN covers."""
 from homeassistant.components.cover import CoverDevice
-from homeassistant.components.lcn import LcnDevice, get_connection
-from homeassistant.components.lcn.const import (
-    CONF_CONNECTIONS, CONF_MOTOR, DATA_LCN)
 from homeassistant.const import CONF_ADDRESS
+
+from . import LcnDevice, get_connection
+from .const import CONF_CONNECTIONS, CONF_MOTOR, DATA_LCN
 
 DEPENDENCIES = ['lcn']
 

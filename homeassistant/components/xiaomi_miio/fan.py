@@ -13,7 +13,7 @@ from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
+REQUIREMENTS = ['python-miio==0.4.5', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -227,7 +227,7 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA = {
     **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON,
-    ATTR_MOTOR_SPEED: 'speed',
+    ATTR_MOTOR_SPEED: 'motor_speed',
     ATTR_DEPTH: 'depth',
     ATTR_DRY: 'dry',
 }
@@ -305,6 +305,7 @@ FEATURE_FLAGS_AIRPURIFIER_V3 = (FEATURE_SET_BUZZER |
 
 FEATURE_FLAGS_AIRHUMIDIFIER = (FEATURE_SET_BUZZER |
                                FEATURE_SET_CHILD_LOCK |
+                               FEATURE_SET_LED |
                                FEATURE_SET_LED_BRIGHTNESS |
                                FEATURE_SET_TARGET_HUMIDITY)
 
@@ -348,7 +349,7 @@ SERVICE_SCHEMA_LED_BRIGHTNESS = AIRPURIFIER_SERVICE_SCHEMA.extend({
 
 SERVICE_SCHEMA_FAVORITE_LEVEL = AIRPURIFIER_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_LEVEL):
-        vol.All(vol.Coerce(int), vol.Clamp(min=0, max=16))
+        vol.All(vol.Coerce(int), vol.Clamp(min=0, max=17))
 })
 
 SERVICE_SCHEMA_VOLUME = AIRPURIFIER_SERVICE_SCHEMA.extend({

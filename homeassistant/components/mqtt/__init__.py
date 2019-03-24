@@ -5,8 +5,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
 """
 import asyncio
-import inspect
 from functools import partial, wraps
+import inspect
 from itertools import groupby
 import json
 import logging
@@ -22,6 +22,7 @@ import requests.certs
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import websocket_api
 from homeassistant.const import (
     CONF_DEVICE, CONF_NAME, CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT,
     CONF_PROTOCOL, CONF_USERNAME, CONF_VALUE_TEMPLATE,
@@ -37,7 +38,6 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 from homeassistant.util.logging import catch_log_exception
-from homeassistant.components import websocket_api
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa pylint: disable=unused-import
@@ -1012,7 +1012,7 @@ class MqttDiscoveryUpdate(Entity):
         await super().async_added_to_hass()
 
         from homeassistant.helpers.dispatcher import async_dispatcher_connect
-        from homeassistant.components.mqtt.discovery import (
+        from .discovery import (
             MQTT_DISCOVERY_UPDATED, clear_discovery_hash)
 
         @callback

@@ -11,6 +11,8 @@ import itertools
 import logging
 import os
 
+import traceback
+from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
@@ -18,7 +20,11 @@ from .const import (
     DATA_ZHA, DATA_ZHA_CORE_COMPONENT, DOMAIN, SIGNAL_REMOVE, DATA_ZHA_GATEWAY,
     CONF_USB_PATH, CONF_BAUDRATE, DEFAULT_BAUDRATE, CONF_RADIO_TYPE,
     DATA_ZHA_RADIO, CONF_DATABASE, DEFAULT_DATABASE_NAME, DATA_ZHA_BRIDGE_ID,
-    RADIO, CONTROLLER, RADIO_DESCRIPTION
+    RADIO, CONTROLLER, RADIO_DESCRIPTION, BELLOWS, ZHA, ZIGPY, ZIGPY_XBEE,
+    ZIGPY_DECONZ, ORIGINAL, CURRENT, DEBUG_LEVELS, ADD_DEVICE_RELAY_LOGGERS,
+    TYPE, NWK, IEEE, MODEL, SIGNATURE, ATTR_MANUFACTURER, RAW_INIT,
+    ZHA_GW_MSG, DEVICE_REMOVED, DEVICE_INFO, DEVICE_FULL_INIT, DEVICE_JOINED,
+    LOG_OUTPUT, LOG_ENTRY
 )
 from .device import ZHADevice, DeviceStatus
 from .channels import (
@@ -32,6 +38,7 @@ from .discovery import (
 from .store import async_get_registry
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
+from ..api import async_get_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +61,12 @@ class ZHAGateway:
         self.radio_description = None
         hass.data[DATA_ZHA][DATA_ZHA_CORE_COMPONENT] = self._component
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
+        self._log_levels = {
+            ORIGINAL: async_capture_log_levels(),
+            CURRENT: async_capture_log_levels()
+        }
+        self.debug_enabled = False
+        self._log_relay_handler = LogRelayHandler(hass, self)
 
     async def async_initialize(self, config_entry):
         """Initialize controller and connect radio."""
@@ -94,13 +107,37 @@ class ZHAGateway:
         At this point, no information about the device is known other than its
         address
         """
-        # Wait for device_initialized, instead
-        pass
+        async_dispatcher_send(
+            self._hass,
+            ZHA_GW_MSG,
+            {
+                TYPE: DEVICE_JOINED,
+                NWK: device.nwk,
+                IEEE: str(device.ieee)
+            }
+        )
 
     def raw_device_initialized(self, device):
         """Handle a device initialization without quirks loaded."""
-        # Wait for device_initialized, instead
-        pass
+        endpoint_ids = device.endpoints.keys()
+        ept_id = next((ept_id for ept_id in endpoint_ids if ept_id != 0), None)
+        manufacturer = 'Unknown'
+        model = 'Unknown'
+        if ept_id is not None:
+            manufacturer = device.endpoints[ept_id].manufacturer
+            model = device.endpoints[ept_id].model
+        async_dispatcher_send(
+            self._hass,
+            ZHA_GW_MSG,
+            {
+                TYPE: RAW_INIT,
+                NWK: device.nwk,
+                IEEE: str(device.ieee),
+                MODEL: model,
+                ATTR_MANUFACTURER: manufacturer,
+                SIGNATURE: device.get_signature()
+            }
+        )
 
     def device_initialized(self, device):
         """Handle device joined and basic information discovered."""
@@ -116,11 +153,21 @@ class ZHAGateway:
         device = self._devices.pop(device.ieee, None)
         self._device_registry.pop(device.ieee, None)
         if device is not None:
+            device_info = async_get_device_info(self._hass, device)
             self._hass.async_create_task(device.async_unsub_dispatcher())
             async_dispatcher_send(
                 self._hass,
                 "{}_{}".format(SIGNAL_REMOVE, str(device.ieee))
             )
+            if device_info is not None:
+                async_dispatcher_send(
+                    self._hass,
+                    ZHA_GW_MSG,
+                    {
+                        TYPE: DEVICE_REMOVED,
+                        DEVICE_INFO: device_info
+                    }
+                )
 
     def get_device(self, ieee_str):
         """Return ZHADevice for given ieee."""
@@ -156,6 +203,28 @@ class ZHAGateway:
                 device_info=device_info
             )
         )
+
+    @callback
+    def async_enable_debug_mode(self):
+        """Enable debug mode for ZHA."""
+        self._log_levels[ORIGINAL] = async_capture_log_levels()
+        async_set_logger_levels(DEBUG_LEVELS)
+        self._log_levels[CURRENT] = async_capture_log_levels()
+
+        for logger_name in ADD_DEVICE_RELAY_LOGGERS:
+            logging.getLogger(logger_name).addHandler(self._log_relay_handler)
+
+        self.debug_enabled = True
+
+    @callback
+    def async_disable_debug_mode(self):
+        """Disable debug mode for ZHA."""
+        async_set_logger_levels(self._log_levels[ORIGINAL])
+        self._log_levels[CURRENT] = async_capture_log_levels()
+        for logger_name in ADD_DEVICE_RELAY_LOGGERS:
+            logging.getLogger(logger_name).removeHandler(
+                self._log_relay_handler)
+        self.debug_enabled = False
 
     @callback
     def _async_get_or_create_device(self, zigpy_device, is_new_join):
@@ -231,3 +300,64 @@ class ZHAGateway:
 
         device_entity = async_create_device_entity(zha_device)
         await self._component.async_add_entities([device_entity])
+
+        if is_new_join:
+            device_info = async_get_device_info(self._hass, zha_device)
+            async_dispatcher_send(
+                self._hass,
+                ZHA_GW_MSG,
+                {
+                    TYPE: DEVICE_FULL_INIT,
+                    DEVICE_INFO: device_info
+                }
+            )
+
+
+@callback
+def async_capture_log_levels():
+    """Capture current logger levels for ZHA."""
+    return {
+        BELLOWS: logging.getLogger(BELLOWS).getEffectiveLevel(),
+        ZHA: logging.getLogger(ZHA).getEffectiveLevel(),
+        ZIGPY: logging.getLogger(ZIGPY).getEffectiveLevel(),
+        ZIGPY_XBEE: logging.getLogger(ZIGPY_XBEE).getEffectiveLevel(),
+        ZIGPY_DECONZ: logging.getLogger(ZIGPY_DECONZ).getEffectiveLevel(),
+    }
+
+
+@callback
+def async_set_logger_levels(levels):
+    """Set logger levels for ZHA."""
+    logging.getLogger(BELLOWS).setLevel(levels[BELLOWS])
+    logging.getLogger(ZHA).setLevel(levels[ZHA])
+    logging.getLogger(ZIGPY).setLevel(levels[ZIGPY])
+    logging.getLogger(ZIGPY_XBEE).setLevel(levels[ZIGPY_XBEE])
+    logging.getLogger(ZIGPY_DECONZ).setLevel(levels[ZIGPY_DECONZ])
+
+
+class LogRelayHandler(logging.Handler):
+    """Log handler for error messages."""
+
+    def __init__(self, hass, gateway):
+        """Initialize a new LogErrorHandler."""
+        super().__init__()
+        self.hass = hass
+        self.gateway = gateway
+
+    def emit(self, record):
+        """Relay log message via dispatcher."""
+        stack = []
+        if record.levelno >= logging.WARN:
+            if not record.exc_info:
+                stack = [f for f, _, _, _ in traceback.extract_stack()]
+
+        entry = LogEntry(record, stack,
+                         _figure_out_source(record, stack, self.hass))
+        async_dispatcher_send(
+            self.hass,
+            ZHA_GW_MSG,
+            {
+                TYPE: LOG_OUTPUT,
+                LOG_ENTRY: entry.to_dict()
+            }
+        )

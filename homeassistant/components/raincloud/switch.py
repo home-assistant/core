@@ -3,13 +3,13 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.raincloud import (
-    ALLOWED_WATERING_TIME, ATTRIBUTION, CONF_WATERING_TIME,
-    DATA_RAINCLOUD, DEFAULT_WATERING_TIME, RainCloudEntity, SWITCHES)
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
+
+from . import (
+    ALLOWED_WATERING_TIME, ATTRIBUTION, CONF_WATERING_TIME, DATA_RAINCLOUD,
+    DEFAULT_WATERING_TIME, SWITCHES, RainCloudEntity)
 
 DEPENDENCIES = ['raincloud']
 
