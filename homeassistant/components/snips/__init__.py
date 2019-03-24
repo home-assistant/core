@@ -105,10 +105,10 @@ async def async_setup(hass, config):
             _LOGGER.error('Received invalid JSON: %s', msg.payload)
             return
 
-        if (request['intent']['confidenceScore']
+        if (request['intent']['probability']
                 < config[DOMAIN].get(CONF_PROBABILITY)):
             _LOGGER.warning("Intent below probaility threshold %s < %s",
-                            request['intent']['confidenceScore'],
+                            request['intent']['probability'],
                             config[DOMAIN].get(CONF_PROBABILITY))
             return
 
@@ -131,7 +131,7 @@ async def async_setup(hass, config):
         slots['site_id'] = {'value': request.get('siteId')}
         slots['session_id'] = {'value': request.get('sessionId')}
         slots['confidenceScore'] = {
-            'value': request['intent']['confidenceScore']
+            'value': request['intent']['probability']
         }
 
         try:
