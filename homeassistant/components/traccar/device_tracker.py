@@ -169,10 +169,11 @@ class TraccarScanner:
         device_ids = [device['id'] for device in self._api.devices]
         end_interval = datetime.utcnow()
         start_interval = end_interval - self._scan_interval
-        events = await self._api.get_events(device_ids=device_ids,
-                                            from_time=start_interval,
-                                            to_time=end_interval,
-                                            event_types=self._event_types.keys())
+        events = await self._api.get_events(
+            device_ids=device_ids,
+            from_time=start_interval,
+            to_time=end_interval,
+            event_types=self._event_types.keys())
         if events is not None:
             for event in events:
                 try:
