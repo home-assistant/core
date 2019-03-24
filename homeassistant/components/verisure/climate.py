@@ -6,7 +6,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from . import HUB as hub
+from homeassistant.components.verisure import HUB as hub
+from homeassistant.components.verisure import CONF_CLIMATE, CONF_LOCKS
 
 _LOGGER = logging.getLogger(__name__)
 HEAT_PUMPS = None
@@ -33,14 +34,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     jsonpath = jsonpath.jsonpath
     global HEAT_PUMPS
     hub.update_overview()
-    HEAT_PUMPS = hub.get('$.heatPumps')
-
-    if HEAT_PUMPS:
-        for heat_pump in HEAT_PUMPS[0]:
-            device_label = jsonpath(heat_pump, '$.deviceLabel')[0]
-            add_entities([
-                VerisureHeatPump(device_label)
-            ])
+    if int(hub.config.get(CONF_CLIMATE, 1)):
+         HEAT_PUMPS = hub.get('$.heatPumps')
+         if HEAT_PUMPS:
+            for heat_pump in HEAT_PUMPS[0]:
+                 device_label = jsonpath(heat_pump, '$.deviceLabel')[0]
+                 add_entities([
+                     VerisureHeatPump(device_label)
+                ])
 
 
 class VerisureHeatPump(ClimateDevice):
@@ -177,8 +178,7 @@ class VerisureHeatPump(ClimateDevice):
     def set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         if self._on:
-            hub.session.set_heat_pump_fan_speed(
-                self.heatpump_id, fan_mode.upper())
+            hub.session.set_heat_pump_fan_speed(self.heatpump_id, fan_mode.upper())
             self._current_fan_mode = fan_mode
         self.schedule_update_ha_state()
 

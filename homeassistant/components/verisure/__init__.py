@@ -28,6 +28,7 @@ CONF_MOUSE = 'mouse'
 CONF_SMARTPLUGS = 'smartplugs'
 CONF_THERMOMETERS = 'thermometers'
 CONF_SMARTCAM = 'smartcam'
+CONF_CLIMATE = 'climate'
 
 DOMAIN = 'verisure'
 
@@ -53,6 +54,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
         vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
         vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
+        vol.Optional(CONF_CLIMATE, default=True): cv.boolean,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): (
             vol.All(cv.time_period, vol.Clamp(min=MIN_SCAN_INTERVAL))),
     }),
