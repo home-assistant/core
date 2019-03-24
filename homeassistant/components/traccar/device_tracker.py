@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 
-REQUIREMENTS = ['pytraccar==0.5.0']
+REQUIREMENTS = ['pytraccar==0.5.0', 'stringcase==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,23 +33,23 @@ ATTR_SPEED = 'speed'
 ATTR_TRACKER = 'tracker'
 ATTR_TRACCAR_ID = 'traccar_id'
 
-EVENT_DEVICE_MOVING = 'deviceMoving'
-EVENT_COMMAND_RESULT = 'commandResult'
-EVENT_DEVICE_FUEL_DROP = 'deviceFuelDrop'
-EVENT_GEOFENCE_ENTER = 'geofenceEnter'
-EVENT_DEVICE_OFFLINE = 'deviceOffline'
-EVENT_DRIVER_CHANGED = 'driverChanged'
-EVENT_GEOFENCE_EXIT = 'geofenceExit'
-EVENT_DEVICE_OVERSPEED = 'deviceOverspeed'
-EVENT_DEVICE_ONLINE = 'deviceOnline'
-EVENT_DEVICE_STOPPED = 'deviceStopped'
+EVENT_DEVICE_MOVING = 'device_moving'
+EVENT_COMMAND_RESULT = 'command_result'
+EVENT_DEVICE_FUEL_DROP = 'device_fuel_drop'
+EVENT_GEOFENCE_ENTER = 'geofence_enter'
+EVENT_DEVICE_OFFLINE = 'device_offline'
+EVENT_DRIVER_CHANGED = 'driver_changed'
+EVENT_GEOFENCE_EXIT = 'geofence_exit'
+EVENT_DEVICE_OVERSPEED = 'device_overspeed'
+EVENT_DEVICE_ONLINE = 'device_online'
+EVENT_DEVICE_STOPPED = 'device_stopped'
 EVENT_MAINTENANCE = 'maintenance'
 EVENT_ALARM = 'alarm'
-EVENT_TEXT_MESSAGE = 'textMessage'
-EVENT_DEVICE_UNKNOWN = 'deviceUnknown'
-EVENT_IGNITION_OFF = 'ignitionOff'
-EVENT_IGNITION_ON = 'ignitionOn'
-EVENT_ALL_EVENTS = 'allEvents'
+EVENT_TEXT_MESSAGE = 'text_message'
+EVENT_DEVICE_UNKNOWN = 'device_unknown'
+EVENT_IGNITION_OFF = 'ignition_off'
+EVENT_IGNITION_ON = 'ignition_on'
+EVENT_ALL_EVENTS = 'all_events'
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
@@ -109,7 +109,8 @@ class TraccarScanner:
                  custom_attributes,
                  event_types):
         """Initialize."""
-        self._event_types = event_types
+        from stringcase import camelcase
+        self._event_types = {camelcase(evt): evt for evt in event_types}
         self._custom_attributes = custom_attributes
         self._scan_interval = scan_interval
         self._async_see = async_see
@@ -171,17 +172,20 @@ class TraccarScanner:
         events = await self._api.get_events(device_ids=device_ids,
                                             from_time=start_interval,
                                             to_time=end_interval,
-                                            event_types=self._event_types)
+                                            event_types=self._event_types.keys())
         if events is not None:
             for event in events:
-                device_name = list(filter(lambda dev:
-                                          dev.get('id') == event['deviceId'],
-                                          self._api._devices)
-                                   )[0].get('name')
-                self._hass.bus.fire('traccar_' + event["type"], {
-                    'device_traccar_id': event['deviceId'],
-                    'device_name': device_name,
-                    'type': event['type'],
-                    'serverTime': event['serverTime'],
-                    'attributes': event['attributes']
-                })
+                try:
+                    device_name = next((
+                        dev.get('name') for dev in self._api._devices
+                        if dev.get('id') == event['deviceId']))
+                except StopIteration:
+                    device_name = None
+                self._hass.bus.async_fire(
+                    'traccar_' + self._event_types.get(event["type"]), {
+                        'device_traccar_id': event['deviceId'],
+                        'device_name': device_name,
+                        'type': event['type'],
+                        'serverTime': event['serverTime'],
+                        'attributes': event['attributes']
+                    })
