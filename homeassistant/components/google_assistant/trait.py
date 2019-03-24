@@ -1063,7 +1063,7 @@ class OpenCloseTrait(_Trait):
             position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
             if position is not None:
                 response['openPercent'] = position
-                response['on']: self.state.state != cover.STATE_CLOSED
+                response['on'] = self.state.state != cover.STATE_CLOSED
                 response['online'] = True
 
 
