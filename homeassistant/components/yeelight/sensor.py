@@ -59,5 +59,5 @@ class YeelightNightlightModeSensor(Entity):
         """Return the state of nightlight."""
         if self._device.is_nightlight_enabled:
             return STATE_ON
-        else:
-            return STATE_OFF
+
+        return STATE_OFF
