@@ -64,16 +64,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS,
                  default=[]): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EVENT,
-                 default=[]): vol.All(cv.ensure_list, 
-                 [vol.Any(EVENT_DEVICE_MOVING, EVENT_COMMAND_RESULT,
-                          EVENT_DEVICE_FUEL_DROP, EVENT_GEOFENCE_ENTER,
-                          EVENT_DEVICE_OFFLINE, EVENT_DRIVER_CHANGED,
-                          EVENT_GEOFENCE_EXIT, EVENT_DEVICE_OVERSPEED,
-                          EVENT_DEVICE_ONLINE, EVENT_DEVICE_STOPPED,
-                          EVENT_MAINTENANCE, EVENT_ALARM,
-                          EVENT_TEXT_MESSAGE, EVENT_DEVICE_UNKNOWN,
-                          EVENT_IGNITION_OFF, EVENT_IGNITION_ON,
-                          EVENT_ALL_EVENTS)]),
+                 default=[]): vol.All(cv.ensure_list,
+                                      [vol.Any(EVENT_DEVICE_MOVING,
+                                               EVENT_COMMAND_RESULT,
+                                               EVENT_DEVICE_FUEL_DROP,
+                                               EVENT_GEOFENCE_ENTER,
+                                               EVENT_DEVICE_OFFLINE,
+                                               EVENT_DRIVER_CHANGED,
+                                               EVENT_GEOFENCE_EXIT,
+                                               EVENT_DEVICE_OVERSPEED,
+                                               EVENT_DEVICE_ONLINE,
+                                               EVENT_DEVICE_STOPPED,
+                                               EVENT_MAINTENANCE,
+                                               EVENT_ALARM,
+                                               EVENT_TEXT_MESSAGE,
+                                               EVENT_DEVICE_UNKNOWN,
+                                               EVENT_IGNITION_OFF,
+                                               EVENT_IGNITION_ON,
+                                               EVENT_ALL_EVENTS)]),
 })
 
 
@@ -97,7 +105,9 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 class TraccarScanner:
     """Define an object to retrieve Traccar data."""
 
-    def __init__(self, api, hass, async_see, scan_interval, custom_attributes, event_types):
+    def __init__(self, api, hass, async_see, scan_interval,
+                 custom_attributes,
+                 event_types):
         """Initialize."""
         self._event_types = event_types
         self._custom_attributes = custom_attributes
