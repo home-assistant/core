@@ -81,9 +81,8 @@ async def test_setup_entry_fails(hass):
     """Test setup entry fails if deCONZ is not available."""
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
-    with patch(
-        'pydeconz.DeconzSession.async_load_parameters',
-        side_effect=Exception):
+    with patch('pydeconz.DeconzSession.async_load_parameters',
+               side_effect=Exception):
         await deconz.async_setup_entry(hass, entry)
 
 
