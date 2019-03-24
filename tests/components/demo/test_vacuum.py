@@ -9,7 +9,7 @@ from homeassistant.components.vacuum import (
     SERVICE_SEND_COMMAND, SERVICE_SET_FAN_SPEED,
     STATE_DOCKED, STATE_CLEANING, STATE_PAUSED, STATE_IDLE,
     STATE_RETURNING)
-from homeassistant.components.vacuum.demo import (
+from homeassistant.components.demo.vacuum import (
     DEMO_VACUUM_BASIC, DEMO_VACUUM_COMPLETE, DEMO_VACUUM_MINIMAL,
     DEMO_VACUUM_MOST, DEMO_VACUUM_NONE, DEMO_VACUUM_STATE, FAN_SPEEDS)
 from homeassistant.const import (

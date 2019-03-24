@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_location.demo import \
+from homeassistant.components.demo.geo_location import \
     NUMBER_OF_DEMO_DEVICES, DEFAULT_UNIT_OF_MEASUREMENT, \
     DEFAULT_UPDATE_INTERVAL
 from homeassistant.setup import setup_component

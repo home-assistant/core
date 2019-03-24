@@ -6,7 +6,7 @@ https://home-assistant.io/components/demo/
 """
 from homeassistant.helpers.event import track_utc_time_change
 
-from . import (
+from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN,
     CoverDevice)
 

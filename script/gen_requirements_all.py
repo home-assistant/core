@@ -222,7 +222,7 @@ def gather_modules():
                 if fnmatch.fnmatch(package, pattern):
                     break
             else:
-                print("{}: {}".format(package, err))
+                print("{}: {}".format(package.replace('.', '/') + '.py', err))
                 errors.append(package)
             continue
 
