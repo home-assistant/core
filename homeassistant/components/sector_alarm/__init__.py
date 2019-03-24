@@ -3,8 +3,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_ACCESS_TOKEN,CONF_NAME)
 from homeassistant.helpers import discovery
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
 import sectoralarmlib.sector as sectorlib
 
 DOMAIN = 'sector_alarm'
@@ -35,18 +33,19 @@ async def async_setup(hass, config):
     """ Initial setup """
 
     try:
-        alarm = sectorlib.SectorAlarm(config[DOMAIN].get(CONF_EMAIL),config[DOMAIN].get(CONF_PASSWORD), config[DOMAIN].get(CONF_ALARM_ID), config[DOMAIN].get(CONF_CODE))
-    except Exception as err:
+        alarm = sectorlib.SectorAlarm(config[DOMAIN].get(CONF_EMAIL),config[DOMAIN].get(CONF_PASSWORD), 
+                                      config[DOMAIN].get(CONF_ALARM_ID), config[DOMAIN].get(CONF_CODE))
+    except Exception:
         _LOGGER.error("Could not login to Sector Alarm. Wrong username or password?")
         return
 
     hass.data[DOMAIN] = alarm
 
-    
     discovery.load_platform(hass, 'sensor', DOMAIN,
                                 {CONF_NAME: DOMAIN}, config)
 
     discovery.load_platform(
-            hass, 'alarm_control_panel', DOMAIN, {CONF_CODE: config[DOMAIN][CONF_CODE], CONF_ALARM_ID: config[DOMAIN][CONF_ALARM_ID]}, config)
+            hass, 'alarm_control_panel', DOMAIN, {CONF_CODE: config[DOMAIN][CONF_CODE], 
+            CONF_ALARM_ID: config[DOMAIN][CONF_ALARM_ID]}, config)
 
     return True

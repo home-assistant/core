@@ -59,7 +59,7 @@ class SectorAlarmPanel(alarm.AlarmControlPanel):
         status = self._sectorConnect.Disarm()
         if status:
             _LOGGER.debug("Disarmed Sector Alarm")
-    
+
     async def async_alarm_arm_home(self, code=None):
         """ Partial turn on the alarm """
         _LOGGER.debug("Trying to partial arm Sector Alarm")

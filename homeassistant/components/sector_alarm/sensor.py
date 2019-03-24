@@ -12,7 +12,8 @@ DEPENDENCIES = ['sector_alarm']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """ Initial setup of the platform. """
     sector_connection = hass.data.get(SECTOR_DOMAIN)
 
@@ -24,6 +25,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         dev.append(SectorTempSensor(temp, sector_connection))
 
     async_add_entities(dev, False)
+
 
 class SectorTempSensor(Entity):
     """ Secotor Alarm temperature class """
@@ -52,6 +54,6 @@ class SectorTempSensor(Entity):
     @Throttle(UPDATE_INTERVAL)
     def update(self):
         temps = self._sector.GetTemps()
-        for x,y in temps:
+        for x, y in temps:
             if x == self._name:
                 self._state = y
