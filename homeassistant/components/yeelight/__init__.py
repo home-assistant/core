@@ -211,7 +211,7 @@ class YeelightDevice:
                 self._bulb_device = yeelight.Bulb(self._ipaddr,
                                                   model=self._model)
                 # force init for type
-                self._update_properties()
+                self.update()
 
             except yeelight.BulbException as ex:
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",

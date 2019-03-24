@@ -1,7 +1,7 @@
 """Sensor platform support for yeelight."""
 import logging
 
-from homeassistant.const import CONF_DEVICES, STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -17,7 +17,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not discovery_info:
         return
 
-    device = hass.data[DATA_YEELIGHT][CONF_DEVICES][discovery_info['host']]
+    device = hass.data[DATA_YEELIGHT][discovery_info['host']]
 
     if device.is_nightlight_supported:
         _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
