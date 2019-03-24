@@ -52,6 +52,7 @@ SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 CONFIG_ENTRY_HANDLERS = {
+    SERVICE_AXIS: 'axis',
     SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
     'esphome': 'esphome',
@@ -69,7 +70,6 @@ SERVICE_HANDLERS = {
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
     SERVICE_HASSIO: ('hassio', None),
-    SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_ENIGMA2: ('media_player', 'enigma2'),
     SERVICE_ROKU: ('roku', None),
