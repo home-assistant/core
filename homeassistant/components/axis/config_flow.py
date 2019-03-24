@@ -153,7 +153,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
         if discovery_info[CONF_HOST].startswith('169.254'):
             return self.async_abort(reason='link_local_address')
 
-        config_file = await self.hass.async_add_job(
+        config_file = await self.hass.async_add_executor_job(
             load_json, self.hass.config.path(CONFIG_FILE))
 
         serialnumber = discovery_info['properties']['macaddress']

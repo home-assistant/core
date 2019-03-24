@@ -27,8 +27,6 @@ class AxisNetworkDevice:
         self.fw_version = None
         self.product_type = None
 
-        self._cancel_retry_setup = None
-
         self.listeners = []
 
     @property
