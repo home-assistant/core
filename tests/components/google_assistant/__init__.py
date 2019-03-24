@@ -93,7 +93,7 @@ DEMO_DEVICES = [{
         'name': 'Living Room Window'
     },
     'traits':
-    ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
+    ['action.devices.traits.OpenClose'],
     'type':
     'action.devices.types.SWITCH',
     'willReportState':
@@ -105,7 +105,7 @@ DEMO_DEVICES = [{
         'name': 'Hall Window'
     },
     'traits':
-    ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
+    ['action.devices.traits.OpenClose'],
     'type':
     'action.devices.types.SWITCH',
     'willReportState':
@@ -115,24 +115,22 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'Garage Door'
     },
-    'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.SWITCH',
+    'traits': ['action.devices.traits.OpenClose'],
     'willReportState': False
 }, {
     'id': 'cover.kitchen_window',
     'name': {
         'name': 'Kitchen Window'
     },
-    'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.SWITCH',
+    'traits': ['action.devices.traits.OpenClose'],
     'willReportState': False
 }, {
     'id': 'group.all_covers',
     'name': {
         'name': 'all covers'
     },
-    'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.SWITCH',
+    'traits': ['action.devices.traits.OpenClose'],
+    'type': 'action.devices.types.BLINDS',
     'willReportState': False
 }, {
     'id':
