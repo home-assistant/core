@@ -1067,7 +1067,7 @@ async def test_openclose_cover(hass):
 
     assert trt.query_attributes() == {
         'openPercent': 75,
-        'on': True
+        'on': True,
         'online': True
     }
 
