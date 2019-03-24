@@ -1428,6 +1428,7 @@ pytouchline==0.7
 
 # homeassistant.components.traccar.device_tracker
 pytraccar==0.5.0
+stringcase==1.2.0
 
 # homeassistant.components.trackr.device_tracker
 pytrackr==0.0.5
