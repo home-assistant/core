@@ -1813,7 +1813,7 @@ yahooweather==0.10
 # homeassistant.components.yale_smart_alarm.alarm_control_panel
 yalesmartalarmclient==0.1.6
 
-# homeassistant.components.yeelight.light
+# homeassistant.components.yeelight
 yeelight==0.4.3
 
 # homeassistant.components.yeelightsunflower.light
