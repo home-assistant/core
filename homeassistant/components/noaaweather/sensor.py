@@ -3,6 +3,10 @@ Support for US NOAA/National Weather Service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.noaaweather/
+
+This component gets data from the US NOAA/National Weather Service API.
+Documentation on the API is at
+https://www.weather.gov/documentation/services-web-api
 """
 import datetime
 from datetime import timedelta
@@ -24,6 +28,17 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = "NOAA Weather"
+
+#
+# The rates at which new measurement values appear varies by station.
+# Typically the measurements from airport weather stations will only update
+# once an hour, while other stations may update much more frequently.
+#
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+
+USER_AGENT_HEADER = {'user-agent':
+                     "Home Assistant component noaaweather sensor v0.1"}
 
 ATTR_LAST_UPDATE = 'last_update'
 ATTR_SENSOR_ID = 'sensor_id'
@@ -34,25 +49,14 @@ CONF_STATIONCODE = 'stationcode'
 ATTRIBUTION = "Data provided by National Oceanic "\
                 "and Atmospheric Administration"
 
-"""From Met Office, probably not needed"""
-CONDITION_CLASSES = {
-    'cloudy': ['7', '8'],
-    'fog': ['5', '6'],
-    'hail': ['19', '20', '21'],
-    'lightning': ['30'],
-    'lightning-rainy': ['28', '29'],
-    'partlycloudy': ['2', '3'],
-    'pouring': ['13', '14', '15'],
-    'rainy': ['9', '10', '11', '12'],
-    'snowy': ['22', '23', '24', '25', '26', '27'],
-    'snowy-rainy': ['16', '17', '18'],
-    'sunny': ['0', '1'],
-    'windy': [],
-    'windy-variant': [],
-    'exceptional': [],
-}
 
-# Unit mapping
+# Unit mapping table
+# The NWS API returns a unit of measure value with each
+# numerical value in the format "unit:<unitname>".
+# The units in this table are the only ones
+# returned at this time, except that unit:degF is
+# not currently returned.
+#
 UNIT_MAPPING = {
         'unit:degC': [TEMP_CELSIUS],
         'unit:degF': [TEMP_FAHRENHEIT],
@@ -62,11 +66,6 @@ UNIT_MAPPING = {
         'unit:Pa': ['Pa'],
         'unit:percent': ['%']
 }
-
-DEFAULT_NAME = "NOAA"
-
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 # Sensor types are defined like: Name, type of value,
 #                       preferred metric units, preferred imperial units
@@ -133,18 +132,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the NOAA sensor platform."""
-    #
-    # The key item is the location to use,
-    # which can be configured by specifying longitude and latitude.
-    # If these are not set in the component configuration, the
-    # longitude and latitude specified in the overall home assistant
-    # configuration are used.
-    # Optionally the station code for the observation station, can
-    # be specified. This must be one which is in the station list
-    # for the location provided.  If no station code is configured,
-    # the closest station is chosen.
-    #
+    """Set up the NOAA sensor platform.
+
+    The key item is the location to use,
+    which can be configured by specifying longitude and latitude.
+    If these are not set in the component configuration, the
+    longitude and latitude specified in the overall home assistant
+    configuration are used.
+    Optionally the station code for the observation station, can
+    be specified. This must be one which is in the station list
+    for the location provided.  If no station code is configured,
+    the closest station is chosen.
+    """
     name = config.get(CONF_NAME)        # Get name (or default)
     # Get configured stationcode
     confstationcode = config.get(CONF_STATIONCODE)
@@ -168,7 +167,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         locmetadata = requests.get(
             'https://api.weather.gov/points/{},{}'.format(
-                latitude, longitude))
+                latitude, longitude), headers=USER_AGENT_HEADER)
     except requests.RequestException:
         _LOGGER.error("Error getting metadata for location %s,%s",
                       latitude, longitude)
@@ -211,7 +210,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # station for observations.  If a station was configured, verify
     # that it is in the list for this location.
     #
-    stationlist = requests.get(obsstaurl)
+    stationlist = requests.get(obsstaurl, headers=USER_AGENT_HEADER)
     if stationlist.status_code != 200:
         _LOGGER.error("Cannot get station list for location %s,%s",
                       latitude, longitude)
@@ -250,7 +249,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     #
     try:
         stationmeta = requests.get('https://api.weather.gov/stations/{}'
-                                   .format(stationcode))
+                                   .format(stationcode),
+                                   headers=USER_AGENT_HEADER)
     except requests.RequestException:
         _LOGGER.error("Can't get station metadata for station %s",
                       stationcode)
@@ -286,19 +286,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class NOAACurrentSensor(Entity):
-    """Implementation of a NOAA station current sensor."""
+    """Implementation of a NOAA station current sensor.
+
+    Each instance has as attributes the condition name, the
+    NOAACurrentCurrentData object, the platform name and the units
+    we should record the measurements in. The units are based on whether
+    home-assistant has been configured to use metric units or imperial
+    units.  The values returned from the NWS API calls are converted to
+    the target units, which are the typical units used for that type
+    of measurement.
+    """
 
     def __init__(self, hass, noaadata, condition, name):
-        """Initialize the sensor."""
+        """Initialize the sensor object."""
         self._condition = condition
-        self.noaadata = noaadata
+        self._noaadata = noaadata
         self._name = name
+        #
         # Set whether desired units are metric (default) or
         # imperial.
+        #
         if hass.config.units == METRIC_SYSTEM:
-            self.desiredunit = SENSOR_TYPES[condition][2]
+            self._desiredunit = SENSOR_TYPES[condition][2]
         elif hass.config.units == IMPERIAL_SYSTEM:
-            self.desiredunit = SENSOR_TYPES[condition][3]
+            self._desiredunit = SENSOR_TYPES[condition][3]
         else:
             _LOGGER.warning("Unknown unit system %s, defaulting to metric",
                             hass.config.units)
@@ -309,11 +320,12 @@ class NOAACurrentSensor(Entity):
         return '{} {}'.format(self._name, SENSOR_TYPES[self._condition][0])
 
     def _unit_convert(self, variable, desiredunit):
-        """Check if value needs to be converted to different units."""
-        # This will do the appropriate conversion to get the value
-        # from unit it is supplied in to the standard metric or imperial
-        # value used for the measurement.
+        """Check if value needs to be converted to different units.
 
+        This will do the appropriate conversion to get the value
+        from unit it is supplied in to the standard metric or imperial
+        value used for the measurement.
+        """
         #
         # No conversion needed if no value
         #
@@ -343,7 +355,7 @@ class NOAACurrentSensor(Entity):
         #
         # If source and desired units are the same, no need to convert
         #
-        if srcunit == self.desiredunit:
+        if srcunit == self._desiredunit:
             return result
 
         # need to conver units, identify conversion required
@@ -397,12 +409,12 @@ class NOAACurrentSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         _LOGGER.debug("Getting state for %s", self._condition)
-        _LOGGER.debug("noaadata.data set is %s", set(self.noaadata.data))
+        _LOGGER.debug("noaadata.data set is %s", set(self._noaadata.data))
         #
         # ensure we have some data
         #
-        if self._condition in self.noaadata.data:
-            variable = self.noaadata.data[self._condition]
+        if self._condition in self._noaadata.data:
+            variable = self._noaadata.data[self._condition]
             _LOGGER.debug("Condition %s value=%s", self._condition, variable)
             #
             # Now check for type of value for this attribute
@@ -422,7 +434,7 @@ class NOAACurrentSensor(Entity):
                 #
                 # Convert to the target units (if required)
                 #
-                res = self._unit_convert(variable, self.desiredunit)
+                res = self._unit_convert(variable, self._desiredunit)
                 if res is None:
                     return res
                 return round(res, 1)
@@ -461,9 +473,9 @@ class NOAACurrentSensor(Entity):
         """Return the state attributes of the device."""
         attr = {}
         attr[ATTR_ATTRIBUTION] = ATTRIBUTION
-        attr[ATTR_LAST_UPDATE] = self.noaadata.lastupdate
-        attr[ATTR_SITE_ID] = self.noaadata.stationid
-        attr[ATTR_SITE_NAME] = self.noaadata.stationname
+        attr[ATTR_LAST_UPDATE] = self._noaadata.lastupdate
+        attr[ATTR_SITE_ID] = self._noaadata.stationid
+        attr[ATTR_SITE_NAME] = self._noaadata.stationname
         return attr
 
     @property
@@ -472,16 +484,16 @@ class NOAACurrentSensor(Entity):
         #
         # ensure we have some data
         #
-        if self._condition in self.noaadata.data:
-            variable = self.noaadata.data[self._condition]
+        if self._condition in self._noaadata.data:
+            variable = self._noaadata.data[self._condition]
             #
             # Now check for type of value for this attribute
             # Only measurements have units
             #
             if SENSOR_TYPES[self._condition][1] == 'measurement':
                 # We should have a unitCode supplied from the API response.
-                if self.desiredunit is not None:
-                    return self.desiredunit
+                if self._desiredunit is not None:
+                    return self._desiredunit
 
                 if 'unitCode' in variable:
                     # run it through our mapping table.  If it
@@ -496,14 +508,27 @@ class NOAACurrentSensor(Entity):
     #
     def update(self):
         """Update the sensor data."""
-        self.noaadata.update()
+        self._noaadata.update()
 
 
 #
 # class to obtain the data from the NOAA/NWS API
 #
 class NOAACurrentData(Entity):
-    """Get the latest data from NOAA API."""
+    """Get the latest data from NOAA API.
+
+    This uses the API call
+    https://api.weather.gov/stations/<stationid>/observations/latest
+    which always returns all measurement names, even when the station does
+    not have an instrument for measuring that item. Also, for some measurements
+    the API returns a null value when the instrument provides some default
+    reading (for example, wind speed will be returned as null when there is
+    no measureable wind.
+    Also the min and max temperature value, and the last n hour precipitation
+    values are not returned with all calls.  It appears that the values
+    are only returned for specific observation intervals through the day,
+    depending upon the station.
+    """
 
     def __init__(self, hass, stationcode,
                  stationid, stationname, forecasturl, forecasthourlyurl, name):
@@ -517,9 +542,9 @@ class NOAACurrentData(Entity):
         self.stationcode = stationcode
         self.stationid = stationid
         self.stationname = stationname
-        self.forecasturl = forecasturl
-        self.forecasthourlyurl = forecasthourlyurl
-        self.obsurl = "https://api.weather.gov/stations/{}"\
+        self._forecasturl = forecasturl
+        self._forecasthourlyurl = forecasthourlyurl
+        self._obsurl = "https://api.weather.gov/stations/{}"\
             "/observations/latest".format(stationcode)
 
         self._name = name
@@ -535,7 +560,7 @@ class NOAACurrentData(Entity):
         _LOGGER.debug("update called for station %s", self.stationcode)
 
         try:
-            obslist = requests.get(self.obsurl)
+            obslist = requests.get(self._obsurl, headers=USER_AGENT_HEADER)
         except requests.RequestException:
             _LOGGER.error("Cannot get observations for station %s",
                           self.stationcode)
