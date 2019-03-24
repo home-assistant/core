@@ -4,7 +4,7 @@ Support for Traccar device tracking.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.traccar/
 """
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import voluptuous as vol
@@ -13,14 +13,15 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
     CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_LEVEL,
-    CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS)
+    CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS,
+    CONF_EVENT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
 
-REQUIREMENTS = ['pytraccar==0.3.0']
+REQUIREMENTS = ['pytraccar==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,25 @@ ATTR_GEOFENCE = 'geofence'
 ATTR_MOTION = 'motion'
 ATTR_SPEED = 'speed'
 ATTR_TRACKER = 'tracker'
+ATTR_TRACCAR_ID = 'traccar_id'
+
+EVENT_DEVICE_MOVING = 'deviceMoving'
+EVENT_COMMAND_RESULT = 'commandResult'
+EVENT_DEVICE_FUEL_DROP = 'deviceFuelDrop'
+EVENT_GEOFENCE_ENTER = 'geofenceEnter'
+EVENT_DEVICE_OFFLINE = 'deviceOffline'
+EVENT_DRIVER_CHANGED = 'driverChanged'
+EVENT_GEOFENCE_EXIT = 'geofenceExit'
+EVENT_DEVICE_OVERSPEED = 'deviceOverspeed'
+EVENT_DEVICE_ONLINE = 'deviceOnline'
+EVENT_DEVICE_STOPPED = 'deviceStopped'
+EVENT_MAINTENANCE = 'maintenance'
+EVENT_ALARM = 'alarm'
+EVENT_TEXT_MESSAGE = 'textMessage'
+EVENT_DEVICE_UNKNOWN = 'deviceUnknown'
+EVENT_IGNITION_OFF = 'ignitionOff'
+EVENT_IGNITION_ON = 'ignitionOn'
+EVENT_ALL_EVENTS = 'allEvents'
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
@@ -43,6 +63,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Optional(CONF_MONITORED_CONDITIONS,
                  default=[]): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_EVENT,
+                 default=[]): vol.All(cv.ensure_list, 
+                 [vol.Any(EVENT_DEVICE_MOVING, EVENT_COMMAND_RESULT,
+                          EVENT_DEVICE_FUEL_DROP, EVENT_GEOFENCE_ENTER,
+                          EVENT_DEVICE_OFFLINE, EVENT_DRIVER_CHANGED,
+                          EVENT_GEOFENCE_EXIT, EVENT_DEVICE_OVERSPEED,
+                          EVENT_DEVICE_ONLINE, EVENT_DEVICE_STOPPED,
+                          EVENT_MAINTENANCE, EVENT_ALARM,
+                          EVENT_TEXT_MESSAGE, EVENT_DEVICE_UNKNOWN,
+                          EVENT_IGNITION_OFF, EVENT_IGNITION_ON,
+                          EVENT_ALL_EVENTS)]),
 })
 
 
@@ -58,7 +89,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     scanner = TraccarScanner(
         api, hass, async_see,
         config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
-        config[CONF_MONITORED_CONDITIONS])
+        config[CONF_MONITORED_CONDITIONS], config[CONF_EVENT])
 
     return await scanner.async_init()
 
@@ -66,8 +97,9 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 class TraccarScanner:
     """Define an object to retrieve Traccar data."""
 
-    def __init__(self, api, hass, async_see, scan_interval, custom_attributes):
+    def __init__(self, api, hass, async_see, scan_interval, custom_attributes, event_types):
         """Initialize."""
+        self._event_types = event_types
         self._custom_attributes = custom_attributes
         self._scan_interval = scan_interval
         self._async_see = async_see
@@ -89,6 +121,12 @@ class TraccarScanner:
         """Update info from Traccar."""
         _LOGGER.debug('Updating device data.')
         await self._api.get_device_info(self._custom_attributes)
+        self._hass.async_create_task(self.import_device_data())
+        if self._event_types:
+            self._hass.async_create_task(self.import_events())
+
+    async def import_device_data(self):
+        """Import device data from Traccar."""
         for devicename in self._api.device_info:
             device = self._api.device_info[devicename]
             attr = {}
@@ -105,10 +143,34 @@ class TraccarScanner:
                 attr[ATTR_BATTERY_LEVEL] = device['battery']
             if device.get('motion') is not None:
                 attr[ATTR_MOTION] = device['motion']
+            if device.get('traccar_id') is not None:
+                attr[ATTR_TRACCAR_ID] = device['traccar_id']
             for custom_attr in self._custom_attributes:
                 if device.get(custom_attr) is not None:
-                    attr[custom_attr] = device[custom_attr]
+                    attr[custom_attr] = device[custom_attr] 
             await self._async_see(
                 dev_id=slugify(device['device_id']),
                 gps=(device.get('latitude'), device.get('longitude')),
                 attributes=attr)
+
+    async def import_events(self):
+        """Import events from Traccar."""
+        device_ids = [device['id'] for device in self._api.devices]
+        end_interval = datetime.utcnow()
+        start_interval = end_interval - self._scan_interval
+        events = await self._api.get_events(device_ids=device_ids, 
+                                            from_time=start_interval,
+                                            to_time=end_interval,
+                                            event_types=self._event_types)
+        if events is not None:
+            for event in events:
+                device_name = list(filter(lambda dev: dev.get('id') == event['deviceId'], 
+                                          self._api._devices)
+                                  )[0].get('name')
+                self._hass.bus.fire('traccar_' + event["type"], {
+                    'device_traccar_id': event['deviceId'],
+                    'device_name': device_name,
+                    'type': event['type'],
+                    'serverTime': event['serverTime'],
+                    'attributes': event['attributes']
+                })
