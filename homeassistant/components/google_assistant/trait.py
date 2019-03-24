@@ -1027,7 +1027,7 @@ class ModesTrait(_Trait):
                             media_player.ATTR_INPUT_SOURCE: source
                         }, blocking=True, context=data.context)
 
-                    
+
 @register_trait
 class OpenCloseTrait(_Trait):
     """Trait to open and close a cover.
@@ -1065,7 +1065,6 @@ class OpenCloseTrait(_Trait):
                 response['openPercent'] = position
                 response['on'] = self.state.state != cover.STATE_CLOSED
                 response['online'] = True
-
 
         return response
 
