@@ -28,7 +28,7 @@ DEFAULT_NAME = "aftership"
 
 ICON = "mdi:package-variant-closed"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 SERVICE_ADD_TRACKING = "aftership_add_tracking"
 SERVICE_REMOVE_TRACKING = "aftership_remove_tracking"
@@ -185,6 +185,7 @@ async def update(self):
             "last_update": track["updated_at"],
             "expected_delivery": track["expected_delivery"],
             "status": track["tag"],
+            "last_checkpoint": track["checkpoints"][-1]
         })
 
         if status not in status_to_ignore:
