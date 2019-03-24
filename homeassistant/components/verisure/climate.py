@@ -1,6 +1,5 @@
+"""Support for Verisure heatpump."""
 import logging
-import jsonpath
-import dateutil.parser
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
@@ -9,9 +8,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 from . import HUB as hub
 
-jsonpath = jsonpath.jsonpath
 _LOGGER = logging.getLogger(__name__)
-
+HEAT_PUMPS = None
 VERISIRE_HASS_OP_MODE = {
     'AUTO': 'auto',
     'FAN': 'fan_only',
@@ -30,12 +28,15 @@ HASS_VERISURE_OP_MODE = {
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    global heat_pumps
+    """Set up the Verisure heatpump."""
+    import jsonpath
+    jsonpath = jsonpath.jsonpath
+    global HEAT_PUMPS
     hub.update_overview()
-    heat_pumps = hub.get('$.heatPumps')
+    HEAT_PUMPS = hub.get('$.heatPumps')
 
-    if len(heat_pumps) > 0:
-        for heat_pump in heat_pumps[0]:
+    if HEAT_PUMPS:
+        for heat_pump in HEAT_PUMPS[0]:
             device_label = jsonpath(heat_pump, '$.deviceLabel')[0]
             add_entities([
                 VerisureHeatPump(device_label)
@@ -43,10 +44,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class VerisureHeatPump(ClimateDevice):
+    """Representation of a Verisure Heatpump."""
 
     def __init__(self, heatpumpid):
         """Initialize the climate device."""
-        self.id = heatpumpid
+        import jsonpath
+        self.jsonpath = jsonpath.jsonpath
+        self._target_temperature = None
+        self._current_operation = None
+        self._current_fan_mode = None
+        self._current_swing_mode = None
+        self._on = None
+        self.heatpump_id = heatpumpid
         self._support_flags = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |\
             SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF | SUPPORT_SWING_MODE
         self._unit_of_measurement = TEMP_CELSIUS
@@ -59,32 +68,34 @@ class VerisureHeatPump(ClimateDevice):
         self.sync_data()
 
     def sync_data(self):
-        global heat_pumps
+        """Update data from Verisure."""
+        import dateutil.parser
+        global HEAT_PUMPS
         hub.update_overview()
-        heat_pumps = hub.get('$.heatPumps')[0]
-        self.heatpumpstate = jsonpath(heat_pumps, '$.[?(@.deviceLabel == \'' +
-                                      self.id + '\')]')[0]
-        self._name = jsonpath(self.heatpumpstate, '$.area')[0]
-        d = dateutil.parser.parse(jsonpath(self.heatpumpstate,
-                                  '$.heatPumpConfig.changedTime')[0])
-        self._current_temperature = jsonpath(
+        HEAT_PUMPS = hub.get('$.heatPumps')[0]
+        self.heatpumpstate = self.jsonpath(
+            HEAT_PUMPS, '$.[?(@.deviceLabel == \'' +
+            self.heatpump_id + '\')]')[0]
+        self._name = self.jsonpath(self.heatpumpstate, '$.area')[0]
+        sync_date = dateutil.parser.parse(self.jsonpath(
+            self.heatpumpstate, '$.heatPumpConfig.changedTime')[0])
+        self._current_temperature = self.jsonpath(
             self.heatpumpstate, '$.latestClimateSample.temperature')[0]
-
-        if self._config_date is None or self._config_date < d:
-            self._target_temperature = jsonpath(
+        if self._config_date is None or self._config_date < sync_date:
+            self._target_temperature = self.jsonpath(
                 self.heatpumpstate, '$.heatPumpConfig.targetTemperature')[0]
-            current_operation = jsonpath(
+            current_operation = self.jsonpath(
                 self.heatpumpstate, '$.heatPumpConfig.mode')[0]
             self._current_operation = VERISIRE_HASS_OP_MODE[current_operation]
-            self._current_fan_mode = jsonpath(
+            self._current_fan_mode = self.jsonpath(
                 self.heatpumpstate, '$.heatPumpConfig.fanSpeed')[0].title()
-            self._current_swing_mode = jsonpath(
+            self._current_swing_mode = self.jsonpath(
                 self.heatpumpstate,
                 '$.heatPumpConfig.airSwingDirection.vertical')[0].title()
-            self._on = True if jsonpath(
+            self._on = bool(self.jsonpath(
                 self.heatpumpstate,
-                '$.heatPumpConfig.power')[0] == 'ON' else False
-            self._config_date = d
+                '$.heatPumpConfig.power')[0] == 'ON')
+            self._config_date = sync_date
 
     @property
     def supported_features(self):
@@ -103,6 +114,7 @@ class VerisureHeatPump(ClimateDevice):
 
     @property
     def target_temperature_step(self):
+        """Representation target temperature step."""
         return 1.0
 
     @property
@@ -151,21 +163,22 @@ class VerisureHeatPump(ClimateDevice):
             if kwargs.get(ATTR_TEMPERATURE) is not None:
                 self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
                 hub.session.set_heat_pump_target_temperature(
-                    self.id, self._target_temperature)
+                    self.heatpump_id, self._target_temperature)
         self.schedule_update_ha_state()
 
     def set_swing_mode(self, swing_mode):
         """Set new swing setting."""
         if self._on:
             hub.session.set_heat_pump_airswingdirection(
-                self.id, swing_mode.upper())
+                self.heatpump_id, swing_mode.upper())
             self._current_swing_mode = swing_mode
         self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         if self._on:
-            hub.session.set_heat_pump_fan_speed(self.id, fan_mode.upper())
+            hub.session.set_heat_pump_fan_speed(
+                self.heatpump_id, fan_mode.upper())
             self._current_fan_mode = fan_mode
         self.schedule_update_ha_state()
 
@@ -173,7 +186,7 @@ class VerisureHeatPump(ClimateDevice):
         """Set new target temperature."""
         if self._on:
             hub.session.set_heat_pump_mode(
-                self.id, HASS_VERISURE_OP_MODE[operation_mode])
+                self.heatpump_id, HASS_VERISURE_OP_MODE[operation_mode])
             self._current_operation = operation_mode
         self.schedule_update_ha_state()
 
@@ -189,15 +202,16 @@ class VerisureHeatPump(ClimateDevice):
 
     def turn_on(self):
         """Turn on."""
-        hub.session.set_heat_pump_power(self.id, 'ON')
+        hub.session.set_heat_pump_power(self.heatpump_id, 'ON')
         self._on = True
         self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn off."""
-        hub.session.set_heat_pump_power(self.id, 'OFF')
+        hub.session.set_heat_pump_power(self.heatpump_id, 'OFF')
         self._on = False
         self.schedule_update_ha_state()
 
     def update(self):
+        """Update self."""
         self.sync_data()
