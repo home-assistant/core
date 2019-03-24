@@ -52,7 +52,7 @@ def gcm_api_deprecated(value):
         return value
 
     _LOGGER.warning(
-        "Configuring hmtl5_push_notifications via the GCM api"
+        "Configuring html5_push_notifications via the GCM api"
         " has been deprecated and will stop working after April 11,"
         " 2019. Use the VAPID configuration instead. For instructions,"
         " see https://www.home-assistant.io/components/notify.html5/")
