@@ -6,7 +6,7 @@ https://home-assistant.io/components/demo/
 """
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
-from . import SUPPORT_OPEN, LockDevice
+from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

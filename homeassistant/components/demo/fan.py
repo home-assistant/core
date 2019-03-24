@@ -6,7 +6,7 @@ https://home-assistant.io/components/demo/
 """
 from homeassistant.const import STATE_OFF
 
-from . import (
+from homeassistant.components.fan import (
     SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SUPPORT_DIRECTION, SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED, FanEntity)
 

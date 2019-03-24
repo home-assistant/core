@@ -27,7 +27,7 @@ async def test_init_state_is_streaming(hass, demo_camera):
     assert demo_camera.state == STATE_STREAMING
 
     mock_on_img = mock_open(read_data=b'ON')
-    with patch('homeassistant.components.camera.demo.open', mock_on_img,
+    with patch('homeassistant.components.demo.camera.open', mock_on_img,
                create=True):
         image = await camera.async_get_image(hass, demo_camera.entity_id)
         assert mock_on_img.called

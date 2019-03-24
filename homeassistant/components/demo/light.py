@@ -6,7 +6,7 @@ https://home-assistant.io/components/demo/
 """
 import random
 
-from . import (
+from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
     ATTR_WHITE_VALUE, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_WHITE_VALUE, Light)

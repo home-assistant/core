@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import PLATFORM_SCHEMA, Light
+from homeassistant.components.light import PLATFORM_SCHEMA, Light
 
 _LOGGER = logging.getLogger(__name__)
 
