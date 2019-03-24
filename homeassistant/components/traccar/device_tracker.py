@@ -174,8 +174,10 @@ class TraccarScanner:
                                             event_types=self._event_types)
         if events is not None:
             for event in events:
-                device_name = list(filter(lambda dev: dev.get(
-                    'id') == event['deviceId'], self._api._devices))[0].get('name')
+                device_name = list(filter(lambda dev:
+                                          dev.get('id') == event['deviceId'],
+                                          self._api._devices)
+                                   )[0].get('name')
                 self._hass.bus.fire('traccar_' + event["type"], {
                     'device_traccar_id': event['deviceId'],
                     'device_name': device_name,
