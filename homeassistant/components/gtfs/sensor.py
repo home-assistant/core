@@ -12,9 +12,10 @@ import threading
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pygtfs==0.1.5']
 
@@ -40,9 +41,6 @@ ICONS = {
     7: 'mdi:stairs',
 }
 
-DATE_FORMAT = '%Y-%m-%d'
-TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
     vol.Required(CONF_DESTINATION): cv.string,
@@ -60,7 +58,7 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     now = datetime.datetime.now() + offset
     day_name = now.strftime('%A').lower()
     now_str = now.strftime('%H:%M:%S')
-    today = now.strftime(DATE_FORMAT)
+    today = now.strftime(dt_util.DATE_STR_FORMAT)
 
     from sqlalchemy.sql import text
 
@@ -117,28 +115,28 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
     origin_arrival = now
     if item['origin_arrival_time'] > item['origin_depart_time']:
         origin_arrival -= datetime.timedelta(days=1)
-    origin_arrival_time = '{} {}'.format(origin_arrival.strftime(DATE_FORMAT),
-                                         item['origin_arrival_time'])
+    origin_arrival_time = '{} {}'.format(
+        origin_arrival.strftime(dt_util.DATE_STR_FORMAT),
+        item['origin_arrival_time'])
 
     origin_depart_time = '{} {}'.format(today, item['origin_depart_time'])
 
     dest_arrival = now
     if item['dest_arrival_time'] < item['origin_depart_time']:
         dest_arrival += datetime.timedelta(days=1)
-    dest_arrival_time = '{} {}'.format(dest_arrival.strftime(DATE_FORMAT),
-                                       item['dest_arrival_time'])
+    dest_arrival_time = '{} {}'.format(
+        dest_arrival.strftime(dt_util.DATE_STR_FORMAT),
+        item['dest_arrival_time'])
 
     dest_depart = dest_arrival
     if item['dest_depart_time'] < item['dest_arrival_time']:
         dest_depart += datetime.timedelta(days=1)
-    dest_depart_time = '{} {}'.format(dest_depart.strftime(DATE_FORMAT),
-                                      item['dest_depart_time'])
+    dest_depart_time = '{} {}'.format(
+        dest_depart.strftime(dt_util.DATE_STR_FORMAT),
+        item['dest_depart_time'])
 
-    depart_time = datetime.datetime.strptime(origin_depart_time, TIME_FORMAT)
-    arrival_time = datetime.datetime.strptime(dest_arrival_time, TIME_FORMAT)
-
-    seconds_until = (depart_time - datetime.datetime.now()).total_seconds()
-    minutes_until = int(seconds_until / 60)
+    depart_time = dt_util.parse_datetime(origin_depart_time)
+    arrival_time = dt_util.parse_datetime(dest_arrival_time)
 
     route = sched.routes_by_id(item['route_id'])[0]
 
@@ -168,11 +166,9 @@ def get_next_departure(sched, start_station_id, end_station_id, offset):
         'route': route,
         'agency': sched.agencies_by_id(route.agency_id)[0],
         'origin_station': origin_station,
-        'departure_time': depart_time,
         'destination_station': destination_station,
+        'departure_time': depart_time,
         'arrival_time': arrival_time,
-        'seconds_until_departure': seconds_until,
-        'minutes_until_departure': minutes_until,
         'origin_stop_time': origin_stop_time_dict,
         'destination_stop_time': destination_stop_time_dict
     }
@@ -222,7 +218,6 @@ class GTFSDepartureSensor(Entity):
         self._custom_name = name
         self._icon = ICON
         self._name = ''
-        self._unit_of_measurement = 'min'
         self._state = None
         self._attributes = {}
         self.lock = threading.Lock()
@@ -239,11 +234,6 @@ class GTFSDepartureSensor(Entity):
         return self._state
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
@@ -252,6 +242,11 @@ class GTFSDepartureSensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def device_class(self):
+        """Return the class of this device."""
+        return DEVICE_CLASS_TIMESTAMP
 
     def update(self):
         """Get the latest data from GTFS and update the states."""
@@ -265,7 +260,12 @@ class GTFSDepartureSensor(Entity):
                     self._name = (self._custom_name or DEFAULT_NAME)
                 return
 
-            self._state = self._departure['minutes_until_departure']
+            # Define the state as a UTC timestamp with ISO 8601 format.
+            arrival_time = dt_util.as_utc(
+                self._departure['arrival_time']).isoformat()
+            departure_time = dt_util.as_utc(
+                self._departure['departure_time']).isoformat()
+            self._state = departure_time
 
             origin_station = self._departure['origin_station']
             destination_station = self._departure['destination_station']
@@ -281,11 +281,12 @@ class GTFSDepartureSensor(Entity):
                                       origin_station.stop_id,
                                       destination_station.stop_id))
 
+            self._icon = ICONS.get(route.route_type, ICON)
+
             # Build attributes
             self._attributes = {}
+            self._attributes['arrival'] = arrival_time
             self._attributes['offset'] = self._offset.seconds / 60
-
-            self._icon = ICONS.get(route.route_type, ICON)
 
             def dict_for_table(resource):
                 """Return a dict for the SQLAlchemy resource given."""
