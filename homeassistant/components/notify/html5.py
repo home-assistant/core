@@ -45,6 +45,7 @@ ATTR_VAPID_PUB_KEY = 'vapid_pub_key'
 ATTR_VAPID_PRV_KEY = 'vapid_prv_key'
 ATTR_VAPID_EMAIL = 'vapid_email'
 
+
 def gcm_api_deprecated(value):
     """Warn user that GCM API config is deprecated."""
     if not value:
@@ -58,7 +59,7 @@ def gcm_api_deprecated(value):
     return value
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(ATTR_GCM_SENDER_ID): 
+    vol.Optional(ATTR_GCM_SENDER_ID):
         vol.All(cv.string, gcm_api_deprecated),
     vol.Optional(ATTR_GCM_API_KEY): cv.string,
     vol.Optional(ATTR_VAPID_PUB_KEY): cv.string,
