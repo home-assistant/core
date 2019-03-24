@@ -219,7 +219,10 @@ class YeelightDevice:
 
         return self._bulb_device
 
-    def _update_properties(self, properties=UPDATE_REQUEST_PROPERTIES):
+    def _update_properties(self, properties=None):
+        if not properties:
+            properties = UPDATE_REQUEST_PROPERTIES
+
         self._bulb_device.get_properties(properties)
 
     @property
