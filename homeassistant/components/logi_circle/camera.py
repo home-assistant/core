@@ -6,8 +6,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.camera import (
-    ATTR_ENTITY_ID, ATTR_FILENAME, CAMERA_SERVICE_SCHEMA, DOMAIN,
+    ATTR_ENTITY_ID, ATTR_FILENAME, CAMERA_SERVICE_SCHEMA,
     PLATFORM_SCHEMA, SUPPORT_ON_OFF, Camera)
+from homeassistant.components.camera.const import DOMAIN
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
     CONF_SCAN_INTERVAL, STATE_OFF, STATE_ON)
