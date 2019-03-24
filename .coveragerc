@@ -456,6 +456,7 @@ omit =
     homeassistant/components/envirophat/sensor.py
     homeassistant/components/etherscan/sensor.py
     homeassistant/components/fedex/sensor.py
+    homeassistant/components/ferienapidotde/binary_sensor.py
     homeassistant/components/filesize/sensor.py
     homeassistant/components/fints/sensor.py
     homeassistant/components/fitbit/sensor.py
