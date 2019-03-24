@@ -1,4 +1,3 @@
-
 """Pressure util functions."""
 
 import logging
