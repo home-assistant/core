@@ -1,7 +1,6 @@
 """Denon HEOS Media Player."""
 
-from datetime import datetime
-from pytz import UTC
+from homeassistant.util.dt import utcnow
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -59,7 +58,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         self._player = player
         self._position_jitter_acceptance_ms = 500
         self._cache_position_ms = 0
-        self._cache_position_at = datetime.now(UTC)
+        self._cache_position_at = utcnow()
 
     def _update_state(self):
         self.async_schedule_update_ha_state()
