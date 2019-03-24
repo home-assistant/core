@@ -36,7 +36,6 @@ omit =
     homeassistant/components/arlo/*
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/august/*
-    homeassistant/components/axis/*
     homeassistant/components/bbb_gpio/*
     homeassistant/components/arest/binary_sensor.py
     homeassistant/components/concord232/binary_sensor.py
