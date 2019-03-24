@@ -1561,7 +1561,10 @@ schiene==0.23
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
-# homeassistant.components.sendgrid.notify
+# homeassistant.components.sector_alarm
+sectoralarmlib==0.7
+
+# homeassistant.components.notify.sendgrid
 sendgrid==5.6.0
 
 # homeassistant.components.sensehat.light
