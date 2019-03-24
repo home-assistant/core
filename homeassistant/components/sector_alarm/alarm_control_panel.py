@@ -15,6 +15,7 @@ DOMAIN = 'sector_alarm'
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """ Initial setup of the platform. """
 
     sector_connection = hass.data.get(SECTOR_DOMAIN)
     code = discovery_info[sector_alarm.CONF_CODE]
@@ -55,18 +56,21 @@ class SectorAlarmPanel(alarm.AlarmControlPanel):
         return 'unknown'
 
     async def async_alarm_disarm(self, code=None):
+        """ Turn off the alarm """
         _LOGGER.debug("Trying to disarm Sector Alarm")
         status = await self._sectorConnect.Disarm()
         if status:
             _LOGGER.debug("Disarmed Sector Alarm")
     
     async def async_alarm_arm_home(self, code=None):
+        """ Partial turn on the alarm """
         _LOGGER.debug("Trying to partial arm Sector Alarm")
         status = await self._sectorConnect.ArmPartial()
         if status:
             _LOGGER.debug("Sector Alarm partial armed")
 
     async def async_alarm_arm_away(self, code=None):
+        """ Fully turn on the alarm"""
         _LOGGER.debug("Trying to arm Sector Alarm")
         status = await self._sectorConnect.Arm()
         if status:
