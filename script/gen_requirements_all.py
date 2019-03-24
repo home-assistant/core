@@ -46,6 +46,7 @@ TEST_REQUIREMENTS = (
     'aiounifi',
     'apns2',
     'av',
+    'axis',
     'caldav',
     'coinmarketcap',
     'defusedxml',
