@@ -15,7 +15,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=6): cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=6): cv.time_period,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -24,20 +24,15 @@ async def async_setup(hass, config):
     """Try to start embedded Genius Hub broker."""
     from geniushub.geniushub import GeniusHub
 
-    username = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
-    host = config[DOMAIN].get(CONF_HOST)
-    scan_interval = config[DOMAIN].get(CONF_SCAN_INTERVAL)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    host = config.get(CONF_HOST)
+    scan_interval = config.get(CONF_SCAN_INTERVAL)
+
     hass.data[GENIUS_HUB] = GeniusHub(
         host, username, password, scan_interval)
 
     hass.async_create_task(async_load_platform(
-        hass, 'climate', DOMAIN, None, config))
-
-    hass.async_create_task(async_load_platform(
-        hass, 'switch', DOMAIN, None, config))
-
-    hass.async_create_task(async_load_platform(
-        hass, 'sensor', DOMAIN, None, config))
+        hass, 'climate', DOMAIN, {}, config))
 
     return True

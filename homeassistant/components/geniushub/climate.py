@@ -1,8 +1,5 @@
 """
 Supports Genius hub to provide climate controls.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/climate.geniushub/
 """
 import logging
 
@@ -11,7 +8,7 @@ from homeassistant.components.climate.const import (
     STATE_ECO, STATE_HEAT, STATE_AUTO, STATE_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_ON_OFF, SUPPORT_AWAY_MODE)
-from homeassistant.components.geniushub import GENIUS_HUB
+from . import GENIUS_HUB
 from homeassistant.const import (
     ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS)
 
@@ -41,10 +38,21 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE \
 #
 OPERATION_LIST = [STATE_IDLE, STATE_HEAT, STATE_ECO, STATE_AUTO]
 
+"""Map between GeniusHub and Home Assistant"""
+MODE_MAP = {
+    'override': STATE_HEAT,
+    'footprint': STATE_ECO,
+    'timer': STATE_AUTO,
+}
+
 
 async def async_setup_platform(hass, config,
                                async_add_entities, discovery_info=None):
+
     """Set up the Genius hub climate devices."""
+    if discovery_info is None:
+        return
+
     genius_hub = hass.data[GENIUS_HUB]
     await genius_hub.getjson('/zones')
 
@@ -67,14 +75,6 @@ class GeniusClimate(ClimateDevice):
         self._target_temperature = zone['target_temperature']
         self._mode = zone['mode']
         self._is_active = zone['is_active']
-
-    @property
-    def state(self):
-        """Return the current state."""
-        if self._is_active:
-            return STATE_ON
-
-        return STATE_OFF
 
     @property
     def name(self):
@@ -140,12 +140,7 @@ class GeniusClimate(ClimateDevice):
     @staticmethod
     def get_current_operation_mode(mode):
         """Return the current operational mode."""
-        mode_map = {
-            'override': STATE_HEAT,
-            'footprint': STATE_ECO,
-            'timer': STATE_AUTO,
-        }
-        return mode_map.get(mode, STATE_IDLE)
+        return MODE_MAP.get(mode, STATE_IDLE)
 
     def get_operation_mode(self, operation_mode):
         """Coverts operation mode from Home Assistant to Genius Hub."""
