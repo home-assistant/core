@@ -106,7 +106,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         assert state.attributes['post_pending_state'] == STATE_ALARM_ARMED_HOME
 
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -221,7 +221,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         assert state.attributes['post_pending_state'] == STATE_ALARM_ARMED_AWAY
 
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -309,7 +309,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             STATE_ALARM_ARMED_NIGHT
 
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -374,7 +374,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=60)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -417,7 +417,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             state.attributes['post_pending_state']
 
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -504,7 +504,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
 
         future = dt_util.utcnow() + timedelta(seconds=2)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -513,7 +513,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -547,7 +547,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -612,7 +612,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -648,7 +648,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -688,7 +688,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -703,7 +703,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -742,7 +742,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -782,7 +782,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -828,7 +828,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             state.attributes['post_pending_state']
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -874,7 +874,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             state.attributes['post_pending_state']
 
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -919,7 +919,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
 
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -929,7 +929,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
 
         future += timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -977,7 +977,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
 
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -987,7 +987,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         assert state.attributes['post_pending_state'] == STATE_ALARM_TRIGGERED
 
         future += timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1019,7 +1019,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=2)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1051,7 +1051,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=2)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1083,7 +1083,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=2)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1117,7 +1117,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=2)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1126,7 +1126,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             self.hass.states.get(entity_id).state
 
         future = dt_util.utcnow() + timedelta(seconds=5)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1181,7 +1181,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             state.attributes['post_pending_state']
 
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1200,7 +1200,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                 state.attributes['post_pending_state']
 
         future += timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1275,7 +1275,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         # Fast-forward a little bit
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1309,7 +1309,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         # Fast-forward a little bit
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1343,7 +1343,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         # Fast-forward a little bit
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1409,7 +1409,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
         # Fast-forward a little bit
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1425,7 +1425,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
         # Fast-forward a little bit
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
@@ -1441,7 +1441,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
         # Fast-forward a little bit
         future = dt_util.utcnow() + timedelta(seconds=1)
-        with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
+        with patch(('homeassistant.components.manual_mqtt.alarm_control_panel.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()

@@ -6,8 +6,8 @@ https://home-assistant.io/components/demo/
 """
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-from . import ClimateDevice
-from .const import (
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, SUPPORT_AUX_HEAT,
     SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_ON_OFF,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_HUMIDITY,

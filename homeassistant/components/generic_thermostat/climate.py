@@ -20,8 +20,8 @@ from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import PLATFORM_SCHEMA, ClimateDevice
-from .const import (
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate.const import (
     ATTR_AWAY_MODE, ATTR_OPERATION_MODE, STATE_AUTO, STATE_COOL, STATE_HEAT,
     STATE_IDLE, SUPPORT_AWAY_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE)

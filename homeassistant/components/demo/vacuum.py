@@ -6,7 +6,7 @@ https://home-assistant.io/components/demo/
 """
 import logging
 
-from . import (
+from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA, STATE_CLEANING, STATE_DOCKED, STATE_IDLE, STATE_PAUSED,
     STATE_RETURNING, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,

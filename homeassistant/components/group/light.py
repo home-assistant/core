@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import (
+from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_EFFECT_LIST,
     ATTR_FLASH, ATTR_HS_COLOR, ATTR_MAX_MIREDS, ATTR_MIN_MIREDS,
     ATTR_TRANSITION, ATTR_WHITE_VALUE, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
