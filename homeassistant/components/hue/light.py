@@ -9,11 +9,10 @@ import async_timeout
 
 from homeassistant.components import hue
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_TRANSITION, ATTR_HS_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
-    FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR, SUPPORT_TRANSITION,
-    Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
+    ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_NONE, EFFECT_RANDOM, FLASH_LONG,
+    FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.util import color
 
 DEPENDENCIES = ['hue']
@@ -314,7 +313,7 @@ class HueLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return [EFFECT_COLORLOOP, EFFECT_RANDOM]
+        return [EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_NONE]
 
     @property
     def device_info(self):
@@ -380,7 +379,8 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        elif self.is_philips:
+        elif (self.is_philips or self.is_osram) and \
+                (effect is None or effect == EFFECT_NONE):
             command['effect'] = 'none'
 
         if self.is_group:
