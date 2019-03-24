@@ -1,24 +1,44 @@
 """Denon HEOS Media Player."""
 
+from datetime import datetime
+from pytz import UTC
+
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    DOMAIN,
+    MEDIA_TYPE_MUSIC,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 
 from . import DOMAIN as HEOS_DOMAIN
 
-DEPENDENCIES = ['heos']
+DEPENDENCIES = ["heos"]
 
-SUPPORT_HEOS = SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_PAUSE | \
-        SUPPORT_PLAY_MEDIA | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-        SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
+SUPPORT_HEOS = (
+    SUPPORT_PLAY
+    | SUPPORT_STOP
+    | SUPPORT_PAUSE
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
+)
 
 PLAY_STATE_TO_STATE = {
-    'play': STATE_PLAYING,
-    'pause': STATE_PAUSED,
-    'stop': STATE_IDLE
+    "play": STATE_PLAYING,
+    "pause": STATE_PAUSED,
+    "stop": STATE_IDLE,
 }
 
 
@@ -37,6 +57,9 @@ class HeosMediaPlayer(MediaPlayerDevice):
     def __init__(self, player):
         """Initialize."""
         self._player = player
+        self._position_jitter_acceptance_ms = 500
+        self._cache_position_ms = 0
+        self._cache_position_at = datetime.now(UTC)
 
     def _update_state(self):
         self.async_schedule_update_ha_state()
@@ -108,7 +131,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._player.mute == 'on'
+        return self._player.mute == "on"
 
     async def async_mute_volume(self, mute):
         """Mute volume."""
@@ -119,15 +142,38 @@ class HeosMediaPlayer(MediaPlayerDevice):
         """Duration of current playing media in seconds."""
         return self._player.duration / 1000.0
 
+    def _get_cache_position(self):
+        """Position cache.
+        Return cached value if jitter increases above 0,5s."""
+        pos_now = self._player.current_position_updated_at
+        if not pos_now:
+            return (None, None)
+
+        pos_ms = self._player.current_position
+        if pos_ms == self._cache_position_ms:
+            return (pos_ms / 1000.0, self._cache_position_at)
+
+        delta_pos_at = pos_now - self._cache_position_at
+        delta_pos_at_ms = (
+            delta_pos_at.seconds * 1000 + delta_pos_at.microseconds / 1000
+        )
+        delta_pos_ms = abs(pos_ms - self._cache_position_ms)
+        jitter_ms = abs(delta_pos_ms - delta_pos_at_ms)
+        if jitter_ms > self._position_jitter_acceptance_ms:
+            self._cache_position_at = pos_now
+            self._cache_position_ms = pos_ms
+
+        return (self._cache_position_ms / 1000.0, self._cache_position_at)
+
     @property
     def media_position_updated_at(self):
         """Get time when position updated."""
-        return self._player.current_position_updated_at
+        return self._get_cache_position()[1]
 
     @property
     def media_position(self):
         """Get media position."""
-        return self._player.current_position / 1000.0
+        return self._get_cache_position()[0]
 
     async def async_media_next_track(self):
         """Go TO next track."""
