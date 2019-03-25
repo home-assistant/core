@@ -12,7 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME)
+    CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME, POWER_WATT,
+    ENERGY_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -28,16 +29,16 @@ SCAN_INTERVAL = timedelta(minutes=10)
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
 SENSOR_TYPES = {
-    'lifetime_energy': ['lifeTimeData', "Lifetime energy", 'Wh',
-                        'mdi:solar-power'],
-    'energy_this_year': ['lastYearData', "Energy this year", 'Wh',
-                         'mdi:solar-power'],
-    'energy_this_month': ['lastMonthData', "Energy this month", 'Wh',
-                          'mdi:solar-power'],
-    'energy_today': ['lastDayData', "Energy today", 'Wh',
-                     'mdi:solar-power'],
-    'current_power': ['currentPower', "Current Power", 'W',
-                      'mdi:solar-power']
+    'lifetime_energy': ['lifeTimeData', "Lifetime energy",
+                        ENERGY_WATT_HOUR, 'mdi:solar-power'],
+    'energy_this_year': ['lastYearData', "Energy this year",
+                         ENERGY_WATT_HOUR, 'mdi:solar-power'],
+    'energy_this_month': ['lastMonthData', "Energy this month",
+                          ENERGY_WATT_HOUR, 'mdi:solar-power'],
+    'energy_today': ['lastDayData', "Energy today",
+                     ENERGY_WATT_HOUR, 'mdi:solar-power'],
+    'current_power': ['currentPower', "Current Power",
+                      POWER_WATT, 'mdi:solar-power']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

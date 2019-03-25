@@ -407,14 +407,10 @@ def _listen_count(hass):
 
 
 async def test_api_error_log(hass, aiohttp_client, hass_access_token,
-                             hass_admin_user, legacy_auth):
+                             hass_admin_user):
     """Test if we can fetch the error log."""
     hass.data[DATA_LOGGING] = '/some/path'
-    await async_setup_component(hass, 'api', {
-        'http': {
-            'api_password': 'yolo'
-        }
-    })
+    await async_setup_component(hass, 'api', {})
     client = await aiohttp_client(hass.http.app)
 
     resp = await client.get(const.URL_API_ERROR_LOG)

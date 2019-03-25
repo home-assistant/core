@@ -21,7 +21,7 @@ from homeassistant.loader import bind_hass
 
 from .storage import async_setup_frontend_storage
 
-REQUIREMENTS = ['home-assistant-frontend==20190305.1']
+REQUIREMENTS = ['home-assistant-frontend==20190321.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
@@ -407,7 +407,7 @@ class IndexView(HomeAssistantView):
             })
 
         no_auth = '1'
-        if hass.config.api.api_password and not request[KEY_AUTHENTICATED]:
+        if not request[KEY_AUTHENTICATED]:
             # do not try to auto connect on load
             no_auth = '0'
 

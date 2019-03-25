@@ -230,6 +230,9 @@ class SynoNasStorageSensor(SynoNasSensor):
                 attr = getattr(
                     self._api.storage, self.var_id)(self.monitor_device)
 
+                if attr is None:
+                    return None
+
                 if self._api.temp_unit == TEMP_CELSIUS:
                     return attr
 

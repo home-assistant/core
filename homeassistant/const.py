@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 89
-PATCH_VERSION = '2'
+MINOR_VERSION = 90
+PATCH_VERSION = '1'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
@@ -245,6 +245,9 @@ ATTR_NAME = 'name'
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'
 
+# Contains one string or a list of strings, each being an area id
+ATTR_AREA_ID = 'area_id'
+
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME = 'friendly_name'
 
@@ -319,6 +322,13 @@ ATTR_DEVICE_CLASS = 'device_class'
 ATTR_TEMPERATURE = 'temperature'
 
 # #### UNITS OF MEASUREMENT ####
+# Power units
+POWER_WATT = 'W'
+
+# Energy units
+ENERGY_KILO_WATT_HOUR = 'kWh'
+ENERGY_WATT_HOUR = 'Wh'
+
 # Temperature units
 TEMP_CELSIUS = '°C'
 TEMP_FAHRENHEIT = '°F'

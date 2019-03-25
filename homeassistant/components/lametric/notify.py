@@ -24,7 +24,7 @@ CONF_PRIORITY = 'priority'
 DEPENDENCIES = ['lametric']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ICON, default='i555'): cv.string,
+    vol.Optional(CONF_ICON, default='a7956'): cv.string,
     vol.Optional(CONF_LIFETIME, default=10): cv.positive_int,
     vol.Optional(CONF_CYCLES, default=1): cv.positive_int,
     vol.Optional(CONF_PRIORITY, default='warning'):

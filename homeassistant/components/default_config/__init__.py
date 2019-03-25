@@ -6,7 +6,6 @@ DEPENDENCIES = (
     'cloud',
     'config',
     'conversation',
-    'discovery',
     'frontend',
     'history',
     'logbook',
@@ -17,6 +16,7 @@ DEPENDENCIES = (
     'sun',
     'system_health',
     'updater',
+    'zeroconf',
 )
 
 

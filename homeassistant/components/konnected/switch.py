@@ -6,7 +6,7 @@ from homeassistant.components.konnected import (
     CONF_PAUSE, CONF_REPEAT, STATE_LOW, STATE_HIGH)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
-    CONF_DEVICES, CONF_SWITCHES, CONF_PIN, ATTR_STATE)
+    ATTR_STATE, CONF_DEVICES, CONF_NAME, CONF_PIN, CONF_SWITCHES)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +40,13 @@ class KonnectedSwitch(ToggleEntity):
         self._pause = self._data.get(CONF_PAUSE)
         self._repeat = self._data.get(CONF_REPEAT)
         self._state = self._boolean_state(self._data.get(ATTR_STATE))
-        self._name = self._data.get(
-            'name', 'Konnected {} Actuator {}'.format(
-                device_id, PIN_TO_ZONE[pin_num]))
-        _LOGGER.debug("Created new switch: %s", self._name)
+        self._unique_id = '{}-{}'.format(device_id, PIN_TO_ZONE[pin_num])
+        self._name = self._data.get(CONF_NAME)
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def name(self):

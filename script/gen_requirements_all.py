@@ -24,6 +24,7 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'opencv-python',
     'py_noaa',
+    'VL53L1X2',
     'pybluez',
     'pycups',
     'PySwitchbot',
@@ -44,6 +45,7 @@ TEST_REQUIREMENTS = (
     'aiohue',
     'aiounifi',
     'apns2',
+    'av',
     'caldav',
     'coinmarketcap',
     'defusedxml',
@@ -61,12 +63,13 @@ TEST_REQUIREMENTS = (
     'ha-ffmpeg',
     'hangups',
     'HAP-python',
+    'hass-nabucasa',
     'haversine',
     'hbmqtt',
     'hdate',
     'holidays',
     'home-assistant-frontend',
-    'homekit',
+    'homekit[IP]',
     'homematicip',
     'influxdb',
     'jsonpath',
@@ -103,7 +106,7 @@ TEST_REQUIREMENTS = (
     'python-forecastio',
     'python-nest',
     'python_awair',
-    'pytradfri\\[async\\]',
+    'pytradfri[async]',
     'pyunifi',
     'pyupnp-async',
     'pywebpush',
@@ -135,9 +138,10 @@ TEST_REQUIREMENTS = (
 )
 
 IGNORE_PACKAGES = (
-    'homeassistant.components.recorder.models',
+    'homeassistant.components.hangouts.hangups_utils',
+    'homeassistant.components.cloud.client',
     'homeassistant.components.homekit.*',
-    'homeassistant.components.hangouts.hangups_utils'
+    'homeassistant.components.recorder.models',
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
@@ -287,7 +291,7 @@ def requirements_test_output(reqs):
     output.append('\n')
     filtered = {key: value for key, value in reqs.items()
                 if any(
-                    re.search(r'(^|#){}($|[=><])'.format(ign),
+                    re.search(r'(^|#){}($|[=><])'.format(re.escape(ign)),
                               key) is not None for ign in TEST_REQUIREMENTS)}
     output.append(generate_requirements_list(filtered))
 
