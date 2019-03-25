@@ -20,7 +20,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-from .const import DOMAIN as PS4_DOMAIN
+from .const import DOMAIN as PS4_DOMAIN, REGIONS as deprecated_regions
 
 DEPENDENCIES = ['ps4']
 
@@ -142,6 +142,12 @@ class PS4Device(MediaPlayerDevice):
                 self._games = self.load_games()
                 if self._games is not None:
                     self._source_list = list(sorted(self._games.values()))
+                # Non-Breaking although data returned may be inaccurate.
+                if self._region in deprecated_regions:
+                    _LOGGER.info("""Region: %s has been deprecated.
+                                    Please remove PS4 integration
+                                    and Re-configure again to utilize
+                                    current regions""", self._region)
         except socket.timeout:
             status = None
         if status is not None:
@@ -275,6 +281,8 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
+        # Close TCP Socket
+        await self.hass.async_add_executor_job(self._ps4.close)
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
@@ -320,6 +328,7 @@ class PS4Device(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
+        # No MEDIA_TYPE_GAME attr as of 0.90.
         return MEDIA_TYPE_MUSIC
 
     @property
