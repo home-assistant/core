@@ -96,11 +96,11 @@ class DriveFlowHandler(config_entries.ConfigFlow):
             ret = rclone_set_auth_code(DRIVE_NAME_INPUT, DRIVE_TYPE_INPUT, user_input['token_key'])
             if ret == 'ok':
                 # remove if exists
+                G_DRIVE_CREATION_TIME_CALL = time.time()
                 exists_entries = [entry.entry_id for entry in self._async_current_entries()]
                 if exists_entries:
                     await asyncio.wait([self.hass.config_entries.async_remove(entry_id)
                                         for entry_id in exists_entries])
-                G_DRIVE_CREATION_TIME_CALL = time.time()
                 return self.async_create_entry(
                     title="Zdalne dyski",
                     data=user_input,
@@ -132,11 +132,11 @@ class DriveFlowHandler(config_entries.ConfigFlow):
                 DRIVE_NAME_INPUT, DRIVE_TYPE_INPUT, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             if ret == 'ok':
                 # if exists
+                G_DRIVE_CREATION_TIME_CALL = time.time()
                 exists_entries = [entry.entry_id for entry in self._async_current_entries()]
                 if exists_entries:
                     await asyncio.wait([self.hass.config_entries.async_remove(entry_id)
                                         for entry_id in exists_entries])
-                G_DRIVE_CREATION_TIME_CALL = time.time()
                 return self.async_create_entry(
                     title="Zdalne dyski",
                     data=user_input,

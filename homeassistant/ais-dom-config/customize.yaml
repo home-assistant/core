@@ -36,6 +36,7 @@ input_text.buttons_ais_remote:
     row_height: 22px
     entities:
 
+
 #    - entity: script.ais_button_click
 #      data:
 #        code: '{"KeyCode":190, "Action": 1}'
@@ -169,7 +170,6 @@ camera.remote_access:
 sensor.ais_secure_android_id_dom:
   friendly_name: Unikalny identyfikator bramki
   icon: mdi:account-card-details
-
 
 group.dom_system_version:
   context_key_words: wersja,aktualizacja,wersja systemu
@@ -307,3 +307,4 @@ group.ais_tts_configuration:
   context_answer: OK, wybrano konfigurację zamiany tekstu na mowę
   remote_group_view: Ustawienia
   order: 3
+

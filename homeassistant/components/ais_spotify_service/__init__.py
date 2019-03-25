@@ -108,8 +108,13 @@ def async_setup(hass, config):
         _LOGGER.info("select_track_name")
         data.process_select_track_name(call)
 
+    def change_serive(call):
+        _LOGGER.info("change_serive")
+        data.change_serive(call)
+
     hass.services.async_register(DOMAIN, 'search', search)
     hass.services.async_register(DOMAIN, 'select_track_name', select_track_name)
+    hass.services.async_register(DOMAIN, 'change_serive', change_serive)
 
     return True
 
@@ -327,3 +332,6 @@ class SpotifyData:
                     "media_content_id": _audio_info
                 })
 
+
+    def change_service(self, call):
+        _LOGGER.info("change_service")

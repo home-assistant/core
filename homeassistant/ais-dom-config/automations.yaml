@@ -191,6 +191,18 @@
       data_template:
         text: "{{ states('input_text.ais_knowledge_query') }}"
 
+#- id: '201903240901000'
+#  alias: 'Change music service'
+#  initial_state: True
+#  hide_entity: True
+#  trigger:
+#    platform: state
+#    entity_id: input_select.ais_music_service
+#  action:
+#    - service: ais_spotify_service.change_serive
+#      data_template:
+#        service: "{{ states('input_select.ais_music_service') }}"
+
 - id: '201807081905012'
   alias: 'Search YouTube Tracks'
   initial_state: True

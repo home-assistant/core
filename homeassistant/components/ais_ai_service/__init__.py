@@ -645,8 +645,10 @@ def commit_current_position(hass):
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
-    # elif CURR_ENTITIE == "input_select.folder_name":
-    #     _say_it(hass, "wybrano", None)
+    elif CURR_ENTITIE == "input_select.ais_music_service":
+        _say_it(hass, "Wybrano " + position + ", jakiej muzyki mam wyszukać", None)
+        set_curr_entity(hass, 'input_text.ais_music_query')
+        CURR_ENTITIE_ENTERED = True
     else:
         _beep_it(hass, 33)
     # TODO - run the script for the item,

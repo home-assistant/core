@@ -107,13 +107,13 @@ async def async_unload_entry(hass, config_entry):
     if config_flow.G_DRIVE_CREATION_TIME_CALL is not None:
         secs = time_now - config_flow.G_DRIVE_CREATION_TIME_CALL
     else:
-        secs = 1
-
+        secs = 10
     if secs > 5:
-        _LOGGER.info("Reloading entry: " + str(secs))
-    else:
         _LOGGER.warning("Remove the drive token from rclone conf: " + str(secs))
         open(G_RCLONE_CONF_FILE, 'w').close()
+    else:
+        _LOGGER.info("Reloading entry: " + str(secs))
+
 
     await hass.config_entries.async_forward_entry_unload(config_entry, 'sensor')
     return True
@@ -241,7 +241,7 @@ def rclone_set_auth_passwd(drive_name, drive_type, user, passwd):
         return 'ERROR: ' + str(e)
 
 
-def album_cover_extract(path):
+def file_tags_extract(path):
     import mutagen.id3
     import mutagen.flac
     import mutagen.mp4
@@ -249,8 +249,16 @@ def album_cover_extract(path):
     dir_www = "/data/data/pl.sviete.dom/files/home/AIS/www/"
     dir_name = os.path.basename(os.path.dirname(path)).replace(' ', '')
     ret_path = '/local/' + dir_name + "_cover.jpg"
+    f_length = 0
+    # file info
+    try:
+        fi = mutagen.File(path)
+        f_length = str(fi.info.length)
+    except Exception as e:
+        _LOGGER.error("Error " + str(e))
+
     if G_COVER_FILE == dir_www + dir_name + "_cover.jpg":
-        return ret_path
+        return ret_path, f_length
     # remove all .jpg
     jpgs = os.listdir(dir_www)
     for jpg in jpgs:
@@ -267,9 +275,13 @@ def album_cover_extract(path):
             flac = mutagen.flac.FLAC(path)
             open(G_COVER_FILE, 'wb').write(flac.pictures[0].data)
         except mutagen.flac.FLACNoHeaderError:
-            mp4 = mutagen.mp4.MP4(path)
-            open(G_COVER_FILE, 'wb').write(mp4['covr'][0])
-    return ret_path
+            try:
+                mp4 = mutagen.mp4.MP4(path)
+                open(G_COVER_FILE, 'wb').write(mp4['covr'][0])
+            except Exception as e:
+                _LOGGER.error("Error " + str(e))
+
+    return ret_path, f_length
 
 
 class LocalData:
@@ -311,11 +323,12 @@ class LocalData:
         elif mime_type.startswith('audio/'):
             _url = self.current_path
             # TODO search the album and title ...
-            album_cover_path = album_cover_extract(self.current_path)
+            album_cover_path, file_length = file_tags_extract(self.current_path)
             _audio_info = {"NAME": os.path.basename(self.current_path),
                            "MEDIA_SOURCE": ais_global.G_AN_LOCAL,
                            "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path)),
-                           "IMAGE_URL": album_cover_path}
+                           "IMAGE_URL": album_cover_path,
+                           "DURATION": file_length}
             _audio_info = json.dumps(_audio_info)
 
             if _url is not None:

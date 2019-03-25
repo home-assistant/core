@@ -112,7 +112,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._status = message.get("currentStatus", 0)
             self._playing = message.get("playing", False)
             self._media_position = message.get("currentPosition", 0)
-            self._duration = message.get("duration", 0)
+            if "duration" in message:
+                self._duration = message.get("duration", 0)
             temp_stream_image = message.get("media_stream_image", None)
             if temp_stream_image is not None:
                 if temp_stream_image.startswith("spotify:image:"):
@@ -167,9 +168,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        # Time does not exist for streams
-        # TODO
-        return self._duration
+        return int(float(self._duration))
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
@@ -328,7 +327,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         position = self._media_position
         if self._status == 3 and self._media_status_received_time is not None:
             position += (dt_util.utcnow() - self._media_status_received_time).total_seconds()
-        return int(position)
+        return int(float(position))
 
     @property
     def device_state_attributes(self):
@@ -476,6 +475,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 self._album_name = j_info["ALBUM_NAME"]
             else:
                 self._album_name = None
+            if "DURATION" in j_info:
+                self._duration = j_info["DURATION"]
 
             try:
                 j_media_info = {"media_title": self._media_title,
