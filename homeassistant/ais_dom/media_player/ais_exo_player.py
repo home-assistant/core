@@ -196,6 +196,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     "val": position
                 }
             )
+            self._media_status_received_time = dt_util.utcnow()
+            self._media_position = position
 
     def volume_up(self):
         """Service to send the exo the command for volume up."""

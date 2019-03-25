@@ -424,9 +424,9 @@ class LocalData:
                                "path": self.current_path + ais_global.G_DRIVE_SHARED_WITH_ME})
         for item in self.folders_json:
             if self.current_path.endswith(':'):
-                path = self.current_path + item["Path"].strip()
+                path = self.current_path + item["Path"]
             else:
-                path = self.current_path + "/" + item["Path"].strip()
+                path = self.current_path + "/" + item["Path"]
 
             l_icon = "file-outline"
             if item["IsDir"]:
@@ -439,7 +439,7 @@ class LocalData:
                         l_icon = "music-circle"
                     elif item["MimeType"].startswith("video/"):
                         l_icon = "file-video-outline"
-            items_info.append({"name": item["Path"].strip()[:50], "icon": l_icon, "path": path})
+            items_info.append({"name": item["Path"][:50], "icon": l_icon, "path": path})
         self.hass.states.set("sensor.dyski", self.current_path, {'files': items_info})
 
     def get_icon(self, entry):
@@ -475,7 +475,10 @@ class LocalData:
                     else:
                         k = self.current_path.rfind("/")
                         self.current_path = self.current_path[:k]
-                        k = self.current_path.rfind("/")
+                        if self.current_path.count("/") > 0:
+                            k = self.current_path.rfind("/")
+                        else:
+                            k = self.current_path.rfind(":")
                         self.current_path = self.current_path[:k]
 
             # local drive
@@ -563,7 +566,11 @@ class LocalData:
                     self.beep()
 
     def rclone_copy_and_read(self, path, item_path):
-        # TODO clear .temp files...
+        # clear .temp files
+        files = os.listdir(G_LOCAL_FILES_ROOT + '/.temp/')
+        for file in files:
+            os.remove(os.path.join(G_LOCAL_FILES_ROOT + '/.temp/', file))
+
         if ais_global.G_DRIVE_SHARED_WITH_ME in path:
             rclone_cmd = ["rclone", "copy", path.replace(ais_global.G_DRIVE_SHARED_WITH_ME, ''),
                           G_LOCAL_FILES_ROOT + '/.temp/', G_RCLONE_CONF,
@@ -656,6 +663,7 @@ class LocalData:
                 item_name = item["Name"]
                 if "MimeType" in item:
                     mime_type = item["MimeType"]
+                break
         if is_dir is None:
             # check if this is file selected from bookmarks
             bookmark = ais_global.G_BOOKMARK_MEDIA_CONTENT_ID.replace(G_RCLONE_URL_TO_STREAM, "")
