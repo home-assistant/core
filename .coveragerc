@@ -82,6 +82,7 @@ omit =
     homeassistant/components/proliphix/climate.py
     homeassistant/components/radiotherm/climate.py
     homeassistant/components/sensibo/climate.py
+    homeassistant/components/tfiac/climate.py
     homeassistant/components/touchline/climate.py
     homeassistant/components/venstar/climate.py
     homeassistant/components/zhong_hong/climate.py
