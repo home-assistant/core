@@ -868,6 +868,8 @@ class StateMachine:
     def set(self, entity_id: str, new_state: Any,
             attributes: Optional[Dict] = None,
             force_update: bool = False,
+            last_changed: Optional[datetime.datetime] = None,
+            last_updated: Optional[datetime.datetime] = None,
             context: Optional[Context] = None) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -879,13 +881,15 @@ class StateMachine:
         run_callback_threadsafe(
             self._loop,
             self.async_set, entity_id, new_state, attributes, force_update,
-            context,
+            last_changed, last_updated, context,
         ).result()
 
     @callback
     def async_set(self, entity_id: str, new_state: Any,
                   attributes: Optional[Dict] = None,
                   force_update: bool = False,
+                  last_changed: Optional[datetime.datetime] = None,
+                  last_updated: Optional[datetime.datetime] = None,
                   context: Optional[Context] = None) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -903,12 +907,15 @@ class StateMachine:
         if old_state is None:
             same_state = False
             same_attr = False
-            last_changed = None
+            new_last_changed = None
+            new_last_updated = None
         else:
             same_state = (old_state.state == new_state and
                           not force_update)
             same_attr = old_state.attributes == attributes
-            last_changed = old_state.last_changed if same_state else None
+            new_last_changed = old_state.last_changed if same_state \
+                else last_changed
+            new_last_updated = last_updated
 
         if same_state and same_attr:
             return
@@ -916,8 +923,8 @@ class StateMachine:
         if context is None:
             context = Context()
 
-        state = State(entity_id, new_state, attributes, last_changed, None,
-                      context)
+        state = State(entity_id, new_state, attributes, new_last_changed,
+                      new_last_updated, context)
         self._states[entity_id] = state
         self._bus.async_fire(EVENT_STATE_CHANGED, {
             'entity_id': entity_id,
