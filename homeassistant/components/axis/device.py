@@ -11,7 +11,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, DOMAIN, LOGGER
+from .const import (
+    AXIS_ADD_SENSOR, AXIS_REACHABLE, CONF_CAMERA, CONF_EVENTS, CONF_MODEL,
+    LOGGER)
+
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -72,8 +75,7 @@ class AxisNetworkDevice:
 
         try:
             self.api = await get_device(
-                hass, self.config_entry.data[CONF_DEVICE],
-                event_types='on', signal_callback=self.async_signal_callback)
+                hass, self.config_entry.data[CONF_DEVICE])
 
         except CannotConnect:
             raise ConfigEntryNotReady
@@ -95,6 +97,10 @@ class AxisNetworkDevice:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, 'binary_sensor'))
+
+            self.api.stream.connection_status_callback = \
+                self.async_connection_status_callback
+            self.api.enable_events(event_callback=self.async_event_callback)
             self.api.start()
 
         return True
@@ -105,7 +111,15 @@ class AxisNetworkDevice:
         return 'axis_add_sensor_{}'.format(self.serial)
 
     @callback
-    def async_signal_callback(self, action, event):
+    def async_connection_status_callback(self, status):
+        """Handle signals of gateway connection status."""
+        from axis.streammanager import SIGNAL_PLAYING
+        if self.available != status == SIGNAL_PLAYING:
+            self.available = status == SIGNAL_PLAYING
+            async_dispatcher_send(self.hass, AXIS_REACHABLE, 0)
+
+    @callback
+    def async_event_callback(self, action, event):
         """Call to configure events when initialized on event stream."""
         if action == 'add':
             async_dispatcher_send(self.hass, self.event_new_sensor, event)
@@ -116,7 +130,7 @@ class AxisNetworkDevice:
         self.api.stop()
 
 
-async def get_device(hass, config, event_types=None, signal_callback=None):
+async def get_device(hass, config):
     """Create a Axis device."""
     import axis
 
@@ -124,8 +138,7 @@ async def get_device(hass, config, event_types=None, signal_callback=None):
         loop=hass.loop, host=config[CONF_HOST],
         username=config[CONF_USERNAME],
         password=config[CONF_PASSWORD],
-        port=config[CONF_PORT], web_proto='http',
-        event_types=event_types, signal=signal_callback)
+        port=config[CONF_PORT], web_proto='http')
 
     try:
         with async_timeout.timeout(15):

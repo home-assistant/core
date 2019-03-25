@@ -9,7 +9,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN as AXIS_DOMAIN, LOGGER
+from .const import (
+    DOMAIN as AXIS_DOMAIN, AXIS_ADD_SENSOR, AXIS_REACHABLE, LOGGER)
 
 DEPENDENCIES = [AXIS_DOMAIN]
 
@@ -35,16 +36,19 @@ class AxisBinarySensor(BinarySensorDevice):
         """Initialize the Axis binary sensor."""
         self.event = event
         self.device = device
-        self.delay = device.config_entry.options[CONF_TRIGGER_TIME]
         self.remove_timer = None
+        self.unsub_dispatcher = None
 
     async def async_added_to_hass(self):
         """Subscribe sensors events."""
         self.event.register_callback(self.update_callback)
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, AXIS_REACHABLE, self.update_callback)
 
-    def update_callback(self):
+    def update_callback(self, delay=None):
         """Update the sensor's state, if needed."""
-        delay = self.device.config_entry.options[CONF_TRIGGER_TIME]
+        if not delay:
+            delay = self.device.config_entry.options[CONF_TRIGGER_TIME]
 
         if self.remove_timer is not None:
             self.remove_timer()
@@ -86,6 +90,10 @@ class AxisBinarySensor(BinarySensorDevice):
         """Return a unique identifier for this device."""
         return '{}-{}-{}'.format(
             self.device.serial, self.event.topic, self.event.id)
+
+    def available(self):
+        """Return True if device is available."""
+        return self.device.available
 
     @property
     def should_poll(self):

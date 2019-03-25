@@ -5,6 +5,9 @@ LOGGER = logging.getLogger('homeassistant.components.axis')
 
 DOMAIN = 'axis'
 
+AXIS_ADD_SENSOR = 'axis_add_sensor'
+AXIS_REACHABLE = 'axis_reachable'
+
 CONF_CAMERA = 'camera'
 CONF_EVENTS = 'events'
 CONF_MODEL = 'model'

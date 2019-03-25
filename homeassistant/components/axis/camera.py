@@ -7,7 +7,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN as AXIS_DOMAIN
+from .const import DOMAIN as AXIS_DOMAIN, AXIS_REACHABLE
 
 DEPENDENCIES = [AXIS_DOMAIN]
 
@@ -46,12 +46,24 @@ class AxisCamera(MjpegCamera):
         self.device_config = config
         self.device = device
         self.port = device.config_entry.data[CONF_DEVICE][CONF_PORT]
-        self.unsub_dispatcher = None
+        self.unsub_dispatcher = []
 
     async def async_added_to_hass(self):
         """Subscribe camera events."""
-        self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, 'axis_{}_new_ip'.format(self.device.name), self._new_ip)
+        self.unsub_dispatcher.append(async_dispatcher_connect(
+            self.hass, 'axis_{}_new_ip'.format(self.device.name),
+            self._new_ip))
+        self.unsub_dispatcher.append(async_dispatcher_connect(
+            self.hass, AXIS_REACHABLE, self.update_callback))
+
+    def update_callback(self, delay=None):
+        """Update the cameras state."""
+        self.schedule_update_ha_state()
+
+    @property
+    def available(self):
+        """Return True if device is available."""
+        return self.device.available
 
     def _new_ip(self, host):
         """Set new IP for video stream."""
