@@ -211,6 +211,9 @@ async def async_setup(hass, config):
         SCHEMA_WS_CAMERA_THUMBNAIL
     )
     hass.components.websocket_api.async_register_command(ws_camera_stream)
+    hass.components.websocket_api.async_register_command(websocket_get_prefs)
+    hass.components.websocket_api.async_register_command(
+        websocket_update_prefs)
 
     await component.async_setup(config)
 
