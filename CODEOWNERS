@@ -241,15 +241,16 @@ homeassistant/components/tautulli/sensor.py @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/cover.py @PhracturedBlue
 homeassistant/components/tesla/* @zabuldon
+homeassistant/components/tfiac/* @fredrike @mellado
 homeassistant/components/thethingsnetwork/* @fabaff
 homeassistant/components/threshold/binary_sensor.py @fabaff
 homeassistant/components/tibber/* @danielhiversen
 homeassistant/components/tile/device_tracker.py @bachya
 homeassistant/components/time_date/sensor.py @fabaff
+homeassistant/components/toon/* @frenck
 homeassistant/components/tplink/* @rytilahti
 homeassistant/components/traccar/device_tracker.py @ludeeus
 homeassistant/components/tradfri/* @ggravlingen
-homeassistant/components/toon/* @frenck
 
 # U
 homeassistant/components/uber/sensor.py @robbiet480
