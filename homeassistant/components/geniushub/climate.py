@@ -175,8 +175,12 @@ class GeniusClimate(ClimateDevice):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            await self.async_set_operation_mode(STATE_HEAT)
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
+
+        self._target_temperature = temperature
+        await self.async_set_operation_mode(STATE_HEAT)
 
     async def async_update(self):
         """Get the latest data from the hub."""
