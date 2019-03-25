@@ -17,6 +17,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from requests.exceptions import HTTPError, ConnectTimeout
 
 REQUIREMENTS = ['solaredge==0.0.2']
 
@@ -202,7 +203,7 @@ class SolarEdgeDetailsSensor(SolarEdgeSensor):
         self._attributes = {}
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -225,7 +226,7 @@ class SolarEdgeInventorySensor(SolarEdgeSensor):
         self._attributes = {}
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -248,7 +249,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensor):
         self._attributes = {}
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -278,7 +279,6 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
     @Throttle(OVERVIEW_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-        from requests.exceptions import HTTPError, ConnectTimeout
 
         try:
             data = self.api.get_overview(self.site_id)
@@ -311,7 +311,6 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
     @Throttle(DETAILS_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-        from requests.exceptions import HTTPError, ConnectTimeout
 
         try:
             data = self.api.get_details(self.site_id)
@@ -345,7 +344,6 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
     @Throttle(INVENTORY_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-        from requests.exceptions import HTTPError, ConnectTimeout
 
         try:
             data = self.api.get_inventory(self.site_id)
@@ -380,7 +378,6 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
     @Throttle(POWER_FLOW_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-        from requests.exceptions import HTTPError, ConnectTimeout
 
         try:
             data = self.api.get_current_power_flow(self.site_id)
@@ -423,7 +420,6 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
                 self.data[key] *= -1 if charge else 1
                 self.attributes[key]['flow'] = ('charge' if charge
                                                 else 'discharge')
-                pass
 
         _LOGGER.debug("Updated SolarEdge power flow: %s, %s",
                       self.data, self.attributes)
