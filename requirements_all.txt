@@ -1494,7 +1494,7 @@ pylgnetcast-homeassistant==0.2.0.dev0
 pylibrespot-java==0.1.0
 
 # homeassistant.components.litejet
-pylitejet==0.1
+pylitejet==0.3.0
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
