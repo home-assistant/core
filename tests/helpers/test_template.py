@@ -97,6 +97,16 @@ class TestHelpersTemplate(unittest.TestCase):
                 '{{ states.sensor.temperature.state | multiply(10) | round }}',
                 self.hass).render()
 
+        assert '12.7' == \
+            template.Template(
+                '{{ states.sensor.temperature.state | round(1, "floor") }}',
+                self.hass).render()
+
+        assert '12.8' == \
+            template.Template(
+                '{{ states.sensor.temperature.state | round(1, "ceil") }}',
+                self.hass).render()
+
     def test_rounding_value_get_original_value_on_error(self):
         """Test rounding value get original value on error."""
         assert 'None' == \
