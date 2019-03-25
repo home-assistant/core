@@ -8,13 +8,15 @@ from homeassistant.components.discovery import SERVICE_YEELIGHT
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_SCAN_INTERVAL, \
     CONF_HOST, ATTR_ENTITY_ID
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as \
+    BINARY_SENSOR_DOMAIN
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['yeelight==0.4.3']
+REQUIREMENTS = ['yeelight==0.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +41,6 @@ ATTR_TRANSITIONS = 'transitions'
 ACTION_RECOVER = 'recover'
 ACTION_STAY = 'stay'
 ACTION_OFF = 'off'
-
-MODE_MOONLIGHT = 'moonlight'
-MODE_DAYLIGHT = 'normal'
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -90,11 +89,6 @@ YEELIGHT_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-NIGHTLIGHT_SUPPORTED_MODELS = [
-    "ceiling3",
-    'ceiling4'
-]
-
 UPDATE_REQUEST_PROPERTIES = [
     "power",
     "bright",
@@ -103,8 +97,7 @@ UPDATE_REQUEST_PROPERTIES = [
     "hue",
     "sat",
     "color_mode",
-    "flowing",
-    "music_on",
+    "bg_power",
     "nl_br",
     "active_mode",
 ]
@@ -195,6 +188,8 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     )
 
     load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
+    load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
+                  hass_config)
 
 
 class YeelightDevice:
@@ -218,16 +213,13 @@ class YeelightDevice:
                 self._bulb_device = yeelight.Bulb(self._ipaddr,
                                                   model=self._model)
                 # force init for type
-                self._update_properties()
+                self.update()
 
             except yeelight.BulbException as ex:
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
 
         return self._bulb_device
-
-    def _update_properties(self):
-        self._bulb_device.get_properties(UPDATE_REQUEST_PROPERTIES)
 
     @property
     def name(self):
@@ -251,6 +243,11 @@ class YeelightDevice:
             return False
 
         return self.bulb.last_properties.get('active_mode') == '1'
+
+    @property
+    def is_nightlight_supported(self) -> bool:
+        """Return true / false if nightlight is supported."""
+        return self.bulb.get_model_specs().get('night_light', False)
 
     def turn_on(self, duration=DEFAULT_TRANSITION):
         """Turn on device."""
@@ -281,5 +278,5 @@ class YeelightDevice:
         if not self.bulb:
             return
 
-        self._update_properties()
+        self._bulb_device.get_properties(UPDATE_REQUEST_PROPERTIES)
         dispatcher_send(self._hass, DATA_UPDATED, self._ipaddr)
