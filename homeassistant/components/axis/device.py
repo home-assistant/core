@@ -50,7 +50,7 @@ class AxisNetworkDevice:
         """Return the mac of this device."""
         return self.config_entry.data[CONF_MAC]
 
-    async def update_device_registry(self):
+    async def async_update_device_registry(self):
         """Update device registry."""
         device_registry = await \
             self.hass.helpers.device_registry.async_get_registry()
