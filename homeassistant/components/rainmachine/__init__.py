@@ -4,12 +4,14 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_IP_ADDRESS, CONF_PASSWORD,
     CONF_PORT, CONF_SCAN_INTERVAL, CONF_SENSORS, CONF_SSL,
     CONF_MONITORED_CONDITIONS, CONF_SWITCHES)
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryNotReady, Unauthorized, UnknownUser)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -128,6 +130,38 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+async def _check_service_permissions(hass, service_call):
+    """Ensure the user of a service call has proper permissions."""
+    if service_call.data.get('entity_id'):
+        rainmachine_entities = service_call.data['entity_id']
+    else:
+        # If the service call doesn't explicitly provide entity IDs, use _all_
+        # RainMachine entities:
+        en_reg = await hass.helpers.entity_registry.async_get_registry()
+        rainmachine_entities = [
+            entity.entity_id for entity in en_reg.entities
+            if hass.config_entries.async_get_entry(
+                entity.config_entry_id).domain == DOMAIN
+        ]
+
+    for entity_id in rainmachine_entities:
+        if service_call.context.user_id:
+            user = await hass.auth.async_get_user(service_call.context.user_id)
+
+            if user is None:
+                raise UnknownUser(
+                    context=service_call.context,
+                    entity_id=entity_id,
+                    permission=POLICY_CONTROL
+                )
+
+            if not user.permissions.check_entity(entity_id, POLICY_CONTROL):
+                raise Unauthorized(
+                    context=service_call.context,
+                    entity_id=entity_id,
+                    permission=POLICY_CONTROL,
+                )
+
 async def async_setup(hass, config):
     """Set up the RainMachine component."""
     hass.data[DOMAIN] = {}
@@ -197,60 +231,71 @@ async def async_setup_entry(hass, config_entry):
             refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
-    async def disable_program(service):
+    async def disable_program(call):
         """Disable a program."""
+        _check_service_permissions(hass, call)
         await rainmachine.client.programs.disable(
-            service.data[CONF_PROGRAM_ID])
+            call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def disable_zone(service):
+    async def disable_zone(call):
         """Disable a zone."""
-        await rainmachine.client.zones.disable(service.data[CONF_ZONE_ID])
+        _check_service_permissions(hass, call)
+        await rainmachine.client.zones.disable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    async def enable_program(service):
+    async def enable_program(call):
         """Enable a program."""
-        await rainmachine.client.programs.enable(service.data[CONF_PROGRAM_ID])
+        _check_service_permissions(hass, call)
+        await rainmachine.client.programs.enable(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def enable_zone(service):
+    async def enable_zone(call):
         """Enable a zone."""
-        await rainmachine.client.zones.enable(service.data[CONF_ZONE_ID])
+        _check_service_permissions(hass, call)
+        await rainmachine.client.zones.enable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    async def pause_watering(service):
+    async def pause_watering(call):
         """Pause watering for a set number of seconds."""
-        await rainmachine.client.watering.pause_all(service.data[CONF_SECONDS])
+        _check_service_permissions(hass, call)
+        await rainmachine.client.watering.pause_all(call.data[CONF_SECONDS])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def start_program(service):
+    async def start_program(call):
         """Start a particular program."""
-        await rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
+        _check_service_permissions(hass, call)
+        await rainmachine.client.programs.start(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def start_zone(service):
+    async def start_zone(call):
         """Start a particular zone for a certain amount of time."""
+        _check_service_permissions(hass, call)
         await rainmachine.client.zones.start(
-            service.data[CONF_ZONE_ID], service.data[CONF_ZONE_RUN_TIME])
+            call.data[CONF_ZONE_ID], call.data[CONF_ZONE_RUN_TIME])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    async def stop_all(service):
+    async def stop_all(call):
         """Stop all watering."""
+        _check_service_permissions(hass, call)
         await rainmachine.client.watering.stop_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def stop_program(service):
+    async def stop_program(call):
         """Stop a program."""
-        await rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
+        _check_service_permissions(hass, call)
+        await rainmachine.client.programs.stop(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def stop_zone(service):
+    async def stop_zone(call):
         """Stop a zone."""
-        await rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
+        _check_service_permissions(hass, call)
+        await rainmachine.client.zones.stop(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    async def unpause_watering(service):
+    async def unpause_watering(call):
         """Unpause watering."""
+        _check_service_permissions(hass, call)
         await rainmachine.client.watering.unpause_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
