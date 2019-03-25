@@ -284,8 +284,9 @@ async def async_setup(hass, config):
                 preprocess_turn_on_alternatives(pars)
             if ATTR_BRIGHTNESS in pars and pars[ATTR_BRIGHTNESS] == 0:
                 # Zero brightness: Turn the light off
-                [pars.pop(k) for k in list(pars.keys()) if k not in \
-                    [ATTR_TRANSITION, ATTR_FLASH]]
+                for k in list(pars.keys()):
+                    if k not in [ATTR_TRANSITION, ATTR_FLASH]:
+                        pars.pop(k)
                 await light.async_turn_off(**pars)
             else:
                 await light.async_turn_on(**pars)
