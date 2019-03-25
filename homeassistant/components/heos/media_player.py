@@ -142,8 +142,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         return self._player.duration / 1000.0
 
     def _get_cache_position(self):
-        """Position cache.
-        Return cached value if jitter increases above 0,5s."""
+        """Get position. Use cache if jitter < 0,5s."""
         pos_now = self._player.current_position_updated_at
         if not pos_now:
             return (None, None)
