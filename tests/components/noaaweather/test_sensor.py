@@ -4,7 +4,9 @@ import unittest
 from unittest.mock import patch
 
 from homeassistant.setup import setup_component
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES, LENGTH_INCHES)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                                 LENGTH_KILOMETERS, LENGTH_MILES,
+                                 LENGTH_INCHES)
 from homeassistant.util.unit_system import (IMPERIAL_SYSTEM)
 
 from tests.common import (get_test_home_assistant)
@@ -65,47 +67,47 @@ BAD_CONF_STATION = {
 
 STATION_LIST = [
         {'id': 'https://api.weather.gov/stations/KJFK',
-            'geometry': {'type': 'Point',
-                         'coordinates': [-73.76393, 40.63915]},
-            'type': 'Feature',
-            'properties': {
-                'name': 'New York, Kennedy International Airport',
-                '@type': 'wx:ObservationStation',
-                'stationIdentifier': 'KJFK',
-                'timeZone': 'America/New_York',
-                '@id': 'https://api.weather.gov/stations/KJFK',
-                'elevation': {'unitCode': 'unit:m', 'value': 3.048}}},
+         'geometry': {'type': 'Point',
+                      'coordinates': [-73.76393, 40.63915]},
+         'type': 'Feature',
+         'properties': {
+             'name': 'New York, Kennedy International Airport',
+             '@type': 'wx:ObservationStation',
+             'stationIdentifier': 'KJFK',
+             'timeZone': 'America/New_York',
+             '@id': 'https://api.weather.gov/stations/KJFK',
+             'elevation': {'unitCode': 'unit:m', 'value': 3.048}}},
         {'id': 'https://api.weather.gov/stations/KLGA',
-            'geometry': {'type': 'Point',
-                         'coordinates': [-73.88, 40.77917]},
-            'type': 'Feature',
-            'properties': {
-                'name': 'New York, La Guardia Airport',
-                '@type': 'wx:ObservationStation',
-                'stationIdentifier': 'KLGA',
-                'timeZone': 'America/New_York',
-                '@id': 'https://api.weather.gov/stations/KLGA',
-                'elevation': {'unitCode': 'unit:m', 'value': 6.096}}},
+         'geometry': {'type': 'Point',
+                      'coordinates': [-73.88, 40.77917]},
+         'type': 'Feature',
+         'properties': {
+             'name': 'New York, La Guardia Airport',
+             '@type': 'wx:ObservationStation',
+             'stationIdentifier': 'KLGA',
+             'timeZone': 'America/New_York',
+             '@id': 'https://api.weather.gov/stations/KLGA',
+             'elevation': {'unitCode': 'unit:m', 'value': 6.096}}},
         {'id': 'https://api.weather.gov/stations/KNYC',
-            'geometry': {'type': 'Point',
-                         'coordinates': [-73.9666699, 40.78333]},
-            'type': 'Feature',
-            'properties': {
-                'name': 'New York City, Central Park',
-                '@type': 'wx:ObservationStation',
-                'stationIdentifier': 'KNYC',
-                'timeZone': 'America/New_York',
-                '@id': 'https://api.weather.gov/stations/KNYC',
-                'elevation': {'unitCode': 'unit:m', 'value': 46.9392}}},
-            ]
+         'geometry': {'type': 'Point',
+                      'coordinates': [-73.9666699, 40.78333]},
+         'type': 'Feature',
+         'properties': {
+             'name': 'New York City, Central Park',
+             '@type': 'wx:ObservationStation',
+             'stationIdentifier': 'KNYC',
+             'timeZone': 'America/New_York',
+             '@id': 'https://api.weather.gov/stations/KNYC',
+             'elevation': {'unitCode': 'unit:m', 'value': 46.9392}}},
+]
 
 OBSERVATION_DATA = {
     "@id": "https://api.weather.gov/stations/"
            "KJFK/observations/2019-03-24T22:51:00+00:00",
     "@type": "wx:ObservationStation",
     "elevation": {
-      "value": 7,
-      "unitCode": "unit:m"
+        "value": 7,
+        "unitCode": "unit:m"
     },
     "station": "https://api.weather.gov/stations/KJFK",
     "timestamp": "2019-03-24T22:51:00+00:00",
@@ -115,105 +117,105 @@ OBSERVATION_DATA = {
     "icon": "https://api.weather.gov/icons/land/day/ovc?size=medium",
     "presentWeather": [],
     "temperature": {
-      "value": 11.700000000000045,
-      "unitCode": "unit:degC",
-      "qualityControl": "qc:V"
+        "value": 11.700000000000045,
+        "unitCode": "unit:degC",
+        "qualityControl": "qc:V"
     },
     "dewpoint": {
-      "value": -1.5,
-      "unitCode": "unit:degC",
-      "qualityControl": "qc:Z"
+        "value": -1.5,
+        "unitCode": "unit:degC",
+        "qualityControl": "qc:Z"
     },
     "windDirection": {
-      "value": 200,
-      "unitCode": "unit:degree_(angle)",
-      "qualityControl": "qc:V"
+        "value": 200,
+        "unitCode": "unit:degree_(angle)",
+        "qualityControl": "qc:V"
     },
     "windSpeed": {
-      "value": 4.6,
-      "unitCode": "unit:m_s-1",
-      "qualityControl": "qc:V"
+        "value": 4.6,
+        "unitCode": "unit:m_s-1",
+        "qualityControl": "qc:V"
     },
     "windGust": {
-      "value": 9.3,
-      "unitCode": "unit:m_s-1",
-      "qualityControl": "qc:Z"
+        "value": 9.3,
+        "unitCode": "unit:m_s-1",
+        "qualityControl": "qc:Z"
     },
     "barometricPressure": {
-      "value": 101690,
-      "unitCode": "unit:Pa",
-      "qualityControl": "qc:V"
+        "value": 101690,
+        "unitCode": "unit:Pa",
+        "qualityControl": "qc:V"
     },
     "seaLevelPressure": {
-      "value": 101680,
-      "unitCode": "unit:Pa",
-      "qualityControl": "qc:V"
+        "value": 101680,
+        "unitCode": "unit:Pa",
+        "qualityControl": "qc:V"
     },
     "visibility": {
-      "value": 16090,
-      "unitCode": "unit:m",
-      "qualityControl": "qc:C"
+        "value": 16090,
+        "unitCode": "unit:m",
+        "qualityControl": "qc:C"
     },
     "maxTemperatureLast24Hours": {
-      "value": None,
-      "unitCode": "unit:degC",
-      "qualityControl": None
+        "value": None,
+        "unitCode": "unit:degC",
+        "qualityControl": None
     },
     "minTemperatureLast24Hours": {
-      "value": None,
-      "unitCode": "unit:degC",
-      "qualityControl": None
+        "value": None,
+        "unitCode": "unit:degC",
+        "qualityControl": None
     },
     "precipitationLastHour": {
-      "value": 0.010,
-      "unitCode": "unit:m",
-      "qualityControl": "qc:Z"
+        "value": 0.010,
+        "unitCode": "unit:m",
+        "qualityControl": "qc:Z"
     },
     "precipitationLast3Hours": {
-      "value": 0.011,
-      "unitCode": "unit:m",
-      "qualityControl": "qc:Z"
+        "value": 0.011,
+        "unitCode": "unit:m",
+        "qualityControl": "qc:Z"
     },
     "precipitationLast6Hours": {
-      "value": 0.015,
-      "unitCode": "unit:m",
-      "qualityControl": "qc:Z"
+        "value": 0.015,
+        "unitCode": "unit:m",
+        "qualityControl": "qc:Z"
     },
     "relativeHumidity": {
-      "value": 65,
-      "unitCode": "unit:percent",
-      "qualityControl": "qc:C"
+        "value": 65,
+        "unitCode": "unit:percent",
+        "qualityControl": "qc:C"
     },
     "windChill": {
-      "value": 4.4,
-      "unitCode": "unit:degC",
-      "qualityControl": "qc:V"
+        "value": 4.4,
+        "unitCode": "unit:degC",
+        "qualityControl": "qc:V"
     },
     "heatIndex": {
-      "value": 11.1,
-      "unitCode": "unit:degC",
-      "qualityControl": "qc:V"
+        "value": 11.1,
+        "unitCode": "unit:degC",
+        "qualityControl": "qc:V"
     },
     "cloudLayers": [
-      {
-        "base": {
-          "value": 4570,
-          "unitCode": "unit:m"
+        {
+            "base": {
+                "value": 4570,
+                "unitCode": "unit:m"
+            },
+            "amount": "FEW"
         },
-        "amount": "FEW"
-      },
-      {
-        "base": {
-          "value": 7620,
-          "unitCode": "unit:m"
-        },
-        "amount": "OVC"
-      }
+        {
+            "base": {
+                "value": 7620,
+                "unitCode": "unit:m"
+            },
+            "amount": "OVC"
+        }
     ]
-  }
+}
 
 
-def get_obs_station_listMock(latitude, longitude):
+def get_obs_station_list_mock(latitude, longitude):
     """Return station list based on location.
 
     If the latitude and longitude are both zero, return an empty
@@ -224,7 +226,7 @@ def get_obs_station_listMock(latitude, longitude):
     return STATION_LIST
 
 
-def get_obs_for_stationMock(stationcode):
+def get_obs_for_station_mock(stationcode):
     """Return static example of observation data.
 
     If the station is KJFK, we return the sample observation data.
@@ -248,9 +250,9 @@ class TestWeather(unittest.TestCase):
         self.hass.stop()
 
     @patch('homeassistant.components.noaaweather.sensor.get_obs_station_list',
-           new=get_obs_station_listMock)
+           new=get_obs_station_list_mock)
     @patch('homeassistant.components.noaaweather.sensor.get_obs_for_station',
-           new=get_obs_for_stationMock)
+           new=get_obs_for_station_mock)
     def test_setup_minimal(self):
         """Test for minimal weather sensor config.
 
@@ -267,9 +269,9 @@ class TestWeather(unittest.TestCase):
             "NOAA Weather Temperature"
 
     @patch('homeassistant.components.noaaweather.sensor.get_obs_station_list',
-           new=get_obs_station_listMock)
+           new=get_obs_station_list_mock)
     @patch('homeassistant.components.noaaweather.sensor.get_obs_for_station',
-           new=get_obs_for_stationMock)
+           new=get_obs_for_station_mock)
     def test_setup_minimal_imperial(self):
         """Test for minimal weather sensor config.
 
@@ -288,9 +290,9 @@ class TestWeather(unittest.TestCase):
             "NOAA Weather Temperature"
 
     @patch('homeassistant.components.noaaweather.sensor.get_obs_station_list',
-           new=get_obs_station_listMock)
+           new=get_obs_station_list_mock)
     @patch('homeassistant.components.noaaweather.sensor.get_obs_for_station',
-           new=get_obs_for_stationMock)
+           new=get_obs_for_station_mock)
     def test_setup_badconflocation(self):
         """Test for configuration with bad location."""
         assert setup_component(self.hass, 'sensor', BAD_CONF_LOCATION)
@@ -299,9 +301,9 @@ class TestWeather(unittest.TestCase):
         assert state is None
 
     @patch('homeassistant.components.noaaweather.sensor.get_obs_station_list',
-           new=get_obs_station_listMock)
+           new=get_obs_station_list_mock)
     @patch('homeassistant.components.noaaweather.sensor.get_obs_for_station',
-           new=get_obs_for_stationMock)
+           new=get_obs_for_station_mock)
     def test_setup_badconfstation(self):
         """Test for configuration with bad station."""
         assert setup_component(self.hass, 'sensor', BAD_CONF_STATION)
@@ -310,9 +312,9 @@ class TestWeather(unittest.TestCase):
         assert state is None
 
     @patch('homeassistant.components.noaaweather.sensor.get_obs_station_list',
-           new=get_obs_station_listMock)
+           new=get_obs_station_list_mock)
     @patch('homeassistant.components.noaaweather.sensor.get_obs_for_station',
-           new=get_obs_for_stationMock)
+           new=get_obs_for_station_mock)
     def test_setup_full(self):
         """Test for full weather sensor config.
 
@@ -399,7 +401,8 @@ class TestWeather(unittest.TestCase):
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Sea Level Pressure"
 
-        state = self.hass.states.get('sensor.noaa_weather_precipitation_in_last_hour')
+        state = self.hass.states.get(
+            'sensor.noaa_weather_precipitation_in_last_hour')
         assert state is not None
 
         assert state.state == '10.0'
@@ -407,7 +410,8 @@ class TestWeather(unittest.TestCase):
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Precipitation in last hour"
 
-        state = self.hass.states.get('sensor.noaa_weather_precipitation_in_last_3_hours')
+        state = self.hass.states.get(
+            'sensor.noaa_weather_precipitation_in_last_3_hours')
         assert state is not None
 
         assert state.state == '11.0'
@@ -415,7 +419,8 @@ class TestWeather(unittest.TestCase):
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Precipitation in last 3 hours"
 
-        state = self.hass.states.get('sensor.noaa_weather_precipitation_in_last_6_hours')
+        state = self.hass.states.get(
+            'sensor.noaa_weather_precipitation_in_last_6_hours')
         assert state is not None
 
         assert state.state == '15.0'
@@ -435,7 +440,8 @@ class TestWeather(unittest.TestCase):
         assert state is not None
 
         assert state.state == '16.1'
-        assert state.attributes.get('unit_of_measurement') == LENGTH_KILOMETERS
+        assert state.attributes.get('unit_of_measurement') == \
+                LENGTH_KILOMETERS
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Visibility"
 
@@ -447,9 +453,9 @@ class TestWeather(unittest.TestCase):
             "NOAA Weather Cloud Layers"
 
     @patch('homeassistant.components.noaaweather.sensor.get_obs_station_list',
-           new=get_obs_station_listMock)
+           new=get_obs_station_list_mock)
     @patch('homeassistant.components.noaaweather.sensor.get_obs_for_station',
-           new=get_obs_for_stationMock)
+           new=get_obs_for_station_mock)
     def test_setup_full_imperial(self):
         """Test for full weather sensor config.
 
@@ -537,7 +543,8 @@ class TestWeather(unittest.TestCase):
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Sea Level Pressure"
 
-        state = self.hass.states.get('sensor.noaa_weather_precipitation_in_last_hour')
+        state = self.hass.states.get(
+            'sensor.noaa_weather_precipitation_in_last_hour')
         assert state is not None
 
         assert state.state == '0.4'
@@ -545,7 +552,8 @@ class TestWeather(unittest.TestCase):
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Precipitation in last hour"
 
-        state = self.hass.states.get('sensor.noaa_weather_precipitation_in_last_3_hours')
+        state = self.hass.states.get(
+            'sensor.noaa_weather_precipitation_in_last_3_hours')
         assert state is not None
 
         assert state.state == '0.4'
@@ -553,7 +561,8 @@ class TestWeather(unittest.TestCase):
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Precipitation in last 3 hours"
 
-        state = self.hass.states.get('sensor.noaa_weather_precipitation_in_last_6_hours')
+        state = self.hass.states.get(
+            'sensor.noaa_weather_precipitation_in_last_6_hours')
         assert state is not None
 
         assert state.state == '0.6'
@@ -583,4 +592,3 @@ class TestWeather(unittest.TestCase):
         assert state.state == 'FEW'
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Cloud Layers"
-
