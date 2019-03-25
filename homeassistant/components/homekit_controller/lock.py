@@ -1,11 +1,11 @@
 """Support for HomeKit Controller locks."""
 import logging
 
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED)
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -41,7 +41,6 @@ class HomeKitLock(HomeKitEntity, LockDevice):
         """Initialise the Lock."""
         super().__init__(accessory, discovery_info)
         self._state = None
-        self._name = discovery_info['model']
         self._battery_level = None
 
     def get_characteristic_types(self):
@@ -61,11 +60,6 @@ class HomeKitLock(HomeKitEntity, LockDevice):
         self._battery_level = value
 
     @property
-    def name(self):
-        """Return the name of this device."""
-        return self._name
-
-    @property
     def is_locked(self):
         """Return true if device is locked."""
         return self._state == STATE_LOCKED
@@ -75,20 +69,20 @@ class HomeKitLock(HomeKitEntity, LockDevice):
         """Return True if entity is available."""
         return self._state is not None
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the device."""
-        self._set_lock_state(STATE_LOCKED)
+        await self._set_lock_state(STATE_LOCKED)
 
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the device."""
-        self._set_lock_state(STATE_UNLOCKED)
+        await self._set_lock_state(STATE_UNLOCKED)
 
-    def _set_lock_state(self, state):
+    async def _set_lock_state(self, state):
         """Send state command."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['lock-mechanism.target-state'],
                             'value': TARGET_STATE_MAP[state]}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
     @property
     def device_state_attributes(self):

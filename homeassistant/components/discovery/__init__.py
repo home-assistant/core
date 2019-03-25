@@ -9,7 +9,6 @@ loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 import json
 from datetime import timedelta
 import logging
-import os
 
 import voluptuous as vol
 
@@ -21,7 +20,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.3.0']
+REQUIREMENTS = ['netdisco==2.5.0']
 
 DOMAIN = 'discovery'
 
@@ -31,6 +30,7 @@ SERVICE_AXIS = 'axis'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DLNA_DMR = 'dlna_dmr'
+SERVICE_ENIGMA2 = 'enigma2'
 SERVICE_FREEBOX = 'freebox'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
@@ -39,17 +39,20 @@ SERVICE_HUE = 'philips_hue'
 SERVICE_IGD = 'igd'
 SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 SERVICE_KONNECTED = 'konnected'
+SERVICE_MOBILE_APP = 'hass_mobile_app'
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_OCTOPRINT = 'octoprint'
 SERVICE_ROKU = 'roku'
 SERVICE_SABNZBD = 'sabnzbd'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_TELLDUSLIVE = 'tellstick'
+SERVICE_YEELIGHT = 'yeelight'
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 CONFIG_ENTRY_HANDLERS = {
+    SERVICE_AXIS: 'axis',
     SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
     'esphome': 'esphome',
@@ -62,12 +65,13 @@ CONFIG_ENTRY_HANDLERS = {
 }
 
 SERVICE_HANDLERS = {
+    SERVICE_MOBILE_APP: ('mobile_app', None),
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
     SERVICE_HASSIO: ('hassio', None),
-    SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
+    SERVICE_ENIGMA2: ('media_player', 'enigma2'),
     SERVICE_ROKU: ('roku', None),
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
@@ -76,6 +80,7 @@ SERVICE_HANDLERS = {
     SERVICE_KONNECTED: ('konnected', None),
     SERVICE_OCTOPRINT: ('octoprint', None),
     SERVICE_FREEBOX: ('freebox', None),
+    SERVICE_YEELIGHT: ('yeelight', None),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'yamaha': ('media_player', 'yamaha'),
@@ -83,7 +88,6 @@ SERVICE_HANDLERS = {
     'directv': ('media_player', 'directv'),
     'denonavr': ('media_player', 'denonavr'),
     'samsung_tv': ('media_player', 'samsungtv'),
-    'yeelight': ('light', 'yeelight'),
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
     'harmony': ('remote', 'harmony'),
@@ -93,7 +97,7 @@ SERVICE_HANDLERS = {
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
     'lg_smart_device': ('media_player', 'lg_soundbar'),
-    'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
+    'nanoleaf_aurora': ('light', 'nanoleaf'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
@@ -194,10 +198,6 @@ async def async_setup(hass, config):
     def schedule_first(event):
         """Schedule the first discovery when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
-
-        # Discovery for local services
-        if 'HASSIO' in os.environ:
-            hass.async_create_task(new_service_found(SERVICE_HASSIO, {}))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
 

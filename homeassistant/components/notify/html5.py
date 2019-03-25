@@ -5,9 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.html5/
 """
 import datetime
+from functools import partial
 import json
 import logging
-from functools import partial
 import time
 import uuid
 
@@ -15,18 +15,19 @@ from aiohttp.hdrs import AUTHORIZATION
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.util.json import load_json, save_json
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TITLE, ATTR_TARGET, PLATFORM_SCHEMA, ATTR_TITLE_DEFAULT,
-    BaseNotificationService, DOMAIN)
 from homeassistant.const import (
-    URL_ROOT, HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_INTERNAL_SERVER_ERROR)
+    HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_UNAUTHORIZED, URL_ROOT)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
+from homeassistant.util.json import load_json, save_json
+
+from . import (
+    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN,
+    PLATFORM_SCHEMA, BaseNotificationService)
 
 REQUIREMENTS = ['pywebpush==1.6.0']
 
@@ -44,8 +45,23 @@ ATTR_VAPID_PUB_KEY = 'vapid_pub_key'
 ATTR_VAPID_PRV_KEY = 'vapid_prv_key'
 ATTR_VAPID_EMAIL = 'vapid_email'
 
+
+def gcm_api_deprecated(value):
+    """Warn user that GCM API config is deprecated."""
+    if not value:
+        return value
+
+    _LOGGER.warning(
+        "Configuring html5_push_notifications via the GCM api"
+        " has been deprecated and will stop working after April 11,"
+        " 2019. Use the VAPID configuration instead. For instructions,"
+        " see https://www.home-assistant.io/components/notify.html5/")
+    return value
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(ATTR_GCM_SENDER_ID): cv.string,
+    vol.Optional(ATTR_GCM_SENDER_ID):
+        vol.All(cv.string, gcm_api_deprecated),
     vol.Optional(ATTR_GCM_API_KEY): cv.string,
     vol.Optional(ATTR_VAPID_PUB_KEY): cv.string,
     vol.Optional(ATTR_VAPID_PRV_KEY): cv.string,

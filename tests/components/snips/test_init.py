@@ -113,7 +113,7 @@ async def test_snips_intent(hass):
         "input": "turn the lights green",
         "intent": {
             "intentName": "Lights",
-            "probability": 1
+            "confidenceScore": 1
         },
         "slots": [
             {
@@ -140,7 +140,7 @@ async def test_snips_intent(hass):
     assert intent
     assert intent.slots == {'light_color': {'value': 'green'},
                             'light_color_raw': {'value': 'green'},
-                            'probability': {'value': 1},
+                            'confidenceScore': {'value': 1},
                             'site_id': {'value': 'default'},
                             'session_id': {'value': '1234567890ABCDEF'}}
     assert intent.text_input == 'turn the lights green'
@@ -161,7 +161,7 @@ async def test_snips_service_intent(hass):
         "input": "turn the light on",
         "intent": {
             "intentName": "Lights",
-            "probability": 0.85
+            "confidenceScore": 0.85
         },
         "siteId": "default",
         "slots": [
@@ -188,7 +188,7 @@ async def test_snips_service_intent(hass):
     assert calls[0].domain == 'light'
     assert calls[0].service == 'turn_on'
     assert calls[0].data['entity_id'] == 'light.kitchen'
-    assert 'probability' not in calls[0].data
+    assert 'confidenceScore' not in calls[0].data
     assert 'site_id' not in calls[0].data
 
 
@@ -205,7 +205,7 @@ async def test_snips_intent_with_duration(hass):
       "input": "set a timer of five minutes",
       "intent": {
         "intentName": "SetTimer",
-        "probability": 1
+        "confidenceScore": 1
       },
       "slots": [
         {
@@ -241,7 +241,7 @@ async def test_snips_intent_with_duration(hass):
     intent = intents[0]
     assert intent.platform == 'snips'
     assert intent.intent_type == 'SetTimer'
-    assert intent.slots == {'probability': {'value': 1},
+    assert intent.slots == {'confidenceScore': {'value': 1},
                             'site_id': {'value': None},
                             'session_id': {'value': None},
                             'timer_duration': {'value': 300},
@@ -274,7 +274,7 @@ async def test_intent_speech_response(hass):
         "sessionId": "abcdef0123456789",
         "intent": {
             "intentName": "spokenIntent",
-            "probability": 1
+            "confidenceScore": 1
         },
         "slots": []
     }
@@ -306,7 +306,7 @@ async def test_unknown_intent(hass, caplog):
         "sessionId": "abcdef1234567890",
         "intent": {
             "intentName": "unknownIntent",
-            "probability": 1
+            "confidenceScore": 1
         },
         "slots": []
     }
@@ -330,7 +330,7 @@ async def test_snips_intent_user(hass):
         "input": "what to do",
         "intent": {
             "intentName": "user_ABCDEF123__Lights",
-            "probability": 1
+            "confidenceScore": 1
         },
         "slots": []
     }
@@ -359,7 +359,7 @@ async def test_snips_intent_username(hass):
         "input": "what to do",
         "intent": {
             "intentName": "username:Lights",
-            "probability": 1
+            "confidenceScore": 1
         },
         "slots": []
     }
@@ -391,7 +391,7 @@ async def test_snips_low_probability(hass, caplog):
         "input": "I am not sure what to say",
         "intent": {
             "intentName": "LightsMaybe",
-            "probability": 0.49
+            "confidenceScore": 0.49
         },
         "slots": []
     }
@@ -419,7 +419,7 @@ async def test_intent_special_slots(hass):
                 "action": {
                     "service": "light.turn_on",
                     "data_template": {
-                        "probability": "{{ probability }}",
+                        "confidenceScore": "{{ confidenceScore }}",
                         "site_id": "{{ site_id }}"
                     }
                 }
@@ -432,7 +432,7 @@ async def test_intent_special_slots(hass):
         "input": "turn the light on",
         "intent": {
             "intentName": "Lights",
-            "probability": 0.85
+            "confidenceScore": 0.85
         },
         "siteId": "default",
         "slots": []
@@ -444,7 +444,7 @@ async def test_intent_special_slots(hass):
     assert len(calls) == 1
     assert calls[0].domain == 'light'
     assert calls[0].service == 'turn_on'
-    assert calls[0].data['probability'] == '0.85'
+    assert calls[0].data['confidenceScore'] == '0.85'
     assert calls[0].data['site_id'] == 'default'
 
 

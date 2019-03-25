@@ -2,9 +2,9 @@
 import logging
 
 from homeassistant.components.cover import (
-    CoverDevice, ENTITY_ID_FORMAT, ATTR_POSITION, ATTR_TILT_POSITION)
-from homeassistant.components.fibaro import (
-    FIBARO_DEVICES, FibaroDevice)
+    ATTR_POSITION, ATTR_TILT_POSITION, ENTITY_ID_FORMAT, CoverDevice)
+
+from . import FIBARO_DEVICES, FibaroDevice
 
 DEPENDENCIES = ['fibaro']
 

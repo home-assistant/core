@@ -29,7 +29,7 @@ async def test_entity_state(hass, device_factory):
         "Fan 1",
         capabilities=[Capability.switch, Capability.fan_speed],
         status={Attribute.switch: 'on', Attribute.fan_speed: 2})
-    await setup_platform(hass, FAN_DOMAIN, device)
+    await setup_platform(hass, FAN_DOMAIN, devices=[device])
 
     # Dimmer 1
     state = hass.states.get('fan.fan_1')
@@ -48,7 +48,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
         capabilities=[Capability.switch, Capability.fan_speed],
         status={Attribute.switch: 'on', Attribute.fan_speed: 2})
     # Act
-    await setup_platform(hass, FAN_DOMAIN, device)
+    await setup_platform(hass, FAN_DOMAIN, devices=[device])
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     device_registry = await hass.helpers.device_registry.async_get_registry()
     # Assert
@@ -71,7 +71,7 @@ async def test_turn_off(hass, device_factory):
         "Fan 1",
         capabilities=[Capability.switch, Capability.fan_speed],
         status={Attribute.switch: 'on', Attribute.fan_speed: 2})
-    await setup_platform(hass, FAN_DOMAIN, device)
+    await setup_platform(hass, FAN_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
         'fan', 'turn_off', {'entity_id': 'fan.fan_1'},
@@ -89,7 +89,7 @@ async def test_turn_on(hass, device_factory):
         "Fan 1",
         capabilities=[Capability.switch, Capability.fan_speed],
         status={Attribute.switch: 'off', Attribute.fan_speed: 0})
-    await setup_platform(hass, FAN_DOMAIN, device)
+    await setup_platform(hass, FAN_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
         'fan', 'turn_on', {ATTR_ENTITY_ID: "fan.fan_1"},
@@ -107,7 +107,7 @@ async def test_turn_on_with_speed(hass, device_factory):
         "Fan 1",
         capabilities=[Capability.switch, Capability.fan_speed],
         status={Attribute.switch: 'off', Attribute.fan_speed: 0})
-    await setup_platform(hass, FAN_DOMAIN, device)
+    await setup_platform(hass, FAN_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
         'fan', 'turn_on',
@@ -128,7 +128,7 @@ async def test_set_speed(hass, device_factory):
         "Fan 1",
         capabilities=[Capability.switch, Capability.fan_speed],
         status={Attribute.switch: 'off', Attribute.fan_speed: 0})
-    await setup_platform(hass, FAN_DOMAIN, device)
+    await setup_platform(hass, FAN_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
         'fan', 'set_speed',
@@ -149,7 +149,7 @@ async def test_update_from_signal(hass, device_factory):
         "Fan 1",
         capabilities=[Capability.switch, Capability.fan_speed],
         status={Attribute.switch: 'off', Attribute.fan_speed: 0})
-    await setup_platform(hass, FAN_DOMAIN, device)
+    await setup_platform(hass, FAN_DOMAIN, devices=[device])
     await device.switch_on(True)
     # Act
     async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE,
@@ -168,7 +168,7 @@ async def test_unload_config_entry(hass, device_factory):
         "Fan 1",
         capabilities=[Capability.switch, Capability.fan_speed],
         status={Attribute.switch: 'off', Attribute.fan_speed: 0})
-    config_entry = await setup_platform(hass, FAN_DOMAIN, device)
+    config_entry = await setup_platform(hass, FAN_DOMAIN, devices=[device])
     # Act
     await hass.config_entries.async_forward_entry_unload(
         config_entry, 'fan')

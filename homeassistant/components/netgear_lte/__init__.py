@@ -8,11 +8,16 @@ import attr
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PASSWORD,
+    CONF_RECIPIENT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.util import Throttle
+
+from . import sensor_types
 
 REQUIREMENTS = ['eternalegypt==0.0.5']
 
@@ -23,10 +28,26 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 DOMAIN = 'netgear_lte'
 DATA_KEY = 'netgear_lte'
 
+
+NOTIFY_SCHEMA = vol.Schema({
+    vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
+    vol.Optional(CONF_RECIPIENT, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+})
+
+SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=sensor_types.DEFAULT):
+        vol.All(cv.ensure_list, [vol.In(sensor_types.ALL)]),
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(NOTIFY_DOMAIN, default={}):
+            vol.All(cv.ensure_list, [NOTIFY_SCHEMA]),
+        vol.Optional(SENSOR_DOMAIN, default={}):
+            SENSOR_SCHEMA,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -71,13 +92,8 @@ class LTEData:
     modem_data = attr.ib(init=False, factory=dict)
 
     def get_modem_data(self, config):
-        """Get the requested or the only modem_data value."""
-        if CONF_HOST in config:
-            return self.modem_data.get(config[CONF_HOST])
-        if len(self.modem_data) == 1:
-            return next(iter(self.modem_data.values()))
-
-        return None
+        """Get modem_data for the host in config."""
+        return self.modem_data.get(config[CONF_HOST])
 
 
 async def async_setup(hass, config):
@@ -87,9 +103,32 @@ async def async_setup(hass, config):
             hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
         hass.data[DATA_KEY] = LTEData(websession)
 
-    tasks = [_setup_lte(hass, conf) for conf in config.get(DOMAIN, [])]
-    if tasks:
-        await asyncio.wait(tasks)
+    netgear_lte_config = config[DOMAIN]
+
+    # Set up each modem
+    tasks = [_setup_lte(hass, lte_conf) for lte_conf in netgear_lte_config]
+    await asyncio.wait(tasks)
+
+    # Load platforms for each modem
+    for lte_conf in netgear_lte_config:
+        # Notify
+        for notify_conf in lte_conf[NOTIFY_DOMAIN]:
+            discovery_info = {
+                CONF_HOST: lte_conf[CONF_HOST],
+                CONF_NAME: notify_conf.get(CONF_NAME),
+                NOTIFY_DOMAIN: notify_conf,
+            }
+            hass.async_create_task(discovery.async_load_platform(
+                hass, NOTIFY_DOMAIN, DOMAIN, discovery_info, config))
+
+        # Sensor
+        sensor_conf = lte_conf.get(SENSOR_DOMAIN)
+        discovery_info = {
+            CONF_HOST: lte_conf[CONF_HOST],
+            SENSOR_DOMAIN: sensor_conf,
+        }
+        hass.async_create_task(discovery.async_load_platform(
+            hass, SENSOR_DOMAIN, DOMAIN, discovery_info, config))
 
     return True
 

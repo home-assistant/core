@@ -1,4 +1,5 @@
 """Helpers to resolve client ID/secret."""
+import logging
 import asyncio
 from ipaddress import ip_address
 from html.parser import HTMLParser
@@ -8,6 +9,8 @@ import aiohttp
 from aiohttp.client_exceptions import ClientError
 
 from homeassistant.util.network import is_local
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def verify_redirect_uri(hass, client_id, redirect_uri):
@@ -78,7 +81,8 @@ async def fetch_redirect_uris(hass, url):
                     if chunks == 10:
                         break
 
-    except (asyncio.TimeoutError, ClientError):
+    except (asyncio.TimeoutError, ClientError) as ex:
+        _LOGGER.error("Error while looking up redirect_uri %s: %s", url, ex)
         pass
 
     # Authorization endpoints verifying that a redirect_uri is allowed for use

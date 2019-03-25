@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "S\u00f3lo se puede configurar una cuenta de Point."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "flow_impl": "Proveedor"
+                }
+            }
+        }
+    }
+}

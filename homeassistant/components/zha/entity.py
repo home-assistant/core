@@ -6,23 +6,28 @@ https://home-assistant.io/components/zha/
 """
 
 import logging
+import time
 
+from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .core.const import (
     DOMAIN, ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, MODEL, NAME,
     SIGNAL_REMOVE
 )
+from .core.channels import MAINS_POWERED
 
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = 'entity_suffix'
+RESTART_GRACE_PERIOD = 7200  # 2 hours
 
 
-class ZhaEntity(entity.Entity):
+class ZhaEntity(RestoreEntity, entity.Entity):
     """A base class for ZHA entities."""
 
     _domain = None  # Must be overridden by subclasses
@@ -136,6 +141,7 @@ class ZhaEntity(entity.Entity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
+        await self.async_check_recently_seen()
         await self.async_accept_signal(
             None, "{}_{}".format(self.zha_device.available_signal, 'entity'),
             self.async_set_available,
@@ -149,14 +155,31 @@ class ZhaEntity(entity.Entity):
             self._zha_device.ieee, self.entity_id, self._zha_device,
             self.cluster_channels, self.device_info)
 
+    async def async_check_recently_seen(self):
+        """Check if the device was seen within the last 2 hours."""
+        last_state = await self.async_get_last_state()
+        if last_state and self._zha_device.last_seen and (
+                time.time() - self._zha_device.last_seen <
+                RESTART_GRACE_PERIOD):
+            self.async_set_available(True)
+            if self.zha_device.power_source != MAINS_POWERED:
+                # mains powered devices will get real time state
+                self.async_restore_last_state(last_state)
+            self._zha_device.set_available(True)
+
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         for unsub in self._unsubs:
             unsub()
 
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        pass
+
     async def async_update(self):
         """Retrieve latest state."""
-        for channel in self.cluster_channels:
+        for channel in self.cluster_channels.values():
             if hasattr(channel, 'async_update'):
                 await channel.async_update()
 

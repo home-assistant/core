@@ -3,7 +3,8 @@ from collections import namedtuple
 import logging
 
 from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.components.freebox import DATA_FREEBOX
+
+from . import DATA_FREEBOX
 
 DEPENDENCIES = ['freebox']
 

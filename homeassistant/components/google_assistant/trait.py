@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components import (
+    camera,
     cover,
     group,
     fan,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_LOCKED,
     STATE_OFF,
+    STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     ATTR_SUPPORTED_FEATURES,
@@ -34,6 +36,7 @@ from .helpers import SmartHomeError
 _LOGGER = logging.getLogger(__name__)
 
 PREFIX_TRAITS = 'action.devices.traits.'
+TRAIT_CAMERA_STREAM = PREFIX_TRAITS + 'CameraStream'
 TRAIT_ONOFF = PREFIX_TRAITS + 'OnOff'
 TRAIT_DOCK = PREFIX_TRAITS + 'Dock'
 TRAIT_STARTSTOP = PREFIX_TRAITS + 'StartStop'
@@ -48,6 +51,7 @@ TRAIT_MODES = PREFIX_TRAITS + 'Modes'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
+COMMAND_GET_CAMERA_STREAM = PREFIX_COMMANDS + 'GetCameraStream'
 COMMAND_DOCK = PREFIX_COMMANDS + 'Dock'
 COMMAND_STARTSTOP = PREFIX_COMMANDS + 'StartStop'
 COMMAND_PAUSEUNPAUSE = PREFIX_COMMANDS + 'PauseUnpause'
@@ -102,7 +106,7 @@ class _Trait:
         """Test if command can be executed."""
         return command in self.commands
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a trait command."""
         raise NotImplementedError
 
@@ -159,7 +163,7 @@ class BrightnessTrait(_Trait):
 
         return response
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a brightness command."""
         domain = self.state.domain
 
@@ -168,20 +172,65 @@ class BrightnessTrait(_Trait):
                 light.DOMAIN, light.SERVICE_TURN_ON, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
-                }, blocking=True)
+                }, blocking=True, context=data.context)
         elif domain == cover.DOMAIN:
             await self.hass.services.async_call(
                 cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     cover.ATTR_POSITION: params['brightness']
-                }, blocking=True)
+                }, blocking=True, context=data.context)
         elif domain == media_player.DOMAIN:
             await self.hass.services.async_call(
                 media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     media_player.ATTR_MEDIA_VOLUME_LEVEL:
                     params['brightness'] / 100
-                }, blocking=True)
+                }, blocking=True, context=data.context)
+
+
+@register_trait
+class CameraStreamTrait(_Trait):
+    """Trait to stream from cameras.
+
+    https://developers.google.com/actions/smarthome/traits/camerastream
+    """
+
+    name = TRAIT_CAMERA_STREAM
+    commands = [
+        COMMAND_GET_CAMERA_STREAM
+    ]
+
+    stream_info = None
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        if domain == camera.DOMAIN:
+            return features & camera.SUPPORT_STREAM
+
+        return False
+
+    def sync_attributes(self):
+        """Return stream attributes for a sync request."""
+        return {
+            'cameraStreamSupportedProtocols': [
+                "hls",
+            ],
+            'cameraStreamNeedAuthToken': False,
+            'cameraStreamNeedDrmEncryption': False,
+        }
+
+    def query_attributes(self):
+        """Return camera stream attributes."""
+        return self.stream_info or {}
+
+    async def execute(self, command, data, params):
+        """Execute a get camera stream command."""
+        url = await self.hass.components.camera.async_request_stream(
+            self.state.entity_id, 'hls')
+        self.stream_info = {
+            'cameraStreamAccessUrl': self.hass.config.api.base_url + url
+        }
 
 
 @register_trait
@@ -199,8 +248,6 @@ class OnOffTrait(_Trait):
     @staticmethod
     def supported(domain, features):
         """Test if state is supported."""
-        if domain == climate.DOMAIN:
-            return features & climate.SUPPORT_ON_OFF != 0
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
@@ -221,7 +268,7 @@ class OnOffTrait(_Trait):
             return {'on': self.state.state != cover.STATE_CLOSED}
         return {'on': self.state.state != STATE_OFF}
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute an OnOff command."""
         domain = self.state.domain
 
@@ -242,7 +289,7 @@ class OnOffTrait(_Trait):
 
         await self.hass.services.async_call(service_domain, service, {
             ATTR_ENTITY_ID: self.state.entity_id
-        }, blocking=True)
+        }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -288,7 +335,7 @@ class ColorSpectrumTrait(_Trait):
         return (command in self.commands and
                 'spectrumRGB' in params.get('color', {}))
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a color spectrum command."""
         # Convert integer to hex format and left pad with 0's till length 6
         hex_value = "{0:06x}".format(params['color']['spectrumRGB'])
@@ -298,7 +345,7 @@ class ColorSpectrumTrait(_Trait):
         await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_HS_COLOR: color
-        }, blocking=True)
+        }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -355,7 +402,7 @@ class ColorTemperatureTrait(_Trait):
         return (command in self.commands and
                 'temperature' in params.get('color', {}))
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a color temperature command."""
         temp = color_util.color_temperature_kelvin_to_mired(
             params['color']['temperature'])
@@ -371,7 +418,7 @@ class ColorTemperatureTrait(_Trait):
         await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_COLOR_TEMP: temp,
-        }, blocking=True)
+        }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -400,13 +447,14 @@ class SceneTrait(_Trait):
         """Return scene query attributes."""
         return {}
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a scene command."""
         # Don't block for scripts as they can be slow.
         await self.hass.services.async_call(
             self.state.domain, SERVICE_TURN_ON, {
                 ATTR_ENTITY_ID: self.state.entity_id
-            }, blocking=self.state.domain != script.DOMAIN)
+            }, blocking=self.state.domain != script.DOMAIN,
+            context=data.context)
 
 
 @register_trait
@@ -434,12 +482,12 @@ class DockTrait(_Trait):
         """Return dock query attributes."""
         return {'isDocked': self.state.state == vacuum.STATE_DOCKED}
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a dock command."""
         await self.hass.services.async_call(
             self.state.domain, vacuum.SERVICE_RETURN_TO_BASE, {
                 ATTR_ENTITY_ID: self.state.entity_id
-            }, blocking=True)
+            }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -473,30 +521,30 @@ class StartStopTrait(_Trait):
             'isPaused': self.state.state == vacuum.STATE_PAUSED,
         }
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params['start']:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_START, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=data.context)
             else:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_STOP, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=data.context)
         elif command == COMMAND_PAUSEUNPAUSE:
             if params['pause']:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_PAUSE, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=data.context)
             else:
                 await self.hass.services.async_call(
                     self.state.domain, vacuum.SERVICE_START, {
                         ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True)
+                    }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -536,10 +584,18 @@ class TemperatureSettingTrait(_Trait):
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
         modes = []
-        for mode in self.state.attributes.get(climate.ATTR_OPERATION_LIST, []):
-            google_mode = self.hass_to_google.get(mode)
-            if google_mode is not None:
-                modes.append(google_mode)
+        supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        if supported & climate.SUPPORT_ON_OFF != 0:
+            modes.append(STATE_OFF)
+            modes.append(STATE_ON)
+
+        if supported & climate.SUPPORT_OPERATION_MODE != 0:
+            for mode in self.state.attributes.get(climate.ATTR_OPERATION_LIST,
+                                                  []):
+                google_mode = self.hass_to_google.get(mode)
+                if google_mode and google_mode not in modes:
+                    modes.append(google_mode)
 
         return {
             'availableThermostatModes': ','.join(modes),
@@ -553,8 +609,16 @@ class TemperatureSettingTrait(_Trait):
         response = {}
 
         operation = attrs.get(climate.ATTR_OPERATION_MODE)
-        if operation is not None and operation in self.hass_to_google:
+        supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        if (supported & climate.SUPPORT_ON_OFF
+                and self.state.state == STATE_OFF):
+            response['thermostatMode'] = 'off'
+        elif (supported & climate.SUPPORT_OPERATION_MODE and
+              operation in self.hass_to_google):
             response['thermostatMode'] = self.hass_to_google[operation]
+        elif supported & climate.SUPPORT_ON_OFF:
+            response['thermostatMode'] = 'on'
 
         unit = self.hass.config.units.temperature_unit
 
@@ -567,15 +631,24 @@ class TemperatureSettingTrait(_Trait):
         if current_humidity is not None:
             response['thermostatHumidityAmbient'] = current_humidity
 
-        if (operation == climate.STATE_AUTO and
-                climate.ATTR_TARGET_TEMP_HIGH in attrs and
-                climate.ATTR_TARGET_TEMP_LOW in attrs):
-            response['thermostatTemperatureSetpointHigh'] = \
-                round(temp_util.convert(attrs[climate.ATTR_TARGET_TEMP_HIGH],
-                                        unit, TEMP_CELSIUS), 1)
-            response['thermostatTemperatureSetpointLow'] = \
-                round(temp_util.convert(attrs[climate.ATTR_TARGET_TEMP_LOW],
-                                        unit, TEMP_CELSIUS), 1)
+        if operation == climate.STATE_AUTO:
+            if (supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
+                    supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+                response['thermostatTemperatureSetpointHigh'] = \
+                    round(temp_util.convert(
+                        attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                        unit, TEMP_CELSIUS), 1)
+                response['thermostatTemperatureSetpointLow'] = \
+                    round(temp_util.convert(
+                        attrs[climate.ATTR_TARGET_TEMP_LOW],
+                        unit, TEMP_CELSIUS), 1)
+            else:
+                target_temp = attrs.get(ATTR_TEMPERATURE)
+                if target_temp is not None:
+                    target_temp = round(
+                        temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
+                    response['thermostatTemperatureSetpointHigh'] = target_temp
+                    response['thermostatTemperatureSetpointLow'] = target_temp
         else:
             target_temp = attrs.get(ATTR_TEMPERATURE)
             if target_temp is not None:
@@ -584,7 +657,7 @@ class TemperatureSettingTrait(_Trait):
 
         return response
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
         unit = self.hass.config.units.temperature_unit
@@ -608,7 +681,7 @@ class TemperatureSettingTrait(_Trait):
                 climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     ATTR_TEMPERATURE: temp
-                }, blocking=True)
+                }, blocking=True, context=data.context)
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
             temp_high = temp_util.convert(
@@ -635,20 +708,42 @@ class TemperatureSettingTrait(_Trait):
                     "Lower bound for temperature range should be between "
                     "{} and {}".format(min_temp, max_temp))
 
+            supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+            svc_data = {
+                ATTR_ENTITY_ID: self.state.entity_id,
+            }
+
+            if(supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH and
+               supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW):
+                svc_data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
+                svc_data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
+            else:
+                svc_data[ATTR_TEMPERATURE] = (temp_high + temp_low) / 2
+
             await self.hass.services.async_call(
-                climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    climate.ATTR_TARGET_TEMP_HIGH: temp_high,
-                    climate.ATTR_TARGET_TEMP_LOW: temp_low,
-                }, blocking=True)
+                climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, svc_data,
+                blocking=True, context=data.context)
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
-            await self.hass.services.async_call(
-                climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    climate.ATTR_OPERATION_MODE:
-                        self.google_to_hass[params['thermostatMode']],
-                }, blocking=True)
+            target_mode = params['thermostatMode']
+            supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+            if (target_mode in [STATE_ON, STATE_OFF] and
+                    supported & climate.SUPPORT_ON_OFF):
+                await self.hass.services.async_call(
+                    climate.DOMAIN,
+                    (SERVICE_TURN_ON
+                     if target_mode == STATE_ON
+                     else SERVICE_TURN_OFF),
+                    {ATTR_ENTITY_ID: self.state.entity_id},
+                    blocking=True, context=data.context)
+            elif supported & climate.SUPPORT_OPERATION_MODE:
+                await self.hass.services.async_call(
+                    climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE, {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        climate.ATTR_OPERATION_MODE:
+                            self.google_to_hass[target_mode],
+                    }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -681,7 +776,7 @@ class LockUnlockTrait(_Trait):
         allowed_unlock = not params['lock'] and self.config.allow_unlock
         return params['lock'] or allowed_unlock
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute an LockUnlock command."""
         if params['lock']:
             service = lock.SERVICE_LOCK
@@ -690,7 +785,7 @@ class LockUnlockTrait(_Trait):
 
         await self.hass.services.async_call(lock.DOMAIN, service, {
             ATTR_ENTITY_ID: self.state.entity_id
-        }, blocking=True)
+        }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -760,13 +855,13 @@ class FanSpeedTrait(_Trait):
 
         return response
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute an SetFanSpeed command."""
         await self.hass.services.async_call(
             fan.DOMAIN, fan.SERVICE_SET_SPEED, {
                 ATTR_ENTITY_ID: self.state.entity_id,
                 fan.ATTR_SPEED: params['fanSpeed']
-            }, blocking=True)
+            }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -934,7 +1029,7 @@ class ModesTrait(_Trait):
 
         return response
 
-    async def execute(self, command, params):
+    async def execute(self, command, data, params):
         """Execute an SetModes command."""
         settings = params.get('updateModeSettings')
         requested_source = settings.get(
@@ -951,4 +1046,4 @@ class ModesTrait(_Trait):
                         media_player.SERVICE_SELECT_SOURCE, {
                             ATTR_ENTITY_ID: self.state.entity_id,
                             media_player.ATTR_INPUT_SOURCE: source
-                        }, blocking=True)
+                        }, blocking=True, context=data.context)

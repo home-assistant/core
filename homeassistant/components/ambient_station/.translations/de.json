@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Anwendungsschl\u00fcssel und / oder API-Schl\u00fcssel bereits registriert",
+            "invalid_key": "Ung\u00fcltiger API Key und / oder Anwendungsschl\u00fcssel",
+            "no_devices": "Keine Ger\u00e4te im Konto gefunden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "app_key": "Anwendungsschl\u00fcssel"
+                },
+                "title": "Gib deine Informationen ein"
+            }
+        },
+        "title": "Ambient PWS"
+    }
+}

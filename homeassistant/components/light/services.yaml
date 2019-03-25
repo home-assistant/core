@@ -68,12 +68,8 @@ turn_off:
 toggle:
   description: Toggles a light.
   fields:
-    entity_id:
-      description: Name(s) of entities to toggle.
-      example: 'light.kitchen'
-    transition:
-      description: Duration in seconds it takes to get to next state.
-      example: 60
+    '...':
+      description: All turn_on parameters can be used.
 
 hue_activate_scene:
   description: Activate a hue scene stored in the hue hub.
@@ -182,29 +178,3 @@ xiaomi_miio_set_delayed_turn_off:
     time_period:
       description: Time period for the delayed turn off.
       example: "5, '0:05', {'minutes': 5}"
-
-yeelight_set_mode:
-  description: Set a operation mode.
-  fields:
-    entity_id:
-      description: Name of the light entity.
-      example: 'light.yeelight'
-    mode:
-      description: Operation mode. Valid values are 'last', 'normal', 'rgb', 'hsv', 'color_flow', 'moonlight'.
-      example: 'moonlight'
-
-yeelight_start_flow:
-  description: Start a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects
-  fields:
-    entity_id:
-      description: Name of the light entity.
-      example: 'light.yeelight'
-    count:
-      description: The number of times to run this flow (0 to run forever).
-      example: 0
-    action:
-      description: The action to take after the flow stops. Can be 'recover', 'stay', 'off'. (default 'recover')
-      example: 'stay'
-    transitions:
-      description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
-      example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'

@@ -81,7 +81,7 @@ async def async_register_panel(
     """Register a new custom panel."""
     if js_url is None and html_url is None and module_url is None:
         raise ValueError('Either js_url, module_url or html_url is required.')
-    elif (js_url and html_url) or (module_url and html_url):
+    if (js_url and html_url) or (module_url and html_url):
         raise ValueError('Pass in only one of JS url, Module url or HTML url.')
 
     if config is not None and not isinstance(config, dict):
