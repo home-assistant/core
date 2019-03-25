@@ -41,7 +41,6 @@ class HomeKitLock(HomeKitEntity, LockDevice):
         """Initialise the Lock."""
         super().__init__(accessory, discovery_info)
         self._state = None
-        self._name = discovery_info['model']
         self._battery_level = None
 
     def get_characteristic_types(self):
@@ -59,11 +58,6 @@ class HomeKitLock(HomeKitEntity, LockDevice):
 
     def _update_battery_level(self, value):
         self._battery_level = value
-
-    @property
-    def name(self):
-        """Return the name of this device."""
-        return self._name
 
     @property
     def is_locked(self):
