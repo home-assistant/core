@@ -17,7 +17,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (CONF_FLAPS, CONF_HOUSEHOLD_ID, CONF_PETS, DATA_SURE_DATA,
                     DATA_SURE_HOUSEHOLD_NAME, DATA_SURE_LISTENER,
                     DATA_SURE_PETCARE, DATA_SUREPY, DEFAULT_SCAN_INTERVAL,
-                    DOMAIN, SURE_IDS, TOPIC_UPDATE, SureThingType)
+                    DOMAIN, SURE_IDS, TOPIC_UPDATE, SureThingTypeID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ async def async_setup(hass, config):
         {
             CONF_NAME: flap[CONF_NAME],
             CONF_ID: flap[CONF_ID],
-            CONF_TYPE: SureThingType.FLAP.name,
+            CONF_TYPE: SureThingTypeID.FLAP.name,
         }
         for flap in conf[CONF_FLAPS]]
 
@@ -84,7 +84,7 @@ async def async_setup(hass, config):
         {
             CONF_NAME: pet[CONF_NAME],
             CONF_ID: pet[CONF_ID],
-            CONF_TYPE: SureThingType.PET.name,
+            CONF_TYPE: SureThingTypeID.PET.name,
         } for pet in conf[CONF_PETS]])
 
     # User has configured household or flaps
@@ -94,9 +94,11 @@ async def async_setup(hass, config):
     configured_households = get_configured_households(hass)
 
     if conf[CONF_HOUSEHOLD_ID] in configured_households:
-        _LOGGER.debug(
-            f"{conf[CONF_HOUSEHOLD_ID]} already configured "
-            f"in {configured_households}")
+        # _LOGGER.debug(
+        #     f"{conf[CONF_HOUSEHOLD_ID]} already configured "
+        #     f"in {configured_households}")
+        _LOGGER.debug("%s already configured in %s",
+                      conf[CONF_HOUSEHOLD_ID], configured_households)
 
         return True
 
@@ -138,11 +140,11 @@ async def async_setup_entry(hass, entry: ConfigEntry):
                 entry.data[CONF_HOUSEHOLD_ID],
                 hass.loop, async_get_clientsession(hass), debug=True)
 
-        if SureThingType.FLAP.name not in hass.data[DATA_SURE_PETCARE]:
-            hass.data[DATA_SURE_PETCARE][SureThingType.FLAP.name] = dict()
+        if SureThingTypeID.FLAP.name not in hass.data[DATA_SURE_PETCARE]:
+            hass.data[DATA_SURE_PETCARE][SureThingTypeID.FLAP.name] = dict()
 
-        if SureThingType.PET.name not in hass.data[DATA_SURE_PETCARE]:
-            hass.data[DATA_SURE_PETCARE][SureThingType.PET.name] = dict()
+        if SureThingTypeID.PET.name not in hass.data[DATA_SURE_PETCARE]:
+            hass.data[DATA_SURE_PETCARE][SureThingTypeID.PET.name] = dict()
 
         response = None
 
@@ -150,12 +152,12 @@ async def async_setup_entry(hass, entry: ConfigEntry):
             sure_id = thing[CONF_ID]
             sure_type = thing[CONF_TYPE]
 
-            if sure_type == SureThingType.FLAP.name:
+            if sure_type == SureThingTypeID.FLAP.name:
                 response = await surepy.get_flap_data(sure_id)
-            elif sure_type == SureThingType.PET.name:
+            elif sure_type == SureThingTypeID.PET.name:
                 response = await surepy.get_pet_data(sure_id)
 
-            _LOGGER.debug(f"api response: {sure_type}/{sure_id}: {response}")
+            # _LOGGER.debug(f"api response: {sure_type}/{sure_id}: {response}")
 
             if response:
                 hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = response[
