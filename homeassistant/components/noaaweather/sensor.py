@@ -37,8 +37,9 @@ DEFAULT_NAME = "NOAA Weather"
 #
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
-USER_AGENT_HEADER = {'user-agent':
-                     "Home Assistant component noaaweather sensor v0.1"}
+REQUESTS_HEADERS = {'user-agent':
+                    "Home Assistant component noaaweather sensor v0.1",
+                    'Accept': 'application/geo+json'}
 
 ATTR_LAST_UPDATE = 'last_update'
 ATTR_SENSOR_ID = 'sensor_id'
@@ -109,8 +110,7 @@ SENSOR_TYPES = {
                                 'measurement', 'mm', LENGTH_INCHES],
     'precipitationLast6Hours': ['Precipitation in last 6 hours',
                                 'measurement', 'mm', LENGTH_INCHES],
-    'relativeHumidity': ['Humidity', 'measurement', 'humidity',
-                         '%', '%'],
+    'relativeHumidity': ['Humidity', 'measurement', '%', '%'],
     'cloudLayers': ['Cloud Layers', 'array', None, None],
     'visibility': ['Visibility', 'measurement',
                    LENGTH_KILOMETERS, LENGTH_MILES]
@@ -127,8 +127,68 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
     vol.Optional(CONF_STATIONCODE): cv.string,
-
 })
+
+
+def get_obs_station_list(latitude, longitude):
+    """Get list of observation stations for a location.
+
+    This gets the list of stations which provide observations
+    closest to the given point (latitude, longitude). This is done
+    by first getting the information about the point, one item of which
+    is the URL for retreiving the list of stations.
+
+    """
+    res = requests.get("https://api.weather.gov/points/{},{}".format(
+        latitude, longitude), headers=REQUESTS_HEADERS)
+    #
+    # The API returns a 404 if the location is outside the area NWS handles.
+    #
+    if res.status_code == 404:
+        _LOGGER.error("Location %s,%s is outside of NWS service area",
+                      latitude, longitude)
+    if res.status_code != 200:
+        _LOGGER.error("Error getting metadata for location %s,%s",
+                      latitude, longitude)
+        return None
+    try:
+        obsurl = res.json()['properties']['observationStations']
+    except ValueError:
+        return None
+
+    res = requests.get(obsurl, headers=REQUESTS_HEADERS)
+    if res.status_code == 404:
+        _LOGGER.error("Location %s,%s is outside of NWS service area",
+                      latitude, longitude)
+    if res.status_code != 200:
+        _LOGGER.error("Error getting station list for location %s,%s",
+                      latitude, longitude)
+        return None
+    try:
+        return res.json()['features']
+    except ValueError:
+        _LOGGER.error("No station list retured for location %s,%s",
+                      latitude, longitude)
+        return None
+
+
+def get_obs_for_station(stationcode):
+    """Retrieve the latest observation data for the given station.
+
+    This calls the NWS API for to retrieve the latest observation
+    measurements from the given weather station. The return value
+    is the dictionary under the JSON 'properties' item.
+    """
+    url = "https://api.weather.gov/stations/{}/observations/latest".format(
+        stationcode)
+    res = requests.get(url, headers=REQUESTS_HEADERS)
+    if res.status_code != 200:
+        _LOGGER.error("Cannot get observations for station %s, status=%s",
+                      stationcode, res.status_code)
+    try:
+        return res.json()['properties']
+    except ValueError:
+        return None
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -161,60 +221,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return
     #
-    # Get metadata about the location using the /points/ function
+    # Get the list of observation stations for the location.
     # This checks that the location is within the NWS coverage area.
     #
     try:
-        locmetadata = requests.get(
-            'https://api.weather.gov/points/{},{}'.format(
-                latitude, longitude), headers=USER_AGENT_HEADER)
+        stationlist = get_obs_station_list(latitude, longitude)
     except requests.RequestException:
-        _LOGGER.error("Error getting metadata for location %s,%s",
+        _LOGGER.error("Error getting station list for location %s,%s",
                       latitude, longitude)
         return
 
-    if locmetadata.status_code != 200:
-        _LOGGER.error("Error getting metadata for location %s,%s, status=%s",
-                      latitude, longitude, locmetadata.status_code)
-        return
-    #
-    # The key metadata we need are:
-    #   observationStations - URL to get list of observation stations
-    #   forecast - URL to get semi-daily forecast
-    #   forecastHourly - URL to get hourly forecast
-    #
-    try:
-        obsstaurl = locmetadata.json()['properties']['observationStations']
-    except requests.RequestException:
-        _LOGGER.error("No observations URL for location %s,%s",
-                      latitude, longitude)
+    if stationlist is None:
         return
 
-    try:
-        forecasturl = locmetadata.json()['properties']['forecast']
-    except requests.RequestException:
-        _LOGGER.error("No forecast URL for location %s,%s",
-                      latitude, longitude)
-        return
-
-    try:
-        forecasthourlyurl = locmetadata.json()['properties']['forecastHourly']
-    except requests.RequestException:
-        _LOGGER.error("No hourly forecast URL for location %s,%s",
-                      latitude, longitude)
-        return
-
-    #
-    # Get list of stations from the /gridpoints/.../stations function
     # If no station was configured, use first station from list as the
     # station for observations.  If a station was configured, verify
     # that it is in the list for this location.
     #
-    stationlist = requests.get(obsstaurl, headers=USER_AGENT_HEADER)
-    if stationlist.status_code != 200:
-        _LOGGER.error("Cannot get station list for location %s,%s",
-                      latitude, longitude)
-        return
     #
     # Do we have a station from the configuration?
     #
@@ -225,13 +248,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # loop through list of stations to check if code is valid station
     # for this location
     #
-    for station in stationlist.json()['features']:
+    for station in stationlist:
         if confstationcode is None:
             stationcode = station['properties']['stationIdentifier']
+            stationname = station['properties']['name']
             break
         else:
             if confstationcode == station['properties']['stationIdentifier']:
                 stationcode = confstationcode
+                stationname = station['properties']['name']
                 break
     #
     # Did we find a valid station?
@@ -245,31 +270,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                           confstationcode, latitude, longitude)
 
     #
-    # Get station meta data
-    #
-    try:
-        stationmeta = requests.get('https://api.weather.gov/stations/{}'
-                                   .format(stationcode),
-                                   headers=USER_AGENT_HEADER)
-    except requests.RequestException:
-        _LOGGER.error("Can't get station metadata for station %s",
-                      stationcode)
-    if stationmeta.status_code != 200:
-        _LOGGER.error("Can't get station metadata for station %s, status %s",
-                      stationcode, stationmeta.status_code)
-    #
-    # Get station information
-    #
-    stationid = stationmeta.json()['properties']['stationIdentifier']
-    stationname = stationmeta.json()['properties']['name']
-
-    #
     # Create the data object for observations for this location/station.
     #
 
     noaadata = NOAACurrentData(hass, stationcode,
-                               stationid, stationname,
-                               forecasturl, forecasthourlyurl, name)
+                               stationname, name)
     #
     # Perform a data update to get first set of data and available
     # measurements
@@ -474,7 +479,7 @@ class NOAACurrentSensor(Entity):
         attr = {}
         attr[ATTR_ATTRIBUTION] = ATTRIBUTION
         attr[ATTR_LAST_UPDATE] = self._noaadata.lastupdate
-        attr[ATTR_SITE_ID] = self._noaadata.stationid
+        attr[ATTR_SITE_ID] = self._noaadata.stationcode
         attr[ATTR_SITE_NAME] = self._noaadata.stationname
         return attr
 
@@ -518,7 +523,7 @@ class NOAACurrentData(Entity):
     """Get the latest data from NOAA API.
 
     This uses the API call
-    https://api.weather.gov/stations/<stationid>/observations/latest
+    https://api.weather.gov/stations/<stationcode>/observations/latest
     which always returns all measurement names, even when the station does
     not have an instrument for measuring that item. Also, for some measurements
     the API returns a null value when the instrument provides some default
@@ -530,23 +535,14 @@ class NOAACurrentData(Entity):
     depending upon the station.
     """
 
-    def __init__(self, hass, stationcode,
-                 stationid, stationname, forecasturl, forecasthourlyurl, name):
+    def __init__(self, hass, stationcode, stationname, name):
         """Initialize the current data object."""
         _LOGGER.debug("Initialize NOAACurrentData with stationcode=%s, \
-                       stationid='%s',stationname='%s',forecasturl='%s',\
-                       forecasthourlyurl='%s',name='%s'",
-                      stationcode, stationid, stationname,
-                      forecasturl, forecasthourlyurl, name)
+                       stationname='%s',name='%s'",
+                      stationcode, stationname, name)
 
         self.stationcode = stationcode
-        self.stationid = stationid
         self.stationname = stationname
-        self._forecasturl = forecasturl
-        self._forecasthourlyurl = forecasthourlyurl
-        self._obsurl = "https://api.weather.gov/stations/{}"\
-            "/observations/latest".format(stationcode)
-
         self._name = name
         self.lastupdate = datetime.datetime.now(datetime.timezone.utc)
         self.data = dict()
@@ -560,26 +556,26 @@ class NOAACurrentData(Entity):
         _LOGGER.debug("update called for station %s", self.stationcode)
 
         try:
-            obslist = requests.get(self._obsurl, headers=USER_AGENT_HEADER)
+            obslist = get_obs_for_station(self.stationcode)
         except requests.RequestException:
             _LOGGER.error("Cannot get observations for station %s",
                           self.stationcode)
         #
         # Make sure good status result
         #
-        if obslist.status_code != 200:
-            _LOGGER.error("Cannot get observations for station %s, status=%s",
-                          self.stationcode, obslist.status_code)
+        if obslist is None:
+            _LOGGER.error("No observations for station %s",
+                          self.stationcode)
         #
         # Get the timestamp of the report, if any
         #
-        if 'timestamp' in obslist.json()['properties']:
-            tsstring = obslist.json()['properties']['timestamp']
+        if 'timestamp' in obslist:
+            tsstring = obslist['timestamp']
             self.lastupdate = datetime.datetime.strptime(
                 '{}{}'.format(tsstring[0:22], tsstring[23:25]),
                 '%Y-%m-%dT%H:%M:%S%z')
         _LOGGER.debug("timestamp=%s, obslist properties='%s'",
-                      self.lastupdate, obslist.json()['properties'])
+                      self.lastupdate, obslist)
 
         #
         # Now loop through all observation values returned and set the
@@ -587,12 +583,11 @@ class NOAACurrentData(Entity):
         #
         _LOGGER.debug("checking for variables using set %s intersection \
                        set %s which is '%s'",
-                      SENSOR_TYPES_SET, set(obslist.json()['properties']),
-                      SENSOR_TYPES_SET.intersection(set(obslist.json()
-                                                        ['properties'])))
+                      SENSOR_TYPES_SET, set(obslist),
+                      SENSOR_TYPES_SET.intersection(set(obslist)))
 
         for variable in SENSOR_TYPES_SET.intersection(
-                set(obslist.json()['properties'])):
+                set(obslist)):
             _LOGGER.debug("setting value variable=%s, value='%s'",
-                          variable, obslist.json()['properties'][variable])
-            self.data[variable] = obslist.json()['properties'][variable]
+                          variable, obslist[variable])
+            self.data[variable] = obslist[variable]
