@@ -259,8 +259,6 @@ class YeelightDevice:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
 
-        self.update()
-
     def turn_off(self, duration=DEFAULT_TRANSITION):
         """Turn off device."""
         import yeelight
@@ -270,8 +268,6 @@ class YeelightDevice:
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
-
-        self.update()
 
     def update(self):
         """Read new properties from the device."""
