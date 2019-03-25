@@ -53,5 +53,5 @@ class YeelightNightlightModeSensor(BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Return true if nightlight move is on."""
+        """Return true if nightlight mode is on."""
         return self._device.is_nightlight_enabled
