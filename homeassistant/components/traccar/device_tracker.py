@@ -176,12 +176,9 @@ class TraccarScanner:
             event_types=self._event_types.keys())
         if events is not None:
             for event in events:
-                try:
-                    device_name = next((
-                        dev.get('name') for dev in self._api._devices
-                        if dev.get('id') == event['deviceId']))
-                except StopIteration:
-                    device_name = None
+                device_name = next((
+                    dev.get('name') for dev in self._api.devices()
+                    if dev.get('id') == event['deviceId']), None)
                 self._hass.bus.async_fire(
                     'traccar_' + self._event_types.get(event["type"]), {
                         'device_traccar_id': event['deviceId'],
