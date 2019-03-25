@@ -30,15 +30,14 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """ Initial setup """
-
+    """Initial setup for Sector Alarm."""
     try:
         alarm = sectorlib.SectorAlarm(config[DOMAIN].get(CONF_EMAIL),
                                       config[DOMAIN].get(CONF_PASSWORD),
                                       config[DOMAIN].get(CONF_ALARM_ID),
                                       config[DOMAIN].get(CONF_CODE))
     except Exception:
-        _LOGGER.error("Could not login to Sector Alarm. Wrong username or password?")
+        _LOGGER.error("Could not login. Wrong username or password?")
         return
 
     hass.data[DOMAIN] = alarm

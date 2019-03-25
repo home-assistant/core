@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """ Initial setup of the platform. """
+    """Initial setup of the platform."""
     sector_connection = hass.data.get(SECTOR_DOMAIN)
 
     temps = sector_connection.GetTemps()
@@ -28,7 +28,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class SectorTempSensor(Entity):
-    """ Secotor Alarm temperature class """
+    """Secotor Alarm temperature class."""
+
     def __init__(self, temp, sectorconnection):
         """Initialize the sensor."""
         self._sector = sectorconnection
@@ -53,7 +54,8 @@ class SectorTempSensor(Entity):
 
     @Throttle(UPDATE_INTERVAL)
     def update(self):
+        """Update function for the temp sensor."""
         temps = self._sector.GetTemps()
-        for x, y in temps:
-            if x == self._name:
-                self._state = y
+        for name, temp in temps:
+            if name == self._name:
+                self._state = temp
