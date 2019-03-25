@@ -1433,7 +1433,7 @@ pytile==2.0.6
 pytouchline==0.7
 
 # homeassistant.components.traccar.device_tracker
-pytraccar==0.3.0
+pytraccar==0.5.0
 
 # homeassistant.components.trackr.device_tracker
 pytrackr==0.0.5
@@ -1653,6 +1653,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.thermoworks_smoke.sensor
+# homeassistant.components.traccar.device_tracker
 stringcase==1.2.0
 
 # homeassistant.components.ecovacs
