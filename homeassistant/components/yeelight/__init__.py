@@ -1,4 +1,4 @@
-"""Support for Xiaomi Yeelight Wifi color bulb."""
+"""Support for Xiaomi Yeelight WiFi color bulb."""
 
 import logging
 from datetime import timedelta
