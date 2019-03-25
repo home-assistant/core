@@ -83,7 +83,6 @@ YEELIGHT_EFFECT_LIST = [
 
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
-
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:

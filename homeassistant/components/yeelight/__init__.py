@@ -1,6 +1,5 @@
-"""
-Support for Xiaomi Yeelight Wifi color bulb.
-"""
+"""Support for Xiaomi Yeelight Wifi color bulb."""
+
 import logging
 from datetime import timedelta
 
@@ -142,10 +141,8 @@ def _parse_custom_effects(effects_config):
     return effects
 
 
-
 def setup(hass, config):
     """Set up the Yeelight bulbs."""
-
     conf = config[DOMAIN]
     yeelight_data = hass.data[DATA_YEELIGHT] = {}
 
