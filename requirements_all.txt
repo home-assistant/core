@@ -1520,7 +1520,7 @@ rfk101py==0.0.1
 rflink==0.0.37
 
 # homeassistant.components.ring
-ring_doorbell==0.2.2
+ring_doorbell==0.2.3
 
 # homeassistant.components.ritassist.device_tracker
 ritassist==0.9.2
