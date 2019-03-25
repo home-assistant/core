@@ -36,7 +36,6 @@ omit =
     homeassistant/components/arlo/*
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/august/*
-    homeassistant/components/axis/*
     homeassistant/components/bbb_gpio/*
     homeassistant/components/arest/binary_sensor.py
     homeassistant/components/concord232/binary_sensor.py
@@ -415,7 +414,6 @@ omit =
     homeassistant/components/lifx_cloud/scene.py
     homeassistant/components/scsgate/*
     homeassistant/components/sense/*
-    homeassistant/components/api_streams/sensor.py
     homeassistant/components/aftership/sensor.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/alpha_vantage/sensor.py

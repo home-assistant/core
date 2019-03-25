@@ -83,9 +83,14 @@ class ChannelStatus(Enum):
 class ZigbeeChannel:
     """Base channel for a Zigbee cluster."""
 
+    CHANNEL_NAME = None
+
     def __init__(self, cluster, device):
         """Initialize ZigbeeChannel."""
-        self.name = 'channel_{}'.format(cluster.cluster_id)
+        self._channel_name = cluster.ep_attribute
+        if self.CHANNEL_NAME:
+            self._channel_name = self.CHANNEL_NAME
+        self._generic_id = 'channel_0x{:04x}'.format(cluster.cluster_id)
         self._cluster = cluster
         self._zha_device = device
         self._unique_id = construct_unique_id(cluster)
@@ -95,6 +100,11 @@ class ZigbeeChannel:
         )
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
+
+    @property
+    def generic_id(self):
+        """Return the generic id for this channel."""
+        return self._generic_id
 
     @property
     def unique_id(self):
@@ -110,6 +120,11 @@ class ZigbeeChannel:
     def device(self):
         """Return the device this channel is linked to."""
         return self._zha_device
+
+    @property
+    def name(self) -> str:
+        """Return friendly name."""
+        return self._channel_name
 
     @property
     def status(self):
@@ -215,10 +230,11 @@ class ZigbeeChannel:
 class AttributeListeningChannel(ZigbeeChannel):
     """Channel for attribute reports from the cluster."""
 
+    CHANNEL_NAME = ATTRIBUTE_CHANNEL
+
     def __init__(self, cluster, device):
         """Initialize AttributeListeningChannel."""
         super().__init__(cluster, device)
-        self.name = ATTRIBUTE_CHANNEL
         attr = self._report_config[0].get('attr')
         if isinstance(attr, str):
             self.value_attribute = get_attr_id_by_name(self.cluster, attr)
@@ -340,10 +356,7 @@ class ZDOChannel:
 class EventRelayChannel(ZigbeeChannel):
     """Event relay that can be attached to zigbee clusters."""
 
-    def __init__(self, cluster, device):
-        """Initialize EventRelayChannel."""
-        super().__init__(cluster, device)
-        self.name = EVENT_RELAY_CHANNEL
+    CHANNEL_NAME = EVENT_RELAY_CHANNEL
 
     @callback
     def attribute_updated(self, attrid, value):

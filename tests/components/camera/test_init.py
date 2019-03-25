@@ -28,7 +28,7 @@ def mock_camera(hass):
         }
     }))
 
-    with patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
+    with patch('homeassistant.components.demo.camera.DemoCamera.camera_image',
                return_value=b'Test'):
         yield
 
@@ -92,7 +92,7 @@ class TestGetImage:
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
+    @patch('homeassistant.components.demo.camera.DemoCamera.camera_image',
            autospec=True, return_value=b'Test')
     def test_get_image_from_camera(self, mock_camera):
         """Grab an image from camera entity."""
@@ -199,7 +199,7 @@ async def test_webocket_camera_stream(hass, hass_ws_client, hass_client,
     with patch('homeassistant.components.camera.request_stream',
                return_value='http://home.assistant/playlist.m3u8'
                ) as mock_request_stream, \
-        patch('homeassistant.components.camera.demo.DemoCamera.stream_source',
+        patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
               new_callable=PropertyMock) as mock_stream_source:
         mock_stream_source.return_value = generate_h264_video()
         # Request playlist through WebSocket
@@ -241,7 +241,7 @@ async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     }
     with patch('homeassistant.components.camera.request_stream'
                ) as mock_request_stream, \
-        patch('homeassistant.components.camera.demo.DemoCamera.stream_source',
+        patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
               new_callable=PropertyMock) as mock_stream_source:
         mock_stream_source.return_value = generate_h264_video()
         # Call service

@@ -130,5 +130,5 @@ class Season(Entity):
 
     def update(self):
         """Update season."""
-        self.datetime = datetime.now()
+        self.datetime = datetime.utcnow()
         self.season = get_season(self.datetime, self.hemisphere, self.type)

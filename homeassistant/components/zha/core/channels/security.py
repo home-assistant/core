@@ -9,18 +9,13 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import ZigbeeChannel
 from ..helpers import bind_cluster
-from ..const import SIGNAL_ATTR_UPDATED, ZONE_CHANNEL
+from ..const import SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
-
-    def __init__(self, cluster, device):
-        """Initialize IASZoneChannel."""
-        super().__init__(cluster, device)
-        self.name = ZONE_CHANNEL
 
     @callback
     def cluster_command(self, tsn, command_id, args):

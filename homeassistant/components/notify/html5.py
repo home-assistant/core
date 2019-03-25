@@ -45,8 +45,23 @@ ATTR_VAPID_PUB_KEY = 'vapid_pub_key'
 ATTR_VAPID_PRV_KEY = 'vapid_prv_key'
 ATTR_VAPID_EMAIL = 'vapid_email'
 
+
+def gcm_api_deprecated(value):
+    """Warn user that GCM API config is deprecated."""
+    if not value:
+        return value
+
+    _LOGGER.warning(
+        "Configuring html5_push_notifications via the GCM api"
+        " has been deprecated and will stop working after April 11,"
+        " 2019. Use the VAPID configuration instead. For instructions,"
+        " see https://www.home-assistant.io/components/notify.html5/")
+    return value
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(ATTR_GCM_SENDER_ID): cv.string,
+    vol.Optional(ATTR_GCM_SENDER_ID):
+        vol.All(cv.string, gcm_api_deprecated),
     vol.Optional(ATTR_GCM_API_KEY): cv.string,
     vol.Optional(ATTR_VAPID_PUB_KEY): cv.string,
     vol.Optional(ATTR_VAPID_PRV_KEY): cv.string,
