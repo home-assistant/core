@@ -1,11 +1,13 @@
 """Light platform support for yeelight."""
 import logging
 
+import voluptuous as vol
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired)
-from homeassistant.const import CONF_HOST, CONF_DEVICES, CONF_LIGHTS
+from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
@@ -15,7 +17,10 @@ from homeassistant.components.light import (
 import homeassistant.util.color as color_util
 from homeassistant.components.yeelight import (
     CONF_TRANSITION, DATA_YEELIGHT, CONF_MODE_MUSIC,
-    CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED)
+    CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED,
+    YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
+    YEELIGHT_FLOW_TRANSITION_SCHEMA, _transitions_config_parser,
+    ACTION_RECOVER)
 
 DEPENDENCIES = ['yeelight']
 
@@ -32,6 +37,11 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_COLOR |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
+
+ATTR_MODE = 'mode'
+
+SERVICE_SET_MODE = 'set_mode'
+SERVICE_START_FLOW = 'start_flow'
 
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
@@ -86,19 +96,56 @@ def _cmd(func):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
+    from yeelight.enums import PowerMode
+
+    data_key = '{}_lights'.format(DATA_YEELIGHT)
+
     if not discovery_info:
         return
 
-    yeelight_data = hass.data[DATA_YEELIGHT]
-    ipaddr = discovery_info[CONF_HOST]
-    device = yeelight_data[CONF_DEVICES][ipaddr]
+    if data_key not in hass.data:
+        hass.data[data_key] = []
+
+    device = hass.data[DATA_YEELIGHT][discovery_info[CONF_HOST]]
     _LOGGER.debug("Adding %s", device.name)
 
     custom_effects = discovery_info[CONF_CUSTOM_EFFECTS]
     light = YeelightLight(device, custom_effects=custom_effects)
 
-    yeelight_data[CONF_LIGHTS][ipaddr] = light
+    hass.data[data_key].append(light)
     add_entities([light], True)
+
+    def service_handler(service):
+        """Dispatch service calls to target entities."""
+        params = {key: value for key, value in service.data.items()
+                  if key != ATTR_ENTITY_ID}
+
+        entity_ids = extract_entity_ids(hass, service)
+        target_devices = [light for light in hass.data[data_key]
+                          if light.entity_id in entity_ids]
+
+        for target_device in target_devices:
+            if service.service == SERVICE_SET_MODE:
+                target_device.set_mode(**params)
+            elif service.service == SERVICE_START_FLOW:
+                params[ATTR_TRANSITIONS] = \
+                    _transitions_config_parser(params[ATTR_TRANSITIONS])
+                target_device.start_flow(**params)
+
+    service_schema_set_mode = YEELIGHT_SERVICE_SCHEMA.extend({
+        vol.Required(ATTR_MODE):
+            vol.In([mode.name.lower() for mode in PowerMode])
+    })
+    hass.services.register(
+        DOMAIN, SERVICE_SET_MODE, service_handler,
+        schema=service_schema_set_mode)
+
+    service_schema_start_flow = YEELIGHT_SERVICE_SCHEMA.extend(
+        YEELIGHT_FLOW_TRANSITION_SCHEMA
+    )
+    hass.services.register(
+        DOMAIN, SERVICE_START_FLOW, service_handler,
+        schema=service_schema_start_flow)
 
 
 class YeelightLight(Light):
@@ -455,3 +502,29 @@ class YeelightLight(Light):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         self.device.turn_off(duration=duration)
+
+    def set_mode(self, mode: str):
+        """Set a power mode."""
+        import yeelight
+
+        try:
+            self._bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()])
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to set the power mode: %s", ex)
+
+        self.device.update()
+
+    def start_flow(self, transitions, count=0, action=ACTION_RECOVER):
+        """Start flow."""
+        import yeelight
+
+        try:
+            flow = yeelight.Flow(
+                count=count,
+                action=yeelight.Flow.actions[action],
+                transitions=transitions)
+
+            self._bulb.start_flow(flow)
+            self.device.update()
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to set effect: %s", ex)
