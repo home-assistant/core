@@ -64,11 +64,6 @@ class HomeKitLock(HomeKitEntity, LockDevice):
         """Return true if device is locked."""
         return self._state == STATE_LOCKED
 
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._state is not None
-
     async def async_lock(self, **kwargs):
         """Lock the device."""
         await self._set_lock_state(STATE_LOCKED)
