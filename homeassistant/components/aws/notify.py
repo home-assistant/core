@@ -15,7 +15,6 @@ from homeassistant.components.notify import (
     BaseNotificationService,
     PLATFORM_SCHEMA,
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
 
 from .const import (
@@ -84,11 +83,11 @@ async def async_get_service(hass, config, discovery_info=None):
 
     available_regions = await get_available_regions(hass, service)
     if region_name not in available_regions:
-        raise ValueError(
-            "Region {} is not available for {} service, must in {}".format(
-                region_name, service, available_regions
-            )
+        _LOGGER.error(
+            "Region %s is not available for %s service, must in %s",
+            region_name, service, available_regions
         )
+        return None
 
     aws_config = conf.copy()
 
@@ -102,13 +101,14 @@ async def async_get_service(hass, config, discovery_info=None):
         del aws_config[CONF_CONTEXT]
 
     if not aws_config:
-        # no platform config, use aws component config instead
+        # no platform config, use the first aws component credential instead
         if hass.data[DATA_SESSIONS]:
-            session = list(hass.data[DATA_SESSIONS].values())[0]
+            session = next(iter(hass.data[DATA_SESSIONS].values()))
         else:
-            raise ValueError(
-                "No available aws session for {}".format(config[CONF_NAME])
+            _LOGGER.error(
+                "Missing aws credential for %s", config[CONF_NAME]
             )
+            return None
 
     if session is None:
         credential_name = aws_config.get(CONF_CREDENTIAL_NAME)
@@ -145,7 +145,7 @@ async def async_get_service(hass, config, discovery_info=None):
         return AWSSQS(session, aws_config)
 
     # should not reach here since service was checked in schema
-    raise ValueError("Unsupported service {}".format(service))
+    return None
 
 
 class AWSNotify(BaseNotificationService):
@@ -155,13 +155,6 @@ class AWSNotify(BaseNotificationService):
         """Initialize the service."""
         self.session = session
         self.aws_config = aws_config
-
-    async def async_send_message(self, message="", **kwargs):
-        """Send notification."""
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not targets:
-            raise HomeAssistantError("At least one target is required")
 
 
 class AWSLambda(AWSNotify):
@@ -176,7 +169,9 @@ class AWSLambda(AWSNotify):
 
     async def async_send_message(self, message="", **kwargs):
         """Send notification to specified LAMBDA ARN."""
-        await super().async_send_message(message, **kwargs)
+        if not kwargs.get(ATTR_TARGET):
+            _LOGGER.error("At least one target is required")
+            return
 
         cleaned_kwargs = {k: v for k, v in kwargs.items() if v is not None}
         payload = {"message": message}
@@ -207,12 +202,14 @@ class AWSSNS(AWSNotify):
 
     async def async_send_message(self, message="", **kwargs):
         """Send notification to specified SNS ARN."""
-        await super().async_send_message(message, **kwargs)
+        if not kwargs.get(ATTR_TARGET):
+            _LOGGER.error("At least one target is required")
+            return
 
         message_attributes = {
             k: {"StringValue": json.dumps(v), "DataType": "String"}
             for k, v in kwargs.items()
-            if v
+            if v is not None
         }
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
@@ -241,7 +238,9 @@ class AWSSQS(AWSNotify):
 
     async def async_send_message(self, message="", **kwargs):
         """Send notification to specified SQS ARN."""
-        await super().async_send_message(message, **kwargs)
+        if not kwargs.get(ATTR_TARGET):
+            _LOGGER.error("At least one target is required")
+            return
 
         cleaned_kwargs = {k: v for k, v in kwargs.items() if v is not None}
         message_body = {"message": message}

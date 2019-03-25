@@ -120,9 +120,13 @@ async def async_setup_entry(hass, entry):
                 hass.data[DATA_SESSIONS][name] = result
 
     # set up notify platform, no entry support for notify component yet,
-    # have to use discovery to load platform
+    # have to use discovery to load platform.
     for notify_config in conf[CONF_NOTIFY]:
-        discovery.load_platform(hass, "notify", DOMAIN, notify_config, config)
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, "notify", DOMAIN, notify_config, config
+            )
+        )
 
     return validation
 
