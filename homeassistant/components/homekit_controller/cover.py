@@ -5,10 +5,10 @@ from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION, CoverDevice)
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.const import (
     STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING)
+
+from . import KNOWN_ACCESSORIES, HomeKitEntity
 
 STATE_STOPPED = 'stopped'
 
@@ -74,20 +74,13 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
             CharacteristicsTypes.DOOR_STATE_CURRENT,
             CharacteristicsTypes.DOOR_STATE_TARGET,
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
-            CharacteristicsTypes.NAME,
         ]
-
-    def _setup_name(self, char):
-        self._name = char['value']
 
     def _update_door_state_current(self, value):
         self._state = CURRENT_GARAGE_STATE_MAP[value]
 
     def _update_obstruction_detected(self, value):
         self._obstruction_detected = value
-
-    def _update_name(self, value):
-        self._name = value
 
     @property
     def available(self):
@@ -172,11 +165,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
             CharacteristicsTypes.HORIZONTAL_TILT_CURRENT,
             CharacteristicsTypes.HORIZONTAL_TILT_TARGET,
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
-            CharacteristicsTypes.NAME,
         ]
-
-    def _setup_name(self, char):
-        self._name = char['value']
 
     def _update_position_state(self, value):
         self._state = CURRENT_WINDOW_STATE_MAP[value]

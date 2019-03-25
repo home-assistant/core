@@ -1,11 +1,11 @@
 """Support for Tahoma sensors."""
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.tahoma import (
-    DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
 DEPENDENCIES = ['tahoma']
 

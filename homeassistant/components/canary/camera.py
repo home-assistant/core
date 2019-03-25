@@ -5,17 +5,18 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.canary/
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-from homeassistant.components.canary import DATA_CANARY, DEFAULT_TIMEOUT
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.util import Throttle
+
+from . import DATA_CANARY, DEFAULT_TIMEOUT
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 

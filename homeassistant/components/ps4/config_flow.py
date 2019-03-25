@@ -5,10 +5,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ps4.const import (
-    DEFAULT_NAME, DEFAULT_REGION, DOMAIN, REGIONS)
 from homeassistant.const import (
     CONF_CODE, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_REGION, CONF_TOKEN)
+
+from .const import DEFAULT_NAME, DEFAULT_REGION, DOMAIN, REGIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,11 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
         # If entry exists check that devices found aren't configured.
         if self.hass.config_entries.async_entries(DOMAIN):
+            creds = {}
             for entry in self.hass.config_entries.async_entries(DOMAIN):
+                # Retrieve creds from entry
+                creds['data'] = entry.data[CONF_TOKEN]
+                # Retrieve device data from entry
                 conf_devices = entry.data['devices']
                 for c_device in conf_devices:
                     if c_device['host'] in device_list:
@@ -88,6 +92,11 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             # If list is empty then all devices are configured.
             if not device_list:
                 return self.async_abort(reason='devices_configured')
+            # Add existing creds for linking. Should be only 1.
+            if not creds:
+                # Abort if creds is missing.
+                return self.async_abort(reason='credential_error')
+            self.creds = creds['data']
 
         # Login to PS4 with user data.
         if user_input is not None:
