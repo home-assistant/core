@@ -44,6 +44,11 @@ def request_stream(hass, stream_source, *, fmt='hls',
     if options is None:
         options = {}
 
+    # For RTSP streams, prefer TCP
+    if isinstance(stream_source, str) \
+            and stream_source[:7] == 'rtsp://' and not options:
+        options['rtsp_flags'] = 'prefer_tcp'
+
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]
         stream = streams.get(stream_source)
