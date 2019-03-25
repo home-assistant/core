@@ -8,7 +8,8 @@ from homeassistant.components.discovery import SERVICE_YEELIGHT
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_SCAN_INTERVAL, \
     CONF_HOST, ATTR_ENTITY_ID
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as \
+    BINARY_SENSOR_DOMAIN
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
@@ -187,7 +188,8 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     )
 
     load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
-    load_platform(hass, SENSOR_DOMAIN, DOMAIN, platform_config, hass_config)
+    load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
+                  hass_config)
 
 
 class YeelightDevice:
@@ -218,12 +220,6 @@ class YeelightDevice:
                               self._ipaddr, self._name, ex)
 
         return self._bulb_device
-
-    def _update_properties(self, properties=None):
-        if not properties:
-            properties = UPDATE_REQUEST_PROPERTIES
-
-        self._bulb_device.get_properties(properties)
 
     @property
     def name(self):
@@ -282,5 +278,5 @@ class YeelightDevice:
         if not self.bulb:
             return
 
-        self._update_properties()
+        self._bulb_device.get_properties(UPDATE_REQUEST_PROPERTIES)
         dispatcher_send(self._hass, DATA_UPDATED, self._ipaddr)

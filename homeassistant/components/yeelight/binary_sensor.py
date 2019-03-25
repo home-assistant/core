@@ -1,10 +1,9 @@
 """Sensor platform support for yeelight."""
 import logging
 
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.yeelight import DATA_YEELIGHT, DATA_UPDATED
 
 DEPENDENCIES = ['yeelight']
@@ -23,10 +22,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
         add_entities([YeelightNightlightModeSensor(device)])
 
-    return True
 
-
-class YeelightNightlightModeSensor(Entity):
+class YeelightNightlightModeSensor(BinarySensorDevice):
     """Representation of a Yeelight nightlight mode sensor."""
 
     def __init__(self, device):
@@ -55,9 +52,6 @@ class YeelightNightlightModeSensor(Entity):
         return "{} nightlight".format(self._device.name)
 
     @property
-    def state(self):
-        """Return the state of nightlight."""
-        if self._device.is_nightlight_enabled:
-            return STATE_ON
-
-        return STATE_OFF
+    def is_on(self):
+        """Return true if nightlight move is on."""
+        return self._device.is_nightlight_enabled
