@@ -50,12 +50,11 @@ async def async_setup(hass, config):
     db_path = hass.config.path('planifneige.db')
     conf = config[DOMAIN]
 
-    pn_client = planif_neige_client.PlanifNeigeClient(conf.get(
-        CONF_API_KEY), db_path)
+    pn_client = planif_neige_client.PlanifNeigeClient(conf[CONF_API_KEY], db_path)
     pn_client.get_planification_for_date()
 
     data = hass.data[DATA_PLANIFNEIGE] = PlanifNeigeData(
-        hass, pn_client, conf.get(CONF_STREETS))
+        hass, pn_client, conf[CONF_STREETS])
 
     async_track_time_interval(
         hass, data.update, conf[CONF_SCAN_INTERVAL]
