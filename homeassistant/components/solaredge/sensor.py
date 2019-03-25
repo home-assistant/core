@@ -10,6 +10,7 @@ import logging
 
 import voluptuous as vol
 
+from requests.exceptions import HTTPError, ConnectTimeout
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME, POWER_WATT,
@@ -17,7 +18,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from requests.exceptions import HTTPError, ConnectTimeout
 
 REQUIREMENTS = ['solaredge==0.0.2']
 
@@ -70,7 +70,6 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the SolarEdge Monitoring API sensor."""
     import solaredge
-    from requests.exceptions import HTTPError, ConnectTimeout
 
     api_key = config[CONF_API_KEY]
     site_id = config[CONF_SITE_ID]
@@ -278,7 +277,6 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
     @Throttle(OVERVIEW_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-
         try:
             data = self.api.get_overview(self.site_id)
             overview = data['overview']
@@ -310,7 +308,6 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
     @Throttle(DETAILS_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-
         try:
             data = self.api.get_details(self.site_id)
             details = data['details']
@@ -343,7 +340,6 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
     @Throttle(INVENTORY_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-
         try:
             data = self.api.get_inventory(self.site_id)
             inventory = data['Inventory']
@@ -377,7 +373,6 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
     @Throttle(POWER_FLOW_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-
         try:
             data = self.api.get_current_power_flow(self.site_id)
             power_flow = data['siteCurrentPowerFlow']
