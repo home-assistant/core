@@ -240,6 +240,7 @@ class OnOffTrait(_Trait):
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
+            cover.DOMAIN,
             switch.DOMAIN,
             fan.DOMAIN,
             light.DOMAIN,
@@ -252,13 +253,22 @@ class OnOffTrait(_Trait):
 
     def query_attributes(self):
         """Return OnOff query attributes."""
+        if self.state.domain == cover.DOMAIN:
+            return {'on': self.state.state != cover.STATE_CLOSED}
         return {'on': self.state.state != STATE_OFF}
 
     async def execute(self, command, data, params):
         """Execute an OnOff command."""
         domain = self.state.domain
 
-        if domain == group.DOMAIN:
+        if domain == cover.DOMAIN:
+            service_domain = domain
+            if params['on']:
+                service = cover.SERVICE_OPEN_COVER
+            else:
+                service = cover.SERVICE_CLOSE_COVER
+
+        elif domain == group.DOMAIN:
             service_domain = HA_DOMAIN
             service = SERVICE_TURN_ON if params['on'] else SERVICE_TURN_OFF
 
@@ -1031,7 +1041,6 @@ class ModesTrait(_Trait):
 @register_trait
 class OpenCloseTrait(_Trait):
     """Trait to open and close a cover.
-
     https://developers.google.com/actions/smarthome/traits/openclose
     """
 
@@ -1045,8 +1054,8 @@ class OpenCloseTrait(_Trait):
         """Test if state is supported."""
         if domain == cover.DOMAIN:
             return features & cover.SUPPORT_SET_POSITION
-
-        return False
+        else:
+            return domain in (cover.DOMAIN)
 
     def sync_attributes(self):
         """Return opening direction."""
@@ -1065,6 +1074,13 @@ class OpenCloseTrait(_Trait):
                 response['openPercent'] = position
                 response['on'] = self.state.state != cover.STATE_CLOSED
                 response['online'] = True
+            else:
+                response['on'] = self.state.state != cover.STATE_CLOSED
+                response['online'] = True
+                if self.state.state != cover.STATE_CLOSED:
+                    response['openPercent'] = 100
+                else:
+                    response['openPercent'] = 0
 
         return response
 
@@ -1073,8 +1089,17 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
 
         if domain == cover.DOMAIN:
-            await self.hass.services.async_call(
-                cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    cover.ATTR_POSITION: params['openPercent']
+            if params['openPercent'] == 0:
+                await self.hass.services.async_call(cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
+                    ATTR_ENTITY_ID: self.state.entity_id
                 }, blocking=True, context=data.context)
+            elif params['openPercent'] == 100:
+                await self.hass.services.async_call(cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
+                    ATTR_ENTITY_ID: self.state.entity_id
+                }, blocking=True, context=data.context)
+            else:
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        cover.ATTR_POSITION: params['openPercent']
+                    }, blocking=True, context=data.context)
