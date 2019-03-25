@@ -10,7 +10,7 @@ DEFAULT_ICON = "mdi:cat"
 BATTERY_DEFAULT_DEVICE_CLASS = "battery"
 BATTERY_DEFAULT_ICON = "mdi:battery"
 
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=3)
 DEFAULT_TIMEOUT = 10
 
 CONF_HOUSEHOLD_ID = "household_id"
@@ -33,6 +33,8 @@ SURE_BATT_VOLTAGE_DIFF = SURE_BATT_VOLTAGE_FULL - SURE_BATT_VOLTAGE_LOW
 
 
 class SureProductID(IntEnum):
+    """Sure Petcare API Product IDs."""
+
     ROUTER = 1      # Sure Hub
     PET_FLAP = 3    # Pet Door Connect
     CAT_FLAP = 6    # Cat Door Connect
@@ -40,6 +42,8 @@ class SureProductID(IntEnum):
 
 # Thanks to @rcastberg for discovering the IDs used by the Sure Petcare API."""
 class SureLocationID(IntEnum):
+    """Sure Petcare API Location IDs."""
+
     INSIDE = 1
     OUTSIDE = 2
     UNKNOWN = -1
@@ -47,6 +51,7 @@ class SureLocationID(IntEnum):
 
 class SureLockStateID(IntEnum):
     """Sure Petcare API State IDs."""
+
     UNLOCKED = 0
     LOCKED_IN = 1
     LOCKED_OUT = 2
@@ -59,6 +64,7 @@ class SureLockStateID(IntEnum):
 
 class SureEventID(IntEnum):
     """Sure Petcare API Event IDs."""
+
     MOVE = 0
     MOVE_UNKNOWN_ANIMAL = 7     # movement of unknown animal
     BATTERY_WARNING = 1
@@ -68,8 +74,9 @@ class SureEventID(IntEnum):
     CURFEW = 20
 
 
-class SureThingType(IntEnum):
-    """Sure Petcare API Thing Types."""
+class SureThingTypeID(IntEnum):
+    """Sure Petcare thing Types."""
+
     HUB = 0
     FLAP = 1
     PET = 2
