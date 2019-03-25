@@ -539,7 +539,7 @@ class YeelightLight(Light):
         import yeelight
 
         try:
-            self._bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()], light_type=self.light_type)
+            self._bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()])
             self.device.update()
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to set the power mode: %s", ex)
