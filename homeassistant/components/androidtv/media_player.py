@@ -61,10 +61,7 @@ SERVICE_ADB_COMMAND_SCHEMA = vol.Schema({
 
 def has_adb_files(value):
     """Check that ADB key files exist."""
-    priv_key = value
-    pub_key = '{}.pub'.format(value)
-    cv.isfile(pub_key)
-    return cv.isfile(priv_key)
+    return cv.isfile(value)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
