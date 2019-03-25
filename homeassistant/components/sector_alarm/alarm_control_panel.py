@@ -53,7 +53,7 @@ class SectorAlarmPanel(alarm.AlarmControlPanel):
 
         if state == 'pending':
             return STATE_ALARM_PENDING
-        
+
         return 'unknown'
 
     async def async_alarm_disarm(self, code=None):
