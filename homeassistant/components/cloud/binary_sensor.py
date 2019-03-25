@@ -2,7 +2,6 @@
 import asyncio
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
