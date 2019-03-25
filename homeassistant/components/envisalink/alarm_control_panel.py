@@ -7,7 +7,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.alarm_control_panel import ALARM_SERVICE_SCHEMA
 from homeassistant.components.envisalink import (
     DATA_EVL, EnvisalinkDevice, PARTITION_SCHEMA, CONF_CODE, CONF_PANIC,
     CONF_PARTITIONNAME, SIGNAL_KEYPAD_UPDATE, SIGNAL_PARTITION_UPDATE)
@@ -27,6 +26,11 @@ ATTR_KEYPRESS = 'keypress'
 ALARM_KEYPRESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_KEYPRESS): cv.string
+})
+
+ALARM_ARM_MAX_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_CODE): cv.string
 })
 
 
@@ -61,7 +65,7 @@ async def async_setup_platform(
 
     hass.services.async_register(
         alarm.DOMAIN, SERVICE_ALARM_ARM_MAX, alarm_arm_max_handler,
-        schema=ALARM_SERVICE_SCHEMA)
+        schema=ALARM_ARM_MAX_SCHEMA)
 
     @callback
     def alarm_keypress_handler(service):
