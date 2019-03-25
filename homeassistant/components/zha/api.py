@@ -310,11 +310,10 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
     cluster_id = msg[ATTR_CLUSTER_ID]
     cluster_type = msg[ATTR_CLUSTER_TYPE]
     attribute = msg[ATTR_ATTRIBUTE]
-    manufacturer = None
-    #  only use manufacturer code for manufacturer clusters
-    if cluster_id >= MFG_CLUSTER_ID_START:
-        manufacturer = msg.get(ATTR_MANUFACTURER) or None
+    manufacturer = msg.get(ATTR_MANUFACTURER) or None
     zha_device = zha_gateway.get_device(ieee)
+    if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+        manufacturer = zha_device.manufacturer_code
     success = failure = None
     if zha_device is not None:
         cluster = zha_device.async_get_cluster(
@@ -476,11 +475,10 @@ def async_load_api(hass):
         cluster_type = service.data.get(ATTR_CLUSTER_TYPE)
         attribute = service.data.get(ATTR_ATTRIBUTE)
         value = service.data.get(ATTR_VALUE)
-        manufacturer = None
-        #  only use manufacturer code for manufacturer clusters
-        if cluster_id >= MFG_CLUSTER_ID_START:
-            manufacturer = service.data.get(ATTR_MANUFACTURER) or None
+        manufacturer = service.data.get(ATTR_MANUFACTURER) or None
         zha_device = zha_gateway.get_device(ieee)
+        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+            manufacturer = zha_device.manufacturer_code
         response = None
         if zha_device is not None:
             response = await zha_device.write_zigbee_attribute(
@@ -517,11 +515,10 @@ def async_load_api(hass):
         command = service.data.get(ATTR_COMMAND)
         command_type = service.data.get(ATTR_COMMAND_TYPE)
         args = service.data.get(ATTR_ARGS)
-        manufacturer = None
-        #  only use manufacturer code for manufacturer clusters
-        if cluster_id >= MFG_CLUSTER_ID_START:
-            manufacturer = service.data.get(ATTR_MANUFACTURER) or None
+        manufacturer = service.data.get(ATTR_MANUFACTURER) or None
         zha_device = zha_gateway.get_device(ieee)
+        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+            manufacturer = zha_device.manufacturer_code
         response = None
         if zha_device is not None:
             response = await zha_device.issue_cluster_command(
