@@ -1,3 +1,5 @@
+
+
 """Tests for the Google Assistant integration."""
 
 DEMO_DEVICES = [{
@@ -28,17 +30,17 @@ DEMO_DEVICES = [{
     'willReportState':
     False
 }, {
-    'id':
-    'switch.decorative_lights',
-    'name': {
-        'name': 'Decorative Lights'
-    },
-    'traits': [
-        'action.devices.traits.OnOff'
-    ],
-    'type': 'action.devices.types.SWITCH',
-    'willReportState':
-    False
+   'id':
+   'switch.decorative_lights',
+   'name': {
+       'name': 'Decorative Lights'
+   },
+   'traits': [
+       'action.devices.traits.OnOff'
+   ],
+   'type': 'action.devices.types.SWITCH',
+   'willReportState':
+   False
 }, {
     'id':
     'light.ceiling_lights',
@@ -95,7 +97,7 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OpenClose'],
     'type':
-    'action.devices.types.SWITCH',
+    'action.devices.types.BLINDS',
     'willReportState':
     False
 }, {
@@ -107,24 +109,24 @@ DEMO_DEVICES = [{
     'traits':
     ['action.devices.traits.OpenClose'],
     'type':
-    'action.devices.types.SWITCH',
+    'action.devices.types.BLINDS',
     'willReportState':
     False
 }, {
-    'id': 'cover.garage_door',
-    'name': {
-        'name': 'Garage Door'
-    },
-    'traits': ['action.devices.traits.OpenClose'],
-    'willReportState': False
-}, {
-    'id': 'cover.kitchen_window',
-    'name': {
-        'name': 'Kitchen Window'
-    },
-    'traits': ['action.devices.traits.OpenClose'],
-    'willReportState': False
-}, {
+#    'id': 'cover.garage_door',
+#    'name': {
+#        'name': 'Garage Door'
+#    },
+#    'traits': ['action.devices.traits.OpenClose'],
+#    'willReportState': False
+#}, {
+#    'id': 'cover.kitchen_window',
+#    'name': {
+#        'name': 'Kitchen Window'
+#    },
+#    'traits': ['action.devices.traits.OpenClose'],
+#    'willReportState': False
+#}, {
     'id': 'group.all_covers',
     'name': {
         'name': 'all covers'
