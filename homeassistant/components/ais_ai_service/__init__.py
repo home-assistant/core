@@ -398,7 +398,6 @@ def reset_virtual_keyboard(hass):
         "entity_id": CURR_ENTITIE, "value": ""})
 
 
-
 # Groups in Groups views
 def get_curr_group():
     global CURR_GROUP
@@ -575,6 +574,12 @@ def say_curr_entity(hass):
     if entity_id == "sensor.ais_knowledge_answer":
         _say_it(hass, "Odpowiedź: " + text, None)
         return
+    elif entity_id == 'sensor.dyski':
+        _say_it(hass, "Dysk wewnętrzny", None)
+        hass.services.call(
+            'ais_drives_service',
+            'browse_path', {"path": '/data/data/pl.sviete.dom/files/home/dom'})
+        return
     elif entity_id == 'input_select.ais_bookmark_last_played':
         _say_it(hass, info_name + " " + info_data.replace("Local;", ""), None)
         return
@@ -662,7 +667,7 @@ def set_next_position(hass):
     if CURR_ENTITIE.startswith('input_select.'):
         arr = state.attributes.get('options')
         # the "-" option is always first
-        if (len(arr) < 2) or (CURR_ENTITIE == "input_select.folder_name" and len(arr) < 3):
+        if (len(arr) < 2):
             _say_it(hass, "brak pozycji", None)
         else:
             CURR_ENTITIE_POSITION = get_next(arr, CURR_ENTITIE_POSITION)
@@ -697,27 +702,11 @@ def set_prev_position(hass):
     state = hass.states.get(CURR_ENTITIE)
     if CURR_ENTITIE.startswith('input_select.'):
         arr = state.attributes.get('options')
-        if (len(arr) < 2) or (CURR_ENTITIE == "input_select.folder_name" and len(arr) < 3):
+        if len(arr) < 2:
             _say_it(hass, "brak pozycji", None)
         else:
             CURR_ENTITIE_POSITION = get_prev(arr, CURR_ENTITIE_POSITION)
-            if CURR_ENTITIE == "input_select.folder_name":
-                if CURR_ENTITIE_POSITION == "..":
-                    CURR_ENTITIE_POSITION = get_prev(arr, CURR_ENTITIE_POSITION)
-                # check if we have remote or local path
-                if CURR_ENTITIE_POSITION.startswith(ais_drives_service.G_CLOUD_PREFIX):
-                    if CURR_ENTITIE_POSITION == ais_drives_service.G_CLOUD_PREFIX:
-                        item = ais_drives_service.G_CLOUD_PREFIX.replace("/", "")
-                    else:
-                        item = CURR_ENTITIE_POSITION.replace(ais_drives_service.G_CLOUD_PREFIX, "")
-                        k = item.find(":")
-                        if k+1 < len(item):
-                            item = item[k:]
-                    _say_it(hass, os.path.basename(item), None)
-                else:
-                    _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
-            else:
-                _say_it(hass, CURR_ENTITIE_POSITION, None)
+            _say_it(hass, CURR_ENTITIE_POSITION, None)
     elif CURR_ENTITIE.startswith('input_number.'):
         _min = float(state.attributes.get('min'))
         _step = float(state.attributes.get('step'))
@@ -746,6 +735,10 @@ def select_entity(hass, long_press):
         set_curr_entity(hass, None)
         say_curr_entity(hass)
         CURR_ENTITIE_ENTERED = False
+        return
+
+    if CURR_ENTITIE == 'sensor.dyski':
+        hass.services.call('ais_drives_service', 'remote_select_item')
         return
 
     if CURR_ENTITIE_ENTERED is False:
@@ -983,6 +976,8 @@ def set_focus_on_prev_entity(hass, long_press):
     else:
         if CURR_ENTITIE.startswith("media_player.") and CURR_ENTITIE_ENTERED:
             hass.services.call('media_player', 'media_previous_track', {"entity_id": CURR_ENTITIE})
+        elif CURR_ENTITIE == "sensor.dyski":
+            hass.services.call('ais_drives_service', 'remote_prev_item')
         else:
             # entity not selected or no way to change the entity, go to next one
             set_prev_entity(hass)
@@ -1020,6 +1015,8 @@ def set_focus_on_next_entity(hass, long_press):
     else:
         if CURR_ENTITIE.startswith("media_player.") and CURR_ENTITIE_ENTERED is True:
             hass.services.call('media_player', 'media_next_track', {"entity_id": CURR_ENTITIE})
+        elif CURR_ENTITIE == "sensor.dyski":
+            hass.services.call('ais_drives_service', 'remote_next_item')
         else:
             # entity not selected or no way to change the entity, go to next one
             set_next_entity(hass)
@@ -1031,13 +1028,11 @@ def go_up_in_menu(hass):
     # check if the entity in the group is selected
     if CURR_ENTITIE is not None:
         # check if we are browsing files
-        if CURR_ENTITIE == "input_select.folder_name":
+        if CURR_ENTITIE == "sensor.dyski":
             # check if we can go up
-            state = hass.states.get(CURR_ENTITIE)
-            options = state.attributes.get('options')
-            if ".." in options:
-                _beep_it(hass, 33)
-                hass.services.call('ais_drives_service', 'browse_path', {"path": "..", "say": True})
+            state = hass.states.get('sensor.dyski')
+            if state.state is not None and state.state != '':
+                hass.services.call('ais_drives_service', 'remote_cancel_item')
                 return
             else:
                 # go up in the group menu

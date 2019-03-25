@@ -49,6 +49,7 @@ recorder:
   exclude:
     entities:
       - sensor.time
+      - sensor.dyski
       - input_select.radio_type
       - input_select.radio_station_name
       - input_select.radio_player
@@ -72,6 +73,7 @@ history:
   exclude:
     entities:
       - sensor.time
+      - sensor.dyski
       - input_select.radio_type
       - input_select.radio_station_name
       - input_select.radio_player

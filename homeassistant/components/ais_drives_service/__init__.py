@@ -80,6 +80,22 @@ def async_setup(hass, config):
         _LOGGER.info("play_prev")
         data.play_prev(call)
 
+    def remote_next_item(call):
+        _LOGGER.info("remote_next_item")
+        data.remote_next_item(call)
+
+    def remote_prev_item(call):
+        _LOGGER.info("remote_prev_item")
+        data.remote_prev_item(call)
+
+    def remote_select_item(call):
+        _LOGGER.info("remote_select_item")
+        data.remote_select_item(call)
+
+    def remote_cancel_item(call):
+        _LOGGER.info("remote_cancel_item")
+        data.remote_cancel_item(call)
+
     hass.services.async_register(
         DOMAIN, 'browse_path', browse_path)
     hass.services.async_register(
@@ -90,6 +106,14 @@ def async_setup(hass, config):
         DOMAIN, 'play_next', play_next)
     hass.services.async_register(
         DOMAIN, 'play_prev', play_prev)
+    hass.services.async_register(
+        DOMAIN, 'remote_next_item', remote_next_item)
+    hass.services.async_register(
+        DOMAIN, 'remote_prev_item', remote_prev_item)
+    hass.services.async_register(
+        DOMAIN, 'remote_select_item', remote_select_item)
+    hass.services.async_register(
+        DOMAIN, 'remote_cancel_item', remote_cancel_item)
 
     return True
 
@@ -113,7 +137,6 @@ async def async_unload_entry(hass, config_entry):
         open(G_RCLONE_CONF_FILE, 'w').close()
     else:
         _LOGGER.info("Reloading entry: " + str(secs))
-
 
     await hass.config_entries.async_forward_entry_unload(config_entry, 'sensor')
     return True
@@ -290,7 +313,7 @@ class LocalData:
     def __init__(self, hass):
         """Initialize the books authors."""
         self.hass = hass
-        self.folders = []
+        self.selected_item_idx = 0
         self.folders_json = []
         self.current_path = os.path.abspath(G_LOCAL_FILES_ROOT)
         self.text_to_say = None
@@ -304,13 +327,6 @@ class LocalData:
 
     def refresh_files(self, call):
         pass
-        # dirs = self.list_dir(self.current_path)
-        # self.folders = [ais_global.G_EMPTY_OPTION]
-        # for d in dirs:
-        #     self.folders.append(self.current_path.replace(G_LOCAL_FILES_ROOT, "") + '/' + d)
-        # # cloud remotes from rclone
-        # self.folders.append(G_CLOUD_PREFIX)
-        # """Load the folders and files synchronously."""
 
     def play_file(self):
         mime_type = mimetypes.MimeTypes().guess_type(self.current_path)[0]
@@ -362,7 +378,7 @@ class LocalData:
 
         self.dispalay_current_path()
 
-    def display_root_items(self, say):
+    def display_root_items(self):
         self.hass.states.set(
             "sensor.dyski", '', {
                 'files': [
@@ -373,48 +389,37 @@ class LocalData:
                     {"name": "Dyski zdalne", "icon": "onedrive",
                      "path": G_CLOUD_PREFIX}]
             })
-        if say:
-            self.say("Dyski")
 
     def dispalay_current_path(self):
         state = self.hass.states.get('sensor.dyski')
         items_info = state.attributes
         self.hass.states.set("sensor.dyski", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), items_info)
 
-    def display_current_items(self, say):
+    def display_current_items(self):
         local_items = []
         try:
             local_items = os.scandir(self.current_path)
         except Exception as e:
             _LOGGER.error("list_dir error: " + str(e))
         si = sorted(local_items, key=lambda en: en.name)
-        self.folders = []
-        for i in si:
-            self.folders.append(i)
         items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
                       {"name": "..", "icon": "", "path": ".."}]
         for i in si:
             items_info.append({"name": i.name, "icon": self.get_icon(i), "path": i.path})
         self.hass.states.set("sensor.dyski", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), {'files': items_info})
-        if say:
-            self.say("ok")
 
     def display_current_remotes(self, remotes):
-        self.folders = []
         items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
                       {"name": "..", "icon": "", "path": ".."}]
         for i in remotes:
             items_info.append({"name": i, "icon": "folder-google-drive", "path": self.current_path + i})
-            self.folders.append(i)
         self.hass.states.set("sensor.dyski", self.current_path, {'files': items_info})
 
     def display_current_remote_items(self):
-        self.folders = []
         items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
                       {"name": "..", "icon": "", "path": ".."}]
 
         if self.current_path.endswith(':'):
-            self.folders.append(self.current_path + ais_global.G_DRIVE_SHARED_WITH_ME)
             items_info.append({"name":  ais_global.G_DRIVE_SHARED_WITH_ME, "icon": "account-supervisor-circle",
                                "path": self.current_path + ais_global.G_DRIVE_SHARED_WITH_ME})
         for item in self.folders_json:
@@ -435,8 +440,6 @@ class LocalData:
                     elif item["MimeType"].startswith("video/"):
                         l_icon = "file-video-outline"
             items_info.append({"name": item["Path"].strip()[:50], "icon": l_icon, "path": path})
-            self.folders.append(path)
-
         self.hass.states.set("sensor.dyski", self.current_path, {'files': items_info})
 
     def get_icon(self, entry):
@@ -449,17 +452,12 @@ class LocalData:
 
     def browse_path(self, call):
         """Load subfolders for the selected folder."""
-        # test
-        # say = False
-        say = True
-        if "say" in call.data:
-            say = call.data["say"]
         if "path" not in call.data:
             _LOGGER.error("No path")
             return
-        self._browse_path(call.data["path"], say)
+        self._browse_path(call.data["path"])
 
-    def _browse_path(self, path, say):
+    def _browse_path(self, path):
         if path == "..":
             # check if this is cloud drive
             if self.is_rclone_path(self.current_path):
@@ -471,8 +469,15 @@ class LocalData:
                     k = self.current_path.rfind(":")
                     self.current_path = self.current_path[:k + 1]
                 else:
-                    k = self.current_path.rfind("/")
-                    self.current_path = self.current_path[:k]
+                    if self.rclone_is_dir(self.current_path):
+                        k = self.current_path.rfind("/")
+                        self.current_path = self.current_path[:k]
+                    else:
+                        k = self.current_path.rfind("/")
+                        self.current_path = self.current_path[:k]
+                        k = self.current_path.rfind("/")
+                        self.current_path = self.current_path[:k]
+
             # local drive
             else:
                 if os.path.isfile(self.current_path):
@@ -484,15 +489,19 @@ class LocalData:
             self.current_path = path
 
         if self.current_path.startswith(G_CLOUD_PREFIX):
-            self.rclone_browse(self.current_path, say)
+            self.rclone_browse(self.current_path)
+            self.selected_item_idx = 0
             return
 
         if self.current_path == G_LOCAL_FILES_ROOT:
-            self.display_root_items(say)
+            self.display_root_items()
+            self.selected_item_idx = 0
             return
 
         if os.path.isdir(self.current_path):
-            self.display_current_items(say)
+            self.display_current_items()
+            self.selected_item_idx = 0
+            return
         else:
             # file was selected, check mimetype and play if possible
             self.play_file()
@@ -513,7 +522,7 @@ class LocalData:
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
         # process.wait()
 
-    def rclone_append_listremotes(self, say):
+    def rclone_append_listremotes(self):
         # self.rclone_fix_permissions()
         rclone_cmd = ["rclone", "listremotes", G_RCLONE_CONF]
         proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -528,12 +537,7 @@ class LocalData:
                     remotes.append(l.strip())
 
             self.display_current_remotes(remotes)
-
-            if say:
-                self.say("Masz " + str(len(remotes)) + " zdalnych dysków")
-            else:
-                self.beep()
-
+            self.say("Masz " + str(len(remotes)) + " zdalnych dysków")
 
     def rclone_browse_folder(self, path, silent):
         if ais_global.G_DRIVE_SHARED_WITH_ME in path:
@@ -548,9 +552,7 @@ class LocalData:
         _LOGGER.error('G ' + path)
         if "" != proc.stderr:
             self.say("Nie można pobrać zawartości folderu " + path + " " + proc.stderr)
-            _LOGGER.error('G E ' + path)
         else:
-            _LOGGER.error('G OK ' + path)
             self.folders_json = json.loads(proc.stdout)
             self.display_current_remote_items()
 
@@ -631,18 +633,16 @@ class LocalData:
         timer = threading.Timer(2, self.rclone_play_the_stream)
         timer.start()
 
-    def rclone_browse(self, path, say):
+    def rclone_is_dir(self, path):
+        # check if path is dir or file
+        for item in self.folders_json:
+            if path.endswith(item["Path"]):
+                return item["IsDir"]
+
+    def rclone_browse(self, path):
         if path == G_CLOUD_PREFIX:
-            self.rclone_append_listremotes(say)
+            self.rclone_append_listremotes()
             return
-        if say:
-            if path == G_CLOUD_PREFIX + self.rclone_remote_from_path(path):
-                self.text_to_say = self.rclone_remote_from_path(path)
-            else:
-                k = path.find(":")
-                self.text_to_say = os.path.basename(path[k:])
-        else:
-            self.text_to_say = None
         is_dir = None
         mime_type = ""
         item_name = ""
@@ -730,7 +730,7 @@ class LocalData:
                 l_idx = i
         if l_idx == len(files):
             l_idx = min(2, len(files))
-        self._browse_path(files[l_idx]["path"], True)
+        self._browse_path(files[l_idx]["path"])
 
     def play_prev(self, call):
         state = self.hass.states.get('sensor.dyski')
@@ -746,13 +746,80 @@ class LocalData:
             l_idx = len(files) - 1
         else:
             l_idx = l_idx - 2
-        self._browse_path(files[l_idx]["path"], True)
+        self._browse_path(files[l_idx]["path"])
+
+    def get_item_name(self, path):
+        path = path.rstrip(':')
+        if path.count('/') > 0:
+            name = path.split('/').pop()
+        else:
+            name = path.split(':').pop()
+        name = name.replace(':', '')
+        name = name.replace('-', ' ')
+        return name
+
+    def remote_next_item(self, call):
+        state = self.hass.states.get('sensor.dyski')
+        attr = state.attributes
+        files = attr.get('files', [])
+        if len(state.state) == 0:
+            if self.selected_item_idx == len(files) - 1:
+                self.selected_item_idx = 0
+            else:
+                self.selected_item_idx = self.selected_item_idx + 1
+        else:
+            if len(files) == 2:
+                self.say("brak pozycji")
+                return
+
+            if self.selected_item_idx == len(files) - 1:
+                self.selected_item_idx = 2
+            else:
+                self.selected_item_idx = max(self.selected_item_idx + 1, 2)
+
+        name = self.get_item_name(files[self.selected_item_idx]["path"])
+        self.say(name)
+
+    def remote_prev_item(self, call):
+        state = self.hass.states.get('sensor.dyski')
+        attr = state.attributes
+        files = attr.get('files', [])
+        if len(state.state) == 0:
+            if self.selected_item_idx < 1:
+                self.selected_item_idx = len(files) - 1
+            else:
+                self.selected_item_idx = self.selected_item_idx - 1
+        else:
+            if len(files) == 2:
+                self.say("brak pozycji")
+                return
+
+            if self.selected_item_idx < 3:
+                self.selected_item_idx = len(files) - 1
+            else:
+                self.selected_item_idx = self.selected_item_idx - 1
+        name = self.get_item_name(files[self.selected_item_idx]["path"])
+        self.say(name)
+
+    def remote_select_item(self, call):
+        state = self.hass.states.get('sensor.dyski')
+        attr = state.attributes
+        files = attr.get('files', [])
+        if state.state is None or self.selected_item_idx is None:
+            self.selected_item_idx = 0
+        name = self.get_item_name(files[self.selected_item_idx]["path"])
+        self.say("Wybieram " + name)
+        self._browse_path(files[self.selected_item_idx]["path"])
+
+    def remote_cancel_item(self, call):
+        self._browse_path('..')
+        # TODO read current folder name
 
     @asyncio.coroutine
     def async_load_all(self):
         """Load all the folders and files."""
         def load():
-            self.display_root_items(say=False)
+            self.display_root_items()
             global G_DRIVE_SECRET, G_DRIVE_CLIENT_ID
             try:
                 ws_resp = aisCloud.key("gdrive_client_id")
