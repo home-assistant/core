@@ -105,6 +105,9 @@ aioasuswrt==1.1.21
 # homeassistant.components.automatic.device_tracker
 aioautomatic==0.6.5
 
+# homeassistant.components.aws
+aiobotocore==0.10.2
+
 # homeassistant.components.dnsip.sensor
 aiodns==1.1.1
 
