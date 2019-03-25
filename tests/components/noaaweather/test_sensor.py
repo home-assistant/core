@@ -441,7 +441,7 @@ class TestWeather(unittest.TestCase):
 
         assert state.state == '16.1'
         assert state.attributes.get('unit_of_measurement') == \
-             LENGTH_KILOMETERS
+            LENGTH_KILOMETERS
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Visibility"
 
