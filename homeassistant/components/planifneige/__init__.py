@@ -38,7 +38,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SCAN_INTERVAL,
                      default=DEFAULT_INTERVAL): vol.All(
                          cv.time_period, cv.positive_timedelta),
-        vol.Required(CONF_STREETS): [STREET_SCHEMA]
+        vol.Required(CONF_STREETS): vol.All(
+            cv.ensure_list, [STREET_SCHEMA])
     })
 }, extra=vol.ALLOW_EXTRA)
 
