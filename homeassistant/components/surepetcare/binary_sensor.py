@@ -9,7 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE, DEFAULT_DEVICE_CLASS,
                     DEFAULT_ICON, SURE_IDS, TOPIC_UPDATE, SureLocationID,
-                    SureLockStateID, SureProductID, SureThingType)
+                    SureLockStateID, SureProductID, SureThingTypeID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,8 +18,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Sure PetCare Flaps sensors based on a config entry."""
     hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID] = entry.data[
         CONF_HOUSEHOLD_ID]
-    hass.data[DATA_SURE_PETCARE][SureThingType.FLAP.name] = dict()
-    hass.data[DATA_SURE_PETCARE][SureThingType.PET.name] = dict()
+    hass.data[DATA_SURE_PETCARE][SureThingTypeID.FLAP.name] = dict()
+    hass.data[DATA_SURE_PETCARE][SureThingTypeID.PET.name] = dict()
 
     entities = list()
 
@@ -30,9 +30,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if sure_id not in hass.data[DATA_SURE_PETCARE][sure_type]:
             hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = None
 
-        if sure_type == SureThingType.FLAP.name:
+        if sure_type == SureThingTypeID.FLAP.name:
             entities.append(Flap(sure_id, thing[CONF_NAME], hass=hass))
-        elif sure_type == SureThingType.PET.name:
+        elif sure_type == SureThingTypeID.PET.name:
             entities.append(Pet(sure_id, thing[CONF_NAME], hass=hass))
 
     async_add_entities(entities, True)
@@ -41,27 +41,26 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SurePetcareBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Sure Petcare Entities."""
 
-    def __init__(self, _id: int, name: int,
+    def __init__(self, _id: int, name: str,
                  icon=None, device_class=None, sure_type=None, hass=None):
-
+        """Initialize a Sure Petcare binary sensor."""
+        self._id = _id
         self._hass = hass
-
-        self._household_id = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
-        self._id: int = _id
-        self._type = sure_type
         self._name = name
-
-        self._data = None
-        self._state = dict()
-
+        self._unit_of_measurement = "%"
         self._icon = icon
         self._device_class = device_class
 
+        self._household_id = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
+        self._sure_type = sure_type
+
+        self._state = dict()
+        self._data = hass.data[DATA_SURE_PETCARE][sure_type]
+
     @property
     def is_on(self):
-        """Return true if light is on."""
-        # return self._state
-        # pass
+        """Return true if entity is on/unlocked."""
+        return bool(self._state)
 
     @property
     def should_poll(self):
@@ -111,8 +110,11 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     async def async_update(self):
         """Get the latest data and update the state."""
         try:
-            self._state = self._data[self._id]
-        except (AttributeError, KeyError, TypeError):
+            self._state = self._hass.data[
+                DATA_SURE_PETCARE][self._sure_type][self._id]
+        except (AttributeError, KeyError, TypeError) as error:
+            # _LOGGER.debug(f"error while updating: {error}")
+            _LOGGER.debug("error while updating: %s", error)
             pass
 
     async def async_added_to_hass(self):
@@ -122,7 +124,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        # noinspection W0201
+        # pylint: disable=attribute-defined-outside-init
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self._hass, TOPIC_UPDATE, update)
 
@@ -135,13 +137,14 @@ class SurePetcareBinarySensor(BinarySensorDevice):
 class Flap(SurePetcareBinarySensor):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, name: int, hass=None):
+    def __init__(self, _id: int, name: str, hass=None):
+        """Initialize a Sure Petcare Flap."""
         super().__init__(
             _id,
             f"Flap {name.capitalize()}",
             icon="mdi:lock",
             device_class="lock",
-            sure_type=hass.data[DATA_SURE_PETCARE][SureThingType.FLAP.name],
+            sure_type=SureThingTypeID.FLAP.name,
             hass=hass,
         )
 
@@ -171,7 +174,6 @@ class Flap(SurePetcareBinarySensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attributes = None
         if self._state:
             attributes = dict(
                 battery_voltage=self._state["battery"] / 4,
@@ -194,12 +196,14 @@ class Flap(SurePetcareBinarySensor):
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    def __init__(self, _id: int, name: int, hass=None):
+    def __init__(self, _id: int, name: str, hass=None):
+        """Initialize a Sure Petcare Pet."""
         super().__init__(
             _id,
             f"Pet {name.capitalize()}",
             icon="mdi:cat",
             device_class="presence",
+            sure_type=SureThingTypeID.PET.name,
             hass=hass,
         )
 
