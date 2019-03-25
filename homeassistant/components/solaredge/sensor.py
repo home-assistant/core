@@ -100,7 +100,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     entities = []
     for sensor_key in config[CONF_MONITORED_CONDITIONS]:
         sensor = sensor_factory.create_sensor(sensor_key)
-        entities.append(sensor)
+        if sensor is not None:
+            entities.append(sensor)
 
     add_entities(entities, True)
 
