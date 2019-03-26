@@ -298,6 +298,10 @@ class YeelightLight(Light):
         """Return yeelight device."""
         return self._device
 
+    @property
+    def _is_nightlight_enabled(self):
+        return self.device.is_nightlight_enabled
+
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
     def _bulb(self) -> 'yeelight.Bulb':  # noqa: F821
@@ -329,12 +333,12 @@ class YeelightLight(Light):
                 self._supported_features = SUPPORT_YEELIGHT_RGB
             elif bulb_type == yeelight.BulbType.WhiteTemp or \
                     bulb_type == yeelight.BulbType.WhiteTempMood:
-                if self._device.is_nightlight_enabled:
+                if self._is_nightlight_enabled:
                     self._supported_features = SUPPORT_YEELIGHT
                 else:
                     self._supported_features = SUPPORT_YEELIGHT_WHITE_TEMP
 
-            if self._min_mireds is None:
+            if self.min_mireds is None:
                 model_specs = self._bulb.get_model_specs()
                 self._min_mireds = \
                     kelvin_to_mired(model_specs['color_temp']['max'])
@@ -344,10 +348,10 @@ class YeelightLight(Light):
             if bulb_type == yeelight.BulbType.WhiteTempMood:
                 self._is_on = self._get_property('main_power') == 'on'
             else:
-                self._is_on = self._properties.get('power') == 'on'
+                self._is_on = self._get_property('power') == 'on'
 
-            if self._device.is_nightlight_enabled:
-                bright = self._properties.get('nl_br', None)
+            if self._is_nightlight_enabled:
+                bright = self._get_property('nl_br', None)
             else:
                 bright = self._get_property('bright', None)
 
@@ -578,6 +582,20 @@ class YeelightAmbientLight(YeelightLight):
         """Return light type."""
         import yeelight
         return yeelight.enums.LightType.Ambient
+
+    @property
+    def min_mireds(self):
+        """Return minimum supported color temperature."""
+        return kelvin_to_mired(6500)
+
+    @property
+    def max_mireds(self):
+        """Return maximum supported color temperature."""
+        return kelvin_to_mired(1700)
+
+    @property
+    def _is_nightlight_enabled(self):
+        return False
 
     def _get_property(self, prop, default=None):
         bg_prop = self.PROPERTIES_MAPPING.get(prop)

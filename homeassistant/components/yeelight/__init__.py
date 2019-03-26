@@ -260,7 +260,7 @@ class YeelightDevice:
     @property
     def is_ambilight_supported(self) -> bool:
         """Return true / false if ambilight is supported."""
-        return self.bulb.get_model_specs()['background_light']
+        return self.bulb.get_model_specs().get('background_light', False)
 
     def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn on device."""
