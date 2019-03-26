@@ -776,12 +776,34 @@ class LocalData:
             self.say("Synchronizacja zakończona.")
 
     def play_next(self, call):
-        self.remote_next_item(False)
-        self.remote_select_item(True)
+        state = self.hass.states.get('sensor.dyski')
+        attr = state.attributes
+        files = attr.get('files', [])
+        l_idx = 0
+        i = 0
+        for f in files:
+            i = i + 1
+            if f["path"].replace(G_LOCAL_FILES_ROOT, "") == state.state:
+                l_idx = i
+        if l_idx == len(files):
+            l_idx = min(2, len(files))
+        self._browse_path(files[l_idx]["path"], True)
 
     def play_prev(self, call):
-        self.remote_prev_item(False)
-        self.remote_select_item(True)
+        state = self.hass.states.get('sensor.dyski')
+        attr = state.attributes
+        files = attr.get('files', [])
+        l_idx = 0
+        i = 0
+        for f in files:
+            i = i + 1
+            if f["path"].replace(G_LOCAL_FILES_ROOT, "") == state.state:
+                l_idx = i
+        if l_idx == 3:
+            l_idx = len(files) - 1
+        else:
+            l_idx = l_idx - 2
+        self._browse_path(files[l_idx]["path"], True)
 
     def get_item_name(self, path):
         path = path.rstrip(':')

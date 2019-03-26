@@ -97,8 +97,6 @@ def async_setup(hass, config):
     # register services
     data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
 
-    # service = configured_service(hass)
-
     @asyncio.coroutine
     def search(call):
         _LOGGER.info("search " + str(call))
@@ -239,11 +237,11 @@ class SpotifyData:
             else:
                 name = item['name']
             prev_name = name
-            i = {"uri": item['uri'], "title": title_prefix + name}
+            i = {"uri": item['uri'], "title": title_prefix + name, "name": name, "type": type}
             if len(item['images']) > 0:
                 i["thumbnail"] = item['images'][0]['url']
             else:
-                i["thumbnail"] = ""
+                i["thumbnail"] = "/static/icons/favicon-100x100.png"
             titles.append(title_prefix + name)
             G_SPOTIFY_FOUND.append(i)
         return titles
@@ -298,6 +296,23 @@ class SpotifyData:
             'select_option', {
                 "entity_id": "input_select.ais_music_track_name",
                 "option": G_SPOTIFY_FOUND[0]["title"]})
+
+        # update list
+        items_info = {}
+        for idx, entry in enumerate(G_SPOTIFY_FOUND):
+            items_info[idx] = {}
+            items_info[idx]["title"] = entry["title"]
+            items_info[idx]["name"] = entry["name"]
+            items_info[idx]["thumbnail"] = entry["thumbnail"]
+            items_info[idx]["uri"] = entry["uri"]
+            items_info[idx]["mediasource"] = ais_global.G_AN_SPOTIFY
+            if entry["type"] == 'album':
+                items_info[idx]["icon"] = 'mdi:album'
+            elif entry["type"] == 'artist':
+                items_info[idx]["icon"] = 'mdi:artist-outline'
+            else:
+                items_info[idx]["icon"] = 'mdi:playlist-music'
+        yield from self.hass.states.async_set("sensor.spotifylist", '', items_info)
 
     def process_select_track_name(self, call):
         _LOGGER.info("process_select_track_name")
