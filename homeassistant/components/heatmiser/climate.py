@@ -24,10 +24,6 @@ CONF_IPADDRESS = 'ipaddress'
 CONF_PORT = 'port'
 CONF_TSTATS = 'tstats'
 
-DOMAIN = 'heatmiser_uh1'
-ATTR_NAME = 'name'
-DEFAULT_NAME = 'uh1'
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the heatmiser thermostat."""
     from heatmiserV3 import heatmiser, connection
@@ -153,7 +149,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        _LOGGER.info("Setting temperature to {}".format(int(temperature)))
+        """_LOGGER.info("Setting temperature to {}".format(int(temperature)))"""
         if temperature is None or self.dcb == None:
             return
         if self.heating == 0:
@@ -179,4 +175,4 @@ class HeatmiserV3Thermostat(ClimateDevice):
             self._max_temp = 17
             self._mode = STATE_HEAT if self._current_temperature < self._target_temperature else STATE_OFF
             
-        _LOGGER.info("Target temperature for {} is {}".format(self._name, self._target_temperature))
+       """ _LOGGER.info("Target temperature for {} is {}".format(self._name, self._target_temperature))"""
