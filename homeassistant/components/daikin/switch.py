@@ -51,7 +51,8 @@ class DaikinZoneSwitch(ToggleEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._api.device.zones[self._zone_id][0]
+        return "{} {}".format(self._api.name,
+                              self._api.device.zones[self._zone_id][0])
 
     @property
     def is_on(self):
