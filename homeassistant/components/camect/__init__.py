@@ -77,7 +77,8 @@ def setup(hass, config):
             home.set_mode(mode)
         elif mode == 'AWAY':
             home.set_mode('DEFAULT')
-    hass.services.register(DOMAIN, SERVICE_CHANGE_OP_MODE,
-            handle_change_op_mode_service, schema=CHANGE_OP_MODE_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_CHANGE_OP_MODE, handle_change_op_mode_service,
+        schema=CHANGE_OP_MODE_SCHEMA)
 
     return True
