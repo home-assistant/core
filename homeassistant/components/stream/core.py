@@ -128,6 +128,7 @@ class StreamOutput:
     @callback
     def _timeout(self, _now=None):
         """Handle stream timeout."""
+        self._unsub = None
         if self._stream.keepalive:
             self.idle = True
             self._stream.check_idle()
