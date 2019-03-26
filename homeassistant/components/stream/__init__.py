@@ -56,6 +56,9 @@ def request_stream(hass, stream_source, *, fmt='hls',
             stream = Stream(hass, stream_source,
                             options=options, keepalive=keepalive)
             streams[stream_source] = stream
+        else:
+            # Update keepalive option on existing stream
+            stream.keepalive = keepalive
 
         # Add provider
         stream.add_provider(fmt)

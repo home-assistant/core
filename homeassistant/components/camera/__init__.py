@@ -541,14 +541,17 @@ async def ws_camera_stream(hass, connection, msg):
     Async friendly.
     """
     try:
-        camera = _get_camera_from_entity_id(hass, msg['entity_id'])
+        entity_id = msg['entity_id']
+        camera = _get_camera_from_entity_id(hass, entity_id)
+        camera_prefs = hass.data[DATA_CAMERA_PREFS].get(entity_id)
 
         if not camera.stream_source:
             raise HomeAssistantError("{} does not support play stream service"
                                      .format(camera.entity_id))
 
         fmt = msg['format']
-        url = request_stream(hass, camera.stream_source, fmt=fmt)
+        url = request_stream(hass, camera.stream_source, fmt=fmt,
+                             keepalive=camera_prefs.preload_stream)
         connection.send_result(msg['id'], {'url': url})
     except HomeAssistantError as ex:
         _LOGGER.error(ex)
@@ -622,10 +625,12 @@ async def async_handle_play_stream_service(camera, service_call):
                                  .format(camera.entity_id))
 
     hass = camera.hass
+    camera_prefs = hass.data[DATA_CAMERA_PREFS].get(camera.entity_id)
     fmt = service_call.data[ATTR_FORMAT]
     entity_ids = service_call.data[ATTR_MEDIA_PLAYER]
 
-    url = request_stream(hass, camera.stream_source, fmt=fmt)
+    url = request_stream(hass, camera.stream_source, fmt=fmt,
+                         keepalive=camera_prefs.preload_stream)
     data = {
         ATTR_ENTITY_ID: entity_ids,
         ATTR_MEDIA_CONTENT_ID: "{}{}".format(hass.config.api.base_url, url),
