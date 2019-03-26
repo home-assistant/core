@@ -278,7 +278,7 @@ homeassistant/components/xiaomi_tv/media_player.py @fattdev
 
 # Y
 homeassistant/components/yamaha_musiccast/* @jalmeroth
-homeassistant/components/yeelight/light.py @rytilahti
+homeassistant/components/yeelight/* @rytilahti @zewelor
 homeassistant/components/yeelightsunflower/light.py @lindsaymarkward
 homeassistant/components/yi/camera.py @bachya
 
