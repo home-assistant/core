@@ -10,7 +10,7 @@ from homeassistant.components.media_player.const import (
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_service)
 
-from .test_init import mutagen_mock  # noqa
+from tests.components.tts.test_init import mutagen_mock  # noqa
 
 
 class TestTTSYandexPlatform:
