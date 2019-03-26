@@ -100,8 +100,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
             self._state = STATE_ALARM_DISARMED
         elif 'Home' in part['arming_level']:
             self._state = STATE_ALARM_ARMED_HOME
-        elif 'Silent' in part['arming_level']:
-            self._state = STATE_ALARM_ARMED_HOME
         else:
             self._state = STATE_ALARM_ARMED_AWAY
 
