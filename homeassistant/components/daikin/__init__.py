@@ -17,13 +17,13 @@ from homeassistant.util import Throttle
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import KEY_HOST
 
-REQUIREMENTS = ['pydaikin==1.2.0']
+REQUIREMENTS = ['pydaikin==1.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'daikin'
 
-
+PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 COMPONENT_TYPES = ['climate', 'sensor', 'switch']
