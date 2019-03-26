@@ -55,8 +55,7 @@ NOTIFY_PLATFORM_SCHEMA = vol.Schema(
         vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
         vol.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
         vol.Optional(CONF_CONTEXT): vol.Coerce(dict),
-    },
-    extra=vol.PREVENT_EXTRA,
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
