@@ -145,8 +145,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not await hassio.is_connected():
-        _LOGGER.error("Not connected with Hass.io")
-        return False
+        _LOGGER.warning("Not connected with Hass.io / system to busy!")
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load()
