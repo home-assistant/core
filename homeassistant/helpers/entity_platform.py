@@ -61,10 +61,6 @@ class EntityPlatform:
     def _get_parallel_updates_semaphore(self):
         """Get or create a semaphore for parallel updates."""
         if self.parallel_updates_semaphore is None:
-            # Even if self.parallel_updates is 0 or None, we still create
-            # a semaphore its default value is 1. The decision whether
-            # apply this semaphore to entity is in _async_add_entity() base on
-            # if entity has `async_update` method
             self.parallel_updates_semaphore = asyncio.Semaphore(
                 self.parallel_updates if self.parallel_updates else 1,
                 loop=self.hass.loop
