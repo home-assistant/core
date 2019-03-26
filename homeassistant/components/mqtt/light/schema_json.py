@@ -55,6 +55,7 @@ CONF_EFFECT_LIST = 'effect_list'
 CONF_FLASH_TIME_LONG = 'flash_time_long'
 CONF_FLASH_TIME_SHORT = 'flash_time_short'
 CONF_HS = 'hs'
+CONF_STATE_ATTR = 'state_attr'
 
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA_JSON = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
@@ -76,6 +77,7 @@ PLATFORM_SCHEMA_JSON = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_STATE_ATTR): cv.string,
     vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
     vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
     vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
@@ -151,6 +153,12 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         optimistic = config.get(CONF_OPTIMISTIC)
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
 
+        state_attr = config.get(CONF_STATE_ATTR)
+        if state_attr:
+            self._state_attr = state_attr
+        else:
+            self._state_attr = 'state'
+
         brightness = config.get(CONF_BRIGHTNESS)
         if brightness:
             self._brightness = 255
@@ -205,9 +213,9 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             """Handle new MQTT messages."""
             values = json.loads(msg.payload)
 
-            if values['state'] == 'ON':
+            if values[self._state_attr] == 'ON':
                 self._state = True
-            elif values['state'] == 'OFF':
+            elif values[self._state_attr] == 'OFF':
                 self._state = False
 
             if self._hs is not None:

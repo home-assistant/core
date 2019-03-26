@@ -275,6 +275,41 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     assert 155 == light_state.attributes.get('white_value')
 
 
+async def test_controlling_state_attr_via_topic(hass, mqtt_mock):
+    """Test the controlling of the state via topic."""
+    assert await async_setup_component(hass, light.DOMAIN, {
+        light.DOMAIN: {
+            'platform': 'mqtt',
+            'schema': 'json',
+            'name': 'test',
+            'state_topic': 'test_light_rgb',
+            'state_attr': 'state_rgb',
+            'command_topic': 'test_light_rgb/set',
+            'qos': '0'
+        }
+    })
+
+    state = hass.states.get('light.test')
+    assert STATE_OFF == state.state
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Turn on the light, full white
+    async_fire_mqtt_message(hass, 'test_light_rgb',
+                            '{"state_rgb":"ON"}')
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.test')
+    assert STATE_ON == state.state
+
+    # Turn the light off
+    async_fire_mqtt_message(hass, 'test_light_rgb', '{"state_rgb":"OFF"}')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.test')
+    assert STATE_OFF == state.state
+
+
 async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     """Test the sending of command in optimistic mode."""
     fake_state = ha.State('light.test', 'on', {'brightness': 95,
