@@ -5,7 +5,7 @@ from homeassistant.components.lock import LockDevice
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED)
 
-from . import KNOWN_ACCESSORIES, HomeKitEntity
+from . import KNOWN_DEVICES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit Lock support."""
     if discovery_info is None:
         return
-    accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+    accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
     add_entities([HomeKitLock(accessory, discovery_info)], True)
 
 
