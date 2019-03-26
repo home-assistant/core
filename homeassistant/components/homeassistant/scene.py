@@ -9,8 +9,8 @@ from homeassistant.const import (
 from homeassistant.core import State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.state import HASS_DOMAIN, async_reproduce_state
+from homeassistant.components.scene import STATES, Scene
 
-from . import STATES, Scene
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): HASS_DOMAIN,

@@ -9,10 +9,10 @@ from typing import Any, Optional, Dict, Set
 
 import voluptuous as vol
 
-from homeassistant import (
-    core, config as conf_util, config_entries, components as core_components,
-    loader)
-from homeassistant.components import persistent_notification
+from homeassistant import core, config as conf_util, config_entries, loader
+from homeassistant.components import (
+    persistent_notification, homeassistant as core_component
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import AsyncHandler
@@ -139,7 +139,7 @@ async def async_from_config_dict(config: Dict[str, Any],
             pass
 
     # setup components
-    res = await core_components.async_setup(hass, config)
+    res = await core_component.async_setup(hass, config)
     if not res:
         _LOGGER.error("Home Assistant core failed to initialize. "
                       "Further initialization aborted")

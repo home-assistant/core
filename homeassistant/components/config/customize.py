@@ -1,5 +1,5 @@
 """Provide configuration end points for Customize."""
-from homeassistant.components import SERVICE_RELOAD_CORE_CONFIG
+from homeassistant.components.homeassistant import SERVICE_RELOAD_CORE_CONFIG
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.core import DOMAIN
 import homeassistant.helpers.config_validation as cv
