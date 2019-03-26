@@ -12,7 +12,7 @@
         "data": {
           "mode": "Config Mode",
           "ip_address": "IP Address (Leave empty if using Auto Discovery)."
-        },
+        }
       },
       "link": {
         "title": "PlayStation 4",
