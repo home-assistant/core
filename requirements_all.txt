@@ -191,9 +191,6 @@ av==6.1.2
 # homeassistant.components.axis
 axis==17
 
-# homeassistant.components.tts.baidu
-baidu-aip==1.6.6
-
 # homeassistant.components.modem_callerid.sensor
 basicmodem==0.7
 
@@ -236,7 +233,6 @@ blockchain==1.4.4
 # homeassistant.components.notify.aws_lambda
 # homeassistant.components.notify.aws_sns
 # homeassistant.components.notify.aws_sqs
-# homeassistant.components.tts.amazon_polly
 boto3==1.9.16
 
 # homeassistant.scripts.credstash
@@ -272,7 +268,7 @@ buienradar==0.91
 caldav==0.5.0
 
 # homeassistant.components.cisco_mobility_express.device_tracker
-ciscomobilityexpress==0.1.2
+ciscomobilityexpress==0.1.4
 
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
@@ -521,7 +517,7 @@ habitipy==0.2.0
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.10
+hass-nabucasa==0.11
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -735,7 +731,7 @@ nad_receiver==0.0.11
 ndms2_client==0.0.6
 
 # homeassistant.components.ness_alarm
-nessclient==0.9.14
+nessclient==0.9.15
 
 # homeassistant.components.netdata.sensor
 netdata==0.1.2
@@ -925,7 +921,7 @@ pyRFXtrx==0.23
 # pySwitchmate==0.4.5
 
 # homeassistant.components.tibber
-pyTibber==0.9.9
+pyTibber==0.10.0
 
 # homeassistant.components.dlink.switch
 pyW215==0.6.0
@@ -991,20 +987,17 @@ pycomfoconnect==0.3
 # homeassistant.components.coolmaster.climate
 pycoolmasternet==0.0.4
 
-# homeassistant.components.tts.microsoft
-pycsspeechtts==1.0.2
-
 # homeassistant.components.cups.sensor
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==1.1.0
+pydaikin==1.2.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.0.7
 
 # homeassistant.components.deconz
-pydeconz==53
+pydeconz==54
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -1232,7 +1225,7 @@ pypoint==1.1.1
 pypollencom==2.2.3
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.4.8
+pyps4-homeassistant==0.5.0
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
@@ -1433,7 +1426,7 @@ pytile==2.0.6
 pytouchline==0.7
 
 # homeassistant.components.traccar.device_tracker
-pytraccar==0.3.0
+pytraccar==0.5.0
 
 # homeassistant.components.trackr.device_tracker
 pytrackr==0.0.5
@@ -1520,7 +1513,7 @@ rfk101py==0.0.1
 rflink==0.0.37
 
 # homeassistant.components.ring
-ring_doorbell==0.2.2
+ring_doorbell==0.2.3
 
 # homeassistant.components.ritassist.device_tracker
 ritassist==0.9.2
@@ -1653,6 +1646,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.thermoworks_smoke.sensor
+# homeassistant.components.traccar.device_tracker
 stringcase==1.2.0
 
 # homeassistant.components.ecovacs
@@ -1820,7 +1814,7 @@ yahooweather==0.10
 yalesmartalarmclient==0.1.6
 
 # homeassistant.components.yeelight
-yeelight==0.4.3
+yeelight==0.4.4
 
 # homeassistant.components.yeelightsunflower.light
 yeelightsunflower==0.0.10

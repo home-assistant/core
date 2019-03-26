@@ -120,7 +120,7 @@ ha-ffmpeg==1.11
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.10
+hass-nabucasa==0.11
 
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
@@ -203,7 +203,7 @@ pyHS100==0.3.4
 pyblackbird==0.5
 
 # homeassistant.components.deconz
-pydeconz==53
+pydeconz==54
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -230,7 +230,7 @@ pyopenuv==1.0.9
 pyotp==2.2.6
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.4.8
+pyps4-homeassistant==0.5.0
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
@@ -276,7 +276,7 @@ restrictedpython==4.0b8
 rflink==0.0.37
 
 # homeassistant.components.ring
-ring_doorbell==0.2.2
+ring_doorbell==0.2.3
 
 # homeassistant.components.yamaha.media_player
 rxv==0.6.0

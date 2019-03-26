@@ -494,6 +494,7 @@ class YeelightLight(Light):
             except yeelight.BulbException as ex:
                 _LOGGER.error("Unable to set the defaults: %s", ex)
                 return
+        self.device.update()
 
     def turn_off(self, **kwargs) -> None:
         """Turn off."""
@@ -502,6 +503,7 @@ class YeelightLight(Light):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         self.device.turn_off(duration=duration)
+        self.device.update()
 
     def set_mode(self, mode: str):
         """Set a power mode."""
@@ -509,10 +511,9 @@ class YeelightLight(Light):
 
         try:
             self._bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()])
+            self.device.update()
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to set the power mode: %s", ex)
-
-        self.device.update()
 
     def start_flow(self, transitions, count=0, action=ACTION_RECOVER):
         """Start flow."""
