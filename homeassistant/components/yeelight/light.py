@@ -38,6 +38,8 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
 
+DEFAULT_ICON = "mdi:lightbulb"
+
 ATTR_MODE = 'mode'
 
 SERVICE_SET_MODE = 'set_mode'
@@ -127,7 +129,7 @@ def _cmd(func):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
-    from yeelight.enums import PowerMode
+    from yeelight.enums import PowerMode, BulbType
 
     data_key = '{}_lights'.format(DATA_YEELIGHT)
 
@@ -142,11 +144,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
 
-    lights = [YeelightLight(device, custom_effects=custom_effects)]
-
-    if device.is_ambilight_supported:
-        lights.append(
-            YeelightAmbientLight(device, custom_effects=custom_effects))
+    lights = []
+    if device.type == BulbType.White:
+        lights.append(YeelightGenericLight(device, custom_effects=custom_effects))
+    elif device.type == BulbType.Color:
+        lights.append(YeelightColorLight(device, custom_effects=custom_effects))
+    elif device.type == BulbType.WhiteTemp:
+        if device.is_nightlight_supported:
+            lights.append(YeelightWithNightLight(device, custom_effects=custom_effects))
+            lights.append(YeelightNightLightMode(device, custom_effects=custom_effects))
+        else:
+            lights.append(YeelightWhiteTempLight(device, custom_effects=custom_effects))
+    elif device.type == BulbType.WhiteTempMood:
+        lights.append(YeelightWithAmbientLight(device, custom_effects=custom_effects))
+        lights.append(YeelightNightLightMode(device, custom_effects=custom_effects))
+        lights.append(YeelightAmbientLight(device, custom_effects=custom_effects))
 
     hass.data[data_key] += lights
     add_entities(lights, True)
@@ -184,23 +196,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         schema=service_schema_start_flow)
 
 
-class YeelightLight(Light):
-    """Representation of a Yeelight light."""
+class YeelightGenericLight(Light):
+    """Representation of a Yeelight generic light."""
 
     def __init__(self, device, custom_effects=None):
         """Initialize the Yeelight light."""
         self.config = device.config
         self._device = device
 
-        self._supported_features = SUPPORT_YEELIGHT
-
         self._brightness = None
         self._color_temp = None
         self._is_on = None
         self._hs = None
 
-        self._min_mireds = None
-        self._max_mireds = None
+        model_specs = self._bulb.get_model_specs()
+        self._min_mireds = kelvin_to_mired(model_specs['color_temp']['max'])
+        self._max_mireds = kelvin_to_mired(model_specs['color_temp']['min'])
 
         if custom_effects:
             self._custom_effects = custom_effects
@@ -231,7 +242,7 @@ class YeelightLight(Light):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return self._supported_features
+        return SUPPORT_YEELIGHT
 
     @property
     def effect_list(self):
@@ -251,7 +262,7 @@ class YeelightLight(Light):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._is_on
+        return self._get_property('power') == 'on'
 
     @property
     def brightness(self) -> int:
@@ -283,6 +294,39 @@ class YeelightLight(Light):
         """Return light type."""
         import yeelight
         return yeelight.enums.LightType.Main
+
+    @property
+    def hs_color(self) -> tuple:
+        """Return the color property."""
+        return self._hs
+
+    # F821: https://github.com/PyCQA/pyflakes/issues/373
+    @property
+    def _bulb(self) -> 'yeelight.Bulb':  # noqa: F821
+        return self.device.bulb
+
+    @property
+    def _properties(self) -> dict:
+        if self._bulb is None:
+            return {}
+        return self._bulb.last_properties
+
+    def _get_property(self, prop, default=None):
+        return self._properties.get(prop, default)
+
+    @property
+    def _bright_property(self):
+        return 'bright'
+
+    @property
+    def _turn_on_power_mode(self):
+        from yeelight.enums import PowerMode
+        return PowerMode.LAST
+
+    @property
+    def device(self):
+        """Return yeelight device."""
+        return self._device
 
     def _get_hs_from_properties(self):
         rgb = self._get_property('rgb')
@@ -513,7 +557,7 @@ class YeelightLight(Light):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self.device.turn_on(duration=duration, light_type=self.light_type)
+        self.device.turn_on(duration=duration, light_type=self.light_type, power_mode=self._turn_on_power_mode)
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
@@ -578,13 +622,90 @@ class YeelightLight(Light):
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to set effect: %s", ex)
 
+class YeelightColorLight(YeelightGenericLight):
+    """Representation of a Color Yeelight light."""
 
-class YeelightAmbientLight(YeelightLight):
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_YEELIGHT_RGB
+
+class YeelightWhiteTempLight(YeelightGenericLight):
+    """Representation of a Color Yeelight light."""
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_YEELIGHT_WHITE_TEMP
+
+
+class YeelightWithNightLight(YeelightWhiteTempLight):
+    """Representation of a Yeelight witch nightlight support."""
+
+    @property
+    def _turn_on_power_mode(self):
+        from yeelight.enums import PowerMode
+        return PowerMode.NORMAL
+
+    @property
+    def _is_nightlight_enabled(self):
+        return self.device.is_nightlight_enabled
+
+    def update(self) -> None:
+        bright = self._get_property(self._bright_property)
+        if bright:
+            self._brightness = round(255 * (int(bright) / 100))
+
+        temp_in_k = self._get_property('ct')
+
+        if temp_in_k:
+            self._color_temp = kelvin_to_mired(int(temp_in_k))
+
+        self._hs = self._get_hs_from_properties()
+
+
+class YeelightNightLightMode(YeelightGenericLight):
+    """Representation of a Yeelight when in nightlight mode."""
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        return "{} nightlight".format(self.device.name)
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return 'mdi:weather-night'
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return super().is_on and self.device.is_nightlight_enabled
+
+    @property
+    def _bright_property(self):
+        return 'nl_br'
+
+    @property
+    def _turn_on_power_mode(self):
+        from yeelight.enums import PowerMode
+        return PowerMode.MOONLIGHT
+
+
+class YeelightWithAmbientLight(YeelightWithNightLight):
+    """Representation of a Yeelight which has ambilight support."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return self._get_property('main_power') == 'on'
+
+
+class YeelightAmbientLight(YeelightColorLight):
     """Representation of a Yeelight ambient light."""
 
     PROPERTIES_MAPPING = {
         "color_mode": "bg_lmode",
-        "main_power": "bg_power",
     }
 
     def __init__(self, *args, **kwargs):
@@ -604,14 +725,10 @@ class YeelightAmbientLight(YeelightLight):
         import yeelight
         return yeelight.enums.LightType.Ambient
 
-    @property
-    def _is_nightlight_enabled(self):
-        return False
-
     def _get_property(self, prop, default=None):
         bg_prop = self.PROPERTIES_MAPPING.get(prop)
 
         if not bg_prop:
             bg_prop = "bg_" + prop
 
-        return self._properties.get(bg_prop, default)
+        return super()._properties.get(bg_prop, default)

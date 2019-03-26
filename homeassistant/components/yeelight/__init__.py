@@ -164,6 +164,7 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     platform_config[CONF_CUSTOM_EFFECTS] = \
         hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
 
+    device.update()
     load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
     load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
                   hass_config)
@@ -190,14 +191,12 @@ class YeelightDevice:
             try:
                 self._bulb_device = yeelight.Bulb(self._ipaddr,
                                                   model=self._model)
-                # force init for type
-                self.update()
-
                 self._available = True
             except yeelight.BulbException as ex:
                 self._available = False
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
+                self._available = False
 
         return self._bulb_device
 
@@ -227,19 +226,28 @@ class YeelightDevice:
         if self.bulb is None:
             return False
 
-        return self.bulb.last_properties.get('active_mode') == '1'
+        return self._active_mode == '1'
 
     @property
     def is_nightlight_supported(self) -> bool:
         """Return true / false if nightlight is supported."""
-        return self.bulb.get_model_specs().get('night_light', False)
+        return self._active_mode is not None
+
+    @property
+    def _active_mode(self):
+        return self.bulb.last_properties.get('active_mode')
 
     @property
     def is_ambilight_supported(self) -> bool:
         """Return true / false if ambilight is supported."""
         return self.bulb.get_model_specs().get('background_light', False)
 
-    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
+    @property
+    def type(self):
+        return self.bulb.bulb_type
+
+    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None,
+                power_mode=None):
         """Turn on device."""
         import yeelight
 
@@ -247,7 +255,8 @@ class YeelightDevice:
             light_type = yeelight.enums.LightType.Main
 
         try:
-            self.bulb.turn_on(duration=duration, light_type=light_type)
+            self.bulb.turn_on(duration=duration, light_type=light_type,
+                                      power_mode=power_mode)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
