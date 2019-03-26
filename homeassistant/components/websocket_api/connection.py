@@ -93,7 +93,7 @@ class ActiveConnection:
             err_message = 'Unauthorized'
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
-            err_message = str(err)
+            err_message = vol.humanize.humanize_error(msg, err)
         else:
             code = const.ERR_UNKNOWN_ERROR
             err_message = 'Unknown error'
