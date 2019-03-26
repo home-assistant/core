@@ -15,7 +15,8 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.util import Throttle
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import sensor_types
 
@@ -23,7 +24,8 @@ REQUIREMENTS = ['eternalegypt==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=10)
+DISPATCHER_NETGEAR_LTE = 'netgear_lte_update'
 
 DOMAIN = 'netgear_lte'
 DATA_KEY = 'netgear_lte'
@@ -56,6 +58,7 @@ CONFIG_SCHEMA = vol.Schema({
 class ModemData:
     """Class for modem state."""
 
+    hass = attr.ib()
     host = attr.ib()
     modem = attr.ib()
 
@@ -64,7 +67,6 @@ class ModemData:
     usage = attr.ib(init=False, default=None)
     connected = attr.ib(init=False, default=True)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Call the API to update the data."""
         import eternalegypt
@@ -82,6 +84,8 @@ class ModemData:
                 self.connected = False
             self.unread_count = None
             self.usage = None
+
+        async_dispatcher_send(self.hass, DISPATCHER_NETGEAR_LTE)
 
 
 @attr.s
@@ -143,7 +147,7 @@ async def _setup_lte(hass, lte_config):
     websession = hass.data[DATA_KEY].websession
     modem = eternalegypt.Modem(hostname=host, websession=websession)
 
-    modem_data = ModemData(host, modem)
+    modem_data = ModemData(hass, host, modem)
 
     try:
         await _login(hass, modem_data, password)
@@ -171,6 +175,12 @@ async def _login(hass, modem_data, password):
         await modem_data.modem.logout()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+
+    async def _update(now):
+        """Periodic update."""
+        await modem_data.async_update()
+
+    async_track_time_interval(hass, _update, SCAN_INTERVAL)
 
 
 async def _retry_login(hass, modem_data, password):
