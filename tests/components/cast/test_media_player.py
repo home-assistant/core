@@ -24,6 +24,7 @@ def cast_mock():
     """Mock pychromecast."""
     with patch.dict('sys.modules', {
         'pychromecast': MagicMock(),
+        'pychromecast.controllers.multizone': MagicMock(),
     }):
         yield
 
