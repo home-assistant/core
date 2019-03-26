@@ -1031,6 +1031,7 @@ class ModesTrait(_Trait):
 @register_trait
 class OpenCloseTrait(_Trait):
     """Trait to open and close a cover.
+
     https://developers.google.com/actions/smarthome/traits/openclose
     """
 
@@ -1077,15 +1078,15 @@ class OpenCloseTrait(_Trait):
 
         if domain == cover.DOMAIN:
             if params['openPercent'] == 0:
-                await self.hass.services.async_call(cover.DOMAIN, 
-                                                    cover.SERVICE_CLOSE_COVER, {
-                    ATTR_ENTITY_ID: self.state.entity_id
-                }, blocking=True, context=data.context)
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True, context=data.context)
             elif params['openPercent'] == 100:
-                await self.hass.services.async_call(cover.DOMAIN, 
-                                                    cover.SERVICE_OPEN_COVER, {
-                    ATTR_ENTITY_ID: self.state.entity_id
-                }, blocking=True, context=data.context)
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True, context=data.context)
             else:
                 await self.hass.services.async_call(
                     cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
