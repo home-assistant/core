@@ -356,7 +356,7 @@ class YeelightLight(Light):
         if rgb and self.supported_features & SUPPORT_COLOR:
             _LOGGER.debug("Setting RGB: %s", rgb)
             self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration)
-            self._hs = color_util.color_RGB_to_hs(rgb[0], rgb[1], rgb[2])
+            self._hs = color_util.color_RGB_to_hs(*rgb)
 
     @_cmd
     def set_colortemp(self, colortemp, duration) -> None:
