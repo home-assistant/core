@@ -576,7 +576,6 @@ class YeelightAmbientLight(YeelightLight):
         self._min_mireds = kelvin_to_mired(6500)
         self._max_mireds = kelvin_to_mired(1700)
 
-
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
