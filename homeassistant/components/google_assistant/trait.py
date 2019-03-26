@@ -292,7 +292,7 @@ class OnOffTrait(_Trait):
         await self.hass.services.async_call(service_domain, service, {
             ATTR_ENTITY_ID: self.state.entity_id
         }, blocking=True, context=data.context)
-        
+
 
 @register_trait
 class OpenCloseTrait(_Trait):
