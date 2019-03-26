@@ -38,6 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 PREFIX_TRAITS = 'action.devices.traits.'
 TRAIT_CAMERA_STREAM = PREFIX_TRAITS + 'CameraStream'
 TRAIT_ONOFF = PREFIX_TRAITS + 'OnOff'
+TRAIT_OPENCLOSE = PREFIX_TRAITS + 'OpenClose'
 TRAIT_DOCK = PREFIX_TRAITS + 'Dock'
 TRAIT_STARTSTOP = PREFIX_TRAITS + 'StartStop'
 TRAIT_BRIGHTNESS = PREFIX_TRAITS + 'Brightness'
@@ -51,6 +52,7 @@ TRAIT_MODES = PREFIX_TRAITS + 'Modes'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
+COMMAND_OPENCLOSE = PREFIX_COMMANDS + 'OpenClose'
 COMMAND_GET_CAMERA_STREAM = PREFIX_COMMANDS + 'GetCameraStream'
 COMMAND_DOCK = PREFIX_COMMANDS + 'Dock'
 COMMAND_STARTSTOP = PREFIX_COMMANDS + 'StartStop'
@@ -290,6 +292,53 @@ class OnOffTrait(_Trait):
         await self.hass.services.async_call(service_domain, service, {
             ATTR_ENTITY_ID: self.state.entity_id
         }, blocking=True, context=data.context)
+        
+
+@register_trait
+class OpenCloseTrait(_Trait):
+    """Trait to offer basic open and close functionality.
+
+    https://developers.google.com/actions/smarthome/traits/openclose
+    """
+
+    name = TRAIT_OPENCLOSE
+    commands = [
+        COMMAND_OPENCLOSE
+    ]
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        return domain in (
+            cover.DOMAIN,
+        )
+
+    def sync_attributes(self):
+        """Return OpenClose attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return OpenClose query attributes."""
+        domain = self.state.domain
+        response = {}
+
+        if domain == cover.DOMAIN:
+            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
+            if position is not None:
+                response['openPercent'] = position
+
+        return response
+
+    async def execute(self, command, data, params):
+        """Execute an OpenClose command."""
+        domain = self.state.domain
+
+        if domain == cover.DOMAIN:
+            await self.hass.services.async_call(
+                cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    cover.ATTR_POSITION: params['openPercent']
+                }, blocking=True, context=data.context)
 
 
 @register_trait
