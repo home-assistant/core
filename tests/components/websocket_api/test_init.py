@@ -99,7 +99,7 @@ async def test_invalid_vol(hass, websocket_client):
         'bla', Mock(side_effect=TypeError),
         messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({
             'type': 'bla',
-             vol.Required('test_config'): str,
+            vol.Required('test_config'): str
         }))
 
     await websocket_client.send_json({
