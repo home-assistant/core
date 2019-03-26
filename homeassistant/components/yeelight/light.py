@@ -348,6 +348,7 @@ class YeelightLight(Light):
             _LOGGER.debug("Setting brightness: %s", brightness)
             self._bulb.set_brightness(brightness / 255 * 100,
                                       duration=duration)
+            self._brightness = brightness
 
     @_cmd
     def set_rgb(self, rgb, duration) -> None:
@@ -355,6 +356,7 @@ class YeelightLight(Light):
         if rgb and self.supported_features & SUPPORT_COLOR:
             _LOGGER.debug("Setting RGB: %s", rgb)
             self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration)
+            self._hs = color_util.color_RGB_to_hs(rgb[0], rgb[1], rgb[2])
 
     @_cmd
     def set_colortemp(self, colortemp, duration) -> None:
@@ -364,6 +366,7 @@ class YeelightLight(Light):
             _LOGGER.debug("Setting color temp: %s K", temp_in_k)
 
             self._bulb.set_color_temp(temp_in_k, duration=duration)
+            self._color_temp = colortemp
 
     @_cmd
     def set_default(self) -> None:
@@ -466,6 +469,7 @@ class YeelightLight(Light):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         self.device.turn_on(duration=duration)
+        self._is_on = True
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
@@ -503,6 +507,7 @@ class YeelightLight(Light):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         self.device.turn_off(duration=duration)
+        self._is_on = False
         self.device.update()
 
     def set_mode(self, mode: str):
