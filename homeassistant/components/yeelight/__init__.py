@@ -14,7 +14,8 @@ from homeassistant.components.binary_sensor import DOMAIN as \
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send, \
+    dispatcher_connect
 from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
 DATA_UPDATED = 'yeelight_{}_data_updated'
+DEVICE_INITIALIZED = '{}_device_initialized'.format(DOMAIN)
 
 DEFAULT_NAME = 'Yeelight'
 DEFAULT_TRANSITION = 350
@@ -115,7 +117,7 @@ def setup(hass, config):
     conf = config.get(DOMAIN, {})
     yeelight_data = hass.data[DATA_YEELIGHT] = {}
 
-    def device_discovered(service, info):
+    def device_discovered(_, info):
         _LOGGER.debug("Adding autodetected %s", info['hostname'])
 
         device_type = info['device_type']
@@ -132,13 +134,24 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_YEELIGHT, device_discovered)
 
-    def update(event):
+    def update(_):
         for device in list(yeelight_data.values()):
             device.update()
 
     track_time_interval(
         hass, update, conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     )
+
+    def load_platforms(ipaddr):
+        platform_config = hass.data[DATA_YEELIGHT][ipaddr].config.copy()
+        platform_config[CONF_HOST] = ipaddr
+        platform_config[CONF_CUSTOM_EFFECTS] = \
+            config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
+        load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, config)
+        load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
+                      config)
+
+    dispatcher_connect(hass, DEVICE_INITIALIZED, load_platforms)
 
     if DOMAIN in config:
         for ipaddr, device_config in conf[CONF_DEVICES].items():
@@ -148,7 +161,7 @@ def setup(hass, config):
     return True
 
 
-def _setup_device(hass, hass_config, ipaddr, device_config):
+def _setup_device(hass, _, ipaddr, device_config):
     devices = hass.data[DATA_YEELIGHT]
 
     if ipaddr in devices:
@@ -157,15 +170,7 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     device = YeelightDevice(hass, ipaddr, device_config)
 
     devices[ipaddr] = device
-
-    platform_config = device_config.copy()
-    platform_config[CONF_HOST] = ipaddr
-    platform_config[CONF_CUSTOM_EFFECTS] = \
-        hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
-
-    load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
-    load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
-                  hass_config)
+    hass.add_job(device.update)
 
 
 class YeelightDevice:
@@ -173,29 +178,20 @@ class YeelightDevice:
 
     def __init__(self, hass, ipaddr, config):
         """Initialize device."""
+        import yeelight
+
         self._hass = hass
         self._config = config
         self._ipaddr = ipaddr
         self._name = config.get(CONF_NAME)
         self._model = config.get(CONF_MODEL)
-        self._bulb_device = None
+        self._bulb_device = yeelight.Bulb(self.ipaddr, model=self._model)
         self._available = False
+        self._initialized = False
 
     @property
     def bulb(self):
         """Return bulb device."""
-        if self._bulb_device is None:
-            try:
-                self._bulb_device = Bulb(self._ipaddr, model=self._model)
-                # force init for type
-                self.update()
-
-                self._available = True
-            except BulbException as ex:
-                self._available = False
-                _LOGGER.error("Failed to connect to bulb %s, %s: %s",
-                              self._ipaddr, self._name, ex)
-
         return self._bulb_device
 
     @property
@@ -224,17 +220,21 @@ class YeelightDevice:
         if self.bulb is None:
             return False
 
-        return self.bulb.last_properties.get('active_mode') == '1'
+        return self._active_mode == '1'
 
     @property
     def is_nightlight_supported(self) -> bool:
         """Return true / false if nightlight is supported."""
-        return self.bulb.get_model_specs().get('night_light', False)
+        return self._active_mode is not None
 
     @property
-    def is_ambilight_supported(self) -> bool:
-        """Return true / false if ambilight is supported."""
-        return self.bulb.get_model_specs().get('background_light', False)
+    def _active_mode(self):
+        return self.bulb.last_properties.get('active_mode')
+
+    @property
+    def type(self):
+        """Return bulb type."""
+        return self.bulb.bulb_type
 
     def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn on device."""
@@ -242,15 +242,14 @@ class YeelightDevice:
             self.bulb.turn_on(duration=duration, light_type=light_type)
         except BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
-            return
 
     def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
         try:
             self.bulb.turn_off(duration=duration, light_type=light_type)
         except BulbException as ex:
-            _LOGGER.error("Unable to turn the bulb off: %s", ex)
-            return
+            _LOGGER.error("Unable to turn the bulb off: %s, %s: %s",
+                          self.ipaddr, self.name, ex)
 
     def update(self):
         """Read new properties from the device."""
@@ -260,9 +259,13 @@ class YeelightDevice:
         try:
             self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
+            if not self._initialized:
+                self._initialized = True
+                dispatcher_send(self._hass, DEVICE_INITIALIZED, self.ipaddr)
         except BulbException as ex:
             if self._available:  # just inform once
-                _LOGGER.error("Unable to update bulb status: %s", ex)
+                _LOGGER.error("Unable to update device %s, %s: %s",
+                              self.ipaddr, self.name, ex)
             self._available = False
 
         dispatcher_send(self._hass, DATA_UPDATED.format(self._ipaddr))
