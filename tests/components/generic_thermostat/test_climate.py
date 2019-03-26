@@ -23,7 +23,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, STATE_HEAT, STATE_COOL, DOMAIN)
-import homeassistant.components as comps
 from tests.common import assert_setup_component, mock_restore_cache
 from tests.components.climate import common
 

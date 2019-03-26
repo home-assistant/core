@@ -8,8 +8,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import pytest
 from tests.common import get_test_instance_port
 
-from homeassistant import core, const, setup
-import homeassistant.components as core_components
+from homeassistant import const, setup
 from homeassistant.components import (
     fan, http, light, script, emulated_hue, media_player, cover, climate)
 from homeassistant.components.emulated_hue import Config
