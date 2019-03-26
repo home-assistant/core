@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['solaredge==0.0.2']
+REQUIREMENTS = ['solaredge==0.0.2', 'stringcase==1.2.0']
 
 # Config for solaredge monitoring api requests.
 CONF_SITE_ID = "site_id"
@@ -314,6 +314,8 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
     @Throttle(DETAILS_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
+        from stringcase import snakecase
+
         try:
             data = self.api.get_details(self.site_id)
             details = data['details']
@@ -328,10 +330,13 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
         self.attributes = {}
 
         for key, value in details.items():
-            if key in ['primaryModule']:
-                self.attributes.update(value)
-            elif key in ['peakPower', 'type', 'name', 'lastUpdateTime',
-                         'installationDate']:
+            key = snakecase(key)
+
+            if key in ['primary_module']:
+                for module_key, module_value in value.items():
+                    self.attributes[snakecase(module_key)] = module_value
+            elif key in ['peak_power', 'type', 'name', 'last_update_time',
+                         'installation_date']:
                 self.attributes[key] = value
             elif key == 'status':
                 self.data = value
