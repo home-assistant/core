@@ -7,7 +7,7 @@ import voluptuous as vol
 
 import homeassistant.components.notify as notify
 from homeassistant.setup import setup_component
-from homeassistant.components.notify import demo
+import homeassistant.components.demo.notify as demo
 from homeassistant.core import callback
 from homeassistant.helpers import discovery, script
 
@@ -50,7 +50,7 @@ class TestNotifyDemo(unittest.TestCase):
         """Test setup."""
         self._setup_notify()
 
-    @patch('homeassistant.components.notify.demo.get_service', autospec=True)
+    @patch('homeassistant.components.demo.notify.get_service', autospec=True)
     def test_no_notify_service(self, mock_demo_get_service):
         """Test missing platform notify service instance."""
         mock_demo_get_service.return_value = None
@@ -63,7 +63,7 @@ class TestNotifyDemo(unittest.TestCase):
             ['ERROR:homeassistant.components.notify:'
              'Failed to initialize notification service demo']
 
-    @patch('homeassistant.components.notify.demo.get_service', autospec=True)
+    @patch('homeassistant.components.demo.notify.get_service', autospec=True)
     def test_discover_notify(self, mock_demo_get_service):
         """Test discovery of notify demo platform."""
         assert notify.DOMAIN not in self.hass.config.components

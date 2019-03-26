@@ -5,7 +5,7 @@ from aiohttp.hdrs import AUTHORIZATION
 
 from homeassistant.setup import async_setup_component
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.components.notify import html5
+import homeassistant.components.html5.notify as html5
 
 CONFIG_FILE = 'file.conf'
 
@@ -54,7 +54,7 @@ async def mock_client(hass, hass_client, registrations=None):
     if registrations is None:
         registrations = {}
 
-    with patch('homeassistant.components.notify.html5._load_config',
+    with patch('homeassistant.components.html5.notify._load_config',
                return_value=registrations):
         await async_setup_component(hass, 'notify', {
             'notify': {
@@ -189,7 +189,7 @@ async def test_registering_new_device_view(hass, hass_client):
     """Test that the HTML view works."""
     client = await mock_client(hass, hass_client)
 
-    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+    with patch('homeassistant.components.html5.notify.save_json') as mock_save:
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
 
     assert resp.status == 200
@@ -206,7 +206,7 @@ async def test_registering_new_device_view_with_name(hass, hass_client):
     SUB_WITH_NAME = SUBSCRIPTION_1.copy()
     SUB_WITH_NAME['name'] = 'test device'
 
-    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+    with patch('homeassistant.components.html5.notify.save_json') as mock_save:
         resp = await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
 
     assert resp.status == 200
@@ -220,7 +220,7 @@ async def test_registering_new_device_expiration_view(hass, hass_client):
     """Test that the HTML view works."""
     client = await mock_client(hass, hass_client)
 
-    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+    with patch('homeassistant.components.html5.notify.save_json') as mock_save:
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
     assert resp.status == 200
@@ -234,7 +234,7 @@ async def test_registering_new_device_fails_view(hass, hass_client):
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
 
-    with patch('homeassistant.components.notify.html5.save_json',
+    with patch('homeassistant.components.html5.notify.save_json',
                side_effect=HomeAssistantError()):
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
@@ -247,7 +247,7 @@ async def test_registering_existing_device_view(hass, hass_client):
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
 
-    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+    with patch('homeassistant.components.html5.notify.save_json') as mock_save:
         await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
@@ -268,7 +268,7 @@ async def test_registering_existing_device_view_with_name(hass, hass_client):
     SUB_WITH_NAME = SUBSCRIPTION_1.copy()
     SUB_WITH_NAME['name'] = 'test device'
 
-    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+    with patch('homeassistant.components.html5.notify.save_json') as mock_save:
         await client.post(REGISTER_URL, data=json.dumps(SUB_WITH_NAME))
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
@@ -286,7 +286,7 @@ async def test_registering_existing_device_fails_view(hass, hass_client):
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
 
-    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+    with patch('homeassistant.components.html5.notify.save_json') as mock_save:
         await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_1))
         mock_save.side_effect = HomeAssistantError
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
@@ -312,7 +312,7 @@ async def test_registering_new_device_validation(hass, hass_client):
     }))
     assert resp.status == 400
 
-    with patch('homeassistant.components.notify.html5.save_json',
+    with patch('homeassistant.components.html5.notify.save_json',
                return_value=False):
         resp = await client.post(REGISTER_URL, data=json.dumps({
             'browser': 'chrome',
@@ -329,7 +329,7 @@ async def test_unregistering_device_view(hass, hass_client):
     }
     client = await mock_client(hass, hass_client, registrations)
 
-    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+    with patch('homeassistant.components.html5.notify.save_json') as mock_save:
         resp = await client.delete(REGISTER_URL, data=json.dumps({
             'subscription': SUBSCRIPTION_1['subscription'],
         }))
@@ -347,7 +347,7 @@ async def test_unregister_device_view_handle_unknown_subscription(
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
 
-    with patch('homeassistant.components.notify.html5.save_json') as mock_save:
+    with patch('homeassistant.components.html5.notify.save_json') as mock_save:
         resp = await client.delete(REGISTER_URL, data=json.dumps({
             'subscription': SUBSCRIPTION_3['subscription']
         }))
@@ -366,7 +366,7 @@ async def test_unregistering_device_view_handles_save_error(
     }
     client = await mock_client(hass, hass_client, registrations)
 
-    with patch('homeassistant.components.notify.html5.save_json',
+    with patch('homeassistant.components.html5.notify.save_json',
                side_effect=HomeAssistantError()):
         resp = await client.delete(REGISTER_URL, data=json.dumps({
             'subscription': SUBSCRIPTION_1['subscription'],

@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 
-from . import (
+from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
 

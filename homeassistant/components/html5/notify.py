@@ -25,7 +25,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import load_json, save_json
 
-from . import (
+from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN,
     PLATFORM_SCHEMA, BaseNotificationService)
 

@@ -21,7 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-from . import (
+from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
 

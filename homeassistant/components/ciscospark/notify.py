@@ -11,7 +11,8 @@ import voluptuous as vol
 from homeassistant.const import CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 
-from . import ATTR_TITLE, PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (ATTR_TITLE, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 
 REQUIREMENTS = ['ciscosparkapi==0.4.2']
 

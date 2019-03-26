@@ -1,7 +1,7 @@
 """The tests for the notify yessssms platform."""
 import unittest
 import requests_mock
-from homeassistant.components.notify import yessssms
+import homeassistant.components.yessssms.notify as yessssms
 
 
 class TestNotifyYesssSMS(unittest.TestCase):
@@ -28,7 +28,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
         message = "Testing YesssSMS platform :)"
 
-        with self.assertLogs("homeassistant.components.notify",
+        with self.assertLogs("homeassistant.components.yessssms.notify",
                              level='ERROR'):
             self.yessssms.send_message(message)
         self.assertTrue(mock.called)
@@ -37,7 +37,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
     def test_empty_message_error(self):
         """Test for an empty SMS message error."""
         message = ""
-        with self.assertLogs("homeassistant.components.notify",
+        with self.assertLogs("homeassistant.components.yessssms.notify",
                              level='ERROR'):
             self.yessssms.send_message(message)
 
@@ -54,7 +54,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
         message = "Testing YesssSMS platform :)"
 
-        with self.assertLogs("homeassistant.components.notify",
+        with self.assertLogs("homeassistant.components.yessssms.notify",
                              level='ERROR'):
             self.yessssms.send_message(message)
         self.assertTrue(mock.called)
@@ -71,7 +71,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
         message = "Testing YesssSMS platform :)"
 
-        with self.assertLogs("homeassistant.components.notify",
+        with self.assertLogs("homeassistant.components.yessssms.notify",
                              level='ERROR'):
             self.yessssms.send_message(message)
         self.assertTrue(mock.called)
@@ -83,7 +83,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
         # pylint: disable=protected-access
         self.yessssms.yesss._suspended = True
 
-        with self.assertLogs("homeassistant.components.notify",
+        with self.assertLogs("homeassistant.components.yessssms.notify",
                              level='ERROR') as context:
             self.yessssms.send_message(message)
         self.assertIn("Account is suspended, cannot send SMS.",
@@ -124,7 +124,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
             status_code=200,
         )
 
-        with self.assertLogs("homeassistant.components.notify",
+        with self.assertLogs("homeassistant.components.yessssms.notify",
                              level='INFO') as context:
             self.yessssms.send_message(message)
         self.assertIn("SMS sent", context.output[0])
@@ -143,7 +143,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
         # pylint: disable=protected-access
         self.yessssms._recipient = ""
 
-        with self.assertLogs("homeassistant.components.notify",
+        with self.assertLogs("homeassistant.components.yessssms.notify",
                              level='ERROR') as context:
             self.yessssms.send_message(message)
 
@@ -179,7 +179,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
         message = "Testing YesssSMS platform :)"
 
-        with self.assertLogs("homeassistant.components.notify",
+        with self.assertLogs("homeassistant.components.yessssms.notify",
                              level='ERROR') as context:
             self.yessssms.send_message(message)
 
@@ -199,7 +199,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
         message = "Testing YesssSMS platform :)"
 
-        with self.assertLogs("homeassistant.components.notify",
+        with self.assertLogs("homeassistant.components.yessssms.notify",
                              level='ERROR') as context:
             self.yessssms.send_message(message)
 

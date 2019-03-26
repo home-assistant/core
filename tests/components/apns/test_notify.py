@@ -8,7 +8,7 @@ import yaml
 
 import homeassistant.components.notify as notify
 from homeassistant.setup import setup_component
-from homeassistant.components.notify import apns
+import homeassistant.components.apns.notify as apns
 from homeassistant.core import State
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -23,7 +23,7 @@ CONFIG = {
 }
 
 
-@patch('homeassistant.components.notify.apns.open', mock_open(), create=True)
+@patch('homeassistant.components.apns.notify.open', mock_open(), create=True)
 class TestApns(unittest.TestCase):
     """Test the APNS component."""
 
@@ -102,7 +102,7 @@ class TestApns(unittest.TestCase):
             assert setup_component(self.hass, notify.DOMAIN, config)
         assert not handle_config[notify.DOMAIN]
 
-    @patch('homeassistant.components.notify.apns._write_device')
+    @patch('homeassistant.components.apns.notify._write_device')
     def test_register_new_device(self, mock_write):
         """Test registering a new device with a name."""
         yaml_file = {5678: {'name': 'test device 2'}}
@@ -116,7 +116,7 @@ class TestApns(unittest.TestCase):
         mock_write.side_effect = fake_write
 
         with patch(
-            'homeassistant.components.notify.apns.load_yaml_config_file',
+            'homeassistant.components.apns.notify.load_yaml_config_file',
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
@@ -128,7 +128,7 @@ class TestApns(unittest.TestCase):
         assert len(written_devices) == 1
         assert written_devices[0].name == 'test device'
 
-    @patch('homeassistant.components.notify.apns._write_device')
+    @patch('homeassistant.components.apns.notify._write_device')
     def test_register_device_without_name(self, mock_write):
         """Test registering a without a name."""
         yaml_file = {
@@ -151,7 +151,7 @@ class TestApns(unittest.TestCase):
         mock_write.side_effect = fake_write
 
         with patch(
-            'homeassistant.components.notify.apns.load_yaml_config_file',
+            'homeassistant.components.apns.notify.load_yaml_config_file',
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
@@ -166,7 +166,7 @@ class TestApns(unittest.TestCase):
         assert test_device is not None
         assert test_device.name is None
 
-    @patch('homeassistant.components.notify.apns._write_device')
+    @patch('homeassistant.components.apns.notify._write_device')
     def test_update_existing_device(self, mock_write):
         """Test updating an existing device."""
         yaml_file = {
@@ -187,7 +187,7 @@ class TestApns(unittest.TestCase):
         mock_write.side_effect = fake_write
 
         with patch(
-            'homeassistant.components.notify.apns.load_yaml_config_file',
+            'homeassistant.components.apns.notify.load_yaml_config_file',
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
@@ -206,7 +206,7 @@ class TestApns(unittest.TestCase):
 
         assert 'updated device 1' == test_device_1.name
 
-    @patch('homeassistant.components.notify.apns._write_device')
+    @patch('homeassistant.components.apns.notify._write_device')
     def test_update_existing_device_with_tracking_id(self, mock_write):
         """Test updating an existing device that has a tracking id."""
         yaml_file = {
@@ -229,7 +229,7 @@ class TestApns(unittest.TestCase):
         mock_write.side_effect = fake_write
 
         with patch(
-            'homeassistant.components.notify.apns.load_yaml_config_file',
+            'homeassistant.components.apns.notify.load_yaml_config_file',
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
@@ -259,7 +259,7 @@ class TestApns(unittest.TestCase):
         yaml_file = {1234: {'name': 'test device 1'}}
 
         with patch(
-            'homeassistant.components.notify.apns.load_yaml_config_file',
+            'homeassistant.components.apns.notify.load_yaml_config_file',
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
@@ -294,7 +294,7 @@ class TestApns(unittest.TestCase):
         }}
 
         with patch(
-            'homeassistant.components.notify.apns.load_yaml_config_file',
+            'homeassistant.components.apns.notify.load_yaml_config_file',
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 
@@ -325,7 +325,7 @@ class TestApns(unittest.TestCase):
         }
 
         with patch(
-            'homeassistant.components.notify.apns.load_yaml_config_file',
+            'homeassistant.components.apns.notify.load_yaml_config_file',
                 Mock(return_value=yaml_file)), \
                 patch('os.path.isfile', Mock(return_value=True)):
             notify_service = apns.ApnsNotificationService(
@@ -353,7 +353,7 @@ class TestApns(unittest.TestCase):
         assert 'Hello' == payload.alert
 
     @patch('apns2.client.APNsClient')
-    @patch('homeassistant.components.notify.apns._write_device')
+    @patch('homeassistant.components.apns.notify._write_device')
     def test_disable_when_unregistered(self, mock_write, mock_client):
         """Test disabling a device when it is unregistered."""
         send = mock_client.return_value.send_notification
@@ -379,7 +379,7 @@ class TestApns(unittest.TestCase):
         mock_write.side_effect = fake_write
 
         with patch(
-            'homeassistant.components.notify.apns.load_yaml_config_file',
+            'homeassistant.components.apns.notify.load_yaml_config_file',
                 Mock(return_value=yaml_file)):
             self._setup_notify()
 

@@ -52,9 +52,9 @@ class TestNotifyFile(unittest.TestCase):
 
         m_open = mock_open()
         with patch(
-            'homeassistant.components.notify.file.open',
+            'homeassistant.components.file.notify.open',
             m_open, create=True
-        ), patch('homeassistant.components.notify.file.os.stat') as mock_st, \
+        ), patch('homeassistant.components.file.notify.os.stat') as mock_st, \
             patch('homeassistant.util.dt.utcnow',
                   return_value=dt_util.utcnow()):
 

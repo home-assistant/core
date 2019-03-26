@@ -2,13 +2,13 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant.components.notify import smtp
+from homeassistant.components.smtp.notify import MailNotificationService
 
 from tests.common import get_test_home_assistant
 import re
 
 
-class MockSMTP(smtp.MailNotificationService):
+class MockSMTP(MailNotificationService):
     """Test SMTP object that doesn't need a working server."""
 
     def _send_email(self, msg):

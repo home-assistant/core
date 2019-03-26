@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE
 from homeassistant.helpers import config_validation as cv
 
-from . import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://llamalab.com/automate/cloud/message'

@@ -15,7 +15,7 @@ from homeassistant.helpers import template as template_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_state_change
 
-from . import (
+from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, DOMAIN, PLATFORM_SCHEMA, BaseNotificationService)
 
 REQUIREMENTS = ['apns2==0.3.0']

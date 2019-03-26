@@ -65,7 +65,7 @@ class TestCommandLine(unittest.TestCase):
                 # the echo command adds a line break
                 assert fil.read() == "{}\n".format(message)
 
-    @patch('homeassistant.components.notify.command_line._LOGGER.error')
+    @patch('homeassistant.components.command_line.notify._LOGGER.error')
     def test_error_for_none_zero_exit_code(self, mock_error):
         """Test if an error is logged for non zero exit codes."""
         with assert_setup_component(1) as handle_config:

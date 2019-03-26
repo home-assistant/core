@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 
-from . import ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ["boto3==1.9.16"]

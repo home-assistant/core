@@ -14,7 +14,8 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
 
-from . import ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 
 REQUIREMENTS = ['boto3==1.9.16']
 

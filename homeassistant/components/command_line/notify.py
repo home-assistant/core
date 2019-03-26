@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.const import CONF_COMMAND, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-from . import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 
