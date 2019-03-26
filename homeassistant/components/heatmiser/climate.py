@@ -149,7 +149,6 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        """_LOGGER.info("Setting temperature to {}".format(int(temperature)))"""
         if temperature is None or self.dcb == None:
             return
         if self.heating == 0:
@@ -175,4 +174,3 @@ class HeatmiserV3Thermostat(ClimateDevice):
             self._max_temp = 17
             self._mode = STATE_HEAT if self._current_temperature < self._target_temperature else STATE_OFF
             
-       """ _LOGGER.info("Target temperature for {} is {}".format(self._name, self._target_temperature))"""
