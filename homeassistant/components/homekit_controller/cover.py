@@ -83,11 +83,6 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
         self._obstruction_detected = value
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._state is not None
-
-    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
@@ -145,11 +140,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
         self._hold = None
         self._obstruction_detected = None
         self.lock_state = None
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._state is not None
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
