@@ -15,7 +15,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
 
-from . import (
+from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
 

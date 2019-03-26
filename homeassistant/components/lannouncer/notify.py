@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
-from . import ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (ATTR_DATA, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 
 ATTR_METHOD = 'method'
 ATTR_METHOD_DEFAULT = 'speak'

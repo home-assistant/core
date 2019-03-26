@@ -17,7 +17,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_time
 
-from . import ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (ATTR_DATA, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 
 REQUIREMENTS = ['TwitterAPI==2.5.9']
 

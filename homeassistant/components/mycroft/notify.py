@@ -6,7 +6,7 @@ https://home-assistant.io/components/notify.mycroft/
 """
 import logging
 
-from . import BaseNotificationService
+from homeassistant.components.notify import BaseNotificationService
 
 DEPENDENCIES = ['mycroft']
 

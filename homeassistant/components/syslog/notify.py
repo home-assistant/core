@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from . import (
+from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)

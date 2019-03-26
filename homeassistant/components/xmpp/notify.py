@@ -19,7 +19,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
 
-from . import (
+from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
 REQUIREMENTS = ['slixmpp==1.4.2']

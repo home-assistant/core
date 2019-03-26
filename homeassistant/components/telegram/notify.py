@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_LOCATION
 
-from . import (
+from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE, PLATFORM_SCHEMA,
     BaseNotificationService)
 

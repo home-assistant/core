@@ -11,7 +11,9 @@ import voluptuous as vol
 from homeassistant.const import CONF_ROOM, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 
-from . import ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (ATTR_DATA, ATTR_TARGET,
+                                             PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 
 REQUIREMENTS = ['pystride==0.1.7']
 

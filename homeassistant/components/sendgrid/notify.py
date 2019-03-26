@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_RECIPIENT, CONF_SENDER, CONTENT_TYPE_TEXT_PLAIN)
 import homeassistant.helpers.config_validation as cv
 
-from . import (
+from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
 REQUIREMENTS = ['sendgrid==5.6.0']
