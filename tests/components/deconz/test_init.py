@@ -8,6 +8,8 @@ import voluptuous as vol
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.components import deconz
+from homeassistant.components.deconz.gateway import (
+    get_gateway_from_config_entry)
 
 from tests.common import mock_coro, MockConfigEntry
 
@@ -202,8 +204,8 @@ async def test_service_refresh_devices(hass):
         mock_gateway.return_value.async_setup.return_value = mock_coro(True)
         assert await deconz.async_setup_entry(hass, entry) is True
 
-    with patch.object(hass.data[deconz.DOMAIN].api, 'async_load_parameters',
-                      return_value=mock_coro(True)):
+    with patch.object(hass.data[deconz.DOMAIN].api,
+                      'async_load_parameters', return_value=mock_coro(True)):
         await hass.services.async_call(
             'deconz', 'device_refresh', service_data={})
         await hass.async_block_till_done()

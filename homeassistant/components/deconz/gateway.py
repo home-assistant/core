@@ -11,9 +11,18 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util import slugify
 
 from .const import (
-    _LOGGER, DECONZ_REACHABLE, CONF_ALLOW_CLIP_SENSOR, NEW_DEVICE, NEW_SENSOR,
-    SUPPORTED_PLATFORMS)
+    _LOGGER, DECONZ_REACHABLE, DOMAIN, CONF_ALLOW_CLIP_SENSOR,
+    CONF_ALLOW_DECONZ_GROUPS, NEW_DEVICE, NEW_SENSOR, SUPPORTED_PLATFORMS)
 from .errors import AuthenticationRequired, CannotConnect
+
+
+@callback
+def get_gateway_from_config_entry(hass, config_entry):
+    """Return gateway with a matching config entry."""
+    for gateway in hass.data[DOMAIN].values():
+        if gateway.config_entry == config_entry:
+            return gateway
+    return None
 
 
 class DeconzGateway:
@@ -29,6 +38,21 @@ class DeconzGateway:
         self.deconz_ids = {}
         self.events = []
         self.listeners = []
+
+    @property
+    def bridgeid(self):
+        """Unique identifier for gateway."""
+        return self.api.config.bridgeid
+
+    @property
+    def allow_clip_sensor(self):
+        """Allow loading clip sensor from gateway."""
+        return self.config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
+
+    @property
+    def allow_deconz_groups(self):
+        """Allow loading deCONZ groups from gateway."""
+        return self.config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True)
 
     async def async_setup(self):
         """Set up a deCONZ gateway."""
@@ -80,8 +104,7 @@ class DeconzGateway:
     def async_add_remote(self, sensors):
         """Set up remote from deCONZ."""
         from pydeconz.sensor import SWITCH as DECONZ_REMOTE
-        allow_clip_sensor = self.config_entry.data.get(
-            CONF_ALLOW_CLIP_SENSOR, True)
+        allow_clip_sensor = self.allow_clip_sensor
         for sensor in sensors:
             if sensor.type in DECONZ_REMOTE and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
