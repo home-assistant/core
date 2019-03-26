@@ -33,7 +33,8 @@ class TestFFmpegNoiseSetup:
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
         assert self.hass.states.get('binary_sensor.ffmpeg_noise') is not None
 
-    @patch('haffmpeg.sensor.SensorNoise.open_sensor', return_value=mock_coro())
+    @patch('haffmpeg.sensor.SensorNoise.open_sensor',
+           return_value=mock_coro())
     def test_setup_component_start(self, mock_start):
         """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
@@ -95,7 +96,8 @@ class TestFFmpegMotionSetup:
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
         assert self.hass.states.get('binary_sensor.ffmpeg_motion') is not None
 
-    @patch('haffmpeg.sensor.SensorMotion.open_sensor', return_value=mock_coro())
+    @patch('haffmpeg.sensor.SensorMotion.open_sensor',
+           return_value=mock_coro())
     def test_setup_component_start(self, mock_start):
         """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
