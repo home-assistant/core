@@ -83,7 +83,6 @@ YEELIGHT_EFFECT_LIST = [
 
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
-
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:
@@ -331,8 +330,8 @@ class YeelightLight(Light):
                 self._supported_features = SUPPORT_YEELIGHT_RGB
             elif self.light_type == yeelight.enums.LightType.Ambient:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
-            elif bulb_type == yeelight.BulbType.WhiteTemp or \
-                    bulb_type == yeelight.BulbType.WhiteTempMood:
+            elif bulb_type in (yeelight.BulbType.WhiteTemp,
+                               yeelight.BulbType.WhiteTempMood):
                 if self._is_nightlight_enabled:
                     self._supported_features = SUPPORT_YEELIGHT
                 else:
@@ -572,6 +571,12 @@ class YeelightAmbientLight(YeelightLight):
         "main_power": "bg_power",
     }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._min_mireds = kelvin_to_mired(6500)
+        self._max_mireds = kelvin_to_mired(1700)
+
+
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
@@ -582,16 +587,6 @@ class YeelightAmbientLight(YeelightLight):
         """Return light type."""
         import yeelight
         return yeelight.enums.LightType.Ambient
-
-    @property
-    def min_mireds(self):
-        """Return minimum supported color temperature."""
-        return kelvin_to_mired(6500)
-
-    @property
-    def max_mireds(self):
-        """Return maximum supported color temperature."""
-        return kelvin_to_mired(1700)
 
     @property
     def _is_nightlight_enabled(self):
