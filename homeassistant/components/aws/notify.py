@@ -1,57 +1,29 @@
 """AWS platform for notify component."""
 import asyncio
-import logging
-import json
 import base64
+import json
+import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_PLATFORM, CONF_NAME, ATTR_CREDENTIALS
 from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import CONF_PLATFORM, CONF_NAME
 from homeassistant.helpers.json import JSONEncoder
-
 from .const import (
-    CONF_ACCESS_KEY_ID,
+    CONF_CONTEXT,
     CONF_CREDENTIAL_NAME,
     CONF_PROFILE_NAME,
     CONF_REGION,
-    CONF_SECRET_ACCESS_KEY,
+    CONF_SERVICE,
     DATA_SESSIONS,
 )
 
 DEPENDENCIES = ["aws"]
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_CONTEXT = "context"
-CONF_SERVICE = "service"
-
-SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        # override notify.PLATFORM_SCHEMA.CONF_PLATFORM to Optional
-        # we don't need this field when we use discovery
-        vol.Optional(CONF_PLATFORM): cv.string,
-        vol.Required(CONF_SERVICE): vol.All(
-            cv.string, vol.Lower, vol.In(SUPPORTED_SERVICES)
-        ),
-        vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
-        vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
-        vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-        vol.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
-        vol.Optional(CONF_CONTEXT): vol.Coerce(dict),
-    },
-    extra=vol.PREVENT_EXTRA,
-)
 
 
 async def get_available_regions(hass, service):
@@ -69,14 +41,15 @@ async def get_available_regions(hass, service):
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the AWS notification service."""
+    if discovery_info is None:
+        _LOGGER.error('Please config aws notify platform in aws component')
+        return None
+
     import aiobotocore
 
     session = None
 
-    if discovery_info is not None:
-        conf = discovery_info
-    else:
-        conf = config
+    conf = discovery_info
 
     service = conf[CONF_SERVICE]
     region_name = conf[CONF_REGION]

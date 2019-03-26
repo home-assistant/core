@@ -13,15 +13,18 @@ from homeassistant.helpers import config_validation as cv, discovery
 from . import config_flow  # noqa
 from .const import (
     CONF_ACCESS_KEY_ID,
+    CONF_CONTEXT,
+    CONF_CREDENTIAL_NAME,
     CONF_CREDENTIALS,
     CONF_NOTIFY,
+    CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
+    CONF_SERVICE,
     DATA_CONFIG,
     DATA_HASS_CONFIG,
     DATA_SESSIONS,
     DOMAIN,
 )
-from .notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
 
 REQUIREMENTS = ["aiobotocore==0.10.2"]
 
@@ -37,6 +40,24 @@ AWS_CREDENTIAL_SCHEMA = vol.Schema(
 )
 
 DEFAULT_CREDENTIAL = [{CONF_NAME: "default", CONF_PROFILE_NAME: "default"}]
+
+SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
+
+NOTIFY_PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_SERVICE): vol.All(
+            cv.string, vol.Lower, vol.In(SUPPORTED_SERVICES)
+        ),
+        vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
+        vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+        vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        vol.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
+        vol.Optional(CONF_CONTEXT): vol.Coerce(dict),
+    },
+    extra=vol.PREVENT_EXTRA,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
