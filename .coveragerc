@@ -54,6 +54,7 @@ omit =
     homeassistant/components/caldav/calendar.py
     homeassistant/components/todoist/calendar.py
     homeassistant/components/bloomsky/camera.py
+    homeassistant/components/camect/*
     homeassistant/components/canary/camera.py
     homeassistant/components/familyhub/camera.py
     homeassistant/components/ffmpeg/camera.py
