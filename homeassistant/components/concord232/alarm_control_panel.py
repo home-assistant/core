@@ -14,8 +14,8 @@ import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_CODE, CONF_MODE, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_CODE, CONF_MODE, 
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
 REQUIREMENTS = ['concord232==0.15']
 
@@ -98,7 +98,9 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
         if part['arming_level'] == 'Off':
             self._state = STATE_ALARM_DISARMED
-        elif 'Home' in part['arming_level'] or 'Silent' in part['arming_level']:
+        elif 'Home' in part['arming_level']:
+            self._state = STATE_ALARM_ARMED_HOME
+        elif 'Silent' in part['arming_level']:
             self._state = STATE_ALARM_ARMED_HOME
         else:
             self._state = STATE_ALARM_ARMED_AWAY
