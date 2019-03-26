@@ -854,18 +854,6 @@ class CastDevice(MediaPlayerDevice):
         self.mz_cast_status[group_uuid] = cast_status
         self.schedule_update_ha_state()
 
-    def multizone_member_added(self, uuid):
-        """Handle added audio group member."""
-        pass
-
-    def multizone_member_removed(self, uuid):
-        """Handle removed audio group member."""
-        pass
-
-    def multizone_status_received(self, uuid):
-        """Handle updated multizone status."""
-        pass
-
     # ========== Service Calls ==========
     def turn_on(self):
         """Turn on the cast device."""
