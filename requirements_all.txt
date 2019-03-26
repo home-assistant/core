@@ -550,7 +550,7 @@ holidays==0.9.10
 home-assistant-frontend==20190321.0
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.2
+homeassistant-pyozw==0.1.3
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.13.0
