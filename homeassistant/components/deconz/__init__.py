@@ -61,17 +61,15 @@ async def async_setup_entry(hass, config_entry):
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    if DOMAIN in hass.data:
-        _LOGGER.error(
-            "Config entry failed since one deCONZ instance already exists")
-        return False
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
 
     gateway = DeconzGateway(hass, config_entry)
 
     if not await gateway.async_setup():
         return False
 
-    hass.data[DOMAIN] = gateway
+    hass.data[DOMAIN][gateway.bridgeid] = gateway
 
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
