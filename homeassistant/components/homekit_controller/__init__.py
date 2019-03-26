@@ -102,6 +102,7 @@ class HKDevice():
                 if component is not None:
                     discovery.load_platform(self.hass, component, DOMAIN,
                                             service_info, self.config)
+                    self.entities.append((aid, iid))
 
     def device_config_callback(self, callback_data):
         """Handle initial pairing."""
