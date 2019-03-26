@@ -262,6 +262,8 @@ async def test_websocket_update_prefs(hass, hass_ws_client,
 
     assert response['success']
     assert not setup_camera_prefs[PREF_PRELOAD_STREAM]
+    assert response['result'][PREF_PRELOAD_STREAM] == \
+        setup_camera_prefs[PREF_PRELOAD_STREAM]
 
 
 async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):

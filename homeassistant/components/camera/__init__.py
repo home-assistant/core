@@ -586,7 +586,7 @@ async def websocket_update_prefs(hass, connection, msg):
     entity_id = changes.pop('entity_id')
     await prefs.async_update(entity_id, **changes)
 
-    connection.send_result(msg['id'])
+    connection.send_result(msg['id'], prefs.get(entity_id).as_dict())
 
 
 async def async_handle_snapshot_service(camera, service):
