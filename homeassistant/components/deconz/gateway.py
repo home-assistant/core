@@ -44,7 +44,7 @@ class DeconzGateway:
             raise ConfigEntryNotReady
 
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.error('Error connecting with deCONZ gateway.')
+            _LOGGER.error('Error connecting with deCONZ gateway')
             return False
 
         for component in SUPPORTED_PLATFORMS:
@@ -135,7 +135,7 @@ async def get_gateway(hass, config, async_add_device_callback,
         return deconz
 
     except errors.Unauthorized:
-        _LOGGER.warning("Invalid key for deCONZ at %s.", config[CONF_HOST])
+        _LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
         raise AuthenticationRequired
 
     except (asyncio.TimeoutError, errors.RequestError):
