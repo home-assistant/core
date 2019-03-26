@@ -226,7 +226,7 @@ def get_obs_station_list_mock(latitude, longitude):
     return STATION_LIST
 
 
-def get_obs_for_station_mock(stationcode):
+def get_obs_for_station_mock(stationcode,errorstate):
     """Return static example of observation data.
 
     If the station is KJFK, we return the sample observation data.

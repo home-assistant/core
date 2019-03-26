@@ -7,6 +7,83 @@ https://home-assistant.io/components/sensor.noaaweather/
 This component gets data from the US NOAA/National Weather Service API.
 Documentation on the API is at
 https://www.weather.gov/documentation/services-web-api
+
+Configuration:
+  - platform: noaaweather
+    name: <string>          # name for the platform instance (defaults to
+                            # "NOAA Weather"
+    latitude = <number>     # latitude for the location, defaults to
+                            # homeassistant latitude configuration value
+    longitude = <number>    # longitude for the location, defaults to
+                            # homeassistant longitude configure value
+                            # Note that latitude and longitude are rounded
+                            # to 4 decimal places, since that is what
+                            # the NOAA/NWS API accepts.
+    stationcode = <string>  # NOAA/NWS weather reporting station
+                            # to use for conditions source.  Note that this
+                            # must be one that NOAA/NWS considers
+                            # as near the location provided.
+                            # If it is not provided, the closest
+                            # station to the location is used. Choices
+                            # can be found by going to the normal forecast
+                            # web page for the location and then using the
+                            # "More Local Wx" link.   The station codes are
+                            # part of the URL for each location shown:
+                            # the uppercase letters just before the .html
+                            # suffix are the station codes.
+    monitored_conditions:   # list of conditions to get.  At least one is
+                            # required. The complete condition list is:
+        - temperature       # temperature in degrees Celsius or Fahrenheit
+        - textDescription   # single word description of weather condition
+        - dewpoint          # dewpoint in degress Celsius or Fahrenheit
+        - windChill         # wind chill temperature in degrees C or F
+        - windSpeed         # sustained wind speed in m/s or mph
+        - windDirection     # direction of sustained winds (degrees angle)
+        - windGust          # speed of wind gusts in m/s or mph
+        - heatIndex         # heat index temperature in degrees C of F
+        - barometricPressure    # pressure in mbar
+        - seaLevelPressure      # current sea level pressure in mbar
+        - precipitationLastHour # liquid precipitation in last hour (mm or in)
+        - precipitationLast3Hours # liquid precipitation in last 3 hours (mm
+                                # or in). Note that this is only returned
+                                # on three hour intervals, and only when
+                                # there has been some liquid precipitation
+                                # in that time. It is not normally useful.
+        - precipitationLast6Hours # liquid precipitation in last 6 hours (mm
+                                # or in). Note that this is only returned
+                                # on six hour intervals, and only when
+                                # there has been some liquid precipitation
+                                # in that time. It is not normally useful.
+        - relativeHumidity      # relative humidity in percent
+        - visibility            # visibility in km or miles.
+        - cloudLayers           # Three character abbreviation for the
+                                # type of the lowest cloud layer. Note
+                                # that the data returned from NOAA/NWS
+                                # actually includes information for multiple
+                                # cloud layers, including the elevation of
+                                # the layer, but at this point only
+                                # the description of the first layer is
+                                # recorded.
+        - minTemperatureLast24Hours # Minimum temperature in the last 24 hours
+                                # in degrees C or F.  This is only reported
+                                # once per day, so it is not really useful.
+        - maxTemperatureLast24Hours # Maximum temperature in the last 24 hours
+                                # in degrees C or F.  This is only reported
+                                # once per day, so it is not really useful.
+
+Some notes on the data returned from NOAA/NWS:
+Not all stations have the equipment to measure all of the conditions.
+In addition, an empty or null value is returned by the station for some
+conditions in certain states:  for example, when the air is calm, windSpeed
+will return null instead of zero.  As the station retures a null value when
+it does not have the equipment for the measurement as well, there is no
+way to determine whether the station can measure the condition, but just not
+now, or if it will never return a measurement for that condition.
+
+Also, some stations may return all null values for a given request.
+
+
+
 """
 import datetime
 from datetime import timedelta
@@ -25,6 +102,8 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.exceptions import (
+    ConfigEntryNotReady, PlatformNotReady)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +113,12 @@ DEFAULT_NAME = "NOAA Weather"
 # The rates at which new measurement values appear varies by station.
 # Typically the measurements from airport weather stations will only update
 # once an hour, while other stations may update much more frequently.
+# To avoid having the NWS update cycle and polling mismatch (poll just
+# before the update) by an hour, we will allow more frequent
+# requests.
 #
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 REQUESTS_HEADERS = {'user-agent':
                     "Home Assistant component noaaweather sensor v0.1",
@@ -147,14 +230,16 @@ def get_obs_station_list(latitude, longitude):
     if res.status_code == 404:
         _LOGGER.error("Location %s,%s is outside of NWS service area",
                       latitude, longitude)
+        raise ConfigEntryNotReady
+
     if res.status_code != 200:
         _LOGGER.error("Error getting metadata for location %s,%s",
                       latitude, longitude)
-        return None
+        raise PlatformNotReady
     try:
         obsurl = res.json()['properties']['observationStations']
     except ValueError:
-        return None
+        raise PlatformNotReady
 
     res = requests.get(obsurl, headers=REQUESTS_HEADERS)
     if res.status_code == 404:
@@ -163,16 +248,16 @@ def get_obs_station_list(latitude, longitude):
     if res.status_code != 200:
         _LOGGER.error("Error getting station list for location %s,%s",
                       latitude, longitude)
-        return None
+        raise ConfigEntryNotReady
     try:
         return res.json()['features']
     except ValueError:
         _LOGGER.error("No station list retured for location %s,%s",
                       latitude, longitude)
-        return None
+        raise ConfigEntryNotReady
 
 
-def get_obs_for_station(stationcode):
+def get_obs_for_station(stationcode, errorstate):
     """Retrieve the latest observation data for the given station.
 
     This calls the NWS API for to retrieve the latest observation
@@ -183,8 +268,10 @@ def get_obs_for_station(stationcode):
         stationcode)
     res = requests.get(url, headers=REQUESTS_HEADERS)
     if res.status_code != 200:
-        _LOGGER.error("Cannot get observations for station %s, status=%s",
-                      stationcode, res.status_code)
+        if not errorstate:
+            _LOGGER.error("Cannot get observations for station %s, status=%s",
+                          stationcode, res.status_code)
+        return None
     try:
         return res.json()['properties']
     except ValueError:
@@ -219,7 +306,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
+        raise ConfigEntryNotReady
+    #
+    # Round location items to 4 decimal digits
+    #
+    latitude = round(latitude, 4)
+    longitude = round(longitude, 4)
     #
     # Get the list of observation stations for the location.
     # This checks that the location is within the NWS coverage area.
@@ -229,10 +321,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except requests.RequestException:
         _LOGGER.error("Error getting station list for location %s,%s",
                       latitude, longitude)
-        return
+        raise PlatformNotReady
 
     if stationlist is None:
-        return
+        raise ConfigEntryNotReady
 
     # If no station was configured, use first station from list as the
     # station for observations.  If a station was configured, verify
@@ -268,6 +360,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             _LOGGER.error("Station %s not found in list for location %s,%s",
                           confstationcode, latitude, longitude)
+        raise ConfigEntryNotReady
 
     #
     # Create the data object for observations for this location/station.
@@ -280,8 +373,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # measurements
     #
     noaadata.update()
-    if None in noaadata.data:
-        return
+    if not noaadata.data:
+        raise PlatformNotReady
 
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
@@ -537,8 +630,8 @@ class NOAACurrentData(Entity):
 
     def __init__(self, hass, stationcode, stationname, name):
         """Initialize the current data object."""
-        _LOGGER.debug("Initialize NOAACurrentData with stationcode=%s, \
-                       stationname='%s',name='%s'",
+        _LOGGER.debug("Initialize NOAACurrentData with stationcode=%s, "
+                      "stationname='%s',name='%s'",
                       stationcode, stationname, name)
 
         self.stationcode = stationcode
@@ -546,6 +639,7 @@ class NOAACurrentData(Entity):
         self._name = name
         self.lastupdate = datetime.datetime.now(datetime.timezone.utc)
         self.data = dict()
+        self._errorstate = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -556,16 +650,26 @@ class NOAACurrentData(Entity):
         _LOGGER.debug("update called for station %s", self.stationcode)
 
         try:
-            obslist = get_obs_for_station(self.stationcode)
+            obslist = get_obs_for_station(self.stationcode, self._errorstate)
         except requests.RequestException:
-            _LOGGER.error("Cannot get observations for station %s",
-                          self.stationcode)
+            if not self._errorstate:
+                self._errorstate = True
+                _LOGGER.error("Cannot get observations for station %s",
+                              self.stationcode)
+            return
         #
         # Make sure good status result
         #
         if obslist is None:
-            _LOGGER.error("No observations for station %s",
-                          self.stationcode)
+            if not self._errorstate:
+                self._errorstate = True
+                _LOGGER.error("No observations for station %s",
+                              self.stationcode)
+            return
+        #
+        # Got data, so no longer in error condition
+        #
+        self._errorstate = False
         #
         # Get the timestamp of the report, if any
         #
