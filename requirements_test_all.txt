@@ -60,6 +60,9 @@ aiounifi==4
 # homeassistant.components.apns
 apns2==0.3.0
 
+# homeassistant.components.aprs
+aprslib==0.6.46
+
 # homeassistant.components.stream
 av==6.1.2
 
@@ -113,6 +116,9 @@ gTTS-token==1.1.3
 # homeassistant.components.nsw_rural_fire_service_feed
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.3
+
+# homeassistant.components.aprs
+geopy==1.19.0
 
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.2

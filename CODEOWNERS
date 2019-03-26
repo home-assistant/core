@@ -23,6 +23,7 @@ homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/amazon_polly/* @robbiet480
 homeassistant/components/ambient_station/* @bachya
 homeassistant/components/api/* @home-assistant/core
+homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/asuswrt/* @kennedyshead
