@@ -6,12 +6,12 @@ https://home-assistant.io/components/device_tracker.locative/
 """
 import logging
 
-from homeassistant.components.device_tracker import \
-    DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.locative import DOMAIN as LOCATIVE_DOMAIN
-from homeassistant.components.locative import TRACKER_UPDATE
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
+
+from . import DOMAIN as LOCATIVE_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 

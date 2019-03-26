@@ -4,18 +4,19 @@ Pushsafer platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.pushsafer/
 """
-import logging
 import base64
+import logging
 import mimetypes
 
 import requests
 from requests.auth import HTTPBasicAuth
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA,
-    PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://www.pushsafer.com/api'

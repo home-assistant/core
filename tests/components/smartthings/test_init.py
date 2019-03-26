@@ -6,10 +6,11 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from pysmartthings import InstalledAppStatus
 import pytest
 
-from homeassistant.components import smartthings
+from homeassistant.components import cloud, smartthings
 from homeassistant.components.smartthings.const import (
-    CONF_INSTALLED_APP_ID, CONF_REFRESH_TOKEN, DATA_BROKERS, DOMAIN,
-    EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE, SUPPORTED_PLATFORMS)
+    CONF_CLOUDHOOK_URL, CONF_INSTALLED_APP_ID, CONF_REFRESH_TOKEN,
+    DATA_BROKERS, DOMAIN, EVENT_BUTTON, SIGNAL_SMARTTHINGS_UPDATE,
+    SUPPORTED_PLATFORMS)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -188,6 +189,33 @@ async def test_config_entry_loads_platforms(
         assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
 
 
+async def test_config_entry_loads_unconnected_cloud(
+        hass, config_entry, app, installed_app,
+        device, smartthings_mock, subscription_factory, scene):
+    """Test entry loads during startup when cloud isn't connected."""
+    setattr(hass.config_entries, '_entries', [config_entry])
+    hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
+    hass.config.api.base_url = 'http://0.0.0.0'
+    api = smartthings_mock.return_value
+    api.app.return_value = mock_coro(return_value=app)
+    api.installed_app.return_value = mock_coro(return_value=installed_app)
+    api.devices.side_effect = \
+        lambda *args, **kwargs: mock_coro(return_value=[device])
+    api.scenes.return_value = mock_coro(return_value=[scene])
+    mock_token = Mock()
+    mock_token.access_token.return_value = str(uuid4())
+    mock_token.refresh_token.return_value = str(uuid4())
+    api.generate_tokens.return_value = mock_coro(return_value=mock_token)
+    subscriptions = [subscription_factory(capability)
+                     for capability in device.capabilities]
+    api.subscriptions.return_value = mock_coro(return_value=subscriptions)
+    with patch.object(hass.config_entries, 'async_forward_entry_setup',
+                      return_value=mock_coro()) as forward_mock:
+        assert await smartthings.async_setup_entry(hass, config_entry)
+        await hass.async_block_till_done()
+        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+
+
 async def test_unload_entry(hass, config_entry):
     """Test entries are unloaded correctly."""
     connect_disconnect = Mock()
@@ -222,6 +250,29 @@ async def test_remove_entry(hass, config_entry, smartthings_mock):
     # Assert
     assert api.delete_installed_app.call_count == 1
     assert api.delete_app.call_count == 1
+
+
+async def test_remove_entry_cloudhook(hass, config_entry, smartthings_mock):
+    """Test that the installed app, app, and cloudhook are removed up."""
+    # Arrange
+    setattr(hass.config_entries, '_entries', [config_entry])
+    hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
+    api = smartthings_mock.return_value
+    api.delete_installed_app.side_effect = lambda _: mock_coro()
+    api.delete_app.side_effect = lambda _: mock_coro()
+    mock_async_is_logged_in = Mock(return_value=True)
+    mock_async_delete_cloudhook = Mock(return_value=mock_coro())
+    # Act
+    with patch.object(cloud, 'async_is_logged_in',
+                      new=mock_async_is_logged_in), \
+        patch.object(cloud, 'async_delete_cloudhook',
+                     new=mock_async_delete_cloudhook):
+        await smartthings.async_remove_entry(hass, config_entry)
+    # Assert
+    assert api.delete_installed_app.call_count == 1
+    assert api.delete_app.call_count == 1
+    assert mock_async_is_logged_in.call_count == 1
+    assert mock_async_delete_cloudhook.call_count == 1
 
 
 async def test_remove_entry_app_in_use(hass, config_entry, smartthings_mock):

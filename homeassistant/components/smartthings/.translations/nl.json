@@ -7,7 +7,8 @@
             "token_already_setup": "Het token is al ingesteld.",
             "token_forbidden": "Het token heeft niet de vereiste OAuth-scopes.",
             "token_invalid_format": "Het token moet de UID/GUID-indeling hebben",
-            "token_unauthorized": "Het token is ongeldig of niet langer geautoriseerd."
+            "token_unauthorized": "Het token is ongeldig of niet langer geautoriseerd.",
+            "webhook_error": "SmartThings kon het in 'base_url` geconfigureerde endpoint niet goedkeuren. Lees de componentvereisten door."
         },
         "step": {
             "user": {

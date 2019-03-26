@@ -3,13 +3,14 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.hydrawise import (
-    ALLOWED_WATERING_TIME, CONF_WATERING_TIME,
-    DATA_HYDRAWISE, DEFAULT_WATERING_TIME, HydrawiseEntity, SWITCHES,
-    DEVICE_MAP, DEVICE_MAP_INDEX)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ALLOWED_WATERING_TIME, CONF_WATERING_TIME, DATA_HYDRAWISE,
+    DEFAULT_WATERING_TIME, DEVICE_MAP, DEVICE_MAP_INDEX, SWITCHES,
+    HydrawiseEntity)
 
 DEPENDENCIES = ['hydrawise']
 

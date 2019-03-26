@@ -1,43 +1,43 @@
 """Support for Netgear LTE sensors."""
+import logging
+
 import attr
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_SENSORS
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from ..netgear_lte import DATA_KEY
+from . import CONF_MONITORED_CONDITIONS, DATA_KEY, DISPATCHER_NETGEAR_LTE
+from .sensor_types import SENSOR_SMS, SENSOR_USAGE
 
 DEPENDENCIES = ['netgear_lte']
 
-SENSOR_SMS = 'sms'
-SENSOR_USAGE = 'usage'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Required(CONF_SENSORS): vol.All(
-        cv.ensure_list, [vol.In([SENSOR_SMS, SENSOR_USAGE])]),
-})
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info):
     """Set up Netgear LTE sensor devices."""
-    modem_data = hass.data[DATA_KEY].get_modem_data(config)
+    if discovery_info is None:
+        return
+
+    modem_data = hass.data[DATA_KEY].get_modem_data(discovery_info)
 
     if not modem_data:
         raise PlatformNotReady
 
+    sensor_conf = discovery_info[DOMAIN]
+    monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
+
     sensors = []
-    for sensor_type in config[CONF_SENSORS]:
+    for sensor_type in monitored_conditions:
         if sensor_type == SENSOR_SMS:
             sensors.append(SMSSensor(modem_data, sensor_type))
         elif sensor_type == SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 @attr.s
@@ -47,9 +47,19 @@ class LTESensor(Entity):
     modem_data = attr.ib()
     sensor_type = attr.ib()
 
+    async def async_added_to_hass(self):
+        """Register callback."""
+        async_dispatcher_connect(
+            self.hass, DISPATCHER_NETGEAR_LTE, self.async_write_ha_state)
+
     async def async_update(self):
-        """Update state."""
+        """Force update of state."""
         await self.modem_data.async_update()
+
+    @property
+    def should_poll(self):
+        """Return that the sensor should not be polled."""
+        return False
 
     @property
     def unique_id(self):

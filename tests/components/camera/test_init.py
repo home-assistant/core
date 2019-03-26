@@ -1,13 +1,17 @@
 """The tests for the camera component."""
 import asyncio
 import base64
-from unittest.mock import patch, mock_open
+import io
+from unittest.mock import patch, mock_open, PropertyMock
 
 import pytest
 
 from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, EVENT_HOMEASSISTANT_START)
 from homeassistant.components import camera, http
+from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
+from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async_ import run_coroutine_threadsafe
@@ -27,9 +31,23 @@ def mock_camera(hass):
         }
     }))
 
-    with patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
+    with patch('homeassistant.components.demo.camera.DemoCamera.camera_image',
                return_value=b'Test'):
         yield
+
+
+@pytest.fixture
+def mock_stream(hass):
+    """Initialize a demo camera platform with streaming."""
+    assert hass.loop.run_until_complete(async_setup_component(hass, 'stream', {
+        'stream': {}
+    }))
+
+
+@pytest.fixture
+def setup_camera_prefs(hass):
+    """Initialize HTTP API."""
+    return common.mock_camera_prefs(hass, 'camera.demo_camera')
 
 
 class TestSetupCamera:
@@ -83,7 +101,7 @@ class TestGetImage:
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
+    @patch('homeassistant.components.demo.camera.DemoCamera.camera_image',
            autospec=True, return_value=b'Test')
     def test_get_image_from_camera(self, mock_camera):
         """Grab an image from camera entity."""
@@ -137,7 +155,7 @@ def test_snapshot_service(hass, mock_camera):
         assert mock_write.mock_calls[0][1][0] == b'Test'
 
 
-async def test_webocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
+async def test_websocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
     """Test camera_thumbnail websocket command."""
     await async_setup_component(hass, 'camera')
 
@@ -156,3 +174,170 @@ async def test_webocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
     assert msg['result']['content_type'] == 'image/jpeg'
     assert msg['result']['content'] == \
         base64.b64encode(b'Test').decode('utf-8')
+
+
+async def test_websocket_stream_no_source(hass, hass_ws_client,
+                                          mock_camera, mock_stream):
+    """Test camera/stream websocket command."""
+    await async_setup_component(hass, 'camera')
+
+    with patch('homeassistant.components.camera.request_stream',
+               return_value='http://home.assistant/playlist.m3u8') \
+            as mock_request_stream:
+        # Request playlist through WebSocket
+        client = await hass_ws_client(hass)
+        await client.send_json({
+            'id': 6,
+            'type': 'camera/stream',
+            'entity_id': 'camera.demo_camera',
+        })
+        msg = await client.receive_json()
+
+        # Assert WebSocket response
+        assert not mock_request_stream.called
+        assert msg['id'] == 6
+        assert msg['type'] == TYPE_RESULT
+        assert not msg['success']
+
+
+async def test_websocket_camera_stream(hass, hass_ws_client,
+                                       mock_camera, mock_stream):
+    """Test camera/stream websocket command."""
+    await async_setup_component(hass, 'camera')
+
+    with patch('homeassistant.components.camera.request_stream',
+               return_value='http://home.assistant/playlist.m3u8'
+               ) as mock_request_stream, \
+        patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
+              new_callable=PropertyMock) as mock_stream_source:
+        mock_stream_source.return_value = io.BytesIO()
+        # Request playlist through WebSocket
+        client = await hass_ws_client(hass)
+        await client.send_json({
+            'id': 6,
+            'type': 'camera/stream',
+            'entity_id': 'camera.demo_camera',
+        })
+        msg = await client.receive_json()
+
+        # Assert WebSocket response
+        assert mock_request_stream.called
+        assert msg['id'] == 6
+        assert msg['type'] == TYPE_RESULT
+        assert msg['success']
+        assert msg['result']['url'][-13:] == 'playlist.m3u8'
+
+
+async def test_websocket_get_prefs(hass, hass_ws_client,
+                                   mock_camera):
+    """Test get camera preferences websocket command."""
+    await async_setup_component(hass, 'camera')
+
+    # Request preferences through websocket
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 7,
+        'type': 'camera/get_prefs',
+        'entity_id': 'camera.demo_camera',
+    })
+    msg = await client.receive_json()
+
+    # Assert WebSocket response
+    assert msg['success']
+
+
+async def test_websocket_update_prefs(hass, hass_ws_client,
+                                      mock_camera, setup_camera_prefs):
+    """Test updating preference."""
+    await async_setup_component(hass, 'camera')
+    assert setup_camera_prefs[PREF_PRELOAD_STREAM]
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 8,
+        'type': 'camera/update_prefs',
+        'entity_id': 'camera.demo_camera',
+        'preload_stream': False,
+    })
+    response = await client.receive_json()
+
+    assert response['success']
+    assert not setup_camera_prefs[PREF_PRELOAD_STREAM]
+    assert response['result'][PREF_PRELOAD_STREAM] == \
+        setup_camera_prefs[PREF_PRELOAD_STREAM]
+
+
+async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
+    """Test camera play_stream service."""
+    data = {
+        ATTR_ENTITY_ID: 'camera.demo_camera',
+        camera.ATTR_MEDIA_PLAYER: 'media_player.test'
+    }
+    with patch('homeassistant.components.camera.request_stream'), \
+            pytest.raises(HomeAssistantError):
+        # Call service
+        await hass.services.async_call(
+            camera.DOMAIN, camera.SERVICE_PLAY_STREAM, data, blocking=True)
+
+
+async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
+    """Test camera play_stream service."""
+    await async_setup_component(hass, 'media_player')
+    data = {
+        ATTR_ENTITY_ID: 'camera.demo_camera',
+        camera.ATTR_MEDIA_PLAYER: 'media_player.test'
+    }
+    with patch('homeassistant.components.camera.request_stream'
+               ) as mock_request_stream, \
+        patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
+              new_callable=PropertyMock) as mock_stream_source:
+        mock_stream_source.return_value = io.BytesIO()
+        # Call service
+        await hass.services.async_call(
+            camera.DOMAIN, camera.SERVICE_PLAY_STREAM, data, blocking=True)
+        # So long as we request the stream, the rest should be covered
+        # by the play_media service tests.
+        assert mock_request_stream.called
+
+
+async def test_no_preload_stream(hass, mock_stream):
+    """Test camera preload preference."""
+    demo_prefs = CameraEntityPreferences({
+        PREF_PRELOAD_STREAM: False,
+    })
+    with patch('homeassistant.components.camera.request_stream'
+               ) as mock_request_stream, \
+        patch('homeassistant.components.camera.prefs.CameraPreferences.get',
+              return_value=demo_prefs), \
+        patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
+              new_callable=PropertyMock) as mock_stream_source:
+        mock_stream_source.return_value = io.BytesIO()
+        await async_setup_component(hass, 'camera', {
+            DOMAIN: {
+                'platform': 'demo'
+            }
+        })
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        assert not mock_request_stream.called
+
+
+async def test_preload_stream(hass, mock_stream):
+    """Test camera preload preference."""
+    demo_prefs = CameraEntityPreferences({
+        PREF_PRELOAD_STREAM: True,
+    })
+    with patch('homeassistant.components.camera.request_stream'
+               ) as mock_request_stream, \
+        patch('homeassistant.components.camera.prefs.CameraPreferences.get',
+              return_value=demo_prefs), \
+        patch('homeassistant.components.demo.camera.DemoCamera.stream_source',
+              new_callable=PropertyMock) as mock_stream_source:
+        mock_stream_source.return_value = io.BytesIO()
+        await async_setup_component(hass, 'camera', {
+            DOMAIN: {
+                'platform': 'demo'
+            }
+        })
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        assert mock_request_stream.called

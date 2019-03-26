@@ -7,14 +7,13 @@ from typing import Optional, Tuple
 import attr
 import voluptuous as vol
 
-from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     CONF_HOST, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
@@ -25,6 +24,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
+
+from . import DOMAIN as CAST_DOMAIN
 
 DEPENDENCIES = ('cast',)
 
@@ -257,6 +258,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _async_setup_platform(hass, cfg, async_add_entities, None)
         for cfg in config])
     if any([task.exception() for task in done]):
+        exceptions = [task.exception() for task in done]
+        for exception in exceptions:
+            _LOGGER.debug("Failed to setup chromecast", exc_info=exception)
         raise PlatformNotReady
 
 
@@ -289,7 +293,7 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         if cast_device is not None:
             async_add_entities([cast_device])
 
-    remove_handler = async_dispatcher_connect(
+    async_dispatcher_connect(
         hass, SIGNAL_CAST_DISCOVERED, async_cast_discovered)
     # Re-play the callback for all past chromecasts, store the objects in
     # a list to avoid concurrent modification resulting in exception.
@@ -306,8 +310,6 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         if info.friendly_name is None:
             _LOGGER.debug("Cannot retrieve detail information for chromecast"
                           " %s, the device may not be online", info)
-            remove_handler()
-            raise PlatformNotReady
 
         hass.async_add_job(_discover_chromecast, hass, info)
 
@@ -477,16 +479,10 @@ class CastDevice(MediaPlayerDevice):
                 ))
         self._chromecast = chromecast
         self._status_listener = CastStatusListener(self, chromecast)
-        # Initialise connection status as connected because we can only
-        # register the connection listener *after* the initial connection
-        # attempt. If the initial connection failed, we would never reach
-        # this code anyway.
-        self._available = True
+        self._available = False
         self.cast_status = chromecast.status
         self.media_status = chromecast.media_controller.status
-        _LOGGER.debug("[%s %s (%s:%s)] Connection successful!",
-                      self.entity_id, self._cast_info.friendly_name,
-                      self._cast_info.host, self._cast_info.port)
+        self._chromecast.start()
         self.async_schedule_update_ha_state()
 
     async def async_del_cast_info(self, cast_info):
@@ -562,6 +558,10 @@ class CastDevice(MediaPlayerDevice):
                 self.entity_id, self._cast_info.friendly_name,
                 self._cast_info.host, self._cast_info.port,
                 connection_status.status)
+            info = self._cast_info
+            if info.friendly_name is None and not info.is_audio_group:
+                # We couldn't find friendly_name when the cast was added, retry
+                self._cast_info = _fill_out_missing_chromecast_info(info)
             self._available = new_available
             self.schedule_update_ha_state()
 

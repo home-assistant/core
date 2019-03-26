@@ -11,12 +11,6 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
-    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import (
     CONF_CODE, CONF_DEVICE, CONF_NAME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
@@ -25,6 +19,12 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,22 +121,23 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Run when new MQTT message has been received."""
-            if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-                               STATE_ALARM_ARMED_AWAY,
-                               STATE_ALARM_ARMED_NIGHT,
-                               STATE_ALARM_PENDING,
-                               STATE_ALARM_TRIGGERED):
-                _LOGGER.warning("Received unexpected payload: %s", payload)
+            if msg.payload not in (
+                    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
+                    STATE_ALARM_ARMED_AWAY,
+                    STATE_ALARM_ARMED_NIGHT,
+                    STATE_ALARM_PENDING,
+                    STATE_ALARM_TRIGGERED):
+                _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
-            self._state = payload
-            self.async_schedule_update_ha_state()
+            self._state = msg.payload
+            self.async_write_ha_state()
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
@@ -227,7 +228,8 @@ class MqttAlarm(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         This method is a coroutine.
         """
-        if not self._validate_code(code, 'arming night'):
+        code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
+        if code_required and not self._validate_code(code, 'arming night'):
             return
         mqtt.async_publish(
             self.hass, self._config.get(CONF_COMMAND_TOPIC),

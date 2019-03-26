@@ -25,9 +25,10 @@ from .const import (
     TOKEN_REFRESH_INTERVAL)
 from .smartapp import (
     setup_smartapp, setup_smartapp_endpoint, smartapp_sync_subscriptions,
-    validate_installed_app)
+    unload_smartapp_endpoint, validate_installed_app,
+    validate_webhook_requirements)
 
-REQUIREMENTS = ['pysmartapp==0.3.1', 'pysmartthings==0.6.7']
+REQUIREMENTS = ['pysmartapp==0.3.2', 'pysmartthings==0.6.7']
 DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents an installed SmartApp."""
     from pysmartthings import SmartThings
 
-    if not hass.config.api.base_url.lower().startswith('https://'):
+    if not validate_webhook_requirements(hass):
         _LOGGER.warning("The 'base_url' of the 'http' component must be "
                         "configured and start with 'https://'")
         return False
@@ -200,8 +201,9 @@ async def async_remove_entry(
 
     # Remove the app if not referenced by other entries, which if already
     # removed raises a 403 error.
+    all_entries = hass.config_entries.async_entries(DOMAIN)
     app_id = entry.data[CONF_APP_ID]
-    app_count = sum(1 for entry in hass.config_entries.async_entries(DOMAIN)
+    app_count = sum(1 for entry in all_entries
                     if entry.data[CONF_APP_ID] == app_id)
     if app_count > 1:
         _LOGGER.debug("App %s was not removed because it is in use by other"
@@ -217,6 +219,9 @@ async def async_remove_entry(
         else:
             raise
     _LOGGER.debug("Removed app %s", app_id)
+
+    if len(all_entries) == 1:
+        await unload_smartapp_endpoint(hass)
 
 
 class DeviceBroker:

@@ -75,6 +75,9 @@ introduction:
 # http:
 #   base_url: example.duckdns.org:8123
 
+# Discover some devices automatically
+discovery:
+
 # Sensors
 sensor:
   # Weather prediction
@@ -428,7 +431,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
 async def async_process_ha_core_config(
         hass: HomeAssistant, config: Dict,
-        has_api_password: bool = False,
+        api_password: Optional[str] = None,
         trusted_networks: Optional[Any] = None) -> None:
     """Process the [homeassistant] section from the configuration.
 
@@ -444,8 +447,11 @@ async def async_process_ha_core_config(
             auth_conf = [
                 {'type': 'homeassistant'}
             ]
-            if has_api_password:
-                auth_conf.append({'type': 'legacy_api_password'})
+            if api_password:
+                auth_conf.append({
+                    'type': 'legacy_api_password',
+                    'api_password': api_password,
+                })
             if trusted_networks:
                 auth_conf.append({
                     'type': 'trusted_networks',

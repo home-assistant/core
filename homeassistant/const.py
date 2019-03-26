@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 89
+MINOR_VERSION = 91
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -325,6 +325,10 @@ ATTR_TEMPERATURE = 'temperature'
 # Power units
 POWER_WATT = 'W'
 
+# Energy units
+ENERGY_KILO_WATT_HOUR = 'kWh'
+ENERGY_WATT_HOUR = 'Wh'
+
 # Temperature units
 TEMP_CELSIUS = '°C'
 TEMP_FAHRENHEIT = '°F'
@@ -338,6 +342,13 @@ LENGTH_INCHES = 'in'  # type: str
 LENGTH_FEET = 'ft'  # type: str
 LENGTH_YARD = 'yd'  # type: str
 LENGTH_MILES = 'mi'  # type: str
+
+# Pressure units
+PRESSURE_PA = 'Pa'  # type: str
+PRESSURE_HPA = 'hPa'  # type: str
+PRESSURE_MBAR = 'mbar'  # type: str
+PRESSURE_INHG = 'inHg'  # type: str
+PRESSURE_PSI = 'psi'  # type: str
 
 # Volume units
 VOLUME_LITERS = 'L'  # type: str
@@ -451,6 +462,7 @@ UNIT_NOT_RECOGNIZED_TEMPLATE = '{} is not a recognized {} unit.'  # type: str
 
 LENGTH = 'length'  # type: str
 MASS = 'mass'  # type: str
+PRESSURE = 'pressure'  # type: str
 VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
 SPEED_MS = 'speed_ms'  # type: str

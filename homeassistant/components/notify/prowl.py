@@ -4,18 +4,19 @@ Prowl notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.prowl/
 """
-import logging
 import asyncio
+import logging
 
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
-    BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://api.prowlapp.com/publicapi/'
