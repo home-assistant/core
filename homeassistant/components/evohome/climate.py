@@ -346,7 +346,8 @@ class EvoZone(EvoClimateDevice):
     def _set_operation_mode(self, operation_mode):
         if operation_mode == EVO_FOLLOW:
             try:
-                self._obj.cancel_temp_override(self._obj)
+              #  self._obj.cancel_temp_override(self._obj)
+                self._obj.cancel_temp_override()
             except HTTPError as err:
                 self._handle_exception("HTTPError", str(err))  # noqa: E501; pylint: disable=no-member
 
