@@ -26,7 +26,7 @@ DOMAIN = 'daikin'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-COMPONENT_TYPES = ['climate', 'sensor']
+COMPONENT_TYPES = ['climate', 'sensor', 'switch']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
