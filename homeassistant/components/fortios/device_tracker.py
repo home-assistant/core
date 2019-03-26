@@ -19,6 +19,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean
 })
 
+
 def get_scanner(hass, config):
     """Validate the configuration and return a FortiOSDeviceScanner."""
     from fortiosapi import FortiOSAPI
@@ -62,7 +63,6 @@ class FortiOSDeviceScanner(DeviceScanner):
         self._fgt = fgt
         self._update()
 
-
     def _update(self):
         """Get the clients from the device."""
         """
@@ -71,7 +71,7 @@ class FortiOSDeviceScanner(DeviceScanner):
         """
         _LOGGER.debug('_update(self)')
 
-        clients_json = self._fgt.monitor('user/device/select','')
+        clients_json = self._fgt.monitor('user/device/select', '')
         self._clients_json = clients_json
 
         self._clients = []
@@ -80,7 +80,6 @@ class FortiOSDeviceScanner(DeviceScanner):
             for p in clients_json['results']:
                 if p['last_seen'] < 180:
                     self._clients.append(p['mac'].upper())
-
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -109,7 +108,8 @@ class FortiOSDeviceScanner(DeviceScanner):
                     name = p['host']['name']
                     _LOGGER.debug("get_device_name name=%s", name)
                     return name
-                except:
+                except Exception as e:
+                    _LOGGER.error("No name found in clients_json: " + str(e))
                     return None
 
         return None
