@@ -48,8 +48,10 @@ class LTESensor(Entity):
     sensor_type = attr.ib()
 
     _unique_id = attr.ib(init=False)
+
     @_unique_id.default
     def _init_unique_id(self):
+        """Register unique_id while we know data is valid."""
         return "{}_{}".format(
             self.sensor_type, self.modem_data.data.serial_number)
 
