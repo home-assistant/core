@@ -82,7 +82,7 @@ class DriveFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_token(self, user_input=None):
         """Handle a flow start."""
-        from homeassistant.components.ais_drives_service import rclone_set_auth_code
+        from homeassistant.components.ais_drives_service import rclone_set_auth_gdrive
         errors = {}
         global G_DRIVE_CREATION_TIME_CALL
         data_schema = vol.Schema({
@@ -93,7 +93,7 @@ class DriveFlowHandler(config_entries.ConfigFlow):
             # add new one
             user_input[CONF_NAME] = DRIVE_NAME_INPUT
             user_input[CONF_TYPE] = DRIVE_TYPE_INPUT
-            ret = rclone_set_auth_code(DRIVE_NAME_INPUT, DRIVE_TYPE_INPUT, user_input['token_key'])
+            ret = rclone_set_auth_gdrive(DRIVE_NAME_INPUT, user_input['token_key'])
             if ret == 'ok':
                 # remove if exists
                 G_DRIVE_CREATION_TIME_CALL = time.time()
@@ -117,7 +117,7 @@ class DriveFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_passwd(self, user_input=None):
         """Handle a flow start."""
-        from homeassistant.components.ais_drives_service import rclone_set_auth_passwd
+        from homeassistant.components.ais_drives_service import rclone_set_auth_mega
         errors = {}
         global G_DRIVE_CREATION_TIME_CALL
         data_schema = vol.Schema({
@@ -128,8 +128,8 @@ class DriveFlowHandler(config_entries.ConfigFlow):
             # add new one or update
             user_input[CONF_NAME] = DRIVE_NAME_INPUT
             user_input[CONF_TYPE] = DRIVE_TYPE_INPUT
-            ret = rclone_set_auth_passwd(
-                DRIVE_NAME_INPUT, DRIVE_TYPE_INPUT, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
+            ret = rclone_set_auth_mega(
+                DRIVE_NAME_INPUT, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             if ret == 'ok':
                 # if exists
                 G_DRIVE_CREATION_TIME_CALL = time.time()
