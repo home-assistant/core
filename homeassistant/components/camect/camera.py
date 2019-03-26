@@ -9,19 +9,18 @@ import asyncio
 from contextlib import suppress
 import logging
 from typing import Dict
-from urllib.parse import urlparse
 
 import aiohttp
 from aiohttp import web
 import async_timeout
 
 from homeassistant.components import camect, camera
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components.http import HomeAssistantView
 
 REQUIREMENTS = ['camect-py==0.1.0']
 DEPENDENCIES = ['camect']
 _LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_entities, cam_ids):
     """Add an entity for every camera from Camect Home."""
@@ -108,6 +107,7 @@ class Camera(camera.Camera):
         """No need for the poll."""
         return False
 
+
 class CamectWebsocketView(camera.CameraView):
     """Camect view to proxy Websocket to home."""
 
@@ -140,6 +140,7 @@ class CamectWebsocketView(camera.CameraView):
         ha_ws.close()
         camect_ws.close()
 
+
 async def _unsecure_https_fetch(https_url):
     async with aiohttp.ClientSession() as session:
         async with session.get(https_url, verify_ssl=False) as resp:
@@ -147,6 +148,7 @@ async def _unsecure_https_fetch(https_url):
                 _LOGGER.warning('resp.status=%d', resp.status)
                 return ''
             return await resp.read()
+
 
 class CamectBundleJsView(HomeAssistantView):
     """Camect view to proxy embedded bundle JS to home."""
@@ -173,6 +175,7 @@ class CamectBundleJsView(HomeAssistantView):
                         body=data, content_type="application/javascript")
 
         raise web.HTTPInternalServerError()
+
 
 class CamectFontFileView(HomeAssistantView):
     """Camect view to proxy font files to home."""

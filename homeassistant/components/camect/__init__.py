@@ -12,8 +12,6 @@ camect:
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camect/
 """
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components import camera
@@ -80,6 +78,6 @@ def setup(hass, config):
         elif mode == 'AWAY':
             home.set_mode('DEFAULT')
     hass.services.register(DOMAIN, SERVICE_CHANGE_OP_MODE,
-        handle_change_op_mode_service, schema=CHANGE_OP_MODE_SCHEMA)
+            handle_change_op_mode_service, schema=CHANGE_OP_MODE_SCHEMA)
 
     return True
