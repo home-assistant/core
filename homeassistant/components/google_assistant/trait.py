@@ -1052,10 +1052,7 @@ class OpenCloseTrait(_Trait):
     @staticmethod
     def supported(domain, features):
         """Test if state is supported."""
-        if domain == cover.DOMAIN:
-            return features & cover.SUPPORT_SET_POSITION
-        else:
-            return domain in (cover.DOMAIN)
+        return domain == cover.DOMAIN
 
     def sync_attributes(self):
         """Return opening direction."""
@@ -1090,11 +1087,11 @@ class OpenCloseTrait(_Trait):
 
         if domain == cover.DOMAIN:
             if params['openPercent'] == 0:
-                await self.hass.services.async_call(cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
+                await self.hass.services.async_call(cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
                     ATTR_ENTITY_ID: self.state.entity_id
                 }, blocking=True, context=data.context)
             elif params['openPercent'] == 100:
-                await self.hass.services.async_call(cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
+                await self.hass.services.async_call(cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
                     ATTR_ENTITY_ID: self.state.entity_id
                 }, blocking=True, context=data.context)
             else:
