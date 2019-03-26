@@ -162,6 +162,7 @@ async def _check_service_permissions(hass, service_call):
                     permission=POLICY_CONTROL,
                 )
 
+
 async def async_setup(hass, config):
     """Set up the RainMachine component."""
     hass.data[DOMAIN] = {}
