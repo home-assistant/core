@@ -5,7 +5,6 @@ import pytest
 from homeassistant.core import DOMAIN as HASS_DOMAIN
 from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
-import homeassistant.components as component
 from homeassistant.components.cover import (SERVICE_OPEN_COVER)
 from homeassistant.helpers import intent
 
@@ -16,7 +15,7 @@ async def test_calling_intent(hass):
     """Test calling an intent from a conversation."""
     intents = async_mock_intent(hass, 'OrderBeer')
 
-    result = await component.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     result = await async_setup_component(hass, 'conversation', {
@@ -146,7 +145,7 @@ async def test_http_processing_intent(hass, hass_client):
 @pytest.mark.parametrize('sentence', ('turn on kitchen', 'turn kitchen on'))
 async def test_turn_on_intent(hass, sentence):
     """Test calling the turn on intent."""
-    result = await component.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     result = await async_setup_component(hass, 'conversation', {})
@@ -197,7 +196,7 @@ async def test_cover_intents_loading(hass):
 @pytest.mark.parametrize('sentence', ('turn off kitchen', 'turn kitchen off'))
 async def test_turn_off_intent(hass, sentence):
     """Test calling the turn on intent."""
-    result = await component.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     result = await async_setup_component(hass, 'conversation', {})
@@ -222,7 +221,7 @@ async def test_turn_off_intent(hass, sentence):
 @pytest.mark.parametrize('sentence', ('toggle kitchen', 'kitchen toggle'))
 async def test_toggle_intent(hass, sentence):
     """Test calling the turn on intent."""
-    result = await component.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     result = await async_setup_component(hass, 'conversation', {})
@@ -246,7 +245,7 @@ async def test_toggle_intent(hass, sentence):
 
 async def test_http_api(hass, hass_client):
     """Test the HTTP conversation API."""
-    result = await component.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     result = await async_setup_component(hass, 'conversation', {})
@@ -270,7 +269,7 @@ async def test_http_api(hass, hass_client):
 
 async def test_http_api_wrong_data(hass, hass_client):
     """Test the HTTP conversation API."""
-    result = await component.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     result = await async_setup_component(hass, 'conversation', {})

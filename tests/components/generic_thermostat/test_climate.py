@@ -68,7 +68,7 @@ def setup_comp_1(hass):
     """Initialize components."""
     hass.config.units = METRIC_SYSTEM
     assert hass.loop.run_until_complete(
-        comps.async_setup(hass, {})
+        async_setup_component(hass, 'homeassistant', {})
     )
 
 

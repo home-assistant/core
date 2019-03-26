@@ -33,8 +33,8 @@ JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 def hass_hue(loop, hass):
     """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
-    loop.run_until_complete(
-        core_components.async_setup(hass, {core.DOMAIN: {}}))
+    loop.run_until_complete(setup.async_setup_component(
+        hass, 'homeassistant', {}))
 
     loop.run_until_complete(setup.async_setup_component(
         hass, http.DOMAIN,
