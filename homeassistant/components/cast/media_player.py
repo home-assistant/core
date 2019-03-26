@@ -91,12 +91,13 @@ class ChromecastInfo:
     @property
     def is_information_complete(self) -> bool:
         """Return if all information is filled out."""
-        return (
-            (not self.is_audio_group or
-             self.is_dynamic_group is not None) and
-            all(attr.astuple(
-                self, filter=attr.filters.exclude(
-                    attr.fields(ChromecastInfo).is_dynamic_group))))
+        want_dynamic_group = self.is_audio_group
+        have_dynamic_group = self.is_dynamic_group is not None
+        have_all_except_dynamic_group = all(
+            attr.astuple(self, filter=attr.filters.exclude(
+                attr.fields(ChromecastInfo).is_dynamic_group)))
+        return (have_all_except_dynamic_group and
+                (not want_dynamic_group or have_dynamic_group))
 
     @property
     def host_port(self) -> Tuple[str, int]:
@@ -104,16 +105,11 @@ class ChromecastInfo:
         return self.host, self.port
 
 
-def _is_our_dynamic_group(our_info: ChromecastInfo,
-                          new_info: ChromecastInfo,) -> bool:
+def _is_matching_dynamic_group(our_info: ChromecastInfo,
+                               new_info: ChromecastInfo,) -> bool:
     return (our_info.is_audio_group and
             new_info.is_dynamic_group and
             our_info.friendly_name == new_info.friendly_name)
-
-
-def _was_our_dynamic_group(our_info: ChromecastInfo,
-                           new_info: ChromecastInfo,) -> bool:
-    return our_info is not None and our_info.uuid == new_info.uuid
 
 
 def _fill_out_missing_chromecast_info(info: ChromecastInfo) -> ChromecastInfo:
@@ -528,7 +524,7 @@ class CastDevice(MediaPlayerDevice):
             if self._cast_info.uuid is None:
                 # We can't handle empty UUIDs
                 return
-            if _is_our_dynamic_group(self._cast_info, discover):
+            if _is_matching_dynamic_group(self._cast_info, discover):
                 _LOGGER.debug("Discovered matching dynamic group: %s",
                               discover)
                 self.hass.async_create_task(
@@ -552,8 +548,8 @@ class CastDevice(MediaPlayerDevice):
             if self._cast_info.uuid is None:
                 # We can't handle empty UUIDs
                 return
-            if _was_our_dynamic_group(
-                    self._dynamic_group_cast_info, discover):
+            if (self._dynamic_group_cast_info is not None and
+                    self._dynamic_group_cast_info.uuid == discover.uuid):
                 _LOGGER.debug("Removed matching dynamic group: %s", discover)
                 self.hass.async_create_task(self.async_del_dynamic_group())
                 return
@@ -576,7 +572,7 @@ class CastDevice(MediaPlayerDevice):
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
         self.hass.async_create_task(self.async_set_cast_info(self._cast_info))
         for info in self.hass.data[KNOWN_CHROMECAST_INFO_KEY]:
-            if _is_our_dynamic_group(self._cast_info, info):
+            if _is_matching_dynamic_group(self._cast_info, info):
                 _LOGGER.debug("[%s %s (%s:%s)] Found dynamic group: %s",
                               self.entity_id, self._cast_info.friendly_name,
                               self._cast_info.host, self._cast_info.port, info)
