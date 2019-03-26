@@ -113,32 +113,31 @@ class SolarEdgeSensorFactory:
         """Initialize the factory."""
         self.platform_name = platform_name
 
-        self.overview_data_service = SolarEdgeOverviewDataService(api, site_id)
-        self.details_data_service = SolarEdgeDetailsDataService(api, site_id)
-        self.inventory_data_service = SolarEdgeInventoryDataService(api,
-                                                                    site_id)
-        self.power_flow_data_service = SolarEdgePowerFlowDataService(api,
-                                                                     site_id)
+        details = SolarEdgeDetailsDataService(api, site_id)
+        overview = SolarEdgeOverviewDataService(api, site_id)
+        inventory = SolarEdgeInventoryDataService(api, site_id)
+        flow = SolarEdgePowerFlowDataService(api, site_id)
+
+        self.services = {
+            'site_details': (SolarEdgeDetailsSensor, details)
+        }
+
+        for key in ['lifetime_energy', 'energy_this_year', 'energy_this_month',
+                    'energy_today', 'current_power']:
+            self.services[key] = (SolarEdgeOverviewSensor, overview)
+
+        for key in ['meters', 'sensors', 'gateways', 'batteries', 'inverters']:
+            self.services[key] = (SolarEdgeInventorySensor, inventory)
+
+        for key in ['power_consumption', 'solar_power', 'grid_power',
+                    'storage_power']:
+            self.services[key] = (SolarEdgePowerFlowSensor, flow)
 
     def create_sensor(self, sensor_key):
         """Create and return a sensor based on the sensor_key."""
-        sensor = None
+        service = self.services[sensor_key]
 
-        if sensor_key == 'site_details':
-            sensor = SolarEdgeDetailsSensor(self.platform_name, sensor_key,
-                                            self.details_data_service)
-        elif sensor_key in ['meters', 'sensors', 'gateways',
-                            'batteries', 'inverters']:
-            sensor = SolarEdgeInventorySensor(self.platform_name, sensor_key,
-                                              self.inventory_data_service)
-        elif sensor_key in ['power_consumption', 'solar_power', 'grid_power',
-                            'storage_power']:
-            sensor = SolarEdgePowerFlowSensor(self.platform_name, sensor_key,
-                                              self.power_flow_data_service)
-        else:
-            sensor = SolarEdgeOverviewSensor(self.platform_name, sensor_key,
-                                             self.overview_data_service)
-        return sensor
+        return service[0](self.platform_name, sensor_key, service[1])
 
 
 class SolarEdgeSensor(Entity):
@@ -305,6 +304,12 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
 
 class SolarEdgeDetailsDataService(SolarEdgeDataService):
     """Get and update the latest details data."""
+
+    def __init__(self, api, site_id):
+        """Initialize the details data service."""
+        super().__init__(api, site_id)
+
+        self.data = None
 
     @Throttle(DETAILS_UPDATE_DELAY)
     def update(self):
