@@ -4,20 +4,19 @@ Support for MyQ-Enabled Garage Doors.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.myq/
 """
-import aiohttp
 import logging
-import socket
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN, CoverDevice)
+    CoverDevice, PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN
+)
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_CLOSING,
-    STATE_OPEN, STATE_OPENING)
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP,
+    STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+)
+from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['aiohttp',
-                'pymyq==1.1.0']
+REQUIREMENTS = ['pymyq==1.2.0']
 _LOGGER = logging.getLogger(__name__)
 
 MYQ_TO_HASS = {
@@ -40,25 +39,12 @@ async def async_setup_platform(
     from pymyq import login
     from pymyq.errors import MyQError, UnsupportedBrandError
 
-    # websession = aiohttp_client.async_get_clientsession(hass)
-
-    # Specify socket
-    conn = aiohttp.TCPConnector(
-        family=socket.AF_INET,
-        limit_per_host=5,
-        enable_cleanup_closed=True,
-    )
-
-    session_timeout = aiohttp.ClientTimeout(connect=10)
-    websession = aiohttp.ClientSession(connector=conn,
-                                       timeout=session_timeout)
-
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     brand = config[CONF_TYPE]
 
     try:
-        myq = await login(username, password, brand, websession)
+        myq = await login(username, password, brand)
     except UnsupportedBrandError:
         _LOGGER.error('Unsupported brand: %s', brand)
         return
@@ -76,6 +62,15 @@ class MyQDevice(CoverDevice):
     def __init__(self, device):
         """Initialize with API object, device id."""
         self._device = device
+
+    async def async_added_to_hass(self):
+        """Register callback to stop session."""
+        async def shutdown(_):
+            """Close connection on shutdown."""
+            _LOGGER.debug("%s: Closing MyQ device", self.name)
+            await self._device.close_connection()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     @property
     def device_class(self):
