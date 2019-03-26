@@ -240,7 +240,6 @@ class OnOffTrait(_Trait):
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
-            cover.DOMAIN,
             switch.DOMAIN,
             fan.DOMAIN,
             light.DOMAIN,
@@ -253,22 +252,13 @@ class OnOffTrait(_Trait):
 
     def query_attributes(self):
         """Return OnOff query attributes."""
-        if self.state.domain == cover.DOMAIN:
-            return {'on': self.state.state != cover.STATE_CLOSED}
         return {'on': self.state.state != STATE_OFF}
 
     async def execute(self, command, data, params):
         """Execute an OnOff command."""
         domain = self.state.domain
 
-        if domain == cover.DOMAIN:
-            service_domain = domain
-            if params['on']:
-                service = cover.SERVICE_OPEN_COVER
-            else:
-                service = cover.SERVICE_CLOSE_COVER
-
-        elif domain == group.DOMAIN:
+        if domain == group.DOMAIN:
             service_domain = HA_DOMAIN
             service = SERVICE_TURN_ON if params['on'] else SERVICE_TURN_OFF
 
