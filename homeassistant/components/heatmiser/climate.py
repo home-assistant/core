@@ -12,7 +12,7 @@ from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO, SUPPORT_TARGET_TEMPERATURE,SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID, PRECISION_WHOLE, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, CONF_ID, PRECISION_WHOLE, STATE_OFF, STATE_ON, STATE_UNKNOWN)
     
 import homeassistant.helpers.config_validation as cv
 
@@ -21,7 +21,7 @@ REQUIREMENTS = ['heatmiserV3==1.1.8']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IPADDRESS = 'ipaddress'
-CONF_PORT = 'port'
+CONF_SERIALPORT = 'port'
 CONF_TSTATS = 'tstats'
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from heatmiserV3 import heatmiser, connection
 
     ipaddress = config.get(CONF_IPADDRESS)
-    port = str(config.get(CONF_PORT))
+    port = str(config.get(CONF_SERIALPORT))
     tstats = config.get(CONF_TSTATS)
     def_min_temp = 5
     def_max_temp = 35
@@ -47,13 +47,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         uh1_per = None
         if index == 1:
             uh1_per = uh1
-       
+
         add_entities([
             HeatmiserV3Thermostat(
             thermostat, room, sensor, uh1_per, def_min_temp, def_max_temp)
         ])
         time.sleep(2.4)
-        
+
 class HeatmiserV3Thermostat(ClimateDevice):
     """Representation of a HeatmiserV3 thermostat."""
 
@@ -90,19 +90,19 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def temperature_unit(self):
         """Return the unit of measurement which this thermostat uses."""
         return TEMP_CELSIUS
-        
-    @property        
+
+    @property
     def operation_list(self):
         """List of available operation modes."""
         return [STATE_OFF, STATE_ON]
-        
+
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         if self._mode in [STATE_HEAT, STATE_OFF, STATE_ON, STATE_UNKNOWN]:
             return self._mode
         return None
-        
+
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if self.heating == 0:
@@ -115,10 +115,10 @@ class HeatmiserV3Thermostat(ClimateDevice):
             self._max_temp = 35
             self.heating = 0
             self._mode = STATE_ON
-            
+
         self.thermostat._hm_send_address(self.thermostat.address, 23, self.heating, 1)
-        
-    @property        
+
+    @property
     def min_temp(self):
         """Return the minimum temperature."""
         return self._min_temp
@@ -127,20 +127,20 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         return self._max_temp
-        
+
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self.dcb == None:
+        if self.dcb is None:
             return 0
         if self.statsensor == 'floor':
             return self.themostats.get_floor_temp()
         return (self.dcb[33]['value'] / 10)
-        
+
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.dcb == None:
+        if self.dcb is None:
             return 0
         if self.heating == 0:
             return self.thermostat.get_target_temp()
@@ -149,28 +149,36 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None or self.dcb == None:
+
+        if temperature is None or self.dcb is None:
             return
         if self.heating == 0:
             self.thermostat.set_target_temp(int(temperature))
-            self._mode = STATE_HEAT if self._current_temperature < int(temperature) else STATE_ON
+            self._mode = STATE_ON
+            if self._current_temperature < int(temperature):
+               self._mode = STATE_HEAT
         else:
             self.thermostat.set_frost_protect_temp(int(temperature))
-            self._mode = STATE_HEAT if self._current_temperature < int(temperature) else STATE_OFF
-            
+            self._mode = STATE_OFF
+            if self._current_temperature < int(temperature):
+                self._mode = STATE_HEAT
+
     def update(self):
         """Get the latest data."""
         self.dcb = self.thermostat.read_dcb()
-        self.heating = self.dcb[23]['value'] 
+        self.heating = self.dcb[23]['value']
         self._current_temperature = self.current_temperature
         self._target_temperature = self.target_temperature
         self._min_temp = 5
         self._max_temp = 35
-        
-        if self.heating  == 0 :
-            self._mode = STATE_HEAT if self._current_temperature < self._target_temperature else STATE_ON
+
+        if self.heating  == 0:
+            self._mode = STATE_ON
+            if self._current_temperature < self._target_temperature:
+                self._mode = STATE_HEAT
         else:
             self._min_temp = 7
             self._max_temp = 17
-            self._mode = STATE_HEAT if self._current_temperature < self._target_temperature else STATE_OFF
-            
+            self._mode = STATE_OFF
+            if self._current_temperature < self._target_temperature:
+                self._mode = STATE_HEAT
