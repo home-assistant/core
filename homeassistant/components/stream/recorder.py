@@ -7,6 +7,11 @@ from homeassistant.core import callback
 from .core import Segment, StreamOutput, PROVIDERS
 
 
+@callback
+def async_setup_recorder(hass):
+    """Only here so Provider Registry works."""
+
+
 def recorder_save_worker(file_out: str, segments: List[Segment]):
     """Handle saving stream."""
     import av

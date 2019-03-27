@@ -22,7 +22,7 @@ from .const import (
 from .core import PROVIDERS
 from .worker import stream_worker
 from .hls import async_setup_hls
-from .recorder import RecorderOutput
+from .recorder import async_setup_recorder
 
 REQUIREMENTS = ['av==6.1.2']
 
@@ -95,6 +95,9 @@ async def async_setup(hass, config):
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
     hass.data[DOMAIN][ATTR_ENDPOINTS]['hls'] = hls_endpoint
+
+    # Setup Recorder
+    async_setup_recorder(hass)
 
     @callback
     def shutdown(event):
@@ -227,5 +230,3 @@ async def async_handle_record_service(hass, call):
         # Wait for latest segment, then add the lookback
         await hls.recv()
         recorder.prepend(list(hls.get_segment())[-num_segments:])
-
-    
