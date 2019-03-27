@@ -1,21 +1,10 @@
 """Denon HEOS Media Player."""
 
-from homeassistant.util.dt import utcnow
-
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN,
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
+    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 
 from . import DOMAIN as HEOS_DOMAIN
@@ -56,9 +45,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
     def __init__(self, player):
         """Initialize."""
         self._player = player
-        self._position_jitter_acceptance_ms = 500
-        self._cache_position_ms = 0
-        self._cache_position_at = utcnow()
 
     def _update_state(self):
         self.async_schedule_update_ha_state()
@@ -135,43 +121,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
     async def async_mute_volume(self, mute):
         """Mute volume."""
         self._player.set_mute(mute)
-
-    @property
-    def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return self._player.duration / 1000.0
-
-    def _get_cache_position(self):
-        """Get position. Use cache if jitter < 0,5s."""
-        pos_now = self._player.current_position_updated_at
-        if not pos_now:
-            return (None, None)
-
-        pos_ms = self._player.current_position
-        if pos_ms == self._cache_position_ms:
-            return (pos_ms / 1000.0, self._cache_position_at)
-
-        delta_pos_at = pos_now - self._cache_position_at
-        delta_pos_at_ms = (
-            delta_pos_at.seconds * 1000 + delta_pos_at.microseconds / 1000
-        )
-        delta_pos_ms = abs(pos_ms - self._cache_position_ms)
-        jitter_ms = abs(delta_pos_ms - delta_pos_at_ms)
-        if jitter_ms > self._position_jitter_acceptance_ms:
-            self._cache_position_at = pos_now
-            self._cache_position_ms = pos_ms
-
-        return (self._cache_position_ms / 1000.0, self._cache_position_at)
-
-    @property
-    def media_position_updated_at(self):
-        """Get time when position updated."""
-        return self._get_cache_position()[1]
-
-    @property
-    def media_position(self):
-        """Get media position."""
-        return self._get_cache_position()[0]
 
     async def async_media_next_track(self):
         """Go TO next track."""
