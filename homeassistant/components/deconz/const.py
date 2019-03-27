@@ -16,8 +16,6 @@ CONF_BRIDGEID = 'bridgeid'
 SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover',
                        'light', 'scene', 'sensor', 'switch']
 
-DECONZ_REACHABLE = 'deconz_reachable'
-
 NEW_GROUP = 'deconz_new_group'
 NEW_LIGHT = 'deconz_new_light'
 NEW_SCENE = 'deconz_new_scene'

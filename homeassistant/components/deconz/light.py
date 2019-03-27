@@ -29,9 +29,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_add_light(lights):
         """Add light from deCONZ."""
         entities = []
+
         for light in lights:
             if light.type not in COVER_TYPES + SWITCH_TYPES:
                 entities.append(DeconzLight(light, gateway))
+
         async_add_entities(entities, True)
 
     gateway.listeners.append(
