@@ -132,37 +132,39 @@ class EvoClimateDevice(ClimateDevice):
         try:
             raise err
 
+        except EvohomeClient2.AuthenticationError as err:
+            _LOGGER.error(
+                "Failed to (re)authenticate with the vendor's server. "
+                "This may be a temporary error.",
+                exc_info=True
+            )
+
         except requests.exceptions.ConnectionError:
             # this appears to be common with Honeywell's servers
             _LOGGER.warning(
-                "The vendor's web servers appear to be uncontactable, so "
-                "unable to get the latest state data during this cycle. "
-                "Hint: This is often a problem with the vendor's network."
+                "Unable to connect with the vendor's server. "
+                "Check your network and the vendor's status page.",
+                exc_info=True
             )
-            return True
 
         except requests.exceptions.HTTPError:
-            if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
+            if err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
                 _LOGGER.warning(
-                    "The vendor's API rate limit has been exceeded, so unable"
-                    "to get the latest state data during this polling cycle. "
-                    "Suspending polling, and will resume after %s seconds.",
-                    (self._params[CONF_SCAN_INTERVAL] * 3).total_seconds()
+                    "Vendor says their server is currently unavailable. "
+                    "This may be temporary; check the vendor's status page."
                 )
 
+            elif err.response.status_code == HTTP_TOO_MANY_REQUESTS:
+                _LOGGER.warning(
+                    "The vendor's API rate limit has been exceeded. "
+                    "So will cease polling, and will resume after %s seconds.",
+                    (self._params[CONF_SCAN_INTERVAL] * 3).total_seconds()
+                )
                 self._timers['statusUpdated'] = datetime.now() + \
                     self._params[CONF_SCAN_INTERVAL] * 3
 
-            if err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
-                # this appears to be common with Honeywell servers
-                _LOGGER.warning(
-                    "The vendor's web servers appear unavailable, so unable "
-                    "to get the latest state data during this polling cycle. "
-                    "Note: This is a problem with the vendor's network."
-                )
-                return True
-
-            raise  # we don't expect/handle any other HTTPErrors
+            else:
+                raise  # we don't expect/handle any other HTTPErrors
 
     @property
     def name(self) -> str:
