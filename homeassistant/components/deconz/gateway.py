@@ -11,16 +11,16 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util import slugify
 
 from .const import (
-    _LOGGER, DECONZ_REACHABLE, DOMAIN, CONF_ALLOW_CLIP_SENSOR,
-    CONF_ALLOW_DECONZ_GROUPS, NEW_DEVICE, NEW_SENSOR, SUPPORTED_PLATFORMS)
+    _LOGGER, CONF_ALLOW_CLIP_SENSOR, CONF_ALLOW_DECONZ_GROUPS, CONF_BRIDGEID,
+    DOMAIN, NEW_DEVICE, NEW_SENSOR, SUPPORTED_PLATFORMS)
 from .errors import AuthenticationRequired, CannotConnect
 
 
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
-    """Return gateway with a matching config entry."""
+    """Return gateway with a matching bridge id."""
     for gateway in hass.data[DOMAIN].values():
-        if gateway.config_entry == config_entry:
+        if gateway.bridgeid == config_entry.data[CONF_BRIDGEID]:
             return gateway
     return None
 
@@ -42,7 +42,7 @@ class DeconzGateway:
     @property
     def bridgeid(self):
         """Unique identifier for gateway."""
-        return self.api.config.bridgeid
+        return self.config_entry.data[CONF_BRIDGEID]
 
     @property
     def allow_clip_sensor(self):
@@ -86,12 +86,17 @@ class DeconzGateway:
 
         return True
 
+    @property
+    def event_reachable(self):
+        """Gateway specific event to signal a change in connection status."""
+        return 'deconz_reachable_{}'.format(self.bridgeid)
+
     @callback
     def async_connection_status_callback(self, available):
         """Handle signals of gateway connection status."""
         self.available = available
-        async_dispatcher_send(
-            self.hass, DECONZ_REACHABLE, {'state': True, 'attr': 'reachable'})
+        async_dispatcher_send(self.hass, self.event_reachable,
+                              {'state': True, 'attr': 'reachable'})
 
     @callback
     def async_add_device_callback(self, device_type, device):
@@ -104,10 +109,10 @@ class DeconzGateway:
     def async_add_remote(self, sensors):
         """Set up remote from deCONZ."""
         from pydeconz.sensor import SWITCH as DECONZ_REMOTE
-        allow_clip_sensor = self.allow_clip_sensor
         for sensor in sensors:
             if sensor.type in DECONZ_REMOTE and \
-               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
+               not (not self.allow_clip_sensor and
+                    sensor.type.startswith('CLIP')):
                 self.events.append(DeconzEvent(self.hass, sensor))
 
     @callback
