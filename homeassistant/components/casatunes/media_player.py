@@ -8,6 +8,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
@@ -70,12 +71,14 @@ async def async_setup_platform(hass, config, async_add_entities,
             zone_devices.append(CasaTunesZone(zone))
         except TypeError:
             _LOGGER.error("Unable to create a zone")
+            raise PlatformNotReady
 
     for source in sources:
         try:
             player_devices.append(CasaTunesPlayer(source))
         except TypeError:
             _LOGGER.error("Unable to create a player")
+            raise PlatformNotReady
 
     async_add_entities(zone_devices)
     async_add_entities(player_devices)
