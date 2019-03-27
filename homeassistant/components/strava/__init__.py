@@ -40,6 +40,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
 async def async_setup(hass, config):
     data = StravaData(hass, config.get(DOMAIN))
 
@@ -66,9 +67,9 @@ class StravaData:
         self._client_id = config.get(CONF_CLIENT_ID)
         self._client_secret = config.get(CONF_CLIENT_SECRET)
 
-        self.athletes = { }
-        self.gears = { }
-        self.clubs = { }
+        self.athletes = {}
+        self.gears = {}
+        self.clubs = {}
 
     @property
     def is_authorized(self):
@@ -89,7 +90,8 @@ class StravaData:
 
     async def get_token(self):
         if not self.is_authorized:
-            store = self._hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+            store = self._hass.helpers.storage.Store(STORAGE_VERSION,
+                                                     STORAGE_KEY)
             self._token = await store.async_load()
 
             if self._token:
@@ -102,7 +104,6 @@ class StravaData:
         expires_at = datetime.fromtimestamp(self._token['expires_at'])
         if expires_at < datetime.now():
             await self.refresh_token()
-
 
     async def authorize(self, code, hass):
         """ Request initial authorization. """
@@ -131,10 +132,11 @@ class StravaData:
         callback_url = '{}{}'.format(self._hass.config.api.base_url,
                                      AUTH_CALLBACK_PATH)
         authorize_url = self.client.authorization_url(
-            client_id = self._config.get(CONF_CLIENT_ID),
-            redirect_uri = callback_url)
+            client_id=self._config.get(CONF_CLIENT_ID),
+            redirect_uri=callback_url)
 
-        self._configurator = self._hass.components.configurator.async_request_config(
+        self._configurator = \
+            self._hass.components.configurator.async_request_config(
                 DEFAULT_NAME, lambda _: None,
                 link_name=CONFIGURATOR_LINK_NAME,
                 link_url=authorize_url,
@@ -171,9 +173,10 @@ class StravaData:
 
         return self.clubs[id]
 
+
 class StravaAthleteData:
 
-    def __init__(self, data, id = None):
+    def __init__(self, data, id=None):
         self.id = id
         self.data = data
 
@@ -184,12 +187,15 @@ class StravaAthleteData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self, hass):
         await self.data.get_token()
-        activities = await hass.async_add_executor_job(self.data.client.get_activities, None, None, 1)
+        activities = await hass.async_add_executor_job(
+            self.data.client.get_activities, None, None, 1)
 
         self.last_activity = next(activities)
 
-        self.details = await hass.async_add_executor_job(self.data.client.get_athlete, self.id)
-        self.stats   = await hass.async_add_executor_job(self.data.client.get_athlete_stats, self.id)
+        self.details = await hass.async_add_executor_job(
+            self.data.client.get_athlete, self.id)
+        self.stats = await hass.async_add_executor_job(
+            self.data.client.get_athlete_stats, self.id)
 
 class StravaClubData:
 
@@ -202,7 +208,8 @@ class StravaClubData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self, hass):
         await self.data.get_token()
-        self.club = await hass.async_add_executor_job(self.data.client.get_club, self.id)
+        self.club = await hass.async_add_executor_job(
+            self.data.client.get_club, self.id)
 
 class StravaGearData:
 
@@ -215,7 +222,8 @@ class StravaGearData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self, hass):
         await self.data.get_token()
-        self.gear = await hass.async_add_executor_job(self.data.client.get_gear, self.id)
+        self.gear = await hass.async_add_executor_job(
+            self.data.client.get_gear, self.id)
 
 class StravaAuthCallbackView(HomeAssistantView):
     """Strava Authorization Callback View."""

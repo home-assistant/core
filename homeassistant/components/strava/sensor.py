@@ -96,7 +96,8 @@ ICON_MAPPING_ACTIVITY_TYPES = {
 }
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
 
     data = hass.data.get(DOMAIN)
 
@@ -144,6 +145,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
             sensors.append(sensor)
 
     add_entities(sensors, True)
+
 
 class StravaSensor(Entity):
 
@@ -251,8 +253,8 @@ class StravaAthleteDetailsSensor(StravaSensor):
     def name(self):
         if self.available:
             name = '{} {}'.format(
-            self._data.details.firstname,
-            self._data.details.lastname)
+                self._data.details.firstname,
+                self._data.details.lastname)
         elif self._data.id:
             name = 'Athlete {}'.format(self._data.id)
         else:
@@ -297,8 +299,8 @@ class StravaAthleteStatsSensor(StravaSensor):
     def name(self):
         if self._data.details:
             name = '{} {}'.format(
-            self._data.details.firstname,
-            self._data.details.lastname)
+                self._data.details.firstname,
+                self._data.details.lastname)
         elif self._data.id:
             name = 'Athlete {}'.format(self._data.id)
         else:
