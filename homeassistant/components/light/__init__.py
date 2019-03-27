@@ -155,8 +155,8 @@ def preprocess_turn_on_alternatives(params):
     if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
         # Zero brightness: Light will be turned off
         for k in list(params.keys()):
-            params = {k: v for k,v in params.items() if k in [ATTR_TRANSITION,
-                                                              ATTR_FLASH]}
+            params = {k: v for k, v in params.items() if k in [ATTR_TRANSITION,
+                                                               ATTR_FLASH]}
 
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
