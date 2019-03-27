@@ -62,19 +62,14 @@ class ModemData:
     host = attr.ib()
     modem = attr.ib()
 
-    serial_number = attr.ib(init=False, default=None)
-    unread_count = attr.ib(init=False, default=None)
-    usage = attr.ib(init=False, default=None)
+    data = attr.ib(init=False, default=None)
     connected = attr.ib(init=False, default=True)
 
     async def async_update(self):
         """Call the API to update the data."""
         import eternalegypt
         try:
-            information = await self.modem.information()
-            self.serial_number = information.serial_number
-            self.unread_count = sum(1 for x in information.sms if x.unread)
-            self.usage = information.usage
+            self.data = await self.modem.information()
             if not self.connected:
                 _LOGGER.warning("Connected to %s", self.host)
                 self.connected = True
@@ -82,8 +77,7 @@ class ModemData:
             if self.connected:
                 _LOGGER.warning("Lost connection to %s", self.host)
                 self.connected = False
-            self.unread_count = None
-            self.usage = None
+            self.data = None
 
         async_dispatcher_send(self.hass, DISPATCHER_NETGEAR_LTE)
 
