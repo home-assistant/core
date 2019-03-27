@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     AXIS_ADD_SENSOR, AXIS_REACHABLE, CONF_CAMERA, CONF_EVENTS, CONF_MODEL,
-    LOGGER)
+    DOMAIN, LOGGER)
 
 from .errors import AuthenticationRequired, CannotConnect
 
