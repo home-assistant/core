@@ -75,6 +75,7 @@ ATTR_LOCATION_NAME = 'location_name'
 ATTR_MAC = 'mac'
 ATTR_SOURCE_TYPE = 'source_type'
 ATTR_CONSIDER_HOME = 'consider_home'
+ATTR_LAST_SEEN = 'last_seen'
 
 SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
@@ -478,7 +479,8 @@ class Device(RestoreEntity):
     def state_attributes(self):
         """Return the device state attributes."""
         attr = {
-            ATTR_SOURCE_TYPE: self.source_type
+            ATTR_SOURCE_TYPE: self.source_type,
+            ATTR_LAST_SEEN: self.last_seen
         }
 
         if self.gps:
@@ -488,6 +490,9 @@ class Device(RestoreEntity):
 
         if self.battery:
             attr[ATTR_BATTERY] = self.battery
+
+        if self.consider_home:
+            attr[ATTR_CONSIDER_HOME] = self.consider_home.total_seconds()
 
         return attr
 
@@ -580,7 +585,14 @@ class Device(RestoreEntity):
             return
         self._state = state.state
         self.last_update_home = (state.state == STATE_HOME)
-        self.last_seen = dt_util.utcnow()
+
+        if state.attributes.get('last_seen'):
+            self.last_seen = dt_util.parse_datetime(
+                state.attributes.get('last_seen'))
+
+        if state.attributes.get('consider_home'):
+            consider_home = state.attributes.get('consider_home')
+            self.consider_home = timedelta(seconds=consider_home)
 
         for attr, var in (
                 (ATTR_SOURCE_TYPE, 'source_type'),
