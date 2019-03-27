@@ -7,6 +7,7 @@ https://home-assistant.io/components/zha/
 
 import asyncio
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -14,12 +15,14 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .core.const import (
-    DOMAIN, ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, ATTR_ATTRIBUTE, ATTR_VALUE,
-    ATTR_MANUFACTURER, ATTR_COMMAND, ATTR_COMMAND_TYPE, ATTR_ARGS, IN, OUT,
-    CLIENT_COMMANDS, SERVER_COMMANDS, SERVER, NAME, ATTR_ENDPOINT_ID,
-    DATA_ZHA_GATEWAY, DATA_ZHA, MFG_CLUSTER_ID_START)
-from .core.helpers import get_matched_clusters, async_is_bindable_target
+    ATTR_ARGS, ATTR_ATTRIBUTE, ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE,
+    ATTR_COMMAND, ATTR_COMMAND_TYPE, ATTR_ENDPOINT_ID, ATTR_MANUFACTURER,
+    ATTR_VALUE, CLIENT_COMMANDS, DATA_ZHA, DATA_ZHA_GATEWAY, DOMAIN, IN,
+    MFG_CLUSTER_ID_START, NAME, OUT, SERVER, SERVER_COMMANDS)
+from .core.helpers import (
+    async_is_bindable_target, convert_ieee, get_matched_clusters)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +51,9 @@ IEEE_SERVICE = 'ieee_based_service'
 
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema({
+        vol.Optional(ATTR_IEEE_ADDRESS, default=''): cv.string,
         vol.Optional(ATTR_DURATION, default=60):
-            vol.All(vol.Coerce(int), vol.Range(1, 254)),
+            vol.All(vol.Coerce(int), vol.Range(0, 254)),
     }),
     IEEE_SERVICE: vol.Schema({
         vol.Required(ATTR_IEEE_ADDRESS): cv.string,
@@ -79,11 +83,16 @@ SERVICE_SCHEMAS = {
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
-    vol.Required('type'): 'zha/devices/permit'
+    vol.Required('type'): 'zha/devices/permit',
+    vol.Optional(ATTR_IEEE, default=''): cv.string,
+    vol.Optional(ATTR_DURATION, default=60): vol.All(vol.Coerce(int),
+                                                     vol.Range(0, 254))
 })
 async def websocket_permit_devices(hass, connection, msg):
     """Permit ZHA zigbee devices."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    duration = msg.get(ATTR_DURATION)
+    ieee = msg.get(ATTR_IEEE)
 
     async def forward_messages(data):
         """Forward events to websocket."""
@@ -103,7 +112,12 @@ async def websocket_permit_devices(hass, connection, msg):
 
     connection.subscriptions[msg['id']] = async_cleanup
     zha_gateway.async_enable_debug_mode()
-    await zha_gateway.application_controller.permit(60)
+    if ieee:
+        ieee = convert_ieee(ieee)
+        await zha_gateway.application_controller.permit(time_s=duration,
+                                                        node=ieee)
+    else:
+        await zha_gateway.application_controller.permit(time_s=duration)
 
     connection.send_result(msg['id'])
 
@@ -450,17 +464,22 @@ def async_load_api(hass):
     async def permit(service):
         """Allow devices to join this network."""
         duration = service.data.get(ATTR_DURATION)
-        _LOGGER.info("Permitting joins for %ss", duration)
-        await application_controller.permit(duration)
+        ieee = service.data.get(ATTR_IEEE_ADDRESS)
+        if ieee:
+            ieee = convert_ieee(ieee)
+            _LOGGER.info("Permitting joins for %ss on %s device",
+                         duration, ieee)
+            await application_controller.permit(time_s=duration, node=ieee)
+        else:
+            _LOGGER.info("Permitting joins for %ss", duration)
+            await application_controller.permit(time_s=duration)
 
     hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_PERMIT, permit, schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
 
     async def remove(service):
         """Remove a node from the network."""
-        from bellows.types import EmberEUI64, uint8_t
-        ieee = service.data.get(ATTR_IEEE_ADDRESS)
-        ieee = EmberEUI64([uint8_t(p, base=16) for p in ieee.split(':')])
+        ieee = convert_ieee(service.data.get(ATTR_IEEE_ADDRESS))
         _LOGGER.info("Removing node %s", ieee)
         await application_controller.remove(ieee)
 
