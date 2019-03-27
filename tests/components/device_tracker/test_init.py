@@ -626,7 +626,7 @@ def test_see_schema_allowing_ios_calls():
     device_tracker.SERVICE_SEE_PAYLOAD_SCHEMA({
         'dev_id': 'Test',
         "battery": 35,
-        "battery_status": 'Unplugged',
+        "battery_status": 'Not Charging',
         "gps": [10.0, 10.0],
         "gps_accuracy": 300,
         "hostname": 'beer',

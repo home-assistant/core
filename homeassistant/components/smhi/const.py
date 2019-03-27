@@ -13,4 +13,4 @@ ENTITY_ID_SENSOR_FORMAT = WEATHER_DOMAIN + ".smhi_{}"
 ENTITY_ID_SENSOR_FORMAT_HOME = ENTITY_ID_SENSOR_FORMAT.format(
     HOME_LOCATION_NAME)
 
-LOGGER = logging.getLogger('homeassistant.components.smhi')
+LOGGER = logging.getLogger('.')

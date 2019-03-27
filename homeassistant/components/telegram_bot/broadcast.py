@@ -1,9 +1,7 @@
 """Support for Telegram bot to send messages only."""
 import logging
 
-from homeassistant.components.telegram_bot import (
-    initialize_bot,
-    PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA)
+from . import PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA, initialize_bot
 
 _LOGGER = logging.getLogger(__name__)
 

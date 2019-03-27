@@ -124,7 +124,6 @@ class NMBSLiveBoard(Entity):
         attrs = {
             'departure': "In {} minutes".format(departure),
             'extra_train': int(self._attrs['isExtra']) > 0,
-            'occupancy': self._attrs['occupancy']['name'],
             'vehicle_id': self._attrs['vehicle'],
             'monitored_station': self._station,
             ATTR_ATTRIBUTION: "https://api.irail.be/",

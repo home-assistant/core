@@ -14,12 +14,13 @@ import string
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_RECIPIENT, CONF_RESOURCE, CONF_ROOM, CONF_SENDER)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
+
+from . import (
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
 REQUIREMENTS = ['slixmpp==1.4.2']
 

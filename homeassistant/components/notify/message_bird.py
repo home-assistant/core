@@ -8,10 +8,10 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (
-    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
+import homeassistant.helpers.config_validation as cv
+
+from . import ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
 
 REQUIREMENTS = ['messagebird==1.2.0']
 

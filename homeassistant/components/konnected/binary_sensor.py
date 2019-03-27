@@ -2,13 +2,13 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.konnected import (
-    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, SIGNAL_SENSOR_UPDATE)
 from homeassistant.const import (
-    CONF_DEVICES, CONF_TYPE, CONF_NAME, CONF_BINARY_SENSORS, ATTR_ENTITY_ID,
-    ATTR_STATE)
+    ATTR_ENTITY_ID, ATTR_STATE, CONF_BINARY_SENSORS, CONF_DEVICES, CONF_NAME,
+    CONF_TYPE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, SIGNAL_SENSOR_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 

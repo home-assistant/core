@@ -2,12 +2,13 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.openuv import (
-    BINARY_SENSORS, DATA_OPENUV_CLIENT, DATA_PROTECTION_WINDOW, DOMAIN,
-    TOPIC_UPDATE, TYPE_PROTECTION_WINDOW, OpenUvEntity)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
+
+from . import (
+    BINARY_SENSORS, DATA_OPENUV_CLIENT, DATA_PROTECTION_WINDOW, DOMAIN,
+    TOPIC_UPDATE, TYPE_PROTECTION_WINDOW, OpenUvEntity)
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_PROTECTION_WINDOW_ENDING_TIME = 'end_time'

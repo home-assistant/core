@@ -7,13 +7,13 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
     DOMAIN, PLATFORM_SCHEMA)
-from homeassistant.components.ifttt import (
-    ATTR_EVENT, DOMAIN as IFTTT_DOMAIN, SERVICE_TRIGGER)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_STATE, CONF_CODE, CONF_NAME, CONF_OPTIMISTIC,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED)
 import homeassistant.helpers.config_validation as cv
+
+from . import ATTR_EVENT, DOMAIN as IFTTT_DOMAIN, SERVICE_TRIGGER
 
 DEPENDENCIES = ['ifttt']
 

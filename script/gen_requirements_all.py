@@ -41,11 +41,13 @@ COMMENT_REQUIREMENTS = (
 TEST_REQUIREMENTS = (
     'aioambient',
     'aioautomatic',
+    'aiobotocore',
     'aiohttp_cors',
     'aiohue',
     'aiounifi',
     'apns2',
     'av',
+    'axis',
     'caldav',
     'coinmarketcap',
     'defusedxml',
@@ -222,7 +224,7 @@ def gather_modules():
                 if fnmatch.fnmatch(package, pattern):
                     break
             else:
-                print("{}: {}".format(package, err))
+                print("{}: {}".format(package.replace('.', '/') + '.py', err))
                 errors.append(package)
             continue
 

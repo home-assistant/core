@@ -9,9 +9,9 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 
+from .connection import get_accessory_information
 from .const import (
-    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_ACCESSORIES,
-    KNOWN_DEVICES
+    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_DEVICES
 )
 
 
@@ -27,29 +27,9 @@ HOMEKIT_IGNORE = [
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUEST_TIMEOUT = 5  # seconds
 RETRY_INTERVAL = 60  # seconds
 
 PAIRING_FILE = "pairing.json"
-
-
-def get_serial(accessory):
-    """Obtain the serial number of a HomeKit device."""
-    # pylint: disable=import-error
-    from homekit.model.services import ServicesTypes
-    from homekit.model.characteristics import CharacteristicsTypes
-
-    for service in accessory['services']:
-        if ServicesTypes.get_short(service['type']) != \
-           'accessory-information':
-            continue
-        for characteristic in service['characteristics']:
-            ctype = CharacteristicsTypes.get_short(
-                characteristic['type'])
-            if ctype != 'serial-number':
-                continue
-            return characteristic['value']
-    return None
 
 
 def escape_characteristic_name(char_name):
@@ -74,6 +54,10 @@ class HKDevice():
         self.config = config
         self.configurator = hass.components.configurator
         self._connection_warning_logged = False
+
+        # This just tracks aid/iid pairs so we know if a HK service has been
+        # mapped to a HA entity.
+        self.entities = []
 
         self.pairing_lock = asyncio.Lock(loop=hass.loop)
 
@@ -100,15 +84,16 @@ class HKDevice():
                 self.hass, RETRY_INTERVAL, lambda _: self.accessory_setup())
             return
         for accessory in data:
-            serial = get_serial(accessory)
-            if serial in self.hass.data[KNOWN_ACCESSORIES]:
-                continue
-            self.hass.data[KNOWN_ACCESSORIES][serial] = self
             aid = accessory['aid']
             for service in accessory['services']:
+                iid = service['iid']
+                if (aid, iid) in self.entities:
+                    # Don't add the same entity again
+                    continue
+
                 devtype = ServicesTypes.get_short(service['type'])
                 _LOGGER.debug("Found %s", devtype)
-                service_info = {'serial': serial,
+                service_info = {'serial': self.hkid,
                                 'aid': aid,
                                 'iid': service['iid'],
                                 'model': self.model,
@@ -117,6 +102,7 @@ class HKDevice():
                 if component is not None:
                     discovery.load_platform(self.hass, component, DOMAIN,
                                             service_info, self.config)
+                    self.entities.append((aid, iid))
 
     def device_config_callback(self, callback_data):
         """Handle initial pairing."""
@@ -204,11 +190,9 @@ class HomeKitEntity(Entity):
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
         self._available = True
-        self._name = accessory.model
         self._accessory = accessory
         self._aid = devinfo['aid']
         self._iid = devinfo['iid']
-        self._address = "homekit-{}-{}".format(devinfo['serial'], self._iid)
         self._features = 0
         self._chars = {}
         self.setup()
@@ -232,6 +216,7 @@ class HomeKitEntity(Entity):
         for accessory in pairing_data.get('accessories', []):
             if accessory['aid'] != self._aid:
                 continue
+            self._accessory_info = get_accessory_information(accessory)
             for service in accessory['services']:
                 if service['iid'] != self._iid:
                     continue
@@ -304,12 +289,13 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self):
         """Return the ID of this device."""
-        return self._address
+        serial = self._accessory_info['serial-number']
+        return "homekit-{}-{}".format(serial, self._iid)
 
     @property
     def name(self):
         """Return the name of the device if any."""
-        return self._name
+        return self._accessory_info.get('name')
 
     @property
     def available(self) -> bool:
@@ -381,7 +367,6 @@ def setup(hass, config):
         device = HKDevice(hass, host, port, model, hkid, config_num, config)
         hass.data[KNOWN_DEVICES][hkid] = device
 
-    hass.data[KNOWN_ACCESSORIES] = {}
     hass.data[KNOWN_DEVICES] = {}
     discovery.listen(hass, SERVICE_HOMEKIT, discovery_dispatch)
     return True

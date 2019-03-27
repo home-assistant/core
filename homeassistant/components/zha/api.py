@@ -10,13 +10,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DOMAIN, ATTR_CLUSTER_ID, ATTR_CLUSTER_TYPE, ATTR_ATTRIBUTE, ATTR_VALUE,
     ATTR_MANUFACTURER, ATTR_COMMAND, ATTR_COMMAND_TYPE, ATTR_ARGS, IN, OUT,
     CLIENT_COMMANDS, SERVER_COMMANDS, SERVER, NAME, ATTR_ENDPOINT_ID,
-    DATA_ZHA_GATEWAY, DATA_ZHA)
+    DATA_ZHA_GATEWAY, DATA_ZHA, MFG_CLUSTER_ID_START)
 from .core.helpers import get_matched_clusters, async_is_bindable_target
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +79,38 @@ SERVICE_SCHEMAS = {
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({
+    vol.Required('type'): 'zha/devices/permit'
+})
+async def websocket_permit_devices(hass, connection, msg):
+    """Permit ZHA zigbee devices."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+
+    async def forward_messages(data):
+        """Forward events to websocket."""
+        connection.send_message(websocket_api.event_message(msg['id'], data))
+
+    remove_dispatcher_function = async_dispatcher_connect(
+        hass,
+        "zha_gateway_message",
+        forward_messages
+    )
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listener and turn off debug mode."""
+        zha_gateway.async_disable_debug_mode()
+        remove_dispatcher_function()
+
+    connection.subscriptions[msg['id']] = async_cleanup
+    zha_gateway.async_enable_debug_mode()
+    await zha_gateway.application_controller.permit(60)
+
+    connection.send_result(msg['id'])
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices'
 })
 async def websocket_get_devices(hass, connection, msg):
@@ -86,22 +120,33 @@ async def websocket_get_devices(hass, connection, msg):
 
     devices = []
     for device in zha_gateway.devices.values():
-        ret_device = {}
-        ret_device.update(device.device_info)
-        ret_device['entities'] = [{
-            'entity_id': entity_ref.reference_id,
-            NAME: entity_ref.device_info[NAME]
-        } for entity_ref in zha_gateway.device_registry[device.ieee]]
+        devices.append(
+            async_get_device_info(
+                hass, device, ha_device_registry=ha_device_registry
+            )
+        )
+    connection.send_result(msg[ID], devices)
 
+
+@callback
+def async_get_device_info(hass, device, ha_device_registry=None):
+    """Get ZHA device."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ret_device = {}
+    ret_device.update(device.device_info)
+    ret_device['entities'] = [{
+        'entity_id': entity_ref.reference_id,
+        NAME: entity_ref.device_info[NAME]
+    } for entity_ref in zha_gateway.device_registry[device.ieee]]
+
+    if ha_device_registry is not None:
         reg_device = ha_device_registry.async_get_device(
             {(DOMAIN, str(device.ieee))}, set())
         if reg_device is not None:
             ret_device['user_given_name'] = reg_device.name_by_user
             ret_device['device_reg_id'] = reg_device.id
-
-        devices.append(ret_device)
-
-    connection.send_result(msg[ID], devices)
+            ret_device['area_id'] = reg_device.area_id
+    return ret_device
 
 
 @websocket_api.require_admin
@@ -267,6 +312,8 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
     attribute = msg[ATTR_ATTRIBUTE]
     manufacturer = msg.get(ATTR_MANUFACTURER) or None
     zha_device = zha_gateway.get_device(ieee)
+    if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+        manufacturer = zha_device.manufacturer_code
     success = failure = None
     if zha_device is not None:
         cluster = zha_device.async_get_cluster(
@@ -430,6 +477,8 @@ def async_load_api(hass):
         value = service.data.get(ATTR_VALUE)
         manufacturer = service.data.get(ATTR_MANUFACTURER) or None
         zha_device = zha_gateway.get_device(ieee)
+        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+            manufacturer = zha_device.manufacturer_code
         response = None
         if zha_device is not None:
             response = await zha_device.write_zigbee_attribute(
@@ -468,6 +517,8 @@ def async_load_api(hass):
         args = service.data.get(ATTR_ARGS)
         manufacturer = service.data.get(ATTR_MANUFACTURER) or None
         zha_device = zha_gateway.get_device(ieee)
+        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+            manufacturer = zha_device.manufacturer_code
         response = None
         if zha_device is not None:
             response = await zha_device.issue_cluster_command(
@@ -497,6 +548,7 @@ def async_load_api(hass):
             SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND
         ])
 
+    websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)

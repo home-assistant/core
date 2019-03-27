@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
     ATTR_ENTITY_ID)
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, DOMAIN
+from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera.const import DOMAIN
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG, CONF_EXTRA_ARGUMENTS)
 import homeassistant.helpers.config_validation as cv
