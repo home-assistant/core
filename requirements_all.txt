@@ -1645,6 +1645,7 @@ statsd==3.2.1
 # homeassistant.components.steam_online.sensor
 steamodd==4.21
 
+# homeassistant.components.solaredge.sensor
 # homeassistant.components.thermoworks_smoke.sensor
 # homeassistant.components.traccar.device_tracker
 stringcase==1.2.0
