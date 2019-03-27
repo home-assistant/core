@@ -1,6 +1,5 @@
 """Support for Homekit device discovery."""
 import asyncio
-import json
 import logging
 import os
 
@@ -9,6 +8,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 
+from .config_flow import load_old_pairings
 from .connection import get_accessory_information
 from .const import (
     CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_DEVICES
@@ -315,25 +315,8 @@ def setup(hass, config):
 
     hass.data[CONTROLLER] = controller = homekit.Controller()
 
-    data_dir = os.path.join(hass.config.path(), HOMEKIT_DIR)
-    if not os.path.isdir(data_dir):
-        os.mkdir(data_dir)
-
-    pairing_file = os.path.join(data_dir, PAIRING_FILE)
-    if os.path.exists(pairing_file):
-        controller.load_data(pairing_file)
-
-    # Migrate any existing pairings to the new internal homekit_python format
-    for device in os.listdir(data_dir):
-        if not device.startswith('hk-'):
-            continue
-        alias = device[3:]
-        if alias in controller.pairings:
-            continue
-        with open(os.path.join(data_dir, device)) as pairing_data_fp:
-            pairing_data = json.load(pairing_data_fp)
-        controller.pairings[alias] = IpPairing(pairing_data)
-        controller.save_data(pairing_file)
+    for hkid, pairing_data in load_old_pairings(hass).items():
+        controller.pairings[hkid] = IpPairing(pairing_data)
 
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for Homekit discovery events."""
