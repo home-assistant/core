@@ -148,6 +148,16 @@ def preprocess_turn_on_alternatives(params):
         params.setdefault(ATTR_XY_COLOR, profile[:2])
         params.setdefault(ATTR_BRIGHTNESS, profile[2])
 
+    brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
+    if brightness_pct is not None:
+        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
+
+    if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
+        # Zero brightness: Light will be turned off
+        for k in list(params.keys()):
+            params = {k: v for k,v in params.items() if k in [ATTR_TRANSITION,
+                                                              ATTR_FLASH]}
+
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
         try:
@@ -161,10 +171,6 @@ def preprocess_turn_on_alternatives(params):
     if kelvin is not None:
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
         params[ATTR_COLOR_TEMP] = int(mired)
-
-    brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
-    if brightness_pct is not None:
-        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
 
     xy_color = params.pop(ATTR_XY_COLOR, None)
     if xy_color is not None:
@@ -284,9 +290,6 @@ async def async_setup(hass, config):
                 preprocess_turn_on_alternatives(pars)
             if ATTR_BRIGHTNESS in pars and pars[ATTR_BRIGHTNESS] == 0:
                 # Zero brightness: Turn the light off
-                for k in list(pars.keys()):
-                    if k not in [ATTR_TRANSITION, ATTR_FLASH]:
-                        pars.pop(k)
                 await light.async_turn_off(**pars)
             else:
                 await light.async_turn_on(**pars)
