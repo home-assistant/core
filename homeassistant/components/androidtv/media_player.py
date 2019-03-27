@@ -63,24 +63,6 @@ SERVICE_ADB_COMMAND_SCHEMA = vol.Schema({
 })
 
 
-def has_adb_files(value):
-    """Check if ADB key exists. Create dummy public key if none exists."""
-    priv_key = value
-    pub_key = '{}.pub'.format(value)
-    try:
-        cv.isfile(pub_key)
-    except vol.Invalid:
-        if os.access(os.path.dirname(pub_key), os.W_OK):
-            _LOGGER.warning(
-                "ADB public key %s not found, creating dummy", pub_key)
-            open(pub_key, 'a').close()
-        else:
-            _LOGGER.error(
-                "ADB public key %s missing, can't create dummy.", pub_key)
-            raise
-    return cv.isfile(priv_key)
-
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS):
