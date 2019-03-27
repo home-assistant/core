@@ -3,8 +3,7 @@ import logging
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.mopar import (
-    DOMAIN as MOPAR_DOMAIN,
-    SUCCESS_RESPONSE
+    DOMAIN as MOPAR_DOMAIN
 )
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
