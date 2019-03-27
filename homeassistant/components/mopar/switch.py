@@ -26,6 +26,7 @@ class MoparSwitch(SwitchDevice):
         self._session = data.session
         self._index = index
         self._name = '{} Switch'.format(data.get_vehicle_name(self._index))
+        self._actuate = data.actuate
         self._state = None
 
     @property
@@ -45,26 +46,10 @@ class MoparSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn on the Mopar Vehicle."""
-        import motorparts
-
-        try:
-            response = motorparts.engine_on(self._session, self._index)
-        except motorparts.MoparError as error:
-            _LOGGER.error(str(error))
-            return
-
-        if response == SUCCESS_RESPONSE:
+        if self._actuate('engine_on', self._index):
             self._state = STATE_ON
 
     def turn_off(self, **kwargs):
         """Turn off the Mopar Vehicle."""
-        import motorparts
-
-        try:
-            response = motorparts.engine_off(self._session, self._index)
-        except motorparts.MoparError as error:
-            _LOGGER.error(str(error))
-            return
-
-        if response == SUCCESS_RESPONSE:
+        if self._actuate('engine_off', self._index):
             self._state = STATE_OFF

@@ -28,6 +28,7 @@ class MoparLock(LockDevice):
         self._session = data.session
         self._index = index
         self._name = '{} Lock'.format(data.get_vehicle_name(self._index))
+        self._actuate = data.actuate
         self._state = None
 
     @property
@@ -47,26 +48,10 @@ class MoparLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the vehicle."""
-        import motorparts
-
-        try:
-            response = motorparts.lock(self._session, self._index)
-        except motorparts.MoparError as error:
-            _LOGGER.error(error)
-            return
-
-        if response == SUCCESS_RESPONSE:
+        if self._actuate('lock', self._index):
             self._state = STATE_LOCKED
 
     def unlock(self, **kwargs):
         """Unlock the vehicle."""
-        import motorparts
-
-        try:
-            response = motorparts.unlock(self._session, self._index)
-        except motorparts.MoparError as error:
-            _LOGGER.error(error)
-            return
-
-        if response == SUCCESS_RESPONSE:
+        if self._actuate('unlock', self._index):
             self._state = STATE_UNLOCKED

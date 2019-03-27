@@ -66,7 +66,7 @@ def setup(hass, config):
         return False
 
     data = hass.data[DOMAIN] = MoparData(hass, session)
-    data.update()
+    data.update(now=None)
 
     track_time_interval(
         hass, data.update, config[CONF_SCAN_INTERVAL]
@@ -111,7 +111,7 @@ class MoparData:
         self.vhrs = {}
         self.tow_guides = {}
 
-    def update(self, now=None, **kwargs):
+    def update(self, now, **kwargs):
         """Update data."""
         import motorparts
 
@@ -155,3 +155,14 @@ class MoparData:
             vehicle['make'],
             vehicle['model']
         )
+
+    def actuate(self, index, command):
+        import motorparts
+
+        try:
+            response = getattr(motorparts, command)(self._session, index)
+        except motorparts.MoparError as error:
+            _LOGGER.error(error)
+            return False
+
+        return response == SUCCESS_RESPONSE
