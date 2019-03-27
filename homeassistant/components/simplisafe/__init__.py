@@ -113,8 +113,9 @@ async def async_setup_entry(hass, config_entry):
             try:
                 await system.update()
             except SimplipyError as err:
-                _LOGGER.error('There was an error while updating: %s', err)
-                return
+                _LOGGER.error(
+                    'There was error updating "%s": %s', system.address, err)
+                continue
 
             async_dispatcher_send(hass, TOPIC_UPDATE.format(system.system_id))
 
