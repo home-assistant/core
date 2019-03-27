@@ -51,15 +51,15 @@ IEEE_SERVICE = 'ieee_based_service'
 
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema({
-        vol.Optional(ATTR_IEEE_ADDRESS, default=''): cv.string,
+        vol.Optional(ATTR_IEEE_ADDRESS, default=None): convert_ieee,
         vol.Optional(ATTR_DURATION, default=60):
             vol.All(vol.Coerce(int), vol.Range(0, 254)),
     }),
     IEEE_SERVICE: vol.Schema({
-        vol.Required(ATTR_IEEE_ADDRESS): cv.string,
+        vol.Required(ATTR_IEEE_ADDRESS): convert_ieee,
     }),
     SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema({
-        vol.Required(ATTR_IEEE): cv.string,
+        vol.Required(ATTR_IEEE): convert_ieee,
         vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
         vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
         vol.Optional(ATTR_CLUSTER_TYPE, default=IN): cv.string,
@@ -68,7 +68,7 @@ SERVICE_SCHEMAS = {
         vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
     }),
     SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.Schema({
-        vol.Required(ATTR_IEEE): cv.string,
+        vol.Required(ATTR_IEEE): convert_ieee,
         vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
         vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
         vol.Optional(ATTR_CLUSTER_TYPE, default=IN): cv.string,
@@ -84,7 +84,7 @@ SERVICE_SCHEMAS = {
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required('type'): 'zha/devices/permit',
-    vol.Optional(ATTR_IEEE, default=''): cv.string,
+    vol.Optional(ATTR_IEEE, default=None): convert_ieee,
     vol.Optional(ATTR_DURATION, default=60): vol.All(vol.Coerce(int),
                                                      vol.Range(0, 254))
 })
@@ -112,13 +112,8 @@ async def websocket_permit_devices(hass, connection, msg):
 
     connection.subscriptions[msg['id']] = async_cleanup
     zha_gateway.async_enable_debug_mode()
-    if ieee:
-        ieee = convert_ieee(ieee)
-        await zha_gateway.application_controller.permit(time_s=duration,
-                                                        node=ieee)
-    else:
-        await zha_gateway.application_controller.permit(time_s=duration)
-
+    await zha_gateway.application_controller.permit(time_s=duration,
+                                                    node=ieee)
     connection.send_result(msg['id'])
 
 
@@ -167,7 +162,7 @@ def async_get_device_info(hass, device, ha_device_registry=None):
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/reconfigure',
-    vol.Required(ATTR_IEEE): str
+    vol.Required(ATTR_IEEE): convert_ieee,
 })
 async def websocket_reconfigure_node(hass, connection, msg):
     """Reconfigure a ZHA nodes entities by its ieee address."""
@@ -182,7 +177,7 @@ async def websocket_reconfigure_node(hass, connection, msg):
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/clusters',
-    vol.Required(ATTR_IEEE): str
+    vol.Required(ATTR_IEEE): convert_ieee,
 })
 async def websocket_device_clusters(hass, connection, msg):
     """Return a list of device clusters."""
@@ -215,7 +210,7 @@ async def websocket_device_clusters(hass, connection, msg):
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/clusters/attributes',
-    vol.Required(ATTR_IEEE): str,
+    vol.Required(ATTR_IEEE): convert_ieee,
     vol.Required(ATTR_ENDPOINT_ID): int,
     vol.Required(ATTR_CLUSTER_ID): int,
     vol.Required(ATTR_CLUSTER_TYPE): str
@@ -257,7 +252,7 @@ async def websocket_device_cluster_attributes(hass, connection, msg):
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/clusters/commands',
-    vol.Required(ATTR_IEEE): str,
+    vol.Required(ATTR_IEEE): convert_ieee,
     vol.Required(ATTR_ENDPOINT_ID): int,
     vol.Required(ATTR_CLUSTER_ID): int,
     vol.Required(ATTR_CLUSTER_TYPE): str
@@ -309,7 +304,7 @@ async def websocket_device_cluster_commands(hass, connection, msg):
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/clusters/attributes/value',
-    vol.Required(ATTR_IEEE): str,
+    vol.Required(ATTR_IEEE): convert_ieee,
     vol.Required(ATTR_ENDPOINT_ID): int,
     vol.Required(ATTR_CLUSTER_ID): int,
     vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -354,7 +349,7 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/bindable',
-    vol.Required(ATTR_IEEE): str,
+    vol.Required(ATTR_IEEE): convert_ieee,
 })
 async def websocket_get_bindable_devices(hass, connection, msg):
     """Directly bind devices."""
@@ -383,8 +378,8 @@ async def websocket_get_bindable_devices(hass, connection, msg):
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/bind',
-    vol.Required(ATTR_SOURCE_IEEE): str,
-    vol.Required(ATTR_TARGET_IEEE): str
+    vol.Required(ATTR_SOURCE_IEEE): convert_ieee,
+    vol.Required(ATTR_TARGET_IEEE): convert_ieee,
 })
 async def websocket_bind_devices(hass, connection, msg):
     """Directly bind devices."""
@@ -403,8 +398,8 @@ async def websocket_bind_devices(hass, connection, msg):
 @websocket_api.async_response
 @websocket_api.websocket_command({
     vol.Required(TYPE): 'zha/devices/unbind',
-    vol.Required(ATTR_SOURCE_IEEE): str,
-    vol.Required(ATTR_TARGET_IEEE): str
+    vol.Required(ATTR_SOURCE_IEEE): convert_ieee,
+    vol.Required(ATTR_TARGET_IEEE): convert_ieee,
 })
 async def websocket_unbind_devices(hass, connection, msg):
     """Remove a direct binding between devices."""
@@ -466,20 +461,18 @@ def async_load_api(hass):
         duration = service.data.get(ATTR_DURATION)
         ieee = service.data.get(ATTR_IEEE_ADDRESS)
         if ieee:
-            ieee = convert_ieee(ieee)
             _LOGGER.info("Permitting joins for %ss on %s device",
                          duration, ieee)
-            await application_controller.permit(time_s=duration, node=ieee)
         else:
             _LOGGER.info("Permitting joins for %ss", duration)
-            await application_controller.permit(time_s=duration)
+        await application_controller.permit(time_s=duration, node=ieee)
 
     hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_PERMIT, permit, schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
 
     async def remove(service):
         """Remove a node from the network."""
-        ieee = convert_ieee(service.data.get(ATTR_IEEE_ADDRESS))
+        ieee = service.data.get(ATTR_IEEE_ADDRESS)
         _LOGGER.info("Removing node %s", ieee)
         await application_controller.remove(ieee)
 
