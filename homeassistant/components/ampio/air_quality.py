@@ -1,8 +1,4 @@
-"""
-Support for Ampio Air Quality data.
-
-For more details about this platform, please refer to the documentation.
-"""
+"""Support for Ampio Air Quality data."""
 from datetime import timedelta
 import logging
 
