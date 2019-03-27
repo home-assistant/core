@@ -1616,7 +1616,6 @@ socialbladeclient==0.2
 
 # homeassistant.components.solaredge.sensor
 solaredge==0.0.2
-stringcase==1.2.0
 
 # homeassistant.components.climate.honeywell
 somecomfort==0.5.2
@@ -1649,6 +1648,7 @@ statsd==3.2.1
 # homeassistant.components.steam_online.sensor
 steamodd==4.21
 
+# homeassistant.components.solaredge.sensor
 # homeassistant.components.thermoworks_smoke.sensor
 stringcase==1.2.0
 
