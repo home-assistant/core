@@ -135,9 +135,9 @@ class SolarEdgeSensorFactory:
 
     def create_sensor(self, sensor_key):
         """Create and return a sensor based on the sensor_key."""
-        service = self.services[sensor_key]
+        sensor_class, service = self.services[sensor_key]
 
-        return service[0](self.platform_name, sensor_key, service[1])
+        return sensor_class(self.platform_name, sensor_key, service)
 
 
 class SolarEdgeSensor(Entity):
@@ -326,7 +326,7 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
             _LOGGER.error("Could not retrieve data, skipping update")
             return
 
-        self.data = {}
+        self.data = None
         self.attributes = {}
 
         for key, value in details.items():
@@ -379,7 +379,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         """Initialize the power flow data service."""
         super().__init__(api, site_id)
 
-        self.unit = ''
+        self.unit = None
 
     @Throttle(POWER_FLOW_UPDATE_DELAY)
     def update(self):
