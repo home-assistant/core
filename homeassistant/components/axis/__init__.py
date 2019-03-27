@@ -52,6 +52,8 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][device.serial] = device
 
+    await device.async_update_device_registry()
+
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
 
     return True
