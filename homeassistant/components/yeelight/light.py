@@ -572,6 +572,7 @@ class YeelightAmbientLight(YeelightLight):
     }
 
     def __init__(self, *args, **kwargs):
+        """Initialize the Yeelight Ambient light."""
         super().__init__(*args, **kwargs)
         self._min_mireds = kelvin_to_mired(6500)
         self._max_mireds = kelvin_to_mired(1700)
