@@ -4,18 +4,17 @@ AWS Lambda platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.aws_lambda/
 """
-import logging
-import json
 import base64
+import json
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PLATFORM, CONF_NAME)
-from homeassistant.components.notify import (
-    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
+
+from . import ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
 
 REQUIREMENTS = ['boto3==1.9.16']
 
@@ -39,8 +38,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the AWS Lambda notification service."""
-    context_str = json.dumps({'hass': hass.config.as_dict(),
-                              'custom': config[CONF_CONTEXT]}, cls=JSONEncoder)
+    _LOGGER.warning(
+        "aws_lambda notify platform is deprecated, please replace it"
+        " with aws component. This config will become invalid in version 0.92."
+        " See https://www.home-assistant.io/components/aws/ for details."
+    )
+
+    context_str = json.dumps({'custom': config[CONF_CONTEXT]}, cls=JSONEncoder)
     context_b64 = base64.b64encode(context_str.encode('utf-8'))
     context = context_b64.decode('utf-8')
 

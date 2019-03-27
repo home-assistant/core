@@ -1,25 +1,21 @@
-"""
-Support for the Mailgun mail notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.mailgun/
-"""
+"""Support for the Mailgun mail notifications."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.mailgun import (
-    CONF_SANDBOX, DOMAIN as MAILGUN_DOMAIN)
 from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService, ATTR_TITLE, ATTR_TITLE_DEFAULT,
-    ATTR_DATA)
+    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 from homeassistant.const import (
     CONF_API_KEY, CONF_DOMAIN, CONF_RECIPIENT, CONF_SENDER)
+
+from . import CONF_SANDBOX, DOMAIN as MAILGUN_DOMAIN
+
+REQUIREMENTS = ['pymailgunner==1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mailgun']
-REQUIREMENTS = ['pymailgunner==1.4']
 
 # Images to attach to notification
 ATTR_IMAGES = 'images'
@@ -30,7 +26,7 @@ DEFAULT_SANDBOX = False
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RECIPIENT): vol.Email(),
-    vol.Optional(CONF_SENDER): vol.Email()
+    vol.Optional(CONF_SENDER): vol.Email(),
 })
 
 

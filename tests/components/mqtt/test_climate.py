@@ -7,21 +7,24 @@ from unittest.mock import ANY
 import pytest
 import voluptuous as vol
 
-from homeassistant.util.unit_system import (
-    METRIC_SYSTEM
-)
-from homeassistant.setup import setup_component
-from homeassistant.components import climate, mqtt
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.components import mqtt
 from homeassistant.components.climate import (
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
+    DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP)
+from homeassistant.components.climate.const import (
+    DOMAIN as CLIMATE_DOMAIN,
+    SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
+    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
+    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE, STATE_AUTO,
+    STATE_COOL, STATE_HEAT, STATE_DRY, STATE_FAN_ONLY)
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.setup import setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
+
 from tests.common import (
-    async_fire_mqtt_message, async_mock_mqtt_component, async_setup_component,
-    fire_mqtt_message, get_test_home_assistant, mock_component,
-    mock_mqtt_component, MockConfigEntry, mock_registry)
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    async_setup_component, fire_mqtt_message, get_test_home_assistant,
+    mock_component, mock_mqtt_component, mock_registry)
 from tests.components.climate import common
 
 ENTITY_CLIMATE = 'climate.test'
@@ -55,7 +58,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_setup_params(self):
         """Test the initial parameters."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 21 == state.attributes.get('temperature')
@@ -67,7 +70,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_supported_features(self):
         """Test the supported_features."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         support = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
@@ -78,13 +81,13 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_get_operation_modes(self):
         """Test that the operation list returns the correct modes."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         modes = state.attributes.get('operation_list')
         assert [
-            climate.STATE_AUTO, STATE_OFF, climate.STATE_COOL,
-            climate.STATE_HEAT, climate.STATE_DRY, climate.STATE_FAN_ONLY
+            STATE_AUTO, STATE_OFF, STATE_COOL,
+            STATE_HEAT, STATE_DRY, STATE_FAN_ONLY
         ] == modes
 
     def test_set_operation_bad_attr_and_state(self):
@@ -92,7 +95,7 @@ class TestMQTTClimate(unittest.TestCase):
 
         Also check the state.
         """
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('operation_mode')
@@ -106,7 +109,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_set_operation(self):
         """Test setting of new operation mode."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('operation_mode')
@@ -123,7 +126,7 @@ class TestMQTTClimate(unittest.TestCase):
         """Test setting operation mode in pessimistic mode."""
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['mode_state_topic'] = 'mode-state'
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert state.attributes.get('operation_mode') is None
@@ -151,7 +154,7 @@ class TestMQTTClimate(unittest.TestCase):
         """Test setting of new operation mode with power command enabled."""
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['power_command_topic'] = 'power-command'
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('operation_mode')
@@ -180,7 +183,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_set_fan_mode_bad_attr(self):
         """Test setting fan mode without required attribute."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "low" == state.attributes.get('fan_mode')
@@ -194,7 +197,7 @@ class TestMQTTClimate(unittest.TestCase):
         """Test setting of new fan mode in pessimistic mode."""
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['fan_mode_state_topic'] = 'fan-state'
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert state.attributes.get('fan_mode') is None
@@ -216,7 +219,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_set_fan_mode(self):
         """Test setting of new fan mode."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "low" == state.attributes.get('fan_mode')
@@ -229,7 +232,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_set_swing_mode_bad_attr(self):
         """Test setting swing mode without required attribute."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('swing_mode')
@@ -243,7 +246,7 @@ class TestMQTTClimate(unittest.TestCase):
         """Test setting swing mode in pessimistic mode."""
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['swing_mode_state_topic'] = 'swing-state'
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert state.attributes.get('swing_mode') is None
@@ -265,7 +268,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_set_swing(self):
         """Test setting of new swing mode."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert "off" == state.attributes.get('swing_mode')
@@ -278,7 +281,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_set_target_temperature(self):
         """Test setting the target temperature."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 21 == state.attributes.get('temperature')
@@ -316,7 +319,7 @@ class TestMQTTClimate(unittest.TestCase):
         """Test setting the target temperature."""
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['temperature_state_topic'] = 'temperature-state'
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert state.attributes.get('temperature') is None
@@ -343,7 +346,7 @@ class TestMQTTClimate(unittest.TestCase):
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['current_temperature_topic'] = 'current_temperature'
         mock_component(self.hass, 'mqtt')
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         fire_mqtt_message(self.hass, 'current_temperature', '47')
         self.hass.block_till_done()
@@ -354,7 +357,7 @@ class TestMQTTClimate(unittest.TestCase):
         """Test setting of the away mode."""
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['away_mode_state_topic'] = 'away-state'
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 'off' == state.attributes.get('away_mode')
@@ -385,7 +388,7 @@ class TestMQTTClimate(unittest.TestCase):
         config['climate']['payload_on'] = 'AN'
         config['climate']['payload_off'] = 'AUS'
 
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 'off' == state.attributes.get('away_mode')
@@ -408,7 +411,7 @@ class TestMQTTClimate(unittest.TestCase):
         """Test setting the hold mode in pessimistic mode."""
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['hold_state_topic'] = 'hold-state'
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert state.attributes.get('hold_mode') is None
@@ -430,7 +433,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_set_hold(self):
         """Test setting the hold mode."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert state.attributes.get('hold_mode') is None
@@ -453,7 +456,7 @@ class TestMQTTClimate(unittest.TestCase):
         """Test setting of the aux heating in pessimistic mode."""
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['aux_state_topic'] = 'aux-state'
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 'off' == state.attributes.get('aux_heat')
@@ -480,7 +483,7 @@ class TestMQTTClimate(unittest.TestCase):
 
     def test_set_aux(self):
         """Test setting of the aux heating."""
-        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 'off' == state.attributes.get('aux_heat')
@@ -506,7 +509,7 @@ class TestMQTTClimate(unittest.TestCase):
         config['climate']['payload_available'] = 'good'
         config['climate']['payload_not_available'] = 'nogood'
 
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get('climate.test')
         assert STATE_UNAVAILABLE == state.state
@@ -544,7 +547,7 @@ class TestMQTTClimate(unittest.TestCase):
         config['climate']['aux_state_topic'] = 'aux-state'
         config['climate']['current_temperature_topic'] = 'current-temperature'
 
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         # Operation Mode
         state = self.hass.states.get(ENTITY_CLIMATE)
@@ -639,7 +642,7 @@ class TestMQTTClimate(unittest.TestCase):
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['min_temp'] = 26
 
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         min_temp = state.attributes.get('min_temp')
@@ -652,7 +655,7 @@ class TestMQTTClimate(unittest.TestCase):
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['max_temp'] = 60
 
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         max_temp = state.attributes.get('max_temp')
@@ -665,7 +668,7 @@ class TestMQTTClimate(unittest.TestCase):
         config = copy.deepcopy(DEFAULT_CONFIG)
         config['climate']['temp_step'] = 0.01
 
-        assert setup_component(self.hass, climate.DOMAIN, config)
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         temp_step = state.attributes.get('target_temp_step')
@@ -676,11 +679,12 @@ class TestMQTTClimate(unittest.TestCase):
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
-    assert await async_setup_component(hass, climate.DOMAIN, {
-        climate.DOMAIN: {
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, {
+        CLIMATE_DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
-            'state_topic': 'test-topic',
+            'power_state_topic': 'test-topic',
+            'power_command_topic': 'test_topic',
             'json_attributes_topic': 'attr-topic'
         }
     })
@@ -694,11 +698,12 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    assert await async_setup_component(hass, climate.DOMAIN, {
-        climate.DOMAIN: {
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, {
+        CLIMATE_DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
-            'state_topic': 'test-topic',
+            'power_state_topic': 'test-topic',
+            'power_command_topic': 'test_topic',
             'json_attributes_topic': 'attr-topic'
         }
     })
@@ -713,11 +718,12 @@ async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
 
 async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    assert await async_setup_component(hass, climate.DOMAIN, {
-        climate.DOMAIN: {
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, {
+        CLIMATE_DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
-            'state_topic': 'test-topic',
+            'power_state_topic': 'test-topic',
+            'power_command_topic': 'test_topic',
             'json_attributes_topic': 'attr-topic'
         }
     })
@@ -736,12 +742,14 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     await async_start(hass, 'homeassistant', {}, entry)
     data1 = (
         '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
+        '  "power_state_topic": "test-topic",'
+        '  "power_command_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic1" }'
     )
     data2 = (
         '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
+        '  "power_state_topic": "test-topic",'
+        '  "power_command_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic2" }'
     )
     async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
@@ -777,24 +785,24 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
 async def test_unique_id(hass):
     """Test unique id option only creates one climate per unique_id."""
     await async_mock_mqtt_component(hass)
-    assert await async_setup_component(hass, climate.DOMAIN, {
-        climate.DOMAIN: [{
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, {
+        CLIMATE_DOMAIN: [{
             'platform': 'mqtt',
             'name': 'Test 1',
-            'status_topic': 'test-topic',
-            'command_topic': 'test_topic',
+            'power_state_topic': 'test-topic',
+            'power_command_topic': 'test_topic',
             'unique_id': 'TOTALLY_UNIQUE'
         }, {
             'platform': 'mqtt',
             'name': 'Test 2',
-            'status_topic': 'test-topic',
-            'command_topic': 'test_topic',
+            'power_state_topic': 'test-topic',
+            'power_command_topic': 'test_topic',
             'unique_id': 'TOTALLY_UNIQUE'
         }]
     })
     async_fire_mqtt_message(hass, 'test-topic', 'payload')
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(climate.DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
 
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
@@ -892,8 +900,6 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     data = json.dumps({
         'platform': 'mqtt',
         'name': 'Test 1',
-        'state_topic': 'test-topic',
-        'command_topic': 'test-topic',
         'device': {
             'identifiers': ['helloworld'],
             'connections': [
@@ -921,12 +927,59 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     assert device.sw_version == '0.1-beta'
 
 
+async def test_entity_device_info_update(hass, mqtt_mock):
+    """Test device registry update."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, 'homeassistant', {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    config = {
+        'platform': 'mqtt',
+        'name': 'Test 1',
+        'power_state_topic': 'test-topic',
+        'power_command_topic': 'test-command-topic',
+        'device': {
+            'identifiers': ['helloworld'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        },
+        'unique_id': 'veryunique'
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Beer'
+
+    config['device']['name'] = 'Milk'
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({('mqtt', 'helloworld')}, set())
+    assert device is not None
+    assert device.name == 'Milk'
+
+
 async def test_entity_id_update(hass, mqtt_mock):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     registry = mock_registry(hass, {})
     mock_mqtt = await async_mock_mqtt_component(hass)
-    assert await async_setup_component(hass, climate.DOMAIN, {
-        climate.DOMAIN: [{
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, {
+        CLIMATE_DOMAIN: [{
             'platform': 'mqtt',
             'name': 'beer',
             'mode_state_topic': 'test-topic',

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "name_exists": "\u8a72\u540d\u7a31\u5df2\u5b58\u5728"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "\u5ee3\u64ad\u901a\u8a0a\u57e0",
+                    "advertise_port": "\u5ee3\u64ad\u901a\u8a0a\u57e0",
+                    "host_ip": "\u4e3b\u6a5f IP",
+                    "listen_port": "\u76e3\u807d\u901a\u8a0a\u57e0",
+                    "name": "\u540d\u7a31",
+                    "upnp_bind_multicast": "\u7d81\u5b9a\u7fa4\u64ad\uff08Multicast\uff09True/False"
+                },
+                "title": "\u5b9a\u7fa9\u4f3a\u670d\u5668\u8a2d\u5b9a"
+            }
+        },
+        "title": "EmulatedRoku"
+    }
+}

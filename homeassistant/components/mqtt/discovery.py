@@ -10,11 +10,12 @@ import logging
 import re
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import CONF_STATE_TOPIC, ATTR_DISCOVERY_HASH
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +82,7 @@ ABBREVIATIONS = {
     'cln_tpl': 'cleaning_template',
     'cmd_t': 'command_topic',
     'curr_temp_t': 'current_temperature_topic',
+    'dev': 'device',
     'dev_cla': 'device_class',
     'dock_t': 'docked_topic',
     'dock_tpl': 'docked_template',
@@ -104,6 +106,7 @@ ABBREVIATIONS = {
     'ic': 'icon',
     'init': 'initial',
     'json_attr': 'json_attributes',
+    'json_attr_t': 'json_attributes_topic',
     'max_temp': 'max_temp',
     'min_temp': 'min_temp',
     'mode_cmd_t': 'mode_command_topic',
@@ -172,11 +175,21 @@ ABBREVIATIONS = {
     'unit_of_meas': 'unit_of_measurement',
     'val_tpl': 'value_template',
     'whit_val_cmd_t': 'white_value_command_topic',
+    'whit_val_scl': 'white_value_scale',
     'whit_val_stat_t': 'white_value_state_topic',
     'whit_val_tpl': 'white_value_template',
     'xy_cmd_t': 'xy_command_topic',
     'xy_stat_t': 'xy_state_topic',
     'xy_val_tpl': 'xy_value_template',
+}
+
+DEVICE_ABBREVIATIONS = {
+    'cns': 'connections',
+    'ids': 'identifiers',
+    'name': 'name',
+    'mf': 'manufacturer',
+    'mdl': 'model',
+    'sw': 'sw_version',
 }
 
 
@@ -188,8 +201,10 @@ def clear_discovery_hash(hass, discovery_hash):
 async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                       config_entry=None) -> bool:
     """Initialize of MQTT Discovery."""
-    async def async_device_message_received(topic, payload, qos):
+    async def async_device_message_received(msg):
         """Process the received message."""
+        payload = msg.payload
+        topic = msg.topic
         match = TOPIC_MATCHER.match(topic)
 
         if not match:
@@ -216,8 +231,15 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
             key = ABBREVIATIONS.get(key, key)
             payload[key] = payload.pop(abbreviated_key)
 
+        if CONF_DEVICE in payload:
+            device = payload[CONF_DEVICE]
+            for key in list(device.keys()):
+                abbreviated_key = key
+                key = DEVICE_ABBREVIATIONS.get(key, key)
+                device[key] = device.pop(abbreviated_key)
+
         if TOPIC_BASE in payload:
-            base = payload[TOPIC_BASE]
+            base = payload.pop(TOPIC_BASE)
             for key, value in payload.items():
                 if isinstance(value, str) and value:
                     if value[0] == TOPIC_BASE and key.endswith('_topic'):

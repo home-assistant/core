@@ -10,11 +10,11 @@ import logging
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+
+from . import PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://api.flock.com/hooks/sendMessage/'

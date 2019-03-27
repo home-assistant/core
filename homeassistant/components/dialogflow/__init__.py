@@ -1,9 +1,4 @@
-"""
-Support for Dialogflow webhook.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/dialogflow/
-"""
+"""Support for Dialogflow webhook."""
 import logging
 
 import voluptuous as vol
@@ -12,6 +7,7 @@ from aiohttp import web
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, template, config_entry_flow
+
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['webhook']
@@ -29,7 +25,7 @@ class DialogFlowError(HomeAssistantError):
 
 
 async def async_setup(hass, config):
-    """Set up Dialogflow component."""
+    """Set up the Dialogflow component."""
     return True
 
 
@@ -45,9 +41,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     except DialogFlowError as err:
         _LOGGER.warning(str(err))
-        return web.json_response(
-            dialogflow_error_response(message, str(err))
-        )
+        return web.json_response(dialogflow_error_response(message, str(err)))
 
     except intent.UnknownIntent as err:
         _LOGGER.warning(str(err))

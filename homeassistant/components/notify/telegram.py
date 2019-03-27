@@ -8,10 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, ATTR_TARGET,
-    PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import ATTR_LOCATION
+
+from . import (
+    ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 

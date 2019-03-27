@@ -4,17 +4,17 @@ AWS SNS platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.aws_sns/
 """
-import logging
 import json
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PLATFORM, CONF_NAME)
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, PLATFORM_SCHEMA,
-    BaseNotificationService)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ["boto3==1.9.16"]
@@ -35,6 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the AWS SNS notification service."""
+    _LOGGER.warning(
+        "aws_sns notify platform is deprecated, please replace it"
+        " with aws component. This config will become invalid in version 0.92."
+        " See https://www.home-assistant.io/components/aws/ for details."
+    )
+
     import boto3
 
     aws_config = config.copy()

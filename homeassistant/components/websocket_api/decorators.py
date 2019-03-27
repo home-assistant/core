@@ -98,3 +98,17 @@ def ws_require_user(
         return check_current_user
 
     return validator
+
+
+def websocket_command(schema):
+    """Tag a function as a websocket command."""
+    command = schema['type']
+
+    def decorate(func):
+        """Decorate ws command function."""
+        # pylint: disable=protected-access
+        func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)
+        func._ws_command = command
+        return func
+
+    return decorate
