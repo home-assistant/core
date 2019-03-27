@@ -201,8 +201,10 @@ class YeelightLight(Light):
 
         if self._get_property('flowing') == '1':
             return 'mdi:waves'
-        elif self._is_nightlight_enabled:
+        if self._is_nightlight_enabled:
             return 'mdi:weather-night'
+        
+        return None
 
     @property
     def available(self) -> bool:
