@@ -1,9 +1,9 @@
 {
     "config": {
-        "title": "AIS Serwis Spotify",
+        "title": "AIS Service Spotify",
         "step": {
             "init": {
-                "description": "To connect the Spotify account: \n 1. Click the link below\n 2. Log in to Spotify \n 3. Authorize ** Home assistant ** \n 4.Go back here and click ** SUBMIT **. \n\n ![AIS logo](/static/icons/favicon-100x100.png) [Uwierzytelnienie  na Spotify]({auth_url})",
+                "description": "To connect the Spotify account: \n 1. Click the link below\n 2. Log in to Spotify \n 3. Authorize **Asystent domowy** \n 4.Go back here and click **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png) [Authentication for Spotify]({auth_url})",
                 "title": "Authentication for Spotify"
             },
            "confirm": {

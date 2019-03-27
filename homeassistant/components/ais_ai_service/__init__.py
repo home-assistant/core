@@ -574,7 +574,7 @@ def say_curr_entity(hass):
     if entity_id == "sensor.ais_knowledge_answer":
         _say_it(hass, "Odpowiedź: " + text, None)
         return
-    elif entity_id == 'sensor.dyski':
+    elif entity_id == 'sensor.ais_drives':
         _say_it(hass, "Dysk wewnętrzny", None)
         hass.services.call(
             'ais_drives_service',
@@ -737,7 +737,7 @@ def select_entity(hass, long_press):
         CURR_ENTITIE_ENTERED = False
         return
 
-    if CURR_ENTITIE == 'sensor.dyski':
+    if CURR_ENTITIE == 'sensor.ais_drives':
         hass.services.call('ais_drives_service', 'remote_select_item')
         return
 
@@ -818,7 +818,7 @@ def select_entity(hass, long_press):
                 if upgrade is True:
                     _say_it(
                         hass,
-                        "Aktualizuje system do najnowszej wersji. Do usłyszenia.", None)
+                        "Poczekaj na zakończenie aktualizacji i restart. Do usłyszenia.", None)
                     hass.services.call('ais_shell_command', 'execute_upgrade')
                 else:
                     _say_it(hass, "Twoja wersja jest aktualna", None)
@@ -976,7 +976,7 @@ def set_focus_on_prev_entity(hass, long_press):
     else:
         if CURR_ENTITIE.startswith("media_player.") and CURR_ENTITIE_ENTERED:
             hass.services.call('media_player', 'media_previous_track', {"entity_id": CURR_ENTITIE})
-        elif CURR_ENTITIE == "sensor.dyski":
+        elif CURR_ENTITIE == "sensor.ais_drives":
             hass.services.call('ais_drives_service', 'remote_prev_item')
         else:
             # entity not selected or no way to change the entity, go to next one
@@ -1015,7 +1015,7 @@ def set_focus_on_next_entity(hass, long_press):
     else:
         if CURR_ENTITIE.startswith("media_player.") and CURR_ENTITIE_ENTERED is True:
             hass.services.call('media_player', 'media_next_track', {"entity_id": CURR_ENTITIE})
-        elif CURR_ENTITIE == "sensor.dyski":
+        elif CURR_ENTITIE == "sensor.ais_drives":
             hass.services.call('ais_drives_service', 'remote_next_item')
         else:
             # entity not selected or no way to change the entity, go to next one
@@ -1028,9 +1028,9 @@ def go_up_in_menu(hass):
     # check if the entity in the group is selected
     if CURR_ENTITIE is not None:
         # check if we are browsing files
-        if CURR_ENTITIE == "sensor.dyski":
+        if CURR_ENTITIE == "sensor.ais_drives":
             # check if we can go up
-            state = hass.states.get('sensor.dyski')
+            state = hass.states.get('sensor.ais_drives')
             if state.state is not None and state.state != '':
                 hass.services.call('ais_drives_service', 'remote_cancel_item')
                 return
@@ -1247,6 +1247,27 @@ async def async_setup(hass, config):
         _say_it(hass, text, None)
 
     @asyncio.coroutine
+    def set_context(service):
+        """Set the context in app."""
+        context = service.data[ATTR_TEXT]
+        for idx, menu in enumerate(GROUP_ENTITIES, start=0):
+            context_key_words = menu['context_key_words']
+            if context_key_words is not None:
+                context_key_words = context_key_words.split(',')
+                if context in context_key_words:
+                    set_curr_group(hass, menu)
+                    set_curr_entity(hass, None)
+                    if context == 'spotify':
+                        yield from hass.services.async_call(
+                            'input_select', 'select_option',
+                            {"entity_id": "input_select.ais_music_service", "option": "Spotify"})
+                    elif context == 'youtube':
+                        yield from hass.services.async_call(
+                            'input_select', 'select_option',
+                            {"entity_id": "input_select.ais_music_service", "option": "YouTube"})
+                    break
+
+    @asyncio.coroutine
     def publish_command_to_frame(service):
         key = service.data['key']
         val = service.data['val']
@@ -1314,7 +1335,6 @@ async def async_setup(hass, config):
                         'select_option', {
                             "entity_id": "input_select.ais_android_wifi_network",
                             "option": o})
-        # TODO Set the WIFI password if possible
 
     # register services
     hass.services.async_register(DOMAIN, 'process', process)
@@ -1325,6 +1345,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'process_command_from_frame', process_command_from_frame)
     hass.services.async_register(DOMAIN, 'prepare_remote_menu', prepare_remote_menu)
     hass.services.async_register(DOMAIN, 'on_new_iot_device_selection', on_new_iot_device_selection)
+    hass.services.async_register(DOMAIN, 'set_context', set_context)
 
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())

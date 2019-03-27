@@ -49,7 +49,7 @@ recorder:
   exclude:
     entities:
       - sensor.time
-      - sensor.dyski
+      - sensor.ais_drives
       - input_select.radio_type
       - input_select.radio_station_name
       - input_select.radio_player
@@ -73,7 +73,7 @@ history:
   exclude:
     entities:
       - sensor.time
-      - sensor.dyski
+      - sensor.ais_drives
       - input_select.radio_type
       - input_select.radio_station_name
       - input_select.radio_player
@@ -99,7 +99,7 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-  development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
+  # development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
   javascript_version: latest
   themes: !include_dir_merge_named themes
 

@@ -15,15 +15,15 @@
                 }
             },
             "token": {
-                "description": "To attach a remote drive [Google Drive](https://www.google.com/drive/) to Home Assistant: \n 1. Click the link below \n 2.Log in with your disk provider \n 3. Authorize ** Home assistant **. \n 4. Return here, enter the code you received from the supplier and click **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png) [Authentication]({auth_url})",
+                "description": "To attach a remote drive [Google Drive](https://www.google.com/drive/) to **Asystent domowy**: \n 1. Click the link below \n 2.Log in with your disk provider \n 3. Authorize **Asystent domowy**. \n 4. Return here, enter the code you received from the supplier and click **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png) [Authentication link]({auth_url})",
                 "title": "Authentication",
                 "data": {
                     "token_key": "authentication code"
                 }
             },
             "passwd": {
-                "description": "To attach a remote drive [MEGA](https://mega.nz/) to the Home Assistant: \n 1.Create an account / log in with your disk provider \n 2. Enter your username and password and then click **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
-                "title": "Uwierzytelnienie dysku",
+                "description": "To attach a remote drive [MEGA](https://mega.nz/) to the **Asystent domowy**: \n 1.Create an account / log in with your disk provider \n 2. Enter your username and password and then click **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "title": "Authentication",
                 "data": {
                     "email": "login - email",
                     "password": "password"

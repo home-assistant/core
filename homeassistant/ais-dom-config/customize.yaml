@@ -280,9 +280,8 @@ group.audiobooks_player:
   remote_group_view: Audio
   order: 5
 group.local_audio:
-  context_key_words: lokalne pliki, dyski
-  context_answer: OK, wybierz pilotem plik
-  context_suffix: Plik
+  context_key_words: lokalne pliki,dyski
+  context_answer: OK, wybierz plik
   remote_group_view: Audio
   order: 6
 group.audio_player:

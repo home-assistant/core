@@ -21,7 +21,7 @@ from homeassistant.loader import bind_hass
 
 from .storage import async_setup_frontend_storage
 
-REQUIREMENTS = ['ais-dom-frontend==20190321.1']
+REQUIREMENTS = ['ais-dom-frontend==20190321.2']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',

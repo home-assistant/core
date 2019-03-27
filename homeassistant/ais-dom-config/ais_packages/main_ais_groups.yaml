@@ -86,4 +86,4 @@ group:
   local_audio:
     name: Dyski
     entities:
-      - sensor.dyski
+      - sensor.ais_drives

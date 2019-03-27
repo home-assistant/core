@@ -312,7 +312,7 @@ class SpotifyData:
                 items_info[idx]["icon"] = 'mdi:artist-outline'
             else:
                 items_info[idx]["icon"] = 'mdi:playlist-music'
-        yield from self.hass.states.async_set("sensor.spotifylist", '', items_info)
+        yield from self.hass.states.async_set("sensor.spotifylist", 0, items_info)
 
     def process_select_track_name(self, call):
         _LOGGER.info("process_select_track_name")

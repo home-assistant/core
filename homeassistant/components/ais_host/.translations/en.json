@@ -1,0 +1,25 @@
+{
+    "config": {
+        "title": "AIS custom host name",
+        "step": {
+            "init": {
+                "title": "Define new AIS host name",
+                "description": "You can change the hostname of the device to another one, this is useful if you have several ais-dom devices on the network.\n\n The host name can not have any special characters [Details in the documentation ](https://sviete.github.io/AIS-docs/).",
+                "data": {
+                    "name": "New Host Name"
+                }
+            },
+            "confirm": {
+                "description": "Do you want to set up own host name for AIS dom device?",
+                "title": "AIS host name"
+            }
+        },
+        "error": {
+            "name_not_correct": "Name is not valid"
+        },
+        "abort": {
+            "do_the_restart": "OK. Now you have to restart the device before the changes are visible on the network.",
+            "single_instance_allowed": "Only a single overwrite of AIS host is allowed."
+        }
+    }
+}

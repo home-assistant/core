@@ -365,6 +365,7 @@ class LocalData:
         self.folders_json = []
         self.current_path = os.path.abspath(G_LOCAL_FILES_ROOT)
         self.rclone_url_to_stream = None
+        self.rclone_pexpect_stream = None
 
     def beep(self):
         self.hass.services.call('ais_ai_service', 'publish_command_to_frame', {"key": 'tone', "val": 97})
@@ -427,7 +428,7 @@ class LocalData:
 
     def display_root_items(self, say):
         self.hass.states.set(
-            "sensor.dyski", '', {
+            "sensor.ais_drives", '', {
                 'files': [
                     {"name": "Dysk wewnętrzny", "icon": "harddisk",
                      "path": G_LOCAL_FILES_ROOT + "/dysk-wewnętrzny"},
@@ -440,9 +441,9 @@ class LocalData:
             self.say("Dysk wewnętrzny")
 
     def dispalay_current_path(self):
-        state = self.hass.states.get('sensor.dyski')
+        state = self.hass.states.get('sensor.ais_drives')
         items_info = state.attributes
-        self.hass.states.set("sensor.dyski", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), items_info)
+        self.hass.states.set("sensor.ais_drives", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), items_info)
 
     def display_current_items(self, say):
         local_items = []
@@ -455,7 +456,7 @@ class LocalData:
                       {"name": "..", "icon": "", "path": ".."}]
         for i in si:
             items_info.append({"name": i.name, "icon": self.get_icon(i), "path": i.path})
-        self.hass.states.set("sensor.dyski", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), {'files': items_info})
+        self.hass.states.set("sensor.ais_drives", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), {'files': items_info})
         if say:
             slen = len(si)
             self.say(self.get_pozycji_variety(slen))
@@ -469,7 +470,7 @@ class LocalData:
             else:
                 icon = "onedrive"
             items_info.append({"name": i["name"], "icon": icon, "path": self.current_path + i["name"] + ':'})
-        self.hass.states.set("sensor.dyski", self.current_path, {'files': items_info})
+        self.hass.states.set("sensor.ais_drives", self.current_path, {'files': items_info})
 
     def display_current_remote_items(self, say):
         items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
@@ -501,7 +502,7 @@ class LocalData:
                     elif item["MimeType"].startswith("video/"):
                         l_icon = "file-video-outline"
             items_info.append({"name": item["Path"][:50], "icon": l_icon, "path": path})
-        self.hass.states.set("sensor.dyski", self.current_path, {'files': items_info})
+        self.hass.states.set("sensor.ais_drives", self.current_path, {'files': items_info})
         if say:
             jlen = len(self.folders_json)
             self.say(self.get_pozycji_variety(jlen))
@@ -674,20 +675,32 @@ class LocalData:
             os.kill(int(pid), signal.SIGKILL)
 
     def rclone_serve_and_play_the_stream(self, path, item_path):
-        # try to kill previous serve if exists
-        self.check_kill_process('rclone')
         # serve and play
         if ais_global.G_DRIVE_SHARED_WITH_ME in path:
-            rclone_cmd = ["rclone", "serve", 'http',
-                          path.replace(ais_global.G_DRIVE_SHARED_WITH_ME, ""), G_RCLONE_CONF, '--addr=:8080']
-        else:
-            rclone_cmd = ["rclone", "serve", 'http', path, G_RCLONE_CONF, '--addr=:8080']
-        rclone_serving_process = subprocess.Popen(
-            rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            path = path.replace(ais_global.G_DRIVE_SHARED_WITH_ME, "")
+        rclone_cmd = "rclone serve http '" + path + "' " + G_RCLONE_CONF + " --addr=:8080"
+
         self.rclone_url_to_stream = G_RCLONE_URL_TO_STREAM + str(item_path)
-        import threading
-        timer = threading.Timer(2, self.rclone_play_the_stream)
-        timer.start()
+        import pexpect
+        try:
+            if self.rclone_pexpect_stream is not None:
+                self.rclone_pexpect_stream.kill(0)
+                self.check_kill_process('rclone')
+            self.rclone_pexpect_stream = pexpect.spawn(rclone_cmd)
+            # Current remotes:
+            self.rclone_pexpect_stream.expect(['Serving on', 'Failed to', pexpect.EOF], timeout=10)
+            _LOGGER.info(str(self.rclone_pexpect_stream.before, 'utf-8'))
+            if self.rclone_pexpect_stream == 0:
+                _LOGGER.info('Serving stream')
+            elif self.rclone_pexpect_stream == 1:
+                _LOGGER.info('Problem, kill rclone')
+                self.rclone_pexpect_stream.kill(0)
+                self.check_kill_process('rclone')
+            elif self.rclone_pexpect_stream == 2:
+                _LOGGER.info('EOF')
+            self.rclone_play_the_stream()
+        except Exception as e:
+            _LOGGER.info('Rclone: ' + str(e))
 
     def rclone_is_dir(self, path):
         # check if path is dir or file
@@ -776,7 +789,7 @@ class LocalData:
             self.say("Synchronizacja zakończona.")
 
     def play_next(self, call):
-        state = self.hass.states.get('sensor.dyski')
+        state = self.hass.states.get('sensor.ais_drives')
         attr = state.attributes
         files = attr.get('files', [])
         l_idx = 0
@@ -790,7 +803,7 @@ class LocalData:
         self._browse_path(files[l_idx]["path"], True)
 
     def play_prev(self, call):
-        state = self.hass.states.get('sensor.dyski')
+        state = self.hass.states.get('sensor.ais_drives')
         attr = state.attributes
         files = attr.get('files', [])
         l_idx = 0
@@ -823,7 +836,7 @@ class LocalData:
         return str(n) + ' pozycji'
 
     def remote_next_item(self, say):
-        state = self.hass.states.get('sensor.dyski')
+        state = self.hass.states.get('sensor.ais_drives')
         attr = state.attributes
         files = attr.get('files', [])
         if len(state.state) == 0:
@@ -846,7 +859,7 @@ class LocalData:
             self.say(name)
 
     def remote_prev_item(self, say):
-        state = self.hass.states.get('sensor.dyski')
+        state = self.hass.states.get('sensor.ais_drives')
         attr = state.attributes
         files = attr.get('files', [])
         if len(state.state) == 0:
@@ -868,7 +881,7 @@ class LocalData:
             self.say(name)
 
     def remote_select_item(self, say):
-        state = self.hass.states.get('sensor.dyski')
+        state = self.hass.states.get('sensor.ais_drives')
         attr = state.attributes
         files = attr.get('files', [])
         if state.state is None or self.selected_item_idx is None:
