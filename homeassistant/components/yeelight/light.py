@@ -203,7 +203,7 @@ class YeelightLight(Light):
             return 'mdi:waves'
         if self._is_nightlight_enabled:
             return 'mdi:weather-night'
-        
+
         return None
 
     @property
