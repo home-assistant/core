@@ -348,10 +348,15 @@ class SensiboClimate(ClimateDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
+        import pysensibo
         try:
             with async_timeout.timeout(TIMEOUT):
                 data = await self._client.async_get_device(
                     self._id, _FETCH_FIELDS)
                 self._do_update(data)
+                return
         except aiohttp.client_exceptions.ClientError:
             _LOGGER.warning('Failed to connect to Sensibo servers.')
+        except pysensibo.SensiboError as ex:
+            _LOGGER.error('Failed to connect to Sensibo servers.: %s', ex)
+        self._status = False
