@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['sisyphus-control==2.1']
+REQUIREMENTS = ['sisyphus-control==2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,26 +37,32 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Set up the sisyphus component."""
     from sisyphus_control import Table
+
+    class SocketIONoiseFilter(logging.Filter):
+        """Filters out excessively verbose logs from SocketIO."""
+
+        def filter(self, record):
+            if record.msg.contains('waiting for connection'):
+                return False
+            return True
+
+    logging.getLogger('socketIO-client').addFilter(SocketIONoiseFilter())
     tables = hass.data.setdefault(DATA_SISYPHUS, {})
     table_configs = config.get(DOMAIN)
     session = async_get_clientsession(hass)
 
     async def add_table(host, name=None):
         """Add platforms for a single table with the given hostname."""
-        table = await Table.connect(host, session)
-        if name is None:
-            name = table.name
-        tables[name] = table
-        _LOGGER.debug("Connected to %s at %s", name, host)
+        table_holder = TableHolder(session, host, name)
+        tables[host] = table_holder
 
         hass.async_create_task(async_load_platform(
             hass, 'light', DOMAIN, {
-                CONF_NAME: name,
+                CONF_HOST: host,
             }, config
         ))
         hass.async_create_task(async_load_platform(
             hass, 'media_player', DOMAIN, {
-                CONF_NAME: name,
                 CONF_HOST: host,
             }, config
         ))
@@ -77,3 +83,45 @@ async def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_tables)
 
     return True
+
+
+class TableHolder:
+    """Holds table objects and makes them available to platforms."""
+
+    def __init__(self, session, host, name):
+        """Initialize the table holder."""
+        self._session = session
+        self._host = host
+        self._name = name
+        self._table_lock = asyncio.Lock()
+        self._table = None
+
+    @property
+    def available(self):
+        """Return true if the table is responding to heartbeats."""
+        if self._table is not None:
+            return self._table.is_connected
+        return False
+
+    @property
+    def name(self):
+        """Return the name of the table."""
+        return self._name
+
+    async def get_table(self):
+        """Return the Table held by this holder, connecting to it if needed."""
+        from sisyphus_control import Table
+        with await self._table_lock:
+            if self._table is None:
+                self._table = await Table.connect(self._host, self._session)
+                if self._name is None:
+                    self._name = self._table.name
+                _LOGGER.debug("Connected to %s at %s", self._name, self._host)
+
+        return self._table
+
+    async def close(self):
+        """Close the table held by this holder, if any."""
+        with await self._table_lock:
+            if self._table is not None:
+                await self._table.close()
