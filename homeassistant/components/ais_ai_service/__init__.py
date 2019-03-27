@@ -92,6 +92,9 @@ CURR_ENTITIE_ENTERED = False
 CURR_BUTTON_CODE = None
 CURR_BUTTON_LONG_PRESS = False
 CURR_ENTITIE_POSITION = None
+PREV_CURR_GROUP = None
+PREV_CURR_ENTITIE = None
+
 ALL_SWITCHES = ["input_boolean", "automation", "switch", "light", "media_player", "script"]
 
 # ais-dom virtual keyboard
@@ -441,13 +444,17 @@ def set_curr_group(hass, group):
     CURR_ENTITIE_POSITION = None
     if group is None:
         CURR_GROUP = get_curr_group()
-
         hass.states.async_set(
             'binary_sensor.selected_entity',
             CURR_GROUP['entity_id'])
     else:
         CURR_GROUP_VIEW = group['remote_group_view']
         CURR_GROUP = group
+    # set display context for mega audio plauer
+    if CURR_GROUP['entity_id'] in (
+            'group.radio_player', 'group.podcast_player', 'group.music_player',
+            'group.audiobooks_player',  'group.local_audio', "sensor.ais_drives"):
+        hass.states.async_set("sensor.ais_player_mode", CURR_GROUP['entity_id'].replace('group.', ''))
 
 
 def set_next_group(hass):
@@ -575,10 +582,15 @@ def say_curr_entity(hass):
         _say_it(hass, "Odpowiedź: " + text, None)
         return
     elif entity_id == 'sensor.ais_drives':
-        _say_it(hass, "Dysk wewnętrzny", None)
-        hass.services.call(
-            'ais_drives_service',
-            'browse_path', {"path": '/data/data/pl.sviete.dom/files/home/dom'})
+        state = hass.states.get('sensor.ais_drives')
+        if state.state is None:
+            _say_it(hass, "Dysk wewnętrzny", None)
+        else:
+            attr = state.attributes
+            files = attr.get('files', [])
+            from homeassistant.components import ais_drives_service
+            info = ais_drives_service.get_pozycji_variety(len(files))
+            _say_it(hass, info, None)
         return
     elif entity_id == 'input_select.ais_bookmark_last_played':
         _say_it(hass, info_name + " " + info_data.replace("Local;", ""), None)
@@ -1038,6 +1050,11 @@ def go_up_in_menu(hass):
                 # go up in the group menu
                 set_curr_group(hass, None)
                 say_curr_group(hass)
+        elif CURR_ENTITIE == 'media_player.wbudowany_glosnik':
+            # go back to prev context
+            set_curr_group(hass, PREV_CURR_GROUP)
+            set_curr_entity(hass, PREV_CURR_ENTITIE)
+            CURR_ENTITIE_ENTERED = True
         elif not CURR_ENTITIE_ENTERED:
             # go up in the group menu
             set_curr_group(hass, None)
@@ -1121,18 +1138,27 @@ def type_to_input_text_from_virtual_keyboard(hass):
 
 
 def go_to_player(hass, say):
+    # remember the previous context
+    global PREV_CURR_GROUP, PREV_CURR_ENTITIE
+    _LOGGER.error('PREV_CURR_GROUP ' + str(PREV_CURR_GROUP))
     # selecting the player to control via remote
     global CURR_ENTITIE_ENTERED
     if len(GROUP_ENTITIES) == 0:
         get_groups(hass)
-    for group in GROUP_ENTITIES:
-        if group['entity_id'] == 'group.audio_player':
-            set_curr_group(hass, group)
-            set_curr_entity(hass, 'media_player.wbudowany_glosnik')
-            CURR_ENTITIE_ENTERED = True
-            if say:
-                _say_it(hass, "Sterowanie odtwarzaczem", None)
 
+    if CURR_ENTITIE != 'media_player.wbudowany_glosnik':
+        # remember prev group and entity
+        PREV_CURR_GROUP = CURR_GROUP
+        PREV_CURR_ENTITIE = CURR_ENTITIE
+
+        for group in GROUP_ENTITIES:
+            if group['entity_id'] == 'group.audio_player':
+                set_curr_group(hass, group)
+                set_curr_entity(hass, 'media_player.wbudowany_glosnik')
+                CURR_ENTITIE_ENTERED = True
+                if say:
+                    _say_it(hass, "Sterowanie odtwarzaczem", None)
+                break
 
 def go_home(hass):
     if len(GROUP_ENTITIES) == 0:
@@ -1158,7 +1184,8 @@ def get_groups(hass):
                    'context_key_words': l_entity.attributes.get('context_key_words'),
                    'context_answer': l_entity.attributes.get('context_answer'),
                    'context_suffix': l_entity.attributes.get('context_suffix'),
-                   'remote_group_view': l_entity.attributes.get('remote_group_view')}
+                   'remote_group_view': l_entity.attributes.get('remote_group_view'),
+                   'player_mode': l_entity.attributes.get('player_mode', '')}
         GROUP_ENTITIES.append(l_group)
 
     def getKey(item):

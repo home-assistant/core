@@ -42,6 +42,15 @@ DRIVES_TYPES = {
     TYPE_MEGA: ('Mega', 'mdi:cloud'),
 }
 
+
+def get_pozycji_variety(n):
+    if n == 1:
+        return str(n) + ' pozycja'
+    elif n in (2, 3, 4) or (n > 20 and (str(n).endswith('2') or str(n).endswith('3') or str(n).endswith('4'))):
+        return str(n) + ' pozycje'
+    return str(n) + ' pozycji'
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Register the service."""
@@ -459,7 +468,7 @@ class LocalData:
         self.hass.states.set("sensor.ais_drives", self.current_path.replace(G_LOCAL_FILES_ROOT, ''), {'files': items_info})
         if say:
             slen = len(si)
-            self.say(self.get_pozycji_variety(slen))
+            self.say(get_pozycji_variety(slen))
 
     def display_current_remotes(self, remotes):
         items_info = [{"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
@@ -505,7 +514,7 @@ class LocalData:
         self.hass.states.set("sensor.ais_drives", self.current_path, {'files': items_info})
         if say:
             jlen = len(self.folders_json)
-            self.say(self.get_pozycji_variety(jlen))
+            self.say(get_pozycji_variety(jlen))
 
     def get_icon(self, entry):
         if entry.is_dir():
@@ -594,7 +603,7 @@ class LocalData:
     def rclone_append_listremotes(self):
         remotes = rclone_get_remotes_long()
         self.display_current_remotes(remotes)
-        self.say(self.get_pozycji_variety(len(remotes)))
+        self.say(get_pozycji_variety(len(remotes)))
 
     def rclone_browse_folder(self, path, say):
         if ais_global.G_DRIVE_SHARED_WITH_ME in path:
@@ -827,13 +836,6 @@ class LocalData:
         name = name.replace(':', '')
         name = name.replace('-', ' ')
         return name
-
-    def get_pozycji_variety(self, n):
-        if n == 1:
-            return str(n) + ' pozycja'
-        elif n in (2, 3, 4) or (n > 20 and (str(n).endswith('2') or str(n).endswith('3') or str(n).endswith('4'))):
-            return str(n) + ' pozycje'
-        return str(n) + ' pozycji'
 
     def remote_next_item(self, say):
         state = self.hass.states.get('sensor.ais_drives')

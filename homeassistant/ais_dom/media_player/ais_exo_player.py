@@ -508,19 +508,18 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     }
                 )
 
-        # go to media player on localhost
-        if self._device_ip == 'localhost':
-            # refresh state
-            self._playing = True
-            self._status = 3
-            old_state = self.hass.states.get('media_player.wbudowany_glosnik')
-            self.hass.states.set(
-                'media_player.wbudowany_glosnik', STATE_PLAYING, old_state.attributes, force_update=True)
-
-            self.hass.services.call(
-                'ais_ai_service',
-                'process_command_from_frame', {
-                    "topic": 'ais/go_to_player',
-                    "payload": ""
-                }
-            )
+            # go to media player context on localhost
+            if self._device_ip == 'localhost':
+                # refresh state
+                self._playing = True
+                self._status = 3
+                old_state = self.hass.states.get('media_player.wbudowany_glosnik')
+                self.hass.states.set(
+                    'media_player.wbudowany_glosnik', STATE_PLAYING, old_state.attributes, force_update=True)
+                self.hass.services.call(
+                    'ais_ai_service',
+                    'process_command_from_frame', {
+                        "topic": 'ais/go_to_player',
+                        "payload": ""
+                    }
+                )
