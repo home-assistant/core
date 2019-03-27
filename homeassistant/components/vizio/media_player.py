@@ -9,8 +9,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -46,8 +44,6 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 COMMON_SUPPORTED_COMMANDS = (
-    SUPPORT_PAUSE |
-    SUPPORT_PLAY |
     SUPPORT_SELECT_SOURCE |
     SUPPORT_TURN_ON |
     SUPPORT_TURN_OFF |
@@ -198,14 +194,6 @@ class VizioDevice(MediaPlayerDevice):
             self._device.mute_on()
         else:
             self._device.mute_off()
-
-    def media_play(self):
-        """Send play command."""
-        self._device.play()
-
-    def media_pause(self):
-        """Send pause command."""
-        self._device.pause()
 
     def media_previous_track(self):
         """Send previous channel command."""
