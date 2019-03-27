@@ -12,7 +12,7 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.const import CONF_TIMEOUT
+from homeassistant.const import CONF_TIMEOUT, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
 from . import (
@@ -21,7 +21,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_IP = 'host'
 CONF_DURATION = 'duration'
 CONF_FONTSIZE = 'fontsize'
 CONF_POSITION = 'position'
@@ -95,7 +94,7 @@ COLORS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP): cv.string,
+    vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.Coerce(int),
     vol.Optional(CONF_FONTSIZE, default=DEFAULT_FONTSIZE):
         vol.In(FONTSIZES.keys()),
@@ -112,7 +111,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the Notifications for Android TV notification service."""
-    remoteip = config.get(CONF_IP)
+    remoteip = config.get(CONF_HOST)
     duration = config.get(CONF_DURATION)
     fontsize = config.get(CONF_FONTSIZE)
     position = config.get(CONF_POSITION)

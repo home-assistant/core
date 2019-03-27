@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import DEVICE_CLASSES
 from homeassistant.const import (ATTR_CODE, ATTR_STATE,
                                  EVENT_HOMEASSISTANT_STOP,
-                                 CONF_SCAN_INTERVAL)
+                                 CONF_SCAN_INTERVAL, CONF_HOST)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'ness_alarm'
 DATA_NESS = 'ness_alarm'
 
-CONF_DEVICE_HOST = 'host'
 CONF_DEVICE_PORT = 'port'
 CONF_INFER_ARMING_STATE = 'infer_arming_state'
 CONF_ZONES = 'zones'
@@ -46,7 +45,7 @@ ZONE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_DEVICE_PORT): cv.port,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
             vol.All(cv.time_period, cv.positive_timedelta),
@@ -76,7 +75,7 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
 
     zones = conf[CONF_ZONES]
-    host = conf[CONF_DEVICE_HOST]
+    host = conf[CONF_HOST]
     port = conf[CONF_DEVICE_PORT]
     scan_interval = conf[CONF_SCAN_INTERVAL]
     infer_arming_state = conf[CONF_INFER_ARMING_STATE]

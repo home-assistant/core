@@ -20,6 +20,5 @@ SENSOR_TYPES = {
     }
 }
 
-KEY_HOST = 'host'
 KEY_MAC = 'mac'
 KEY_IP = 'ip'
