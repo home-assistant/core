@@ -991,7 +991,7 @@ pycoolmasternet==0.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==1.2.0
+pydaikin==1.3.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.0.7
@@ -1645,6 +1645,7 @@ statsd==3.2.1
 # homeassistant.components.steam_online.sensor
 steamodd==4.21
 
+# homeassistant.components.solaredge.sensor
 # homeassistant.components.thermoworks_smoke.sensor
 # homeassistant.components.traccar.device_tracker
 stringcase==1.2.0
