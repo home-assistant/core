@@ -13,14 +13,18 @@ from homeassistant.helpers import config_validation as cv, discovery
 from . import config_flow  # noqa
 from .const import (
     CONF_ACCESS_KEY_ID,
+    CONF_CONTEXT,
+    CONF_CREDENTIAL_NAME,
+    CONF_CREDENTIALS,
+    CONF_NOTIFY,
+    CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
+    CONF_SERVICE,
     DATA_CONFIG,
     DATA_HASS_CONFIG,
     DATA_SESSIONS,
     DOMAIN,
-    CONF_NOTIFY,
 )
-from .notify import PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA
 
 REQUIREMENTS = ["aiobotocore==0.10.2"]
 
@@ -37,14 +41,31 @@ AWS_CREDENTIAL_SCHEMA = vol.Schema(
 
 DEFAULT_CREDENTIAL = [{CONF_NAME: "default", CONF_PROFILE_NAME: "default"}]
 
+SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
+
+NOTIFY_PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_SERVICE): vol.All(
+            cv.string, vol.Lower, vol.In(SUPPORTED_SERVICES)
+        ),
+        vol.Required(CONF_REGION): vol.All(cv.string, vol.Lower),
+        vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
+        vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        vol.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
+        vol.Optional(CONF_CONTEXT): vol.Coerce(dict),
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(
-                    ATTR_CREDENTIALS, default=DEFAULT_CREDENTIAL
+                    CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL
                 ): vol.All(cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]),
-                vol.Optional(CONF_NOTIFY): vol.All(
+                vol.Optional(CONF_NOTIFY, default=[]): vol.All(
                     cv.ensure_list, [NOTIFY_PLATFORM_SCHEMA]
                 ),
             }
@@ -98,9 +119,10 @@ async def async_setup_entry(hass, entry):
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: entry.data})[DOMAIN]
 
+    # validate credentials and create sessions
     validation = True
     tasks = []
-    for cred in conf.get(ATTR_CREDENTIALS):
+    for cred in conf[ATTR_CREDENTIALS]:
         tasks.append(_validate_aws_credentials(hass, cred))
     if tasks:
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -109,15 +131,22 @@ async def async_setup_entry(hass, entry):
             if isinstance(result, Exception):
                 _LOGGER.error(
                     "Validating credential [%s] failed: %s",
-                    name, result, exc_info=result
+                    name,
+                    result,
+                    exc_info=result,
                 )
                 validation = False
             else:
                 hass.data[DATA_SESSIONS][name] = result
 
-    # No entry support for notify component yet
-    for notify_config in conf.get(CONF_NOTIFY, []):
-        discovery.load_platform(hass, "notify", DOMAIN, notify_config, config)
+    # set up notify platform, no entry support for notify component yet,
+    # have to use discovery to load platform.
+    for notify_config in conf[CONF_NOTIFY]:
+        hass.async_create_task(
+            discovery.async_load_platform(
+                hass, "notify", DOMAIN, notify_config, config
+            )
+        )
 
     return validation
 
