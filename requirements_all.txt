@@ -505,7 +505,7 @@ greenwavereality==0.5.1
 gstreamer-player==1.1.2
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.11
+ha-ffmpeg==2.0
 
 # homeassistant.components.philips_js.media_player
 ha-philipsjs==0.0.5
@@ -550,7 +550,7 @@ holidays==0.9.10
 home-assistant-frontend==20190321.0
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.2
+homeassistant-pyozw==0.1.3
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.13.0
@@ -785,7 +785,7 @@ openhomedevice==0.4.2
 opensensemap-api==0.1.5
 
 # homeassistant.components.enigma2.media_player
-openwebifpy==1.2.7
+openwebifpy==3.1.0
 
 # homeassistant.components.luci.device_tracker
 openwrt-luci-rpc==1.0.5
