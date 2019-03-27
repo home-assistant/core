@@ -284,6 +284,7 @@ homeassistant/components/yi/camera.py @bachya
 
 # Z
 homeassistant/components/zeroconf/* @robbiet480
+homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zoneminder/* @rohankapoorcom
 
 # Other code
