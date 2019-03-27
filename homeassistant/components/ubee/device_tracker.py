@@ -19,12 +19,24 @@ REQUIREMENTS = ['pyubee==0.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MODEL = 'model'
+DEFAULT_MODEL = 'detect'
+
+
+def check_model(model):
+    """Check Ubee model."""
+    from pyubee import SUPPORTED_MODELS
+    if model not in SUPPORTED_MODELS:
+        raise vol.Invalid()
+
+    return model
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_MODEL, default='detect'): cv.string,
+    vol.Optional(CONF_MODEL, default=DEFAULT_MODEL):
+        vol.All(cv.string, check_model)
 })
 
 
