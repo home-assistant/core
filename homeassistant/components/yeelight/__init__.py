@@ -91,6 +91,7 @@ YEELIGHT_SERVICE_SCHEMA = vol.Schema({
 
 UPDATE_REQUEST_PROPERTIES = [
     "power",
+    "main_power",
     "bright",
     "ct",
     "rgb",
@@ -98,6 +99,13 @@ UPDATE_REQUEST_PROPERTIES = [
     "sat",
     "color_mode",
     "bg_power",
+    "bg_lmode",
+    "bg_flowing",
+    "bg_ct",
+    "bg_bright",
+    "bg_hue",
+    "bg_sat",
+    "bg_rgb",
     "nl_br",
     "active_mode",
 ]
@@ -249,22 +257,34 @@ class YeelightDevice:
         """Return true / false if nightlight is supported."""
         return self.bulb.get_model_specs().get('night_light', False)
 
-    def turn_on(self, duration=DEFAULT_TRANSITION):
+    @property
+    def is_ambilight_supported(self) -> bool:
+        """Return true / false if ambilight is supported."""
+        return self.bulb.get_model_specs().get('background_light', False)
+
+    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn on device."""
         import yeelight
 
+        if not light_type:
+            light_type = yeelight.enums.LightType.Main
+
         try:
-            self._bulb_device.turn_on(duration=duration)
+            self._bulb_device.turn_on(duration=duration, light_type=light_type)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
 
-    def turn_off(self, duration=DEFAULT_TRANSITION):
+    def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
         import yeelight
 
+        if not light_type:
+            light_type = yeelight.enums.LightType.Main
+
         try:
-            self._bulb_device.turn_off(duration=duration)
+            self._bulb_device.turn_off(duration=duration,
+                                       light_type=light_type)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
