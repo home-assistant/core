@@ -173,9 +173,9 @@ def setup(hass, config):
     )
 
     if DOMAIN in config:
-      for ipaddr, device_config in conf[CONF_DEVICES].items():
-          _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
-          _setup_device(hass, config, ipaddr, device_config)
+        for ipaddr, device_config in conf[CONF_DEVICES].items():
+            _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
+            _setup_device(hass, config, ipaddr, device_config)
 
     return True
 
