@@ -9,8 +9,8 @@ from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL, HTTP_TOO_MANY_REQUESTS, PRECISION_HALVES, STATE_OFF,
-    TEMP_CELSIUS)
+    CONF_SCAN_INTERVAL, HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
+    PRECISION_HALVES, STATE_OFF, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
