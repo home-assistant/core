@@ -24,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 
 ANDROIDTV_DOMAIN = 'androidtv'
 
-REQUIREMENTS = ['androidtv==0.0.13']
+REQUIREMENTS = ['androidtv==0.0.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In(DEVICE_CLASSES),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ADBKEY): has_adb_files,
+    vol.Optional(CONF_ADBKEY): cv.isfile,
     vol.Optional(CONF_ADB_SERVER_IP): cv.string,
     vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT):
         cv.port,
