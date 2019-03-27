@@ -10,12 +10,12 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-                                                    STATE_AUTO,STATE_COOL,STATE_HEAT,STATE_ECO, 
-                                                    SUPPORT_TARGET_TEMPERATURE,SUPPORT_OPERATION_MODE)
+            STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO,
+            SUPPORT_TARGET_TEMPERATURE,SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
-                                TEMP_CELSIUS,ATTR_TEMPERATURE,CONF_NAME,
-                                CONF_ID,PRECISION_WHOLE,STATE_OFF, 
-                                STATE_ON,STATE_UNKNOWN)
+            TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME,
+            CONF_ID, PRECISION_WHOLE, STATE_OFF,
+            STATE_ON, STATE_UNKNOWN)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -53,8 +53,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         add_entities([
             HeatmiserV3Thermostat(
-                thermostat,room,sensor,uh1_per,
-                def_min_temp,def_max_temp)
+                thermostat, room, sensor, uh1_per,
+                def_min_temp, def_max_temp)
                 ])
         time.sleep(2.4)
 
@@ -62,8 +62,8 @@ class HeatmiserV3Thermostat(ClimateDevice):
     """Representation of a HeatmiserV3 thermostat."""
 
     def __init__(
-                self,thermostat,name,sensor,uh1,
-                def_min_temp,def_max_temp
+                self, thermostat, name, sensor, uh1,
+                def_min_temp, def_max_temp
                 ):
         """Initialize the thermostat."""
         self.uh1 = uh1
@@ -106,7 +106,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if self._mode in [STATE_HEAT,STATE_OFF,STATE_ON,STATE_UNKNOWN]:
+        if self._mode in [STATE_HEAT, STATE_OFF, STATE_ON, STATE_UNKNOWN]:
             return self._mode
         return None
 
