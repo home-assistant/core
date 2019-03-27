@@ -1,8 +1,7 @@
 """
 Support for Ampio Air Quality data.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_quality/ampio/
+For more details about this platform, please refer to the documentation
 """
 from datetime import timedelta
 import logging
