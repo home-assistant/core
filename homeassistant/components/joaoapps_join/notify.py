@@ -7,7 +7,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-join-api==0.0.2']
+REQUIREMENTS = ['python-join-api==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,5 +60,5 @@ class JoinNotificationService(BaseNotificationService):
         send_notification(
             device_id=self._device_id, device_ids=self._device_ids,
             device_names=self._device_names, text=message, title=title,
-            icon=data.get('icon'), smallicon=data.get('smallicon'),
-            vibration=data.get('vibration'), api_key=self._api_key)
+            image=data.get('image'), vibration=data.get('vibration'),
+            api_key=self._api_key)
