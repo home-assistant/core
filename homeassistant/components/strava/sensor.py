@@ -1,9 +1,18 @@
+import logging
+
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 
-CONF_ATHLETE = 'athelete'
-CONF_ACTIVITY = 'activity'
+_LOGGER = logging.getLogger(__name__)
+
+CONF_ATHLETE = 'athlete'
+CONF_ACTIVITY = 'last_activity'
+CONF_CLUB = 'club'
+CONF_GEAR = 'gear'
+CONF_BIKE = 'bike'
+CONF_SHOE = 'shoe'
 CONF_STATS = 'stats'
+CONF_FIELDS = 'fields'
 
 DOMAIN = 'strava'
 
@@ -14,6 +23,8 @@ SCAN_INTERVAL = timedelta(minutes=1)
 DEPENDENCIES = ['strava']
 
 ICON_MAPPING_FIELDS = {
+    'member_count': 'mdi:account-multiple',
+    'follower_count': 'mdi:account-multiple',
     'distance': 'mdi:map-marker-distance',
     'moving_time': 'mdi:timer',
     'elapsed_time': 'mdi:timer',
@@ -28,6 +39,7 @@ ICON_MAPPING_FIELDS = {
     'kudos_count': 'mdi:account-heart',
     'comment_count': 'mdi:comment',
     'athlete_count': 'mdi:account-multiple',
+    'friend_count': 'mdi:account-multiple',
     'photo_count': 'mdi:image',
     'total_photo_count': 'mdi:image',
     'average_speed': 'mdi:speedometer',
@@ -36,7 +48,11 @@ ICON_MAPPING_FIELDS = {
     'average_watts': 'mdi:power-plug',
     'device_watts': 'mdi:power-plug',
     'max_watts': 'mdi:power-plug',
-    'weighted_average_watts': 'mdi:power-plug'
+    'weighted_average_watts': 'mdi:power-plug',
+    'max_heartrate': 'mdi:heart',
+    'average_heartrate': 'mdi:heart',
+    'calories': 'mdi:fire',
+    'suffer_score': 'mdi:hospital'
 }
 
 ICON_MAPPING_ACTIVITY_TYPES = {
@@ -80,11 +96,59 @@ ICON_MAPPING_ACTIVITY_TYPES = {
 }
 
 
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+
+    data = hass.data.get(DOMAIN)
+
+    athlete_id = config.get(CONF_ATHLETE)
+    gear_id = config.get(CONF_GEAR)
+    club_id = config.get(CONF_CLUB)
+    bike_id = config.get(CONF_BIKE)
+    shoe_id = config.get(CONF_SHOE)
+
+    fields = config.get(CONF_FIELDS) or []
+    stats = config.get(CONF_STATS) or []
+    activity = config.get(CONF_ACTIVITY) or []
+
+    sensors = []
+
+    if bike_id:
+        gear_id = 'b{}'.format(bike_id)
+    elif shoe_id:
+        gear_id = 'g{}'.format(shoe_id)
+
+    if athlete_id:
+        if athlete_id == 'me':
+            athlete_id = None
+
+        for field in stats:
+            sensor = StravaAthleteStatsSensor(data, athlete_id, field)
+            sensors.append(sensor)
+
+        for field in activity:
+            sensor = StravaLastActivitySensor(data, athlete_id, field)
+            sensors.append(sensor)
+
+        for field in fields:
+            sensor = StravaAthleteDetailsSensor(data, athlete_id, field)
+            sensors.append(sensor)
+
+    elif gear_id:
+        for field in fields:
+            sensor = StravaGearSensor(data, gear_id, field)
+            sensors.append(sensor)
+
+    elif club_id:
+        for field in fields:
+            sensor = StravaClubSensor(data, club_id, field)
+            sensors.append(sensor)
+
+    add_entities(sensors, True)
+
 class StravaSensor(Entity):
 
-    def __init__(self, data, field):
-        self._data = data
-        self._client = data.client
+    def __init__(self, field):
+        self._state = None
 
         if '.' in field:
             comps = field.split('.')
@@ -93,6 +157,7 @@ class StravaSensor(Entity):
             self._subfield = comps[1]
         else:
             self._field = field
+            self._subfield = None
 
     @property
     def state(self):
@@ -125,95 +190,76 @@ class StravaSensor(Entity):
 
     @property
     def icon(self):
-        """Return the icon."""
-        return ICON
+        if self._field and self._field in ICON_MAPPING_FIELDS:
+            return ICON_MAPPING_FIELDS[self._field]
+        elif self._subfield and self._subfield in ICON_MAPPING_FIELDS:
+            return ICON_MAPPING_FIELDS[self._subfield]
+        else:
+            return ICON
 
     @property
     def available(self):
-        return True
+        return self._state
 
-class StravaActivitySensor(StravaSensor):
+
+class StravaLastActivitySensor(StravaSensor):
     """Representation of an Activity Sensor."""
 
-    def __init__(self, data, activity_id, field):
-        """ Initialize the sensor. """
-        super().__init__(data, field)
+    def __init__(self, data, athlete_id, field):
+        super().__init__(field)
 
-        self._activity_id = activity_id
+        self._data = data.get_athlete(athlete_id)
+
+    async def async_update(self):
+        await self._data.update(self.hass)
+        self._state = self._data.last_activity
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        if self.available:
+            name = self._data.last_activity.name
+        else:
+            name = 'Last Activity'
 
         field = self._field.replace('_', ' ').title()
 
-        return 'Strava Last Activity: {}'.format(field)
+        return '{}: {}'.format(name, field)
 
     @property
     def unique_id(self):
-        return 'strava_last_activity_{}'.format(self._field)
+        field = self._field
+        if self._subfield:
+            field += '_' + self._subfield
 
-    def update(self):
-        """Fetch new state data for the sensor.
+        return 'strava_athlete_{}_last_activity_{}'.format(
+            self._data.id, field)
 
-        This is the only method that should fetch new data for Home Assistant.
-        """
 
-        self._data.renew_token()
-
-        activities = self._data.client.get_activities(limit=1)
-
-        self._state = next(activities)
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        if self._state and self._state.type in ICON_MAPPING_ACTIVITY_TYPES:
-            return ICON_MAPPING_ACTIVITY_TYPES[self._state.type]
-        else:
-            return super().icon
-
-    @property
-    def device_state_attributes(self):
-        from units.quantity import Quantity
-
-        fields = ['gear_id', 'external_id', 'upload_id', 'name', 'distance', 'total_elevation_gain', 'elev_high', 'elev_low', 'type', 'start_date', 'start_date_local', 'achievement_count', 'kudos_count', 'comment_count', 'athlete_count', 'photo_count', 'total_photo_count', 'trainer', 'commute', 'manual', 'private', 'flagged', 'workout_type', 'average_speed', 'max_speed', 'has_kudoed', 'kilojoules', 'average_watts', 'device_watts', 'max_watts', 'weighted_average_watts', 'description', 'calories', 'device_name']
-        attrs = {
-            'activity_id': self._state.id,
-            'start_latlng': (self._state.start_latlng.lat, self._state.start_latlng.lon),
-            'end_latlng': (self._state.end_latlng.lat, self._state.end_latlng.lon),
-            'moving_time': self._state.moving_time.seconds,
-            'elapsed_time': self._state.elapsed_time.seconds,
-            'timezone': self._state.timezone.zone
-        }
-
-        for field in fields:
-            val = getattr(self._state, field)
-
-            if isinstance(val, Quantity):
-                val = val.num
-
-            if val is not None:
-                attrs[field] = val
-
-        return attrs
-
-class StravaAthleteSensor(StravaSensor):
+class StravaAthleteDetailsSensor(StravaSensor):
     """Representation of an Athlete Sensor."""
 
     def __init__(self, data, athlete_id, field):
-        """Initialize the sensor."""
-        super().__init__(data, field)
-        self._athlete_id = athlete_id
-        self._athlete = self._client.get_athlete(athlete_id)
+        super().__init__(field)
+
+        self._data = data.get_athlete(athlete_id)
+
+    async def async_update(self):
+        await self._data.update(self.hass)
+        self._state = self._data.details
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        if self.available:
+            name = '{} {}'.format(
+            self._data.details.firstname,
+            self._data.details.lastname)
+        elif self._data.id:
+            name = 'Athlete {}'.format(self._data.id)
+        else:
+            name = 'Athlete'
 
         field = self._field.replace('_', ' ').title()
-
-        name = 'Strava Stats: {}'.format(field)
+        name += ': {}'.format(field)
 
         if self._subfield:
             subfield = self._subfield.replace('_', ' ').title()
@@ -222,98 +268,132 @@ class StravaAthleteSensor(StravaSensor):
         return name
 
     @property
-    def device_state_attributes(self):
-        from units.quantity import Quantity
-
-        totals = [
-            'recent_ride_totals',
-            'recent_run_totals',
-            'ytd_ride_totals',
-            'ytd_run_totals',
-            'all_ride_totals',
-            'all_run_totals'
-        ]
-
-        fields = [
-            'achievement_count',
-            'count',
-            'distance',
-            'elapsed_time',
-            'elevation_gain',
-            'moving_time'
-        ]
-
-        attrs = {
-            'athlete_id': self._athlete_id,
-            'biggest_ride_distance': self._state.biggest_ride_distance.num,
-            'biggest_climb_elevation_gain': self._state.biggest_climb_elevation_gain.num,
-        }
-
-        for total in totals:
-            t = getattr(self._state, total)
-            for field in fields:
-                val = getattr(t, field)
-
-                if isinstance(val, Quantity):
-                    val = val.num
-
-                if isinstance(val, timedelta):
-                    val = val.seconds
-
-                if val is not None:
-                    attrs['{}.{}'.format(total, field)] = val
-
-
-        return attrs
-
-    @property
     def entity_picture(self):
-        return self._athlete.profile
+        if self.available:
+            return self._data.details.profile
 
     @property
     def unique_id(self):
-        return 'strava_athelete_{}_stats_{}'.format(
-            self._athlete_id, self._field)
+        field = self._field
+        if self._subfield:
+            field += '_' + self._subfield
 
-    def update(self):
-        """Fetch new state data for the sensor.
+        return 'strava_athelete_{}_details_{}'.format(
+            self._data.id, field)
 
-        This is the only method that should fetch new data for Home Assistant.
-        """
 
-        self._data.renew_token()
+class StravaAthleteStatsSensor(StravaSensor):
 
-        if self._data.is_authorized:
-            self._state = self._client.get_athlete_stats(self._athlete_id)
+    def __init__(self, data, athlete_id, field):
+        super().__init__(field)
+
+        self._data = data.get_athlete(athlete_id)
+
+    async def async_update(self):
+        await self._data.update(self.hass)
+        self._state = self._data.stats
 
     @property
-    def icon(self):
-        """Return the icon."""
-        if self._field and self._field in ICON_MAPPING_FIELDS:
-            return ICON_MAPPING_FIELDS[self._field]
-        elif self._subfield and self._subfield in ICON_MAPPING_FIELDS:
-            return ICON_MAPPING_FIELDS[self._subfield]
+    def name(self):
+        if self._data.details:
+            name = '{} {}'.format(
+            self._data.details.firstname,
+            self._data.details.lastname)
+        elif self._data.id:
+            name = 'Athlete {}'.format(self._data.id)
         else:
-            return super().icon
+            name = 'Athlete'
+
+        field = self._field.replace('_', ' ').title()
+        name += ': {}'.format(field)
+
+        if self._subfield:
+            subfield = self._subfield.replace('_', ' ').title()
+            name += ' {}'.format(subfield)
+
+        return name
+
+    @property
+    def entity_picture(self):
+        if self._data.details:
+            return self._data.details.profile
+
+    @property
+    def unique_id(self):
+        field = self._field
+        if self._subfield:
+            field += '_' + self._subfield
+
+        return 'strava_athelete_{}_stats_{}'.format(
+            self._data.id, field)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+class StravaClubSensor(StravaSensor):
 
-    data = hass.data.get(DOMAIN)
+    def __init__(self, data, club_id, field):
+        super().__init__(field)
 
-    athlete_id = config.get(CONF_ATHLETE)
-    stats = config.get(CONF_STATS)
-    activity = config.get(CONF_ACTIVITY)
+        self._data = data.get_club(club_id)
 
-    if data.is_authorized:
-        sensors = []
+    async def async_update(self):
+        await self._data.update(self.hass)
+        self._state = self._data.club
 
-        for field in stats:
-            sensor = StravaAthleteSensor(data, athlete_id, field)
-            sensors.append(sensor)
+    @property
+    def name(self):
+        if self.available:
+            name = self._state.name
+        else:
+            name = 'Club {}'.format(self._data.id)
 
-        for field in activity:
-            sensor = StravaActivitySensor(data, athlete_id, field)
-            sensors.append(sensor)
+        field = self._field.replace('_', ' ').title()
+        name += ': {}'.format(field)
 
-        add_entities(sensors, True)
+        if self._subfield:
+            subfield = self._subfield.replace('_', ' ').title()
+            name += ' {}'.format(subfield)
+
+        return name
+
+    @property
+    def entity_picture(self):
+        if self.available:
+            return self._state.profile_medium
+
+    @property
+    def unique_id(self):
+        return 'strava_club_{}_{}'.format(
+            self._data.id, self._field)
+
+
+class StravaGearSensor(StravaSensor):
+
+    def __init__(self, data, gear_id, field):
+        super().__init__(field)
+
+        self._data = data.get_gear(gear_id)
+
+    async def async_update(self):
+        await self._data.update(self.hass)
+        self._state = self._data.gear
+
+    @property
+    def name(self):
+        if self.available:
+            name = self._state.name
+        else:
+            name = 'Gear {}'.format(self._data.id)
+
+        field = self._field.replace('_', ' ').title()
+        name += ': {}'.format(field)
+
+        if self._subfield:
+            subfield = self._subfield.replace('_', ' ').title()
+            name += ' {}'.format(subfield)
+
+        return name
+
+    @property
+    def unique_id(self):
+        return 'strava_gear_{}_{}'.format(
+            self._data.id, self._field)
