@@ -10,10 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO, SUPPORT_TARGET_TEMPERATURE,SUPPORT_OPERATION_MODE)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO, 
+    SUPPORT_TARGET_TEMPERATURE,SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME, CONF_ID, PRECISION_WHOLE, STATE_OFF, STATE_ON, STATE_UNKNOWN)
-    
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME,
+    CONF_ID, PRECISION_WHOLE, STATE_OFF, 
+    STATE_ON, STATE_UNKNOWN)
+
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['heatmiserV3==1.1.8']
@@ -50,14 +53,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         add_entities([
             HeatmiserV3Thermostat(
-            thermostat, room, sensor, uh1_per, def_min_temp, def_max_temp)
-        ])
+                thermostat, room, sensor, uh1_per,
+                def_min_temp, def_max_temp)
+                ])
         time.sleep(2.4)
 
 class HeatmiserV3Thermostat(ClimateDevice):
     """Representation of a HeatmiserV3 thermostat."""
 
-    def __init__(self, thermostat, name, sensor, uh1, def_min_temp, def_max_temp):
+    def __init__(self, thermostat, name, sensor, uh1,
+    def_min_temp, def_max_temp):
         """Initialize the thermostat."""
         self.uh1 = uh1
         self.thermostat = thermostat
@@ -79,7 +84,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE )
+        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
     @property
     def name(self):
@@ -116,7 +121,8 @@ class HeatmiserV3Thermostat(ClimateDevice):
             self.heating = 0
             self._mode = STATE_ON
 
-        self.thermostat._hm_send_address(self.thermostat.address, 23, self.heating, 1)
+        self.thermostat._hm_send_address(self.thermostat.address, 23
+        , self.heating, 1)
 
     @property
     def min_temp(self):
@@ -156,7 +162,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
             self.thermostat.set_target_temp(int(temperature))
             self._mode = STATE_ON
             if self._current_temperature < int(temperature):
-               self._mode = STATE_HEAT
+                self._mode = STATE_HEAT
         else:
             self.thermostat.set_frost_protect_temp(int(temperature))
             self._mode = STATE_OFF
@@ -172,7 +178,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
         self._min_temp = 5
         self._max_temp = 35
 
-        if self.heating  == 0:
+        if self.heating == 0:
             self._mode = STATE_ON
             if self._current_temperature < self._target_temperature:
                 self._mode = STATE_HEAT
