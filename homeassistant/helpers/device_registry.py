@@ -290,8 +290,6 @@ async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
         return reg
 
     if isinstance(reg_or_evt, Event):
-        # This shouldn't be possible in production (has been tested)
-        # It's here soley for testing purposes.
         evt = reg_or_evt
         await evt.wait()
         return cast(DeviceRegistry, hass.data.get(DATA_REGISTRY))

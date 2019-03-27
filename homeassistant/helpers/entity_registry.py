@@ -295,8 +295,6 @@ async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
         return reg
 
     if isinstance(reg_or_evt, Event):
-        # This shouldn't be possible in production (has been tested)
-        # It's here soley for testing purposes.
         evt = reg_or_evt
         await evt.wait()
         return cast(EntityRegistry, hass.data.get(DATA_REGISTRY))
