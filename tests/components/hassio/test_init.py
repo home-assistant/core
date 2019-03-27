@@ -196,15 +196,16 @@ def test_fail_setup_without_environ_var(hass):
 
 
 @asyncio.coroutine
-def test_fail_setup_cannot_connect(hass):
+def test_fail_setup_cannot_connect(hass, caplog):
     """Fail setup if cannot connect."""
     with patch.dict(os.environ, MOCK_ENVIRON), \
             patch('homeassistant.components.hassio.HassIO.is_connected',
                   Mock(return_value=mock_coro(None))):
         result = yield from async_setup_component(hass, 'hassio', {})
-        assert not result
+        assert result
 
-    assert not hass.components.hassio.is_hassio()
+    assert hass.components.hassio.is_hassio()
+    assert "Not connected with Hass.io / system to busy!" in caplog.text
 
 
 @asyncio.coroutine
