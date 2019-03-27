@@ -22,7 +22,6 @@ class MoparSwitch(SwitchDevice):
 
     def __init__(self, data, index):
         """Initialize the Switch."""
-        self._session = data.session
         self._index = index
         self._name = '{} Switch'.format(data.get_vehicle_name(self._index))
         self._actuate = data.actuate

@@ -24,7 +24,6 @@ class MoparLock(LockDevice):
 
     def __init__(self, data, index):
         """Initialize the Mopar lock."""
-        self._session = data.session
         self._index = index
         self._name = '{} Lock'.format(data.get_vehicle_name(self._index))
         self._actuate = data.actuate

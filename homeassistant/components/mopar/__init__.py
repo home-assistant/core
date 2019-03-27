@@ -74,14 +74,7 @@ def setup(hass, config):
 
     def handle_horn(call):
         """Enable the horn on the Mopar vehicle."""
-        try:
-            motorparts.remote_command(
-                data.session,
-                motorparts.COMMAND_HORN,
-                call.data[ATTR_VEHICLE_INDEX]
-            )
-        except motorparts.MoparError as error:
-            _LOGGER.error(error)
+        data.actuate('horn', call.data[ATTR_VEHICLE_INDEX])
 
     hass.services.register(
         DOMAIN,
@@ -140,11 +133,6 @@ class MoparData:
 
         return motorparts.ATTRIBUTION
 
-    @property
-    def session(self):
-        """Get the session to communicate with the vehicle."""
-        return self._session
-
     def get_vehicle_name(self, index):
         """Get the name corresponding with this vehicle."""
         vehicle = self.vehicles[index]
@@ -156,7 +144,8 @@ class MoparData:
             vehicle['model']
         )
 
-    def actuate(self, index, command):
+    def actuate(self, command, index):
+        """Run a command on the specified Mopar vehicle."""
         import motorparts
 
         try:
