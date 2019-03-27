@@ -89,7 +89,8 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 
 @callback
 @bind_hass
-def async_track_template(hass, template, action, variables=None):
+def async_track_template(hass, template, action, variables=None,
+                         entity_ids=None):
     """Add a listener that track state changes with template condition."""
     from . import condition
 
@@ -109,8 +110,10 @@ def async_track_template(hass, template, action, variables=None):
         elif not template_result:
             already_triggered = False
 
+    if not entity_ids:
+        entity_ids = template.extract_entities(variables)
     return async_track_state_change(
-        hass, template.extract_entities(variables),
+        hass, entity_ids,
         template_condition_listener)
 
 

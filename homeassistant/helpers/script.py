@@ -8,7 +8,7 @@ from typing import Optional, Sequence
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, Context, callback
-from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
+from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT, CONF_ENTITY_ID
 from homeassistant import exceptions
 from homeassistant.helpers import (
     service, condition, template as template,
@@ -258,6 +258,7 @@ class Script():
         # Call ourselves in the future to continue work
         wait_template = action[CONF_WAIT_TEMPLATE]
         wait_template.hass = self.hass
+        entity_ids = action.get(CONF_ENTITY_ID)
 
         self.last_action = action.get(CONF_ALIAS, 'wait template')
         self._log("Executing step %s" % self.last_action)
@@ -275,7 +276,8 @@ class Script():
                 self.async_run(variables, context))
 
         self._async_listener.append(async_track_template(
-            self.hass, wait_template, async_script_wait, variables))
+            self.hass, wait_template, async_script_wait, variables,
+            entity_ids))
 
         if CONF_TIMEOUT in action:
             self._async_set_timeout(
