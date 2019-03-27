@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Daikin climate based on config_entry."""
-    daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
+    daikin_api = hass.data[DAIKIN_DOMAIN][entry.entry_id]
     zones = daikin_api.device.zones
     if zones:
         async_add_entities([
