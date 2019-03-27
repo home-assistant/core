@@ -125,7 +125,7 @@ async def async_setup(hass, config):
 
             if not modem_data:
                 _LOGGER.error(
-                    "%s: host  '%s' unavailable", SERVICE_DELETE_SMS, host)
+                    "%s: host %s unavailable", SERVICE_DELETE_SMS, host)
                 return
 
             for sms_id in service.data[ATTR_SMS_ID]:
