@@ -26,7 +26,6 @@ SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_ID): cv.string,
-
     vol.Optional(CONF_NAME): cv.string,
 })
 
@@ -71,11 +70,6 @@ class AmpioSmogQuality(AirQualityEntity):
         return "ampio_smog_{}".format(self._station_id)
 
     @property
-    def should_poll(self):
-        """Pool for new date update."""
-        return True
-
-    @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._ampio.api.pm2_5
@@ -84,11 +78,6 @@ class AmpioSmogQuality(AirQualityEntity):
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._ampio.api.pm10
-
-    @property
-    def unit_of_measurement(self):
-        """Return unit of measurement."""
-        return "µg/m³"
 
     @property
     def attribution(self):
