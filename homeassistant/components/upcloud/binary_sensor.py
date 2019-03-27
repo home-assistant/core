@@ -3,11 +3,11 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.upcloud import (
-    UpCloudServerEntity, CONF_SERVERS, DATA_UPCLOUD)
+    PLATFORM_SCHEMA, BinarySensorDevice)
+import homeassistant.helpers.config_validation as cv
+
+from . import CONF_SERVERS, DATA_UPCLOUD, UpCloudServerEntity
 
 _LOGGER = logging.getLogger(__name__)
 

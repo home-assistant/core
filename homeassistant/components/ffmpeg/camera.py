@@ -9,13 +9,12 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_NAME
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-from homeassistant.components.ffmpeg import (
-    DATA_FFMPEG, CONF_INPUT, CONF_EXTRA_ARGUMENTS)
+from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import (
-    async_aiohttp_proxy_stream)
+
+from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ class FFmpegCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg import ImageFrame, IMAGE_JPEG
+        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
         ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
 
         image = await asyncio.shield(ffmpeg.get_image(
@@ -59,15 +58,16 @@ class FFmpegCamera(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg import CameraMjpeg
+        from haffmpeg.camera import CameraMjpeg
 
         stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
         await stream.open_camera(
             self._input, extra_cmd=self._extra_arguments)
 
         try:
+            stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
+                self.hass, request, stream_reader,
                 self._manager.ffmpeg_stream_content_type)
         finally:
             await stream.close()

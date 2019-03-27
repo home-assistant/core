@@ -44,6 +44,11 @@ def request_stream(hass, stream_source, *, fmt='hls',
     if options is None:
         options = {}
 
+    # For RTSP streams, prefer TCP
+    if isinstance(stream_source, str) \
+            and stream_source[:7] == 'rtsp://' and not options:
+        options['rtsp_flags'] = 'prefer_tcp'
+
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]
         stream = streams.get(stream_source)
@@ -51,6 +56,9 @@ def request_stream(hass, stream_source, *, fmt='hls',
             stream = Stream(hass, stream_source,
                             options=options, keepalive=keepalive)
             streams[stream_source] = stream
+        else:
+            # Update keepalive option on existing stream
+            stream.keepalive = keepalive
 
         # Add provider
         stream.add_provider(fmt)
@@ -120,9 +128,15 @@ class Stream:
         """Remove provider output stream."""
         if provider.format in self._outputs:
             del self._outputs[provider.format]
+            self.check_idle()
 
         if not self._outputs:
             self.stop()
+
+    def check_idle(self):
+        """Reset access token if all providers are idle."""
+        if all([p.idle for p in self._outputs.values()]):
+            self.access_token = None
 
     def start(self):
         """Start a stream."""

@@ -3,13 +3,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.raspihats import (
-    CONF_BOARD, CONF_CHANNELS, CONF_I2C_HATS, CONF_INDEX, CONF_INITIAL_STATE,
-    CONF_INVERT_LOGIC, I2C_HAT_NAMES, I2C_HATS_MANAGER, I2CHatsException)
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
+
+from . import (
+    CONF_BOARD, CONF_CHANNELS, CONF_I2C_HATS, CONF_INDEX, CONF_INITIAL_STATE,
+    CONF_INVERT_LOGIC, I2C_HAT_NAMES, I2C_HATS_MANAGER, I2CHatsException)
 
 _LOGGER = logging.getLogger(__name__)
 

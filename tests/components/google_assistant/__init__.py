@@ -231,10 +231,7 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'HeatPump'
     },
-    'traits': [
-        'action.devices.traits.OnOff',
-        'action.devices.traits.TemperatureSetting'
-    ],
+    'traits': ['action.devices.traits.TemperatureSetting'],
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False
 }, {

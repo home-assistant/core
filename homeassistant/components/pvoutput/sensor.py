@@ -13,7 +13,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.sensor.rest import RestData
+from homeassistant.components.rest.sensor import RestData
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_API_KEY, CONF_NAME, ATTR_DATE, ATTR_TIME,
     ATTR_VOLTAGE)

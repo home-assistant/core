@@ -36,6 +36,7 @@ MEDIA_TYPE_VIDEO = 'video'
 MEDIA_TYPE_EPISODE = 'episode'
 MEDIA_TYPE_CHANNEL = 'channel'
 MEDIA_TYPE_PLAYLIST = 'playlist'
+MEDIA_TYPE_IMAGE = 'image'
 MEDIA_TYPE_URL = 'url'
 
 SERVICE_CLEAR_PLAYLIST = 'clear_playlist'

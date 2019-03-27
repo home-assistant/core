@@ -2,11 +2,11 @@
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
-from homeassistant.components.point import MinutPointEntity
-from homeassistant.components.point.const import (
-    DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import MinutPointEntity
+from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -343,6 +343,13 @@ LENGTH_FEET = 'ft'  # type: str
 LENGTH_YARD = 'yd'  # type: str
 LENGTH_MILES = 'mi'  # type: str
 
+# Pressure units
+PRESSURE_PA = 'Pa'  # type: str
+PRESSURE_HPA = 'hPa'  # type: str
+PRESSURE_MBAR = 'mbar'  # type: str
+PRESSURE_INHG = 'inHg'  # type: str
+PRESSURE_PSI = 'psi'  # type: str
+
 # Volume units
 VOLUME_LITERS = 'L'  # type: str
 VOLUME_MILLILITERS = 'mL'  # type: str
@@ -455,6 +462,7 @@ UNIT_NOT_RECOGNIZED_TEMPLATE = '{} is not a recognized {} unit.'  # type: str
 
 LENGTH = 'length'  # type: str
 MASS = 'mass'  # type: str
+PRESSURE = 'pressure'  # type: str
 VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
 SPEED_MS = 'speed_ms'  # type: str

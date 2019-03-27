@@ -3,11 +3,11 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
-from homeassistant.components.tesla import TeslaDevice
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES)
+    LENGTH_KILOMETERS, LENGTH_MILES, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
