@@ -123,7 +123,6 @@ def test_sync_request(hass_fixture, assistant_client, auth_header):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     devices = body['payload']['devices']
-    print([dev['id'] for dev in devices])
     assert (
         sorted([dev['id'] for dev in devices])
         == sorted([dev['id'] for dev in DEMO_DEVICES]))
