@@ -9,8 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    DOMAIN as AXIS_DOMAIN, AXIS_ADD_SENSOR, AXIS_REACHABLE, LOGGER)
+from .const import DOMAIN as AXIS_DOMAIN, LOGGER
 
 DEPENDENCIES = [AXIS_DOMAIN]
 
@@ -43,7 +42,7 @@ class AxisBinarySensor(BinarySensorDevice):
         """Subscribe sensors events."""
         self.event.register_callback(self.update_callback)
         self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, AXIS_REACHABLE, self.update_callback)
+            self.hass, self.device.event_reachable, self.update_callback)
 
     def update_callback(self, delay=None):
         """Update the sensor's state, if needed."""

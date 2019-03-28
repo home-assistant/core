@@ -11,9 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    AXIS_ADD_SENSOR, AXIS_REACHABLE, CONF_CAMERA, CONF_EVENTS, CONF_MODEL,
-    DOMAIN, LOGGER)
+from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, DOMAIN, LOGGER
 
 from .errors import AuthenticationRequired, CannotConnect
 
@@ -106,17 +104,26 @@ class AxisNetworkDevice:
         return True
 
     @property
-    def event_new_sensor(self):
-        """Device specific event to signal new sensor available."""
-        return 'axis_add_sensor_{}'.format(self.serial)
+    def event_reachable(self):
+        """Device specific event to signal a change in connection status."""
+        return 'axis_reachable_{}'.format(self.serial)
 
     @callback
     def async_connection_status_callback(self, status):
-        """Handle signals of gateway connection status."""
+        """Handle signals of gateway connection status.
+
+        This is called on every RTSP keep-alive message.
+        Only signal state change if state change is true.
+        """
         from axis.streammanager import SIGNAL_PLAYING
-        if self.available != status == SIGNAL_PLAYING:
-            self.available = status == SIGNAL_PLAYING
-            async_dispatcher_send(self.hass, AXIS_REACHABLE, 0)
+        if self.available != (status == SIGNAL_PLAYING):
+            self.available = not self.available
+            async_dispatcher_send(self.hass, self.event_reachable, 0)
+
+    @property
+    def event_new_sensor(self):
+        """Device specific event to signal new sensor available."""
+        return 'axis_add_sensor_{}'.format(self.serial)
 
     @callback
     def async_event_callback(self, action, event):
