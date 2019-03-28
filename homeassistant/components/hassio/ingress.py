@@ -1,6 +1,6 @@
 """Hass.io Add-on ingress service."""
 import asyncio
-from typing import Dict, Union
+from typing import Union
 
 import aiohttp
 from aiohttp import web
@@ -97,7 +97,7 @@ class HassIOIngressView(HomeAssistantView):
         header = request.headers.copy()
 
         async with client.request(
-            request.method, url, headers=header, data=data
+                request.method, url, headers=header, data=data
         ) as result:
             headers = result.headers.copy()
             del headers['content-length']
