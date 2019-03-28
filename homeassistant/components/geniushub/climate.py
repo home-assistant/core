@@ -8,12 +8,12 @@ from homeassistant.components.climate.const import (
     STATE_ECO, STATE_HEAT, STATE_AUTO, STATE_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_ON_OFF, SUPPORT_AWAY_MODE)
-from . import GENIUS_HUB
+from . import (
+    DOMAIN, GENIUS_HUB)
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = 'geniushub'
 
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE \
@@ -46,8 +46,8 @@ MODE_MAP = {
 }
 
 
-async def async_setup_platform(hass, config,
-                               async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
 
     """Set up the Genius hub climate devices."""
     if discovery_info is None:
@@ -119,10 +119,7 @@ class GeniusClimate(ClimateDevice):
     @property
     def is_on(self):
         """Return true if the device is on."""
-        if self._mode == "off":
-            return False
-
-        return True
+        return self._mode != "off"
 
     @property
     def is_away_mode_on(self):
@@ -168,7 +165,7 @@ class GeniusClimate(ClimateDevice):
         data = self.get_operation_mode(operation_mode)
         self._mode = data['mode']
         if data['data'] is None:
-            _LOGGER.error("Unknown mode")
+            _LOGGER.error("Unknown mode %s", operation_mode)
             return
 
         await GeniusClimate._genius_hub.putjson(self._device_id, data['data'])
