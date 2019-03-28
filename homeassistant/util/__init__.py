@@ -112,7 +112,7 @@ def get_local_ip() -> str:
         # Check eth0, eth1, eth2, en0, ...
         interfaces = [
             i + str(n) for i in ("eth", "en", "wlan") for n in range(3)
-        ]  # :(
+        ]
         for interface in interfaces:
             try:
                 ip_addr = interface_ip(interface)
