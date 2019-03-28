@@ -100,9 +100,13 @@ def get_platform(hass,  # type: HomeAssistant
         return platform
 
     # Legacy platform check for custom: custom_components/light/hue.py
-    platform = _load_file(
-        hass, PLATFORM_FORMAT.format(domain=platform_name, platform=domain),
-        [PACKAGE_CUSTOM_COMPONENTS])
+    # Only check if the component was also in custom components.
+    if component is None or base_paths[0] == PACKAGE_CUSTOM_COMPONENTS:
+        platform = _load_file(
+            hass,
+            PLATFORM_FORMAT.format(domain=platform_name, platform=domain),
+            [PACKAGE_CUSTOM_COMPONENTS]
+        )
 
     if platform is None:
         if component is None:
