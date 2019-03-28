@@ -709,7 +709,7 @@ millheater==0.3.4
 # homeassistant.components.mitemp_bt.sensor
 mitemp_bt==0.0.1
 
-# homeassistant.components.mopar.sensor
+# homeassistant.components.mopar
 motorparts==1.1.0
 
 # homeassistant.components.tts
