@@ -20,7 +20,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, \
-    SERVICE_TURN_ON, EVENT_HOMEASSISTANT_START
+    SERVICE_TURN_ON, EVENT_HOMEASSISTANT_START, CONF_FILENAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
@@ -33,7 +33,8 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
 from homeassistant.components.stream import request_stream
 from homeassistant.components.stream.const import (
-    OUTPUT_FORMATS, FORMAT_CONTENT_TYPE)
+    OUTPUT_FORMATS, FORMAT_CONTENT_TYPE, CONF_STREAM_SOURCE, CONF_LOOKBACK,
+    CONF_DURATION, SERVICE_RECORD, DOMAIN as DOMAIN_STREAM)
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
 
@@ -83,6 +84,12 @@ CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
 CAMERA_SERVICE_PLAY_STREAM = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
     vol.Optional(ATTR_FORMAT, default='hls'): vol.In(OUTPUT_FORMATS),
+})
+
+CAMERA_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(CONF_FILENAME): cv.template,
+    vol.Optional(CONF_DURATION, default=30): int,
+    vol.Optional(CONF_LOOKBACK, default=0): int,
 })
 
 WS_TYPE_CAMERA_THUMBNAIL = 'camera_thumbnail'
@@ -259,6 +266,10 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_PLAY_STREAM, CAMERA_SERVICE_PLAY_STREAM,
         async_handle_play_stream_service
+    )
+    component.async_register_entity_service(
+        SERVICE_RECORD, CAMERA_SERVICE_RECORD,
+        async_handle_record_service
     )
 
     return True
@@ -640,3 +651,27 @@ async def async_handle_play_stream_service(camera, service_call):
     await hass.services.async_call(
         DOMAIN_MP, SERVICE_PLAY_MEDIA, data,
         blocking=True, context=service_call.context)
+
+
+async def async_handle_record_service(camera, call):
+    """Handle stream recording service calls."""
+    if not camera.stream_source:
+        raise HomeAssistantError("{} does not support record service"
+                                 .format(camera.entity_id))
+
+    hass = camera.hass
+    filename = call.data[CONF_FILENAME]
+    filename.hass = hass
+    video_path = filename.async_render(
+        variables={ATTR_ENTITY_ID: camera})
+
+    data = {
+        CONF_STREAM_SOURCE: camera.stream_source,
+        CONF_FILENAME: video_path,
+        CONF_DURATION: call.data[CONF_DURATION],
+        CONF_LOOKBACK: call.data[CONF_LOOKBACK],
+    }
+
+    await hass.services.async_call(
+        DOMAIN_STREAM, SERVICE_RECORD, data,
+        blocking=True, context=call.context)
