@@ -1,5 +1,6 @@
 """Code to support homekit_controller tests."""
 import json
+import os
 from datetime import timedelta
 from unittest import mock
 
@@ -12,7 +13,8 @@ from homeassistant.components.homekit_controller import (
     DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, SERVICE_HOMEKIT)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import async_fire_time_changed, fire_service_discovered
+from tests.common import (
+    async_fire_time_changed, fire_service_discovered, load_fixture)
 
 
 class FakePairing:
@@ -150,8 +152,8 @@ class FakeService(AbstractService):
 
 def setup_accessories_from_file(path):
     """Load an collection of accessory defs from JSON data."""
-    with open(path, 'r') as accessories_data:
-        accessories_json = json.load(accessories_data)
+    accessories_json = json.loads(load_fixture(os.path.join(
+        'homekit_controller', path)))
 
     accessories = []
 

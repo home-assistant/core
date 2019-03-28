@@ -4,8 +4,6 @@ Regression tests for Aqara Gateway V3.
 https://github.com/home-assistant/home-assistant/issues/20957
 """
 
-import os
-
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
 from tests.components.homekit_controller.common import (
     setup_accessories_from_file, setup_test_accessories, Helper
@@ -14,10 +12,7 @@ from tests.components.homekit_controller.common import (
 
 async def test_aqara_gateway_setup(hass):
     """Test that a Aqara Gateway can be correctly setup in HA."""
-    profile_path = os.path.join(
-        os.path.dirname(__file__), 'aqara_gateway.json'
-    )
-    accessories = setup_accessories_from_file(profile_path)
+    accessories = setup_accessories_from_file('aqara_gateway.json')
     pairing = await setup_test_accessories(hass, accessories)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()

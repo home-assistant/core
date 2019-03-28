@@ -4,8 +4,6 @@ Regression tests for Aqara Gateway V3.
 https://github.com/home-assistant/home-assistant/issues/20885
 """
 
-import os
-
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from tests.components.homekit_controller.common import (
@@ -15,8 +13,7 @@ from tests.components.homekit_controller.common import (
 
 async def test_lennox_e30_setup(hass):
     """Test that a Lennox E30 can be correctly setup in HA."""
-    profile_path = os.path.join(os.path.dirname(__file__), 'lennox_e30.json')
-    accessories = setup_accessories_from_file(profile_path)
+    accessories = setup_accessories_from_file('lennox_e30.json')
     pairing = await setup_test_accessories(hass, accessories)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()

@@ -4,8 +4,6 @@ Regression tests for Ecobee 3.
 https://github.com/home-assistant/home-assistant/issues/15336
 """
 
-import os
-
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from tests.components.homekit_controller.common import (
@@ -15,8 +13,7 @@ from tests.components.homekit_controller.common import (
 
 async def test_ecobee3_setup(hass):
     """Test that a Ecbobee 3 can be correctly setup in HA."""
-    profile_path = os.path.join(os.path.dirname(__file__), 'ecobee3.json')
-    accessories = setup_accessories_from_file(profile_path)
+    accessories = setup_accessories_from_file('ecobee3.json')
     pairing = await setup_test_accessories(hass, accessories)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
