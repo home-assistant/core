@@ -1,7 +1,9 @@
 """Commands part of Websocket API."""
 import voluptuous as vol
 
-from homeassistant.const import MATCH_ALL, EVENT_TIME_CHANGED
+from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.const import (
+    MATCH_ALL, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED)
 from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
 from homeassistant.exceptions import Unauthorized, ServiceNotFound, \
     HomeAssistantError
@@ -10,112 +12,78 @@ from homeassistant.helpers.service import async_get_all_descriptions
 
 from . import const, decorators, messages
 
-TYPE_CALL_SERVICE = 'call_service'
-TYPE_EVENT = 'event'
-TYPE_GET_CONFIG = 'get_config'
-TYPE_GET_SERVICES = 'get_services'
-TYPE_GET_STATES = 'get_states'
-TYPE_PING = 'ping'
-TYPE_PONG = 'pong'
-TYPE_SUBSCRIBE_EVENTS = 'subscribe_events'
-TYPE_UNSUBSCRIBE_EVENTS = 'unsubscribe_events'
-
 
 @callback
 def async_register_commands(hass):
     """Register commands."""
     async_reg = hass.components.websocket_api.async_register_command
-    async_reg(TYPE_SUBSCRIBE_EVENTS, handle_subscribe_events,
-              SCHEMA_SUBSCRIBE_EVENTS)
-    async_reg(TYPE_UNSUBSCRIBE_EVENTS, handle_unsubscribe_events,
-              SCHEMA_UNSUBSCRIBE_EVENTS)
-    async_reg(TYPE_CALL_SERVICE, handle_call_service, SCHEMA_CALL_SERVICE)
-    async_reg(TYPE_GET_STATES, handle_get_states, SCHEMA_GET_STATES)
-    async_reg(TYPE_GET_SERVICES, handle_get_services, SCHEMA_GET_SERVICES)
-    async_reg(TYPE_GET_CONFIG, handle_get_config, SCHEMA_GET_CONFIG)
-    async_reg(TYPE_PING, handle_ping, SCHEMA_PING)
-
-
-SCHEMA_SUBSCRIBE_EVENTS = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_SUBSCRIBE_EVENTS,
-    vol.Optional('event_type', default=MATCH_ALL): str,
-})
-
-
-SCHEMA_UNSUBSCRIBE_EVENTS = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_UNSUBSCRIBE_EVENTS,
-    vol.Required('subscription'): cv.positive_int,
-})
-
-
-SCHEMA_CALL_SERVICE = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_CALL_SERVICE,
-    vol.Required('domain'): str,
-    vol.Required('service'): str,
-    vol.Optional('service_data'): dict
-})
-
-
-SCHEMA_GET_STATES = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_GET_STATES,
-})
-
-
-SCHEMA_GET_SERVICES = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_GET_SERVICES,
-})
-
-
-SCHEMA_GET_CONFIG = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_GET_CONFIG,
-})
-
-
-SCHEMA_PING = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_PING,
-})
-
-
-def event_message(iden, event):
-    """Return an event message."""
-    return {
-        'id': iden,
-        'type': TYPE_EVENT,
-        'event': event.as_dict(),
-    }
+    async_reg(handle_subscribe_events)
+    async_reg(handle_unsubscribe_events)
+    async_reg(handle_call_service)
+    async_reg(handle_get_states)
+    async_reg(handle_get_services)
+    async_reg(handle_get_config)
+    async_reg(handle_ping)
 
 
 def pong_message(iden):
     """Return a pong message."""
     return {
         'id': iden,
-        'type': TYPE_PONG,
+        'type': 'pong',
     }
 
 
 @callback
+@decorators.websocket_command({
+    vol.Required('type'): 'subscribe_events',
+    vol.Optional('event_type', default=MATCH_ALL): str,
+})
 def handle_subscribe_events(hass, connection, msg):
     """Handle subscribe events command.
 
     Async friendly.
     """
-    if not connection.user.is_admin:
+    from .permissions import SUBSCRIBE_WHITELIST
+
+    event_type = msg['event_type']
+
+    if (event_type not in SUBSCRIBE_WHITELIST and
+            not connection.user.is_admin):
         raise Unauthorized
 
-    async def forward_events(event):
-        """Forward events to websocket."""
-        if event.event_type == EVENT_TIME_CHANGED:
-            return
+    if event_type == EVENT_STATE_CHANGED:
+        @callback
+        def forward_events(event):
+            """Forward state changed events to websocket."""
+            if not connection.user.permissions.check_entity(
+                    event.data['entity_id'], POLICY_READ):
+                return
 
-        connection.send_message(event_message(msg['id'], event))
+            connection.send_message(messages.event_message(msg['id'], event))
 
-    connection.event_listeners[msg['id']] = hass.bus.async_listen(
-        msg['event_type'], forward_events)
+    else:
+        @callback
+        def forward_events(event):
+            """Forward events to websocket."""
+            if event.event_type == EVENT_TIME_CHANGED:
+                return
+
+            connection.send_message(messages.event_message(
+                msg['id'], event.as_dict()
+            ))
+
+    connection.subscriptions[msg['id']] = hass.bus.async_listen(
+        event_type, forward_events)
 
     connection.send_message(messages.result_message(msg['id']))
 
 
 @callback
+@decorators.websocket_command({
+    vol.Required('type'): 'unsubscribe_events',
+    vol.Required('subscription'): cv.positive_int,
+})
 def handle_unsubscribe_events(hass, connection, msg):
     """Handle unsubscribe events command.
 
@@ -123,8 +91,8 @@ def handle_unsubscribe_events(hass, connection, msg):
     """
     subscription = msg['subscription']
 
-    if subscription in connection.event_listeners:
-        connection.event_listeners.pop(subscription)()
+    if subscription in connection.subscriptions:
+        connection.subscriptions.pop(subscription)()
         connection.send_message(messages.result_message(msg['id']))
     else:
         connection.send_message(messages.error_message(
@@ -132,6 +100,12 @@ def handle_unsubscribe_events(hass, connection, msg):
 
 
 @decorators.async_response
+@decorators.websocket_command({
+    vol.Required('type'): 'call_service',
+    vol.Required('domain'): str,
+    vol.Required('service'): str,
+    vol.Optional('service_data'): dict
+})
 async def handle_call_service(hass, connection, msg):
     """Handle call service command.
 
@@ -151,14 +125,19 @@ async def handle_call_service(hass, connection, msg):
         connection.send_message(messages.error_message(
             msg['id'], const.ERR_NOT_FOUND, 'Service not found.'))
     except HomeAssistantError as err:
+        connection.logger.exception(err)
         connection.send_message(messages.error_message(
             msg['id'], const.ERR_HOME_ASSISTANT_ERROR, '{}'.format(err)))
     except Exception as err:  # pylint: disable=broad-except
+        connection.logger.exception(err)
         connection.send_message(messages.error_message(
             msg['id'], const.ERR_UNKNOWN_ERROR, '{}'.format(err)))
 
 
 @callback
+@decorators.websocket_command({
+    vol.Required('type'): 'get_states',
+})
 def handle_get_states(hass, connection, msg):
     """Handle get states command.
 
@@ -175,6 +154,9 @@ def handle_get_states(hass, connection, msg):
 
 
 @decorators.async_response
+@decorators.websocket_command({
+    vol.Required('type'): 'get_services',
+})
 async def handle_get_services(hass, connection, msg):
     """Handle get services command.
 
@@ -186,6 +168,9 @@ async def handle_get_services(hass, connection, msg):
 
 
 @callback
+@decorators.websocket_command({
+    vol.Required('type'): 'get_config',
+})
 def handle_get_config(hass, connection, msg):
     """Handle get config command.
 
@@ -196,6 +181,9 @@ def handle_get_config(hass, connection, msg):
 
 
 @callback
+@decorators.websocket_command({
+    vol.Required('type'): 'ping',
+})
 def handle_ping(hass, connection, msg):
     """Handle ping command.
 

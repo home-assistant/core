@@ -9,12 +9,12 @@ from aiohttp.web_exceptions import (
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.components.http.ban import process_success_login
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import KEY_AUTHENTICATED, KEY_REAL_IP
+from .ban import process_success_login
+from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def request_handler_factory(view, handler):
 
     async def handle(request):
         """Handle incoming request."""
-        if not request.app['hass'].is_running:
+        if not request.app[KEY_HASS].is_running:
             return web.Response(status=503)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
@@ -102,8 +102,8 @@ def request_handler_factory(view, handler):
             else:
                 raise HTTPUnauthorized()
 
-        _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request.get(KEY_REAL_IP), authenticated)
+        _LOGGER.debug('Serving %s to %s (auth: %s)',
+                      request.path, request.get(KEY_REAL_IP), authenticated)
 
         try:
             result = handler(request, **request.match_info)

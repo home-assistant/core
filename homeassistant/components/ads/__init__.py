@@ -171,12 +171,11 @@ class AdsHub:
             hnotify, huser = self._client.add_device_notification(
                 name, attr, self._device_notification_callback)
             hnotify = int(hnotify)
+            self._notification_items[hnotify] = NotificationItem(
+                hnotify, huser, name, plc_datatype, callback)
 
         _LOGGER.debug(
             "Added device notification %d for variable %s", hnotify, name)
-
-        self._notification_items[hnotify] = NotificationItem(
-            hnotify, huser, name, plc_datatype, callback)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
@@ -187,9 +186,10 @@ class AdsHub:
         data = contents.data
 
         try:
-            notification_item = self._notification_items[hnotify]
+            with self._lock:
+                notification_item = self._notification_items[hnotify]
         except KeyError:
-            _LOGGER.debug("Unknown device notification handle: %d", hnotify)
+            _LOGGER.error("Unknown device notification handle: %d", hnotify)
             return
 
         # Parse data to desired datatype

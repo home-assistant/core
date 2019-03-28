@@ -6,7 +6,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, CONF_API_KEY
 
-REQUIREMENTS = ['python-join-api==0.0.2']
+REQUIREMENTS = ['python-join-api==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

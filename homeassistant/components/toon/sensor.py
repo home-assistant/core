@@ -16,7 +16,7 @@ DEPENDENCIES = ['toon']
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=300)
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
@@ -134,7 +134,7 @@ class ToonSensor(ToonEntity):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Get the latest data from the sensor."""
         section = getattr(self.toon, self.section)
         value = None

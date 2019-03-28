@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=300)
 
 HA_TOON = {
     STATE_AUTO: 'Comfort',
@@ -117,7 +117,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
         """Set new operation mode."""
         self.toon.thermostat_state = HA_TOON[operation_mode]
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Update local state."""
         if self.toon.thermostat_state is None:
             self._state = None

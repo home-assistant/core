@@ -1,6 +1,7 @@
 """Provide a way to connect devices to one physical location."""
 import logging
 import uuid
+from asyncio import Event
 from collections import OrderedDict
 from typing import MutableMapping  # noqa: F401
 from typing import Iterable, Optional, cast
@@ -9,6 +10,7 @@ import attr
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
+
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +38,11 @@ class AreaRegistry:
         self.hass = hass
         self.areas = {}  # type: MutableMapping[str, AreaEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+
+    @callback
+    def async_get_area(self, area_id: str) -> Optional[AreaEntry]:
+        """Get all areas."""
+        return self.areas.get(area_id)
 
     @callback
     def async_list_areas(self) -> Iterable[AreaEntry]:
@@ -128,14 +135,21 @@ class AreaRegistry:
 @bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> AreaRegistry:
     """Return area registry instance."""
-    task = hass.data.get(DATA_REGISTRY)
+    reg_or_evt = hass.data.get(DATA_REGISTRY)
 
-    if task is None:
-        async def _load_reg() -> AreaRegistry:
-            registry = AreaRegistry(hass)
-            await registry.async_load()
-            return registry
+    if not reg_or_evt:
+        evt = hass.data[DATA_REGISTRY] = Event()
 
-        task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
+        reg = AreaRegistry(hass)
+        await reg.async_load()
 
-    return cast(AreaRegistry, await task)
+        hass.data[DATA_REGISTRY] = reg
+        evt.set()
+        return reg
+
+    if isinstance(reg_or_evt, Event):
+        evt = reg_or_evt
+        await evt.wait()
+        return cast(AreaRegistry, hass.data.get(DATA_REGISTRY))
+
+    return cast(AreaRegistry, reg_or_evt)

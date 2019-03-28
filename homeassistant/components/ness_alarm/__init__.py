@@ -1,30 +1,35 @@
 """Support for Ness D8X/D16X devices."""
-from collections import namedtuple
+import datetime
 import logging
+from collections import namedtuple
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES
-from homeassistant.const import ATTR_CODE, ATTR_STATE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (ATTR_CODE, ATTR_STATE,
+                                 EVENT_HOMEASSISTANT_STOP,
+                                 CONF_SCAN_INTERVAL, CONF_HOST)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['nessclient==0.9.13']
+REQUIREMENTS = ['nessclient==0.9.15']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'ness_alarm'
 DATA_NESS = 'ness_alarm'
 
-CONF_DEVICE_HOST = 'host'
 CONF_DEVICE_PORT = 'port'
+CONF_INFER_ARMING_STATE = 'infer_arming_state'
 CONF_ZONES = 'zones'
 CONF_ZONE_NAME = 'name'
 CONF_ZONE_TYPE = 'type'
 CONF_ZONE_ID = 'id'
 ATTR_OUTPUT_ID = 'output_id'
 DEFAULT_ZONES = []
+DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=1)
+DEFAULT_INFER_ARMING_STATE = False
 
 SIGNAL_ZONE_CHANGED = 'ness_alarm.zone_changed'
 SIGNAL_ARMING_STATE_CHANGED = 'ness_alarm.arming_state_changed'
@@ -40,10 +45,15 @@ ZONE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_DEVICE_PORT): cv.port,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+            vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_ZONES, default=DEFAULT_ZONES):
             vol.All(cv.ensure_list, [ZONE_SCHEMA]),
+        vol.Optional(CONF_INFER_ARMING_STATE,
+                     default=DEFAULT_INFER_ARMING_STATE):
+            cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -65,10 +75,14 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
 
     zones = conf[CONF_ZONES]
-    host = conf[CONF_DEVICE_HOST]
+    host = conf[CONF_HOST]
     port = conf[CONF_DEVICE_PORT]
+    scan_interval = conf[CONF_SCAN_INTERVAL]
+    infer_arming_state = conf[CONF_INFER_ARMING_STATE]
 
-    client = Client(host=host, port=port, loop=hass.loop)
+    client = Client(host=host, port=port, loop=hass.loop,
+                    update_interval=scan_interval.total_seconds(),
+                    infer_arming_state=infer_arming_state)
     hass.data[DATA_NESS] = client
 
     async def _close(event):

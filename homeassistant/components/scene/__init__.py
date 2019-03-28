@@ -5,8 +5,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TURN_ON)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TURN_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -28,9 +27,8 @@ def _hass_domain_validator(config):
 def _platform_validator(config):
     """Validate it is a valid  platform."""
     try:
-        platform = importlib.import_module(
-            'homeassistant.components.scene.{}'.format(
-                config[CONF_PLATFORM]))
+        platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
+                                           __name__)
     except ImportError:
         try:
             platform = importlib.import_module(
@@ -68,7 +66,7 @@ async def async_setup(hass, config):
 
     async def async_handle_scene_service(service):
         """Handle calls to the switch services."""
-        target_scenes = component.async_extract_from_service(service)
+        target_scenes = await component.async_extract_from_service(service)
 
         tasks = [scene.async_activate() for scene in target_scenes]
         if tasks:

@@ -8,11 +8,12 @@ callbacks when device states change.
 import asyncio
 import functools
 import logging
+from urllib.parse import urlparse
 from uuid import uuid4
 
 from aiohttp import web
 
-from homeassistant.components import webhook
+from homeassistant.components import cloud, webhook
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -21,9 +22,10 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     APP_NAME_PREFIX, APP_OAUTH_CLIENT_NAME, APP_OAUTH_SCOPES, CONF_APP_ID,
-    CONF_INSTALLED_APP_ID, CONF_INSTALLED_APPS, CONF_INSTANCE_ID,
-    CONF_LOCATION_ID, CONF_REFRESH_TOKEN, DATA_BROKERS, DATA_MANAGER, DOMAIN,
-    SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX, STORAGE_KEY, STORAGE_VERSION)
+    CONF_CLOUDHOOK_URL, CONF_INSTALLED_APP_ID, CONF_INSTALLED_APPS,
+    CONF_INSTANCE_ID, CONF_LOCATION_ID, CONF_REFRESH_TOKEN, DATA_BROKERS,
+    DATA_MANAGER, DOMAIN, SETTINGS_INSTANCE_ID, SIGNAL_SMARTAPP_PREFIX,
+    STORAGE_KEY, STORAGE_VERSION)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,15 +61,41 @@ async def validate_installed_app(api, installed_app_id: str):
     return installed_app
 
 
+def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
+    """Ensure HASS is setup properly to receive webhooks."""
+    if cloud.async_active_subscription(hass):
+        return True
+    if hass.data[DOMAIN][CONF_CLOUDHOOK_URL] is not None:
+        return True
+    return get_webhook_url(hass).lower().startswith('https://')
+
+
+def get_webhook_url(hass: HomeAssistantType) -> str:
+    """
+    Get the URL of the webhook.
+
+    Return the cloudhook if available, otherwise local webhook.
+    """
+    cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
+    if cloud.async_active_subscription(hass) and cloudhook_url is not None:
+        return cloudhook_url
+    return webhook.async_generate_url(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
+
+
 def _get_app_template(hass: HomeAssistantType):
     from pysmartthings import APP_TYPE_WEBHOOK, CLASSIFICATION_AUTOMATION
+
+    endpoint = "at " + hass.config.api.base_url
+    cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
+    if cloudhook_url is not None:
+        endpoint = "via Nabu Casa"
+    description = "{} {}".format(hass.config.location_name, endpoint)
 
     return {
         'app_name': APP_NAME_PREFIX + str(uuid4()),
         'display_name': 'Home Assistant',
-        'description': "Home Assistant at " + hass.config.api.base_url,
-        'webhook_target_url': webhook.async_generate_url(
-            hass, hass.data[DOMAIN][CONF_WEBHOOK_ID]),
+        'description': description,
+        'webhook_target_url': get_webhook_url(hass),
         'app_type': APP_TYPE_WEBHOOK,
         'single_instance': True,
         'classifications': [CLASSIFICATION_AUTOMATION]
@@ -162,9 +190,25 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),
-            CONF_WEBHOOK_ID: webhook.generate_secret()
+            CONF_WEBHOOK_ID: webhook.generate_secret(),
+            CONF_CLOUDHOOK_URL: None
         }
         await store.async_save(config)
+
+    # Register webhook
+    webhook.async_register(hass, DOMAIN, 'SmartApp',
+                           config[CONF_WEBHOOK_ID], smartapp_webhook)
+
+    # Create webhook if eligible
+    cloudhook_url = config.get(CONF_CLOUDHOOK_URL)
+    if cloudhook_url is None \
+            and cloud.async_active_subscription(hass) \
+            and not hass.config_entries.async_entries(DOMAIN):
+        cloudhook_url = await cloud.async_create_cloudhook(
+            hass, config[CONF_WEBHOOK_ID])
+        config[CONF_CLOUDHOOK_URL] = cloudhook_url
+        await store.async_save(config)
+        _LOGGER.debug("Created cloudhook '%s'", cloudhook_url)
 
     # SmartAppManager uses a dispatcher to invoke callbacks when push events
     # occur. Use hass' implementation instead of the built-in one.
@@ -172,23 +216,54 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         signal_prefix=SIGNAL_SMARTAPP_PREFIX,
         connect=functools.partial(async_dispatcher_connect, hass),
         send=functools.partial(async_dispatcher_send, hass))
-    manager = SmartAppManager(
-        webhook.async_generate_path(config[CONF_WEBHOOK_ID]),
-        dispatcher=dispatcher)
+    # Path is used in digital signature validation
+    path = urlparse(cloudhook_url).path if cloudhook_url else \
+        webhook.async_generate_path(config[CONF_WEBHOOK_ID])
+    manager = SmartAppManager(path, dispatcher=dispatcher)
     manager.connect_install(functools.partial(smartapp_install, hass))
     manager.connect_update(functools.partial(smartapp_update, hass))
     manager.connect_uninstall(functools.partial(smartapp_uninstall, hass))
-
-    webhook.async_register(hass, DOMAIN, 'SmartApp',
-                           config[CONF_WEBHOOK_ID], smartapp_webhook)
 
     hass.data[DOMAIN] = {
         DATA_MANAGER: manager,
         CONF_INSTANCE_ID: config[CONF_INSTANCE_ID],
         DATA_BROKERS: {},
         CONF_WEBHOOK_ID: config[CONF_WEBHOOK_ID],
+        # Will not be present if not enabled
+        CONF_CLOUDHOOK_URL: config.get(CONF_CLOUDHOOK_URL),
         CONF_INSTALLED_APPS: []
     }
+    _LOGGER.debug("Setup endpoint for %s",
+                  cloudhook_url if cloudhook_url else
+                  webhook.async_generate_url(hass, config[CONF_WEBHOOK_ID]))
+
+
+async def unload_smartapp_endpoint(hass: HomeAssistantType):
+    """Tear down the component configuration."""
+    if DOMAIN not in hass.data:
+        return
+    # Remove the cloudhook if it was created
+    cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
+    if cloudhook_url and cloud.async_is_logged_in(hass):
+        await cloud.async_delete_cloudhook(
+            hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
+        # Remove cloudhook from storage
+        store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        await store.async_save({
+            CONF_INSTANCE_ID: hass.data[DOMAIN][CONF_INSTANCE_ID],
+            CONF_WEBHOOK_ID: hass.data[DOMAIN][CONF_WEBHOOK_ID],
+            CONF_CLOUDHOOK_URL: None
+        })
+        _LOGGER.debug("Cloudhook '%s' was removed", cloudhook_url)
+    # Remove the webhook
+    webhook.async_unregister(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
+    # Disconnect all brokers
+    for broker in hass.data[DOMAIN][DATA_BROKERS].values():
+        broker.disconnect()
+    # Remove all handlers from manager
+    hass.data[DOMAIN][DATA_MANAGER].dispatcher.disconnect_all()
+    # Remove the component data
+    hass.data.pop(DOMAIN)
 
 
 async def smartapp_sync_subscriptions(
@@ -285,6 +360,9 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
         # Store the data where the flow can find it
         hass.data[DOMAIN][CONF_INSTALLED_APPS].append(install_data)
 
+    _LOGGER.debug("Installed SmartApp '%s' under parent app '%s'",
+                  req.installed_app_id, app.app_id)
+
 
 async def smartapp_update(hass: HomeAssistantType, req, resp, app):
     """
@@ -301,7 +379,7 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
         entry.data[CONF_REFRESH_TOKEN] = req.refresh_token
         hass.config_entries.async_update_entry(entry)
 
-    _LOGGER.debug("SmartApp '%s' under parent app '%s' was updated",
+    _LOGGER.debug("Updated SmartApp '%s' under parent app '%s'",
                   req.installed_app_id, app.app_id)
 
 
@@ -316,11 +394,12 @@ async def smartapp_uninstall(hass: HomeAssistantType, req, resp, app):
                   req.installed_app_id),
                  None)
     if entry:
-        _LOGGER.debug("SmartApp '%s' under parent app '%s' was removed",
-                      req.installed_app_id, app.app_id)
         # Add as job not needed because the current coroutine was invoked
         # from the dispatcher and is not being awaited.
         await hass.config_entries.async_remove(entry.entry_id)
+
+    _LOGGER.debug("Uninstalled SmartApp '%s' under parent app '%s'",
+                  req.installed_app_id, app.app_id)
 
 
 async def smartapp_webhook(hass: HomeAssistantType, webhook_id: str, request):

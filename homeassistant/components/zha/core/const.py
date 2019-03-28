@@ -1,5 +1,12 @@
 """All constants related to the ZHA component."""
 import enum
+import logging
+
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.fan import DOMAIN as FAN
+from homeassistant.components.light import DOMAIN as LIGHT
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
 
 DOMAIN = 'zha'
 
@@ -17,13 +24,13 @@ DATA_ZHA_CORE_EVENTS = 'zha_core_events'
 DATA_ZHA_GATEWAY = 'zha_gateway'
 ZHA_DISCOVERY_NEW = 'zha_discovery_new_{}'
 
-COMPONENTS = [
-    'binary_sensor',
-    'fan',
-    'light',
-    'sensor',
-    'switch',
-]
+COMPONENTS = (
+    BINARY_SENSOR,
+    FAN,
+    LIGHT,
+    SENSOR,
+    SWITCH,
+)
 
 CONF_BAUDRATE = 'baudrate'
 CONF_DATABASE = 'database_path'
@@ -32,6 +39,10 @@ CONF_RADIO_TYPE = 'radio_type'
 CONF_USB_PATH = 'usb_path'
 DATA_DEVICE_CONFIG = 'zha_device_config'
 ENABLE_QUIRKS = 'enable_quirks'
+
+RADIO = 'radio'
+RADIO_DESCRIPTION = 'radio_description'
+CONTROLLER = 'controller'
 
 DEFAULT_RADIO_TYPE = 'ezsp'
 DEFAULT_BAUDRATE = 57600
@@ -68,18 +79,20 @@ UNKNOWN = 'unknown'
 OPENING = 'opening'
 ZONE = 'zone'
 OCCUPANCY = 'occupancy'
+ACCELERATION = 'acceleration'
 
 ATTR_LEVEL = 'level'
 
+ZDO_CHANNEL = 'zdo'
 ON_OFF_CHANNEL = 'on_off'
 ATTRIBUTE_CHANNEL = 'attribute'
 BASIC_CHANNEL = 'basic'
-COLOR_CHANNEL = 'color'
+COLOR_CHANNEL = 'light_color'
 FAN_CHANNEL = 'fan'
 LEVEL_CHANNEL = ATTR_LEVEL
-ZONE_CHANNEL = 'zone'
-ELECTRICAL_MEASUREMENT_CHANNEL = 'active_power'
-POWER_CONFIGURATION_CHANNEL = 'battery'
+ZONE_CHANNEL = 'ias_zone'
+ELECTRICAL_MEASUREMENT_CHANNEL = 'electrical_measurement'
+POWER_CONFIGURATION_CHANNEL = 'power'
 EVENT_RELAY_CHANNEL = 'event_relay'
 
 SIGNAL_ATTR_UPDATED = 'attribute_updated'
@@ -91,6 +104,36 @@ SIGNAL_REMOVE = 'remove'
 
 QUIRK_APPLIED = 'quirk_applied'
 QUIRK_CLASS = 'quirk_class'
+MANUFACTURER_CODE = 'manufacturer_code'
+POWER_SOURCE = 'power_source'
+
+BELLOWS = 'bellows'
+ZHA = 'homeassistant.components.zha'
+ZIGPY = 'zigpy'
+ZIGPY_XBEE = 'zigpy_xbee'
+ZIGPY_DECONZ = 'zigpy_deconz'
+ORIGINAL = 'original'
+CURRENT = 'current'
+DEBUG_LEVELS = {
+    BELLOWS: logging.DEBUG,
+    ZHA: logging.DEBUG,
+    ZIGPY: logging.DEBUG,
+    ZIGPY_XBEE: logging.DEBUG,
+    ZIGPY_DECONZ: logging.DEBUG,
+}
+ADD_DEVICE_RELAY_LOGGERS = [ZHA, ZIGPY]
+TYPE = 'type'
+NWK = 'nwk'
+SIGNATURE = 'signature'
+RAW_INIT = 'raw_device_initialized'
+ZHA_GW_MSG = 'zha_gateway_message'
+DEVICE_REMOVED = 'device_removed'
+DEVICE_INFO = 'device_info'
+DEVICE_FULL_INIT = 'device_fully_initialized'
+DEVICE_JOINED = 'device_joined'
+LOG_OUTPUT = 'log_output'
+LOG_ENTRY = 'log_entry'
+MFG_CLUSTER_ID_START = 0xfc00
 
 
 class RadioType(enum.Enum):
@@ -107,15 +150,6 @@ class RadioType(enum.Enum):
 
 
 DISCOVERY_KEY = 'zha_discovery_info'
-DEVICE_CLASS = {}
-SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
-SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
-CLUSTER_REPORT_CONFIGS = {}
-CUSTOM_CLUSTER_MAPPINGS = {}
-COMPONENT_CLUSTERS = {}
-EVENT_RELAY_CLUSTERS = []
-NO_SENSOR_CLUSTERS = []
-BINDABLE_CLUSTERS = []
 
 REPORT_CONFIG_MAX_INT = 900
 REPORT_CONFIG_MAX_INT_BATTERY_SAVE = 10800
@@ -130,7 +164,7 @@ REPORT_CONFIG_DEFAULT = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT,
 REPORT_CONFIG_ASAP = (REPORT_CONFIG_MIN_INT_ASAP, REPORT_CONFIG_MAX_INT,
                       REPORT_CONFIG_RPT_CHANGE)
 REPORT_CONFIG_BATTERY_SAVE = (REPORT_CONFIG_MIN_INT_BATTERY_SAVE,
-                              REPORT_CONFIG_MAX_INT,
+                              REPORT_CONFIG_MAX_INT_BATTERY_SAVE,
                               REPORT_CONFIG_RPT_CHANGE)
 REPORT_CONFIG_IMMEDIATE = (REPORT_CONFIG_MIN_INT_IMMEDIATE,
                            REPORT_CONFIG_MAX_INT,

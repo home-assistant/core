@@ -3,9 +3,12 @@
         "abort": {
             "credential_error": "Error al obtener las credenciales.",
             "devices_configured": "Todos los dispositivos encontrados ya est\u00e1n configurados.",
-            "no_devices_found": "No se encuentran dispositivos PlayStation 4 en la red."
+            "no_devices_found": "No se encuentran dispositivos PlayStation 4 en la red.",
+            "port_987_bind_error": "No se pudo unir al puerto 987.",
+            "port_997_bind_error": "No se pudo unir al puerto 997."
         },
         "error": {
+            "login_failed": "No se ha podido emparejar con PlayStation 4. Verifique que el PIN sea correcto.",
             "not_ready": "PlayStation 4 no est\u00e1 encendido o conectado a la red."
         },
         "step": {

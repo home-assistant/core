@@ -3,11 +3,13 @@ import logging
 from homeassistant.core import callback
 from homeassistant.components.cover import (
     DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION)
-from homeassistant.components import zwave
-from homeassistant.components.zwave import (
-    ZWaveDeviceEntity, workaround)
 from homeassistant.components.cover import CoverDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from . import (
+    ZWaveDeviceEntity, CONF_INVERT_OPENCLOSE_BUTTONS, workaround)
+from .const import (
+    COMMAND_CLASS_SWITCH_MULTILEVEL, COMMAND_CLASS_SWITCH_BINARY,
+    COMMAND_CLASS_BARRIER_OPERATOR, DATA_NETWORK)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,26 +34,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def get_device(hass, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
-    invert_buttons = node_config.get(zwave.CONF_INVERT_OPENCLOSE_BUTTONS)
+    invert_buttons = node_config.get(CONF_INVERT_OPENCLOSE_BUTTONS)
     if (values.primary.command_class ==
-            zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
+            COMMAND_CLASS_SWITCH_MULTILEVEL
             and values.primary.index == 0):
         return ZwaveRollershutter(hass, values, invert_buttons)
-    if values.primary.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY:
+    if values.primary.command_class == COMMAND_CLASS_SWITCH_BINARY:
         return ZwaveGarageDoorSwitch(values)
     if values.primary.command_class == \
-       zwave.const.COMMAND_CLASS_BARRIER_OPERATOR:
+       COMMAND_CLASS_BARRIER_OPERATOR:
         return ZwaveGarageDoorBarrier(values)
     return None
 
 
-class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
+class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
     """Representation of an Z-Wave cover."""
 
     def __init__(self, hass, values, invert_buttons):
         """Initialize the Z-Wave rollershutter."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
-        self._network = hass.data[zwave.const.DATA_NETWORK]
+        self._network = hass.data[DATA_NETWORK]
         self._open_id = None
         self._close_id = None
         self._current_position = None
@@ -115,7 +117,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self._network.manager.releaseButton(self._open_id)
 
 
-class ZwaveGarageDoorBase(zwave.ZWaveDeviceEntity, CoverDevice):
+class ZwaveGarageDoorBase(ZWaveDeviceEntity, CoverDevice):
     """Base class for a Zwave garage door device."""
 
     def __init__(self, values):

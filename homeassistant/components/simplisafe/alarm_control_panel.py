@@ -3,13 +3,13 @@ import logging
 import re
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.simplisafe.const import (
-    DATA_CLIENT, DOMAIN, TOPIC_UPDATE)
 from homeassistant.const import (
     CONF_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 

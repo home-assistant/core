@@ -17,9 +17,14 @@ from ..helpers import (
     bind_configure_reporting, construct_unique_id,
     safe_read, get_attr_id_by_name)
 from ..const import (
-    CLUSTER_REPORT_CONFIGS, REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED,
-    ATTRIBUTE_CHANNEL, EVENT_RELAY_CHANNEL
+    REPORT_CONFIG_DEFAULT, SIGNAL_ATTR_UPDATED, ATTRIBUTE_CHANNEL,
+    EVENT_RELAY_CHANNEL, ZDO_CHANNEL
 )
+from ..registries import CLUSTER_REPORT_CONFIGS
+
+NODE_DESCRIPTOR_REQUEST = 0x0002
+MAINS_POWERED = 1
+BATTERY_OR_UNKNOWN = 0
 
 ZIGBEE_CHANNEL_REGISTRY = {}
 _LOGGER = logging.getLogger(__name__)
@@ -78,9 +83,14 @@ class ChannelStatus(Enum):
 class ZigbeeChannel:
     """Base channel for a Zigbee cluster."""
 
+    CHANNEL_NAME = None
+
     def __init__(self, cluster, device):
         """Initialize ZigbeeChannel."""
-        self.name = 'channel_{}'.format(cluster.cluster_id)
+        self._channel_name = cluster.ep_attribute
+        if self.CHANNEL_NAME:
+            self._channel_name = self.CHANNEL_NAME
+        self._generic_id = 'channel_0x{:04x}'.format(cluster.cluster_id)
         self._cluster = cluster
         self._zha_device = device
         self._unique_id = construct_unique_id(cluster)
@@ -90,6 +100,11 @@ class ZigbeeChannel:
         )
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
+
+    @property
+    def generic_id(self):
+        """Return the generic id for this channel."""
+        return self._generic_id
 
     @property
     def unique_id(self):
@@ -105,6 +120,11 @@ class ZigbeeChannel:
     def device(self):
         """Return the device this channel is linked to."""
         return self._zha_device
+
+    @property
+    def name(self) -> str:
+        """Return friendly name."""
+        return self._channel_name
 
     @property
     def status(self):
@@ -181,11 +201,16 @@ class ZigbeeChannel:
 
     async def get_attribute_value(self, attribute, from_cache=True):
         """Get the value for an attribute."""
+        manufacturer = None
+        manufacturer_code = self._zha_device.manufacturer_code
+        if self.cluster.cluster_id >= 0xfc00 and manufacturer_code:
+            manufacturer = manufacturer_code
         result = await safe_read(
             self._cluster,
             [attribute],
             allow_cache=from_cache,
-            only_cache=from_cache
+            only_cache=from_cache,
+            manufacturer=manufacturer
         )
         return result.get(attribute)
 
@@ -205,20 +230,21 @@ class ZigbeeChannel:
 class AttributeListeningChannel(ZigbeeChannel):
     """Channel for attribute reports from the cluster."""
 
+    CHANNEL_NAME = ATTRIBUTE_CHANNEL
+
     def __init__(self, cluster, device):
         """Initialize AttributeListeningChannel."""
         super().__init__(cluster, device)
-        self.name = ATTRIBUTE_CHANNEL
         attr = self._report_config[0].get('attr')
         if isinstance(attr, str):
-            self._value_attribute = get_attr_id_by_name(self.cluster, attr)
+            self.value_attribute = get_attr_id_by_name(self.cluster, attr)
         else:
-            self._value_attribute = attr
+            self.value_attribute = attr
 
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
-        if attrid == self._value_attribute:
+        if attrid == self.value_attribute:
             async_dispatcher_send(
                 self._zha_device.hass,
                 "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
@@ -235,14 +261,21 @@ class AttributeListeningChannel(ZigbeeChannel):
 class ZDOChannel:
     """Channel for ZDO events."""
 
+    POWER_SOURCES = {
+        MAINS_POWERED: 'Mains',
+        BATTERY_OR_UNKNOWN: 'Battery or Unknown'
+    }
+
     def __init__(self, cluster, device):
         """Initialize ZDOChannel."""
-        self.name = 'zdo'
+        self.name = ZDO_CHANNEL
         self._cluster = cluster
         self._zha_device = device
         self._status = ChannelStatus.CREATED
         self._unique_id = "{}_ZDO".format(device.name)
         self._cluster.add_listener(self)
+        self.power_source = None
+        self.manufacturer_code = None
 
     @property
     def unique_id(self):
@@ -271,20 +304,59 @@ class ZDOChannel:
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
+        entry = self._zha_device.gateway.zha_storage.async_get_or_create(
+            self._zha_device)
+        _LOGGER.debug("entry loaded from storage: %s", entry)
+        if entry is not None:
+            self.power_source = entry.power_source
+            self.manufacturer_code = entry.manufacturer_code
+
+        if self.power_source is None:
+            self.power_source = BATTERY_OR_UNKNOWN
+
+        if self.manufacturer_code is None and not from_cache:
+            # this should always be set. This is from us not doing
+            # this previously so lets set it up so users don't have
+            # to reconfigure every device.
+            await self.async_get_node_descriptor(False)
+            entry = self._zha_device.gateway.zha_storage.async_update(
+                self._zha_device)
+            _LOGGER.debug("entry after getting node desc in init: %s", entry)
         self._status = ChannelStatus.INITIALIZED
+
+    async def async_get_node_descriptor(self, from_cache):
+        """Request the node descriptor from the device."""
+        from zigpy.zdo.types import Status
+
+        if from_cache:
+            return
+
+        node_descriptor = await self._cluster.request(
+            NODE_DESCRIPTOR_REQUEST,
+            self._cluster.device.nwk, tries=3, delay=2)
+
+        def get_bit(byteval, idx):
+            return int(((byteval & (1 << idx)) != 0))
+
+        if node_descriptor is not None and\
+                node_descriptor[0] == Status.SUCCESS:
+            mac_capability_flags = node_descriptor[2].mac_capability_flags
+
+            self.power_source = get_bit(mac_capability_flags, 2)
+            self.manufacturer_code = node_descriptor[2].manufacturer_code
+
+            _LOGGER.debug("node descriptor: %s", node_descriptor)
 
     async def async_configure(self):
         """Configure channel."""
+        await self.async_get_node_descriptor(False)
         self._status = ChannelStatus.CONFIGURED
 
 
 class EventRelayChannel(ZigbeeChannel):
     """Event relay that can be attached to zigbee clusters."""
 
-    def __init__(self, cluster, device):
-        """Initialize EventRelayChannel."""
-        super().__init__(cluster, device)
-        self.name = EVENT_RELAY_CHANNEL
+    CHANNEL_NAME = EVENT_RELAY_CHANNEL
 
     @callback
     def attribute_updated(self, attrid, value):

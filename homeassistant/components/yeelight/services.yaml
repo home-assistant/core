@@ -1,0 +1,25 @@
+set_mode:
+  description: Set a operation mode.
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      example: 'light.yeelight'
+    mode:
+      description: Operation mode. Valid values are 'last', 'normal', 'rgb', 'hsv', 'color_flow', 'moonlight'.
+      example: 'moonlight'
+
+start_flow:
+  description: Start a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      example: 'light.yeelight'
+    count:
+      description: The number of times to run this flow (0 to run forever).
+      example: 0
+    action:
+      description: The action to take after the flow stops. Can be 'recover', 'stay', 'off'. (default 'recover')
+      example: 'stay'
+    transitions:
+      description: Array of transitions, for desired effect. Examples https://yeelight.readthedocs.io/en/stable/flow.html
+      example: '[{ "TemperatureTransition": [1900, 1000, 80] }, { "TemperatureTransition": [1900, 1000, 10] }]'

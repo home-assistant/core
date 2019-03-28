@@ -6,20 +6,20 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.core import CoreState, Context
-from homeassistant.loader import bind_hass
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID,
-    EVENT_AUTOMATION_TRIGGERED, ATTR_NAME)
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_ID, CONF_PLATFORM,
+    EVENT_AUTOMATION_TRIGGERED, EVENT_HOMEASSISTANT_START, SERVICE_RELOAD,
+    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+from homeassistant.core import Context, CoreState
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import extract_domain_configs, script, condition
+from homeassistant.helpers import condition, extract_domain_configs, script
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.loader import bind_hass
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.dt import utcnow
-import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'automation'
 DEPENDENCIES = ['group']
@@ -54,9 +54,8 @@ _LOGGER = logging.getLogger(__name__)
 def _platform_validator(config):
     """Validate it is a valid  platform."""
     try:
-        platform = importlib.import_module(
-            'homeassistant.components.automation.{}'.format(
-                config[CONF_PLATFORM]))
+        platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
+                                           __name__)
     except ImportError:
         raise vol.Invalid('Invalid platform specified') from None
 
@@ -120,7 +119,7 @@ async def async_setup(hass, config):
     async def trigger_service_handler(service_call):
         """Handle automation triggers."""
         tasks = []
-        for entity in component.async_extract_from_service(service_call):
+        for entity in await component.async_extract_from_service(service_call):
             tasks.append(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES),
                 skip_condition=True,
@@ -133,7 +132,7 @@ async def async_setup(hass, config):
         """Handle automation turn on/off service calls."""
         tasks = []
         method = 'async_{}'.format(service_call.service)
-        for entity in component.async_extract_from_service(service_call):
+        for entity in await component.async_extract_from_service(service_call):
             tasks.append(getattr(entity, method)())
 
         if tasks:
@@ -142,7 +141,7 @@ async def async_setup(hass, config):
     async def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
         tasks = []
-        for entity in component.async_extract_from_service(service_call):
+        for entity in await component.async_extract_from_service(service_call):
             if entity.is_on:
                 tasks.append(entity.async_turn_off())
             else:
