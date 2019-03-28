@@ -69,31 +69,29 @@ def setup(hass, hass_config):
     scan_interval = timedelta(
         minutes=(scan_interval.total_seconds() + 59) // 60)
 
-    from evohomeclient2 import EvohomeClient
+    import evohomeclient2
 
     try:
-        client = evo_data['client'] = EvohomeClient(
+        client = evo_data['client'] = evohomeclient2.EvohomeClient(
             evo_data['params'][CONF_USERNAME],
             evo_data['params'][CONF_PASSWORD],
             debug=False
         )
 
-    except EvohomeClient2.AuthenticationError as err:
+    except evohomeclient2.AuthenticationError as err:
         _LOGGER.error(
             "setup(): Failed to authenticate with the vendor's server. "
-            "Check your username (%s), and password are correct. ",
-            "Unable to continue. Resolve any errors and restart HA.",
-            evo_data['params'][CONF_USERNAME],
-            exc_info=True
+            "Check your username (%s) and password are correct. "
+            "Resolve any errors and restart HA. Message is: %s",
+            evo_data['params'][CONF_USERNAME], err
         )
         return False
 
     except requests.exceptions.ConnectionError:
         _LOGGER.error(
-            "setup(): Failed to connect with the vendor's web servers. "
-            "The server is not contactable (maybe the vendor's fault?). "
-            "Unable to continue. Resolve any errors and restart HA.",
-            exc_info=True
+            "setup(): Unable to connect with the vendor's server. "
+            "Check your network and the vendor's status page. "
+            "Resolve any errors and restart HA."
         )
         return False
 

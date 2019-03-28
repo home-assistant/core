@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 
+import evohomeclient2
 import requests.exceptions
 
 from homeassistant.components.climate import ClimateDevice
@@ -132,19 +133,18 @@ class EvoClimateDevice(ClimateDevice):
         try:
             raise err
 
-        except EvohomeClient2.AuthenticationError as err:
+        except evohomeclient2.AuthenticationError as err:
             _LOGGER.error(
                 "Failed to (re)authenticate with the vendor's server. "
-                "This may be a temporary error.",
-                exc_info=True
+                "This may be a temporary error. Message is: %s",
+                err
             )
 
         except requests.exceptions.ConnectionError:
             # this appears to be common with Honeywell's servers
             _LOGGER.warning(
                 "Unable to connect with the vendor's server. "
-                "Check your network and the vendor's status page.",
-                exc_info=True
+                "Check your network and the vendor's status page."
             )
 
         except requests.exceptions.HTTPError:
@@ -306,7 +306,8 @@ class EvoZone(EvoClimateDevice):
         """
         try:
             self._obj.set_temperature(temperature, until)
-        except requests.exceptions.HTTPError as err:
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
 
     def set_temperature(self, **kwargs):
@@ -356,7 +357,8 @@ class EvoZone(EvoClimateDevice):
         if operation_mode == EVO_FOLLOW:
             try:
                 self._obj.cancel_temp_override()
-            except requests.exceptions.HTTPError as err:
+            except (requests.exceptions.RequestException,
+                    evohomeclient2.AuthenticationError) as err:
                 self._handle_exception(err)
 
         elif operation_mode == EVO_TEMPOVER:
@@ -518,7 +520,8 @@ class EvoController(EvoClimateDevice):
     def _set_operation_mode(self, operation_mode):
         try:
             self._obj._set_status(operation_mode)                                # noqa: E501; pylint: disable=protected-access
-        except requests.exceptions.HTTPError as err:
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
 
     def set_operation_mode(self, operation_mode):
@@ -555,7 +558,8 @@ class EvoController(EvoClimateDevice):
         try:
             self._status.update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])
-        except requests.exceptions.HTTPError as err:
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
         else:
             self._timers['statusUpdated'] = datetime.now()
