@@ -6,7 +6,6 @@ import pytest
 from homeassistant.const import CONF_FILENAME
 from homeassistant.components.stream.const import (
     DOMAIN, SERVICE_RECORD, CONF_STREAM_SOURCE, CONF_LOOKBACK, ATTR_STREAMS)
-from homeassistant.components.stream.recorder import RecorderOutput
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
