@@ -15,7 +15,6 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE \
     | SUPPORT_ON_OFF | SUPPORT_AWAY_MODE
 # Genius supports the operation modes: Off, Override, Footprint and Timer
@@ -56,11 +55,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     client = hass.data[DOMAIN]['client']
     await client.getjson('/zones')
 
-    # Get the zones with a temperature
-    climate_list = client.getClimateList()
-
-    for zone in climate_list:
-        async_add_entities([GeniusClimate(client, zone)])
+    zones = []
+    for zone in client.getClimateList():
+        zones.append(GeniusClimate(client, zone))
+    async_add_entities(zones, update_before_add=False)
 
 
 class GeniusClimate(ClimateDevice):
