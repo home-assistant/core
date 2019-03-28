@@ -91,6 +91,7 @@ YEELIGHT_SERVICE_SCHEMA = vol.Schema({
 
 UPDATE_REQUEST_PROPERTIES = [
     "power",
+    "main_power",
     "bright",
     "ct",
     "rgb",
@@ -98,6 +99,13 @@ UPDATE_REQUEST_PROPERTIES = [
     "sat",
     "color_mode",
     "bg_power",
+    "bg_lmode",
+    "bg_flowing",
+    "bg_ct",
+    "bg_bright",
+    "bg_hue",
+    "bg_sat",
+    "bg_rgb",
     "nl_br",
     "active_mode",
 ]
@@ -136,7 +144,7 @@ def _parse_custom_effects(effects_config):
 
 def setup(hass, config):
     """Set up the Yeelight bulbs."""
-    conf = config[DOMAIN]
+    conf = config.get(DOMAIN, {})
     yeelight_data = hass.data[DATA_YEELIGHT] = {}
 
     def device_discovered(service, info):
@@ -161,12 +169,13 @@ def setup(hass, config):
             device.update()
 
     track_time_interval(
-        hass, update, conf[CONF_SCAN_INTERVAL]
+        hass, update, conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     )
 
-    for ipaddr, device_config in conf[CONF_DEVICES].items():
-        _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
-        _setup_device(hass, config, ipaddr, device_config)
+    if DOMAIN in config:
+        for ipaddr, device_config in conf[CONF_DEVICES].items():
+            _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
+            _setup_device(hass, config, ipaddr, device_config)
 
     return True
 
@@ -184,7 +193,7 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     platform_config = device_config.copy()
     platform_config[CONF_HOST] = ipaddr
     platform_config[CONF_CUSTOM_EFFECTS] = _parse_custom_effects(
-        hass_config[DATA_YEELIGHT].get(CONF_CUSTOM_EFFECTS, {})
+        hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
     )
 
     load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
@@ -249,22 +258,34 @@ class YeelightDevice:
         """Return true / false if nightlight is supported."""
         return self.bulb.get_model_specs().get('night_light', False)
 
-    def turn_on(self, duration=DEFAULT_TRANSITION):
+    @property
+    def is_ambilight_supported(self) -> bool:
+        """Return true / false if ambilight is supported."""
+        return self.bulb.get_model_specs().get('background_light', False)
+
+    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn on device."""
         import yeelight
 
+        if not light_type:
+            light_type = yeelight.enums.LightType.Main
+
         try:
-            self._bulb_device.turn_on(duration=duration)
+            self._bulb_device.turn_on(duration=duration, light_type=light_type)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
 
-    def turn_off(self, duration=DEFAULT_TRANSITION):
+    def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
         import yeelight
 
+        if not light_type:
+            light_type = yeelight.enums.LightType.Main
+
         try:
-            self._bulb_device.turn_off(duration=duration)
+            self._bulb_device.turn_off(duration=duration,
+                                       light_type=light_type)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return

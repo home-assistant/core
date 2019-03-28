@@ -327,11 +327,7 @@ def mock_registry(hass, mock_entries=None):
     registry = entity_registry.EntityRegistry(hass)
     registry.entities = mock_entries or OrderedDict()
 
-    async def _get_reg():
-        return registry
-
-    hass.data[entity_registry.DATA_REGISTRY] = \
-        hass.loop.create_task(_get_reg())
+    hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
 
 
@@ -340,11 +336,7 @@ def mock_area_registry(hass, mock_entries=None):
     registry = area_registry.AreaRegistry(hass)
     registry.areas = mock_entries or OrderedDict()
 
-    async def _get_reg():
-        return registry
-
-    hass.data[area_registry.DATA_REGISTRY] = \
-        hass.loop.create_task(_get_reg())
+    hass.data[area_registry.DATA_REGISTRY] = registry
     return registry
 
 
@@ -353,11 +345,7 @@ def mock_device_registry(hass, mock_entries=None):
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = mock_entries or OrderedDict()
 
-    async def _get_reg():
-        return registry
-
-    hass.data[device_registry.DATA_REGISTRY] = \
-        hass.loop.create_task(_get_reg())
+    hass.data[device_registry.DATA_REGISTRY] = registry
     return registry
 
 

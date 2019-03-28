@@ -110,10 +110,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Adding %s", device.name)
 
     custom_effects = discovery_info[CONF_CUSTOM_EFFECTS]
-    light = YeelightLight(device, custom_effects=custom_effects)
 
-    hass.data[data_key].append(light)
-    add_entities([light], True)
+    lights = [YeelightLight(device, custom_effects=custom_effects)]
+
+    if device.is_ambilight_supported:
+        lights.append(
+            YeelightAmbientLight(device, custom_effects=custom_effects))
+
+    hass.data[data_key] += lights
+    add_entities(lights, True)
 
     def service_handler(service):
         """Dispatch service calls to target entities."""
@@ -243,9 +248,16 @@ class YeelightLight(Light):
         """Return list with custom effects names."""
         return list(self.custom_effects.keys())
 
+    @property
+    def light_type(self):
+        """Return light type."""
+        import yeelight
+        return yeelight.enums.LightType.Main
+
     def _get_hs_from_properties(self):
-        rgb = self._properties.get('rgb', None)
-        color_mode = self._properties.get('color_mode', None)
+        rgb = self._get_property('rgb')
+        color_mode = self._get_property('color_mode')
+
         if not rgb or not color_mode:
             return None
 
@@ -254,8 +266,9 @@ class YeelightLight(Light):
             temp_in_k = mired_to_kelvin(self._color_temp)
             return color_util.color_temperature_to_hs(temp_in_k)
         if color_mode == 3:  # hsv
-            hue = int(self._properties.get('hue'))
-            sat = int(self._properties.get('sat'))
+            hue = int(self._get_property('hue'))
+            sat = int(self._get_property('sat'))
+
             return (hue / 360 * 65536, sat / 100 * 255)
 
         rgb = int(rgb)
@@ -276,10 +289,17 @@ class YeelightLight(Light):
             return {}
         return self._bulb.last_properties
 
+    def _get_property(self, prop, default=None):
+        return self._properties.get(prop, default)
+
     @property
     def device(self):
         """Return yeelight device."""
         return self._device
+
+    @property
+    def _is_nightlight_enabled(self):
+        return self.device.is_nightlight_enabled
 
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
@@ -304,32 +324,41 @@ class YeelightLight(Light):
         """Update properties from the bulb."""
         import yeelight
         try:
-            if self._bulb.bulb_type == yeelight.BulbType.Color:
+            bulb_type = self._bulb.bulb_type
+
+            if bulb_type == yeelight.BulbType.Color:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
-            elif self._bulb.bulb_type == yeelight.BulbType.WhiteTemp:
-                if self._device.is_nightlight_enabled:
+            elif self.light_type == yeelight.enums.LightType.Ambient:
+                self._supported_features = SUPPORT_YEELIGHT_RGB
+            elif bulb_type in (yeelight.BulbType.WhiteTemp,
+                               yeelight.BulbType.WhiteTempMood):
+                if self._is_nightlight_enabled:
                     self._supported_features = SUPPORT_YEELIGHT
                 else:
                     self._supported_features = SUPPORT_YEELIGHT_WHITE_TEMP
 
-            if self._min_mireds is None:
+            if self.min_mireds is None:
                 model_specs = self._bulb.get_model_specs()
                 self._min_mireds = \
                     kelvin_to_mired(model_specs['color_temp']['max'])
                 self._max_mireds = \
                     kelvin_to_mired(model_specs['color_temp']['min'])
 
-            self._is_on = self._properties.get('power') == 'on'
-
-            if self._device.is_nightlight_enabled:
-                bright = self._properties.get('nl_br', None)
+            if bulb_type == yeelight.BulbType.WhiteTempMood:
+                self._is_on = self._get_property('main_power') == 'on'
             else:
-                bright = self._properties.get('bright', None)
+                self._is_on = self._get_property('power') == 'on'
+
+            if self._is_nightlight_enabled:
+                bright = self._get_property('nl_br', None)
+            else:
+                bright = self._get_property('bright', None)
 
             if bright:
                 self._brightness = round(255 * (int(bright) / 100))
 
-            temp_in_k = self._properties.get('ct', None)
+            temp_in_k = self._get_property('ct')
+
             if temp_in_k:
                 self._color_temp = kelvin_to_mired(int(temp_in_k))
 
@@ -347,14 +376,16 @@ class YeelightLight(Light):
         if brightness:
             _LOGGER.debug("Setting brightness: %s", brightness)
             self._bulb.set_brightness(brightness / 255 * 100,
-                                      duration=duration)
+                                      duration=duration,
+                                      light_type=self.light_type)
 
     @_cmd
     def set_rgb(self, rgb, duration) -> None:
         """Set bulb's color."""
         if rgb and self.supported_features & SUPPORT_COLOR:
             _LOGGER.debug("Setting RGB: %s", rgb)
-            self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration)
+            self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration,
+                               light_type=self.light_type)
 
     @_cmd
     def set_colortemp(self, colortemp, duration) -> None:
@@ -363,7 +394,8 @@ class YeelightLight(Light):
             temp_in_k = mired_to_kelvin(colortemp)
             _LOGGER.debug("Setting color temp: %s K", temp_in_k)
 
-            self._bulb.set_color_temp(temp_in_k, duration=duration)
+            self._bulb.set_color_temp(temp_in_k, duration=duration,
+                                      light_type=self.light_type)
 
     @_cmd
     def set_default(self) -> None:
@@ -401,7 +433,7 @@ class YeelightLight(Light):
 
             flow = Flow(count=count, transitions=transitions)
             try:
-                self._bulb.start_flow(flow)
+                self._bulb.start_flow(flow, light_type=self.light_type)
             except BulbException as ex:
                 _LOGGER.error("Unable to set flash: %s", ex)
 
@@ -415,7 +447,7 @@ class YeelightLight(Light):
                                               police2, christmas, rgb,
                                               randomloop, lsd, slowdown)
             if effect == EFFECT_STOP:
-                self._bulb.stop_flow()
+                self._bulb.stop_flow(light_type=self.light_type)
                 return
 
             effects_map = {
@@ -447,7 +479,7 @@ class YeelightLight(Light):
                 flow = Flow(count=2, transitions=pulse(0, 172, 237))
 
             try:
-                self._bulb.start_flow(flow)
+                self._bulb.start_flow(flow, light_type=self.light_type)
             except BulbException as ex:
                 _LOGGER.error("Unable to set effect: %s", ex)
 
@@ -465,7 +497,7 @@ class YeelightLight(Light):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self.device.turn_on(duration=duration)
+        self.device.turn_on(duration=duration, light_type=self.light_type)
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
@@ -502,7 +534,7 @@ class YeelightLight(Light):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self.device.turn_off(duration=duration)
+        self.device.turn_off(duration=duration, light_type=self.light_type)
         self.device.update()
 
     def set_mode(self, mode: str):
@@ -525,7 +557,45 @@ class YeelightLight(Light):
                 action=yeelight.Flow.actions[action],
                 transitions=transitions)
 
-            self._bulb.start_flow(flow)
+            self._bulb.start_flow(flow, light_type=self.light_type)
             self.device.update()
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to set effect: %s", ex)
+
+
+class YeelightAmbientLight(YeelightLight):
+    """Representation of a Yeelight ambient light."""
+
+    PROPERTIES_MAPPING = {
+        "color_mode": "bg_lmode",
+        "main_power": "bg_power",
+    }
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the Yeelight Ambient light."""
+        super().__init__(*args, **kwargs)
+        self._min_mireds = kelvin_to_mired(6500)
+        self._max_mireds = kelvin_to_mired(1700)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        return "{} ambilight".format(self.device.name)
+
+    @property
+    def light_type(self):
+        """Return light type."""
+        import yeelight
+        return yeelight.enums.LightType.Ambient
+
+    @property
+    def _is_nightlight_enabled(self):
+        return False
+
+    def _get_property(self, prop, default=None):
+        bg_prop = self.PROPERTIES_MAPPING.get(prop)
+
+        if not bg_prop:
+            bg_prop = "bg_" + prop
+
+        return self._properties.get(bg_prop, default)
