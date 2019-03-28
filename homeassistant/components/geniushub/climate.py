@@ -1,6 +1,4 @@
-"""
-Supports Genius hub to provide climate controls.
-"""
+"""Supports Genius hub to provide climate controls."""
 import logging
 
 from homeassistant.components.climate import ClimateDevice
@@ -47,7 +45,6 @@ MODE_MAP = {
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-
     """Set up the Genius hub climate devices."""
     if discovery_info is None:
         return
