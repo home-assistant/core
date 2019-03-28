@@ -2,9 +2,7 @@
 import logging
 from datetime import timedelta, datetime
 
-from homeassistant.components.repetier import (SENSOR_TYPES,
-                                               DOMAIN as COMPONENT_DOMAIN)
-from homeassistant.const import (TEMP_CELSIUS)
+from homeassistant.components.repetier import (SENSOR_TYPES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import Throttle
@@ -14,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['repetier']
 
 SCAN_INTERVAL = timedelta(seconds=5)
+TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Repetier Server sensors."""
@@ -28,13 +27,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     monitored_conditions = discovery_info['sensors']
 
     def refresh(event_time):
-        """Update sensors"""
+        """Update sensors."""
         _addDevice()
 
     track_time_interval(hass, refresh, SCAN_INTERVAL)
 
     def _addDevice():
-        """Add devices"""
+        """Add devices."""
         server = pyrepetier.Repetier(
             url=url,
             port=port,
@@ -44,12 +43,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devices = []
 
         for sens_type in monitored_conditions:
-            _LOGGER.debug("Checking for %s sensor types on %s",
-                          sens_type,
-                          printers[id]['name'])
             if sens_type == 'Temperatures':
                 nozzles = server.Nozzle(id)
-                if nozzles != None:
+                if nozzles is not None:
                     for nozzle in nozzles:
                         state = hass.states.get('sensor.' +
                                                 printers[id]['slug'] +
@@ -64,12 +60,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                     'sens_type': sens_type}
                             new_sensor = RepetierSensor('nozzle', svar)
                             devices.append(new_sensor)
-                else:
-                    _LOGGER.debug("No nozzles found - is printer %s offline?",
-                                  printers[id]['name'])
 
                 beds = server.Bed(id)
-                if beds != None:
+                if beds is not None:
                     for bed in beds:
                         state = hass.states.get('sensor.' +
                                                 printers[id]['slug'] +
@@ -84,13 +77,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                     'sens_type': sens_type}
                             new_sensor = RepetierSensor('bed', svar)
                             devices.append(new_sensor)
-                else:
-                    _LOGGER.debug("No beds found - is printer %s offline?",
-                                  printers[id]['name'])
+
             elif sens_type == "Current State":
                 state = hass.states.get('sensor.' + printers[id]['slug'])
                 if not state:
-                    _LOGGER.debug("State sensor initiating...")
+                    _LOGGER.debug("State sensor initiating for %s...",
+                                  printers[id]['slug'])
                     new_sensor = RepetierSensor('state',
                                                 {'name': printers[id]['slug'],
                                                  'id': id,
@@ -146,16 +138,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     _addDevice()
 
+
 class RepetierSensor(Entity):
-    """Class to create and populate a Repetier Sensor"""
+    """Class to create and populate a Repetier Sensor."""
 
     def __init__(self, type, data):
-        """Init new sensor"""
+        """Init new sensor."""
         self._name = data['name']
         self._sens_type = data['sens_type']
         self._type = type
         self._server = data['server']
         self._id = data['id']
+
         if type == 'nozzle':
             self._nozzle = data['nozzle']
             self._setpoint = None
@@ -182,7 +176,9 @@ class RepetierSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[self._sens_type][1]
         self._state = None
         self._attributes = None
-        _LOGGER.debug("Created new Repetier Sensor for %s, Type: %s", self._name, self._type)
+        _LOGGER.debug("Created new Repetier Sensor for %s, Type: %s",
+                      self._name,
+                      self._type)
 
     @property
     def name(self):
@@ -191,8 +187,7 @@ class RepetierSensor(Entity):
 
     @property
     def state(self):
-        """Return sensor state"""
-        sens_unit = self.unit_of_measurement
+        """Return sensor state."""
         if self._type == 'nozzle' or self._type == 'bed':
             if self._state is None:
                 self._state = 0
@@ -211,7 +206,7 @@ class RepetierSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Attributes of this sensor"""
+        """Attributes of this sensor."""
         if self._type == 'nozzle' or self._type == 'bed':
             self._attributes = {'setpoint': self._setpoint}
         elif self._type == 'percentage':
@@ -230,32 +225,38 @@ class RepetierSensor(Entity):
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
-        """Update the sensor"""
+        """Update the sensor."""
         import pyrepetier
         import time
         server = pyrepetier.Repetier(url=self._server['url'],
                                      port=self._server['port'],
                                      apikey=self._server['apikey'])
-        printers = server.getPrinters()
+        server.getPrinters()
         if self._type == 'nozzle':
             nozzle = server.Nozzle(self._id)
             _LOGGER.debug(nozzle)
-            if nozzle != None:
-                _LOGGER.debug("Nozzle %s Setpoint: %s, Temp: %s", self._nozzle, nozzle[self._nozzle]['tempset'], nozzle[self._nozzle]['temp']) 
+            if nozzle is not None:
+                _LOGGER.debug("Nozzle %s Setpoint: %s, Temp: %s",
+                              self._nozzle, nozzle[self._nozzle]['tempset'],
+                              nozzle[self._nozzle]['temp'])
                 self._setpoint = nozzle[self._nozzle]['tempset']
                 self._state = nozzle[self._nozzle]['temp']
             else:
-                _LOGGER.debug("Nozzle %s not found - is printer offline?", self._nozzle)
+                _LOGGER.debug("Nozzle %s not found - is printer offline?",
+                              self._nozzle)
                 self._setpoint = None
                 self._state = None
         elif self._type == 'bed':
             bed = server.Bed(self._id)
-            if bed != None:
-                _LOGGER.debug("Bed %s Setpoint: %s, Temp: %s", self._bed, bed[self._bed]['tempset'], bed[self._bed]['temp'])
+            if bed is not None:
+                _LOGGER.debug("Bed %s Setpoint: %s, Temp: %s",
+                              self._bed, bed[self._bed]['tempset'],
+                              bed[self._bed]['temp'])
                 self._setpoint = bed[self._bed]['tempset']
                 self._state = bed[self._bed]['temp']
             else:
-                _LOGGER.debug("Bed %s not found - is printer offline?", self._bed)
+                _LOGGER.debug("Bed %s not found - is printer offline?",
+                              self._bed)
                 self._setpoint = None
                 self._state = None
         elif self._type == 'state':
@@ -264,7 +265,7 @@ class RepetierSensor(Entity):
             self._state = state
         elif self._type == 'percentage':
             state = server.Percent(self._id)
-            if state != None:
+            if state is not None:
                 self._state = round(state, 1)
                 self._jobname = server.JobName(self._id)
                 self._jobid = server.JobID(self._id)
@@ -274,17 +275,20 @@ class RepetierSensor(Entity):
             start = server.TimeStart(self._id)
             end = server.PrintLength(self._id)
             printtime = server.PrintTime(self._id)
-            if start != None and end != None and printtime != None:
+            if start is not None and end is not None and printtime is not None:
                 remaining = end - printtime
-                timeend = start + round(end, 0)
+                tend = start + round(end, 0)
+                dtime = datetime.utcfromtimestamp(tend).strftime(TIME_FORMAT)
                 self._secs = int(round(remaining, 0))
-                self._endtime = datetime.utcfromtimestamp(timeend).strftime('%Y-%m-%d %H:%M:%S')
-                self._state = time.strftime('%H:%M:%S', time.gmtime(self._secs))
+                self._state = time.strftime('%H:%M:%S',
+                                            time.gmtime(self._secs))
         elif self._type == 'elapsed':
             start = server.TimeStart(self._id)
             printtime = server.PrintTime(self._id)
-            if start != None and printtime != None:
-                self._starttime = datetime.utcfromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S')
+            if start is not None and printtime is not None:
+                dtime = datetime.utcfromtimestamp(start).strftime(TIME_FORMAT)
+                self._starttime = dtime
                 self._secs = int(round(printtime, 0))
-                self._state = time.strftime('%H:%M:%S', time.gmtime(self._secs))
+                self._state = time.strftime('%H:%M:%S',
+                                            time.gmtime(self._secs))
 

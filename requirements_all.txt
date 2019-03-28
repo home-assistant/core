@@ -1276,7 +1276,7 @@ pyrecswitch==1.0.2
 # homeassistant.components.ruter
 =======
 # homeassistant.components.repetier
-pyrepetier==2.0.0
+pyrepetier==2.0.1
 
 # homeassistant.components.ruter.sensor
 >>>>>>> Updated requirements and coveragerc

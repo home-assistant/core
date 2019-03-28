@@ -19,13 +19,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 from homeassistant.util import slugify as util_slugify
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['pyrepetier==2.0.0']
+REQUIREMENTS = ['pyrepetier==2.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +50,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema({
 })
 
 SENSOR_TYPES = {
-    #Type, Unit, Icon
+    # Type, Unit, Icon
     'Temperatures': ['temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     "Current State": ['state', None, 'mdi:printer-3d'],
     "Job Percentage": ['progress', '%', 'mdi:file-percent'],
@@ -103,12 +100,14 @@ def setup(hass, config):
 
         for printer in printers:
             sensors = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
-            load_platform(hass, 'sensor', DOMAIN, {'printer': printer,
-                                                   'url': url,
-                                                   'port': port,
-                                                   'apikey': apikey, 
-                                                   'name': printers[printer]['slug'],
-                                                   'sensors': sensors}, repetier)
+            sensvar = {'printer': printer,
+                       'url': url,
+                       'port': port,
+                       'apikey': apikey,
+                       'name': printers[printer]['slug'],
+                       'sensors': sensors}
+
+            load_platform(hass, 'sensor', DOMAIN, sensvar, repetier)
 
             success = True
 
