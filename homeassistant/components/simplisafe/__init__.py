@@ -1,4 +1,5 @@
 """Support for SimpliSafe alarm systems."""
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -107,26 +108,25 @@ async def async_setup_entry(hass, config_entry):
 
     async def refresh(event_time):
         """Refresh data from the SimpliSafe account."""
-        for system in systems:
-            _LOGGER.debug('Updating system data: %s', system.system_id)
-
-            try:
-                await system.update()
-            except SimplipyError as err:
+        tasks = [system.update() for system in systems]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for system, result in zip(systems, results):
+            if isinstance(result, SimplipyError):
                 _LOGGER.error(
-                    'There was error updating "%s": %s', system.address, err)
-                continue
+                    'There was error updating "%s": %s', system.address,
+                    result)
+            else:
+                _LOGGER.debug('Updated status of "%s"', system.address)
+                async_dispatcher_send(
+                    hass, TOPIC_UPDATE.format(system.system_id))
 
-            async_dispatcher_send(hass, TOPIC_UPDATE.format(system.system_id))
-
-            if system.api.refresh_token_dirty:
-                _async_save_refresh_token(
-                    hass, config_entry, system.api.refresh_token)
+                if system.api.refresh_token_dirty:
+                    _async_save_refresh_token(
+                        hass, config_entry, system.api.refresh_token)
 
     hass.data[DOMAIN][DATA_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
-            hass,
-            refresh,
+            hass, refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
     return True
