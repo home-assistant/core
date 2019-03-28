@@ -1,6 +1,7 @@
 """Support for RainMachine devices."""
 import logging
 from datetime import timedelta
+from functools import wraps
 
 import voluptuous as vol
 
@@ -130,36 +131,43 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def _check_service_permissions(hass, service_call):
+def _check_valid_user(hass):
     """Ensure the user of a service call has proper permissions."""
-    if not service_call.context.user_id:
-        return
+    def decorator(service):
+        """Decorate."""
+        @wraps(service)
+        async def check_permissions(call):
+            """Check user permission and raise before call if unauthorized."""
+            if not call.context.user_id:
+                return
 
-    user = await hass.auth.async_get_user(service_call.context.user_id)
-    if user is None:
-        raise UnknownUser(
-            context=service_call.context,
-            permission=POLICY_CONTROL
-        )
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(
+                    context=call.context,
+                    permission=POLICY_CONTROL
+                )
 
-    # RainMachine services don't interact with specific entities. Therefore,
-    # we examine _all_ RainMachine entities and if the user has permission to
-    # control _any_ of them, the user has permission to call the service:
-    en_reg = await hass.helpers.entity_registry.async_get_registry()
-    rainmachine_entities = [
-        entity.entity_id for entity in en_reg.entities
-        if hass.config_entries.async_get_entry(
-            entity.config_entry_id).domain == DOMAIN
-    ]
+            # RainMachine services don't interact with specific entities.
+            # Therefore, we examine _all_ RainMachine entities and if the user
+            # has permission to control _any_ of them, the user has permission
+            # to call the service:
+            en_reg = await hass.helpers.entity_registry.async_get_registry()
+            rainmachine_entities = [
+                entity.entity_id for entity in en_reg.entities.values()
+                if entity.platform == DOMAIN
+            ]
 
-    for entity_id in rainmachine_entities:
-        if user.permissions.check_entity(entity_id, POLICY_CONTROL):
-            return
+            for entity_id in rainmachine_entities:
+                if user.permissions.check_entity(entity_id, POLICY_CONTROL):
+                    return await service(call)
 
-    raise Unauthorized(
-        context=service_call.context,
-        permission=POLICY_CONTROL,
-    )
+            raise Unauthorized(
+                context=call.context,
+                permission=POLICY_CONTROL,
+            )
+        return check_permissions
+    return decorator
 
 
 async def async_setup(hass, config):
@@ -231,71 +239,71 @@ async def async_setup_entry(hass, config_entry):
             refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
+    @_check_valid_user(hass)
     async def disable_program(call):
         """Disable a program."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.programs.disable(
             call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def disable_zone(call):
         """Disable a zone."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.zones.disable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def enable_program(call):
         """Enable a program."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.programs.enable(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def enable_zone(call):
         """Enable a zone."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.zones.enable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def pause_watering(call):
         """Pause watering for a set number of seconds."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.watering.pause_all(call.data[CONF_SECONDS])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def start_program(call):
         """Start a particular program."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.programs.start(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def start_zone(call):
         """Start a particular zone for a certain amount of time."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.zones.start(
             call.data[CONF_ZONE_ID], call.data[CONF_ZONE_RUN_TIME])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def stop_all(call):
         """Stop all watering."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.watering.stop_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def stop_program(call):
         """Stop a program."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.programs.stop(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def stop_zone(call):
         """Stop a zone."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.zones.stop(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
+    @_check_valid_user(hass)
     async def unpause_watering(call):
         """Unpause watering."""
-        _check_service_permissions(hass, call)
         await rainmachine.client.watering.unpause_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
