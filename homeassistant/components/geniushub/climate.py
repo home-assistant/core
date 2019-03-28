@@ -8,10 +8,10 @@ from homeassistant.components.climate.const import (
     STATE_ECO, STATE_HEAT, STATE_AUTO, STATE_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_ON_OFF, SUPPORT_AWAY_MODE)
-from . import (
-    DOMAIN, GENIUS_HUB)
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS)
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,22 +53,22 @@ async def async_setup_platform(hass, config, async_add_entities,
     if discovery_info is None:
         return
 
-    genius_hub = hass.data[GENIUS_HUB]
-    await genius_hub.getjson('/zones')
+    client = hass.data[DOMAIN]['client']
+    await client.getjson('/zones')
 
     # Get the zones with a temperature
-    climate_list = genius_hub.getClimateList()
+    climate_list = client.getClimateList()
 
     for zone in climate_list:
-        async_add_entities([GeniusClimate(genius_hub, zone)])
+        async_add_entities([GeniusClimate(client, zone)])
 
 
 class GeniusClimate(ClimateDevice):
     """Representation of a Genius Hub climate device."""
 
-    def __init__(self, genius_hub, zone):
+    def __init__(self, client, zone):
         """Initialize the climate device."""
-        GeniusClimate._genius_hub = genius_hub
+        GeniusClimate._client = client
         self._name = zone['name']
         self._device_id = zone['iID']
         self._current_temperature = zone['current_temperature']
@@ -168,7 +168,7 @@ class GeniusClimate(ClimateDevice):
             _LOGGER.error("Unknown mode %s", operation_mode)
             return
 
-        await GeniusClimate._genius_hub.putjson(self._device_id, data['data'])
+        await GeniusClimate._client.putjson(self._device_id, data['data'])
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
@@ -181,9 +181,9 @@ class GeniusClimate(ClimateDevice):
 
     async def async_update(self):
         """Get the latest data from the hub."""
-        what_zone = GeniusClimate._genius_hub.getZone(self._device_id)
+        what_zone = GeniusClimate._client.getZone(self._device_id)
         if what_zone:
-            zone = GeniusClimate._genius_hub.GET_CLIMATE(what_zone)
+            zone = GeniusClimate._client.GET_CLIMATE(what_zone)
             self._current_temperature = zone['current_temperature']
             self._target_temperature = zone['target_temperature']
             self._mode = zone['mode']
