@@ -63,11 +63,7 @@ class OpenThermGateway(ClimateDevice):
         else:
             self._current_operation = STATE_IDLE
         self._current_temperature = status.get(self._gw_vars.DATA_ROOM_TEMP)
-
-        temp = status.get(self._gw_vars.DATA_ROOM_SETPOINT_OVRD)
-        if temp is None:
-            temp = status.get(self._gw_vars.DATA_ROOM_SETPOINT)
-        self._target_temperature = temp
+        self._target_temperature = status.get(self._gw_vars.DATA_ROOM_SETPOINT)
 
         # GPIO mode 5: 0 == Away
         # GPIO mode 6: 1 == Away
