@@ -172,7 +172,8 @@ async def test_add_new_light(hass):
     light = Mock()
     light.name = 'name'
     light.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_light', [light])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('light'), [light])
     await hass.async_block_till_done()
     assert "light.name" in gateway.deconz_ids
 
@@ -183,7 +184,8 @@ async def test_add_new_group(hass):
     group = Mock()
     group.name = 'name'
     group.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_group', [group])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('group'), [group])
     await hass.async_block_till_done()
     assert "light.name" in gateway.deconz_ids
 
@@ -194,7 +196,8 @@ async def test_do_not_add_deconz_groups(hass):
     group = Mock()
     group.name = 'name'
     group.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_group', [group])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('group'), [group])
     await hass.async_block_till_done()
     assert len(gateway.deconz_ids) == 0
 
