@@ -1,9 +1,10 @@
 """Support for tracking Tesla cars."""
 import logging
 
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
+
+from . import DOMAIN as TESLA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

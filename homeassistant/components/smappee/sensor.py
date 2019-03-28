@@ -1,10 +1,11 @@
 """Support for monitoring a Smappee energy sensor."""
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.components.smappee import DATA_SMAPPEE
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import POWER_WATT, ENERGY_KILO_WATT_HOUR
+
+from . import DATA_SMAPPEE
 
 DEPENDENCIES = ['smappee']
 

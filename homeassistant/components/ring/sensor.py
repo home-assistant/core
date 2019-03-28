@@ -9,15 +9,14 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.ring import (
-    ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DATA_RING)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
-    ATTR_ATTRIBUTION)
+    ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+
+from . import ATTRIBUTION, DATA_RING, DEFAULT_ENTITY_NAMESPACE
 
 DEPENDENCIES = ['ring']
 

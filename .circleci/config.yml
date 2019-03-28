@@ -1,0 +1,79 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2.1
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+      - image: circleci/python:3.7.2
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+      - image: circleci/buildpack-deps:stretch
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - run:
+          name: setup docker prereqs
+          command: sudo apt-get update && sudo apt-get install -y --no-install-recommends libudev-dev
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements_all.txt" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install --progress-bar off -r requirements_all.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements_all.txt" }}
+
+      - run:
+          name: install
+          command: |
+            . venv/bin/activate
+            pip install --progress-bar off -e .
+
+      - run:
+          name: run lint
+          command: |
+            . venv/bin/activate
+            python script/gen_requirements_all.py validate
+            flake8
+            pylint homeassistant
+
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            if [ -z "$CODE_COVERAGE" ]; then CC_SWITCH=""; else CC_SWITCH="--cov --cov-report html:htmlcov"; fi
+            pytest --timeout=9 --duration=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH
+            script/check_dirty
+          when: always
+
+      - store_test_results:
+          path: test-reports
+
+      - store_artifacts:
+          path: htmlcov
+          destination: cov-reports
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports

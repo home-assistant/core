@@ -86,7 +86,7 @@ class FFmpegMotion(FFmpegBinarySensor):
 
     def __init__(self, hass, manager, config):
         """Initialize FFmpeg motion binary sensor."""
-        from haffmpeg import SensorMotion
+        from haffmpeg.sensor import SensorMotion
 
         super().__init__(config)
         self.ffmpeg = SensorMotion(

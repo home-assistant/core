@@ -1,8 +1,8 @@
 """Remote control support for Apple TV."""
-from homeassistant.components.apple_tv import (
-    ATTR_ATV, ATTR_POWER, DATA_APPLE_TV)
 from homeassistant.components import remote
-from homeassistant.const import (CONF_NAME, CONF_HOST)
+from homeassistant.const import CONF_HOST, CONF_NAME
+
+from . import ATTR_ATV, ATTR_POWER, DATA_APPLE_TV
 
 DEPENDENCIES = ['apple_tv']
 

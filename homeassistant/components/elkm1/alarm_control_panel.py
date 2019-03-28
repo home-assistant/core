@@ -1,15 +1,16 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
 import voluptuous as vol
+
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
     ATTR_CODE, ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMING, STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
-from homeassistant.components.elkm1 import (
-    DOMAIN as ELK_DOMAIN, create_elk_entities, ElkEntity)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
+
+from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 DEPENDENCIES = [ELK_DOMAIN]
 

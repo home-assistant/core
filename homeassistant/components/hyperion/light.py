@@ -1,9 +1,4 @@
-"""
-Support for Hyperion remotes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.hyperion/
-"""
+"""Support for Hyperion remotes."""
 import json
 import logging
 import socket
@@ -11,9 +6,9 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_EFFECT, Light, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME)
+    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_HS_COLOR, PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_EFFECT, Light)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -47,34 +42,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR):
-    vol.All(list, vol.Length(min=3, max=3),
-            [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
+        vol.All(list, vol.Length(min=3, max=3),
+                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
-    vol.Optional(CONF_HDMI_PRIORITY,
-                 default=DEFAULT_HDMI_PRIORITY): cv.positive_int,
-    vol.Optional(CONF_EFFECT_LIST,
-                 default=DEFAULT_EFFECT_LIST): vol.All(cv.ensure_list,
-                                                       [cv.string]),
+    vol.Optional(CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY):
+        cv.positive_int,
+    vol.Optional(CONF_EFFECT_LIST, default=DEFAULT_EFFECT_LIST):
+        vol.All(cv.ensure_list, [cv.string]),
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Hyperion server remote."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    priority = config.get(CONF_PRIORITY)
-    hdmi_priority = config.get(CONF_HDMI_PRIORITY)
-    default_color = config.get(CONF_DEFAULT_COLOR)
-    effect_list = config.get(CONF_EFFECT_LIST)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    priority = config[CONF_PRIORITY]
+    hdmi_priority = config[CONF_HDMI_PRIORITY]
+    default_color = config[CONF_DEFAULT_COLOR]
+    effect_list = config[CONF_EFFECT_LIST]
 
-    device = Hyperion(config.get(CONF_NAME), host, port, priority,
-                      default_color, hdmi_priority, effect_list)
+    device = Hyperion(
+        name, host, port, priority, default_color, hdmi_priority, effect_list)
 
     if device.setup():
         add_entities([device])
-        return True
-    return False
 
 
 class Hyperion(Light):

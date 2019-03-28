@@ -65,6 +65,8 @@ def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
     """Ensure HASS is setup properly to receive webhooks."""
     if cloud.async_active_subscription(hass):
         return True
+    if hass.data[DOMAIN][CONF_CLOUDHOOK_URL] is not None:
+        return True
     return get_webhook_url(hass).lower().startswith('https://')
 
 

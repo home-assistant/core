@@ -26,14 +26,14 @@ async def test_koogeek_ls1_setup(hass):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     # Assert that the entity is correctly added to the entity registry
-    entity = entity_registry.async_get('light.testdevice')
-    assert entity.unique_id == 'homekit-AAAA011111111111-7'
+    entry = entity_registry.async_get('light.koogeek_ls1_20833f')
+    assert entry.unique_id == 'homekit-AAAA011111111111-7'
 
-    helper = Helper(hass, 'light.testdevice', pairing, accessories[0])
+    helper = Helper(hass, 'light.koogeek_ls1_20833f', pairing, accessories[0])
     state = await helper.poll_and_get_state()
 
     # Assert that the friendly name is detected correctly
-    assert state.attributes['friendly_name'] == 'TestDevice'
+    assert state.attributes['friendly_name'] == 'Koogeek-LS1-20833F'
 
     # Assert that all optional features the LS1 supports are detected
     assert state.attributes['supported_features'] == (
@@ -54,7 +54,7 @@ async def test_recover_from_failure(hass, utcnow, failure_cls):
     accessories = setup_accessories_from_file(profile_path)
     pairing = await setup_test_accessories(hass, accessories)
 
-    helper = Helper(hass, 'light.testdevice', pairing, accessories[0])
+    helper = Helper(hass, 'light.koogeek_ls1_20833f', pairing, accessories[0])
 
     # Set light state on fake device to off
     helper.characteristics[LIGHT_ON].set_value(False)

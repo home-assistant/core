@@ -6,12 +6,13 @@ https://home-assistant.io/components/vacuum.dyson/
 """
 import logging
 
-from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY, SUPPORT_FAN_SPEED, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     VacuumDevice)
 from homeassistant.helpers.icon import icon_for_battery_level
+
+from . import DYSON_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,7 +2,7 @@
 import asyncio
 from unittest import mock
 
-from homeassistant.components.camera import DOMAIN
+from homeassistant.components.camera.const import DOMAIN
 from homeassistant.components.local_file.camera import (
     SERVICE_UPDATE_FILE_PATH)
 from homeassistant.setup import async_setup_component

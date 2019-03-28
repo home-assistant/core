@@ -7,8 +7,9 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tellduslive import (
-    APPLICATION_NAME, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL, SCAN_INTERVAL,
+    APPLICATION_NAME, DOMAIN, KEY_SCAN_INTERVAL, SCAN_INTERVAL,
     config_flow)
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry, MockDependency, mock_coro
 
@@ -94,7 +95,7 @@ async def test_step_import(hass, mock_tellduslive):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import({
-        KEY_HOST: DOMAIN,
+        CONF_HOST: DOMAIN,
         KEY_SCAN_INTERVAL: 0,
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
@@ -106,7 +107,7 @@ async def test_step_import_add_host(hass, mock_tellduslive):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import({
-        KEY_HOST: 'localhost',
+        CONF_HOST: 'localhost',
         KEY_SCAN_INTERVAL: 0,
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
@@ -117,7 +118,7 @@ async def test_step_import_no_config_file(hass, mock_tellduslive):
     """Test that we trigger user with no config_file configuring from import."""
     flow = init_config_flow(hass)
 
-    result = await flow.async_step_import({ KEY_HOST: 'localhost', KEY_SCAN_INTERVAL: 0, })
+    result = await flow.async_step_import({ CONF_HOST: 'localhost', KEY_SCAN_INTERVAL: 0, })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
@@ -129,7 +130,7 @@ async def test_step_import_load_json_matching_host(hass, mock_tellduslive):
     with patch('homeassistant.components.tellduslive.config_flow.load_json',
                return_value={'tellduslive': {}}), \
             patch('os.path.isfile'):
-        result = await flow.async_step_import({ KEY_HOST: 'Cloud API', KEY_SCAN_INTERVAL: 0, })
+        result = await flow.async_step_import({ CONF_HOST: 'Cloud API', KEY_SCAN_INTERVAL: 0, })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
@@ -141,7 +142,7 @@ async def test_step_import_load_json(hass, mock_tellduslive):
     with patch('homeassistant.components.tellduslive.config_flow.load_json',
                return_value={'localhost': {}}), \
             patch('os.path.isfile'):
-        result = await flow.async_step_import({ KEY_HOST: 'localhost', KEY_SCAN_INTERVAL: SCAN_INTERVAL, })
+        result = await flow.async_step_import({ CONF_HOST: 'localhost', KEY_SCAN_INTERVAL: SCAN_INTERVAL, })
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['title'] == 'localhost'
     assert result['data']['host'] == 'localhost'

@@ -63,20 +63,28 @@ def stream_worker(hass, stream, quit_event):
     first_packet = True
     sequence = 1
     audio_packets = {}
+    last_dts = None
 
     while not quit_event.is_set():
         try:
             packet = next(container.demux(video_stream))
             if packet.dts is None:
+                if first_packet:
+                    continue
                 # If we get a "flushing" packet, the stream is done
-                raise StopIteration
+                raise StopIteration("No dts in packet")
         except (av.AVError, StopIteration) as ex:
             # End of stream, clear listeners and stop thread
             for fmt, _ in outputs.items():
                 hass.loop.call_soon_threadsafe(
                     stream.outputs[fmt].put, None)
-            _LOGGER.error("Error demuxing stream: %s", ex)
+            _LOGGER.error("Error demuxing stream: %s", str(ex))
             break
+
+        # Skip non monotonically increasing dts in feed
+        if not first_packet and last_dts >= packet.dts:
+            continue
+        last_dts = packet.dts
 
         # Reset segment on every keyframe
         if packet.is_keyframe:
@@ -104,7 +112,7 @@ def stream_worker(hass, stream, quit_event):
                 a_packet, buffer = create_stream_buffer(
                     stream_output, video_stream, audio_frame)
                 audio_packets[buffer.astream] = a_packet
-                outputs[stream_output.format] = buffer
+                outputs[stream_output.name] = buffer
 
         # First video packet tends to have a weird dts/pts
         if first_packet:
