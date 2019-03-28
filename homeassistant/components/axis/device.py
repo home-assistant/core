@@ -118,7 +118,7 @@ class AxisNetworkDevice:
         from axis.streammanager import SIGNAL_PLAYING
         if self.available != (status == SIGNAL_PLAYING):
             self.available = not self.available
-            async_dispatcher_send(self.hass, self.event_reachable, 0)
+            async_dispatcher_send(self.hass, self.event_reachable, True)
 
     @property
     def event_new_sensor(self):

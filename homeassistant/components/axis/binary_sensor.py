@@ -44,17 +44,20 @@ class AxisBinarySensor(BinarySensorDevice):
         self.unsub_dispatcher = async_dispatcher_connect(
             self.hass, self.device.event_reachable, self.update_callback)
 
-    def update_callback(self, delay=None):
-        """Update the sensor's state, if needed."""
-        if not delay:
-            delay = self.device.config_entry.options[CONF_TRIGGER_TIME]
+    @callback
+    def update_callback(self, no_delay=False):
+        """Update the sensor's state, if needed.
+
+        Parameter no_delay is True when device_event_reachable is sent.
+        """
+        delay = self.device.config_entry.options[CONF_TRIGGER_TIME]
 
         if self.remove_timer is not None:
             self.remove_timer()
             self.remove_timer = None
 
-        if delay == 0 or self.is_on:
-            self.schedule_update_ha_state()
+        if self.is_on or delay == 0 or no_delay:
+            self.async_schedule_update_ha_state()
             return
 
         @callback

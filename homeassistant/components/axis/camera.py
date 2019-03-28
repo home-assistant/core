@@ -5,6 +5,7 @@ from homeassistant.components.mjpeg.camera import (
 from homeassistant.const import (
     CONF_AUTHENTICATION, CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME,
     CONF_PASSWORD, CONF_PORT, CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN as AXIS_DOMAIN
@@ -56,9 +57,10 @@ class AxisCamera(MjpegCamera):
         self.unsub_dispatcher.append(async_dispatcher_connect(
             self.hass, self.device.event_reachable, self.update_callback))
 
-    def update_callback(self, delay=None):
+    @callback
+    def update_callback(self, no_delay=None):
         """Update the cameras state."""
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def available(self):
