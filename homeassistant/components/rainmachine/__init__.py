@@ -132,35 +132,34 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def _check_service_permissions(hass, service_call):
     """Ensure the user of a service call has proper permissions."""
-    if service_call.data.get('entity_id'):
-        rainmachine_entities = service_call.data['entity_id']
-    else:
-        # If the service call doesn't explicitly provide entity IDs, use _all_
-        # RainMachine entities:
-        en_reg = await hass.helpers.entity_registry.async_get_registry()
-        rainmachine_entities = [
-            entity.entity_id for entity in en_reg.entities
-            if hass.config_entries.async_get_entry(
-                entity.config_entry_id).domain == DOMAIN
-        ]
+    if not service_call.context.user_id:
+        return
+
+    user = await hass.auth.async_get_user(service_call.context.user_id)
+    if user is None:
+        raise UnknownUser(
+            context=service_call.context,
+            permission=POLICY_CONTROL
+        )
+
+    # RainMachine services don't interact with specific entities. Therefore,
+    # we examine _all_ RainMachine entities and if the user has permission to
+    # control _any_ of them, the user has permission to call the service:
+    en_reg = await hass.helpers.entity_registry.async_get_registry()
+    rainmachine_entities = [
+        entity.entity_id for entity in en_reg.entities
+        if hass.config_entries.async_get_entry(
+            entity.config_entry_id).domain == DOMAIN
+    ]
 
     for entity_id in rainmachine_entities:
-        if service_call.context.user_id:
-            user = await hass.auth.async_get_user(service_call.context.user_id)
+        if user.permissions.check_entity(entity_id, POLICY_CONTROL):
+            return
 
-            if user is None:
-                raise UnknownUser(
-                    context=service_call.context,
-                    entity_id=entity_id,
-                    permission=POLICY_CONTROL
-                )
-
-            if not user.permissions.check_entity(entity_id, POLICY_CONTROL):
-                raise Unauthorized(
-                    context=service_call.context,
-                    entity_id=entity_id,
-                    permission=POLICY_CONTROL,
-                )
+    raise Unauthorized(
+        context=service_call.context,
+        permission=POLICY_CONTROL,
+    )
 
 
 async def async_setup(hass, config):
