@@ -24,8 +24,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add binary sensor from Axis device."""
         async_add_entities([AxisBinarySensor(event, device)], True)
 
-    device.listeners.append(
-        async_dispatcher_connect(hass, 'axis_add_sensor', async_add_sensor))
+    device.listeners.append(async_dispatcher_connect(
+        hass, device.event_new_sensor, async_add_sensor))
 
 
 class AxisBinarySensor(BinarySensorDevice):
@@ -82,6 +82,19 @@ class AxisBinarySensor(BinarySensorDevice):
         return self.event.event_class
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return '{}-{}-{}'.format(
+            self.device.serial, self.event.topic, self.event.id)
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return {
+            'identifiers': {(AXIS_DOMAIN, self.device.serial)}
+        }

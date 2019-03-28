@@ -57,3 +57,15 @@ class AxisCamera(MjpegCamera):
         """Set new IP for video stream."""
         self._mjpeg_url = AXIS_VIDEO.format(host, self.port)
         self._still_image_url = AXIS_IMAGE.format(host, self.port)
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return '{}-camera'.format(self.device.serial)
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return {
+            'identifiers': {(AXIS_DOMAIN, self.device.serial)}
+        }

@@ -1,25 +1,22 @@
-"""
-Support for Xiaomi Yeelight Wifi color bulb.
+"""Support for Xiaomi Yeelight WiFi color bulb."""
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/yeelight/
-"""
 import logging
 from datetime import timedelta
 
 import voluptuous as vol
 from homeassistant.components.discovery import SERVICE_YEELIGHT
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_SCAN_INTERVAL, \
-    CONF_HOST, ATTR_ENTITY_ID, CONF_LIGHTS
+    CONF_HOST, ATTR_ENTITY_ID
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as \
+    BINARY_SENSOR_DOMAIN
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['yeelight==0.4.3']
+REQUIREMENTS = ['yeelight==0.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +34,6 @@ CONF_MODE_MUSIC = 'use_music_mode'
 CONF_FLOW_PARAMS = 'flow_params'
 CONF_CUSTOM_EFFECTS = 'custom_effects'
 
-ATTR_MODE = 'mode'
 ATTR_COUNT = 'count'
 ATTR_ACTION = 'action'
 ATTR_TRANSITIONS = 'transitions'
@@ -46,18 +42,12 @@ ACTION_RECOVER = 'recover'
 ACTION_STAY = 'stay'
 ACTION_OFF = 'off'
 
-MODE_MOONLIGHT = 'moonlight'
-MODE_DAYLIGHT = 'normal'
-
 SCAN_INTERVAL = timedelta(seconds=30)
 
 YEELIGHT_RGB_TRANSITION = 'RGBTransition'
 YEELIGHT_HSV_TRANSACTION = 'HSVTransition'
 YEELIGHT_TEMPERATURE_TRANSACTION = 'TemperatureTransition'
 YEELIGHT_SLEEP_TRANSACTION = 'SleepTransition'
-
-SERVICE_SET_MODE = 'set_mode'
-SERVICE_START_FLOW = 'start_flow'
 
 YEELIGHT_FLOW_TRANSITION_SCHEMA = {
     vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
@@ -99,21 +89,23 @@ YEELIGHT_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-NIGHTLIGHT_SUPPORTED_MODELS = [
-    "ceiling3",
-    'ceiling4'
-]
-
 UPDATE_REQUEST_PROPERTIES = [
     "power",
+    "main_power",
     "bright",
     "ct",
     "rgb",
     "hue",
     "sat",
     "color_mode",
-    "flowing",
-    "music_on",
+    "bg_power",
+    "bg_lmode",
+    "bg_flowing",
+    "bg_ct",
+    "bg_bright",
+    "bg_hue",
+    "bg_sat",
+    "bg_rgb",
     "nl_br",
     "active_mode",
 ]
@@ -152,13 +144,8 @@ def _parse_custom_effects(effects_config):
 
 def setup(hass, config):
     """Set up the Yeelight bulbs."""
-    from yeelight.enums import PowerMode
-
-    conf = config[DOMAIN]
-    yeelight_data = hass.data[DATA_YEELIGHT] = {
-        CONF_DEVICES: {},
-        CONF_LIGHTS: {},
-    }
+    conf = config.get(DOMAIN, {})
+    yeelight_data = hass.data[DATA_YEELIGHT] = {}
 
     def device_discovered(service, info):
         _LOGGER.debug("Adding autodetected %s", info['hostname'])
@@ -177,56 +164,24 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_YEELIGHT, device_discovered)
 
-    def async_update(event):
-        for device in yeelight_data[CONF_DEVICES].values():
+    def update(event):
+        for device in yeelight_data.values():
             device.update()
 
-    async_track_time_interval(
-        hass, async_update, conf[CONF_SCAN_INTERVAL]
+    track_time_interval(
+        hass, update, conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     )
 
-    def service_handler(service):
-        """Dispatch service calls to target entities."""
-        params = {key: value for key, value in service.data.items()
-                  if key != ATTR_ENTITY_ID}
-
-        entity_ids = extract_entity_ids(hass, service)
-        target_devices = [dev.device for dev in
-                          yeelight_data[CONF_LIGHTS].values()
-                          if dev.entity_id in entity_ids]
-
-        for target_device in target_devices:
-            if service.service == SERVICE_SET_MODE:
-                target_device.set_mode(**params)
-            elif service.service == SERVICE_START_FLOW:
-                params[ATTR_TRANSITIONS] = \
-                    _transitions_config_parser(params[ATTR_TRANSITIONS])
-                target_device.start_flow(**params)
-
-    service_schema_set_mode = YEELIGHT_SERVICE_SCHEMA.extend({
-        vol.Required(ATTR_MODE):
-            vol.In([mode.name.lower() for mode in PowerMode])
-    })
-    hass.services.register(
-        DOMAIN, SERVICE_SET_MODE, service_handler,
-        schema=service_schema_set_mode)
-
-    service_schema_start_flow = YEELIGHT_SERVICE_SCHEMA.extend(
-        YEELIGHT_FLOW_TRANSITION_SCHEMA
-    )
-    hass.services.register(
-        DOMAIN, SERVICE_START_FLOW, service_handler,
-        schema=service_schema_start_flow)
-
-    for ipaddr, device_config in conf[CONF_DEVICES].items():
-        _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
-        _setup_device(hass, config, ipaddr, device_config)
+    if DOMAIN in config:
+        for ipaddr, device_config in conf[CONF_DEVICES].items():
+            _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
+            _setup_device(hass, config, ipaddr, device_config)
 
     return True
 
 
 def _setup_device(hass, hass_config, ipaddr, device_config):
-    devices = hass.data[DATA_YEELIGHT][CONF_DEVICES]
+    devices = hass.data[DATA_YEELIGHT]
 
     if ipaddr in devices:
         return
@@ -238,10 +193,12 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     platform_config = device_config.copy()
     platform_config[CONF_HOST] = ipaddr
     platform_config[CONF_CUSTOM_EFFECTS] = _parse_custom_effects(
-        hass_config[DATA_YEELIGHT].get(CONF_CUSTOM_EFFECTS, {})
+        hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
     )
 
     load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
+    load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
+                  hass_config)
 
 
 class YeelightDevice:
@@ -265,16 +222,13 @@ class YeelightDevice:
                 self._bulb_device = yeelight.Bulb(self._ipaddr,
                                                   model=self._model)
                 # force init for type
-                self._update_properties()
+                self.update()
 
             except yeelight.BulbException as ex:
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
 
         return self._bulb_device
-
-    def _update_properties(self):
-        self._bulb_device.get_properties(UPDATE_REQUEST_PROPERTIES)
 
     @property
     def name(self):
@@ -299,59 +253,47 @@ class YeelightDevice:
 
         return self.bulb.last_properties.get('active_mode') == '1'
 
-    def turn_on(self, duration=DEFAULT_TRANSITION):
+    @property
+    def is_nightlight_supported(self) -> bool:
+        """Return true / false if nightlight is supported."""
+        return self.bulb.get_model_specs().get('night_light', False)
+
+    @property
+    def is_ambilight_supported(self) -> bool:
+        """Return true / false if ambilight is supported."""
+        return self.bulb.get_model_specs().get('background_light', False)
+
+    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn on device."""
         import yeelight
 
+        if not light_type:
+            light_type = yeelight.enums.LightType.Main
+
         try:
-            self._bulb_device.turn_on(duration=duration)
+            self._bulb_device.turn_on(duration=duration, light_type=light_type)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
 
-        self.update()
-
-    def turn_off(self, duration=DEFAULT_TRANSITION):
+    def turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
         import yeelight
 
+        if not light_type:
+            light_type = yeelight.enums.LightType.Main
+
         try:
-            self._bulb_device.turn_off(duration=duration)
+            self._bulb_device.turn_off(duration=duration,
+                                       light_type=light_type)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
-
-        self.update()
 
     def update(self):
         """Read new properties from the device."""
         if not self.bulb:
             return
 
-        self._update_properties()
+        self._bulb_device.get_properties(UPDATE_REQUEST_PROPERTIES)
         dispatcher_send(self._hass, DATA_UPDATED, self._ipaddr)
-
-    def set_mode(self, mode: str):
-        """Set a power mode."""
-        import yeelight
-
-        try:
-            self.bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()])
-        except yeelight.BulbException as ex:
-            _LOGGER.error("Unable to set the power mode: %s", ex)
-
-        self.update()
-
-    def start_flow(self, transitions, count=0, action=ACTION_RECOVER):
-        """Start flow."""
-        import yeelight
-
-        try:
-            flow = yeelight.Flow(
-                count=count,
-                action=yeelight.Flow.actions[action],
-                transitions=transitions)
-
-            self.bulb.start_flow(flow)
-        except yeelight.BulbException as ex:
-            _LOGGER.error("Unable to set effect: %s", ex)

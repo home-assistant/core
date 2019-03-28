@@ -41,6 +41,7 @@ COMMENT_REQUIREMENTS = (
 TEST_REQUIREMENTS = (
     'aioambient',
     'aioautomatic',
+    'aiobotocore',
     'aiohttp_cors',
     'aiohue',
     'aiounifi',
@@ -53,7 +54,6 @@ TEST_REQUIREMENTS = (
     'dsmr_parser',
     'eebrightbox',
     'emulated_roku',
-    'enturclient',
     'ephem',
     'evohomeclient',
     'feedparser-homeassistant',
