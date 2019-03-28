@@ -654,7 +654,7 @@ async def async_handle_play_stream_service(camera, service_call):
 
 
 async def async_handle_record_service(camera, call):
-    """Handle play stream services calls."""
+    """Handle stream recording service calls."""
     if not camera.stream_source:
         raise HomeAssistantError("{} does not support record service"
                                  .format(camera.entity_id))

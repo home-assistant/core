@@ -16,8 +16,7 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
     """Handle saving stream."""
     import av
 
-    output = av.open(file_out, 'w', format='mp4',
-                     options={'movflags': 'frag_keyframe'})
+    output = av.open(file_out, 'w', options={'movflags': 'frag_keyframe'})
     output_v = None
 
     for segment in segments:
@@ -32,7 +31,7 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
 
         # Remux video
         for packet in source.demux(source_v):
-            if packet is not None:
+            if packet is not None and packet.dts is not None:
                 packet.stream = output_v
                 output.mux(packet)
 
@@ -43,9 +42,9 @@ def recorder_save_worker(file_out: str, segments: List[Segment]):
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, stream) -> None:
+    def __init__(self, stream, timeout: int = 30) -> None:
         """Initialize recorder output."""
-        super().__init__(stream)
+        super().__init__(stream, timeout)
         self.video_path = None
         self._segments = []
 

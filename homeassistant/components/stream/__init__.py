@@ -110,7 +110,7 @@ async def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     async def async_record(call):
-        """Call save video service handler."""
+        """Call record stream service handler."""
         await async_handle_record_service(hass, call)
 
     hass.services.async_register(DOMAIN, SERVICE_RECORD,
