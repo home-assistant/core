@@ -148,16 +148,6 @@ def preprocess_turn_on_alternatives(params):
         params.setdefault(ATTR_XY_COLOR, profile[:2])
         params.setdefault(ATTR_BRIGHTNESS, profile[2])
 
-    brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
-    if brightness_pct is not None:
-        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
-
-    if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
-        # Zero brightness: Light will be turned off
-        for k in list(params.keys()):
-            params = {k: v for k, v in params.items() if k in [ATTR_TRANSITION,
-                                                               ATTR_FLASH]}
-
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
         try:
@@ -172,6 +162,10 @@ def preprocess_turn_on_alternatives(params):
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
         params[ATTR_COLOR_TEMP] = int(mired)
 
+    brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
+    if brightness_pct is not None:
+        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
+
     xy_color = params.pop(ATTR_XY_COLOR, None)
     if xy_color is not None:
         params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
@@ -179,6 +173,17 @@ def preprocess_turn_on_alternatives(params):
     rgb_color = params.pop(ATTR_RGB_COLOR, None)
     if rgb_color is not None:
         params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+
+
+def preprocess_turn_off(params):
+    """Process data for turning light off if brightness is 0."""
+    if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
+        # Zero brightness: Light will be turned off
+        params = {k: v for k, v in params.items() if k in [ATTR_TRANSITION,
+                                                           ATTR_FLASH]}
+        return (True, params)  # Light should be turned off
+
+    return (False, None)  # Light should be turned on
 
 
 class SetIntentHandler(intent.IntentHandler):
@@ -278,19 +283,22 @@ async def async_setup(hass, config):
                     )
 
         preprocess_turn_on_alternatives(params)
+        turn_lights_off, off_params = preprocess_turn_off(params)
 
         update_tasks = []
         for light in target_lights:
             light.async_set_context(service.context)
 
             pars = params
+            off_pars = off_params
+            turn_light_off = turn_lights_off
             if not pars:
                 pars = params.copy()
                 pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
                 preprocess_turn_on_alternatives(pars)
-            if ATTR_BRIGHTNESS in pars and pars[ATTR_BRIGHTNESS] == 0:
-                # Zero brightness: Turn the light off
-                await light.async_turn_off(**pars)
+                turn_light_off, off_pars = preprocess_turn_off(pars)
+            if turn_light_off:
+                await light.async_turn_off(**off_pars)
             else:
                 await light.async_turn_on(**pars)
 
