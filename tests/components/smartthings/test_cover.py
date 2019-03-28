@@ -142,7 +142,10 @@ async def test_set_cover_position_unsupported(hass, device_factory):
         COVER_DOMAIN, SERVICE_SET_COVER_POSITION,
         {ATTR_POSITION: 50}, blocking=True)
 
-    # Ensure API was notcalled
+    state = hass.states.get('cover.shade')
+    assert ATTR_CURRENT_POSITION not in state.attributes
+
+    # Ensure API was not called
     # pylint: disable=protected-access
     assert device._api.post_device_command.call_count == 0  # type: ignore
 
