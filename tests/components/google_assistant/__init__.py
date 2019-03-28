@@ -30,17 +30,17 @@ DEMO_DEVICES = [{
     'willReportState':
     False
 }, {
-   'id':
-   'switch.decorative_lights',
-   'name': {
-       'name': 'Decorative Lights'
-   },
-   'traits': [
-       'action.devices.traits.OnOff'
-   ],
-   'type': 'action.devices.types.SWITCH',
-   'willReportState':
-   False
+    'id':
+    'switch.decorative_lights',
+    'name': {
+        'name': 'Decorative Lights'
+    },
+    'traits': [
+        'action.devices.traits.OnOff'
+    ],
+    'type': 'action.devices.types.SWITCH',
+    'willReportState':
+    False
 }, {
     'id':
     'light.ceiling_lights',
