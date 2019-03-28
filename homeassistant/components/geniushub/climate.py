@@ -68,7 +68,7 @@ class GeniusClimate(ClimateDevice):
 
     def __init__(self, client, zone):
         """Initialize the climate device."""
-        GeniusClimate._client = client
+        self._client = client
         self._name = zone['name']
         self._device_id = zone['iID']
         self._current_temperature = zone['current_temperature']
@@ -168,7 +168,7 @@ class GeniusClimate(ClimateDevice):
             _LOGGER.error("Unknown mode %s", operation_mode)
             return
 
-        await GeniusClimate._client.putjson(self._device_id, data['data'])
+        await self._client.putjson(self._device_id, data['data'])
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
@@ -181,9 +181,9 @@ class GeniusClimate(ClimateDevice):
 
     async def async_update(self):
         """Get the latest data from the hub."""
-        what_zone = GeniusClimate._client.getZone(self._device_id)
+        what_zone = self._client.getZone(self._device_id)
         if what_zone:
-            zone = GeniusClimate._client.GET_CLIMATE(what_zone)
+            zone = self._client.GET_CLIMATE(what_zone)
             self._current_temperature = zone['current_temperature']
             self._target_temperature = zone['target_temperature']
             self._mode = zone['mode']
