@@ -1055,7 +1055,7 @@ async def test_modes(hass):
 
 
 async def test_openclose_cover(hass):
-    """Test brightness trait support for cover domain."""
+    """Test cover trait."""
     assert trait.OpenCloseTrait.supported(cover.DOMAIN,
                                           cover.SUPPORT_SET_POSITION)
 
