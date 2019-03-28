@@ -7,7 +7,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
 from .config_flow import load_old_pairings
-from .connection import get_accessory_information HKDevice
+from .connection import get_accessory_information, HKDevice
 from .const import (
     CONTROLLER, HOMEKIT_DIR, KNOWN_DEVICES, PAIRING_FILE
 )
