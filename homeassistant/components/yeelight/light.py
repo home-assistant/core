@@ -341,9 +341,9 @@ class YeelightLight(Light):
             self._is_on = self._get_property('power') == 'on'
 
         if self._is_nightlight_enabled:
-            bright = self._get_property('nl_br', None)
+            bright = self._get_property('nl_br')
         else:
-            bright = self._get_property('bright', None)
+            bright = self._get_property('bright')
 
         if bright:
             self._brightness = round(255 * (int(bright) / 100))
