@@ -1047,9 +1047,7 @@ class OpenCloseTrait(_Trait):
 
     def sync_attributes(self):
         """Return opening direction."""
-        return {
-            'openDirection': ['UP']
-        }
+        return {}
 
     def query_attributes(self):
         """Return state query attributes."""
@@ -1060,11 +1058,7 @@ class OpenCloseTrait(_Trait):
             position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
             if position is not None:
                 response['openPercent'] = position
-                response['on'] = self.state.state != cover.STATE_CLOSED
-                response['online'] = True
             else:
-                response['on'] = self.state.state != cover.STATE_CLOSED
-                response['online'] = True
                 if self.state.state != cover.STATE_CLOSED:
                     response['openPercent'] = 100
                 else:
