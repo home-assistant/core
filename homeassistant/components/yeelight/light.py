@@ -315,7 +315,7 @@ class YeelightGenericLight(Light):
         return self._properties.get(prop, default)
 
     @property
-    def _bright_property(self):
+    def _brightness_property(self):
         return 'bright'
 
     @property
@@ -652,7 +652,7 @@ class YeelightWithNightLight(YeelightWhiteTempLight):
         return self.device.is_nightlight_enabled
 
     def update(self) -> None:
-        bright = self._get_property(self._bright_property)
+        bright = self._get_property(self._brightness_property)
         if bright:
             self._brightness = round(255 * (int(bright) / 100))
 
@@ -683,7 +683,7 @@ class YeelightNightLightMode(YeelightGenericLight):
         return super().is_on and self.device.is_nightlight_enabled
 
     @property
-    def _bright_property(self):
+    def _brightness_property(self):
         return 'nl_br'
 
     @property
