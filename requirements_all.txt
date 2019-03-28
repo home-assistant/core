@@ -229,11 +229,10 @@ blockchain==1.4.4
 # homeassistant.components.bme680.sensor
 # bme680==1.0.5
 
+# homeassistant.components.route53
 # homeassistant.components.aws_lambda.notify
 # homeassistant.components.aws_sns.notify
 # homeassistant.components.aws_sqs.notify
-# homeassistant.components.route53
-# homeassistant.components.tts.amazon_polly
 boto3==1.9.16
 
 # homeassistant.scripts.credstash
@@ -1339,7 +1338,7 @@ python-hpilo==3.9
 
 # homeassistant.components.joaoapps_join
 # homeassistant.components.joaoapps_join.notify
-python-join-api==0.0.2
+python-join-api==0.0.4
 
 # homeassistant.components.juicenet
 python-juicenet==0.0.5
