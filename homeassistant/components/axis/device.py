@@ -99,11 +99,16 @@ class AxisNetworkDevice:
 
         return True
 
+    @property
+    def event_new_sensor(self):
+        """Device specific event to signal new sensor available."""
+        return 'axis_add_sensor_{}'.format(self.serial)
+
     @callback
     def async_signal_callback(self, action, event):
         """Call to configure events when initialized on event stream."""
         if action == 'add':
-            async_dispatcher_send(self.hass, 'axis_add_sensor', event)
+            async_dispatcher_send(self.hass, self.event_new_sensor, event)
 
     @callback
     def shutdown(self, event):
