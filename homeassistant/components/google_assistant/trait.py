@@ -1071,19 +1071,23 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
 
         if domain == cover.DOMAIN:
-            if params['openPercent'] == 0:
-                await self.hass.services.async_call(
-                    cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
-                        ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True, context=data.context)
-            elif params['openPercent'] == 100:
-                await self.hass.services.async_call(
-                    cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
-                        ATTR_ENTITY_ID: self.state.entity_id
-                    }, blocking=True, context=data.context)
-            else:
+            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
+            if position is not None:
                 await self.hass.services.async_call(
                     cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                         ATTR_ENTITY_ID: self.state.entity_id,
                         cover.ATTR_POSITION: params['openPercent']
                     }, blocking=True, context=data.context)
+            else:
+                if self.state.state != cover.STATE_CLOSED:
+                    if params['openPercent'] < 100:
+                        await self.hass.services.async_call(
+                            cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
+                                ATTR_ENTITY_ID: self.state.entity_id
+                            }, blocking=True, context=data.context)
+                else:
+                    if params['openPercent'] > 0:
+                        await self.hass.services.async_call(
+                            cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
+                                ATTR_ENTITY_ID: self.state.entity_id
+                            }, blocking=True, context=data.context)
