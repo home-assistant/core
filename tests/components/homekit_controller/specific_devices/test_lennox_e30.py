@@ -13,7 +13,7 @@ from tests.components.homekit_controller.common import (
 
 async def test_lennox_e30_setup(hass):
     """Test that a Lennox E30 can be correctly setup in HA."""
-    accessories = setup_accessories_from_file('lennox_e30.json')
+    accessories = await setup_accessories_from_file(hass, 'lennox_e30.json')
     pairing = await setup_test_accessories(hass, accessories)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()

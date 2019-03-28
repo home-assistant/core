@@ -150,10 +150,13 @@ class FakeService(AbstractService):
         return char
 
 
-def setup_accessories_from_file(path):
+async def setup_accessories_from_file(hass, path):
     """Load an collection of accessory defs from JSON data."""
-    accessories_json = json.loads(load_fixture(os.path.join(
-        'homekit_controller', path)))
+    accessories_fixture = await hass.async_add_executor_job(
+        load_fixture,
+        os.path.join('homekit_controller', path),
+    )
+    accessories_json = json.loads(accessories_fixture)
 
     accessories = []
 

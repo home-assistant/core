@@ -18,7 +18,7 @@ LIGHT_ON = ('lightbulb', 'on')
 
 async def test_koogeek_ls1_setup(hass):
     """Test that a Koogeek LS1 can be correctly setup in HA."""
-    accessories = setup_accessories_from_file('koogeek_ls1.json')
+    accessories = await setup_accessories_from_file(hass, 'koogeek_ls1.json')
     pairing = await setup_test_accessories(hass, accessories)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
@@ -48,7 +48,7 @@ async def test_recover_from_failure(hass, utcnow, failure_cls):
 
     See https://github.com/home-assistant/home-assistant/issues/18949
     """
-    accessories = setup_accessories_from_file('koogeek_ls1.json')
+    accessories = await setup_accessories_from_file(hass, 'koogeek_ls1.json')
     pairing = await setup_test_accessories(hass, accessories)
 
     helper = Helper(hass, 'light.koogeek_ls1_20833f', pairing, accessories[0])
