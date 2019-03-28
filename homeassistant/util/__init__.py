@@ -7,6 +7,8 @@ import enum
 import socket
 import random
 import string
+import fcntl
+import struct
 from functools import wraps
 from types import MappingProxyType
 from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
@@ -80,24 +82,44 @@ def ensure_unique_string(preferred_string: str, current_strings:
 
     return test_string
 
+def interface_ip(interface):
+    """Determine the IP assigned to us by the given network interface."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(
+        fcntl.ioctl(
+            sock.fileno(), 0x8915, struct.pack('256s', interface[:15])
+        )[20:24]
+    )
+    # Explanation:
+    # https://stackoverflow.com/questions/11735821/python-get-localhost-ip
+    # https://stackoverflow.com/questions/24196932/how-can-i-get-the-ip-address-of-eth0-in-python
 
-# Taken from: http://stackoverflow.com/a/11735897
+
 def get_local_ip() -> str:
     """Try to determine the local IP address of the machine."""
+    # noqa: E722 pylint: disable=bare-except
+    ip_addr = '127.0.0.1'
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-        # Use Google Public DNS server to determine own IP
-        sock.connect(('8.8.8.8', 80))
-
-        return sock.getsockname()[0]  # type: ignore
-    except socket.error:
+        ip_addr = socket.gethostbyname(socket.gethostname())
+    except socket.gaierror:
         try:
-            return socket.gethostbyname(socket.gethostname())
-        except socket.gaierror:
-            return '127.0.0.1'
-    finally:
-        sock.close()
+            ip_addr = socket.gethostbyname(socket.gethostname() + '.local')
+        except:
+            pass
+    except:
+        pass
+    if ip_addr.startswith('127.'):
+        # Check eth0, eth1, eth2, en0, ...
+        interfaces = [
+            i + str(n) for i in ("eth", "en", "wlan") for n in range(3)
+        ]  # :(
+        for interface in interfaces:
+            try:
+                ip_addr = interface_ip(interface)
+                break
+            except IOError:
+                pass
+    return ip_addr
 
 
 # Taken from http://stackoverflow.com/a/23728630
