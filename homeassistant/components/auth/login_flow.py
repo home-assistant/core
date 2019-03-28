@@ -81,7 +81,8 @@ from . import indieauth
 async def async_setup(hass, store_result):
     """Component to allow users to login."""
     hass.http.register_view(AuthProvidersView)
-    hass.http.register_view(LoginFlowIndexView(hass.auth.login_flow))
+    hass.http.register_view(
+        LoginFlowIndexView(hass.auth.login_flow, store_result))
     hass.http.register_view(
         LoginFlowResourceView(hass.auth.login_flow, store_result))
 
@@ -142,9 +143,10 @@ class LoginFlowIndexView(HomeAssistantView):
     name = 'api:auth:login_flow'
     requires_auth = False
 
-    def __init__(self, flow_mgr):
+    def __init__(self, flow_mgr, store_result):
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
+        self._store_result = store_result
 
     async def get(self, request):
         """Do not allow index of flows in progress."""
@@ -178,6 +180,12 @@ class LoginFlowIndexView(HomeAssistantView):
             return self.json_message('Invalid handler specified', 404)
         except data_entry_flow.UnknownStep:
             return self.json_message('Handler does not support init', 400)
+
+        if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            result.pop('data')
+            result['result'] = self._store_result(
+                data['client_id'], result['result'])
+            return self.json(result)
 
         return self.json(_prepare_result_json(result))
 
