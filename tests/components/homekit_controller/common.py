@@ -8,8 +8,9 @@ from homekit.model.characteristics import (
     AbstractCharacteristic, CharacteristicPermissions, CharacteristicsTypes)
 from homekit.model import Accessory, get_id
 from homekit.exceptions import AccessoryNotFoundError
-from homeassistant.components.homekit_controller import (
-    DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, SERVICE_HOMEKIT)
+from homeassistant.components.homekit_controller import SERVICE_HOMEKIT
+from homeassistant.components.homekit_controller.const import (
+    DOMAIN, HOMEKIT_ACCESSORY_DISPATCH)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed, fire_service_discovered
