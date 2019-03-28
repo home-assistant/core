@@ -23,26 +23,26 @@ jobs:
 
       - run:
           name: setup docker prereqs
-          command: sudo apt-get update && sudo apt-get install -y --no-install-recommends libudev-dev
+          command: sudo apt-get update && sudo apt-get install -y --no-install-recommends
+            libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev
+            libswscale-dev libswresample-dev libavfilter-dev
 
-      # Download and cache dependencies
+      # Download and cache dependencies, we don't use fallback cache
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "requirements_all.txt" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+            - v1-dependencies-{{ checksum "requirements_all.txt" }}-{{ checksum "requirements_test.txt" }}
 
       - run:
           name: install dependencies
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install --progress-bar off -r requirements_all.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
+            pip install -q --progress-bar off -r requirements_all.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
 
       - save_cache:
           paths:
             - ./venv
-          key: v1-dependencies-{{ checksum "requirements_all.txt" }}
+          key: v1-dependencies-{{ checksum "requirements_all.txt" }}-{{ checksum "requirements_test.txt" }}
 
       - run:
           name: install
