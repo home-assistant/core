@@ -14,7 +14,6 @@ from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['proxmoxer==1.0.3']
 DOMAIN = 'proxmox'
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,9 +31,9 @@ DEFAULT_VERIFY_SSL = True
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_NODES, default=[]): [cv.string],
@@ -64,12 +63,12 @@ async def async_setup(hass, config):
 async def get_client(conf):
     """Return Proxmox VE API client."""
     from proxmoxer import ProxmoxAPI
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    user = conf.get(CONF_USERNAME)
-    realm = conf.get(CONF_REALM)
-    password = conf.get(CONF_PASSWORD)
-    verify_ssl = conf.get(CONF_VERIFY_SSL)
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
+    user = conf[CONF_USERNAME]
+    realm = conf[CONF_REALM]
+    password = conf[CONF_PASSWORD]
+    verify_ssl = conf[CONF_VERIFY_SSL]
     proxmox = ProxmoxAPI(
         host, user=user + '@' + realm, password=password,
         port=port, verify_ssl=verify_ssl)
@@ -95,8 +94,8 @@ async def setup_proxmox(hass, config):
 
 async def update_data(hass, conf):
     """Update Proxmox VE data."""
-    conf_nodes = conf.get(CONF_NODES)
-    conf_vms = conf.get(CONF_VMS)
+    conf_nodes = conf[CONF_NODES]
+    conf_vms = conf[CONF_VMS]
     proxmox = await get_client(conf)
     nodes = proxmox.nodes.get()
     node_dict = {}
@@ -107,17 +106,19 @@ async def update_data(hass, conf):
             cts = proxmox.nodes(name).lxc.get()
             for item in cts:
                 vm_id = item['vmid']
-                if not bool(conf_vms) or int(vm_id) in conf_vms:
-                    item['node'] = name
-                    key = "{} - {}".format(item['name'], vm_id)
-                    node_dict[key] = format_values(item)
+                if conf_vms and int(vm_id) not in conf_vms:
+                    continue
+                item['node'] = name
+                key = "{} - {}".format(item['name'], vm_id)
+                node_dict[key] = format_values(item)
             vms = proxmox.nodes(name).qemu.get()
             for item in vms:
                 vm_id = item['vmid']
-                if not bool(conf_vms) or int(vm_id) in conf_vms:
-                    item['node'] = name
-                    key = "{} - {}".format(item['name'], vm_id)
-                    node_dict[key] = format_values(item)
+                if conf_vms and int(vm_id) not in conf_vms:
+                    continue
+                item['node'] = name
+                key = "{} - {}".format(item['name'], vm_id)
+                node_dict[key] = format_values(item)
     hass.data[DATA_PROXMOX_NODES] = node_dict
 
 

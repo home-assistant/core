@@ -43,7 +43,7 @@ class PXMXBinarySensor(BinarySensorDevice):
         self._vm_id = item['vmid']
         self._vm_name = item['name']
         self._item = item
-        self._unique_id = proxmox.DOMAIN + '_status_' + item['vmid']
+        self._unique_id = proxmox.DOMAIN + 'st' + item['vmid']
 
     @property
     def unique_id(self) -> str:
