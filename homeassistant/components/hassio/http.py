@@ -65,7 +65,7 @@ class HassIOView(HomeAssistantView):
 
     async def _command_proxy(
             self, path: str, request: web.Request
-    ) -> web.Response:
+    ) -> Union[web.Response, web.StreamResponse]:
         """Return a client request with proxy origin for Hass.io supervisor.
 
         This method is a coroutine.
