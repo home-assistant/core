@@ -1,4 +1,10 @@
-"""Support for devices connected to UniFi POE."""
+"""
+Support for devices connected to UniFi POE.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/unifi/
+"""
+
 import voluptuous as vol
 
 from homeassistant import config_entries

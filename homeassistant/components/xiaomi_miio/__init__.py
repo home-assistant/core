@@ -1,1 +1,0 @@
-"""Support for Xiaomi Miio."""

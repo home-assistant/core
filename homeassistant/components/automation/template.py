@@ -1,4 +1,9 @@
-"""Offer template automation rules."""
+"""
+Offer template automation rules.
+
+For more details about this automation rule, please refer to the documentation
+at https://home-assistant.io/docs/automation/trigger/#template-trigger
+"""
 import logging
 
 import voluptuous as vol
@@ -7,6 +12,7 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_PLATFORM
 from homeassistant.helpers.event import async_track_template
 import homeassistant.helpers.config_validation as cv
+
 
 _LOGGER = logging.getLogger(__name__)
 

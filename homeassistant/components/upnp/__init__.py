@@ -1,4 +1,9 @@
-"""Open ports in your router for Home Assistant and provide statistics."""
+"""
+Will open a port in your router for Home Assistant and provide statistics.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/upnp/
+"""
 from ipaddress import ip_address
 
 import voluptuous as vol
@@ -23,7 +28,8 @@ from .const import DOMAIN
 from .const import LOGGER as _LOGGER
 from .device import Device
 
-REQUIREMENTS = ['async-upnp-client==0.14.6']
+
+REQUIREMENTS = ['async-upnp-client==0.14.2']
 
 NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'
@@ -35,7 +41,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
         vol.Optional(CONF_PORTS):
             vol.Schema({
-                vol.Any(CONF_HASS, cv.port): vol.Any(CONF_HASS, cv.port)
+                vol.Any(CONF_HASS, cv.port):
+                    vol.Any(CONF_HASS, cv.port)
             })
     }),
 }, extra=vol.ALLOW_EXTRA)

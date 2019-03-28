@@ -1,4 +1,9 @@
-"""Support for Telegram bots using webhooks."""
+"""
+Allows utilizing telegram webhooks.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot.webhooks/
+"""
 import datetime as dt
 from ipaddress import ip_network
 import logging
@@ -7,13 +12,13 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
-from homeassistant.const import (
-    CONF_URL, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
-import homeassistant.helpers.config_validation as cv
-
-from . import (
-    CONF_ALLOWED_CHAT_IDS, PLATFORM_SCHEMA, BaseTelegramBotEntity,
+from homeassistant.components.telegram_bot import (
+    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA,
     initialize_bot)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
+    HTTP_UNAUTHORIZED, CONF_URL)
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['http']
 

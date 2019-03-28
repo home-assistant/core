@@ -98,9 +98,9 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
         def sub_callback(topic, sub_cb, qos):
             """Call MQTT subscribe function."""
             @callback
-            def internal_callback(msg):
+            def internal_callback(*args):
                 """Call callback."""
-                sub_cb(msg.topic, msg.payload, msg.qos)
+                sub_cb(*args)
 
             hass.async_create_task(
                 mqtt.async_subscribe(topic, internal_callback, qos))

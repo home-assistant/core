@@ -1,4 +1,6 @@
 """Tests for the legacy_api_password auth provider."""
+from unittest.mock import Mock
+
 import pytest
 
 from homeassistant import auth, data_entry_flow
@@ -17,7 +19,6 @@ def provider(hass, store):
     """Mock provider."""
     return legacy_api_password.LegacyApiPasswordAuthProvider(hass, store, {
         'type': 'legacy_api_password',
-        'api_password': 'test-password',
     })
 
 
@@ -50,13 +51,32 @@ async def test_only_one_credentials(manager, provider):
 
 async def test_verify_login(hass, provider):
     """Test login using legacy api password auth provider."""
+    hass.http = Mock(api_password='test-password')
     provider.async_validate_login('test-password')
+    hass.http = Mock(api_password='test-password')
     with pytest.raises(legacy_api_password.InvalidAuthError):
         provider.async_validate_login('invalid-password')
 
 
+async def test_login_flow_abort(hass, manager):
+    """Test wrong config."""
+    for http in (
+        None,
+        Mock(api_password=None),
+        Mock(api_password=''),
+    ):
+        hass.http = http
+
+        result = await manager.login_flow.async_init(
+            handler=('legacy_api_password', None)
+        )
+        assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result['reason'] == 'no_api_password_set'
+
+
 async def test_login_flow_works(hass, manager):
     """Test wrong config."""
+    hass.http = Mock(api_password='hello')
     result = await manager.login_flow.async_init(
         handler=('legacy_api_password', None)
     )
@@ -74,7 +94,7 @@ async def test_login_flow_works(hass, manager):
     result = await manager.login_flow.async_configure(
         flow_id=result['flow_id'],
         user_input={
-            'password': 'test-password'
+            'password': 'hello'
         }
     )
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

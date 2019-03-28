@@ -4,23 +4,27 @@ Support Legacy API password auth provider.
 It will be removed when auth system production ready
 """
 import hmac
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional, cast, TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 from .. import AuthManager
 from ..models import Credentials, UserMeta, User
 
-AUTH_PROVIDER_TYPE = 'legacy_api_password'
-CONF_API_PASSWORD = 'api_password'
+if TYPE_CHECKING:
+    from homeassistant.components.http import HomeAssistantHTTP  # noqa: F401
+
+
+USER_SCHEMA = vol.Schema({
+    vol.Required('username'): str,
+})
+
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
-    vol.Required(CONF_API_PASSWORD): cv.string,
 }, extra=vol.PREVENT_EXTRA)
 
 LEGACY_USER_NAME = 'Legacy API password user'
@@ -30,34 +34,29 @@ class InvalidAuthError(HomeAssistantError):
     """Raised when submitting invalid authentication."""
 
 
-async def async_validate_password(hass: HomeAssistant, password: str)\
-        -> Optional[User]:
-    """Return a user if password is valid. None if not."""
+async def async_get_user(hass: HomeAssistant) -> User:
+    """Return the legacy API password user."""
     auth = cast(AuthManager, hass.auth)  # type: ignore
-    providers = auth.get_auth_providers(AUTH_PROVIDER_TYPE)
-    if not providers:
+    found = None
+
+    for prv in auth.auth_providers:
+        if prv.type == 'legacy_api_password':
+            found = prv
+            break
+
+    if found is None:
         raise ValueError('Legacy API password provider not found')
 
-    try:
-        provider = cast(LegacyApiPasswordAuthProvider, providers[0])
-        provider.async_validate_login(password)
-        return await auth.async_get_or_create_user(
-            await provider.async_get_or_create_credentials({})
-        )
-    except InvalidAuthError:
-        return None
+    return await auth.async_get_or_create_user(
+        await found.async_get_or_create_credentials({})
+    )
 
 
-@AUTH_PROVIDERS.register(AUTH_PROVIDER_TYPE)
+@AUTH_PROVIDERS.register('legacy_api_password')
 class LegacyApiPasswordAuthProvider(AuthProvider):
-    """An auth provider support legacy api_password."""
+    """Example auth provider based on hardcoded usernames and passwords."""
 
     DEFAULT_TITLE = 'Legacy API Password'
-
-    @property
-    def api_password(self) -> str:
-        """Return api_password."""
-        return str(self.config[CONF_API_PASSWORD])
 
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
@@ -65,10 +64,10 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
     @callback
     def async_validate_login(self, password: str) -> None:
-        """Validate password."""
-        api_password = str(self.config[CONF_API_PASSWORD])
+        """Validate a username and password."""
+        hass_http = getattr(self.hass, 'http', None)  # type: HomeAssistantHTTP
 
-        if not hmac.compare_digest(api_password.encode('utf-8'),
+        if not hmac.compare_digest(hass_http.api_password.encode('utf-8'),
                                    password.encode('utf-8')):
             raise InvalidAuthError
 
@@ -99,6 +98,12 @@ class LegacyLoginFlow(LoginFlow):
             -> Dict[str, Any]:
         """Handle the step of the form."""
         errors = {}
+
+        hass_http = getattr(self.hass, 'http', None)
+        if hass_http is None or not hass_http.api_password:
+            return self.async_abort(
+                reason='no_api_password_set'
+            )
 
         if user_input is not None:
             try:

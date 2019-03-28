@@ -4,15 +4,11 @@ from unittest.mock import patch, Mock
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components import locative
 from homeassistant.components.device_tracker import \
     DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.locative import DOMAIN, TRACKER_UPDATE
+from homeassistant.components.locative import DOMAIN
 from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
-from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-
-# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(autouse=True)
@@ -127,7 +123,7 @@ async def test_enter_and_exit(hass, locative_client, webhook_id):
     assert req.status == HTTP_OK
     state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
-    assert state_name == 'home'
+    assert 'home' == state_name
 
     data['id'] = 'HOME'
     data['trigger'] = 'exit'
@@ -138,7 +134,7 @@ async def test_enter_and_exit(hass, locative_client, webhook_id):
     assert req.status == HTTP_OK
     state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
-    assert state_name == 'not_home'
+    assert 'not_home' == state_name
 
     data['id'] = 'hOmE'
     data['trigger'] = 'enter'
@@ -149,7 +145,7 @@ async def test_enter_and_exit(hass, locative_client, webhook_id):
     assert req.status == HTTP_OK
     state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
-    assert state_name == 'home'
+    assert 'home' == state_name
 
     data['trigger'] = 'exit'
 
@@ -159,7 +155,7 @@ async def test_enter_and_exit(hass, locative_client, webhook_id):
     assert req.status == HTTP_OK
     state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
-    assert state_name == 'not_home'
+    assert 'not_home' == state_name
 
     data['id'] = 'work'
     data['trigger'] = 'enter'
@@ -170,7 +166,7 @@ async def test_enter_and_exit(hass, locative_client, webhook_id):
     assert req.status == HTTP_OK
     state_name = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                                 data['device'])).state
-    assert state_name == 'work'
+    assert 'work' == state_name
 
 
 async def test_exit_after_enter(hass, locative_client, webhook_id):
@@ -238,35 +234,3 @@ async def test_exit_first(hass, locative_client, webhook_id):
     state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
                                            data['device']))
     assert state.state == 'not_home'
-
-
-@pytest.mark.xfail(
-    reason='The device_tracker component does not support unloading yet.'
-)
-async def test_load_unload_entry(hass, locative_client, webhook_id):
-    """Test that the appropriate dispatch signals are added and removed."""
-    url = '/api/webhook/{}'.format(webhook_id)
-
-    data = {
-        'latitude': 40.7855,
-        'longitude': -111.7367,
-        'device': 'new_device',
-        'id': 'Home',
-        'trigger': 'exit'
-    }
-
-    # Exit Home
-    req = await locative_client.post(url, data=data)
-    await hass.async_block_till_done()
-    assert req.status == HTTP_OK
-
-    state = hass.states.get('{}.{}'.format(DEVICE_TRACKER_DOMAIN,
-                                           data['device']))
-    assert state.state == 'not_home'
-    assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-
-    await locative.async_unload_entry(hass, entry)
-    await hass.async_block_till_done()
-    assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]

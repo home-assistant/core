@@ -1,4 +1,9 @@
-"""Offer MQTT listening automation rules."""
+"""
+Offer MQTT listening automation rules.
+
+For more details about this automation rule, please refer to the documentation
+at https://home-assistant.io/docs/automation/trigger/#mqtt-trigger
+"""
 import json
 
 import voluptuous as vol
@@ -29,18 +34,18 @@ async def async_trigger(hass, config, action, automation_info):
     encoding = config[CONF_ENCODING] or None
 
     @callback
-    def mqtt_automation_listener(mqttmsg):
+    def mqtt_automation_listener(msg_topic, msg_payload, qos):
         """Listen for MQTT messages."""
-        if payload is None or payload == mqttmsg.payload:
+        if payload is None or payload == msg_payload:
             data = {
                 'platform': 'mqtt',
-                'topic': mqttmsg.topic,
-                'payload': mqttmsg.payload,
-                'qos': mqttmsg.qos,
+                'topic': msg_topic,
+                'payload': msg_payload,
+                'qos': qos,
             }
 
             try:
-                data['payload_json'] = json.loads(mqttmsg.payload)
+                data['payload_json'] = json.loads(msg_payload)
             except ValueError:
                 pass
 

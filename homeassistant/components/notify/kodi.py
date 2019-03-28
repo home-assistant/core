@@ -10,14 +10,13 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ICON, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_PROXY_SSL,
-    CONF_USERNAME)
+    ATTR_ICON, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
+    CONF_PROXY_SSL)
+from homeassistant.components.notify import (
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
+    BaseNotificationService)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-from . import (
-    ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
-    BaseNotificationService)
 
 REQUIREMENTS = ['jsonrpc-async==0.6']
 
@@ -91,7 +90,7 @@ class KodiNotificationService(BaseNotificationService):
         try:
             data = kwargs.get(ATTR_DATA) or {}
 
-            displaytime = int(data.get(ATTR_DISPLAYTIME, 10000))
+            displaytime = data.get(ATTR_DISPLAYTIME, 10000)
             icon = data.get(ATTR_ICON, "info")
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
             await self._server.GUI.ShowNotification(

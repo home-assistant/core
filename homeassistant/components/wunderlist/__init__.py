@@ -1,4 +1,9 @@
-"""Support to interact with Wunderlist."""
+"""
+Component to interact with Wunderlist.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/wunderlist/
+"""
 import logging
 
 import voluptuous as vol
@@ -20,7 +25,7 @@ CONF_STARRED = 'starred'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
+        vol.Required(CONF_ACCESS_TOKEN): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -30,7 +35,7 @@ SERVICE_CREATE_TASK = 'create_task'
 SERVICE_SCHEMA_CREATE_TASK = vol.Schema({
     vol.Required(CONF_LIST_NAME): cv.string,
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_STARRED): cv.boolean,
+    vol.Optional(CONF_STARRED): cv.boolean
 })
 
 

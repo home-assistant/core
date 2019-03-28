@@ -1,4 +1,9 @@
-"""Trigger an automation when a LiteJet switch is released."""
+"""
+Trigger an automation when a LiteJet switch is released.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/automation.litejet/
+"""
 import logging
 
 import voluptuous as vol

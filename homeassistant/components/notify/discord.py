@@ -8,10 +8,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
-
-from . import ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA, BaseNotificationService, ATTR_TARGET, ATTR_DATA)
+from homeassistant.const import CONF_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 

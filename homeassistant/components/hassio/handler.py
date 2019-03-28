@@ -1,4 +1,9 @@
-"""Handler for Hass.io."""
+"""
+Exposes regular REST commands as services.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/hassio/
+"""
 import asyncio
 import logging
 import os
@@ -7,10 +12,8 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.http import (
-    CONF_SERVER_HOST,
-    CONF_SERVER_PORT,
-    CONF_SSL_CERTIFICATE,
-)
+    CONF_API_PASSWORD, CONF_SERVER_HOST, CONF_SERVER_PORT,
+    CONF_SSL_CERTIFICATE)
 from homeassistant.const import CONF_TIME_ZONE, SERVER_PORT
 
 from .const import X_HASSIO
@@ -62,7 +65,7 @@ class HassIO:
 
         This method return a coroutine.
         """
-        return self.send_command("/supervisor/ping", method="get", timeout=15)
+        return self.send_command("/supervisor/ping", method="get")
 
     @_api_data
     def get_homeassistant_info(self):
@@ -97,6 +100,13 @@ class HassIO:
         """
         return self.send_command("/homeassistant/stop")
 
+    def check_homeassistant_config(self):
+        """Check Home-Assistant config with Hass.io API.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/homeassistant/check", timeout=600)
+
     @_api_data
     def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.
@@ -120,6 +130,7 @@ class HassIO:
         options = {
             'ssl': CONF_SSL_CERTIFICATE in http_config,
             'port': port,
+            'password': http_config.get(CONF_API_PASSWORD),
             'watchdog': True,
             'refresh_token': refresh_token,
         }

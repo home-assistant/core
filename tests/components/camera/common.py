@@ -4,9 +4,7 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 from homeassistant.components.camera import (
-    ATTR_FILENAME, SERVICE_ENABLE_MOTION, SERVICE_SNAPSHOT)
-from homeassistant.components.camera.const import (
-    DOMAIN, DATA_CAMERA_PREFS, PREF_PRELOAD_STREAM)
+    ATTR_FILENAME, DOMAIN, SERVICE_ENABLE_MOTION, SERVICE_SNAPSHOT)
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, \
     SERVICE_TURN_ON
 from homeassistant.core import callback
@@ -47,13 +45,3 @@ def async_snapshot(hass, filename, entity_id=None):
 
     hass.async_add_job(hass.services.async_call(
         DOMAIN, SERVICE_SNAPSHOT, data))
-
-
-def mock_camera_prefs(hass, entity_id, prefs={}):
-    """Fixture for cloud component."""
-    prefs_to_set = {
-        PREF_PRELOAD_STREAM: True,
-    }
-    prefs_to_set.update(prefs)
-    hass.data[DATA_CAMERA_PREFS]._prefs[entity_id] = prefs_to_set
-    return prefs_to_set

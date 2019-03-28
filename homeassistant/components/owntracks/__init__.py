@@ -1,4 +1,4 @@
-"""Support for OwnTracks."""
+"""Component for OwnTracks."""
 from collections import defaultdict
 import json
 import logging
@@ -8,19 +8,16 @@ from aiohttp.web import json_response
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import mqtt
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components import mqtt
 from homeassistant.setup import async_when_setup
+import homeassistant.helpers.config_validation as cv
 
 from .config_flow import CONF_SECRET
 
-REQUIREMENTS = ['PyNaCl==1.3.0']
-
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'owntracks'
+DOMAIN = "owntracks"
+REQUIREMENTS = ['libnacl==1.6.1']
 DEPENDENCIES = ['webhook']
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
@@ -49,6 +46,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_WEBHOOK_ID): cv.string,
     }
 }, extra=vol.ALLOW_EXTRA)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
@@ -99,16 +98,16 @@ async def async_connect_mqtt(hass, component):
     """Subscribe to MQTT topic."""
     context = hass.data[DOMAIN]['context']
 
-    async def async_handle_mqtt_message(msg):
+    async def async_handle_mqtt_message(topic, payload, qos):
         """Handle incoming OwnTracks message."""
         try:
-            message = json.loads(msg.payload)
+            message = json.loads(payload)
         except ValueError:
             # If invalid JSON
-            _LOGGER.error("Unable to parse payload as JSON: %s", msg.payload)
+            _LOGGER.error("Unable to parse payload as JSON: %s", payload)
             return
 
-        message['topic'] = msg.topic
+        message['topic'] = topic
         hass.helpers.dispatcher.async_dispatcher_send(
             DOMAIN, hass, context, message)
 

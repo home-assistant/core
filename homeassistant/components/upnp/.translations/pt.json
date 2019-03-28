@@ -15,7 +15,7 @@
         "step": {
             "confirm": {
                 "description": "Deseja configurar o UPnP / IGD?",
-                "title": "UPnP/IGD"
+                "title": ""
             },
             "init": {
                 "title": "UPnP/IGD"

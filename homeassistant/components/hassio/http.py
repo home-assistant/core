@@ -1,18 +1,23 @@
-"""HTTP Support for Hass.io."""
+"""
+Exposes regular REST commands as services.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/hassio/
+"""
 import asyncio
 import logging
 import os
 import re
 
+import async_timeout
 import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE
 from aiohttp.web_exceptions import HTTPBadGateway
-import async_timeout
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 
-from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID, X_HASSIO
+from .const import X_HASSIO, X_HASS_USER_ID, X_HASS_IS_ADMIN
 
 _LOGGER = logging.getLogger(__name__)
 

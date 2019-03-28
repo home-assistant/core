@@ -1,4 +1,9 @@
-"""Support for functionality to have conversations with Home Assistant."""
+"""
+Support for functionality to have conversations with Home Assistant.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/conversation/
+"""
 import logging
 import re
 
@@ -6,16 +11,17 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import http
-from homeassistant.components.cover import (
-    INTENT_CLOSE_COVER, INTENT_OPEN_COVER)
-from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.conversation.util import create_matcher
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
+from homeassistant.components.cover import (INTENT_OPEN_COVER,
+                                            INTENT_CLOSE_COVER)
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
-from homeassistant.setup import ATTR_COMPONENT
-
-from .util import create_matcher
+from homeassistant.setup import (ATTR_COMPONENT)
 
 _LOGGER = logging.getLogger(__name__)
 

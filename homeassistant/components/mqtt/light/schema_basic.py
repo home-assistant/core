@@ -20,13 +20,11 @@ from homeassistant.const import (
     CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-from . import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +58,7 @@ CONF_WHITE_VALUE_SCALE = 'white_value_scale'
 CONF_WHITE_VALUE_STATE_TOPIC = 'white_value_state_topic'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 CONF_ON_COMMAND_TYPE = 'on_command_type'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = 'MQTT Light'
@@ -110,16 +109,16 @@ PLATFORM_SCHEMA_BASIC = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
         vol.In(VALUES_ON_COMMAND_TYPE),
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
-    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema).extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
 
-async def async_setup_entity_basic(config, async_add_entities, config_entry,
+async def async_setup_entity_basic(config, async_add_entities,
                                    discovery_hash=None):
     """Set up a MQTT Light."""
     config.setdefault(
         CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
 
-    async_add_entities([MqttLight(config, config_entry, discovery_hash)])
+    async_add_entities([MqttLight(config, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -127,7 +126,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 MqttEntityDeviceInfo, Light, RestoreEntity):
     """Representation of a MQTT light."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, discovery_hash):
         """Initialize MQTT light."""
         self._state = False
         self._sub_state = None
@@ -159,7 +158,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
+        MqttEntityDeviceInfo.__init__(self, device_config)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -172,9 +171,8 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -254,19 +252,18 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         last_state = await self.async_get_last_state()
 
         @callback
-        def state_received(msg):
+        def state_received(topic, payload, qos):
             """Handle new MQTT messages."""
-            payload = templates[CONF_STATE](msg.payload)
+            payload = templates[CONF_STATE](payload)
             if not payload:
-                _LOGGER.debug("Ignoring empty state message from '%s'",
-                              msg.topic)
+                _LOGGER.debug("Ignoring empty state message from '%s'", topic)
                 return
 
             if payload == self._payload['on']:
                 self._state = True
             elif payload == self._payload['off']:
                 self._state = False
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -277,19 +274,19 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._state = last_state.state == STATE_ON
 
         @callback
-        def brightness_received(msg):
+        def brightness_received(topic, payload, qos):
             """Handle new MQTT messages for the brightness."""
-            payload = templates[CONF_BRIGHTNESS](msg.payload)
+            payload = templates[CONF_BRIGHTNESS](payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty brightness message from '%s'",
-                              msg.topic)
+                              topic)
                 return
 
             device_value = float(payload)
             percent_bright = \
                 device_value / self._config.get(CONF_BRIGHTNESS_SCALE)
             self._brightness = percent_bright * 255
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None:
             topics[CONF_BRIGHTNESS_STATE_TOPIC] = {
@@ -306,12 +303,11 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._brightness = None
 
         @callback
-        def rgb_received(msg):
+        def rgb_received(topic, payload, qos):
             """Handle new MQTT messages for RGB."""
-            payload = templates[CONF_RGB](msg.payload)
+            payload = templates[CONF_RGB](payload)
             if not payload:
-                _LOGGER.debug("Ignoring empty rgb message from '%s'",
-                              msg.topic)
+                _LOGGER.debug("Ignoring empty rgb message from '%s'", topic)
                 return
 
             rgb = [int(val) for val in payload.split(',')]
@@ -320,7 +316,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 percent_bright = \
                     float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
                 self._brightness = percent_bright * 255
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_RGB_STATE_TOPIC] is not None:
             topics[CONF_RGB_STATE_TOPIC] = {
@@ -335,16 +331,16 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._hs = (0, 0)
 
         @callback
-        def color_temp_received(msg):
+        def color_temp_received(topic, payload, qos):
             """Handle new MQTT messages for color temperature."""
-            payload = templates[CONF_COLOR_TEMP](msg.payload)
+            payload = templates[CONF_COLOR_TEMP](payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty color temp message from '%s'",
-                              msg.topic)
+                              topic)
                 return
 
             self._color_temp = int(payload)
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None:
             topics[CONF_COLOR_TEMP_STATE_TOPIC] = {
@@ -361,16 +357,15 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._color_temp = None
 
         @callback
-        def effect_received(msg):
+        def effect_received(topic, payload, qos):
             """Handle new MQTT messages for effect."""
-            payload = templates[CONF_EFFECT](msg.payload)
+            payload = templates[CONF_EFFECT](payload)
             if not payload:
-                _LOGGER.debug("Ignoring empty effect message from '%s'",
-                              msg.topic)
+                _LOGGER.debug("Ignoring empty effect message from '%s'", topic)
                 return
 
             self._effect = payload
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_EFFECT_STATE_TOPIC] is not None:
             topics[CONF_EFFECT_STATE_TOPIC] = {
@@ -387,17 +382,17 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._effect = None
 
         @callback
-        def hs_received(msg):
+        def hs_received(topic, payload, qos):
             """Handle new MQTT messages for hs color."""
-            payload = templates[CONF_HS](msg.payload)
+            payload = templates[CONF_HS](payload)
             if not payload:
-                _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
+                _LOGGER.debug("Ignoring empty hs message from '%s'", topic)
                 return
 
             try:
                 hs_color = [float(val) for val in payload.split(',', 2)]
                 self._hs = hs_color
-                self.async_write_ha_state()
+                self.async_schedule_update_ha_state()
             except ValueError:
                 _LOGGER.debug("Failed to parse hs state update: '%s'",
                               payload)
@@ -415,19 +410,19 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._hs = (0, 0)
 
         @callback
-        def white_value_received(msg):
+        def white_value_received(topic, payload, qos):
             """Handle new MQTT messages for white value."""
-            payload = templates[CONF_WHITE_VALUE](msg.payload)
+            payload = templates[CONF_WHITE_VALUE](payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty white value message from '%s'",
-                              msg.topic)
+                              topic)
                 return
 
             device_value = float(payload)
             percent_white = \
                 device_value / self._config.get(CONF_WHITE_VALUE_SCALE)
             self._white_value = percent_white * 255
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_WHITE_VALUE_STATE_TOPIC] is not None:
             topics[CONF_WHITE_VALUE_STATE_TOPIC] = {
@@ -444,17 +439,17 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             self._white_value = None
 
         @callback
-        def xy_received(msg):
+        def xy_received(topic, payload, qos):
             """Handle new MQTT messages for xy color."""
-            payload = templates[CONF_XY](msg.payload)
+            payload = templates[CONF_XY](payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty xy-color message from '%s'",
-                              msg.topic)
+                              topic)
                 return
 
             xy_color = [float(val) for val in payload.split(',')]
             self._hs = color_util.color_xy_to_hs(*xy_color)
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_XY_STATE_TOPIC] is not None:
             topics[CONF_XY_STATE_TOPIC] = {
@@ -745,7 +740,7 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             should_update = True
 
         if should_update:
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off.
@@ -759,4 +754,4 @@ class MqttLight(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self._optimistic:
             # Optimistically assume that the light has changed state.
             self._state = False
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()

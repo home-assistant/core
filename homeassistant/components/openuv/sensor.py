@@ -1,20 +1,23 @@
-"""Support for OpenUV sensors."""
+"""
+This platform provides sensors for OpenUV data.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.openuv/
+"""
 import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.dt import as_local, parse_datetime
-
-from . import (
+from homeassistant.components.openuv import (
     DATA_OPENUV_CLIENT, DATA_UV, DOMAIN, SENSORS, TOPIC_UPDATE,
     TYPE_CURRENT_OZONE_LEVEL, TYPE_CURRENT_UV_INDEX, TYPE_CURRENT_UV_LEVEL,
     TYPE_MAX_UV_INDEX, TYPE_SAFE_EXPOSURE_TIME_1, TYPE_SAFE_EXPOSURE_TIME_2,
     TYPE_SAFE_EXPOSURE_TIME_3, TYPE_SAFE_EXPOSURE_TIME_4,
     TYPE_SAFE_EXPOSURE_TIME_5, TYPE_SAFE_EXPOSURE_TIME_6, OpenUvEntity)
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.util.dt import as_local, parse_datetime
 
 DEPENDENCIES = ['openuv']
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_MAX_UV_TIME = 'time'
 
@@ -27,11 +30,11 @@ EXPOSURE_TYPE_MAP = {
     TYPE_SAFE_EXPOSURE_TIME_6: 'st6'
 }
 
-UV_LEVEL_EXTREME = 'Extreme'
-UV_LEVEL_VHIGH = 'Very High'
-UV_LEVEL_HIGH = 'High'
-UV_LEVEL_MODERATE = 'Moderate'
-UV_LEVEL_LOW = 'Low'
+UV_LEVEL_EXTREME = "Extreme"
+UV_LEVEL_VHIGH = "Very High"
+UV_LEVEL_HIGH = "High"
+UV_LEVEL_MODERATE = "Moderate"
+UV_LEVEL_LOW = "Low"
 
 
 async def async_setup_platform(

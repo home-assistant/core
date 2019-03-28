@@ -1,4 +1,9 @@
-"""Offer webhook triggered automation rules."""
+"""
+Offer webhook triggered automation rules.
+
+For more details about this automation rule, please refer to the documentation
+at https://home-assistant.io/docs/automation/trigger/#webhook-trigger
+"""
 from functools import partial
 import logging
 

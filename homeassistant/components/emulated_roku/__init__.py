@@ -1,4 +1,9 @@
-"""Support for Roku API emulation."""
+"""
+Support for Roku API emulation.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/emulated_roku/
+"""
 import voluptuous as vol
 
 from homeassistant import config_entries, util

@@ -1,4 +1,9 @@
-"""Support for Danfoss Air HRV."""
+"""
+Support for Danfoss Air HRV.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/danfoss_air/
+"""
 from datetime import timedelta
 import logging
 
@@ -9,11 +14,11 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pydanfossair==0.0.7']
+REQUIREMENTS = ['pydanfossair==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
-DANFOSS_AIR_PLATFORMS = ['sensor', 'binary_sensor', 'switch']
+DANFOSS_AIR_PLATFORMS = ['sensor', 'binary_sensor']
 DOMAIN = 'danfoss_air'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -50,11 +55,10 @@ class DanfossAir:
 
     def get_value(self, item):
         """Get value for sensor."""
-        return self._data.get(item)
+        if item in self._data:
+            return self._data[item]
 
-    def update_state(self, command, state_command):
-        """Send update command to Danfoss Air CCM."""
-        self._data[state_command] = self._client.command(command)
+        return None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -75,17 +79,5 @@ class DanfossAir:
             = round(self._client.command(ReadCommand.filterPercent), 2)
         self._data[ReadCommand.bypass] \
             = self._client.command(ReadCommand.bypass)
-        self._data[ReadCommand.fan_step] \
-            = self._client.command(ReadCommand.fan_step)
-        self._data[ReadCommand.supply_fan_speed] \
-            = self._client.command(ReadCommand.supply_fan_speed)
-        self._data[ReadCommand.exhaust_fan_speed] \
-            = self._client.command(ReadCommand.exhaust_fan_speed)
-        self._data[ReadCommand.away_mode] \
-            = self._client.command(ReadCommand.away_mode)
-        self._data[ReadCommand.boost] \
-            = self._client.command(ReadCommand.boost)
-        self._data[ReadCommand.battery_percent] \
-            = self._client.command(ReadCommand.battery_percent)
 
         _LOGGER.debug("Done fetching data from Danfoss Air CCM module")

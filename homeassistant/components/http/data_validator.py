@@ -1,4 +1,5 @@
 """Decorator for view methods to help with data validation."""
+
 from functools import wraps
 import logging
 

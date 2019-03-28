@@ -24,8 +24,3 @@ set_runtime_value_float:
     value:
       description: The float value to set.
 
-pulse:
-  description: Pulses an input on the IHC controller.
-  fields:
-    ihc_id:
-      description: The integer IHC resource ID.

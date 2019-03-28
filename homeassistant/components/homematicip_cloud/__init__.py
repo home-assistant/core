@@ -1,11 +1,15 @@
-"""Support for HomematicIP Cloud devices."""
+"""
+Support for HomematicIP Cloud components.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/homematicip_cloud/
+"""
 import logging
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
-from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 
 from .config_flow import configured_haps
@@ -15,7 +19,7 @@ from .const import (
 from .device import HomematicipGenericDevice  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
-REQUIREMENTS = ['homematicip==0.10.6']
+REQUIREMENTS = ['homematicip==0.10.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,25 +57,7 @@ async def async_setup_entry(hass, entry):
     hap = HomematicipHAP(hass, entry)
     hapid = entry.data[HMIPC_HAPID].replace('-', '').upper()
     hass.data[DOMAIN][hapid] = hap
-
-    if not await hap.async_setup():
-        return False
-
-    # Register hap as device in registry.
-    device_registry = await dr.async_get_registry(hass)
-    home = hap.home
-    # Add the HAP name from configuration if set.
-    hapname = home.label \
-        if not home.name else "{} {}".format(home.label, home.name)
-    device_registry.async_get_or_create(
-        config_entry_id=home.id,
-        identifiers={(DOMAIN, home.id)},
-        manufacturer='eQ-3',
-        name=hapname,
-        model=home.modelType,
-        sw_version=home.currentAPVersion,
-    )
-    return True
+    return await hap.async_setup()
 
 
 async def async_unload_entry(hass, entry):

@@ -1,16 +1,21 @@
-"""Support for displaying persistent notifications."""
-from collections import OrderedDict
+"""
+A component which is collecting configuration errors.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/persistent_notification/
+"""
 import logging
+from collections import OrderedDict
 from typing import Awaitable
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import TemplateError
+from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 

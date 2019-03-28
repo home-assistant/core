@@ -41,5 +41,6 @@ async def resolve_auth_code(hass, client_id, client_secret, code):
     except AuthorizationError as err:
         if err.response.status_code == 401:
             raise config_flow.CodeInvalid()
-        raise config_flow.NestAuthError('Unknown error: {} ({})'.format(
-            err, err.response.status_code))
+        else:
+            raise config_flow.NestAuthError('Unknown error: {} ({})'.format(
+                err, err.response.status_code))

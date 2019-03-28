@@ -1,4 +1,9 @@
-"""Support for OpenTherm Gateway devices."""
+"""
+Support for OpenTherm Gateway devices.
+
+For more details about this component, please refer to the documentation at
+http://home-assistant.io/components/opentherm_gw/
+"""
 import logging
 from datetime import datetime, date
 
@@ -14,10 +19,6 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyotgw==0.4b2']
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'opentherm_gw'
 
@@ -103,6 +104,10 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+REQUIREMENTS = ['pyotgw==0.4b1']
+
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass, config):
     """Set up the OpenTherm Gateway component."""
@@ -115,15 +120,14 @@ async def async_setup(hass, config):
         DATA_GW_VARS: pyotgw.vars,
         DATA_LATEST_STATUS: {}
     }
+    hass.async_create_task(connect_and_subscribe(
+        hass, conf[CONF_DEVICE], gateway))
     hass.async_create_task(register_services(hass, gateway))
     hass.async_create_task(async_load_platform(
         hass, 'climate', DOMAIN, conf.get(CONF_CLIMATE), config))
     if monitored_vars:
         hass.async_create_task(setup_monitored_vars(
             hass, config, monitored_vars))
-    # Schedule directly on the loop to avoid blocking HA startup.
-    hass.loop.create_task(
-        connect_and_subscribe(hass, conf[CONF_DEVICE], gateway))
     return True
 
 

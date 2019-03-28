@@ -84,7 +84,8 @@ class FlowHandler(config_entries.ConfigFlow):
                         KEY_SCAN_INTERVAL: self._scan_interval.seconds,
                         KEY_SESSION: session,
                     })
-            errors['base'] = 'auth_error'
+            else:
+                errors['base'] = 'auth_error'
 
         try:
             with async_timeout.timeout(10):

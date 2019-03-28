@@ -1,4 +1,9 @@
-"""Support to interact with Remember The Milk."""
+"""
+Component to interact with Remember The Milk.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/remember_the_milk/
+"""
 import json
 import logging
 import os

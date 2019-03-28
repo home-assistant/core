@@ -206,7 +206,7 @@ def test_extract_from_service_available_device(hass):
 
     assert ['test_domain.test_1', 'test_domain.test_3'] == \
         sorted(ent.entity_id for ent in
-               (yield from component.async_extract_from_service(call_1)))
+               component.async_extract_from_service(call_1))
 
     call_2 = ha.ServiceCall('test', 'service', data={
         'entity_id': ['test_domain.test_3', 'test_domain.test_4'],
@@ -214,7 +214,7 @@ def test_extract_from_service_available_device(hass):
 
     assert ['test_domain.test_3'] == \
         sorted(ent.entity_id for ent in
-               (yield from component.async_extract_from_service(call_2)))
+               component.async_extract_from_service(call_2))
 
 
 @asyncio.coroutine
@@ -275,7 +275,7 @@ def test_extract_from_service_returns_all_if_no_entity_id(hass):
 
     assert ['test_domain.test_1', 'test_domain.test_2'] == \
         sorted(ent.entity_id for ent in
-               (yield from component.async_extract_from_service(call)))
+               component.async_extract_from_service(call))
 
 
 @asyncio.coroutine
@@ -293,7 +293,7 @@ def test_extract_from_service_filter_out_non_existing_entities(hass):
 
     assert ['test_domain.test_2'] == \
            [ent.entity_id for ent
-            in (yield from component.async_extract_from_service(call))]
+            in component.async_extract_from_service(call)]
 
 
 @asyncio.coroutine
@@ -308,8 +308,7 @@ def test_extract_from_service_no_group_expand(hass):
         'entity_id': ['group.test_group']
     })
 
-    extracted = yield from component.async_extract_from_service(
-        call, expand_group=False)
+    extracted = component.async_extract_from_service(call, expand_group=False)
     assert extracted == [test_group]
 
 
@@ -467,7 +466,7 @@ async def test_extract_all_omit_entity_id(hass, caplog):
 
     assert ['test_domain.test_1', 'test_domain.test_2'] == \
         sorted(ent.entity_id for ent in
-               await component.async_extract_from_service(call))
+               component.async_extract_from_service(call))
     assert ('Not passing an entity ID to a service to target all entities is '
             'deprecated') in caplog.text
 
@@ -484,6 +483,6 @@ async def test_extract_all_use_match_all(hass, caplog):
 
     assert ['test_domain.test_1', 'test_domain.test_2'] == \
         sorted(ent.entity_id for ent in
-               await component.async_extract_from_service(call))
+               component.async_extract_from_service(call))
     assert ('Not passing an entity ID to a service to target all entities is '
             'deprecated') not in caplog.text

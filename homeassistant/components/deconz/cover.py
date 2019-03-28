@@ -1,12 +1,16 @@
-"""Support for deCONZ covers."""
+"""
+Support for deCONZ covers.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/cover.deconz/
+"""
 from homeassistant.components.cover import (
     ATTR_POSITION, CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP,
     SUPPORT_SET_POSITION)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    COVER_TYPES, DAMPERS, DOMAIN as DECONZ_DOMAIN, NEW_LIGHT, WINDOW_COVERS)
+from .const import COVER_TYPES, DAMPERS, DOMAIN as DECONZ_DOMAIN, WINDOW_COVERS
 from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
@@ -14,8 +18,8 @@ DEPENDENCIES = ['deconz']
 ZIGBEE_SPEC = ['lumi.curtain']
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Unsupported way of setting up deCONZ covers."""
     pass
 
@@ -40,7 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities, True)
 
     gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_LIGHT, async_add_cover))
+        async_dispatcher_connect(hass, 'deconz_new_light', async_add_cover))
 
     async_add_cover(gateway.api.lights.values())
 
@@ -49,7 +53,7 @@ class DeconzCover(DeconzDevice, CoverDevice):
     """Representation of a deCONZ cover."""
 
     def __init__(self, device, gateway):
-        """Set up cover device."""
+        """Set up cover and add update callback to get data from websocket."""
         super().__init__(device, gateway)
 
         self._features = SUPPORT_OPEN

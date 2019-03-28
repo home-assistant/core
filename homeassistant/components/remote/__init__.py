@@ -1,4 +1,9 @@
-"""Support to interface with universal remote control devices."""
+"""
+Component to interface with universal remote control devices.
+
+For more details about this component, please refer to the documentation
+at https://home-assistant.io/components/remote/
+"""
 from datetime import timedelta
 import functools as ft
 import logging
@@ -13,8 +18,7 @@ from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
 from homeassistant.components import group
-from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +27,6 @@ ATTR_COMMAND = 'command'
 ATTR_DEVICE = 'device'
 ATTR_NUM_REPEATS = 'num_repeats'
 ATTR_DELAY_SECS = 'delay_secs'
-ATTR_HOLD_SECS = 'hold_secs'
 
 DOMAIN = 'remote'
 DEPENDENCIES = ['group']
@@ -41,7 +44,6 @@ SERVICE_SYNC = 'sync'
 
 DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
-DEFAULT_HOLD_SECS = 0
 
 REMOTE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -57,7 +59,6 @@ REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Optional(
         ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
     vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
-    vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
 })
 
 

@@ -5,6 +5,7 @@ import logging
 import os
 from collections import OrderedDict, namedtuple
 from glob import glob
+from platform import system
 from typing import Dict, List, Sequence
 from unittest.mock import patch
 
@@ -21,6 +22,8 @@ from homeassistant.util import yaml
 from homeassistant.exceptions import HomeAssistantError
 
 REQUIREMENTS = ('colorlog==4.0.2',)
+if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
+    REQUIREMENTS += ('colorama<=1',)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
@@ -342,21 +345,14 @@ def check_ha_config_file(hass):
                 _comp_error(ex, domain, config)
                 continue
 
-        if (not hasattr(component, 'PLATFORM_SCHEMA') and
-                not hasattr(component, 'PLATFORM_SCHEMA_BASE')):
+        if not hasattr(component, 'PLATFORM_SCHEMA'):
             continue
 
         platforms = []
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                if hasattr(component, 'PLATFORM_SCHEMA_BASE'):
-                    p_validated = \
-                        component.PLATFORM_SCHEMA_BASE(  # type: ignore
-                            p_config)
-                else:
-                    p_validated = component.PLATFORM_SCHEMA(  # type: ignore
-                        p_config)
+                p_validated = component.PLATFORM_SCHEMA(p_config)
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
                 continue

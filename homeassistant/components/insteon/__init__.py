@@ -1,16 +1,22 @@
-"""Support for INSTEON Modems (PLM and Hub)."""
+"""
+Support for INSTEON Modems (PLM and Hub).
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/insteon/
+"""
 import collections
 import logging
 from typing import Dict
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_ADDRESS, CONF_ENTITY_ID, CONF_HOST, CONF_PLATFORM, CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP,
+                                 CONF_PLATFORM,
+                                 CONF_ENTITY_ID,
+                                 CONF_HOST)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['insteonplm==0.15.2']
@@ -25,6 +31,7 @@ CONF_HUB_PASSWORD = 'password'
 CONF_HUB_VERSION = 'hub_version'
 CONF_OVERRIDE = 'device_override'
 CONF_PLM_HUB_MSG = 'Must configure either a PLM port or a Hub host'
+CONF_ADDRESS = 'address'
 CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
 CONF_FIRMWARE = 'firmware'

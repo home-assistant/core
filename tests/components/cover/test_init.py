@@ -2,7 +2,7 @@
 
 from homeassistant.components.cover import (SERVICE_OPEN_COVER,
                                             SERVICE_CLOSE_COVER)
-from homeassistant.helpers import intent
+from homeassistant.components import intent
 import homeassistant.components as comps
 from tests.common import async_mock_service
 

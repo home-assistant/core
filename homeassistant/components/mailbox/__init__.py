@@ -1,4 +1,9 @@
-"""Support for Voice mailboxes."""
+"""
+Provides functionality for mailboxes.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/mailbox/
+"""
 import asyncio
 from contextlib import suppress
 from datetime import timedelta

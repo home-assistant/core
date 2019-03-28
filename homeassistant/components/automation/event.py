@@ -1,4 +1,9 @@
-"""Offer event listening automation rules."""
+"""
+Offer event listening automation rules.
+
+For more details about this automation rule, please refer to the documentation
+at https://home-assistant.io/docs/automation/trigger/#event-trigger
+"""
 import logging
 
 import voluptuous as vol

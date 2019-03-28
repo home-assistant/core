@@ -13,8 +13,7 @@ import voluptuous as vol
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
 from homeassistant.helpers import intent
@@ -35,27 +34,12 @@ ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-# Refer to the cover dev docs for device class descriptions
-DEVICE_CLASS_AWNING = 'awning'
-DEVICE_CLASS_BLIND = 'blind'
-DEVICE_CLASS_CURTAIN = 'curtain'
-DEVICE_CLASS_DAMPER = 'damper'
-DEVICE_CLASS_DOOR = 'door'
-DEVICE_CLASS_GARAGE = 'garage'
-DEVICE_CLASS_SHADE = 'shade'
-DEVICE_CLASS_SHUTTER = 'shutter'
-DEVICE_CLASS_WINDOW = 'window'
 DEVICE_CLASSES = [
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_DAMPER,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_SHADE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW
+    'damper',
+    'garage',        # Garage door control
+    'window',        # Window control
 ]
+
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 SUPPORT_OPEN = 1

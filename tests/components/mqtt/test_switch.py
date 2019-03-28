@@ -1,20 +1,19 @@
 """The tests for the MQTT switch platform."""
 import json
-from unittest.mock import ANY
-
 from asynctest import patch
 import pytest
+from unittest.mock import ANY
 
-from homeassistant.components import mqtt, switch
-from homeassistant.components.mqtt.discovery import async_start
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNAVAILABLE)
-import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
+    ATTR_ASSUMED_STATE
+import homeassistant.core as ha
+from homeassistant.components import switch, mqtt
+from homeassistant.components.mqtt.discovery import async_start
 
 from tests.common import (
-    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
-    mock_coro, mock_registry)
+    mock_coro, async_mock_mqtt_component, async_fire_mqtt_message,
+    MockConfigEntry, mock_registry)
 from tests.components.switch import common
 
 
@@ -392,7 +391,7 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
 
     data = (
         '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
+        '  "status_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
@@ -421,12 +420,12 @@ async def test_discovery_update_switch(hass, mqtt_mock, caplog):
 
     data1 = (
         '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
+        '  "status_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "state_topic": "test_topic",'
+        '  "status_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 
@@ -460,7 +459,7 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "state_topic": "test_topic",'
+        '  "status_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
 

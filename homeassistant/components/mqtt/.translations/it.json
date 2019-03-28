@@ -10,20 +10,13 @@
             "broker": {
                 "data": {
                     "broker": "Broker",
-                    "discovery": "Attiva l'individuazione",
-                    "password": "Password",
-                    "port": "Porta",
-                    "username": "Nome utente"
-                },
-                "description": "Inserisci le informazioni di connessione del tuo broker MQTT.",
-                "title": "MQTT"
+                    "discovery": "Attiva l'individuazione"
+                }
             },
             "hassio_confirm": {
                 "data": {
                     "discovery": "Attiva l'individuazione"
-                },
-                "description": "Vuoi configurare Home Assistant per connettersi al broker MQTT fornito dall'add-on di Hass.io {addon}?",
-                "title": "Broker MQTT tramite l'add-on di Hass.io"
+                }
             }
         },
         "title": "MQTT"

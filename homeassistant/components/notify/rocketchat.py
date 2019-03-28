@@ -8,11 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_ROOM, CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-
-from . import ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.const import (
+    CONF_URL, CONF_USERNAME, CONF_PASSWORD, CONF_ROOM)
+from homeassistant.components.notify import (
+    ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 
 REQUIREMENTS = ['rocketchat-API==0.6.1']
 

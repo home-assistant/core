@@ -170,13 +170,11 @@ class FlowHandler:
         }
 
     @callback
-    def async_abort(self, *, reason: str,
-                    description_placeholders: Optional[Dict] = None) -> Dict:
+    def async_abort(self, *, reason: str) -> Dict:
         """Abort the config flow."""
         return {
             'type': RESULT_TYPE_ABORT,
             'flow_id': self.flow_id,
             'handler': self.handler,
-            'reason': reason,
-            'description_placeholders': description_placeholders,
+            'reason': reason
         }

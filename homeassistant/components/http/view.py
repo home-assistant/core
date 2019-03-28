@@ -1,20 +1,26 @@
-"""Support for views."""
+"""
+This module provides WSGI application to serve the Home Assistant API.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/http/
+"""
 import asyncio
 import json
 import logging
 
 from aiohttp import web
 from aiohttp.web_exceptions import (
-    HTTPBadRequest, HTTPInternalServerError, HTTPUnauthorized)
+    HTTPUnauthorized, HTTPInternalServerError, HTTPBadRequest)
 import voluptuous as vol
 
-from homeassistant import exceptions
-from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.components.http.ban import process_success_login
 from homeassistant.core import Context, is_callback
+from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant import exceptions
 from homeassistant.helpers.json import JSONEncoder
 
-from .ban import process_success_login
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
+from .const import KEY_AUTHENTICATED, KEY_REAL_IP
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +97,7 @@ def request_handler_factory(view, handler):
 
     async def handle(request):
         """Handle incoming request."""
-        if not request.app[KEY_HASS].is_running:
+        if not request.app['hass'].is_running:
             return web.Response(status=503)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
@@ -102,8 +108,8 @@ def request_handler_factory(view, handler):
             else:
                 raise HTTPUnauthorized()
 
-        _LOGGER.debug('Serving %s to %s (auth: %s)',
-                      request.path, request.get(KEY_REAL_IP), authenticated)
+        _LOGGER.info('Serving %s to %s (auth: %s)',
+                     request.path, request.get(KEY_REAL_IP), authenticated)
 
         try:
             result = handler(request, **request.match_info)

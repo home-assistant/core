@@ -13,12 +13,8 @@
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Bitte geben Sie das Passwort der ESPHome-Konfiguration f\u00fcr {name} ein:",
+                "description": "Bitte geben Sie das Passwort der ESPhome-Konfiguration ein:",
                 "title": "Passwort eingeben"
-            },
-            "discovery_confirm": {
-                "description": "Willst du den ESPHome-Knoten `{name}` zu Home Assistant hinzuf\u00fcgen?",
-                "title": "Gefundener ESPHome-Knoten"
             },
             "user": {
                 "data": {

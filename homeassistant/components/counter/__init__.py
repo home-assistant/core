@@ -1,4 +1,9 @@
-"""Component to count within automations."""
+"""
+Component to count within automations.
+
+For more details about this component, please refer to the documentation
+at https://home-assistant.io/components/counter/
+"""
 import logging
 
 import voluptuous as vol

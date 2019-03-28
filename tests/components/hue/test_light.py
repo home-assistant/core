@@ -701,9 +701,7 @@ def test_available():
     """Test available property."""
     light = hue_light.HueLight(
         light=Mock(state={'reachable': False},
-                   raw=LIGHT_RAW,
-                   colorgamuttype=LIGHT_GAMUT_TYPE,
-                   colorgamut=LIGHT_GAMUT),
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=False,
@@ -713,9 +711,7 @@ def test_available():
 
     light = hue_light.HueLight(
         light=Mock(state={'reachable': False},
-                   raw=LIGHT_RAW,
-                   colorgamuttype=LIGHT_GAMUT_TYPE,
-                   colorgamut=LIGHT_GAMUT),
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=True),
         is_group=False,
@@ -725,9 +721,7 @@ def test_available():
 
     light = hue_light.HueLight(
         light=Mock(state={'reachable': False},
-                   raw=LIGHT_RAW,
-                   colorgamuttype=LIGHT_GAMUT_TYPE,
-                   colorgamut=LIGHT_GAMUT),
+                   raw=LIGHT_RAW),
         request_bridge_update=None,
         bridge=Mock(allow_unreachable=False),
         is_group=True,

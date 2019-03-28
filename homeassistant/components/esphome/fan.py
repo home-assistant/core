@@ -1,14 +1,13 @@
 """Support for ESPHome fans."""
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
-from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED, FanEntity)
+from homeassistant.components.esphome import EsphomeEntity, \
+    platform_async_setup_entry
+from homeassistant.components.fan import FanEntity, SPEED_HIGH, SPEED_LOW, \
+    SPEED_MEDIUM, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, SPEED_OFF
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
-
-from . import EsphomeEntity, platform_async_setup_entry
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import

@@ -1,4 +1,9 @@
-"""Offer Home Assistant core automation rules."""
+"""
+Offer Home Assistant core automation rules.
+
+For more details about this automation rule, please refer to the documentation
+at https://home-assistant.io/components/automation/#homeassistant-trigger
+"""
 import logging
 
 import voluptuous as vol

@@ -41,15 +41,14 @@ GROUP = {
         "lights": [
             "1",
             "2"
-        ],
+        ]
     },
     "2": {
         "id": "Group 2 id",
         "name": "Group 2 name",
         "state": {},
         "action": {},
-        "scenes": [],
-        "lights": [],
+        "scenes": []
     },
 }
 

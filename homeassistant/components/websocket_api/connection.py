@@ -21,7 +21,7 @@ class ActiveConnection:
         else:
             self.refresh_token_id = None
 
-        self.subscriptions = {}
+        self.event_listeners = {}
         self.last_id = 0
 
     def context(self, msg):
@@ -30,16 +30,6 @@ class ActiveConnection:
         if user is None:
             return Context()
         return Context(user_id=user.id)
-
-    @callback
-    def send_result(self, msg_id, result=None):
-        """Send a result message."""
-        self.send_message(messages.result_message(msg_id, result))
-
-    @callback
-    def send_error(self, msg_id, code, message):
-        """Send a error message."""
-        self.send_message(messages.error_message(msg_id, code, message))
 
     @callback
     def async_handle(self, msg):
@@ -82,7 +72,7 @@ class ActiveConnection:
     @callback
     def async_close(self):
         """Close down connection."""
-        for unsub in self.subscriptions.values():
+        for unsub in self.event_listeners.values():
             unsub()
 
     @callback
@@ -93,11 +83,11 @@ class ActiveConnection:
             err_message = 'Unauthorized'
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
-            err_message = vol.humanize.humanize_error(msg, err)
+            err_message = 'Invalid format'
         else:
+            self.logger.exception('Error handling message: %s', msg)
             code = const.ERR_UNKNOWN_ERROR
             err_message = 'Unknown error'
 
-        self.logger.exception('Error handling message: %s', err_message)
         self.send_message(
             messages.error_message(msg['id'], code, err_message))

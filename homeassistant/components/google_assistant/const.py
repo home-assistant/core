@@ -21,7 +21,6 @@ DEFAULT_EXPOSED_DOMAINS = [
 DEFAULT_ALLOW_UNLOCK = False
 
 PREFIX_TYPES = 'action.devices.types.'
-TYPE_CAMERA = PREFIX_TYPES + 'CAMERA'
 TYPE_LIGHT = PREFIX_TYPES + 'LIGHT'
 TYPE_SWITCH = PREFIX_TYPES + 'SWITCH'
 TYPE_VACUUM = PREFIX_TYPES + 'VACUUM'
@@ -43,8 +42,3 @@ ERR_NOT_SUPPORTED = "notSupported"
 ERR_PROTOCOL_ERROR = 'protocolError'
 ERR_UNKNOWN_ERROR = 'unknownError'
 ERR_FUNCTION_NOT_SUPPORTED = 'functionNotSupported'
-
-# Event types
-EVENT_COMMAND_RECEIVED = 'google_assistant_command'
-EVENT_QUERY_RECEIVED = 'google_assistant_query'
-EVENT_SYNC_RECEIVED = 'google_assistant_sync'

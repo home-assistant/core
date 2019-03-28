@@ -1,10 +1,11 @@
 """Support for ESPHome binary sensors."""
 import logging
+
 from typing import TYPE_CHECKING, Optional
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-
-from . import EsphomeEntity, platform_async_setup_entry
+from homeassistant.components.esphome import EsphomeEntity, \
+    platform_async_setup_entry
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
