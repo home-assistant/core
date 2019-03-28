@@ -19,7 +19,7 @@ async def async_handle_state_update(hass, context, msg):
     _LOGGER.debug("[state handler] context: %s  msg: %s", context, msg)
     entity_id = context.get(ATTR_ENTITY_ID)
     state = bool(int(msg.get(ATTR_STATE)))
-    if msg.get(CONF_INVERSE):
+    if context.get(CONF_INVERSE):
         state = not state
 
     async_dispatcher_send(
