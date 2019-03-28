@@ -8,7 +8,7 @@ from homeassistant.helpers.discovery import async_load_platform
 
 REQUIREMENTS = ['geniushub==0.1']
 
-DOMAIN = 'genius_hub'
+DOMAIN = 'geniushub'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
