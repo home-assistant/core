@@ -860,6 +860,7 @@ niluclient==0.1.2
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # homeassistant.components.nederlandse_spoorwegen.sensor
 =======
 =======
@@ -874,6 +875,9 @@ nordpool==0.2
 >>>>>>> Resolved conflicts
 =======
 # homeassistant.components.sensor.nordpool
+=======
+# homeassistant.components.nordpool.sensor
+>>>>>>> Update
 nordpool==0.2
 
 # homeassistant.components.sensor.nederlandse_spoorwegen
