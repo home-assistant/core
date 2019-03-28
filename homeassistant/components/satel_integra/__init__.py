@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -23,7 +23,6 @@ DOMAIN = 'satel_integra'
 
 DATA_SATEL = 'satel_integra'
 
-CONF_DEVICE_HOST = 'host'
 CONF_DEVICE_PORT = 'port'
 CONF_DEVICE_PARTITION = 'partition'
 CONF_ARM_HOME_MODE = 'arm_home_mode'
@@ -48,7 +47,7 @@ ZONE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_DEVICE_PARTITION,
                      default=DEFAULT_DEVICE_PARTITION): cv.positive_int,
@@ -68,7 +67,7 @@ async def async_setup(hass, config):
 
     zones = conf.get(CONF_ZONES)
     outputs = conf.get(CONF_OUTPUTS)
-    host = conf.get(CONF_DEVICE_HOST)
+    host = conf.get(CONF_HOST)
     port = conf.get(CONF_DEVICE_PORT)
     partition = conf.get(CONF_DEVICE_PARTITION)
 

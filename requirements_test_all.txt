@@ -86,9 +86,6 @@ eebrightbox==0.0.4
 # homeassistant.components.emulated_roku
 emulated_roku==0.1.8
 
-# homeassistant.components.entur_public_transport.sensor
-enturclient==0.1.3
-
 # homeassistant.components.season.sensor
 ephem==3.7.6.0
 

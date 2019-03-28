@@ -58,7 +58,6 @@ omit =
     homeassistant/components/blinkt/light.py
     homeassistant/components/blockchain/sensor.py
     homeassistant/components/bloomsky/*
-    homeassistant/components/bloomsky/camera.py
     homeassistant/components/bluesound/media_player.py
     homeassistant/components/bluetooth_le_tracker/device_tracker.py
     homeassistant/components/bluetooth_tracker/device_tracker.py
@@ -94,7 +93,6 @@ omit =
     homeassistant/components/cloudflare/*
     homeassistant/components/cmus/media_player.py
     homeassistant/components/coinbase/*
-    homeassistant/components/coinbase/sensor.py
     homeassistant/components/comed_hourly_pricing/sensor.py
     homeassistant/components/comfoconnect/*
     homeassistant/components/concord232/alarm_control_panel.py
@@ -158,6 +156,7 @@ omit =
     homeassistant/components/enigma2/media_player.py
     homeassistant/components/enocean/*
     homeassistant/components/enphase_envoy/sensor.py
+    homeassistant/components/entur_public_transport/*
     homeassistant/components/envirophat/sensor.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
@@ -351,7 +350,7 @@ omit =
     homeassistant/components/mochad/*
     homeassistant/components/modbus/*
     homeassistant/components/modem_callerid/sensor.py
-    homeassistant/components/mopar/sensor.py
+    homeassistant/components/mopar/*
     homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py

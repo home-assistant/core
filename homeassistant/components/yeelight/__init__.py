@@ -144,7 +144,7 @@ def _parse_custom_effects(effects_config):
 
 def setup(hass, config):
     """Set up the Yeelight bulbs."""
-    conf = config[DOMAIN]
+    conf = config.get(DOMAIN, {})
     yeelight_data = hass.data[DATA_YEELIGHT] = {}
 
     def device_discovered(service, info):
@@ -169,12 +169,13 @@ def setup(hass, config):
             device.update()
 
     track_time_interval(
-        hass, update, conf[CONF_SCAN_INTERVAL]
+        hass, update, conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     )
 
-    for ipaddr, device_config in conf[CONF_DEVICES].items():
-        _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
-        _setup_device(hass, config, ipaddr, device_config)
+    if DOMAIN in config:
+        for ipaddr, device_config in conf[CONF_DEVICES].items():
+            _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
+            _setup_device(hass, config, ipaddr, device_config)
 
     return True
 
@@ -192,7 +193,7 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     platform_config = device_config.copy()
     platform_config[CONF_HOST] = ipaddr
     platform_config[CONF_CUSTOM_EFFECTS] = _parse_custom_effects(
-        hass_config[DATA_YEELIGHT].get(CONF_CUSTOM_EFFECTS, {})
+        hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
     )
 
     load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
