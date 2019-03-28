@@ -8,14 +8,13 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOSTS
+from homeassistant.const import CONF_HOSTS, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import config_flow  # noqa  pylint_disable=unused-import
-from .const import KEY_HOST
 
 REQUIREMENTS = ['pydaikin==1.3.1']
 
@@ -53,7 +52,7 @@ async def async_setup(hass, config):
                 DOMAIN,
                 context={'source': SOURCE_IMPORT},
                 data={
-                    KEY_HOST: host,
+                    CONF_HOST: host,
                 }))
     return True
 
@@ -61,7 +60,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with Daikin."""
     conf = entry.data
-    daikin_api = await daikin_api_setup(hass, conf[KEY_HOST])
+    daikin_api = await daikin_api_setup(hass, conf[CONF_HOST])
     if not daikin_api:
         return False
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})

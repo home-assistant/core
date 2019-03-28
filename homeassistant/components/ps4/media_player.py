@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     ENTITY_IMAGE_URL, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF,
+    MEDIA_TYPE_GAME, SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON)
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
@@ -328,8 +328,7 @@ class PS4Device(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        # No MEDIA_TYPE_GAME attr as of 0.90.
-        return MEDIA_TYPE_MUSIC
+        return MEDIA_TYPE_GAME
 
     @property
     def media_image_url(self):
