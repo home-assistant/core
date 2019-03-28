@@ -136,7 +136,8 @@ async def test_add_new_switch(hass):
     switch.name = 'name'
     switch.type = "Smart plug"
     switch.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_light', [switch])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('light'), [switch])
     await hass.async_block_till_done()
     assert "switch.name" in gateway.deconz_ids
 

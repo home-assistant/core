@@ -38,8 +38,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities(entities, True)
 
-    gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_LIGHT, async_add_switch))
+    gateway.listeners.append(async_dispatcher_connect(
+        hass, gateway.async_event_new_device(NEW_LIGHT), async_add_switch))
 
     async_add_switch(gateway.api.lights.values())
 

@@ -73,9 +73,9 @@ class DeconzGateway:
                 hass.config_entries.async_forward_entry_setup(
                     self.config_entry, component))
 
-        self.listeners.append(
-            async_dispatcher_connect(
-                hass, NEW_SENSOR, self.async_add_remote))
+        self.listeners.append(async_dispatcher_connect(
+            hass, self.async_event_new_device(NEW_SENSOR),
+            self.async_add_remote))
 
         self.async_add_remote(self.api.sensors.values())
 
@@ -96,11 +96,17 @@ class DeconzGateway:
                               {'state': True, 'attr': 'reachable'})
 
     @callback
+    def async_event_new_device(self, device_type):
+        """Gateway specific event to signal new device."""
+        return NEW_DEVICE[device_type].format(self.bridgeid)
+
+    @callback
     def async_add_device_callback(self, device_type, device):
         """Handle event of new device creation in deCONZ."""
         if not isinstance(device, list):
             device = [device]
-        async_dispatcher_send(self.hass, NEW_DEVICE[device_type], device)
+        async_dispatcher_send(
+            self.hass, self.async_event_new_device(device_type), device)
 
     @callback
     def async_add_remote(self, sensors):

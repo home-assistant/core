@@ -16,16 +16,16 @@ CONF_BRIDGEID = 'bridgeid'
 SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover',
                        'light', 'scene', 'sensor', 'switch']
 
-NEW_GROUP = 'deconz_new_group'
-NEW_LIGHT = 'deconz_new_light'
-NEW_SCENE = 'deconz_new_scene'
-NEW_SENSOR = 'deconz_new_sensor'
+NEW_GROUP = 'group'
+NEW_LIGHT = 'light'
+NEW_SCENE = 'scene'
+NEW_SENSOR = 'sensor'
 
 NEW_DEVICE = {
-    'group': NEW_GROUP,
-    'light': NEW_LIGHT,
-    'scene': NEW_SCENE,
-    'sensor': NEW_SENSOR
+    NEW_GROUP: 'deconz_new_group_{}',
+    NEW_LIGHT: 'deconz_new_light_{}',
+    NEW_SCENE: 'deconz_new_scene_{}',
+    NEW_SENSOR: 'deconz_new_sensor_{}'
 }
 
 ATTR_DARK = 'dark'

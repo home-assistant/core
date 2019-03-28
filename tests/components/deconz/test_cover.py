@@ -128,7 +128,8 @@ async def test_add_new_cover(hass):
     cover.name = 'name'
     cover.type = "Level controllable output"
     cover.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_light', [cover])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('light'), [cover])
     await hass.async_block_till_done()
     assert "cover.name" in gateway.deconz_ids
 

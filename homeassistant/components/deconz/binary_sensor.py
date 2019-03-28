@@ -41,8 +41,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities(entities, True)
 
-    gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_SENSOR, async_add_sensor))
+    gateway.listeners.append(async_dispatcher_connect(
+        hass, gateway.async_event_new_device(NEW_SENSOR), async_add_sensor))
 
     async_add_sensor(gateway.api.sensors.values())
 

@@ -36,8 +36,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities(entities, True)
 
-    gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_LIGHT, async_add_light))
+    gateway.listeners.append(async_dispatcher_connect(
+        hass, gateway.async_event_new_device(NEW_LIGHT), async_add_light))
 
     @callback
     def async_add_group(groups):
@@ -50,8 +50,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities(entities, True)
 
-    gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_GROUP, async_add_group))
+    gateway.listeners.append(async_dispatcher_connect(
+        hass, gateway.async_event_new_device(NEW_GROUP), async_add_group))
 
     async_add_light(gateway.api.lights.values())
     async_add_group(gateway.api.groups.values())

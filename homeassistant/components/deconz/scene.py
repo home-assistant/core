@@ -29,8 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities(entities)
 
-    gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_SCENE, async_add_scene))
+    gateway.listeners.append(async_dispatcher_connect(
+        hass, gateway.async_event_new_device(NEW_SCENE), async_add_scene))
 
     async_add_scene(gateway.api.scenes.values())
 
