@@ -160,6 +160,7 @@ omit =
     homeassistant/components/emulated_hue/upnp.py
     homeassistant/components/enigma2/media_player.py
     homeassistant/components/enocean/*
+    homeassistant/components/entur_public_transport/*
     homeassistant/components/envisalink/*
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/binary_sensor.py
