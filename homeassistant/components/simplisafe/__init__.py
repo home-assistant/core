@@ -115,14 +115,15 @@ async def async_setup_entry(hass, config_entry):
                 _LOGGER.error(
                     'There was error updating "%s": %s', system.address,
                     result)
-            else:
-                _LOGGER.debug('Updated status of "%s"', system.address)
-                async_dispatcher_send(
-                    hass, TOPIC_UPDATE.format(system.system_id))
+                continue
 
-                if system.api.refresh_token_dirty:
-                    _async_save_refresh_token(
-                        hass, config_entry, system.api.refresh_token)
+            _LOGGER.debug('Updated status of "%s"', system.address)
+            async_dispatcher_send(
+                hass, TOPIC_UPDATE.format(system.system_id))
+
+            if system.api.refresh_token_dirty:
+                _async_save_refresh_token(
+                    hass, config_entry, system.api.refresh_token)
 
     hass.data[DOMAIN][DATA_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
