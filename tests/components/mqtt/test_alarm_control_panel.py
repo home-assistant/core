@@ -301,7 +301,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
                 'command_topic': 'alarm/command',
                 'code': '1234',
                 'command_template': \
-		        '{\"action\":\"{{ action }}\",\"code\":\"{{ code }}\"}',
+                    '{\"action\":\"{{ action }}\",\"code\":\"{{ code }}\"}',
             }
         })
 
@@ -309,8 +309,8 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/command', '{\"action\":\"DISARM\",\"code\":\"1234\"}',
-	        0,
-	        False)
+            0,
+            False)
 
     def test_disarm_publishes_mqtt_when_code_not_req(self):
         """Test publishing of MQTT messages while disarmed.
