@@ -235,9 +235,6 @@ blockchain==1.4.4
 # homeassistant.components.aws_sqs.notify
 boto3==1.9.16
 
-# homeassistant.scripts.credstash
-botocore==1.7.34
-
 # homeassistant.components.braviatv.media_player
 braviarc-homeassistant==0.3.7.dev0
 
