@@ -43,10 +43,6 @@ class HassIOIngressView(HomeAssistantView):
                     client, request, addon, path
                 )
 
-            # Stream
-            if header["transfer-encoding"] == "chunked":
-                return await self._handle_stream(client, request, addon, path)
-
             # Request
             return await self._handle_request(client, request, addon, path)
 
@@ -80,16 +76,10 @@ class HassIOIngressView(HomeAssistantView):
 
         return ws_server
 
-    async def _handle_stream(
-            self, client: aiohttp.ClientSession,
-            request: web.Request, addon: str, path: str
-    ) -> web.StreamResponse:
-        """Ingress route for stream."""
-
     async def _handle_request(
             self, client: aiohttp.ClientSession,
             request: web.Request, addon: str, path: str
-    ) -> web.Response:
+    ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
 
         url = self._create_url(addon, path)
@@ -100,16 +90,32 @@ class HassIOIngressView(HomeAssistantView):
                 request.method, url, headers=header, data=data
         ) as result:
             headers = result.headers.copy()
-            del headers['content-length']
 
-            body = await result.read()
+            # Simple request
+            if "content-lenght" in headers:
+                del headers['content-length']
 
-            # Return Response
-            return web.Response(
-                headers=headers,
-                status=result.status,
-                body=body
-            )
+                # Return Response
+                body = await result.read()
+                return web.Response(
+                    headers=headers,
+                    status=result.status,
+                    body=body
+                )
+
+            # Stream response
+            response = web.StreamResponse(status=result.status)
+            response.content_type = result.content_type
+
+            try:
+                await response.prepare(request)
+                async for data in result.content:
+                    await response.write(data)
+
+            except (aiohttp.ClientError, aiohttp.ClientPayloadError):
+                pass
+
+            return response
 
 
 async def _websocket_forward(ws_from, ws_to):

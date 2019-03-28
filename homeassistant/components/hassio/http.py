@@ -88,10 +88,6 @@ class HassIOView(HomeAssistantView):
         try:
             with async_timeout.timeout(10, loop=hass.loop):
                 data = await request.read()
-                if data:
-                    headers[CONTENT_TYPE] = request.content_type
-                else:
-                    data = None
 
             method = getattr(self._websession, request.method.lower())
             client = await method(
@@ -128,6 +124,9 @@ class HassIOView(HomeAssistantView):
         headers = _init_header(request)
 
         try:
+            with async_timeout.timeout(10, loop=hass.loop):
+                data = await request.read()
+
             method = getattr(self._websession, request.method.lower())
             client = await method(
                 "http://{}/{}".format(self._host, path), data=data,
