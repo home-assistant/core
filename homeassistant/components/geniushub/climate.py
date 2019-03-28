@@ -124,10 +124,7 @@ class GeniusClimate(ClimateDevice):
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        if self._mode == "away":
-            return True
-
-        return False
+        return self._mode == "away"
 
     @property
     def current_operation(self):
