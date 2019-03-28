@@ -668,7 +668,7 @@ class CastDevice(MediaPlayerDevice):
         self._dynamic_group_cast_info = cast_info
 
         # pylint: disable=protected-access
-        chromecast = await self.hass.async_add_job(
+        chromecast = await self.hass.async_add_executor_job(
             pychromecast._get_chromecast_from_host, (
                 cast_info.host, cast_info.port, cast_info.uuid,
                 cast_info.model_name, cast_info.friendly_name
@@ -700,7 +700,8 @@ class CastDevice(MediaPlayerDevice):
         self._dynamic_group_available = False
         self._dynamic_group_cast_info = None
         if self._dynamic_group_cast is not None:
-            await self.hass.async_add_job(self._dynamic_group_cast.disconnect)
+            await self.hass.async_add_executor_job(
+                self._dynamic_group_cast.disconnect)
 
         self._dynamic_group_invalidate()
 
@@ -717,9 +718,10 @@ class CastDevice(MediaPlayerDevice):
         self._available = False
         self.async_schedule_update_ha_state()
 
-        await self.hass.async_add_job(self._chromecast.disconnect)
+        await self.hass.async_add_executor_job(self._chromecast.disconnect)
         if self._dynamic_group_cast is not None:
-            await self.hass.async_add_job(self._dynamic_group_cast.disconnect)
+            await self.hass.async_add_executor_job(
+                self._dynamic_group_cast.disconnect)
 
         self._invalidate()
 
