@@ -8,43 +8,46 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT, CONTENT_TYPE_TEXT_PLAIN)
+    CONF_API_KEY, CONF_RECIPIENT, CONF_SENDER, CONTENT_TYPE_TEXT_PLAIN)
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
 REQUIREMENTS = ['sendgrid==5.6.0']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_SENDER_NAME = 'sender_name'
+
+DEFAULT_SENDER_NAME = 'Home Assistant'
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_SENDER): vol.Email(),
     vol.Required(CONF_RECIPIENT): vol.Email(),
+    vol.Optional(CONF_SENDER_NAME, default=DEFAULT_SENDER_NAME): cv.string,
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the SendGrid notification service."""
-    api_key = config.get(CONF_API_KEY)
-    sender = config.get(CONF_SENDER)
-    recipient = config.get(CONF_RECIPIENT)
-
-    return SendgridNotificationService(api_key, sender, recipient)
+    return SendgridNotificationService(config)
 
 
 class SendgridNotificationService(BaseNotificationService):
     """Implementation the notification service for email via Sendgrid."""
 
-    def __init__(self, api_key, sender, recipient):
+    def __init__(self, config):
         """Initialize the service."""
         from sendgrid import SendGridAPIClient
 
-        self.api_key = api_key
-        self.sender = sender
-        self.recipient = recipient
+        self.api_key = config[CONF_API_KEY]
+        self.sender = config[CONF_SENDER]
+        self.sender_name = config[CONF_SENDER_NAME]
+        self.recipient = config[CONF_RECIPIENT]
 
         self._sg = SendGridAPIClient(apikey=self.api_key)
 
@@ -64,7 +67,8 @@ class SendgridNotificationService(BaseNotificationService):
                 }
             ],
             "from": {
-                "email": self.sender
+                "email": self.sender,
+                "name": self.sender_name
             },
             "content": [
                 {

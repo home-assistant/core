@@ -20,7 +20,8 @@ from homeassistant.const import (
     STATE_ON)
 from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import intent
@@ -122,10 +123,7 @@ LIGHT_TURN_OFF_SCHEMA = vol.Schema({
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
 })
 
-LIGHT_TOGGLE_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.comp_entity_ids,
-    ATTR_TRANSITION: VALID_TRANSITION,
-})
+LIGHT_TOGGLE_SCHEMA = LIGHT_TURN_ON_SCHEMA
 
 PROFILE_SCHEMA = vol.Schema(
     vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
@@ -255,7 +253,7 @@ async def async_setup(hass, config):
         params = service.data.copy()
 
         # Convert the entity ids to valid light ids
-        target_lights = component.async_extract_from_service(service)
+        target_lights = await component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
 
         if service.context.user_id:
@@ -439,6 +437,9 @@ class Light(ToggleEntity):
             data[ATTR_MIN_MIREDS] = self.min_mireds
             data[ATTR_MAX_MIREDS] = self.max_mireds
 
+        if supported_features & SUPPORT_EFFECT:
+            data[ATTR_EFFECT_LIST] = self.effect_list
+
         if self.is_on:
             if supported_features & SUPPORT_BRIGHTNESS:
                 data[ATTR_BRIGHTNESS] = self.brightness
@@ -460,7 +461,6 @@ class Light(ToggleEntity):
                 data[ATTR_WHITE_VALUE] = self.white_value
 
             if supported_features & SUPPORT_EFFECT:
-                data[ATTR_EFFECT_LIST] = self.effect_list
                 data[ATTR_EFFECT] = self.effect
 
         return {key: val for key, val in data.items() if val is not None}

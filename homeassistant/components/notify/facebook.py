@@ -11,10 +11,10 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
+
+from . import ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 

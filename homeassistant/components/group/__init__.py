@@ -1,9 +1,4 @@
-"""
-Provide the functionality to group entities.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/group/
-"""
+"""Provide the functionality to group entities."""
 import asyncio
 import logging
 
@@ -22,6 +17,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
+
+from .reproduce_state import async_reproduce_states  # noqa
 
 DOMAIN = 'group'
 
@@ -303,8 +300,8 @@ async def async_setup(hass, config):
         visible = service.data.get(ATTR_VISIBLE)
 
         tasks = []
-        for group in component.async_extract_from_service(service,
-                                                          expand_group=False):
+        for group in await component.async_extract_from_service(
+                service, expand_group=False):
             group.visible = visible
             tasks.append(group.async_update_ha_state())
 

@@ -7,15 +7,15 @@ https://home-assistant.io/components/notify.slack/
 import logging
 
 import requests
-from requests.auth import HTTPBasicAuth
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
+from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA,
+
+from . import (
+    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, PLATFORM_SCHEMA,
     BaseNotificationService)
-from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 
 REQUIREMENTS = ['slacker==0.12.0']
 
@@ -152,7 +152,7 @@ class SlackNotificationService(BaseNotificationService):
                     req = requests.get(url, timeout=CONF_TIMEOUT)
                 return req.content
 
-            elif local_path:
+            if local_path:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
                     return open(local_path, 'rb')

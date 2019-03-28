@@ -8,11 +8,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA,
-    BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
+    BaseNotificationService)
 
 REQUIREMENTS = ['python-pushover==0.3']
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_USER_KEY = 'user_key'
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USER_KEY): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
 })

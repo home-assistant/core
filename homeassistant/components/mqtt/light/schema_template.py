@@ -17,12 +17,14 @@ from homeassistant.components.light import (
 from homeassistant.const import (
     CONF_DEVICE, CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF)
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
+    CONF_UNIQUE_ID, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     MqttEntityDeviceInfo, subscription)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from . import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +46,6 @@ CONF_GREEN_TEMPLATE = 'green_template'
 CONF_RED_TEMPLATE = 'red_template'
 CONF_STATE_TEMPLATE = 'state_template'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
-CONF_UNIQUE_ID = 'unique_id'
 
 PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
@@ -68,13 +69,13 @@ PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
-    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema).extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 
 
-async def async_setup_entity_template(config, async_add_entities,
+async def async_setup_entity_template(config, async_add_entities, config_entry,
                                       discovery_hash):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttTemplate(config, discovery_hash)])
+    async_add_entities([MqttTemplate(config, config_entry, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -82,7 +83,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                    MqttEntityDeviceInfo, Light, RestoreEntity):
     """Representation of a MQTT Template light."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_hash):
         """Initialize a MQTT Template light."""
         self._state = False
         self._sub_state = None
@@ -108,7 +109,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_hash,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -121,8 +122,9 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -186,10 +188,10 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         last_state = await self.async_get_last_state()
 
         @callback
-        def state_received(topic, payload, qos):
+        def state_received(msg):
             """Handle new MQTT messages."""
             state = self._templates[CONF_STATE_TEMPLATE].\
-                async_render_with_possible_json_value(payload)
+                async_render_with_possible_json_value(msg.payload)
             if state == STATE_ON:
                 self._state = True
             elif state == STATE_OFF:
@@ -201,7 +203,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 try:
                     self._brightness = int(
                         self._templates[CONF_BRIGHTNESS_TEMPLATE].
-                        async_render_with_possible_json_value(payload)
+                        async_render_with_possible_json_value(msg.payload)
                     )
                 except ValueError:
                     _LOGGER.warning("Invalid brightness value received")
@@ -210,7 +212,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 try:
                     self._color_temp = int(
                         self._templates[CONF_COLOR_TEMP_TEMPLATE].
-                        async_render_with_possible_json_value(payload)
+                        async_render_with_possible_json_value(msg.payload)
                     )
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
@@ -219,13 +221,13 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 try:
                     red = int(
                         self._templates[CONF_RED_TEMPLATE].
-                        async_render_with_possible_json_value(payload))
+                        async_render_with_possible_json_value(msg.payload))
                     green = int(
                         self._templates[CONF_GREEN_TEMPLATE].
-                        async_render_with_possible_json_value(payload))
+                        async_render_with_possible_json_value(msg.payload))
                     blue = int(
                         self._templates[CONF_BLUE_TEMPLATE].
-                        async_render_with_possible_json_value(payload))
+                        async_render_with_possible_json_value(msg.payload))
                     self._hs = color_util.color_RGB_to_hs(red, green, blue)
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
@@ -234,21 +236,21 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 try:
                     self._white_value = int(
                         self._templates[CONF_WHITE_VALUE_TEMPLATE].
-                        async_render_with_possible_json_value(payload)
+                        async_render_with_possible_json_value(msg.payload)
                     )
                 except ValueError:
                     _LOGGER.warning('Invalid white value received')
 
             if self._templates[CONF_EFFECT_TEMPLATE] is not None:
                 effect = self._templates[CONF_EFFECT_TEMPLATE].\
-                    async_render_with_possible_json_value(payload)
+                    async_render_with_possible_json_value(msg.payload)
 
                 if effect in self._config.get(CONF_EFFECT_LIST):
                     self._effect = effect
                 else:
                     _LOGGER.warning("Unsupported effect value received")
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topics[CONF_STATE_TOPIC] is not None:
             self._sub_state = await subscription.async_subscribe_topics(
@@ -398,7 +400,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         )
 
         if self._optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off.
@@ -419,7 +421,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         )
 
         if self._optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def supported_features(self):

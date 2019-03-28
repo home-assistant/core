@@ -10,7 +10,7 @@ from unittest.mock import patch, MagicMock
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.components import zwave
-from homeassistant.components.binary_sensor.zwave import get_device
+from homeassistant.components.zwave.binary_sensor import get_device
 from homeassistant.components.zwave import (
     const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, DATA_NETWORK)
 from homeassistant.setup import setup_component
@@ -214,7 +214,7 @@ async def test_node_discovery(hass, mock_openzwave):
     hass.async_add_job(mock_receivers[0], node)
     await hass.async_block_till_done()
 
-    assert hass.states.get('zwave.mock_node').state is 'unknown'
+    assert hass.states.get('zwave.mock_node').state == 'unknown'
 
 
 async def test_unparsed_node_discovery(hass, mock_openzwave):
@@ -257,7 +257,7 @@ async def test_unparsed_node_discovery(hass, mock_openzwave):
                 assert len(mock_logger.warning.mock_calls) == 1
                 assert mock_logger.warning.mock_calls[0][1][1:] == \
                     (14, const.NODE_READY_WAIT_SECS)
-    assert hass.states.get('zwave.unknown_node_14').state is 'unknown'
+    assert hass.states.get('zwave.unknown_node_14').state == 'unknown'
 
 
 async def test_node_ignored(hass, mock_openzwave):
@@ -307,7 +307,7 @@ async def test_value_discovery(hass, mock_openzwave):
     await hass.async_block_till_done()
 
     assert hass.states.get(
-        'binary_sensor.mock_node_mock_value').state is 'off'
+        'binary_sensor.mock_node_mock_value').state == 'off'
 
 
 async def test_value_discovery_existing_entity(hass, mock_openzwave):

@@ -1,18 +1,13 @@
-"""
-Support for ZoneMinder Binary Sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.zoneminder/
-"""
+"""Support for ZoneMinder binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
+from . import DOMAIN as ZONEMINDER_DOMAIN
 
 DEPENDENCIES = ['zoneminder']
 
 
-async def async_setup_platform(hass, config, add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder binary sensor platform."""
     sensors = []
     for host_name, zm_client in hass.data[ZONEMINDER_DOMAIN].items():

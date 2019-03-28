@@ -9,21 +9,21 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.vacuum import (
-    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
+    DOMAIN, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    VacuumDevice, DOMAIN)
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_DEVICE)
+    VacuumDevice)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.icon import icon_for_battery_level
+
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +94,6 @@ CONF_FAN_SPEED_TEMPLATE = 'fan_speed_template'
 CONF_SET_FAN_SPEED_TOPIC = 'set_fan_speed_topic'
 CONF_FAN_SPEED_LIST = 'fan_speed_list'
 CONF_SEND_COMMAND_TOPIC = 'send_command_topic'
-CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Vacuum'
 DEFAULT_RETAIN = False
@@ -162,18 +161,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT vacuum dynamically through MQTT discovery."""
     async def async_discover(discovery_payload):
         """Discover and add a MQTT vacuum."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        await _async_setup_entity(config, async_add_entities,
-                                  discovery_payload[ATTR_DISCOVERY_HASH])
+        try:
+            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
+            config = PLATFORM_SCHEMA(discovery_payload)
+            await _async_setup_entity(config, async_add_entities, config_entry,
+                                      discovery_hash)
+        except Exception:
+            if discovery_hash:
+                clear_discovery_hash(hass, discovery_hash)
+            raise
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(DOMAIN, 'mqtt'), async_discover)
 
 
-async def _async_setup_entity(config, async_add_entities,
+async def _async_setup_entity(config, async_add_entities, config_entry,
                               discovery_hash=None):
     """Set up the MQTT vacuum."""
-    async_add_entities([MqttVacuum(config, discovery_hash)])
+    async_add_entities([MqttVacuum(config, config_entry, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
@@ -181,7 +186,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                  MqttEntityDeviceInfo, VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
-    def __init__(self, config, discovery_info):
+    def __init__(self, config, config_entry, discovery_info):
         """Initialize the vacuum."""
         self._cleaning = False
         self._charging = False
@@ -203,7 +208,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_info,
                                      self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config)
+        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     def _setup_from_config(self, config):
         self._name = config.get(CONF_NAME)
@@ -257,8 +262,9 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Subscribe MQTT events."""
@@ -278,45 +284,45 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 tpl.hass = self.hass
 
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Handle new MQTT message."""
-            if topic == self._state_topics[CONF_BATTERY_LEVEL_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_BATTERY_LEVEL_TOPIC] and \
                     self._templates[CONF_BATTERY_LEVEL_TEMPLATE]:
                 battery_level = self._templates[CONF_BATTERY_LEVEL_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if battery_level is not None:
                     self._battery_level = int(battery_level)
 
-            if topic == self._state_topics[CONF_CHARGING_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_CHARGING_TOPIC] and \
                     self._templates[CONF_CHARGING_TEMPLATE]:
                 charging = self._templates[CONF_CHARGING_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if charging is not None:
                     self._charging = cv.boolean(charging)
 
-            if topic == self._state_topics[CONF_CLEANING_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_CLEANING_TOPIC] and \
                     self._templates[CONF_CLEANING_TEMPLATE]:
                 cleaning = self._templates[CONF_CLEANING_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if cleaning is not None:
                     self._cleaning = cv.boolean(cleaning)
 
-            if topic == self._state_topics[CONF_DOCKED_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_DOCKED_TOPIC] and \
                     self._templates[CONF_DOCKED_TEMPLATE]:
                 docked = self._templates[CONF_DOCKED_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if docked is not None:
                     self._docked = cv.boolean(docked)
 
-            if topic == self._state_topics[CONF_ERROR_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_ERROR_TOPIC] and \
                     self._templates[CONF_ERROR_TEMPLATE]:
                 error = self._templates[CONF_ERROR_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if error is not None:
                     self._error = cv.string(error)
 
@@ -332,15 +338,15 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             else:
                 self._status = "Stopped"
 
-            if topic == self._state_topics[CONF_FAN_SPEED_TOPIC] and \
+            if msg.topic == self._state_topics[CONF_FAN_SPEED_TOPIC] and \
                     self._templates[CONF_FAN_SPEED_TEMPLATE]:
                 fan_speed = self._templates[CONF_FAN_SPEED_TEMPLATE]\
                     .async_render_with_possible_json_value(
-                        payload, error_value=None)
+                        msg.payload, error_value=None)
                 if fan_speed is not None:
                     self._fan_speed = fan_speed
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         topics_list = {topic for topic in self._state_topics.values() if topic}
         self._sub_state = await subscription.async_subscribe_topics(
@@ -428,7 +434,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_TURN_ON],
                            self._qos, self._retain)
         self._status = 'Cleaning'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the vacuum off."""
@@ -439,7 +445,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_TURN_OFF],
                            self._qos, self._retain)
         self._status = 'Turning Off'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_stop(self, **kwargs):
         """Stop the vacuum."""
@@ -450,7 +456,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_STOP],
                            self._qos, self._retain)
         self._status = 'Stopping the current task'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
@@ -461,7 +467,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_CLEAN_SPOT],
                            self._qos, self._retain)
         self._status = "Cleaning spot"
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_locate(self, **kwargs):
         """Locate the vacuum (usually by playing a song)."""
@@ -472,7 +478,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_LOCATE],
                            self._qos, self._retain)
         self._status = "Hi, I'm over here!"
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
@@ -483,7 +489,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_START_PAUSE],
                            self._qos, self._retain)
         self._status = 'Pausing/Resuming cleaning...'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_return_to_base(self, **kwargs):
         """Tell the vacuum to return to its dock."""
@@ -494,7 +500,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._payloads[CONF_PAYLOAD_RETURN_TO_BASE],
                            self._qos, self._retain)
         self._status = 'Returning home...'
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
@@ -506,7 +512,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         mqtt.async_publish(self.hass, self._set_fan_speed_topic,
                            fan_speed, self._qos, self._retain)
         self._status = "Setting fan to {}...".format(fan_speed)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
@@ -516,4 +522,4 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         mqtt.async_publish(self.hass, self._send_command_topic,
                            command, self._qos, self._retain)
         self._status = "Sending command {}...".format(command)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -4,7 +4,7 @@ Demo notification service.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.components.notify import BaseNotificationService
+from . import BaseNotificationService
 
 EVENT_NOTIFY = "notify"
 
