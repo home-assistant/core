@@ -24,6 +24,7 @@ def run(args):
         'value', help="The value to save when putting a secret",
         nargs='?', default=None)
 
+    # pylint: disable=no-member
     import credstash
 
     args = parser.parse_args(args)
