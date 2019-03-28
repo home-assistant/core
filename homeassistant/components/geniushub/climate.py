@@ -10,7 +10,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_ON_OFF, SUPPORT_AWAY_MODE)
 from . import GENIUS_HUB
 from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'geniushub'
