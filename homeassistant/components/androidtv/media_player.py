@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 ANDROIDTV_DOMAIN = 'androidtv'
 
-REQUIREMENTS = ['androidtv==0.0.13']
+REQUIREMENTS = ['androidtv==0.0.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,21 +61,13 @@ SERVICE_ADB_COMMAND_SCHEMA = vol.Schema({
 })
 
 
-def has_adb_files(value):
-    """Check that ADB key files exist."""
-    priv_key = value
-    pub_key = '{}.pub'.format(value)
-    cv.isfile(pub_key)
-    return cv.isfile(priv_key)
-
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS):
         vol.In(DEVICE_CLASSES),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ADBKEY): has_adb_files,
+    vol.Optional(CONF_ADBKEY): cv.isfile,
     vol.Optional(CONF_ADB_SERVER_IP): cv.string,
     vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT):
         cv.port,
