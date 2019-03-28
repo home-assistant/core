@@ -388,7 +388,7 @@ emulated_roku==0.1.8
 enocean==0.40
 
 # homeassistant.components.entur_public_transport.sensor
-enturclient==0.1.3
+enturclient==0.2.0
 
 # homeassistant.components.envirophat.sensor
 # envirophat==0.0.6
