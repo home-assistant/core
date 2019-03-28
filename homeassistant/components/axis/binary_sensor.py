@@ -24,8 +24,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add binary sensor from Axis device."""
         async_add_entities([AxisBinarySensor(event, device)], True)
 
-    device.listeners.append(
-        async_dispatcher_connect(hass, 'axis_add_sensor', async_add_sensor))
+    device.listeners.append(async_dispatcher_connect(
+        hass, device.event_new_sensor, async_add_sensor))
 
 
 class AxisBinarySensor(BinarySensorDevice):
