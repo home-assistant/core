@@ -38,12 +38,6 @@ NO_AUTH = re.compile(
     r')$'
 )
 
-STREAM_RESPONSE = re.compile(
-    r'^(?:'
-    r'|snapshots/[^/]+/(?:upload|download)'
-    r')$'
-)
-
 
 class HassIOView(HomeAssistantView):
     """Hass.io view to handle base part."""
@@ -64,9 +58,6 @@ class HassIOView(HomeAssistantView):
         if _need_auth(path) and not request[KEY_AUTHENTICATED]:
             return web.Response(status=401)
 
-        # Prepare the right proxy
-        if _is_stream(path):
-            return await self._stream_proxy(path, request)
         return await self._command_proxy(path, request)
 
     get = _handle
@@ -95,53 +86,23 @@ class HassIOView(HomeAssistantView):
                 headers=headers, timeout=read_timeout
             )
 
-            data = await client.read()
-            return web.Response(
-                body=data,
-                status=client.status,
-                content_type=client.content_type
-            )
+            # Simple request
+            if "content-lenght" in client.headers:
+                # Return Response
+                body = await client.read()
+                return web.Response(
+                    content_type=client.content_type,
+                    status=client.status,
+                    body=body
+                )
 
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Client error on api %s request %s", path, err)
+            # Stream response
+            response = web.StreamResponse(status=client.status)
+            response.content_type = client.content_type
 
-        except asyncio.TimeoutError:
-            _LOGGER.error("Client timeout error on API request %s", path)
-
-        raise HTTPBadGateway()
-
-    async def _stream_proxy(
-            self, path: str, request: web.Request
-    ) -> web.StreamResponse:
-        """Return a client stream with proxy origin for Hass.io supervisor.
-
-        This method is a coroutine.
-        """
-        read_timeout = _get_timeout(path)
-        hass = request.app['hass']
-
-        data = None
-        headers = _init_header(request)
-
-        try:
-            with async_timeout.timeout(10, loop=hass.loop):
-                data = await request.read()
-
-            method = getattr(self._websession, request.method.lower())
-            client = await method(
-                "http://{}/{}".format(self._host, path), data=data,
-                headers=headers, timeout=read_timeout
-            )
-
-            response = web.StreamResponse()
-            response.content_type = request.content_type
-            try:
-                await response.prepare(request)
-                async for data in client.content:
-                    await response.write(data)
-
-            except (aiohttp.ClientError, aiohttp.ClientPayloadError):
-                pass
+            await response.prepare(request)
+            async for data in client.content:
+                await response.write(data)
 
             return response
 
@@ -182,10 +143,3 @@ def _need_auth(path: str) -> bool:
     if NO_AUTH.match(path):
         return False
     return True
-
-
-def _is_stream(path: str) -> bool:
-    """Return if a path need stream response."""
-    if STREAM_RESPONSE.match(path):
-        return True
-    return False
