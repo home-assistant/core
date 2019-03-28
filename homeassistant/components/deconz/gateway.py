@@ -19,10 +19,7 @@ from .errors import AuthenticationRequired, CannotConnect
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
     """Return gateway with a matching bridge id."""
-    for gateway in hass.data[DOMAIN].values():
-        if gateway.bridgeid == config_entry.data[CONF_BRIDGEID]:
-            return gateway
-    return None
+    return hass.data[DOMAIN][config_entry.data[CONF_BRIDGEID]]
 
 
 class DeconzGateway:
