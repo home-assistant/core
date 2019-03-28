@@ -22,6 +22,14 @@ def configured_hosts(hass):
                in hass.config_entries.async_entries(DOMAIN))
 
 
+@callback
+def get_master_gateway(hass):
+    """Return a bool telling if this is the master gateway."""
+    for gateway in hass.data[DOMAIN].values():
+        if gateway.master:
+            return gateway
+
+
 @config_entries.HANDLERS.register(DOMAIN)
 class DeconzFlowHandler(config_entries.ConfigFlow):
     """Handle a deCONZ config flow."""

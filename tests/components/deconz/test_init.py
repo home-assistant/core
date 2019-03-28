@@ -8,8 +8,6 @@ import voluptuous as vol
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.components import deconz
-from homeassistant.components.deconz.gateway import (
-    get_gateway_from_config_entry)
 
 from tests.common import mock_coro, MockConfigEntry
 

@@ -42,6 +42,11 @@ class DeconzGateway:
         return self.config_entry.data[CONF_BRIDGEID]
 
     @property
+    def master(self) -> bool:
+        """Define which gateway which can be called without defining id."""
+        return self.config_entry.options['master']
+
+    @property
     def allow_clip_sensor(self):
         """Allow loading clip sensor from gateway."""
         return self.config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)

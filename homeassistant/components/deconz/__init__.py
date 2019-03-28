@@ -4,11 +4,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 # Loading the config flow file will register the flow
-from .config_flow import configured_hosts
+from .config_flow import configured_hosts, get_master_gateway
 from .const import DEFAULT_PORT, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
@@ -99,7 +100,8 @@ async def async_setup_entry(hass, config_entry):
         field = call.data.get(SERVICE_FIELD, '')
         entity_id = call.data.get(SERVICE_ENTITY)
         data = call.data.get(SERVICE_DATA)
-        gateway = hass.data[DOMAIN]
+
+        gateway = get_master_gateway(hass)
 
         if entity_id:
             try:
@@ -115,7 +117,7 @@ async def async_setup_entry(hass, config_entry):
 
     async def async_refresh_devices(call):
         """Refresh available devices from deCONZ."""
-        gateway = hass.data[DOMAIN]
+        gateway = get_master_gateway(hass)
 
         groups = set(gateway.api.groups.keys())
         lights = set(gateway.api.lights.keys())
@@ -161,3 +163,15 @@ async def async_unload_entry(hass, config_entry):
     hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
     hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
     return await gateway.async_reset()
+
+
+@callback
+async def async_populate_options(hass, config_entry):
+    """Populate default options for gateway."""
+    master = len(hass.data[DOMAIN]) == 1
+
+    options = {
+        'master': master
+    }
+
+    hass.config_entries.async_update_entry(config_entry, options=options)
