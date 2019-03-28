@@ -328,6 +328,7 @@ omit =
     homeassistant/components/mobile_app/*
     homeassistant/components/mochad/*
     homeassistant/components/modbus/*
+    homeassistant/components/mopar/*
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
     homeassistant/components/mysensors/*
@@ -499,7 +500,7 @@ omit =
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/modem_callerid/sensor.py
-    homeassistant/components/mopar/sensor.py
+    homeassistant/components/mopar/*
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
