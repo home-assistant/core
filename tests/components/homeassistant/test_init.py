@@ -12,7 +12,8 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_STOP, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     SERVICE_TOGGLE)
 import homeassistant.components as comps
-from homeassistant.components import (
+from homeassistant.setup import async_setup_component
+from homeassistant.components.homeassistant import (
     SERVICE_CHECK_CONFIG, SERVICE_RELOAD_CORE_CONFIG)
 import homeassistant.helpers.intent as intent
 from homeassistant.exceptions import HomeAssistantError
@@ -97,7 +98,8 @@ class TestComponentsCore(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         assert run_coroutine_threadsafe(
-            comps.async_setup(self.hass, {}), self.hass.loop
+            async_setup_component(self.hass, 'homeassistant', {}),
+            self.hass.loop
         ).result()
 
         self.hass.states.set('light.Bowl', STATE_ON)
@@ -186,7 +188,7 @@ class TestComponentsCore(unittest.TestCase):
         assert state.attributes.get('hello') == 'world'
 
     @patch('homeassistant.config.os.path.isfile', Mock(return_value=True))
-    @patch('homeassistant.components._LOGGER.error')
+    @patch('homeassistant.components.homeassistant._LOGGER.error')
     @patch('homeassistant.config.async_process_ha_core_config')
     def test_reload_core_with_wrong_conf(self, mock_process, mock_error):
         """Test reload core conf service."""
@@ -244,7 +246,7 @@ class TestComponentsCore(unittest.TestCase):
 
 async def test_turn_on_intent(hass):
     """Test HassTurnOn intent."""
-    result = await comps.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     hass.states.async_set('light.test_light', 'off')
@@ -265,7 +267,7 @@ async def test_turn_on_intent(hass):
 
 async def test_turn_off_intent(hass):
     """Test HassTurnOff intent."""
-    result = await comps.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     hass.states.async_set('light.test_light', 'on')
@@ -286,7 +288,7 @@ async def test_turn_off_intent(hass):
 
 async def test_toggle_intent(hass):
     """Test HassToggle intent."""
-    result = await comps.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     hass.states.async_set('light.test_light', 'off')
@@ -310,7 +312,7 @@ async def test_turn_on_multiple_intent(hass):
 
     This tests that matching finds the proper entity among similar names.
     """
-    result = await comps.async_setup(hass, {})
+    result = await async_setup_component(hass, 'homeassistant', {})
     assert result
 
     hass.states.async_set('light.test_light', 'off')
@@ -333,7 +335,7 @@ async def test_turn_on_multiple_intent(hass):
 
 async def test_turn_on_to_not_block_for_domains_without_service(hass):
     """Test if turn_on is blocking domain with no service."""
-    await comps.async_setup(hass, {})
+    await async_setup_component(hass, 'homeassistant', {})
     async_mock_service(hass, 'light', SERVICE_TURN_ON)
     hass.states.async_set('light.Bowl', STATE_ON)
     hass.states.async_set('light.Ceiling', STATE_OFF)
@@ -359,7 +361,7 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
 
 async def test_entity_update(hass):
     """Test being able to call entity update."""
-    await comps.async_setup(hass, {})
+    await async_setup_component(hass, 'homeassistant', {})
 
     with patch('homeassistant.helpers.entity_component.async_update_entity',
                return_value=mock_coro()) as mock_update:

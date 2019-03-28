@@ -53,6 +53,7 @@ async def test_setup_entry(hass):
 
     mock_device = Mock()
     mock_device.async_setup.return_value = mock_coro(True)
+    mock_device.async_update_device_registry.return_value = mock_coro(True)
     mock_device.serial.return_value = '1'
 
     with patch.object(axis, 'AxisNetworkDevice') as mock_device_class, \

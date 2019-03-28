@@ -1,6 +1,5 @@
 """Support for Homekit device discovery."""
 import asyncio
-import json
 import logging
 import os
 
@@ -9,10 +8,10 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 
+from .config_flow import load_old_pairings
 from .connection import get_accessory_information
 from .const import (
-    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_ACCESSORIES,
-    KNOWN_DEVICES
+    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_DEVICES
 )
 
 
@@ -31,25 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 RETRY_INTERVAL = 60  # seconds
 
 PAIRING_FILE = "pairing.json"
-
-
-def get_serial(accessory):
-    """Obtain the serial number of a HomeKit device."""
-    # pylint: disable=import-error
-    from homekit.model.services import ServicesTypes
-    from homekit.model.characteristics import CharacteristicsTypes
-
-    for service in accessory['services']:
-        if ServicesTypes.get_short(service['type']) != \
-           'accessory-information':
-            continue
-        for characteristic in service['characteristics']:
-            ctype = CharacteristicsTypes.get_short(
-                characteristic['type'])
-            if ctype != 'serial-number':
-                continue
-            return characteristic['value']
-    return None
 
 
 def escape_characteristic_name(char_name):
@@ -74,6 +54,10 @@ class HKDevice():
         self.config = config
         self.configurator = hass.components.configurator
         self._connection_warning_logged = False
+
+        # This just tracks aid/iid pairs so we know if a HK service has been
+        # mapped to a HA entity.
+        self.entities = []
 
         self.pairing_lock = asyncio.Lock(loop=hass.loop)
 
@@ -100,15 +84,16 @@ class HKDevice():
                 self.hass, RETRY_INTERVAL, lambda _: self.accessory_setup())
             return
         for accessory in data:
-            serial = get_serial(accessory)
-            if serial in self.hass.data[KNOWN_ACCESSORIES]:
-                continue
-            self.hass.data[KNOWN_ACCESSORIES][serial] = self
             aid = accessory['aid']
             for service in accessory['services']:
+                iid = service['iid']
+                if (aid, iid) in self.entities:
+                    # Don't add the same entity again
+                    continue
+
                 devtype = ServicesTypes.get_short(service['type'])
                 _LOGGER.debug("Found %s", devtype)
-                service_info = {'serial': serial,
+                service_info = {'serial': self.hkid,
                                 'aid': aid,
                                 'iid': service['iid'],
                                 'model': self.model,
@@ -117,6 +102,7 @@ class HKDevice():
                 if component is not None:
                     discovery.load_platform(self.hass, component, DOMAIN,
                                             service_info, self.config)
+                    self.entities.append((aid, iid))
 
     def device_config_callback(self, callback_data):
         """Handle initial pairing."""
@@ -329,25 +315,8 @@ def setup(hass, config):
 
     hass.data[CONTROLLER] = controller = homekit.Controller()
 
-    data_dir = os.path.join(hass.config.path(), HOMEKIT_DIR)
-    if not os.path.isdir(data_dir):
-        os.mkdir(data_dir)
-
-    pairing_file = os.path.join(data_dir, PAIRING_FILE)
-    if os.path.exists(pairing_file):
-        controller.load_data(pairing_file)
-
-    # Migrate any existing pairings to the new internal homekit_python format
-    for device in os.listdir(data_dir):
-        if not device.startswith('hk-'):
-            continue
-        alias = device[3:]
-        if alias in controller.pairings:
-            continue
-        with open(os.path.join(data_dir, device)) as pairing_data_fp:
-            pairing_data = json.load(pairing_data_fp)
-        controller.pairings[alias] = IpPairing(pairing_data)
-        controller.save_data(pairing_file)
+    for hkid, pairing_data in load_old_pairings(hass).items():
+        controller.pairings[hkid] = IpPairing(pairing_data)
 
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for Homekit discovery events."""
@@ -381,7 +350,6 @@ def setup(hass, config):
         device = HKDevice(hass, host, port, model, hkid, config_num, config)
         hass.data[KNOWN_DEVICES][hkid] = device
 
-    hass.data[KNOWN_ACCESSORIES] = {}
     hass.data[KNOWN_DEVICES] = {}
     discovery.listen(hass, SERVICE_HOMEKIT, discovery_dispatch)
     return True

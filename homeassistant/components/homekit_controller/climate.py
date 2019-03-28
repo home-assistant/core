@@ -7,7 +7,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
 
-from . import KNOWN_ACCESSORIES, HomeKitEntity
+from . import KNOWN_DEVICES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -29,7 +29,7 @@ DEFAULT_VALID_MODES = list(MODE_HOMEKIT_TO_HASS)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit climate."""
     if discovery_info is not None:
-        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
         add_entities([HomeKitClimateDevice(accessory, discovery_info)], True)
 
 

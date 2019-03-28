@@ -8,7 +8,7 @@ import os
 
 import voluptuous as vol
 
-from . import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 
 SUPPORT_LANGUAGES = [
     'en', 'de'
@@ -51,7 +51,7 @@ class DemoProvider(Provider):
 
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from demo."""
-        filename = os.path.join(os.path.dirname(__file__), 'demo.mp3')
+        filename = os.path.join(os.path.dirname(__file__), 'tts.mp3')
         try:
             with open(filename, 'rb') as voice:
                 data = voice.read()

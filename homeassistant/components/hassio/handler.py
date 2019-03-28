@@ -62,7 +62,7 @@ class HassIO:
 
         This method return a coroutine.
         """
-        return self.send_command("/supervisor/ping", method="get")
+        return self.send_command("/supervisor/ping", method="get", timeout=15)
 
     @_api_data
     def get_homeassistant_info(self):

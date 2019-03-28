@@ -46,7 +46,6 @@ async def async_setup(hass, config):
         if success:
             key = '{}.{}'.format(DOMAIN, panel_name)
             hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: key})
-            hass.config.components.add(key)
 
     @callback
     def component_loaded(event):

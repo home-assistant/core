@@ -82,6 +82,19 @@ class AxisBinarySensor(BinarySensorDevice):
         return self.event.event_class
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return '{}-{}-{}'.format(
+            self.device.serial, self.event.topic, self.event.id)
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return {
+            'identifiers': {(AXIS_DOMAIN, self.device.serial)}
+        }

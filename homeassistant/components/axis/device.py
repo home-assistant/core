@@ -8,9 +8,10 @@ from homeassistant.const import (
     CONF_USERNAME)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, LOGGER
+from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -48,6 +49,20 @@ class AxisNetworkDevice:
     def serial(self):
         """Return the mac of this device."""
         return self.config_entry.data[CONF_MAC]
+
+    async def async_update_device_registry(self):
+        """Update device registry."""
+        device_registry = await \
+            self.hass.helpers.device_registry.async_get_registry()
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            connections={(CONNECTION_NETWORK_MAC, self.serial)},
+            identifiers={(DOMAIN, self.serial)},
+            manufacturer='Axis Communications AB',
+            model="{} {}".format(self.model, self.product_type),
+            name=self.name,
+            sw_version=self.fw_version
+        )
 
     async def async_setup(self):
         """Set up the device."""
