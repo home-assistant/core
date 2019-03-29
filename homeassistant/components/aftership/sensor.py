@@ -11,27 +11,27 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["pyaftership==0.1.2"]
+REQUIREMENTS = ['pyaftership==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Information provided by AfterShip"
-ATTR_TRACKINGS = "trackings"
+ATTRIBUTION = 'Information provided by AfterShip'
+ATTR_TRACKINGS = 'trackings'
 
-BASE = "https://track.aftership.com/"
+BASE = 'https://track.aftership.com/'
 
-CONF_SLUG = "slug"
-CONF_TITLE = "title"
-CONF_TRACKING_NUMBER = "tracking_number"
+CONF_SLUG = 'slug'
+CONF_TITLE = 'title'
+CONF_TRACKING_NUMBER = 'tracking_number'
 
-DEFAULT_NAME = "aftership"
+DEFAULT_NAME = 'aftership'
 
-ICON = "mdi:package-variant-closed"
+ICON = 'mdi:package-variant-closed'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-SERVICE_ADD_TRACKING = "aftership_add_tracking"
-SERVICE_REMOVE_TRACKING = "aftership_remove_tracking"
+SERVICE_ADD_TRACKING = 'aftership_add_tracking'
+SERVICE_REMOVE_TRACKING = 'aftership_remove_tracking'
 
 ADD_TRACKING_SERVICE_SCHEMA = vol.Schema(
     {
@@ -46,31 +46,28 @@ REMOVE_TRACKING_SERVICE_SCHEMA = vol.Schema(
      vol.Required(CONF_TRACKING_NUMBER): cv.string}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the AfterShip sensor platform."""
     from pyaftership.tracker import Tracking
 
     apikey = config[CONF_API_KEY]
     name = config[CONF_NAME]
+
     session = async_get_clientsession(hass)
     aftership = Tracking(hass.loop, session, apikey)
 
     await aftership.get_trackings()
 
-    if not aftership.meta or aftership.meta["code"] != 200:
-        _LOGGER.error(
-            "No tracking data found. Check API key is correct: %s",
-            aftership.meta
-        )
+    if not aftership.meta or aftership.meta['code'] != 200:
+        _LOGGER.error("No tracking data found. Check API key is correct: %s",
+                      aftership.meta)
         return
 
     instance = AfterShipSensor(aftership, name)
@@ -84,7 +81,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         tracking_number = call.data[CONF_TRACKING_NUMBER]
 
         await aftership.add_package_tracking(tracking_number, title, slug)
-        await update(instance)
+        await instance.async_update(no_throttle=True)
 
     hass.services.async_register(
         DOMAIN,
@@ -99,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         tracking_number = call.data[CONF_TRACKING_NUMBER]
 
         await aftership.remove_package_tracking(slug, tracking_number)
-        await update(instance)
+        await instance.async_update(no_throttle=True)
 
     hass.services.async_register(
         DOMAIN,
@@ -132,7 +129,7 @@ class AfterShipSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return "packages"
+        return 'packages'
 
     @property
     def device_state_attributes(self):
@@ -147,57 +144,53 @@ class AfterShipSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the AfterShip API."""
-        await update(self)
+        await self.aftership.get_trackings()
 
+        if not self.aftership.meta:
+            _LOGGER.error('Unknown errors when querying')
+            return
+        if self.aftership.meta['code'] != 200:
+            _LOGGER.error(
+                'Errors when querying AfterShip. %s',
+                str(self.aftership.meta)
+            )
+            return
 
-async def update(self):
-    """Get the latest data from the AfterShip API."""
-    await self.aftership.get_trackings()
+        status_to_ignore = {'delivered'}
+        status_counts = {}
+        trackings = []
+        not_delivered_count = 0
 
-    if not self.aftership.meta:
-        _LOGGER.error("Unknown errors when querying")
-        return
-    if self.aftership.meta["code"] != 200:
-        _LOGGER.error(
-            "Errors when querying AfterShip. %s",
-            str(self.aftership.meta)
-        )
-        return
+        for track in self.aftership.trackings['trackings']:
+            status = track['tag'].lower()
+            name = (
+                track['tracking_number']
+                if track['title'] is None
+                else track['title']
+            )
+            status_counts[status] = status_counts.get(status, 0) + 1
+            trackings.append({
+                'name': name,
+                'tracking_number': track['tracking_number'],
+                'slug': track['slug'],
+                'link': '%s%s/%s' % (
+                BASE, track['slug'], track['tracking_number']),
+                'last_update': track['updated_at'],
+                'expected_delivery': track['expected_delivery'],
+                'status': track['tag'],
+                'last_checkpoint': track['checkpoints'][-1]
+            })
 
-    status_to_ignore = {"delivered"}
-    status_counts = {}
-    trackings = []
-    not_delivered_count = 0
+            if status not in status_to_ignore:
+                not_delivered_count += 1
+            else:
+                _LOGGER.debug("Ignoring %s as it has status: %s",
+                              name, status)
 
-    for track in self.aftership.trackings["trackings"]:
-        status = track["tag"].lower()
-        name = (
-            track["tracking_number"]
-            if track["title"] is None
-            else track["title"]
-        )
-        status_counts[status] = status_counts.get(status, 0) + 1
-        trackings.append({
-            "name": name,
-            "tracking_number": track["tracking_number"],
-            "slug": track["slug"],
-            "link": BASE + track["slug"] + "/" + track["tracking_number"],
-            "last_update": track["updated_at"],
-            "expected_delivery": track["expected_delivery"],
-            "status": track["tag"],
-            "last_checkpoint": track["checkpoints"][-1]
-        })
+        self._attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            **status_counts,
+            ATTR_TRACKINGS: trackings,
+        }
 
-        if status not in status_to_ignore:
-            not_delivered_count += 1
-        else:
-            _LOGGER.debug("Ignoring %s as it has status: %s",
-                          name, status)
-
-    self._attributes = {
-        ATTR_ATTRIBUTION: ATTRIBUTION,
-        **status_counts,
-        ATTR_TRACKINGS: trackings,
-    }
-
-    self._state = not_delivered_count
+        self._state = not_delivered_count
