@@ -16,10 +16,10 @@ import voluptuous as vol
 
 from homeassistant.components import camera
 from homeassistant.const import (
-    ATTR_NAME, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv, discovery
 
-REQUIREMENTS = ['camect-py==0.1.0']
+REQUIREMENTS = ['camect-py==0.1.1']
 
 ATTR_MODE = 'mode'
 CONF_CAMERA_IDS = 'camera_ids'
@@ -32,7 +32,7 @@ SERVICE_CHANGE_OP_MODE = 'change_op_mode'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CAMERA_IDS, default=[]): vol.All(
@@ -59,16 +59,6 @@ def setup(hass, config):
     hass.data[DOMAIN] = home
     discovery.load_platform(
         hass, camera.DOMAIN, DOMAIN, conf.get(CONF_CAMERA_IDS), config)
-
-    # Register event listener.
-    def on_camect_event(evt):
-        evt_tp = evt['type']
-        if evt_tp == ATTR_NAME:
-            pass
-        elif evt_tp == ATTR_MODE:
-            pass
-        hass.bus.fire('camect_event', evt)
-    home.add_event_listener(lambda evt: hass.bus.fire('camect_event', evt))
 
     # Register service.
     def handle_change_op_mode_service(call):

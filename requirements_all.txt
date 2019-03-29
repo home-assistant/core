@@ -272,7 +272,7 @@ ciscomobilityexpress==0.1.4
 
 # homeassistant.components.camect
 # homeassistant.components.camera.camect
-camect-py==0.1.0
+camect-py==0.1.1
 
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
