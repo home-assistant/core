@@ -30,7 +30,8 @@ def setup_platform(hass, config, add_entities, cam_ids):
 class Camera(camera.Camera):
     """An implementation of a camera supported by Camect Home."""
 
-    def __init__(self, home, json: Dict[str, str], camect_site: str, ws_url: str):
+    def __init__(self, home, json: Dict[str, str], camect_site: str,
+                 ws_url: str):
         """Initialize a camera supported by Camect Home."""
         super(Camera, self).__init__()
         self._home = home
