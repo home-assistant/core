@@ -70,7 +70,7 @@ GATEWAY_CONFIG = vol.Schema({
 })
 
 GATEWAY_CONFIG_MAC_OPTIONAL = GATEWAY_CONFIG.extend({
-    vol.Optional(CONF_MAC, default=None): vol.Any(GW_MAC, None)
+    vol.Optional(CONF_MAC): GW_MAC,
 })
 
 GATEWAY_CONFIG_MAC_REQUIRED = GATEWAY_CONFIG.extend({
