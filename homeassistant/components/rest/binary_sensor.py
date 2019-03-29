@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.util import str_to_bool
 import homeassistant.helpers.config_validation as cv
 
 from .sensor import RestData
@@ -121,11 +122,7 @@ class RestBinarySensor(BinarySensorDevice):
             response = self._value_template.\
                 async_render_with_possible_json_value(self.rest.data, False)
 
-        try:
-            return bool(int(response))
-        except ValueError:
-            return {'true': True, 'on': True, 'open': True,
-                    'yes': True}.get(response.lower(), False)
+        return str_to_bool(response)
 
     def update(self):
         """Get the latest data from REST API and updates the state."""

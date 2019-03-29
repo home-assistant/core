@@ -1,5 +1,5 @@
 """Helper class to implement include/exclude of entities and domains."""
-from typing import Callable, Dict, Iterable
+from typing import Callable, Dict, Iterable, Any
 
 import voluptuous as vol
 
@@ -107,3 +107,64 @@ def generate_filter(include_domains: Iterable[str],
         return entity_id in include_e
 
     return entity_filter_4c
+
+
+class FilterBuilder:
+    """Builder class for entity filters."""
+
+    def __init__(self, include_all=False,
+                 include_domains: Iterable[str] = None,
+                 include_entities: Iterable[str] = None,
+                 exclude_domains: Iterable[str] = None,
+                 exclude_entities: Iterable[str] = None):
+        """Initialiser."""
+        self.include_all = include_all
+        self.include_domains = set(include_domains or [])
+        self.include_entities = set(include_entities or [])
+        self.exclude_domains = set(exclude_domains or [])
+        self.exclude_entities = set(exclude_entities or [])
+
+    def build(self) -> Callable[[str], bool]:
+        """Build a callable entity filter based on current settings."""
+        if self.include_all:
+            return lambda _: True
+        if (not self.include_domains
+                and not self.include_entities
+                and not self.exclude_entities
+                and not self.exclude_entities):
+            return lambda _: False
+
+        return generate_filter(
+            self.include_domains,
+            self.include_entities,
+            self.exclude_domains,
+            self.exclude_entities)
+
+    def __call__(self, entity_id: str) -> bool:
+        """Build filter and evaluate for given entity_id."""
+        return self.build()(entity_id)
+
+    def __eq__(self, other: Any) -> bool:
+        """Test equivalence of two filter builders, or list of entities."""
+        if isinstance(other, FilterBuilder):
+            return (
+                self.include_all == other.include_all and
+                self.include_domains == other.include_domains and
+                self.include_entities == other.include_entities and
+                self.exclude_domains == other.exclude_domains and
+                self.exclude_entities == other.exclude_entities)
+        return False
+
+    def __repr__(self) -> str:
+        """Convert to string."""
+        return (
+            "FilterBuilder(" +
+            ("include_all=True " if self.include_all else "") +
+            (("include_domains=" + str(self.include_domains) + " ")
+             if self.include_domains else "") +
+            (("include_entities=" + str(self.include_entities) + " ")
+             if self.include_entities else "") +
+            (("exclude_domains=" + str(self.exclude_domains) + " ")
+             if self.exclude_domains else "") +
+            (("exclude_entities=" + str(self.exclude_entities) + " ")
+             if self.exclude_entities else ""))

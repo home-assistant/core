@@ -21,6 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util import str_to_bool
 
 FROM_CONFIG_FORMAT = '{}_from_config'
 ASYNC_FROM_CONFIG_FORMAT = 'async_{}_from_config'
@@ -333,7 +334,7 @@ def async_template(hass: HomeAssistant, value_template: Template,
         _LOGGER.error("Error during template condition: %s", ex)
         return False
 
-    return value.lower() == 'true'
+    return str_to_bool(value)
 
 
 def async_template_from_config(config: ConfigType,

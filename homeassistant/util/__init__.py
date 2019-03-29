@@ -63,6 +63,15 @@ def convert(value: T, to_type: Callable[[T], U],
         return default
 
 
+def str_to_bool(value: str) -> bool:
+    """Convert a string to a boolean value."""
+    try:
+        return bool(int(value))
+    except ValueError:
+        return {'true': True, 'on': True, 'open': True,
+                'yes': True}.get(value.lower(), False)
+
+
 def ensure_unique_string(preferred_string: str, current_strings:
                          Union[Iterable[str], KeysView[str]]) -> str:
     """Return a string that is not present in current_strings.
