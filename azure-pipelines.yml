@@ -8,6 +8,26 @@ trigger:
 
 jobs:
 
+- job: 'Lint'
+  pool:
+    vmImage: 'Ubuntu-16.04'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.5.3'
+      architecture: 'x64'
+
+  - script: python -m pip install --upgrade pip && pip install -r requirements_all.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
+    displayName: 'Install dependencies'
+
+  - script: |
+      python script/gen_requirements_all.py validate
+      flake8
+      pydocstyle tests
+      pylint homeassistant
+    displayName: 'lint'
+
 - job: 'Test'
   pool:
     vmImage: 'Ubuntu-16.04'
@@ -27,11 +47,10 @@ jobs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
 
-  - script: python -m pip install --upgrade pip && pip install -r requirements_all.txt
+  - script: python -m pip install --upgrade pip && pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
     displayName: 'Install dependencies'
 
   - script: |
-      pip install pytest
       pytest tests
     displayName: 'pytest'
 
@@ -51,6 +70,9 @@ jobs:
     inputs:
       versionSpec: '3.x'
       architecture: 'x64'
+
+  - script: python -m pip install --upgrade pip && pip install wheel
+    displayName: 'Install dependencies'
 
   - script: python setup.py sdist
     displayName: 'Build sdist'
