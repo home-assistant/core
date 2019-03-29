@@ -7,7 +7,7 @@ from homeassistant.util import Throttle, dt
 
 from . import (
     CONF_CAL_ID, CONF_ENTITIES, CONF_IGNORE_AVAILABILITY, CONF_SEARCH,
-    CONF_TRACK, TOKEN_FILE, GoogleCalendarService)
+    CONF_TRACK, TOKEN_FILE, CONF_MAX_RESULTS, GoogleCalendarService)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,8 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         """Create the Calendar event device."""
         self.data = GoogleCalendarData(calendar_service, calendar,
                                        data.get(CONF_SEARCH),
-                                       data.get(CONF_IGNORE_AVAILABILITY))
+                                       data.get(CONF_IGNORE_AVAILABILITY),
+                                       data.get(CONF_MAX_RESULTS))
 
         super().__init__(hass, data)
 
@@ -54,12 +55,13 @@ class GoogleCalendarData:
     """Class to utilize calendar service object to get next event."""
 
     def __init__(self, calendar_service, calendar_id, search,
-                 ignore_availability):
+                 ignore_availability, max_results):
         """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = search
         self.ignore_availability = ignore_availability
+        self.max_results = max_results
         self.event = None
 
     def _prepare_query(self):
@@ -73,6 +75,8 @@ class GoogleCalendarData:
             return False
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
         params['calendarId'] = self.calendar_id
+        if self.max_results:
+            params['max_results'] = self.max_results
         if self.search:
             params['q'] = self.search
 
