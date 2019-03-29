@@ -643,6 +643,7 @@ omit =
     homeassistant/components/waterfurnace/*
     homeassistant/components/watson_iot/*
     homeassistant/components/waze_travel_time/sensor.py
+    homeassistant/components/webdav/*
     homeassistant/components/webostv/*
     homeassistant/components/wemo/*
     homeassistant/components/wemo/fan.py
