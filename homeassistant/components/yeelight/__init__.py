@@ -116,7 +116,7 @@ def setup(hass, config):
     conf = config.get(DOMAIN, {})
     yeelight_data = hass.data[DATA_YEELIGHT] = {}
 
-    def device_discovered(service, info):
+    def device_discovered(_, info):
         _LOGGER.debug("Adding autodetected %s", info['hostname'])
 
         device_type = info['device_type']
@@ -133,7 +133,7 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_YEELIGHT, device_discovered)
 
-    def update(event):
+    def update(_):
         for device in yeelight_data.values():
             device.update()
 
@@ -164,10 +164,13 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     platform_config[CONF_CUSTOM_EFFECTS] = \
         hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
 
-    device.update()
-    load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
-    load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
-                  hass_config)
+    def setup_platforms():
+        device.update()
+        load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
+        load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
+                      hass_config)
+
+    hass.add_job(setup_platforms)
 
 
 class YeelightDevice:
@@ -256,7 +259,7 @@ class YeelightDevice:
 
         try:
             self.bulb.turn_on(duration=duration, light_type=light_type,
-                                      power_mode=power_mode)
+                              power_mode=power_mode)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
@@ -271,7 +274,8 @@ class YeelightDevice:
         try:
             self.bulb.turn_off(duration=duration, light_type=light_type)
         except yeelight.BulbException as ex:
-            _LOGGER.error("Unable to turn the bulb off: %s", ex)
+            _LOGGER.error("Unable to turn the bulb off: %s, %s: %s",
+                          self.ipaddr, self.name, ex)
             return
 
     def update(self):
@@ -286,7 +290,8 @@ class YeelightDevice:
             self._available = True
         except yeelight.BulbException as ex:
             if self._available:  # just inform once
-                _LOGGER.error("Unable to update bulb status: %s", ex)
+                _LOGGER.error("Unable to update device %s, %s: %s",
+                              self.ipaddr, self.name, ex)
             self._available = False
 
-        dispatcher_send(self._hass, DATA_UPDATED, self._ipaddr)
+        dispatcher_send(self._hass, DATA_UPDATED, self.ipaddr)

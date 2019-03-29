@@ -157,6 +157,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         lights.append(YeelightWithAmbientLight(device, custom_effects=custom_effects))
         lights.append(YeelightNightLightMode(device, custom_effects=custom_effects))
         lights.append(YeelightAmbientLight(device, custom_effects=custom_effects))
+    else:
+        _LOGGER.error("Cannot determinate device type for %s, %s",
+                      device.ipaddr, device._name)
 
     hass.data[data_key] += lights
     add_entities(lights, True)
@@ -202,6 +205,11 @@ class YeelightGenericLight(Light):
         self.config = device.config
         self._device = device
 
+        self._brightness = None
+        self._color_temp = None
+        self._is_on = None
+        self._hs = None
+
         model_specs = self._bulb.get_model_specs()
         self._min_mireds = kelvin_to_mired(model_specs['color_temp']['max'])
         self._max_mireds = kelvin_to_mired(model_specs['color_temp']['min'])
@@ -214,7 +222,7 @@ class YeelightGenericLight(Light):
     @callback
     def _schedule_immediate_update(self, ipaddr):
         if ipaddr == self.device.ipaddr:
-            self.async_schedule_update_ha_state
+            self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -245,7 +253,10 @@ class YeelightGenericLight(Light):
     @property
     def color_temp(self) -> int:
         """Return the color temperature."""
-        return kelvin_to_mired(int(self._get_property('ct')))
+        temp = self._get_property('ct')
+        if temp:
+            self._color_temp = temp
+        return kelvin_to_mired(int(self._color_temp))
 
     @property
     def name(self) -> str:
@@ -260,8 +271,10 @@ class YeelightGenericLight(Light):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
-        bright = self._get_property(self._brightness_property, 0)
-        return round(255 * (int(bright) / 100))
+        temp = self._get_property(self._brightness_property)
+        if temp:
+            self._brightness = temp
+        return round(255 * (int(self._brightness) / 100))
 
     @property
     def min_mireds(self):
