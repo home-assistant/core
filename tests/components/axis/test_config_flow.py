@@ -31,8 +31,7 @@ async def test_flow_works(hass):
 
     with patch('axis.AxisDevice') as mock_device:
         def mock_constructor(
-                loop, host, username, password, port, web_proto, event_types,
-                signal):
+                loop, host, username, password, port, web_proto):
             """Fake the controller constructor."""
             mock_device.loop = loop
             mock_device.host = host
@@ -189,8 +188,7 @@ async def test_discovery_flow_known_device(hass):
                    config_flow.CONF_PORT: 80}}), \
             patch('axis.AxisDevice') as mock_device:
         def mock_constructor(
-                loop, host, username, password, port, web_proto, event_types,
-                signal):
+                loop, host, username, password, port, web_proto):
             """Fake the controller constructor."""
             mock_device.loop = loop
             mock_device.host = host
@@ -277,8 +275,7 @@ async def test_import_flow_works(hass):
 
     with patch('axis.AxisDevice') as mock_device:
         def mock_constructor(
-                loop, host, username, password, port, web_proto, event_types,
-                signal):
+                loop, host, username, password, port, web_proto):
             """Fake the controller constructor."""
             mock_device.loop = loop
             mock_device.host = host
