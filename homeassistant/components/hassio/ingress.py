@@ -9,6 +9,7 @@ from aiohttp import web
 from aiohttp.hdrs import (
     CONNECTION, CONTENT_LENGTH, UPGRADE, X_FORWARDED_FOR, X_FORWARDED_HOST,
     X_FORWARDED_PROTO)
+from aiohttp.web_exceptions import HTTPBadGateway
 from multidict import CIMultiDict
 
 from homeassistant.core import callback
@@ -47,8 +48,6 @@ class HassIOIngress(HomeAssistantView):
             self, request: web.Request, addon: str, path: str
     ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
         """Route data to Hass.io ingress service."""
-        header = request.headers
-
         # Create websession and aims cookies
         client = aiohttp.ClientSession(
             cookies=request.cookies, connector=self._connector
@@ -56,14 +55,16 @@ class HassIOIngress(HomeAssistantView):
 
         try:
             # Websocket
-            if header[CONNECTION] == "Upgrade" and\
-                    header[UPGRADE] == "websocket":
+            if _is_websocket(request):
                 return await self._handle_websocket(
                     client, request, addon, path
                 )
 
             # Request
             return await self._handle_request(client, request, addon, path)
+
+        except aiohttp.ClientError:
+            raise HTTPBadGateway() from None
 
         finally:
             client.detach()
@@ -103,7 +104,7 @@ class HassIOIngress(HomeAssistantView):
     ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
         url = self._create_url(addon, path)
-        data = request.read()
+        data = await request.read()
         source_header = _init_header(request, True)
 
         async with client.request(
@@ -170,10 +171,20 @@ def _init_header(
     # Set X-Forwarded-Proto
     forward_proto = request.headers.get(X_FORWARDED_PROTO)
     if not forward_proto:
-        forward_proto = request.url.schema
+        forward_proto = request.url.scheme
     headers[X_FORWARDED_PROTO] = forward_proto
 
     return headers
+
+
+def _is_websocket(request: web.Request) -> bool:
+    """Return True if request is a websocket."""
+    headers = request.headers
+
+    if headers.get(CONNECTION) == "Upgrade" and\
+                    headers.get(UPGRADE) == "websocket":
+        return True
+    return False
 
 
 async def _websocket_forward(ws_from, ws_to):
