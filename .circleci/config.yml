@@ -25,7 +25,7 @@ commands:
           libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev
           libswscale-dev libswresample-dev libavfilter-dev
 
-  install-requirments:
+  install-requirements:
     description: Set up venv and install requirements python packages with cache support
     parameters:
       python:
@@ -90,7 +90,14 @@ jobs:
             pip install --progress-bar off flake8
             flake8
 
-  install-all-and-check-requirement:
+      - install
+      - run:
+          name: run gen_requirements_all
+          command: |
+            . venv/bin/activate
+            python script/gen_requirements_all.py validate
+
+  pre-install-all-requirements:
     executor:
       name: python
       tag: 3.7-stretch
@@ -98,17 +105,10 @@ jobs:
     steps:
       - checkout
       - docker-prereqs
-      - install-requirments:
+      - install-requirements:
           python: 3.7-stretch
           all: true
           test: true
-      - install
-
-      - run:
-          name: run gen_requirements_all
-          command: |
-            . venv/bin/activate
-            python script/gen_requirements_all.py validate
 
   pylint:
     executor:
@@ -119,7 +119,7 @@ jobs:
     steps:
       - checkout
       - docker-prereqs
-      - install-requirments:
+      - install-requirements:
           python: 3.7-stretch
           all: true
           test: true
@@ -143,7 +143,7 @@ jobs:
     steps:
       - checkout
       - docker-prereqs
-      - install-requirments:
+      - install-requirements:
           python: << parameters.python >>
           test_all: true
 
@@ -159,7 +159,7 @@ jobs:
     steps:
       - checkout
       - docker-prereqs
-      - install-requirments:
+      - install-requirements:
           python: << parameters.python >>
           test_all: true
       - install
@@ -190,10 +190,10 @@ workflows:
   build:
     jobs:
       - static-check
-      - install-all-and-check-requirement
+      - pre-install-all-requirements
       - pylint:
           requires:
-            - install-all-and-check-requirement
+            - pre-install-all-requirements
       - pre-test:
           name: pre-test 3.5.5
           python: 3.5.5-stretch
