@@ -43,7 +43,7 @@ class DeconzGateway:
 
     @property
     def master(self) -> bool:
-        """Define which gateway which can be called without defining id."""
+        """Gateway which is used with deCONZ services without defining id."""
         return self.config_entry.options['master']
 
     @property

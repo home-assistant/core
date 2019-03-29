@@ -10,7 +10,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts, get_master_gateway
-from .const import DEFAULT_PORT, DOMAIN, _LOGGER
+from .const import CONF_BRIDGEID, DEFAULT_PORT, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
 REQUIREMENTS = ['pydeconz==54']
@@ -159,16 +159,19 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload deCONZ config entry."""
-    gateway = hass.data.pop(DOMAIN)
-    hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
-    hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
+    gateway = hass.data[DOMAIN].pop(config_entry.data[CONF_BRIDGEID])
+
+    if not hass.data[DOMAIN]:
+        hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
+        hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
+
     return await gateway.async_reset()
 
 
 @callback
 async def async_populate_options(hass, config_entry):
     """Populate default options for gateway."""
-    master = len(hass.data[DOMAIN]) == 1
+    master = bool(get_master_gateway(hass))
 
     options = {
         'master': master

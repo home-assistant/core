@@ -115,7 +115,8 @@ async def test_setup_entry_successful(hass):
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     entry = MockConfigEntry(domain=deconz.DOMAIN, data={
-        'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'
+        'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF',
+        'bridgeid': '12345'
     })
     entry.add_to_hass(hass)
     mock_registry = Mock()
@@ -123,6 +124,7 @@ async def test_unload_entry(hass):
         patch('homeassistant.helpers.device_registry.async_get_registry',
               return_value=mock_coro(mock_registry)):
         mock_gateway.return_value.async_setup.return_value = mock_coro(True)
+        mock_gateway.return_value.bridgeid.return_value = '12345'
         assert await deconz.async_setup_entry(hass, entry) is True
 
     mock_gateway.return_value.async_reset.return_value = mock_coro(True)
