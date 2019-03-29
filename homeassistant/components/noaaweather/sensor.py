@@ -622,9 +622,11 @@ class NOAACurrentSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
+        if self._condition not in self._noaadata.data:
+            return None
         attr = {}
         attr[ATTR_ATTRIBUTION] = ATTRIBUTION
-        attr[ATTR_LAST_UPDATE] = self._noaadata.lastupdate
+        attr[ATTR_LAST_UPDATE] = self._noaadata.datatime[self._condition]
         attr[ATTR_SITE_ID] = self._noaadata.stationcode
         return attr
 
@@ -698,6 +700,7 @@ class NOAACurrentData(Entity):
         self.lastupdate = datetime.datetime.now(datetime.timezone.utc) -\
             timedelta(hours=2)
         self.data = dict()
+        self.datatime = dict()
         self._errorstate = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -803,6 +806,7 @@ class NOAACurrentData(Entity):
                         }
                 if SENSOR_TYPES[variable][2] == 'array':
                     self.data[variable] = dict()
+                self.datatime[variable] = thisupdate
 
             #
             # Check for existance of useable values for
@@ -816,6 +820,7 @@ class NOAACurrentData(Entity):
                 if qcval in ('qc:S', 'qc:C'):
                     # Valid value, just update data.
                     self.data[variable] = obsprop[variable]
+                    self.datatime[variable] = thisupdate
                     continue
                 #
                 # Special case for windChill.  Value is not valid
@@ -845,6 +850,7 @@ class NOAACurrentData(Entity):
                         #
                         continue
                     self.data[variable] = obsprop[variable]
+                    self.datatime[variable] = thisupdate
                     continue
                 #
                 # Special case for heatIndex.  Value is not valid
@@ -874,6 +880,7 @@ class NOAACurrentData(Entity):
                         #
                         continue
                     self.data[variable] = obsprop[variable]
+                    self.datatime[variable] = thisupdate
                     continue
                 #
                 # Other items, check for qc:V
@@ -882,6 +889,7 @@ class NOAACurrentData(Entity):
                     if 'value' in obsprop[variable]:
                         if obsprop[variable]['value'] is not None:
                             self.data[variable] = obsprop[variable]
+                            self.datatime[variable] = thisupdate
                             continue
                 #
                 # If we have a qualityControl attribute but with a value
@@ -892,4 +900,5 @@ class NOAACurrentData(Entity):
             #
 
             self.data[variable] = obsprop[variable]
+            self.datatime[variable] = thisupdate
         return
