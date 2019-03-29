@@ -162,7 +162,6 @@ class YeelightLight(Light):
         self._device = device
 
         self._supported_features = SUPPORT_YEELIGHT
-        self._available = False
 
         self._brightness = None
         self._color_temp = None
@@ -196,7 +195,7 @@ class YeelightLight(Light):
     @property
     def available(self) -> bool:
         """Return if bulb is available."""
-        return self._available
+        return self.device.available
 
     @property
     def supported_features(self) -> int:
@@ -304,14 +303,7 @@ class YeelightLight(Light):
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
     def _bulb(self) -> 'yeelight.Bulb':  # noqa: F821
-        bulb = self.device.bulb
-
-        if bulb:
-            self._available = True
-            return bulb
-
-        self._available = False
-        return None
+        return self.device.bulb
 
     def set_music_mode(self, mode) -> None:
         """Set the music mode on or off."""
@@ -323,52 +315,45 @@ class YeelightLight(Light):
     def update(self) -> None:
         """Update properties from the bulb."""
         import yeelight
-        try:
-            bulb_type = self._bulb.bulb_type
+        bulb_type = self._bulb.bulb_type
 
-            if bulb_type == yeelight.BulbType.Color:
-                self._supported_features = SUPPORT_YEELIGHT_RGB
-            elif self.light_type == yeelight.enums.LightType.Ambient:
-                self._supported_features = SUPPORT_YEELIGHT_RGB
-            elif bulb_type in (yeelight.BulbType.WhiteTemp,
-                               yeelight.BulbType.WhiteTempMood):
-                if self._is_nightlight_enabled:
-                    self._supported_features = SUPPORT_YEELIGHT
-                else:
-                    self._supported_features = SUPPORT_YEELIGHT_WHITE_TEMP
-
-            if self.min_mireds is None:
-                model_specs = self._bulb.get_model_specs()
-                self._min_mireds = \
-                    kelvin_to_mired(model_specs['color_temp']['max'])
-                self._max_mireds = \
-                    kelvin_to_mired(model_specs['color_temp']['min'])
-
-            if bulb_type == yeelight.BulbType.WhiteTempMood:
-                self._is_on = self._get_property('main_power') == 'on'
-            else:
-                self._is_on = self._get_property('power') == 'on'
-
+        if bulb_type == yeelight.BulbType.Color:
+            self._supported_features = SUPPORT_YEELIGHT_RGB
+        elif self.light_type == yeelight.enums.LightType.Ambient:
+            self._supported_features = SUPPORT_YEELIGHT_RGB
+        elif bulb_type in (yeelight.BulbType.WhiteTemp,
+                           yeelight.BulbType.WhiteTempMood):
             if self._is_nightlight_enabled:
-                bright = self._get_property('nl_br', None)
+                self._supported_features = SUPPORT_YEELIGHT
             else:
-                bright = self._get_property('bright', None)
+                self._supported_features = SUPPORT_YEELIGHT_WHITE_TEMP
 
-            if bright:
-                self._brightness = round(255 * (int(bright) / 100))
+        if self.min_mireds is None:
+            model_specs = self._bulb.get_model_specs()
+            self._min_mireds = \
+                kelvin_to_mired(model_specs['color_temp']['max'])
+            self._max_mireds = \
+                kelvin_to_mired(model_specs['color_temp']['min'])
 
-            temp_in_k = self._get_property('ct')
+        if bulb_type == yeelight.BulbType.WhiteTempMood:
+            self._is_on = self._get_property('main_power') == 'on'
+        else:
+            self._is_on = self._get_property('power') == 'on'
 
-            if temp_in_k:
-                self._color_temp = kelvin_to_mired(int(temp_in_k))
+        if self._is_nightlight_enabled:
+            bright = self._get_property('nl_br')
+        else:
+            bright = self._get_property('bright')
 
-            self._hs = self._get_hs_from_properties()
+        if bright:
+            self._brightness = round(255 * (int(bright) / 100))
 
-            self._available = True
-        except yeelight.BulbException as ex:
-            if self._available:  # just inform once
-                _LOGGER.error("Unable to update bulb status: %s", ex)
-            self._available = False
+        temp_in_k = self._get_property('ct')
+
+        if temp_in_k:
+            self._color_temp = kelvin_to_mired(int(temp_in_k))
+
+        self._hs = self._get_hs_from_properties()
 
     @_cmd
     def set_brightness(self, brightness, duration) -> None:

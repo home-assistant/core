@@ -30,6 +30,15 @@ DISPATCHER_NETGEAR_LTE = 'netgear_lte_update'
 DOMAIN = 'netgear_lte'
 DATA_KEY = 'netgear_lte'
 
+EVENT_SMS = 'netgear_lte_sms'
+
+SERVICE_DELETE_SMS = 'delete_sms'
+
+ATTR_HOST = 'host'
+ATTR_SMS_ID = 'sms_id'
+ATTR_FROM = 'from'
+ATTR_MESSAGE = 'message'
+
 
 NOTIFY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
@@ -53,6 +62,11 @@ CONFIG_SCHEMA = vol.Schema({
     })])
 }, extra=vol.ALLOW_EXTRA)
 
+DELETE_SMS_SCHEMA = vol.Schema({
+    vol.Required(ATTR_HOST): cv.string,
+    vol.Required(ATTR_SMS_ID): vol.All(cv.ensure_list, [cv.positive_int]),
+})
+
 
 @attr.s
 class ModemData:
@@ -62,19 +76,14 @@ class ModemData:
     host = attr.ib()
     modem = attr.ib()
 
-    serial_number = attr.ib(init=False, default=None)
-    unread_count = attr.ib(init=False, default=None)
-    usage = attr.ib(init=False, default=None)
+    data = attr.ib(init=False, default=None)
     connected = attr.ib(init=False, default=True)
 
     async def async_update(self):
         """Call the API to update the data."""
         import eternalegypt
         try:
-            information = await self.modem.information()
-            self.serial_number = information.serial_number
-            self.unread_count = sum(1 for x in information.sms if x.unread)
-            self.usage = information.usage
+            self.data = await self.modem.information()
             if not self.connected:
                 _LOGGER.warning("Connected to %s", self.host)
                 self.connected = True
@@ -82,8 +91,7 @@ class ModemData:
             if self.connected:
                 _LOGGER.warning("Lost connection to %s", self.host)
                 self.connected = False
-            self.unread_count = None
-            self.usage = None
+            self.data = None
 
         async_dispatcher_send(self.hass, DISPATCHER_NETGEAR_LTE)
 
@@ -106,6 +114,24 @@ async def async_setup(hass, config):
         websession = async_create_clientsession(
             hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
         hass.data[DATA_KEY] = LTEData(websession)
+
+        async def delete_sms_handler(service):
+            """Apply a service."""
+            host = service.data[ATTR_HOST]
+            conf = {CONF_HOST: host}
+            modem_data = hass.data[DATA_KEY].get_modem_data(conf)
+
+            if not modem_data:
+                _LOGGER.error(
+                    "%s: host %s unavailable", SERVICE_DELETE_SMS, host)
+                return
+
+            for sms_id in service.data[ATTR_SMS_ID]:
+                await modem_data.modem.delete_sms(sms_id)
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_DELETE_SMS, delete_sms_handler,
+            schema=DELETE_SMS_SCHEMA)
 
     netgear_lte_config = config[DOMAIN]
 
@@ -167,6 +193,19 @@ async def _setup_lte(hass, lte_config):
 async def _login(hass, modem_data, password):
     """Log in and complete setup."""
     await modem_data.modem.login(password=password)
+
+    def fire_sms_event(sms):
+        """Send an SMS event."""
+        data = {
+            ATTR_HOST: modem_data.host,
+            ATTR_SMS_ID: sms.id,
+            ATTR_FROM: sms.sender,
+            ATTR_MESSAGE: sms.message,
+        }
+        hass.bus.async_fire(EVENT_SMS, data)
+
+    await modem_data.modem.add_sms_listener(fire_sms_event)
+
     await modem_data.async_update()
     hass.data[DATA_KEY].modem_data[modem_data.host] = modem_data
 

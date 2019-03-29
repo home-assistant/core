@@ -24,7 +24,7 @@ async def async_setup_platform(
 
     modem_data = hass.data[DATA_KEY].get_modem_data(discovery_info)
 
-    if not modem_data:
+    if not modem_data or not modem_data.data:
         raise PlatformNotReady
 
     sensor_conf = discovery_info[DOMAIN]
@@ -47,6 +47,14 @@ class LTESensor(Entity):
     modem_data = attr.ib()
     sensor_type = attr.ib()
 
+    _unique_id = attr.ib(init=False)
+
+    @_unique_id.default
+    def _init_unique_id(self):
+        """Register unique_id while we know data is valid."""
+        return "{}_{}".format(
+            self.sensor_type, self.modem_data.data.serial_number)
+
     async def async_added_to_hass(self):
         """Register callback."""
         async_dispatcher_connect(
@@ -62,9 +70,14 @@ class LTESensor(Entity):
         return False
 
     @property
+    def available(self):
+        """Return the availability of the sensor."""
+        return self.modem_data.data is not None
+
+    @property
     def unique_id(self):
         """Return a unique ID like 'usage_5TG365AB0078V'."""
-        return "{}_{}".format(self.sensor_type, self.modem_data.serial_number)
+        return self._unique_id
 
 
 class SMSSensor(LTESensor):
@@ -78,7 +91,7 @@ class SMSSensor(LTESensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.modem_data.unread_count
+        return sum(1 for x in self.modem_data.data.sms if x.unread)
 
 
 class UsageSensor(LTESensor):
@@ -97,7 +110,4 @@ class UsageSensor(LTESensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.modem_data.usage is None:
-            return None
-
-        return round(self.modem_data.usage / 1024**2, 1)
+        return round(self.modem_data.data.usage / 1024**2, 1)
