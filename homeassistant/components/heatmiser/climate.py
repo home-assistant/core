@@ -6,18 +6,14 @@ https://home-assistant.io/components/climate.heatmiser/
 """
 import logging
 import time
-import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-            STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO,
-            SUPPORT_TARGET_TEMPERATURE,SUPPORT_OPERATION_MODE)
-from homeassistant.const import (
-            TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME,
-            CONF_ID, PRECISION_WHOLE, STATE_OFF,
-            STATE_ON, STATE_UNKNOWN)
+    STATE_HEAT,SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE,
+    STATE_OFF, STATE_ON, STATE_UNKNOWN)
 
 REQUIREMENTS = ['heatmiserV3==1.1.8']
 
@@ -86,7 +82,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
     def name(self):
@@ -124,10 +120,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
             self._mode = STATE_ON
 
         self.thermostat._hm_send_address(
-                                        self.thermostat.address,
-                                        23,
-                                        self.heating,
-                                        1)
+            self.thermostat.address,23,self.heating,1)
 
     @property
     def min_temp(self):
@@ -145,8 +138,8 @@ class HeatmiserV3Thermostat(ClimateDevice):
         if self.dcb is None:
             return 0
         if self.statsensor == 'floor':
-            return self.themostats.get_floor_temp()
-        return (self.dcb[33]['value'] / 10)
+            return self.themostat.get_floor_temp()
+        return self.dcb[33]['value'] / 10
 
     @property
     def target_temperature(self):
