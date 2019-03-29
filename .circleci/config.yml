@@ -46,7 +46,7 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v1-<< parameters.python >>-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
+            - v1-<< parameters.python >>-{{ checksum "homeassistant/package_constraints.txt" }}-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
       - run:
           name: install dependencies
           command: |
@@ -59,7 +59,7 @@ commands:
       - save_cache:
           paths:
             - ./venv
-          key: v1-<< parameters.python >>-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
+          key: v1-<< parameters.python >>-{{ checksum "homeassistant/package_constraints.txt" }}-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
 
   install:
     description: Install Home Assistant
