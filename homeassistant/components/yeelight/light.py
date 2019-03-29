@@ -38,8 +38,6 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
 
-DEFAULT_ICON = "mdi:lightbulb"
-
 ATTR_MODE = 'mode'
 
 SERVICE_SET_MODE = 'set_mode'
@@ -204,11 +202,6 @@ class YeelightGenericLight(Light):
         self.config = device.config
         self._device = device
 
-        self._brightness = None
-        self._color_temp = None
-        self._is_on = None
-        self._hs = None
-
         model_specs = self._bulb.get_model_specs()
         self._min_mireds = kelvin_to_mired(model_specs['color_temp']['max'])
         self._max_mireds = kelvin_to_mired(model_specs['color_temp']['min'])
@@ -221,7 +214,7 @@ class YeelightGenericLight(Light):
     @callback
     def _schedule_immediate_update(self, ipaddr):
         if ipaddr == self.device.ipaddr:
-            self.async_schedule_update_ha_state(True)
+            self.async_schedule_update_ha_state
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -252,7 +245,7 @@ class YeelightGenericLight(Light):
     @property
     def color_temp(self) -> int:
         """Return the color temperature."""
-        return self._color_temp
+        return kelvin_to_mired(int(self._get_property('ct')))
 
     @property
     def name(self) -> str:
@@ -267,7 +260,8 @@ class YeelightGenericLight(Light):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
-        return self._brightness
+        bright = self._get_property(self._brightness_property, 0)
+        return round(255 * (int(bright) / 100))
 
     @property
     def min_mireds(self):
@@ -298,7 +292,7 @@ class YeelightGenericLight(Light):
     @property
     def hs_color(self) -> tuple:
         """Return the color property."""
-        return self._hs
+        return self._get_hs_from_properties()
 
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
@@ -337,7 +331,7 @@ class YeelightGenericLight(Light):
 
         color_mode = int(color_mode)
         if color_mode == 2:  # color temperature
-            temp_in_k = mired_to_kelvin(self._color_temp)
+            temp_in_k = mired_to_kelvin(self.color_temp)
             return color_util.color_temperature_to_hs(temp_in_k)
         if color_mode == 3:  # hsv
             hue = int(self._get_property('hue'))
@@ -648,20 +642,13 @@ class YeelightWithNightLight(YeelightWhiteTempLight):
         return PowerMode.NORMAL
 
     @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return super().is_on and not self.device.is_nightlight_enabled
+
+    @property
     def _is_nightlight_enabled(self):
         return self.device.is_nightlight_enabled
-
-    def update(self) -> None:
-        bright = self._get_property(self._brightness_property)
-        if bright:
-            self._brightness = round(255 * (int(bright) / 100))
-
-        temp_in_k = self._get_property('ct')
-
-        if temp_in_k:
-            self._color_temp = kelvin_to_mired(int(temp_in_k))
-
-        self._hs = self._get_hs_from_properties()
 
 
 class YeelightNightLightMode(YeelightGenericLight):
