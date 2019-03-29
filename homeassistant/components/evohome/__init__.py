@@ -13,8 +13,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_START,
-    HTTP_BAD_REQUEST, HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS)
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform

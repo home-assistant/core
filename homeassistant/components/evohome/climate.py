@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import (
 
 from . import (
     CONF_LOCATION_IDX, DATA_EVOHOME, DISPATCHER_EVOHOME, EVO_CHILD, EVO_PARENT,
-    GWS, SCAN_INTERVAL_DEFAULT, TCS)
+    GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +133,7 @@ class EvoClimateDevice(ClimateDevice):
         try:
             raise err
 
-        except evohomeclient2.AuthenticationError as err:
+        except evohomeclient2.AuthenticationError:
             _LOGGER.error(
                 "Failed to (re)authenticate with the vendor's server. "
                 "This may be a temporary error. Message is: %s",
