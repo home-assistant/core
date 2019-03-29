@@ -1063,11 +1063,10 @@ async def test_openclose_cover(hass):
         cover.ATTR_CURRENT_POSITION: 75
     }), BASIC_CONFIG)
 
-    assert trt.sync_attributes() == {'openDirection': ['UP']}
+    assert trt.sync_attributes() == {}
 
     assert trt.query_attributes() == {
         'openPercent': 75,
-        'on': True,
         'online': True
     }
 
