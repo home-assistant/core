@@ -212,6 +212,7 @@ class YeelightDevice:
         self._name = config.get(CONF_NAME)
         self._model = config.get(CONF_MODEL)
         self._bulb_device = None
+        self._available = False
 
     @property
     def bulb(self):
@@ -224,7 +225,9 @@ class YeelightDevice:
                 # force init for type
                 self.update()
 
+                self._available = True
             except yeelight.BulbException as ex:
+                self._available = False
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
 
@@ -246,9 +249,14 @@ class YeelightDevice:
         return self._ipaddr
 
     @property
+    def available(self):
+        """Return true is device is available."""
+        return self._available
+
+    @property
     def is_nightlight_enabled(self) -> bool:
         """Return true / false if nightlight is currently enabled."""
-        if self._bulb_device is None:
+        if self.bulb is None:
             return False
 
         return self.bulb.last_properties.get('active_mode') == '1'
@@ -271,7 +279,7 @@ class YeelightDevice:
             light_type = yeelight.enums.LightType.Main
 
         try:
-            self._bulb_device.turn_on(duration=duration, light_type=light_type)
+            self.bulb.turn_on(duration=duration, light_type=light_type)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return
@@ -284,16 +292,24 @@ class YeelightDevice:
             light_type = yeelight.enums.LightType.Main
 
         try:
-            self._bulb_device.turn_off(duration=duration,
-                                       light_type=light_type)
+            self.bulb.turn_off(duration=duration, light_type=light_type)
         except yeelight.BulbException as ex:
-            _LOGGER.error("Unable to turn the bulb on: %s", ex)
+            _LOGGER.error("Unable to turn the bulb off: %s", ex)
             return
 
     def update(self):
         """Read new properties from the device."""
+        import yeelight
+
         if not self.bulb:
             return
 
-        self._bulb_device.get_properties(UPDATE_REQUEST_PROPERTIES)
+        try:
+            self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
+            self._available = True
+        except yeelight.BulbException as ex:
+            if self._available:  # just inform once
+                _LOGGER.error("Unable to update bulb status: %s", ex)
+            self._available = False
+
         dispatcher_send(self._hass, DATA_UPDATED, self._ipaddr)

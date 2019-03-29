@@ -241,6 +241,7 @@ omit =
     homeassistant/components/hikvisioncam/switch.py
     homeassistant/components/hipchat/notify.py
     homeassistant/components/hitron_coda/device_tracker.py
+    homeassistant/components/heos/*
     homeassistant/components/hive/*
     homeassistant/components/hlk_sw16/*
     homeassistant/components/homekit_controller/*

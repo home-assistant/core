@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME,
     CONF_PORT, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_STANDBY)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 ANDROIDTV_DOMAIN = 'androidtv'
@@ -125,7 +126,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         _LOGGER.warning("Could not connect to %s at %s%s",
                         device_name, host, adb_log)
-        return
+        raise PlatformNotReady
 
     if host in hass.data[ANDROIDTV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", host)
