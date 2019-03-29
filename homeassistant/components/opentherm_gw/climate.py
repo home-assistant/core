@@ -154,6 +154,8 @@ class OpenThermGateway(ClimateDevice):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
             temp = float(kwargs[ATTR_TEMPERATURE])
+            if temp == self.target_temperature:
+                return
             self._new_target_temperature = await self._gateway.set_target_temp(
                 temp)
             self.async_schedule_update_ha_state()
