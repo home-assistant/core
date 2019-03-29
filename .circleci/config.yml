@@ -3,52 +3,83 @@
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
 version: 2.1
-jobs:
-  build:
+
+executors:
+
+  python:
+    parameters:
+      tag:
+        type: string
+        default: latest  
     docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.7.2
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
+      - image: circleci/python:<< parameters.tag >>
       - image: circleci/buildpack-deps:stretch
-
     working_directory: ~/repo
 
+commands:
+
+  docker-prereqs:
+    description: Set up docker prerequisite requirement
     steps:
-      - checkout
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends
+          libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev
+          libswscale-dev libswresample-dev libavfilter-dev
 
-      - run:
-          name: setup docker prereqs
-          command: sudo apt-get update && sudo apt-get install -y --no-install-recommends
-            libudev-dev libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev
-            libswscale-dev libswresample-dev libavfilter-dev
-
-      # Download and cache dependencies, we don't use fallback cache
+  install-requirments:
+    description: Set up venv and install requirements python packages with cache support
+    parameters:
+      all:
+        description: pip install -r requirements_all.txt
+        type: boolean
+        default: false
+      test:
+        description: pip install -r requirements_test.txt
+        type: boolean
+        default: false
+      test_all:
+        description: pip install -r requirements_test_all.txt
+        type: boolean
+        default: false
+    steps:
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "requirements_all.txt" }}-{{ checksum "requirements_test.txt" }}
-
+            - v1-dependencies-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
       - run:
           name: install dependencies
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -q --progress-bar off -r requirements_all.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
-
+            <<# parameters.all >>pip install -q --progress-bar off -r requirements_all.txt -c homeassistant/package_constraints.txt<</ parameters.all>>
+            <<# parameters.test >>pip install -q --progress-bar off -r requirements_test.txt -c homeassistant/package_constraints.txt<</ parameters.test>>
+            <<# parameters.test_all >>pip install -q --progress-bar off -r requirements_test_all.txt -c homeassistant/package_constraints.txt<</ parameters.test_all>>
       - save_cache:
           paths:
             - ./venv
-          key: v1-dependencies-{{ checksum "requirements_all.txt" }}-{{ checksum "requirements_test.txt" }}
+          key: v1-dependencies-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
 
+  install:
+    description: Install Home Assistant
+    steps:
       - run:
           name: install
           command: |
             . venv/bin/activate
             pip install --progress-bar off -e .
+
+jobs:
+
+  lint:
+    executor:
+      name: python
+      tag: "3.5.3"
+
+    steps:
+      - checkout
+      - docker-prereqs
+      - install-requirments:
+          all: true
+          test: true
+      - install
 
       - run:
           name: run lint
@@ -58,12 +89,29 @@ jobs:
             flake8
             pylint homeassistant
 
+  test:
+    parameters:
+      python:
+        type: string
+    executor:
+      name: python
+      tag: << parameters.python >>
+    parallelism: 4
+
+    steps:
+      - checkout
+      - docker-prereqs
+      - install-requirments:
+          test_all: true
+      - install
+
       - run:
           name: run tests
           command: |
             . venv/bin/activate
+            TESTFILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
             if [ -z "$CODE_COVERAGE" ]; then CC_SWITCH=""; else CC_SWITCH="--cov --cov-report html:htmlcov"; fi
-            pytest --timeout=9 --duration=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH
+            pytest --timeout=9 --duration=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH -- ${TESTFILES}
             script/check_dirty
           when: always
 
@@ -77,3 +125,22 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - lint
+      - test:
+          name: test 3.5.3
+          python: "3.5.3"
+      - test:
+          name: test 3.6
+          python: "3.6"
+      - test:
+          name: test 3.7
+          python: "3.7"
+      # CircleCI does not allow failure yet
+      # - test:
+      #     name: test 3.8
+      #     python: "3.8"
