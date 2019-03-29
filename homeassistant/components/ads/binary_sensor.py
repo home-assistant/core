@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from . import CONF_ADS_VAR, DATA_ADS
 

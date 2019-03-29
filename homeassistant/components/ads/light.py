@@ -9,7 +9,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from . import CONF_ADS_VAR, CONF_ADS_VAR_BRIGHTNESS, DATA_ADS
 
