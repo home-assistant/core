@@ -6,13 +6,12 @@ https://home-assistant.io/components/cover.somfy_mylink/
 """
 import logging
 
-from homeassistant.components.cover import (ATTR_POSITION, SUPPORT_CLOSE,
-                                            SUPPORT_OPEN, SUPPORT_SET_POSITION,
-                                            SUPPORT_STOP, CoverDevice)
-from . import DATA_SOMFY_MYLINK, CONF_DEFAULT_REVERSE
-from homeassistant.helpers.event import async_track_time_change
+from homeassistant.components.cover import (
+    SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP, CoverDevice)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
+
+from . import CONF_DEFAULT_REVERSE, DATA_SOMFY_MYLINK
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['somfy_mylink']
@@ -68,7 +67,7 @@ class SomfyShade(CoverDevice, RestoreEntity):
     def name(self):
         """Return the name of the cover."""
         return self._name
-    
+
     @property
     def is_closed(self):
         """Return if the cover is closed."""
