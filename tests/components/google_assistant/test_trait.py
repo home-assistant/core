@@ -1066,8 +1066,7 @@ async def test_openclose_cover(hass):
     assert trt.sync_attributes() == {}
 
     assert trt.query_attributes() == {
-        'openPercent': 75,
-        'online': True
+        'openPercent': 75
     }
 
     calls = async_mock_service(
