@@ -114,7 +114,7 @@ async def get_calendar_info(hass: HomeAssistantType,
                             connection: websocket_api.ActiveConnection,
                             msg: Dict):
     """Handle calendar request."""
-    component = hass.data.get(DOMAIN, {})
+    component = hass.data[DOMAIN]
     calendar = component.get_entity(msg['entity_id'])
 
     if calendar is None:
