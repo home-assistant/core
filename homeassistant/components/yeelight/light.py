@@ -124,6 +124,7 @@ def _cmd(func):
 
     return _wrap
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
     from yeelight.enums import PowerMode, BulbType
@@ -142,6 +143,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
 
     lights = []
+
     def _klass_setup_helper(klass):
         lights.append(klass(device, custom_effects=custom_effects))
 
@@ -631,6 +633,7 @@ class YeelightGenericLight(Light):
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to set effect: %s", ex)
 
+
 class YeelightColorLight(YeelightGenericLight):
     """Representation of a Color Yeelight light."""
 
@@ -638,6 +641,7 @@ class YeelightColorLight(YeelightGenericLight):
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_YEELIGHT_RGB
+
 
 class YeelightWhiteTempLight(YeelightGenericLight):
     """Representation of a Color Yeelight light."""
