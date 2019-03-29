@@ -107,7 +107,8 @@ class HassIOIngress(HomeAssistantView):
         source_header = _init_header(request, True)
 
         async with client.request(
-                request.method, url, headers=source_header, data=data
+                request.method, url, headers=source_header,
+                params=request.query, data=data
         ) as result:
             headers = result.headers.copy()
 
