@@ -9,6 +9,7 @@ from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from . import CONF_ADS_VAR, DATA_ADS
 
