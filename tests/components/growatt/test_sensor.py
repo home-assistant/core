@@ -6,7 +6,7 @@ import pytest
 import requests_mock
 import growatt
 
-import homeassistant.components.sensor.growatt as victim
+import homeassistant.components.growatt.sensor as victim
 
 
 @mock.patch("growatt.GrowattApi.login", return_value={"userId": "1"})
