@@ -1,24 +1,26 @@
 """Template helper methods for rendering strings with Home Assistant data."""
-from datetime import datetime
+import base64
 import json
 import logging
 import math
 import random
-import base64
 import re
+from contextlib import AbstractContextManager
+from datetime import datetime
+from typing import Callable
 
 import jinja2
 from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 
-from homeassistant.const import (
-    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
-    STATE_UNKNOWN)
-from homeassistant.core import State, valid_entity_id
+from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE,
+                                 ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
+from homeassistant.core import State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.entityfilter import FilterBuilder
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
@@ -29,12 +31,48 @@ _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-_RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
-_RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
-    r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
-)
-_RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
+_ENTITY_COLLECT = None
+
+# pylint: disable=invalid-name
+
+
+class async_generate_filter(AbstractContextManager, FilterBuilder):
+    """
+    Filter function generator for entities touched in template.
+
+    Returns Generate a filter function that returns true for any entity IDs
+    passed to it that are used to calculate results of the template.
+
+    Usage:
+      with async_generate_filter() as entities:
+        template1.async_render(variables)
+        template2.async_render(variables)
+    """
+
+    def __init__(self):
+        """Initialise."""
+        super().__init__()
+        self._filter = None
+
+    def __enter__(self) -> Callable[[str], bool]:
+        """Return `self` upon entering the runtime context."""
+        global _ENTITY_COLLECT
+
+        assert _ENTITY_COLLECT is None
+        _ENTITY_COLLECT = self
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Raise any exception triggered within the runtime context."""
+        global _ENTITY_COLLECT
+        self._filter = self.build()
+        _ENTITY_COLLECT = None
+
+    def __call__(self, entity_id: str) -> bool:
+        """Invoke the filter."""
+        if self._filter is None:
+            return super().__call__(entity_id)
+        return self._filter
 
 
 @bind_hass
@@ -61,34 +99,6 @@ def render_complex(value, variables=None):
     return value.async_render(variables)
 
 
-def extract_entities(template, variables=None):
-    """Extract all entities for state_changed listener from template string."""
-    if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
-        return []
-
-    if _RE_NONE_ENTITIES.search(template):
-        return MATCH_ALL
-
-    extraction = _RE_GET_ENTITIES.findall(template)
-    extraction_final = []
-
-    for result in extraction:
-        if result[0] == 'trigger.entity_id' and 'trigger' in variables and \
-           'entity_id' in variables['trigger']:
-            extraction_final.append(variables['trigger']['entity_id'])
-        elif result[0]:
-            extraction_final.append(result[0])
-
-        if variables and result[1] in variables and \
-           isinstance(variables[result[1]], str) and \
-           valid_entity_id(variables[result[1]]):
-            extraction_final.append(variables[result[1]])
-
-    if extraction_final:
-        return list(set(extraction_final))
-    return MATCH_ALL
-
-
 class Template:
     """Class to hold a template and manage caching and rendering."""
 
@@ -112,9 +122,17 @@ class Template:
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
+    @callback
     def extract_entities(self, variables=None):
-        """Extract all entities for state_changed listener."""
-        return extract_entities(self.template, variables)
+        """Deprecated. Will go soon."""
+        with async_generate_filter() as entities:
+            try:
+                self.async_render(variables)
+            except TemplateError:
+                pass
+            if not entities.include_entities:
+                return '*'
+            return entities.include_entities
 
     def render(self, variables: TemplateVarsType = None, **kwargs):
         """Render given template."""
@@ -124,6 +142,7 @@ class Template:
         return run_callback_threadsafe(
             self.hass.loop, self.async_render, kwargs).result()
 
+    @callback
     def async_render(self, variables: TemplateVarsType = None,
                      **kwargs) -> str:
         """Render given template.
@@ -150,6 +169,7 @@ class Template:
             self.hass.loop, self.async_render_with_possible_json_value, value,
             error_value).result()
 
+    @callback
     def async_render_with_possible_json_value(self, value,
                                               error_value=_SENTINEL,
                                               variables=None):
@@ -190,7 +210,7 @@ class Template:
         global_vars = ENV.make_globals({
             'closest': template_methods.closest,
             'distance': template_methods.distance,
-            'is_state': self.hass.states.is_state,
+            'is_state': template_methods.is_state,
             'is_state_attr': template_methods.is_state_attr,
             'state_attr': template_methods.state_attr,
             'states': AllStates(self.hass),
@@ -207,6 +227,10 @@ class Template:
                 self.template == other.template and
                 self.hass == other.hass)
 
+    def __hash__(self):
+        """Hash code for template."""
+        return hash(self.template)
+
 
 class AllStates:
     """Class to expose all HA states as attributes."""
@@ -221,6 +245,8 @@ class AllStates:
 
     def __iter__(self):
         """Return all states."""
+        if _ENTITY_COLLECT is not None:
+            _ENTITY_COLLECT.include_all = True
         return iter(
             _wrap_state(state) for state in
             sorted(self._hass.states.async_all(),
@@ -232,7 +258,7 @@ class AllStates:
 
     def __call__(self, entity_id):
         """Return the states."""
-        state = self._hass.states.get(entity_id)
+        state = _get_state(self._hass, entity_id)
         return STATE_UNKNOWN if state is None else state.state
 
 
@@ -246,11 +272,13 @@ class DomainStates:
 
     def __getattr__(self, name):
         """Return the states."""
-        return _wrap_state(
-            self._hass.states.get('{}.{}'.format(self._domain, name)))
+        return _get_state(
+            self._hass, '{}.{}'.format(self._domain, name))
 
     def __iter__(self):
         """Return the iteration over all the states."""
+        if _ENTITY_COLLECT is not None:
+            _ENTITY_COLLECT.include_domains.add(self._domain)
         return iter(sorted(
             (_wrap_state(state) for state in self._hass.states.async_all()
              if state.domain == self._domain),
@@ -270,10 +298,16 @@ class TemplateState(State):
         """Initialize template state."""
         self._state = state
 
+    def _access_state(self):
+        state = object.__getattribute__(self, '_state')
+        if _ENTITY_COLLECT is not None:
+            _ENTITY_COLLECT.include_entities.add(state.entity_id)
+        return state
+
     @property
     def state_with_unit(self):
         """Return the state concatenated with the unit if available."""
-        state = object.__getattribute__(self, '_state')
+        state = self._access_state()
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if unit is None:
             return state.state
@@ -283,17 +317,26 @@ class TemplateState(State):
         """Return an attribute of the state."""
         if name in TemplateState.__dict__:
             return object.__getattribute__(self, name)
-        return getattr(object.__getattribute__(self, '_state'), name)
+        state = self._access_state()
+        return getattr(state, name)
 
     def __repr__(self):
         """Representation of Template State."""
-        rep = object.__getattribute__(self, '_state').__repr__()
+        state = self._access_state()
+        rep = state.__repr__()
         return '<template ' + rep[1:]
 
 
 def _wrap_state(state):
     """Wrap a state."""
     return None if state is None else TemplateState(state)
+
+
+def _get_state(hass, entity_id):
+    state = hass.states.get(entity_id)
+    if _ENTITY_COLLECT is not None:
+        _ENTITY_COLLECT.include_entities.add(entity_id)
+    return _wrap_state(state)
 
 
 class TemplateMethods:
@@ -361,7 +404,7 @@ class TemplateMethods:
 
             group = self._hass.components.group
 
-            states = [self._hass.states.get(entity_id) for entity_id
+            states = [_get_state(self._hass, entity_id) for entity_id
                       in group.expand_entity_ids([gr_entity_id])]
 
         return _wrap_state(loc_helper.closest(latitude, longitude, states))
@@ -421,14 +464,19 @@ class TemplateMethods:
         return self._hass.config.units.length(
             loc_util.distance(*locations[0] + locations[1]), 'm')
 
+    def is_state(self, entity_id: str, state: State) -> bool:
+        """Test if a state is a specific value."""
+        state_obj = _get_state(self._hass, entity_id)
+        return state_obj is not None and state_obj.state == state
+
     def is_state_attr(self, entity_id, name, value):
-        """Test if a state is a specific attribute."""
+        """Test if a state's attribute is a specific value."""
         state_attr = self.state_attr(entity_id, name)
         return state_attr is not None and state_attr == value
 
     def state_attr(self, entity_id, name):
         """Get a specific attribute from a state."""
-        state_obj = self._hass.states.get(entity_id)
+        state_obj = _get_state(self._hass, entity_id)
         if state_obj is not None:
             return state_obj.attributes.get(name)
         return None
@@ -438,7 +486,7 @@ class TemplateMethods:
         if isinstance(entity_id_or_state, State):
             return entity_id_or_state
         if isinstance(entity_id_or_state, str):
-            return self._hass.states.get(entity_id_or_state)
+            return _get_state(self._hass, entity_id_or_state)
         return None
 
 
