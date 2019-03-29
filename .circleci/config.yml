@@ -67,7 +67,7 @@ jobs:
   lint:
     executor:
       name: python
-      tag: "3.7.2"
+      tag: "3.5.3"
 
     steps:
       - checkout
@@ -86,9 +86,12 @@ jobs:
             pylint homeassistant
 
   test:
+    parameters:
+      python:
+        type: string
     executor:
       name: python
-      tag: "3.7.2"
+      tag: << parameters.python >>
     parallelism: 4
 
     steps:
@@ -124,4 +127,16 @@ workflows:
   build:
     jobs:
       - lint
-      - test
+      - test:
+          name: test 3.5.3
+          python: "3.5.3"
+      - test:
+          name: test 3.6
+          python: "3.6"
+      - test:
+          name: test 3.7
+          python: "3.7"
+      # CircleCI does not allow failure yet
+      # - test:
+      #     name: test 3.8
+      #     python: "3.8"
