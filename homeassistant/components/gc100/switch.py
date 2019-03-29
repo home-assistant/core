@@ -6,11 +6,12 @@ https://home-assistant.io/components/switch.gc100/
 """
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.gc100 import DATA_GC100, CONF_PORTS
-from homeassistant.components.switch import (PLATFORM_SCHEMA)
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
+
+from . import CONF_PORTS, DATA_GC100
 
 DEPENDENCIES = ['gc100']
 

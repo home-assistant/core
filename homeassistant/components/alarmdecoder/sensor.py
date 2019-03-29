@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.alarmdecoder import (SIGNAL_PANEL_MESSAGE)
+
+from . import SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 

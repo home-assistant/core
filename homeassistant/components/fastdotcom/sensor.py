@@ -1,11 +1,11 @@
 """Support for Fast.com internet speed testing sensor."""
 import logging
 
-from homeassistant.components.fastdotcom import DOMAIN as FASTDOTCOM_DOMAIN, \
-    DATA_UPDATED
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from . import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
 
 DEPENDENCIES = ['fastdotcom']
 
