@@ -9,7 +9,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['proxmoxer==1.0.3']
@@ -87,7 +86,6 @@ async def setup_proxmox(hass, config):
 
     async def async_update_proxmox(now):
         await update_data(hass, conf)
-        async_dispatcher_send(hass, SIGNAL_PROXMOX_UPDATED, None)
 
     async_track_time_interval(hass, async_update_proxmox, UPDATE_INTERVAL)
 
@@ -101,24 +99,25 @@ async def update_data(hass, conf):
     node_dict = {}
     for node in nodes:
         name = node['node']
-        if not bool(conf_nodes) or name in conf_nodes:
-            node_dict[name] = format_values(node)
-            cts = proxmox.nodes(name).lxc.get()
-            for item in cts:
-                vm_id = item['vmid']
-                if conf_vms and int(vm_id) not in conf_vms:
-                    continue
-                item['node'] = name
-                key = "{} - {}".format(item['name'], vm_id)
-                node_dict[key] = format_values(item)
-            vms = proxmox.nodes(name).qemu.get()
-            for item in vms:
-                vm_id = item['vmid']
-                if conf_vms and int(vm_id) not in conf_vms:
-                    continue
-                item['node'] = name
-                key = "{} - {}".format(item['name'], vm_id)
-                node_dict[key] = format_values(item)
+        if conf_nodes and name not in conf_nodes:
+            continue
+        node_dict[name] = format_values(node)
+        cts = proxmox.nodes(name).lxc.get()
+        for item in cts:
+            vm_id = item['vmid']
+            if conf_vms and int(vm_id) not in conf_vms:
+                continue
+            item['node'] = name
+            key = "{} - {}".format(item['name'], vm_id)
+            node_dict[key] = format_values(item)
+        vms = proxmox.nodes(name).qemu.get()
+        for item in vms:
+            vm_id = item['vmid']
+            if conf_vms and int(vm_id) not in conf_vms:
+                continue
+            item['node'] = name
+            key = "{} - {}".format(item['name'], vm_id)
+            node_dict[key] = format_values(item)
     hass.data[DATA_PROXMOX_NODES] = node_dict
 
 
