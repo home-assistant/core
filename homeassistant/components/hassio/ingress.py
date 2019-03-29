@@ -18,7 +18,7 @@ from .const import X_HASSIO
 
 
 @callback
-def async_setup_auth(hass, host):
+def async_setup_ingress(hass, host):
     """Auth setup."""
     hassio_ingress = HassIOIngress(hass, host)
     hass.http.register_view(hassio_ingress)
