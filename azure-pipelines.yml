@@ -15,7 +15,7 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.5.3'
+      versionSpec: '3.5'
       architecture: 'x64'
 
   - script: python -m pip install --upgrade pip && pip install -r requirements_all.txt -r requirements_test.txt -c homeassistant/package_constraints.txt
@@ -34,7 +34,7 @@ jobs:
   strategy:
     matrix:
       Python35:
-        python.version: '3.5.3'
+        python.version: '3.5'
       Python36:
         python.version: '3.6'
       Python37:
