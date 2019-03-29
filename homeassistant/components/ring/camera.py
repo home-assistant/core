@@ -166,11 +166,11 @@ class RingCam(Camera):
         video_status = last_event['recording']['status']
 
         if video_status == 'ready' and \
-            (self._last_video_id != last_recording_id or \
-            self._utcnow >= self._expires_at):
+            (self._last_video_id != last_recording_id or
+             self._utcnow >= self._expires_at):
 
             video_url = self._camera.recording_url(last_recording_id)
-            if video_url != False:
+            if video_url:
                 _LOGGER.info("Ring DoorBell properties refreshed")
 
                 # update attributes if new video or if URL has expired
