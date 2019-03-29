@@ -54,8 +54,8 @@ async def test_async_setup_entry_loads_platforms(
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        forward_mock.assert_called_once()
-        controller.connect.assert_called_once()
+        assert forward_mock.call_count == 1
+        assert controller.connect.call_count == 1
         controller.disconnect.assert_not_called()
     assert hass.data[DOMAIN] == {
         DATA_CONTROLLER: controller,
@@ -72,8 +72,8 @@ async def test_async_setup_entry_connect_failure(
         controller.connect.side_effect = error
         assert not await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
-        controller.connect.assert_called_once()
-        controller.disconnect.assert_called_once()
+        assert controller.connect.call_count == 1
+        assert controller.disconnect.call_count == 1
         controller.connect.reset_mock()
         controller.disconnect.reset_mock()
 
@@ -85,5 +85,5 @@ async def test_unload_entry(hass, config_entry, controller):
                       return_value=True) as unload:
         assert await async_unload_entry(hass, config_entry)
         await hass.async_block_till_done()
-        controller.disconnect.assert_called_once()
-        unload.assert_called_once()
+        assert controller.disconnect.call_count == 1
+        assert unload.call_count == 1

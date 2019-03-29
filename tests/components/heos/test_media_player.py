@@ -123,37 +123,37 @@ async def test_services(hass, config_entry, players):
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, SERVICE_CLEAR_PLAYLIST,
         {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    player.clear_queue.assert_called_once()
+    assert player.clear_queue.call_count == 1
 
     player.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PAUSE,
         {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    player.pause.assert_called_once()
+    assert player.pause.call_count == 1
 
     player.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PLAY,
         {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    player.play.assert_called_once()
+    assert player.play.call_count == 1
 
     player.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK,
         {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    player.play_previous.assert_called_once()
+    assert player.play_previous.call_count == 1
 
     player.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_NEXT_TRACK,
         {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    player.play_next.assert_called_once()
+    assert player.play_next.call_count == 1
 
     player.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_STOP,
         {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    player.stop.assert_called_once()
+    assert player.stop.call_count == 1
 
     player.reset_mock()
     await hass.services.async_call(
