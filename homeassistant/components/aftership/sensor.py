@@ -147,13 +147,11 @@ class AfterShipSensor(Entity):
         await self.aftership.get_trackings()
 
         if not self.aftership.meta:
-            _LOGGER.error('Unknown errors when querying')
+            _LOGGER.error("Unknown errors when querying")
             return
         if self.aftership.meta['code'] != 200:
             _LOGGER.error(
-                'Errors when querying AfterShip. %s',
-                str(self.aftership.meta)
-            )
+                "Errors when querying AfterShip. %s", str(self.aftership.meta))
             return
 
         status_to_ignore = {'delivered'}
@@ -184,8 +182,7 @@ class AfterShipSensor(Entity):
             if status not in status_to_ignore:
                 not_delivered_count += 1
             else:
-                _LOGGER.debug("Ignoring %s as it has status: %s",
-                              name, status)
+                _LOGGER.debug("Ignoring %s as it has status: %s", name, status)
 
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
