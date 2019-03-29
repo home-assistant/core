@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from . import CONF_ADS_VAR, DATA_ADS
 
@@ -56,7 +55,7 @@ class AdsBinarySensor(BinarySensorDevice):
             """Handle device notifications."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._state = value
-            run_coroutine_threadsafe(async_event_set(), self.hass.loop)
+            asyncio.run_coroutine_threadsafe(async_event_set(), self.hass.loop)
             self.schedule_update_ha_state()
 
         async def async_event_set():
@@ -69,7 +68,7 @@ class AdsBinarySensor(BinarySensorDevice):
             self._ads_hub.add_device_notification,
             self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
         try:
-            with async_timeout.timeout(30):
+            with async_timeout.timeout(10):
                 await self._event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug('Variable %s: Timeout during first update',

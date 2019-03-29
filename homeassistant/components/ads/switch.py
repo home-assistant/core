@@ -9,7 +9,6 @@ from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from . import CONF_ADS_VAR, DATA_ADS
 
@@ -53,7 +52,7 @@ class AdsSwitch(ToggleEntity):
             """Handle device notification."""
             _LOGGER.debug("Variable %s changed its value to %d", name, value)
             self._on_state = value
-            run_coroutine_threadsafe(async_event_set(), self.hass.loop)
+            asyncio.run_coroutine_threadsafe(async_event_set(), self.hass.loop)
             self.schedule_update_ha_state()
 
         async def async_event_set():
@@ -66,7 +65,7 @@ class AdsSwitch(ToggleEntity):
             self._ads_hub.add_device_notification,
             self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
         try:
-            with async_timeout.timeout(30):
+            with async_timeout.timeout(10):
                 await self._event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug('Variable %s: Timeout during first update',
