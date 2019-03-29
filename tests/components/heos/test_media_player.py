@@ -17,15 +17,13 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP, SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, STATE_IDLE, STATE_PLAYING,
     STATE_UNAVAILABLE)
+from homeassistant.setup import async_setup_component
 
 
-async def setup_platform(hass, config_entry, players):
+async def setup_platform(hass, config_entry, config):
     """Set up the media player platform for testing."""
-    hass.config.components.add(DOMAIN)
     config_entry.add_to_hass(hass)
-    hass.data[DOMAIN] = {MEDIA_PLAYER_DOMAIN: players}
-    await hass.config_entries.async_forward_entry_setup(
-        config_entry, MEDIA_PLAYER_DOMAIN)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
 
@@ -34,9 +32,9 @@ async def test_async_setup_platform():
     await media_player.async_setup_platform(None, None, None)
 
 
-async def test_state_attributes(hass, config_entry, players):
+async def test_state_attributes(hass, config_entry, config, controller):
     """Tests the state attributes."""
-    await setup_platform(hass, config_entry, players)
+    await setup_platform(hass, config_entry, config)
     state = hass.states.get('media_player.test_player')
     assert state.state == STATE_IDLE
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.25
@@ -54,18 +52,17 @@ async def test_state_attributes(hass, config_entry, players):
     assert state.attributes['media_source_id'] == 1
     assert state.attributes['media_station'] == "Station Name"
     assert state.attributes['media_type'] == "Station"
-    assert state.attributes['player_ip_address'] == "127.0.0.1"
-    assert state.attributes['player_network_connection_type'] == "wired"
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Player"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
         SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
         SUPPORT_PREVIOUS_TRACK | media_player.BASE_SUPPORTED_FEATURES
 
 
-async def test_updates_start_from_signals(hass, config_entry, players):
+async def test_updates_start_from_signals(
+        hass, config_entry, config, controller):
     """Tests dispatched signals update player."""
-    await setup_platform(hass, config_entry, players)
-    player = players[1]
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
 
     # Test player does not update for other players
     player.state = const.PLAY_STATE_PLAY
@@ -114,12 +111,11 @@ async def test_updates_start_from_signals(hass, config_entry, players):
     assert state.state == STATE_PLAYING
 
 
-async def test_services(hass, config_entry, players):
+async def test_services(hass, config_entry, config, controller):
     """Tests player commands."""
-    await setup_platform(hass, config_entry, players)
-    player = players[1]
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
 
-    player.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, SERVICE_CLEAR_PLAYLIST,
         {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
@@ -177,11 +173,8 @@ async def test_services(hass, config_entry, players):
     player.set_volume.assert_called_once_with(100)
 
 
-async def test_unload_config_entry(hass, config_entry, players):
+async def test_unload_config_entry(hass, config_entry, config, controller):
     """Test the player is removed when the config entry is unloaded."""
-    await setup_platform(hass, config_entry, players)
-    # Act
-    await hass.config_entries.async_forward_entry_unload(
-        config_entry, MEDIA_PLAYER_DOMAIN)
-    # Assert
+    await setup_platform(hass, config_entry, config)
+    await config_entry.async_unload(hass)
     assert not hass.states.get('media_player.test_player')

@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
-    """Create config entry from config if not already created."""
+    """Set up the HEOS component."""
     host = config[DOMAIN][CONF_HOST]
     entries = hass.config_entries.async_entries(DOMAIN)
     if not entries:
@@ -49,27 +49,35 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents the HEOS controller."""
     from pyheos import Heos
+    host = entry.data[CONF_HOST]
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes
-    controller = Heos(entry.data[CONF_HOST], all_progress_events=False)
-
+    controller = Heos(host, all_progress_events=False)
     try:
         await controller.connect(auto_reconnect=True)
-
-        async def disconnect_controller(event):
-            await controller.disconnect()
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                   disconnect_controller)
-        hass.data[DOMAIN] = {
-            DATA_CONTROLLER: controller,
-            MEDIA_PLAYER_DOMAIN: await controller.get_players()
-        }
     # Auto reconnect only operates if initial connection was successful.
-    except (asyncio.TimeoutError, ConnectionError):
+    except (asyncio.TimeoutError, ConnectionError) as error:
         await controller.disconnect()
-        _LOGGER.exception("Error connecting and retrieving players")
+        _LOGGER.exception("Unable to connect to controller %s: %s",
+                          host, type(error).__name__)
         return False
 
+    async def disconnect_controller(event):
+        await controller.disconnect()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
+
+    try:
+        players = await controller.get_players()
+    except (asyncio.TimeoutError, ConnectionError) as error:
+        await controller.disconnect()
+        _LOGGER.exception("Unable to retrieve players: %s",
+                          host, type(error).__name__)
+        return False
+
+    hass.data[DOMAIN] = {
+        DATA_CONTROLLER: controller,
+        MEDIA_PLAYER_DOMAIN: players
+    }
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, MEDIA_PLAYER_DOMAIN))
     return True

@@ -1,6 +1,7 @@
 """Denon HEOS Media Player."""
 from functools import reduce
 from operator import ior
+
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK,
@@ -36,10 +37,23 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     def __init__(self, player):
         """Initialize."""
+        from pyheos import const
         self._media_position_updated_at = None
         self._player = player
         self._signals = []
         self._supported_features = BASE_SUPPORTED_FEATURES
+        self._play_state_to_state = {
+            const.PLAY_STATE_PLAY: STATE_PLAYING,
+            const.PLAY_STATE_STOP: STATE_IDLE,
+            const.PLAY_STATE_PAUSE: STATE_PAUSED
+        }
+        self._control_to_support = {
+            const.CONTROL_PLAY: SUPPORT_PLAY,
+            const.CONTROL_PAUSE: SUPPORT_PAUSE,
+            const.CONTROL_STOP: SUPPORT_STOP,
+            const.CONTROL_PLAY_PREVIOUS: SUPPORT_PREVIOUS_TRACK,
+            const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
+        }
 
     async def _controller_event(self, event):
         """Handle controller event."""
@@ -111,16 +125,9 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def async_update(self):
         """Update supported features of the player."""
-        from pyheos import const
-        control_to_support = {
-            const.CONTROL_PLAY: SUPPORT_PLAY,
-            const.CONTROL_PAUSE: SUPPORT_PAUSE,
-            const.CONTROL_STOP: SUPPORT_STOP,
-            const.CONTROL_PLAY_PREVIOUS: SUPPORT_PREVIOUS_TRACK,
-            const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
-        }
         controls = self._player.now_playing_media.supported_controls
-        current_support = [control_to_support[control] for control in controls]
+        current_support = [self._control_to_support[control]
+                           for control in controls]
         self._supported_features = reduce(ior, current_support,
                                           BASE_SUPPORTED_FEATURES)
 
@@ -156,9 +163,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
             'media_queue_id': self._player.now_playing_media.queue_id,
             'media_source_id': self._player.now_playing_media.source_id,
             'media_station': self._player.now_playing_media.station,
-            'media_type': self._player.now_playing_media.type,
-            'player_ip_address': self._player.ip_address,
-            'player_network_connection_type': self._player.network
+            'media_type': self._player.now_playing_media.type
         }
 
     @property
@@ -238,13 +243,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
     @property
     def state(self) -> str:
         """State of the player."""
-        from pyheos import const
-        play_state_to_state = {
-            const.PLAY_STATE_PLAY: STATE_PLAYING,
-            const.PLAY_STATE_STOP: STATE_IDLE,
-            const.PLAY_STATE_PAUSE: STATE_PAUSED
-        }
-        return play_state_to_state[self._player.state]
+        return self._play_state_to_state[self._player.state]
 
     @property
     def supported_features(self) -> int:
