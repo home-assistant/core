@@ -93,7 +93,7 @@ from homeassistant.helpers.entity import (
     Entity, async_generate_entity_id)
 from homeassistant.util import Throttle
 from homeassistant.exceptions import (
-    ConfigEntryNotReady, PlatformNotReady, HomeAssistantError)
+    ConfigEntryNotReady, PlatformNotReady)
 
 REQUIREMENTS = ['pynws==0.5']
 
