@@ -1,11 +1,17 @@
 """Hass.io Add-on ingress service."""
 import asyncio
-from typing import Union
+from ipaddress import ip_address
+import os
+from typing import Dict, Union
 
 import aiohttp
 from aiohttp import web
+from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
+from multidict import CIMultiDict
 
 from homeassistant.components.http import HomeAssistantView
+
+from .const import X_HASSIO
 
 
 class HassIOIngressView(HomeAssistantView):
@@ -62,9 +68,11 @@ class HassIOIngressView(HomeAssistantView):
         ws_server = web.WebSocketResponse()
         await ws_server.prepare(request)
 
-        # Start proxy
         url = self._create_url(addon, path)
-        async with client.ws_connect(url) as ws_client:
+        source_header = _init_header(request, False)
+
+        # Start proxy
+        async with client.ws_connect(url, headers=source_header) as ws_client:
             # Proxy requests
             await asyncio.wait(
                 [
@@ -84,16 +92,16 @@ class HassIOIngressView(HomeAssistantView):
 
         url = self._create_url(addon, path)
         data = request.read()
-        header = request.headers.copy()
+        source_header = _init_header(request, True)
 
         async with client.request(
-                request.method, url, headers=header, data=data
+                request.method, url, headers=source_header, data=data
         ) as result:
             headers = result.headers.copy()
 
             # Simple request
-            if "content-lenght" in headers:
-                del headers['content-length']
+            if "content-length" in headers:
+                del headers["content-length"]
 
                 # Return Response
                 body = await result.read()
@@ -104,7 +112,8 @@ class HassIOIngressView(HomeAssistantView):
                 )
 
             # Stream response
-            response = web.StreamResponse(status=result.status)
+            response = web.StreamResponse(
+                status=result.status, headers=headers)
             response.content_type = result.content_type
 
             try:
@@ -116,6 +125,42 @@ class HassIOIngressView(HomeAssistantView):
                 pass
 
             return response
+
+
+def _init_header(
+        request: web.Request, use_source: bool
+) -> Union[CIMultiDict, Dict[str, str]]:
+    """Create initial header."""
+    if use_source:
+        headers = request.headers.copy()
+    else:
+        headers = {}
+
+    # Inject token / cleanup later on Supervisor
+    headers[X_HASSIO] = os.environ.get('HASSIO_TOKEN', "")
+
+    # Set X-Forwarded-For
+    forward_for = request.headers.get(X_FORWARDED_FOR)
+    connected_ip = ip_address(request.transport.get_extra_info('peername')[0])
+    if forward_for:
+        forward_for = "{}, {!s}".format(forward_for, connected_ip)
+    else:
+        forward_for = "{!s}".format(connected_ip)
+    headers[X_FORWARDED_FOR] = forward_for
+
+    # Set X-Forwarded-Host
+    forward_host = request.headers.get(X_FORWARDED_HOST)
+    if not forward_host:
+        forward_host = request.host
+    headers[X_FORWARDED_HOST] = forward_host
+
+    # Set X-Forwarded-Host
+    forward_proto = request.headers.get(X_FORWARDED_PROTO)
+    if not forward_proto:
+        forwad_proto = request.url.schema
+    headers[X_FORWARDED_PROTO] = forward_proto
+
+    return headers
 
 
 async def _websocket_forward(ws_from, ws_to):

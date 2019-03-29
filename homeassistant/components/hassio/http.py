@@ -87,7 +87,7 @@ class HassIOView(HomeAssistantView):
             )
 
             # Simple request
-            if "content-lenght" in client.headers:
+            if "content-length" in client.headers:
                 # Return Response
                 body = await client.read()
                 return web.Response(
