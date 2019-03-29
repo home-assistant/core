@@ -194,6 +194,9 @@ av==6.1.2
 # homeassistant.components.axis
 axis==19
 
+# homeassistant.components.baidu.tts
+baidu-aip==1.6.6
+
 # homeassistant.components.modem_callerid.sensor
 basicmodem==0.7
 
@@ -233,6 +236,7 @@ blockchain==1.4.4
 # bme680==1.0.5
 
 # homeassistant.components.route53
+# homeassistant.components.amazon_polly.tts
 # homeassistant.components.aws_lambda.notify
 # homeassistant.components.aws_sns.notify
 # homeassistant.components.aws_sqs.notify
@@ -986,6 +990,9 @@ pycomfoconnect==0.3
 
 # homeassistant.components.coolmaster.climate
 pycoolmasternet==0.0.4
+
+# homeassistant.components.microsoft.tts
+pycsspeechtts==1.0.2
 
 # homeassistant.components.cups.sensor
 # pycups==1.9.73
