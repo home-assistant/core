@@ -6,7 +6,7 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+# from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts, get_master_gateway
@@ -65,6 +65,9 @@ async def async_setup_entry(hass, config_entry):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
+    if not config_entry.options:
+        await async_populate_options(hass, config_entry)
+
     gateway = DeconzGateway(hass, config_entry)
 
     if not await gateway.async_setup():
@@ -72,14 +75,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][gateway.bridgeid] = gateway
 
-    device_registry = await \
-        hass.helpers.device_registry.async_get_registry()
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, gateway.api.config.mac)},
-        identifiers={(DOMAIN, gateway.api.config.bridgeid)},
-        manufacturer='Dresden Elektronik', model=gateway.api.config.modelid,
-        name=gateway.api.config.name, sw_version=gateway.api.config.swversion)
+    await gateway.async_update_device_registry()
 
     async def async_configure(call):
         """Set attribute of device in deCONZ.
@@ -164,14 +160,22 @@ async def async_unload_entry(hass, config_entry):
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
         hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
+    elif gateway.master:
+        await async_populate_options(hass, config_entry)
+        new_master_gateway = next(iter(hass.data[DOMAIN].values()))
+        await async_populate_options(hass, new_master_gateway.config_entry)
 
     return await gateway.async_reset()
 
 
 @callback
 async def async_populate_options(hass, config_entry):
-    """Populate default options for gateway."""
-    master = bool(get_master_gateway(hass))
+    """Populate default options for gateway.
+
+    Called by setup_entry and unload_entry.
+    Makes sure there is always one master available.
+    """
+    master = not get_master_gateway(hass)
 
     options = {
         'master': master

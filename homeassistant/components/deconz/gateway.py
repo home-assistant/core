@@ -6,6 +6,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_ID
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.util import slugify
@@ -55,6 +56,20 @@ class DeconzGateway:
     def allow_deconz_groups(self):
         """Allow loading deCONZ groups from gateway."""
         return self.config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True)
+
+    async def async_update_device_registry(self):
+        """Update device registry."""
+        device_registry = await \
+            self.hass.helpers.device_registry.async_get_registry()
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            connections={(CONNECTION_NETWORK_MAC, self.api.config.mac)},
+            identifiers={(DOMAIN, self.api.config.bridgeid)},
+            manufacturer='Dresden Elektronik',
+            model=self.api.config.modelid,
+            name=self.api.config.name,
+            sw_version=self.api.config.swversion
+        )
 
     async def async_setup(self):
         """Set up a deCONZ gateway."""
