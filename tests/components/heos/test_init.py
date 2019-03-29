@@ -10,8 +10,6 @@ from homeassistant.components.media_player.const import (
     DOMAIN as MEDIA_PLAYER_DOMAIN)
 from homeassistant.const import CONF_HOST
 
-from tests.common import mock_coro
-
 
 async def test_async_setup_creates_entry(hass, config):
     """Test component setup creates entry from config."""
@@ -71,7 +69,7 @@ async def test_async_setup_entry_connect_failure(
     config_entry.add_to_hass(hass)
     errors = [ConnectionError, asyncio.TimeoutError]
     for error in errors:
-        controller.connect.side_effect = mock_coro(exception=error)
+        controller.connect.side_effect = error
         assert not await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
         controller.connect.assert_called_once()
