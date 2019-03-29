@@ -224,7 +224,7 @@ class YeelightGenericLight(Light):
     @callback
     def _schedule_immediate_update(self, ipaddr):
         if ipaddr == self.device.ipaddr:
-            self.async_schedule_update_ha_state(True)
+            self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
