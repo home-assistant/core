@@ -530,7 +530,7 @@ hbmqtt==0.9.4
 hdate==0.8.7
 
 # homeassistant.components.heatmiser.climate
-heatmiserV3==0.9.1
+heatmiserV3==1.1.8
 
 # homeassistant.components.hikvisioncam.switch
 hikvision==0.4

@@ -120,7 +120,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
             self._mode = STATE_ON
 
         self.thermostat._hm_send_address(
-            self.thermostat.address,23,self.heating,1)
+            self.thermostat.address, 23, self.heating, 1)
 
     @property
     def min_temp(self):
