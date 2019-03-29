@@ -28,7 +28,8 @@ from homeassistant.const import (
     CONF_PROTOCOL, CONF_USERNAME, CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import Event, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError, Unauthorized, IntegrationNotReady)
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
@@ -701,7 +702,7 @@ class MQTT:
                 self._mqttc.connect, self.broker, self.port, self.keepalive)
         except OSError as err:
             _LOGGER.error("Failed to connect due to exception: %s", err)
-            raise ConfigEntryNotReady
+            raise IntegrationNotReady
 
         if result != 0:
             import paho.mqtt.client as mqtt
