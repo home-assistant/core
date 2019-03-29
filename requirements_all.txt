@@ -183,7 +183,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.dlna_dmr.media_player
-async-upnp-client==0.14.6
+async-upnp-client==0.14.7
 
 # homeassistant.components.stream
 av==6.1.2
