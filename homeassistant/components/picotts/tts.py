@@ -12,7 +12,7 @@ import tempfile
 
 import voluptuous as vol
 
-from . import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 
 _LOGGER = logging.getLogger(__name__)
 
