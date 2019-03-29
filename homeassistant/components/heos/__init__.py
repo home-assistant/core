@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except (asyncio.TimeoutError, ConnectionError) as error:
         await controller.disconnect()
         _LOGGER.exception("Unable to retrieve players: %s",
-                          host, type(error).__name__)
+                          type(error).__name__)
         return False
 
     hass.data[DOMAIN] = {
