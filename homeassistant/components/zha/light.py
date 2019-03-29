@@ -153,7 +153,7 @@ class Light(ZhaEntity, light.Light):
         if self._level_channel:
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level)
-        async_track_time_interval(self.hass, self.async_update, SCAN_INTERVAL)
+        async_track_time_interval(self.hass, self.refresh, SCAN_INTERVAL)
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -244,3 +244,7 @@ class Light(ZhaEntity, light.Light):
         if self._level_channel:
             self._brightness = await self._level_channel.get_attribute_value(
                 'current_level')
+
+    async def refresh(self, time):
+        """Call async_update at an interval."""
+        await self.async_update()
