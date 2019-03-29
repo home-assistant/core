@@ -27,11 +27,11 @@ from .core.channels.registry import populate_channel_registry
 from .core.patches import apply_cluster_listener_patch
 
 REQUIREMENTS = [
-    'bellows-homeassistant==0.7.1',
-    'zigpy-homeassistant==0.3.0',
-    'zigpy-xbee-homeassistant==0.1.2',
+    'bellows-homeassistant==0.7.2',
+    'zigpy-homeassistant==0.3.1',
+    'zigpy-xbee-homeassistant==0.1.3',
     'zha-quirks==0.0.7',
-    'zigpy-deconz==0.1.2'
+    'zigpy-deconz==0.1.3'
 ]
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
