@@ -38,7 +38,7 @@ class HassIOIngress(HomeAssistantView):
     def __init__(self, host: str, websession: aiohttp.ClientSession):
         """Initialize a Hass.io ingress view."""
         self._host = host
-        self._connector = websession.connector
+        self._websession = websession
 
     def _create_url(self, addon: str, path: str) -> str:
         """Create URL to service."""
@@ -48,26 +48,18 @@ class HassIOIngress(HomeAssistantView):
             self, request: web.Request, addon: str, path: str
     ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
         """Route data to Hass.io ingress service."""
-        # Create websession and aims cookies
-        client = aiohttp.ClientSession(
-            cookies=request.cookies, connector=self._connector
-        )
-
         try:
             # Websocket
             if _is_websocket(request):
-                return await self._handle_websocket(
-                    client, request, addon, path
-                )
+                return await self._handle_websocket(request, addon, path)
 
             # Request
-            return await self._handle_request(client, request, addon, path)
+            return await self._handle_request(request, addon, path)
 
         except aiohttp.ClientError:
-            raise HTTPBadGateway() from None
+            pass
 
-        finally:
-            client.detach()
+        raise HTTPBadGateway() from None
 
     get = _handle
     post = _handle
@@ -75,8 +67,7 @@ class HassIOIngress(HomeAssistantView):
     delete = _handle
 
     async def _handle_websocket(
-            self, client: aiohttp.ClientSession,
-            request: web.Request, addon: str, path: str
+            self, request: web.Request, addon: str, path: str
     ) -> web.WebSocketResponse:
         """Ingress route for websocket."""
         ws_server = web.WebSocketResponse()
@@ -86,7 +77,9 @@ class HassIOIngress(HomeAssistantView):
         source_header = _init_header(request, False)
 
         # Start proxy
-        async with client.ws_connect(url, headers=source_header) as ws_client:
+        async with self._websession.ws_connect(
+                url, headers=source_header
+        ) as ws_client:
             # Proxy requests
             await asyncio.wait(
                 [
@@ -99,17 +92,16 @@ class HassIOIngress(HomeAssistantView):
         return ws_server
 
     async def _handle_request(
-            self, client: aiohttp.ClientSession,
-            request: web.Request, addon: str, path: str
+            self, request: web.Request, addon: str, path: str
     ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
         url = self._create_url(addon, path)
         data = await request.read()
         source_header = _init_header(request, True)
 
-        async with client.request(
+        async with self._websession.request(
                 request.method, url, headers=source_header,
-                params=request.query, data=data
+                params=request.query, data=data, cookies=request.cookies
         ) as result:
             headers = result.headers.copy()
 

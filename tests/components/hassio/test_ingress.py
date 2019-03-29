@@ -1,19 +1,7 @@
 """The tests for the hassio component."""
 import asyncio
-from unittest.mock import patch
 
 import pytest
-
-
-@pytest.fixture(autouse=True)
-def mock_aiohttp_client(loop, aioclient_mock):
-    session = aioclient_mock.create_session(loop)
-
-    with patch(
-            'homeassistant.components.hassio.ingress.aiohttp.ClientSession',
-            return_value=session
-    ):
-        yield aioclient_mock
 
 
 @pytest.mark.parametrize(
