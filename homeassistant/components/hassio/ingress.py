@@ -167,7 +167,7 @@ def _init_header(
     # Set X-Forwarded-Proto
     forward_proto = request.headers.get(X_FORWARDED_PROTO)
     if not forward_proto:
-        forwad_proto = request.url.schema
+        forward_proto = request.url.schema
     headers[X_FORWARDED_PROTO] = forward_proto
 
     return headers
