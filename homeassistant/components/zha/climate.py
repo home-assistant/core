@@ -236,7 +236,7 @@ class Thermostat(ZhaEntity, ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper)
+        return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, [STATE_OFF])
 
     @property
     def precision(self):
