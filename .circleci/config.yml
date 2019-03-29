@@ -28,6 +28,9 @@ commands:
   install-requirments:
     description: Set up venv and install requirements python packages with cache support
     parameters:
+      python:
+        type: string
+        default: latest
       all:
         description: pip install -r requirements_all.txt
         type: boolean
@@ -43,7 +46,7 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - v1-dependencies-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
+            - v1-<< parameters.python >>-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
       - run:
           name: install dependencies
           command: |
@@ -55,7 +58,7 @@ commands:
       - save_cache:
           paths:
             - ./venv
-          key: v1-dependencies-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
+          key: v1-<< parameters.python >>-<<# parameters.all >>{{ checksum "requirements_all.txt" }}<</ parameters.all>>-<<# parameters.test >>{{ checksum "requirements_test.txt" }}<</ parameters.test>>-<<# parameters.test_all >>{{ checksum "requirements_test_all.txt" }}<</ parameters.test_all>>
 
   install:
     description: Install Home Assistant
@@ -71,12 +74,13 @@ jobs:
   lint:
     executor:
       name: python
-      tag: "3.5.3"
+      tag: 3.5.5-stretch
 
     steps:
       - checkout
       - docker-prereqs
       - install-requirments:
+          python: 3.5.5-stretch
           all: true
           test: true
       - install
@@ -102,6 +106,7 @@ jobs:
       - checkout
       - docker-prereqs
       - install-requirments:
+          python: << parameters.python >>
           test_all: true
       - install
 
@@ -132,15 +137,15 @@ workflows:
     jobs:
       - lint
       - test:
-          name: test 3.5.3
-          python: "3.5.3"
+          name: test 3.5.5
+          python: 3.5.5-stretch
       - test:
           name: test 3.6
-          python: "3.6"
+          python: 3.6-stretch
       - test:
           name: test 3.7
-          python: "3.7"
+          python: 3.7-stretch
       # CircleCI does not allow failure yet
       # - test:
       #     name: test 3.8
-      #     python: "3.8"
+      #     python: 3.8-rc-stretch
