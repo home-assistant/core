@@ -93,6 +93,21 @@ jobs:
             flake8
             pylint homeassistant
 
+  pre-test:
+    parameters:
+      python:
+        type: string
+    executor:
+      name: python
+      tag: << parameters.python >>
+
+    steps:
+      - checkout
+      - docker-prereqs
+      - install-requirments:
+          python: << parameters.python >>
+          test_all: true
+
   test:
     parameters:
       python:
@@ -136,14 +151,29 @@ workflows:
   build:
     jobs:
       - lint
+      - pre-test:
+          name: pre-test 3.5.5
+          python: 3.5.5-stretch
+      - pre-test:
+          name: pre-test 3.6
+          python: 3.6-stretch
+      - pre-test:
+          name: pre-test 3.7
+          python: 3.7-stretch
       - test:
           name: test 3.5.5
+          requires:
+            - pre-test 3.5.5
           python: 3.5.5-stretch
       - test:
           name: test 3.6
+          requires:
+            - pre-test 3.6
           python: 3.6-stretch
       - test:
           name: test 3.7
+          requires:
+            - pre-test 3.7
           python: 3.7-stretch
       # CircleCI does not allow failure yet
       # - test:
