@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PAUSED, STATE_PLAYING)
 
-REQUIREMENTS = ['casatunes==0.0.1']
+REQUIREMENTS = ['casatunes==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
