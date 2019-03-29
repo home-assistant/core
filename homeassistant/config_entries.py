@@ -328,7 +328,8 @@ class ConfigEntry:
             wait_time = 2**min(tries, 4) * 5
             tries += 1
             _LOGGER.warning(
-                'Integration entry for %s not ready yet. Retrying in %d seconds.',
+                'Integration entry for %s not ready yet. '\
+                'Retrying in %d seconds.',
                 self.domain, wait_time)
 
             async def setup_again(now):
