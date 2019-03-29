@@ -1,13 +1,15 @@
 """Helpers for listening to events."""
-from datetime import timedelta
 import functools as ft
+from datetime import timedelta
 
-from homeassistant.loader import bind_hass
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.sun import get_astral_event_next
+from homeassistant.helpers.template import async_generate_filter
+from homeassistant.loader import bind_hass
+
+from ..const import (ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED,
+                     MATCH_ALL, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from ..core import HomeAssistant, callback
-from ..const import (
-    ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL,
-    SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from ..util import dt as dt_util
 from ..util.async_ import run_callback_threadsafe
 
@@ -90,31 +92,80 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 @callback
 @bind_hass
 def async_track_template(hass, template, action, variables=None):
-    """Add a listener that track state changes with template condition."""
+    """Add a listener that fires when a a template evaluates to 'true'."""
     from . import condition
 
-    # Local variable to keep track of if the action has already been triggered
-    already_triggered = False
+    # pylint: disable=unused-variable
+    with async_generate_filter() as last_entity_filter:
+        last_result = condition.async_template(
+            hass, template, variables)
+    if last_result:
+        hass.async_run_job(action, 'all', None, None)
 
     @callback
-    def template_condition_listener(entity_id, from_s, to_s):
+    def state_changed_listener(event):
         """Check if condition is correct and run action."""
-        nonlocal already_triggered
-        template_result = condition.async_template(hass, template, variables)
+        nonlocal last_entity_filter, last_result
 
-        # Check to see if template returns true
-        if template_result and not already_triggered:
-            already_triggered = True
-            hass.async_run_job(action, entity_id, from_s, to_s)
-        elif not template_result:
-            already_triggered = False
+        entity_id = event.data.get('entity_id')
+        if not last_entity_filter(entity_id):
+            return
 
-    return async_track_state_change(
-        hass, template.extract_entities(variables),
-        template_condition_listener)
+        with async_generate_filter() as entity_filter:
+            result = condition.async_template(
+                hass, template, variables)
+        last_entity_filter = entity_filter
+
+        # Check to see if the result has changed and is true.
+        if not last_result and result:
+            hass.async_run_job(action, entity_id,
+                               event.data.get('old_state'),
+                               event.data.get('new_state'))
+        last_result = result
+
+    return hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
 
 
 track_template = threaded_listener_factory(async_track_template)
+
+
+@callback
+@bind_hass
+def async_track_template_result(hass, template, action, variables=None):
+    """Add a listener that fires when a the result of a template changes."""
+    try:
+        # pylint: disable=unused-variable
+        with async_generate_filter() as last_entity_filter:
+            last_result = template.async_render(variables)
+    except TemplateError:
+        last_result = None
+
+    @callback
+    def state_changed_listener(event):
+        """Check if condition is correct and run action."""
+        nonlocal last_entity_filter, last_result
+
+        entity_id = event.data.get('entity_id')
+        if not last_entity_filter(entity_id):
+            return
+
+        try:
+            with async_generate_filter() as entity_filter:
+                result = template.async_render(variables)
+        except TemplateError:
+            return
+        finally:
+            last_entity_filter = entity_filter
+
+        # Check to see if the result has changed
+        if result != last_result:
+            hass.async_run_job(action, template, last_result, result)
+            last_result = result
+
+    return hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
+
+
+track_template_result = threaded_listener_factory(async_track_template_result)
 
 
 @callback
