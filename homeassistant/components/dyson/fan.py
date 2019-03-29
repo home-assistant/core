@@ -22,6 +22,8 @@ ATTR_ANGLE_LOW = 'angle_low'
 ATTR_ANGLE_HIGH = 'angle_high'
 ATTR_FLOW_DIRECTION_FRONT = 'flow_direction_front'
 ATTR_TIMER = 'timer'
+ATTR_HEPA_FILTER = 'hepa_filter'
+ATTR_CARBON_FILTER = 'carbon_filter'
 ATTR_DYSON_SPEED = 'dyson_speed'
 ATTR_DYSON_SPEED_LIST = 'dyson_speed_list'
 
@@ -82,7 +84,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Get Dyson Devices from parent component
     has_purecool_devices = False
-    device_names = (device.name for device in hass.data[DYSON_FAN_DEVICES])
+    device_names = [device.name for device in hass.data[DYSON_FAN_DEVICES]]
     for device in hass.data[DYSON_DEVICES]:
         if device.name not in device_names:
             if isinstance(device, DysonPureCool):
@@ -518,6 +520,16 @@ class DysonPureCoolDevice(FanEntity):
         return self._device.state.sleep_timer
 
     @property
+    def hepa_filter(self):
+        """Return the HEPA filter state."""
+        return int(self._device.state.hepa_filter_state)
+
+    @property
+    def carbon_filter(self):
+        """Return the carbon filter state."""
+        return int(self._device.state.carbon_filter_state)
+
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
@@ -555,6 +567,8 @@ class DysonPureCoolDevice(FanEntity):
             ATTR_ANGLE_HIGH: self.angle_high,
             ATTR_FLOW_DIRECTION_FRONT: self.flow_direction_front,
             ATTR_TIMER: self.timer,
+            ATTR_HEPA_FILTER: self.hepa_filter,
+            ATTR_CARBON_FILTER: self.carbon_filter,
             ATTR_DYSON_SPEED: self.dyson_speed,
             ATTR_DYSON_SPEED_LIST: self.dyson_speed_list
         }

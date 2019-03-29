@@ -49,6 +49,8 @@ def _get_dyson_purecool_device():
     device.state.oscillation_angle_high = "0180"
     device.state.front_direction = "ON"
     device.state.sleep_timer = 60
+    device.state.hepa_filter_state = "0090"
+    device.state.carbon_filter_state = "0080"
     return device
 
 
@@ -684,6 +686,8 @@ async def test_purecool_attributes(devices, login, hass):
     assert attributes[dyson.ATTR_ANGLE_HIGH] == 180
     assert attributes[dyson.ATTR_FLOW_DIRECTION_FRONT] is True
     assert attributes[dyson.ATTR_TIMER] == 60
+    assert attributes[dyson.ATTR_HEPA_FILTER] == 90
+    assert attributes[dyson.ATTR_CARBON_FILTER] == 80
     assert attributes[dyson.ATTR_DYSON_SPEED] == FanSpeed.FAN_SPEED_AUTO.value
     assert attributes[ATTR_SPEED] == SPEED_MEDIUM
     assert attributes[ATTR_OSCILLATING] is True
@@ -703,8 +707,8 @@ async def test_purecool_update_state(devices, login, hass):
                                "oscs": "ON", "oson": "ON", "nmod": "OFF",
                                "rhtm": "ON", "fnst": "FAN", "ercd": "11E1",
                                "wacd": "NONE", "nmdv": "0004", "fnsp": "0002",
-                               "bril": "0002", "corf": "ON", "cflr": "0084",
-                               "hflr": "0084", "sltm": "OFF", "osal": "0045",
+                               "bril": "0002", "corf": "ON", "cflr": "0085",
+                               "hflr": "0095", "sltm": "OFF", "osal": "0045",
                                "osau": "0095", "ancp": "CUST"}}
     device.state = DysonPureCoolV2State(json.dumps(event))
 
@@ -721,6 +725,8 @@ async def test_purecool_update_state(devices, login, hass):
     assert attributes[dyson.ATTR_ANGLE_HIGH] == 95
     assert attributes[dyson.ATTR_FLOW_DIRECTION_FRONT] is False
     assert attributes[dyson.ATTR_TIMER] == "OFF"
+    assert attributes[dyson.ATTR_HEPA_FILTER] == 95
+    assert attributes[dyson.ATTR_CARBON_FILTER] == 85
     assert attributes[dyson.ATTR_DYSON_SPEED] == \
         int(FanSpeed.FAN_SPEED_2.value)
     assert attributes[ATTR_SPEED] is SPEED_LOW
