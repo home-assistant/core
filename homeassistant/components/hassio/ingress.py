@@ -102,7 +102,6 @@ class HassIOIngress(HomeAssistantView):
             request: web.Request, addon: str, path: str
     ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
-
         url = self._create_url(addon, path)
         data = request.read()
         source_header = _init_header(request, True)

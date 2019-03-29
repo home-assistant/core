@@ -1,12 +1,11 @@
 """The tests for the hassio component."""
 import asyncio
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
-from tests.common import mock_coro
 from . import API_PASSWORD
 
 
