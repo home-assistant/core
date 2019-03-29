@@ -18,7 +18,7 @@
                     "pairing_code": "Kopplungscode"
                 },
                 "description": "Geben Sie Ihren HomeKit-Kopplungscode ein, um dieses Zubeh\u00f6r zu verwenden",
-                "title": "Kopplung mit {{ model }}"
+                "title": "Mit HomeKit Zubeh\u00f6r koppeln"
             },
             "user": {
                 "data": {

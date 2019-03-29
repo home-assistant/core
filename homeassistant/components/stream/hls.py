@@ -111,6 +111,11 @@ class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
 
     @property
+    def name(self) -> str:
+        """Return provider name."""
+        return 'hls'
+
+    @property
     def format(self) -> str:
         """Return container format."""
         return 'mpegts'

@@ -1,13 +1,14 @@
 """Support for Tado to create a climate device for each zone."""
 import logging
 
-from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.components.tado import DATA_TADO
+
+from . import DATA_TADO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ OPERATION_LIST = {
     CONST_MODE_OFF: 'Off',
 }
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_ON_OFF)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -198,6 +200,27 @@ class TadoClimate(ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temp
+
+    @property
+    def is_on(self):
+        """Return true if heater is on."""
+        return self._device_is_active
+
+    def turn_off(self):
+        """Turn device off."""
+        _LOGGER.info("Switching mytado.com to OFF for zone %s",
+                     self.zone_name)
+
+        self._current_operation = CONST_MODE_OFF
+        self._control_heating()
+
+    def turn_on(self):
+        """Turn device on."""
+        _LOGGER.info("Switching mytado.com to %s mode for zone %s",
+                     self._overlay_mode, self.zone_name)
+
+        self._current_operation = self._overlay_mode
+        self._control_heating()
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""

@@ -1,7 +1,8 @@
 """Support for the Hive sensors."""
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+from . import DATA_HIVE, DOMAIN
 
 DEPENDENCIES = ['hive']
 

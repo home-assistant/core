@@ -1,12 +1,13 @@
 """Support for wired switches attached to a Konnected device."""
 import logging
 
-from homeassistant.components.konnected import (
-    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, CONF_ACTIVATION, CONF_MOMENTARY,
-    CONF_PAUSE, CONF_REPEAT, STATE_LOW, STATE_HIGH)
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     ATTR_STATE, CONF_DEVICES, CONF_NAME, CONF_PIN, CONF_SWITCHES)
+from homeassistant.helpers.entity import ToggleEntity
+
+from . import (
+    CONF_ACTIVATION, CONF_MOMENTARY, CONF_PAUSE, CONF_REPEAT,
+    DOMAIN as KONNECTED_DOMAIN, STATE_HIGH, STATE_LOW)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +41,8 @@ class KonnectedSwitch(ToggleEntity):
         self._pause = self._data.get(CONF_PAUSE)
         self._repeat = self._data.get(CONF_REPEAT)
         self._state = self._boolean_state(self._data.get(ATTR_STATE))
-        self._unique_id = '{}-{}'.format(device_id, PIN_TO_ZONE[pin_num])
+        self._unique_id = '{}-{}'.format(device_id, hash(frozenset(
+            {self._pin_num, self._momentary, self._pause, self._repeat})))
         self._name = self._data.get(CONF_NAME)
 
     @property

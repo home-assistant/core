@@ -1,7 +1,7 @@
 """Support for control of ElkM1 outputs (relays)."""
-from homeassistant.components.elkm1 import (
-    DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities)
 from homeassistant.components.switch import SwitchDevice
+
+from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 DEPENDENCIES = [ELK_DOMAIN]
 

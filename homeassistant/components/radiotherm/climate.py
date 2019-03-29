@@ -246,8 +246,8 @@ class RadioThermostat(ClimateDevice):
         try:
             data = self.device.tstat['raw']
         except radiotherm.validate.RadiothermTstatError:
-            _LOGGER.error('%s (%s) was busy (invalid value returned)',
-                          self._name, self.device.host)
+            _LOGGER.warning('%s (%s) was busy (invalid value returned)',
+                            self._name, self.device.host)
             return
 
         current_temp = data['temp']

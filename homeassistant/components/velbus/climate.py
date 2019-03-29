@@ -4,10 +4,9 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     STATE_HEAT, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.velbus import (
-    DOMAIN as VELBUS_DOMAIN, VelbusEntity)
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+
+from . import DOMAIN as VELBUS_DOMAIN, VelbusEntity
 
 _LOGGER = logging.getLogger(__name__)
 

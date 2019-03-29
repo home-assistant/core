@@ -1,10 +1,10 @@
 """Support for the Tuya lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR, Light)
-
-from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 from homeassistant.util import color as colorutil
+
+from . import DATA_TUYA, TuyaDevice
 
 DEPENDENCIES = ['tuya']
 

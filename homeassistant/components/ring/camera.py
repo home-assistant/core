@@ -5,20 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.ring/
 """
 import asyncio
-import logging
-
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
-from homeassistant.components.ring import (
-    DATA_RING, ATTRIBUTION, NOTIFICATION_ID)
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.util import dt as dt_util
+
+from . import ATTRIBUTION, DATA_RING, NOTIFICATION_ID
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
@@ -116,7 +115,7 @@ class RingCam(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg import ImageFrame, IMAGE_JPEG
+        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
 
         if self._video_url is None:
@@ -129,7 +128,7 @@ class RingCam(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg import CameraMjpeg
+        from haffmpeg.camera import CameraMjpeg
 
         if self._video_url is None:
             return
@@ -139,8 +138,9 @@ class RingCam(Camera):
             self._video_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
+            stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
+                self.hass, request, stream_reader,
                 self._ffmpeg.ffmpeg_stream_content_type)
         finally:
             await stream.close()

@@ -1,16 +1,15 @@
 """Support for Tibber sensors."""
 import asyncio
-
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
 import aiohttp
 
-from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import dt as dt_util
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt as dt_util
+
+from . import DOMAIN as TIBBER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ from .config_flow import configured_hosts
 from .const import DEFAULT_PORT, DOMAIN, _LOGGER
 from .gateway import DeconzGateway
 
-REQUIREMENTS = ['pydeconz==52']
+REQUIREMENTS = ['pydeconz==54']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -124,8 +124,7 @@ async def async_setup_entry(hass, config_entry):
         scenes = set(gateway.api.scenes.keys())
         sensors = set(gateway.api.sensors.keys())
 
-        if not await gateway.api.async_load_parameters():
-            return
+        await gateway.api.async_load_parameters()
 
         gateway.async_add_device_callback(
             'group', [group

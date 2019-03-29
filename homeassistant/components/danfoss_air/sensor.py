@@ -1,12 +1,12 @@
 """Support for the for Danfoss Air HRV sensors."""
 import logging
 
-from homeassistant.components.danfoss_air import DOMAIN \
-     as DANFOSS_AIR_DOMAIN
 from homeassistant.const import (
-    TEMP_CELSIUS, DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY)
+    DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN as DANFOSS_AIR_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

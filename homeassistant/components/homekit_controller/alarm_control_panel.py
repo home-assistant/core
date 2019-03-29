@@ -2,11 +2,11 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+
+from . import KNOWN_DEVICES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit Alarm Control Panel support."""
     if discovery_info is None:
         return
-    accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+    accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
     add_entities([HomeKitAlarmControlPanel(accessory, discovery_info)],
                  True)
 
