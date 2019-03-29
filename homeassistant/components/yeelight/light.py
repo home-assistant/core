@@ -124,7 +124,6 @@ def _cmd(func):
 
     return _wrap
 
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
     from yeelight.enums import PowerMode, BulbType
@@ -143,20 +142,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
 
     lights = []
+    def _klass_setup_helper(klass):
+        lights.append(klass(device, custom_effects=custom_effects))
+
     if device.type == BulbType.White:
-        lights.append(YeelightGenericLight(device, custom_effects=custom_effects))
+        _klass_setup_helper(YeelightGenericLight)
     elif device.type == BulbType.Color:
-        lights.append(YeelightColorLight(device, custom_effects=custom_effects))
+        _klass_setup_helper(YeelightColorLight)
     elif device.type == BulbType.WhiteTemp:
         if device.is_nightlight_supported:
-            lights.append(YeelightWithNightLight(device, custom_effects=custom_effects))
-            lights.append(YeelightNightLightMode(device, custom_effects=custom_effects))
+            _klass_setup_helper(YeelightWithNightLight)
+            _klass_setup_helper(YeelightNightLightMode)
         else:
-            lights.append(YeelightWhiteTempLight(device, custom_effects=custom_effects))
+            _klass_setup_helper(YeelightWhiteTempLight)
     elif device.type == BulbType.WhiteTempMood:
-        lights.append(YeelightWithAmbientLight(device, custom_effects=custom_effects))
-        lights.append(YeelightNightLightMode(device, custom_effects=custom_effects))
-        lights.append(YeelightAmbientLight(device, custom_effects=custom_effects))
+        _klass_setup_helper(YeelightWithAmbientLight)
+        _klass_setup_helper(YeelightNightLightMode)
+        _klass_setup_helper(YeelightAmbientLight)
     else:
         _LOGGER.error("Cannot determinate device type for %s, %s",
                       device.ipaddr, device._name)
