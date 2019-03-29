@@ -188,7 +188,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.test_template_sensor')
         assert state.attributes['test_attribute'] == 'It Works.'
 
-    @mock.patch('homeassistant.components.binary_sensor.template.'
+    @mock.patch('homeassistant.components.template.binary_sensor.'
                 'BinarySensorTemplate._async_render')
     def test_match_all(self, _async_render):
         """Test MATCH_ALL in template."""
