@@ -300,8 +300,8 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
                 'code': '1234',
-                'command_template': \
-                    '{\"action\":\"{{ action }}\",\"code\":\"{{ code }}\"}',
+                'command_template': '{\"action\":\"{{ action }}\",'
+                                    '\"code\":\"{{ code }}\"}',
             }
         })
 
