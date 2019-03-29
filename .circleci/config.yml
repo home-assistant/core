@@ -72,7 +72,25 @@ commands:
 
 jobs:
 
-  lint:
+  static-check:
+    executor:
+      name: python
+      tag: 3.7-stretch
+
+    steps:
+      - checkout
+      - docker-prereqs
+
+      - run:
+          name: run static check
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -U pip
+            pip install --progress-bar off flake8
+            flake8
+
+  install-all-and-check-requirement:
     executor:
       name: python
       tag: 3.7-stretch
@@ -81,18 +99,38 @@ jobs:
       - checkout
       - docker-prereqs
       - install-requirments:
-          python: 3.5.5-stretch
+          python: 3.7-stretch
           all: true
           test: true
       - install
 
       - run:
-          name: run lint
+          name: run gen_requirements_all
           command: |
             . venv/bin/activate
             python script/gen_requirements_all.py validate
-            flake8
-            pylint homeassistant
+
+  pylint:
+    executor:
+      name: python
+      tag: 3.7-stretch
+    parallelism: 3
+
+    steps:
+      - checkout
+      - docker-prereqs
+      - install-requirments:
+          python: 3.7-stretch
+          all: true
+          test: true
+      - install
+
+      - run:
+          name: run pylint
+          command: |
+            . venv/bin/activate
+            PYFILES=$(circleci tests glob "homeassistant/**/*.py" | circleci tests split)
+            pylint ${PYFILES}
 
   pre-test:
     parameters:
@@ -151,7 +189,11 @@ workflows:
   version: 2
   build:
     jobs:
-      - lint
+      - static-check
+      - install-all-and-check-requirement
+      - pylint:
+          requires:
+            - install-all-and-check-requirement
       - pre-test:
           name: pre-test 3.5.5
           python: 3.5.5-stretch
