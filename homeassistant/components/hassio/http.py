@@ -7,7 +7,7 @@ from typing import Dict, Union
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import CONTENT_TYPE
+from aiohttp.hdrs import CONTENT_TYPE, CONTENT_LENGTH
 from aiohttp.web_exceptions import HTTPBadGateway
 import async_timeout
 
@@ -87,7 +87,7 @@ class HassIOView(HomeAssistantView):
             )
 
             # Simple request
-            if "content-length" in client.headers:
+            if CONTENT_LENGTH in client.headers:
                 # Return Response
                 body = await client.read()
                 return web.Response(

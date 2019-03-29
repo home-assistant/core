@@ -6,7 +6,9 @@ from typing import Dict, Union
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
+from aiohttp.hdrs import (
+    CONNECTION, CONTENT_LENGTH, UPGRADE, X_FORWARDED_FOR, X_FORWARDED_HOST,
+    X_FORWARDED_PROTO)
 from multidict import CIMultiDict
 
 from homeassistant.components.http import HomeAssistantView
@@ -43,8 +45,8 @@ class HassIOIngressView(HomeAssistantView):
 
         try:
             # Websocket
-            if header["connection"] == "Upgrade" and\
-                    header["upgrade"] == "websocket":
+            if header[CONNECTION] == "Upgrade" and\
+                    header[UPGRADE] == "websocket":
                 return await self._handle_websocket(
                     client, request, addon, path
                 )
@@ -100,8 +102,8 @@ class HassIOIngressView(HomeAssistantView):
             headers = result.headers.copy()
 
             # Simple request
-            if "content-length" in headers:
-                del headers["content-length"]
+            if CONTENT_LENGTH in headers:
+                del headers[CONTENT_LENGTH]
 
                 # Return Response
                 body = await result.read()
