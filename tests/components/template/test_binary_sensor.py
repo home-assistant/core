@@ -5,7 +5,7 @@ from unittest import mock
 
 from homeassistant.const import MATCH_ALL, EVENT_HOMEASSISTANT_START
 from homeassistant import setup
-from homeassistant.components.binary_sensor import template
+from homeassistant.components.template import binary_sensor as template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
 from homeassistant.util.async_ import run_callback_threadsafe
