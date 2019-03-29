@@ -75,7 +75,7 @@ jobs:
   lint:
     executor:
       name: python
-      tag: 3.5.5-stretch
+      tag: 3.7-stretch
 
     steps:
       - checkout
@@ -116,7 +116,7 @@ jobs:
     executor:
       name: python
       tag: << parameters.python >>
-    parallelism: 4
+    parallelism: 3
 
     steps:
       - checkout
