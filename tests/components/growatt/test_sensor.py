@@ -1,4 +1,4 @@
-"""The tests for the Google Wifi platform."""
+"""The tests for the Growatt platform."""
 import json
 from unittest import mock
 
