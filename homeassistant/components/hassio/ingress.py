@@ -11,12 +11,20 @@ from aiohttp.hdrs import (
     X_FORWARDED_PROTO)
 from multidict import CIMultiDict
 
+from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 
 from .const import X_HASSIO
 
 
-class HassIOIngressView(HomeAssistantView):
+@callback
+def async_setup_auth(hass, host):
+    """Auth setup."""
+    hassio_ingress = HassIOIngress(hass, host)
+    hass.http.register_view(hassio_ingress)
+
+
+class HassIOIngress(HomeAssistantView):
     """Hass.io view to handle base part."""
 
     name = "api:hassio:ingress"
@@ -156,7 +164,7 @@ def _init_header(
         forward_host = request.host
     headers[X_FORWARDED_HOST] = forward_host
 
-    # Set X-Forwarded-Host
+    # Set X-Forwarded-Proto
     forward_proto = request.headers.get(X_FORWARDED_PROTO)
     if not forward_proto:
         forwad_proto = request.url.schema
