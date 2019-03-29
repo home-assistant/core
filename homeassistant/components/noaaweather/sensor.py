@@ -11,7 +11,7 @@ https://www.weather.gov/documentation/services-web-api
 Configuration:
   - platform: noaaweather
     name: <string>          # name for the platform instance (defaults to
-                            # "NOAA Weather"
+                            # "NOAAWeather"
     latitude = <number>     # latitude for the location, defaults to
                             # homeassistant latitude configuration value
     longitude = <number>    # longitude for the location, defaults to
@@ -37,23 +37,19 @@ Configuration:
         - textDescription   # single word description of weather condition
         - dewpoint          # dewpoint in degress Celsius or Fahrenheit
         - windChill         # wind chill temperature in degrees C or F
-        - windSpeed         # sustained wind speed in m/s or mph
+        - windSpeed         # sustained wind speed in km/h or mph
         - windDirection     # direction of sustained winds (degrees angle)
-        - windGust          # speed of wind gusts in m/s or mph
+        - windGust          # speed of wind gusts in km/h or mph
         - heatIndex         # heat index temperature in degrees C of F
         - barometricPressure    # pressure in mbar
         - seaLevelPressure      # current sea level pressure in mbar
         - precipitationLastHour # liquid precipitation in last hour (mm or in)
         - precipitationLast3Hours # liquid precipitation in last 3 hours (mm
                                 # or in). Note that this is only returned
-                                # on three hour intervals, and only when
-                                # there has been some liquid precipitation
-                                # in that time. It is not normally useful.
+                                # on three hour intervals.
         - precipitationLast6Hours # liquid precipitation in last 6 hours (mm
                                 # or in). Note that this is only returned
-                                # on six hour intervals, and only when
-                                # there has been some liquid precipitation
-                                # in that time. It is not normally useful.
+                                # on six hour intervals.
         - relativeHumidity      # relative humidity in percent
         - visibility            # visibility in km or miles.
         - cloudLayers           # Three character abbreviation for the
@@ -66,44 +62,40 @@ Configuration:
                                 # recorded.
         - minTemperatureLast24Hours # Minimum temperature in the last 24 hours
                                 # in degrees C or F.  This is only reported
-                                # once per day, so it is not really useful.
+                                # once per day.
         - maxTemperatureLast24Hours # Maximum temperature in the last 24 hours
                                 # in degrees C or F.  This is only reported
-                                # once per day, so it is not really useful.
+                                # once per day.
 
 Some notes on the data returned from NOAA/NWS:
 Not all stations have the equipment to measure all of the conditions.
-In addition, an empty or null value is returned by the station for some
-conditions in certain states:  for example, when the air is calm, windSpeed
-will return null instead of zero.  As the station retures a null value when
-it does not have the equipment for the measurement as well, there is no
-way to determine whether the station can measure the condition, but just not
-now, or if it will never return a measurement for that condition.
-
-Also, some stations may return all null values for a given request.
-
-
 
 """
 import datetime
 from datetime import timedelta
 
 import logging
-import requests
+
+import aiohttp
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA, ENTITY_ID_FORMAT)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS, CONF_NAME, LENGTH_METERS, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES, LENGTH_INCHES)
+    TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES, LENGTH_INCHES,
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE)
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import (
+    Entity, async_generate_entity_id)
 from homeassistant.util import Throttle
 from homeassistant.exceptions import (
-    ConfigEntryNotReady, PlatformNotReady)
+    ConfigEntryNotReady, PlatformNotReady, HomeAssistantError)
+
+REQUIREMENTS = ['pynws==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +104,9 @@ DEFAULT_NAME = "NOAA Weather"
 #
 # The rates at which new measurement values appear varies by station.
 # Typically the measurements from airport weather stations will only update
-# once an hour, while other stations may update much more frequently.
+# once an hour, while other stations may provide updated data much more
+# frequently. Some of the updates may not have the full set of measurements,
+# but all items the station measures should be in the hourly update.
 # To avoid having the NWS update cycle and polling mismatch (poll just
 # before the update) by an hour, we will allow more frequent
 # requests.
@@ -120,14 +114,9 @@ DEFAULT_NAME = "NOAA Weather"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 SCAN_INTERVAL = timedelta(minutes=30)
 
-REQUESTS_HEADERS = {'user-agent':
-                    "Home Assistant component noaaweather sensor v0.1",
-                    'Accept': 'application/geo+json'}
-
 ATTR_LAST_UPDATE = 'last_update'
 ATTR_SENSOR_ID = 'sensor_id'
 ATTR_SITE_ID = 'site_id'
-ATTR_SITE_NAME = 'site_name'
 CONF_STATIONCODE = 'stationcode'
 
 ATTRIBUTION = "Data provided by National Oceanic "\
@@ -153,6 +142,7 @@ UNIT_MAPPING = {
 
 # Sensor types are defined like: Name, type of value,
 #                       preferred metric units, preferred imperial units
+#                       icon, device class
 # where type is one of:
 #   single - single value, for example textDescription or presentWeather
 #   measurement - single measurement as a dictionary of attributes
@@ -162,41 +152,55 @@ UNIT_MAPPING = {
 #           and 'amount'
 
 SENSOR_TYPES = {
-    'textDescription': ['Weather', 'single', None, None],
-    'presentWeather': ['Present Weather', 'single', None, None],
+    'textDescription': ['Weather', 'single', None, None, None, None],
+    'presentWeather': ['Present Weather', 'single', None, None, None, None],
     'temperature': ['Temperature', 'measurement',
-                    TEMP_CELSIUS, TEMP_FAHRENHEIT],
+                    TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                    'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
     'dewpoint': ['dewpoint', 'measurement',
-                 TEMP_CELSIUS, TEMP_FAHRENHEIT],
+                 TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
     'windChill': ['Wind Chill', 'measurement',
-                  TEMP_CELSIUS, TEMP_FAHRENHEIT],
+                  TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
     'heatIndex': ['Heat Index', 'measurement',
-                  TEMP_CELSIUS, TEMP_FAHRENHEIT],
+                  TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
     'windSpeed': ['Wind Speed', 'measurement',
-                  'm/s', 'mph'],
+                  'km/h', 'mph',
+                  'mdi:weather-windy', None],
     'windDirection': ['Wind Bearing', 'measurement',
-                      '°', '°'],
+                      '°', '°',
+                      'mdi:flag-triangle', None],
     'windGust': ['Wind Gust', 'measurement',
-                 'm/s', 'mph'],
-    'barometricPressure': ['Pressure', 'measurement', 'mbar', 'mbar'],
+                 'km/h', 'mph', 'mdi:weather-windy', None],
+    'barometricPressure': ['Pressure', 'measurement', 'mbar', 'mbar',
+                           None, DEVICE_CLASS_PRESSURE],
     'seaLevelPressure': ['Sea Level Pressure', 'measurement',
-                         'mbar', 'mbar'],
+                         'mbar', 'mbar',
+                         None, DEVICE_CLASS_PRESSURE],
     'maxTemperatureLast24Hours': ['Maximum Temperature last 24 Hours',
                                   'measurement', TEMP_CELSIUS,
-                                  TEMP_FAHRENHEIT],
+                                  TEMP_FAHRENHEIT,
+                                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
     'minTemperatureLast24Hours': ['Minimum Temperature last 24 Hours',
                                   'measurement', TEMP_CELSIUS,
-                                  TEMP_FAHRENHEIT],
+                                  TEMP_FAHRENHEIT,
+                                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
     'precipitationLastHour': ['Precipitation in last hour', 'measurement',
-                              'mm', LENGTH_INCHES],
+                              'mm', LENGTH_INCHES,
+                              'mdi:cup-water', None],
     'precipitationLast3Hours': ['Precipitation in last 3 hours',
-                                'measurement', 'mm', LENGTH_INCHES],
+                                'measurement', 'mm', LENGTH_INCHES,
+                                'mdi:cup-water', None],
     'precipitationLast6Hours': ['Precipitation in last 6 hours',
-                                'measurement', 'mm', LENGTH_INCHES],
-    'relativeHumidity': ['Humidity', 'measurement', '%', '%'],
-    'cloudLayers': ['Cloud Layers', 'array', None, None],
+                                'measurement', 'mm', LENGTH_INCHES,
+                                'mdi:cup-water', None],
+    'relativeHumidity': ['Humidity', 'measurement', '%', '%',
+                         'mdi:water-percent', DEVICE_CLASS_HUMIDITY],
+    'cloudLayers': ['Cloud Layers', 'array', None, None, None, None],
     'visibility': ['Visibility', 'measurement',
-                   LENGTH_KILOMETERS, LENGTH_MILES]
+                   LENGTH_KILOMETERS, LENGTH_MILES, None, None]
 }
 
 SENSOR_TYPES_SET = set(SENSOR_TYPES)
@@ -213,72 +217,87 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_obs_station_list(latitude, longitude):
+async def get_obs_station_list(nws):
     """Get list of observation stations for a location.
 
     This gets the list of stations which provide observations
-    closest to the given point (latitude, longitude). This is done
-    by first getting the information about the point, one item of which
-    is the URL for retreiving the list of stations.
+    closest to the given point (latitude, longitude).
 
     """
-    res = requests.get("https://api.weather.gov/points/{},{}".format(
-        latitude, longitude), headers=REQUESTS_HEADERS)
-    #
-    # The API returns a 404 if the location is outside the area NWS handles.
-    #
-    if res.status_code == 404:
-        _LOGGER.error("Location %s,%s is outside of NWS service area",
-                      latitude, longitude)
-        raise ConfigEntryNotReady
-
-    if res.status_code != 200:
-        _LOGGER.error("Error getting metadata for location %s,%s",
-                      latitude, longitude)
-        raise PlatformNotReady
+    import pynws
+    res = None
     try:
-        obsurl = res.json()['properties']['observationStations']
-    except ValueError:
+        res = await nws.stations()
+    except pynws.NwsError as status:
+        #
+        # This is some type of configuration error
+        #
+        _LOGGER.error("Error getting station list for %s: %s",
+                      nws.latlon, status)
+        raise ConfigEntryNotReady
+    except aiohttp.ClientResponseError as status:
+        #
+        # Check if the response error is a 404 (not found) or something
+        # else. A 404 indicates the location is outside the NOAA/NWS
+        # scope, so it is a configuration error.
+        if status.args[0][0:3] == '404':
+            _LOGGER("location %s outside of NOAA/NWS scope",
+                    nws.latlon)
+            raise ConfigEntryNotReady
+        #
+        # Other errors translate into potential temporary errors
+        # from the API server, so indicate that the target is not
+        # ready.
+        #
+        _LOGGER.error("Error getting station list for %s: %s",
+                      nws.latlon, status)
         raise PlatformNotReady
-
-    res = requests.get(obsurl, headers=REQUESTS_HEADERS)
-    if res.status_code == 404:
-        _LOGGER.error("Location %s,%s is outside of NWS service area",
-                      latitude, longitude)
-    if res.status_code != 200:
-        _LOGGER.error("Error getting station list for location %s,%s",
-                      latitude, longitude)
+    except aiohttp.ClientError as status:
+        #
+        # Here with some type of error that is not due
+        # to an HTTP response.  This most likely is due to some intermittent
+        # issue with either the API server or the Internet connection to it,
+        # so try again later
+        _LOGGER.error("Error accessing API for %s: %s",
+                      nws.latlon, status)
+        raise PlatformNotReady
+    #
+    # If we didn't get a station value, there is something wrong
+    # with the configuration
+    #
+    if res is None:
         raise ConfigEntryNotReady
-    try:
-        return res.json()['features']
-    except ValueError:
-        _LOGGER.error("No station list retured for location %s,%s",
-                      latitude, longitude)
-        raise ConfigEntryNotReady
+    #
+    # Return the list of stations.
+    #
+    return res
 
 
-def get_obs_for_station(stationcode, errorstate):
+async def get_obs_for_station(nws, errorstate):
     """Retrieve the latest observation data for the given station.
 
-    This calls the NWS API for to retrieve the latest observation
+    This calls the NWS API for to retrieve the latest sets of observation
     measurements from the given weather station. The return value
-    is the dictionary under the JSON 'properties' item.
+    is the sequence of dictionaries under the JSON 'properties' item.
     """
-    url = "https://api.weather.gov/stations/{}/observations/latest".format(
-        stationcode)
-    res = requests.get(url, headers=REQUESTS_HEADERS)
-    if res.status_code != 200:
-        if not errorstate:
-            _LOGGER.error("Cannot get observations for station %s, status=%s",
-                          stationcode, res.status_code)
-        return None
+    import pynws
     try:
-        return res.json()['properties']
-    except ValueError:
+        res = await nws.observations()
+    except pynws.NwsError as status:
+        if not errorstate:
+            _LOGGER.error("Error getting observations for station %s - %s",
+                          nws.station, status)
         return None
+    except aiohttp.ClientError as status:
+        if not errorstate:
+            _LOGGER.error("Error getting observations for station %s - %s",
+                          nws.station, status)
+        return None
+    return res
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the NOAA sensor platform.
 
     The key item is the location to use,
@@ -291,6 +310,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for the location provided.  If no station code is configured,
     the closest station is chosen.
     """
+    import pynws
     name = config.get(CONF_NAME)        # Get name (or default)
     # Get configured stationcode
     confstationcode = config.get(CONF_STATIONCODE)
@@ -308,20 +328,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         raise ConfigEntryNotReady
     #
+    # Set up a client aiohttp session for use by the pynws object
+    #
+    session = aiohttp.ClientSession()
+    #
     # Round location items to 4 decimal digits
     #
     latitude = round(latitude, 4)
     longitude = round(longitude, 4)
     #
+    # Set up pynws.nws object
+    #
+    nws = pynws.Nws(session, latlon=(latitude, longitude))
+    nws.limit = 5
+    #
     # Get the list of observation stations for the location.
     # This checks that the location is within the NWS coverage area.
     #
-    try:
-        stationlist = get_obs_station_list(latitude, longitude)
-    except requests.RequestException:
-        _LOGGER.error("Error getting station list for location %s,%s",
-                      latitude, longitude)
-        raise PlatformNotReady
+    stationlist = await get_obs_station_list(nws)
 
     if stationlist is None:
         raise ConfigEntryNotReady
@@ -342,13 +366,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     #
     for station in stationlist:
         if confstationcode is None:
-            stationcode = station['properties']['stationIdentifier']
-            stationname = station['properties']['name']
+            stationcode = station
             break
         else:
-            if confstationcode == station['properties']['stationIdentifier']:
+            if confstationcode == station:
                 stationcode = confstationcode
-                stationname = station['properties']['name']
                 break
     #
     # Did we find a valid station?
@@ -361,26 +383,36 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error("Station %s not found in list for location %s,%s",
                           confstationcode, latitude, longitude)
         raise ConfigEntryNotReady
-
+    #
+    # Set station code in nws object for future calls
+    #
+    nws.station = stationcode
     #
     # Create the data object for observations for this location/station.
     #
 
-    noaadata = NOAACurrentData(hass, stationcode,
-                               stationname, name)
+    noaadata = NOAACurrentData(hass, stationcode, name, nws)
     #
     # Perform a data update to get first set of data and available
     # measurements
     #
-    noaadata.update()
+    await noaadata.async_update()
     if not noaadata.data:
         raise PlatformNotReady
-
+    _LOGGER.debug("after first update, noaadata.data=%s", noaadata.data)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(NOAACurrentSensor(hass, noaadata, variable, name))
-
-    add_entities(sensors, True)
+        entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT,
+            DEFAULT_NAME + '.' + noaadata.stationcode + '.' + variable,
+            hass=hass)
+        sensors.append(
+            NOAACurrentSensor(hass, noaadata, variable, name, entity_id))
+    #
+    # Add all the sensors
+    #
+    async_add_entities(sensors, True)
+    return
 
 
 class NOAACurrentSensor(Entity):
@@ -395,11 +427,14 @@ class NOAACurrentSensor(Entity):
     of measurement.
     """
 
-    def __init__(self, hass, noaadata, condition, name):
+    def __init__(self, hass, noaadata, condition, name, entity_id):
         """Initialize the sensor object."""
+        _LOGGER.debug("Initializing sensor %s, condition %s, sensor_type: %s",
+                      name, condition, SENSOR_TYPES[condition])
         self._condition = condition
         self._noaadata = noaadata
         self._name = name
+        self.entity_id = entity_id
         #
         # Set whether desired units are metric (default) or
         # imperial.
@@ -411,11 +446,26 @@ class NOAACurrentSensor(Entity):
         else:
             _LOGGER.warning("Unknown unit system %s, defaulting to metric",
                             hass.config.units)
+        #
+        # Set icon and device class, if any
+        #
+        self._icon = SENSOR_TYPES[condition][4]
+        self._device_class = SENSOR_TYPES[condition][5]
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return '{} {}'.format(self._name, SENSOR_TYPES[self._condition][0])
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return self._icon
+
+    @property
+    def device_class(self):
+        """Device class of the sensor."""
+        return self._device_class
 
     def _unit_convert(self, variable, desiredunit):
         """Check if value needs to be converted to different units.
@@ -497,6 +547,11 @@ class NOAACurrentSensor(Entity):
         if srcunit == 'm/s' and desiredunit == 'mph':
             return result * 2.236936292
         #
+        # Even for metric we need to convert meters/second
+        #
+        if srcunit == 'm/s' and desiredunit == 'km/h':
+            return result * 3.6
+        #
         # If we fall through to here we have a unit name in our mapping
         # table but not in the conversion code above.
         # Just return the original value.
@@ -508,9 +563,7 @@ class NOAACurrentSensor(Entity):
         """Return the state of the sensor."""
         _LOGGER.debug("Getting state for %s", self._condition)
         _LOGGER.debug("noaadata.data set is %s", set(self._noaadata.data))
-        #
-        # ensure we have some data
-        #
+
         if self._condition in self._noaadata.data:
             variable = self._noaadata.data[self._condition]
             _LOGGER.debug("Condition %s value=%s", self._condition, variable)
@@ -524,8 +577,8 @@ class NOAACurrentSensor(Entity):
                 return variable
             if SENSOR_TYPES[self._condition][1] == 'measurement':
                 # value attribute of variable for measurements
-                _LOGGER.debug("Condition %s is measurement='%s',\
-                               from string '%s'",
+                _LOGGER.debug("Condition %s is measurement='%s', "
+                              "from string '%s'",
                               self._condition, variable['value'], variable)
                 if variable['value'] is None:
                     return None
@@ -573,7 +626,6 @@ class NOAACurrentSensor(Entity):
         attr[ATTR_ATTRIBUTION] = ATTRIBUTION
         attr[ATTR_LAST_UPDATE] = self._noaadata.lastupdate
         attr[ATTR_SITE_ID] = self._noaadata.stationcode
-        attr[ATTR_SITE_NAME] = self._noaadata.stationname
         return attr
 
     @property
@@ -604,9 +656,9 @@ class NOAACurrentSensor(Entity):
     #
     # Handle data update request
     #
-    def update(self):
+    async def async_update(self):
         """Update the sensor data."""
-        self._noaadata.update()
+        await self._noaadata.async_update()
 
 
 #
@@ -628,35 +680,35 @@ class NOAACurrentData(Entity):
     depending upon the station.
     """
 
-    def __init__(self, hass, stationcode, stationname, name):
+    def __init__(self, hass, stationcode, name, nws):
         """Initialize the current data object."""
         _LOGGER.debug("Initialize NOAACurrentData with stationcode=%s, "
-                      "stationname='%s',name='%s'",
-                      stationcode, stationname, name)
+                      "name='%s'",
+                      stationcode, name)
 
         self.stationcode = stationcode
-        self.stationname = stationname
         self._name = name
-        self.lastupdate = datetime.datetime.now(datetime.timezone.utc)
+        self.nws = nws
+        #
+        # Set time of last update to two hours ago.  This
+        # should ensure that when we get the first set of observations
+        # and process those after this time, we will have at least
+        # one complete hourly observation record
+        #
+        self.lastupdate = datetime.datetime.now(datetime.timezone.utc) -\
+            timedelta(hours=2)
         self.data = dict()
         self._errorstate = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    async def async_update(self):
         """Get the latest observation data from the station."""
         #
         # Log that we were called
         #
-        _LOGGER.debug("update called for station %s", self.stationcode)
+        _LOGGER.debug("update called for station %s", self.nws.station)
 
-        try:
-            obslist = get_obs_for_station(self.stationcode, self._errorstate)
-        except requests.RequestException:
-            if not self._errorstate:
-                self._errorstate = True
-                _LOGGER.error("Cannot get observations for station %s",
-                              self.stationcode)
-            return
+        obslist = await get_obs_for_station(self.nws, self._errorstate)
         #
         # Make sure good status result
         #
@@ -671,27 +723,173 @@ class NOAACurrentData(Entity):
         #
         self._errorstate = False
         #
+        # Sort the list so that the oldest observations are first
+        #
+        obslist = sorted(obslist, key=lambda obs: obs['timestamp'])
+        for obs in obslist:
+            self._process_obs(obs)
+        return
+
+    def _process_obs(self, obsprop):
+        #
         # Get the timestamp of the report, if any
         #
-        if 'timestamp' in obslist:
-            tsstring = obslist['timestamp']
-            self.lastupdate = datetime.datetime.strptime(
+        _LOGGER.debug("_process_obs called with obsprop=%s", obsprop)
+        if 'timestamp' in obsprop:
+            tsstring = obsprop['timestamp']
+            _LOGGER.debug("timestamp=%s", tsstring)
+            thisupdate = datetime.datetime.strptime(
                 '{}{}'.format(tsstring[0:22], tsstring[23:25]),
                 '%Y-%m-%dT%H:%M:%S%z')
-        _LOGGER.debug("timestamp=%s, obslist properties='%s'",
-                      self.lastupdate, obslist)
+            _LOGGER.debug("previous update=%s, thisupdate=%s, ",
+                          self.lastupdate, thisupdate)
+            #
+            # Check if this update is from before our last update time
+            # If so, ignore it.
+            #
+            if thisupdate <= self.lastupdate:
+                return
+        else:
+            # if no timestamp on the record assume it is current.
+            thisupdate = datetime.datetime.now(datetime.timezone.utc)
+        #
+        # Remember time this update was from
+        #
+        self.lastupdate = thisupdate
 
         #
         # Now loop through all observation values returned and set the
-        # condition value
+        # condition value.
+        # We must check whether a value was actually
+        # provided, based on the "qualityControl" attribute.
+        # Cases are:
+        #   qc:Z - this report does not contain a value for this measurement
+        #           therefore we will not change the current value.
+        #   qc:S - this report contains a valid value for this measurement.
+        #           therefore we will update the current value
+        #   qc:V - this is used for windChill and heatIndex, which are
+        #           based on other values.  Specific checks are done
+        #           to determine whether a null value should be set as the
+        #           current value.
+        #           It is also sometimes used for the pressure items
+        #   qc:C - this is used for valid relativeHumidity, visibility and the
+        #           precipitation values. Therefore, these values will
+        #           update the current value.
+        #   null - this is used for min/max temperature values (and maybe
+        #           others) when they do not have a valid value.
         #
-        _LOGGER.debug("checking for variables using set %s intersection \
-                       set %s which is '%s'",
-                      SENSOR_TYPES_SET, set(obslist),
-                      SENSOR_TYPES_SET.intersection(set(obslist)))
+        _LOGGER.debug("checking for variables using set %s intersection "
+                      "set %s which is '%s'",
+                      SENSOR_TYPES_SET, set(obsprop),
+                      SENSOR_TYPES_SET.intersection(set(obsprop)))
 
         for variable in SENSOR_TYPES_SET.intersection(
-                set(obslist)):
+                set(obsprop)):
             _LOGGER.debug("setting value variable=%s, value='%s'",
-                          variable, obslist[variable])
-            self.data[variable] = obslist[variable]
+                          variable, obsprop[variable])
+            #
+            # If this is the first time we update has been called
+            # we need to ensure every variable we want will exist
+            # in the dictionary
+            #
+            if variable not in self.data:
+                if SENSOR_TYPES[variable][1] == 'measurement':
+                    self.data[variable] = "unknown"
+                if SENSOR_TYPES[variable][1] == 'measurement':
+                    self.data[variable] = {
+                        'value': None,
+                        'unitCode': None,
+                        'qualityControl': None,
+                        }
+                if SENSOR_TYPES[variable][2] == 'array':
+                    self.data[variable] = dict()
+
+            #
+            # Check for existance of useable values for
+            # measurements.
+            #
+            if 'qualityControl' in obsprop[variable]:
+                qcval = obsprop[variable]['qualityControl']
+                if qcval == 'qc:Z':
+                    # No update of value
+                    continue
+                if qcval in ('qc:S', 'qc:C'):
+                    # Valid value, just update data.
+                    self.data[variable] = obsprop[variable]
+                    continue
+                #
+                # Special case for windChill.  Value is not valid
+                # if we don't have valid temperature and windSpeed
+                # values, since it is a calculated value based on
+                # temperature and wind speed.
+                #
+                if variable == 'windChill':
+                    if 'temperature' not in obsprop or \
+                            'windSpeed' not in obsprop:
+                        #
+                        # If no temperature or windSpeed values
+                        # we can't have windChill
+                        #
+                        continue
+                    if 'value' not in obsprop['temperature'] or \
+                            'value' not in obsprop['windSpeed']:
+                        #
+                        # If no values, we can't have windChill
+                        #
+                        continue
+                    if obsprop['temperature']['value'] is None or \
+                            (obsprop['windSpeed']['value'] is None):
+                        #
+                        # If either value is missing, ignore
+                        # this value
+                        #
+                        continue
+                    self.data[variable] = obsprop[variable]
+                    continue
+                #
+                # Special case for heatIndex.  Value is not valid
+                # if we don't have valid temperature and dewpoint
+                # values, since it is a calculated value based on
+                # temperature and dewpoint.
+                #
+                if variable == 'heatIndex':
+                    if 'temperature' not in obsprop or \
+                            'dewpoint' not in obsprop:
+                        #
+                        # If no temperature or dewpoint values
+                        # we can't have heatIndex
+                        #
+                        continue
+                    if 'value' not in obsprop['temperature'] or \
+                            'value' not in obsprop['dewpoint']:
+                        #
+                        # If no values, we can't have heatIndex
+                        #
+                        continue
+                    if obsprop['temperature']['value'] is None or \
+                            obsprop['dewpoint']['value'] is None:
+                        #
+                        # If either value is missing, ignore
+                        # this value
+                        #
+                        continue
+                    self.data[variable] = obsprop[variable]
+                    continue
+                #
+                # Other items, check for qc:V
+                #
+                if qcval == "qc:V":
+                    if 'value' in obsprop[variable]:
+                        if obsprop[variable]['value'] is not None:
+                            self.data[variable] = obsprop[variable]
+                            continue
+                #
+                # If we have a qualityControl attribute but with a value
+                # we don't know about, ignore the item.
+                continue
+            #
+            # Here for values that do not include a qualityControl attribute.
+            #
+
+            self.data[variable] = obsprop[variable]
+        return

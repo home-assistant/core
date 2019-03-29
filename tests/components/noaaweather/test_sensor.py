@@ -14,9 +14,7 @@ from tests.common import (get_test_home_assistant)
 VALID_CONFIG_MINIMAL = {
     'sensor': {
         'platform': 'noaaweather',
-        'monitored_conditions': [
-            'temperature',
-            ],
+        'monitored_conditions': ['temperature'],
     }
 }
 
@@ -65,43 +63,9 @@ BAD_CONF_STATION = {
     }
 }
 
-STATION_LIST = [
-        {'id': 'https://api.weather.gov/stations/KJFK',
-         'geometry': {'type': 'Point',
-                      'coordinates': [-73.76393, 40.63915]},
-         'type': 'Feature',
-         'properties': {
-             'name': 'New York, Kennedy International Airport',
-             '@type': 'wx:ObservationStation',
-             'stationIdentifier': 'KJFK',
-             'timeZone': 'America/New_York',
-             '@id': 'https://api.weather.gov/stations/KJFK',
-             'elevation': {'unitCode': 'unit:m', 'value': 3.048}}},
-        {'id': 'https://api.weather.gov/stations/KLGA',
-         'geometry': {'type': 'Point',
-                      'coordinates': [-73.88, 40.77917]},
-         'type': 'Feature',
-         'properties': {
-             'name': 'New York, La Guardia Airport',
-             '@type': 'wx:ObservationStation',
-             'stationIdentifier': 'KLGA',
-             'timeZone': 'America/New_York',
-             '@id': 'https://api.weather.gov/stations/KLGA',
-             'elevation': {'unitCode': 'unit:m', 'value': 6.096}}},
-        {'id': 'https://api.weather.gov/stations/KNYC',
-         'geometry': {'type': 'Point',
-                      'coordinates': [-73.9666699, 40.78333]},
-         'type': 'Feature',
-         'properties': {
-             'name': 'New York City, Central Park',
-             '@type': 'wx:ObservationStation',
-             'stationIdentifier': 'KNYC',
-             'timeZone': 'America/New_York',
-             '@id': 'https://api.weather.gov/stations/KNYC',
-             'elevation': {'unitCode': 'unit:m', 'value': 46.9392}}},
-]
+STATION_LIST = ['KJFK', 'KLGA', 'KNYC']
 
-OBSERVATION_DATA = {
+OBSERVATION_DATA = [{
     "@id": "https://api.weather.gov/stations/"
            "KJFK/observations/2019-03-24T22:51:00+00:00",
     "@type": "wx:ObservationStation",
@@ -213,27 +177,30 @@ OBSERVATION_DATA = {
         }
     ]
 }
+]
 
 
-def get_obs_station_list_mock(latitude, longitude):
+async def get_obs_station_list_mock(nws):
     """Return station list based on location.
 
     If the latitude and longitude are both zero, return an empty
     list.  Otherwise return our sample list.
     """
+    print(nws.latlon)
+    latitude, longitude = nws.latlon
     if latitude == 0 and longitude == 0:
         return None
     return STATION_LIST
 
 
-def get_obs_for_station_mock(stationcode,errorstate):
+async def get_obs_for_station_mock(nws, errorstate):
     """Return static example of observation data.
 
     If the station is KJFK, we return the sample observation data.
     If not, we will return None, which is what happens when there
     is no observation data available.
     """
-    if stationcode == "KJFK":
+    if nws.station == "KJFK":
         return OBSERVATION_DATA
     return None
 
@@ -364,8 +331,8 @@ class TestWeather(unittest.TestCase):
         state = self.hass.states.get('sensor.noaa_weather_wind_speed')
         assert state is not None
 
-        assert state.state == '4.6'
-        assert state.attributes.get('unit_of_measurement') == 'm/s'
+        assert state.state == '16.6'
+        assert state.attributes.get('unit_of_measurement') == 'km/h'
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Wind Speed"
 
@@ -380,8 +347,8 @@ class TestWeather(unittest.TestCase):
         state = self.hass.states.get('sensor.noaa_weather_wind_gust')
         assert state is not None
 
-        assert state.state == '9.3'
-        assert state.attributes.get('unit_of_measurement') == 'm/s'
+        assert state.state == '33.5'
+        assert state.attributes.get('unit_of_measurement') == 'km/h'
         assert state.attributes.get('friendly_name') == \
             "NOAA Weather Wind Gust"
 
