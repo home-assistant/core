@@ -13,7 +13,7 @@ from homeassistant.util import slugify
 
 from .const import (
     _LOGGER, CONF_ALLOW_CLIP_SENSOR, CONF_ALLOW_DECONZ_GROUPS, CONF_BRIDGEID,
-    DOMAIN, NEW_DEVICE, NEW_SENSOR, SUPPORTED_PLATFORMS)
+    CONF_MASTER_GATEWAY, DOMAIN, NEW_DEVICE, NEW_SENSOR, SUPPORTED_PLATFORMS)
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -38,22 +38,22 @@ class DeconzGateway:
         self.listeners = []
 
     @property
-    def bridgeid(self):
+    def bridgeid(self) -> str:
         """Unique identifier for gateway."""
         return self.config_entry.data[CONF_BRIDGEID]
 
     @property
     def master(self) -> bool:
         """Gateway which is used with deCONZ services without defining id."""
-        return self.config_entry.options['master']
+        return self.config_entry.options[CONF_MASTER_GATEWAY]
 
     @property
-    def allow_clip_sensor(self):
+    def allow_clip_sensor(self) -> bool:
         """Allow loading clip sensor from gateway."""
         return self.config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
 
     @property
-    def allow_deconz_groups(self):
+    def allow_deconz_groups(self) -> bool:
         """Allow loading deCONZ groups from gateway."""
         return self.config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True)
 

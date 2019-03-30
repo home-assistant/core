@@ -22,6 +22,7 @@ CONFIG = {
     }
 }
 
+
 async def setup_entry(hass, entry):
     """Setup entry."""
     with patch.object(deconz.DeconzGateway, 'async_setup',
