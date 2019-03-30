@@ -101,6 +101,11 @@ class UnifiVideoCamera(Camera):
         return caminfo['recordingSettings']['motionRecordEnabled']
 
     @property
+    def supported_features(self):
+        """Return supported features."""
+        return SUPPORT_STREAM
+
+    @property
     def stream_source(self):
         """Return the stream source."""
         caminfo = self._nvr.get_camera(self._uuid)
