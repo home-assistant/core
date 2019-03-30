@@ -163,12 +163,14 @@ async def _update_azuredns(resource, tenant,
             _LOGGER.debug(
                 "IP address in Azure DNS configured correctly to %s.",
                 ipv4address)
-            return True
         else:
             _LOGGER.error(
                 "External IP address %s does not match IP from Azure DNS %s",
                 ipv4address, azureip)
+            return False
 
     except requests.exceptions.RequestException as errormessage:
         _LOGGER.error("Azure DNS patch request failed: %s", errormessage)
         return False
+
+    return True
