@@ -1132,7 +1132,7 @@ pylgnetcast-homeassistant==0.2.0.dev0
 pylgtv==0.1.9
 
 # homeassistant.components.linky.sensor
-pylinky==0.3.0
+pylinky==0.3.3
 
 # homeassistant.components.litejet
 pylitejet==0.1
