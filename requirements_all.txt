@@ -123,9 +123,6 @@ aioftp==0.12.0
 # homeassistant.components.harmony.remote
 aioharmony==0.1.8
 
-# homeassistant.components.heos
-aioheos==0.4.0
-
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
@@ -183,7 +180,7 @@ asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.dlna_dmr.media_player
-async-upnp-client==0.14.6
+async-upnp-client==0.14.7
 
 # homeassistant.components.stream
 av==6.1.2
@@ -212,7 +209,7 @@ batinfo==0.4.2
 beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
-bellows-homeassistant==0.7.1
+bellows-homeassistant==0.7.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.3
@@ -551,7 +548,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190327.0
+home-assistant-frontend==20190329.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.3
@@ -1076,6 +1073,9 @@ pygtt==1.1.2
 # homeassistant.components.version.sensor
 pyhaversion==2.0.3
 
+# homeassistant.components.heos
+pyheos==0.2.0
+
 # homeassistant.components.hikvision.binary_sensor
 pyhik==0.2.2
 
@@ -1132,7 +1132,7 @@ pylgnetcast-homeassistant==0.2.0.dev0
 pylgtv==0.1.9
 
 # homeassistant.components.linky.sensor
-pylinky==0.3.0
+pylinky==0.3.3
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -1232,7 +1232,7 @@ pypoint==1.1.1
 pypollencom==2.2.3
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.5.0
+pyps4-homeassistant==0.5.2
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
@@ -1846,13 +1846,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.1.2
+zigpy-deconz==0.1.3
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.3.0
+zigpy-homeassistant==0.3.1
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.1.2
+zigpy-xbee-homeassistant==0.1.3
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3

@@ -157,14 +157,23 @@ class RingCam(Camera):
         self._camera.update()
         self._utcnow = dt_util.utcnow()
 
-        last_recording_id = self._camera.last_recording_id
+        try:
+            last_event = self._camera.history(limit=1)[0]
+        except (IndexError, TypeError):
+            return
 
-        if self._last_video_id != last_recording_id or \
-           self._utcnow >= self._expires_at:
+        last_recording_id = last_event['id']
+        video_status = last_event['recording']['status']
 
-            _LOGGER.info("Ring DoorBell properties refreshed")
+        if video_status == 'ready' and \
+            (self._last_video_id != last_recording_id or
+             self._utcnow >= self._expires_at):
 
-            # update attributes if new video or if URL has expired
-            self._last_video_id = self._camera.last_recording_id
-            self._video_url = self._camera.recording_url(self._last_video_id)
-            self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow
+            video_url = self._camera.recording_url(last_recording_id)
+            if video_url:
+                _LOGGER.info("Ring DoorBell properties refreshed")
+
+                # update attributes if new video or if URL has expired
+                self._last_video_id = last_recording_id
+                self._video_url = video_url
+                self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow

@@ -1,42 +1,35 @@
 """Denon HEOS Media Player."""
+from functools import reduce
+from operator import ior
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.util.dt import utcnow
 
-from . import DOMAIN as HEOS_DOMAIN
+from .const import DOMAIN as HEOS_DOMAIN
 
-DEPENDENCIES = ["heos"]
+DEPENDENCIES = ['heos']
 
-SUPPORT_HEOS = (
-    SUPPORT_PLAY
-    | SUPPORT_STOP
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-)
-
-PLAY_STATE_TO_STATE = {
-    "play": STATE_PLAYING,
-    "pause": STATE_PAUSED,
-    "stop": STATE_IDLE,
-}
+BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
+                          SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \
+                          SUPPORT_SHUFFLE_SET
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discover_info=None):
-    """Set up the HEOS platform."""
-    controller = hass.data[HEOS_DOMAIN][DOMAIN]
-    players = controller.get_players()
-    devices = [HeosMediaPlayer(p) for p in players]
-    async_add_devices(devices, True)
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add binary sensors for a config entry."""
+    players = hass.data[HEOS_DOMAIN][DOMAIN]
+    devices = [HeosMediaPlayer(player) for player in players.values()]
+    async_add_entities(devices, True)
 
 
 class HeosMediaPlayer(MediaPlayerDevice):
@@ -44,109 +37,225 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     def __init__(self, player):
         """Initialize."""
+        from pyheos import const
+        self._media_position_updated_at = None
         self._player = player
+        self._signals = []
+        self._supported_features = BASE_SUPPORTED_FEATURES
+        self._play_state_to_state = {
+            const.PLAY_STATE_PLAY: STATE_PLAYING,
+            const.PLAY_STATE_STOP: STATE_IDLE,
+            const.PLAY_STATE_PAUSE: STATE_PAUSED
+        }
+        self._control_to_support = {
+            const.CONTROL_PLAY: SUPPORT_PLAY,
+            const.CONTROL_PAUSE: SUPPORT_PAUSE,
+            const.CONTROL_STOP: SUPPORT_STOP,
+            const.CONTROL_PLAY_PREVIOUS: SUPPORT_PREVIOUS_TRACK,
+            const.CONTROL_PLAY_NEXT: SUPPORT_NEXT_TRACK
+        }
 
-    def _update_state(self):
-        self.async_schedule_update_ha_state()
+    async def _controller_event(self, event):
+        """Handle controller event."""
+        from pyheos import const
+        if event == const.EVENT_PLAYERS_CHANGED:
+            await self.async_update_ha_state(True)
 
-    async def async_update(self):
-        """Update the player."""
-        self._player.request_update()
+    async def _heos_event(self, event):
+        """Handle connection event."""
+        await self.async_update_ha_state(True)
+
+    async def _player_update(self, player_id, event):
+        """Handle player attribute updated."""
+        from pyheos import const
+        if self._player.player_id != player_id:
+            return
+        if event == const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
+            self._media_position_updated_at = utcnow()
+        await self.async_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Device added to hass."""
-        self._player.state_change_callback = self._update_state
+        from pyheos import const
+        # Update state when attributes of the player change
+        self._signals.append(self._player.heos.dispatcher.connect(
+            const.SIGNAL_PLAYER_EVENT, self._player_update))
+        # Update state when available players change
+        self._signals.append(self._player.heos.dispatcher.connect(
+            const.SIGNAL_CONTROLLER_EVENT, self._controller_event))
+        # Update state upon connect/disconnects
+        self._signals.append(self._player.heos.dispatcher.connect(
+            const.SIGNAL_HEOS_EVENT, self._heos_event))
+
+    async def async_clear_playlist(self):
+        """Clear players playlist."""
+        await self._player.clear_queue()
+
+    async def async_media_pause(self):
+        """Send pause command."""
+        await self._player.pause()
+
+    async def async_media_play(self):
+        """Send play command."""
+        await self._player.play()
+
+    async def async_media_previous_track(self):
+        """Send previous track command."""
+        await self._player.play_previous()
+
+    async def async_media_next_track(self):
+        """Send next track command."""
+        await self._player.play_next()
+
+    async def async_media_stop(self):
+        """Send stop command."""
+        await self._player.stop()
+
+    async def async_mute_volume(self, mute):
+        """Mute the volume."""
+        await self._player.set_mute(mute)
+
+    async def async_set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        await self._player.set_play_mode(self._player.repeat, shuffle)
+
+    async def async_set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        await self._player.set_volume(volume * 100)
+
+    async def async_update(self):
+        """Update supported features of the player."""
+        controls = self._player.now_playing_media.supported_controls
+        current_support = [self._control_to_support[control]
+                           for control in controls]
+        self._supported_features = reduce(ior, current_support,
+                                          BASE_SUPPORTED_FEATURES)
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect the device when removed."""
+        for signal_remove in self._signals:
+            signal_remove()
+        self._signals.clear()
 
     @property
-    def unique_id(self):
-        """Get unique id of the player."""
-        return self._player.player_id
+    def available(self) -> bool:
+        """Return True if the device is available."""
+        return self._player.available
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._player.name
+    def device_info(self) -> dict:
+        """Get attributes about the device."""
+        return {
+            'identifiers': {
+                (DOMAIN, self._player.player_id)
+            },
+            'name': self._player.name,
+            'model': self._player.model,
+            'manufacturer': 'HEOS',
+            'sw_version': self._player.version
+        }
 
     @property
-    def volume_level(self):
-        """Volume level of the device (0..1)."""
-        volume = self._player.volume
-        return float(volume) / 100
+    def device_state_attributes(self) -> dict:
+        """Get additional attribute about the state."""
+        return {
+            'media_album_id': self._player.now_playing_media.album_id,
+            'media_queue_id': self._player.now_playing_media.queue_id,
+            'media_source_id': self._player.now_playing_media.source_id,
+            'media_station': self._player.now_playing_media.station,
+            'media_type': self._player.now_playing_media.type
+        }
 
     @property
-    def state(self):
-        """Get state."""
-        return PLAY_STATE_TO_STATE.get(self._player.play_state)
+    def is_volume_muted(self) -> bool:
+        """Boolean if volume is currently muted."""
+        return self._player.is_muted
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+    def media_album_name(self) -> str:
+        """Album name of current playing media, music track only."""
+        return self._player.now_playing_media.album
 
     @property
-    def media_content_type(self):
+    def media_artist(self) -> str:
+        """Artist of current playing media, music track only."""
+        return self._player.now_playing_media.artist
+
+    @property
+    def media_content_id(self) -> str:
+        """Content ID of current playing media."""
+        return self._player.now_playing_media.media_id
+
+    @property
+    def media_content_type(self) -> str:
         """Content type of current playing media."""
         return MEDIA_TYPE_MUSIC
 
     @property
-    def media_artist(self):
-        """Artist of current playing media."""
-        return self._player.media_artist
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        duration = self._player.now_playing_media.duration
+        if isinstance(duration, int):
+            return duration / 1000
+        return None
 
     @property
-    def media_title(self):
-        """Album name of current playing media."""
-        return self._player.media_title
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        # Some media doesn't have duration but reports position, return None
+        if not self._player.now_playing_media.duration:
+            return None
+        return self._player.now_playing_media.current_position / 1000
 
     @property
-    def media_album_name(self):
-        """Album name of current playing media."""
-        return self._player.media_album
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid."""
+        # Some media doesn't have duration but reports position, return None
+        if not self._player.now_playing_media.duration:
+            return None
+        return self._media_position_updated_at
 
     @property
-    def media_image_url(self):
-        """Return the image url of current playing media."""
-        return self._player.media_image_url
+    def media_image_url(self) -> str:
+        """Image url of current playing media."""
+        return self._player.now_playing_media.image_url
 
     @property
-    def media_content_id(self):
-        """Return the content ID of current playing media."""
-        return self._player.media_id
+    def media_title(self) -> str:
+        """Title of current playing media."""
+        return self._player.now_playing_media.song
 
     @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._player.mute == "on"
-
-    async def async_mute_volume(self, mute):
-        """Mute volume."""
-        self._player.set_mute(mute)
-
-    async def async_media_next_track(self):
-        """Go TO next track."""
-        self._player.play_next()
-
-    async def async_media_previous_track(self):
-        """Go TO previous track."""
-        self._player.play_previous()
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self._player.name
 
     @property
-    def supported_features(self):
-        """Flag of media commands that are supported."""
-        return SUPPORT_HEOS
+    def should_poll(self) -> bool:
+        """No polling needed for this device."""
+        return False
 
-    async def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1."""
-        self._player.set_volume(volume * 100)
+    @property
+    def shuffle(self) -> bool:
+        """Boolean if shuffle is enabled."""
+        return self._player.shuffle
 
-    async def async_media_play(self):
-        """Play media player."""
-        self._player.play()
+    @property
+    def state(self) -> str:
+        """State of the player."""
+        return self._play_state_to_state[self._player.state]
 
-    async def async_media_stop(self):
-        """Stop media player."""
-        self._player.stop()
+    @property
+    def supported_features(self) -> int:
+        """Flag media player features that are supported."""
+        return self._supported_features
 
-    async def async_media_pause(self):
-        """Pause media player."""
-        self._player.pause()
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return str(self._player.player_id)
+
+    @property
+    def volume_level(self) -> float:
+        """Volume level of the media player (0..1)."""
+        return self._player.volume / 100
