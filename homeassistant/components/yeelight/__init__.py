@@ -13,7 +13,8 @@ from homeassistant.components.binary_sensor import DOMAIN as \
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send, dispatcher_connect
+from homeassistant.helpers.dispatcher import dispatcher_send, \
+    dispatcher_connect
 from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['yeelight==0.4.4']
