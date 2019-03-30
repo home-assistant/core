@@ -154,6 +154,7 @@ FLOWS = [
     'gpslogger',
     'hangouts',
     'homematicip_cloud',
+    'heos',
     'hue',
     'ifttt',
     'ios',

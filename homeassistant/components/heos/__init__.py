@@ -27,6 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the HEOS component."""
+    if DOMAIN not in config:
+        return True
     host = config[DOMAIN][CONF_HOST]
     entries = hass.config_entries.async_entries(DOMAIN)
     if not entries:
