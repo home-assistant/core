@@ -98,7 +98,7 @@ class AmcrestCam(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
-    
+
     @property
     def supported_features(self):
         """Return supported features."""
