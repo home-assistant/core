@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 import logging
 
-import evohomeclient2
 import requests.exceptions
 
 from homeassistant.components.climate import ClimateDevice
@@ -131,6 +130,7 @@ class EvoClimateDevice(ClimateDevice):
 
     def _handle_exception(self, err):
         try:
+            import evohomeclient2
             raise err
 
         except evohomeclient2.AuthenticationError:
@@ -305,6 +305,7 @@ class EvoZone(EvoClimateDevice):
           - None for PermanentOverride (i.e. indefinitely)
         """
         try:
+            import evohomeclient2
             self._obj.set_temperature(temperature, until)
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
@@ -356,6 +357,7 @@ class EvoZone(EvoClimateDevice):
     def _set_operation_mode(self, operation_mode):
         if operation_mode == EVO_FOLLOW:
             try:
+                import evohomeclient2
                 self._obj.cancel_temp_override()
             except (requests.exceptions.RequestException,
                     evohomeclient2.AuthenticationError) as err:
@@ -519,6 +521,7 @@ class EvoController(EvoClimateDevice):
 
     def _set_operation_mode(self, operation_mode):
         try:
+            import evohomeclient2
             self._obj._set_status(operation_mode)                                # noqa: E501; pylint: disable=protected-access
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
@@ -556,6 +559,7 @@ class EvoController(EvoClimateDevice):
         loc_idx = self._params[CONF_LOCATION_IDX]
 
         try:
+            import evohomeclient2
             self._status.update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])
         except (requests.exceptions.RequestException,
