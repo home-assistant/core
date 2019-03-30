@@ -31,8 +31,7 @@ SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_FLASH)
 
 SUPPORT_YEELIGHT_WHITE_TEMP = (SUPPORT_YEELIGHT |
-                               SUPPORT_COLOR_TEMP |
-                               SUPPORT_EFFECT)
+                               SUPPORT_COLOR_TEMP)
 
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_COLOR |

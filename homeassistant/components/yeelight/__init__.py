@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import DOMAIN as \
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send, dispatcher_connect
 from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['yeelight==0.4.4']
@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
 DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
+DEVICE_INITIALIZED = '{}_device_initialized'.format(DOMAIN)
 
 DEFAULT_NAME = 'Yeelight'
 DEFAULT_TRANSITION = 350
@@ -141,6 +142,17 @@ def setup(hass, config):
         hass, update, conf.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     )
 
+    def load_platforms(ipaddr):
+        platform_config = hass.data[DATA_YEELIGHT][ipaddr].config.copy()
+        platform_config[CONF_HOST] = ipaddr
+        platform_config[CONF_CUSTOM_EFFECTS] = \
+            config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
+        load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, config)
+        load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
+                      config)
+
+    dispatcher_connect(hass, DEVICE_INITIALIZED, load_platforms)
+
     if DOMAIN in config:
         for ipaddr, device_config in conf[CONF_DEVICES].items():
             _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
@@ -149,7 +161,7 @@ def setup(hass, config):
     return True
 
 
-def _setup_device(hass, hass_config, ipaddr, device_config):
+def _setup_device(hass, _, ipaddr, device_config):
     devices = hass.data[DATA_YEELIGHT]
 
     if ipaddr in devices:
@@ -158,18 +170,7 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     device = YeelightDevice(hass, ipaddr, device_config)
 
     devices[ipaddr] = device
-    platform_config = device_config.copy()
-    platform_config[CONF_HOST] = ipaddr
-    platform_config[CONF_CUSTOM_EFFECTS] = \
-        hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
-
-    def setup_platforms():
-        device.setup()
-        load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
-        load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
-                      hass_config)
-
-    hass.add_job(setup_platforms)
+    hass.add_job(device.update)
 
 
 class YeelightDevice:
@@ -177,29 +178,21 @@ class YeelightDevice:
 
     def __init__(self, hass, ipaddr, config):
         """Initialize device."""
+        import yeelight
+
         self._hass = hass
         self._config = config
         self._ipaddr = ipaddr
         self._name = config.get(CONF_NAME)
         self._model = config.get(CONF_MODEL)
-        self._bulb_device = None
+        self._bulb_device = yeelight.Bulb(self.ipaddr, model=self._model)
         self._available = False
+        self._initialized = False
 
     @property
     def bulb(self):
         """Return bulb device."""
         return self._bulb_device
-
-    def setup(self):
-        import yeelight
-        try:
-            self._bulb_device = yeelight.Bulb(self.ipaddr, model=self._model)
-            self._bulb_device.get_properties(UPDATE_REQUEST_PROPERTIES)
-            self._available = True
-        except yeelight.BulbException as ex:
-            self._available = False
-            _LOGGER.error("Failed to connect to bulb %s, %s: %s",
-                          self.ipaddr, self.name, ex)
 
     @property
     def name(self):
@@ -286,6 +279,10 @@ class YeelightDevice:
         try:
             self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
+
+            if not self._initialized:
+                self._initialized = True
+                dispatcher_send(self._hass, DEVICE_INITIALIZED, self.ipaddr)
         except yeelight.BulbException as ex:
             if self._available:  # just inform once
                 _LOGGER.error("Unable to update device %s, %s: %s",
