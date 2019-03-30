@@ -175,6 +175,9 @@ apns2==0.3.0
 # homeassistant.components.aqualogic
 aqualogic==1.0
 
+# homeassistant.components.ampio.air_quality
+asmog==0.0.6
+
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
@@ -977,7 +980,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==3.0.0
+pychromecast==3.1.0
 
 # homeassistant.components.cmus.media_player
 pycmus==0.1.1
@@ -1138,7 +1141,7 @@ pylinky==0.3.3
 pylitejet==0.1
 
 # homeassistant.components.loopenergy.sensor
-pyloopenergy==0.1.0
+pyloopenergy==0.1.2
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.5.0
