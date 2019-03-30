@@ -182,6 +182,8 @@ class NanoleafLight(Light):
             hue, saturation = hs_color
             self._light.hue = int(hue)
             self._light.saturation = int(saturation)
+        if color_temp_mired:
+            self._light.color_temperature = mired_to_kelvin(color_temp_mired)
 
         if transition:
             if brightness:  # tune to the required brightness in n seconds
@@ -193,8 +195,7 @@ class NanoleafLight(Light):
             self._light.on = True
             if brightness:
                 self._light.brightness = int(brightness / 2.55)
-        if color_temp_mired:
-            self._light.color_temperature = mired_to_kelvin(color_temp_mired)
+
         if effect:
             self._light.effect = effect
 
