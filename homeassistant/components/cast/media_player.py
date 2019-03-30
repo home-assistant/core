@@ -871,15 +871,13 @@ class CastDevice(MediaPlayerDevice):
 
         if (media_status is None or media_status.player_state == "UNKNOWN" and
                 self._dynamic_group_cast is not None):
-            # pylint: disable=protected-access
             media_controller = \
-                self._dynamic_group_cast._chromecast.media_controller
+                self._dynamic_group_cast.media_controller
 
         if media_status is None or media_status.player_state == "UNKNOWN":
             groups = self.mz_media_status
             for k, val in groups.items():
                 if val and val.player_state != "UNKNOWN":
-                    media_status = val
                     media_controller = \
                         self.mz_mgr.get_multizone_mediacontroller(k)
                     break
