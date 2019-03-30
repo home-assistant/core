@@ -39,7 +39,7 @@ class DeconzGateway:
 
     @property
     def bridgeid(self) -> str:
-        """Unique identifier for gateway."""
+        """Return the unique identifier of the gateway."""
         return self.config_entry.data[CONF_BRIDGEID]
 
     @property
