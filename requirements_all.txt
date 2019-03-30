@@ -123,9 +123,6 @@ aioftp==0.12.0
 # homeassistant.components.harmony.remote
 aioharmony==0.1.8
 
-# homeassistant.components.heos
-aioheos==0.4.0
-
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
@@ -1075,6 +1072,9 @@ pygtt==1.1.2
 
 # homeassistant.components.version.sensor
 pyhaversion==2.0.3
+
+# homeassistant.components.heos
+pyheos==0.2.0
 
 # homeassistant.components.hikvision.binary_sensor
 pyhik==0.2.2
