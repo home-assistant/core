@@ -3,6 +3,11 @@
 SENSOR_SMS = 'sms'
 SENSOR_USAGE = 'usage'
 
-ALL = [SENSOR_SMS, SENSOR_USAGE]
+SENSOR_UNITS = {
+    SENSOR_SMS: 'unread',
+    SENSOR_USAGE: 'MiB',
+}
+
+ALL = list(SENSOR_UNITS)
 
 DEFAULT = [SENSOR_USAGE]
