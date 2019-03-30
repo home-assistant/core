@@ -13,6 +13,11 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Initialition of the platform."""
     sector_connection = hass.data.get(SECTOR_DOMAIN)
+
+    if sector_connection is None:
+        _LOGGER.error("SECTOR_DOMAIN is empty")
+        return;
+
     code = discovery_info[sector_alarm.CONF_CODE]
     panel_id = discovery_info[sector_alarm.CONF_ALARM_ID]
 
