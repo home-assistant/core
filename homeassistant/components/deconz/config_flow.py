@@ -150,6 +150,9 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         deconz_config[CONF_PORT] = discovery_info.get(CONF_PORT)
         deconz_config[CONF_BRIDGEID] = discovery_info.get('serial')
 
+        if deconz_config[CONF_HOST] in configured_hosts(self.hass):
+            return self.async_abort(reason='one_instance_only')
+
         return await self.async_step_import(deconz_config)
 
     async def async_step_import(self, import_config):
