@@ -6,16 +6,12 @@ from homeassistant.const import (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
 
 import homeassistant.components.sector_alarm as sector_alarm
 
-DEPENDENCIES = ['sector_alarm']
-
-DOMAIN = 'sector_alarm'
-
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Initial setup of the platform."""
+    """Initialition of the platform."""
     sector_connection = hass.data.get(SECTOR_DOMAIN)
     code = discovery_info[sector_alarm.CONF_CODE]
     panel_id = discovery_info[sector_alarm.CONF_ALARM_ID]
@@ -26,8 +22,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 class SectorAlarmPanel(alarm.AlarmControlPanel):
     """Get the alarm status, and arm/disarm alarm."""
 
-    def __init__(self, sectorConnect, panelId, code):
-        self._panelid = panelId
+    def __init__(self, sectorConnect, alarmId, code):
+        self._alarmid = alarmId
         self._code = code
         self._sectorconnect = sectorConnect
         self._state = ''
@@ -35,23 +31,21 @@ class SectorAlarmPanel(alarm.AlarmControlPanel):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Sector Alarm {}".format(self._panelid)
+        return "Sector Alarm {}".format(self._alarmid)
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        state = self._state
-
-        if state == 'ON':
+        if self._state == 'ON':
             return STATE_ALARM_ARMED_AWAY
 
-        if state == 'PARTIAL':
+        if self._state == 'PARTIAL':
             return STATE_ALARM_ARMED_HOME
 
-        if state == 'OFF':
+        if self._state == 'OFF':
             return STATE_ALARM_DISARMED
 
-        if state == 'pending':
+        if self._state == 'pending':
             return STATE_ALARM_PENDING
 
         return 'unknown'

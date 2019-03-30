@@ -1,20 +1,16 @@
 import logging
 import voluptuous as vol
-import sectoralarmlib.sector as sectorlib
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_NAME)
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_CODE, CONF_EMAIL
 from homeassistant.helpers import discovery
 
 DOMAIN = 'sector_alarm'
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['sectoralarmlib==0.5']
+REQUIREMENTS = ['sectoralarmlib==0.7']
 
-CONF_EMAIL = 'email'
-CONF_PASSWORD = 'password'
 CONF_ALARM_ID = 'alarm_id'
-CONF_CODE = "code"
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN:
@@ -23,20 +19,22 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_EMAIL): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Required(CONF_ALARM_ID): cv.string,
-            vol.Required(CONF_CODE, default=''): cv.string
+            vol.Required(CONF_CODE): cv.string
         }),
 },
                            extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
-    """Initial setup for Sector Alarm."""
+    """Initialitation for Sector Alarm."""
     try:
-        alarm = sectorlib.SectorAlarm(config[DOMAIN].get(CONF_EMAIL),
-                                      config[DOMAIN].get(CONF_PASSWORD),
-                                      config[DOMAIN].get(CONF_ALARM_ID),
-                                      config[DOMAIN].get(CONF_CODE))
-    except Exception:
+        import sectoralarmlib.sector as sectorlib
+
+        alarm = sectorlib.SectorAlarm(config[DOMAIN][CONF_EMAIL],
+                                      config[DOMAIN][CONF_PASSWORD],
+                                      config[DOMAIN][CONF_ALARM_ID],
+                                      config[DOMAIN][CONF_CODE])
+    except RuntimeError:
         _LOGGER.error("Could not login. Wrong username or password?")
         return
 

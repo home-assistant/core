@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Initial setup of the platform."""
+    """Initialition of the platform."""
     sector_connection = hass.data.get(SECTOR_DOMAIN)
 
     temps = sector_connection.GetTemps()
@@ -24,7 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     for temp in temps:
         dev.append(SectorTempSensor(temp, sector_connection))
 
-    async_add_entities(dev, False)
+    async_add_entities(dev)
 
 
 class SectorTempSensor(Entity):
