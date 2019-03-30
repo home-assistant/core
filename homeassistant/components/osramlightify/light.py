@@ -11,10 +11,8 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP, ATTR_KELVIN,
-    ATTR_HS_COLOR, ATTR_RGB_COLOR, ATTR_XY_COLOR, ATTR_COLOR_NAME,
-    ATTR_MIN_MIREDS, ATTR_MAX_MIREDS, ATTR_TRANSITION, ATTR_EFFECT,
-    ATTR_EFFECT_LIST, EFFECT_RANDOM, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
+    ATTR_EFFECT, EFFECT_RANDOM, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_TRANSITION,
     Light)
 
@@ -161,9 +159,7 @@ class Luminary(Light):
         self._max_mireds = 0
         self._brightness = 0
         self._color_temp = 0
-        self._hs_color = (0, 0)
         self._rgb_color = (0, 0, 0)
-        self._xy_color = (0, 0)
 
         self.update_static_attributes()
         self.update_dynamic_attributes()
@@ -203,7 +199,7 @@ class Luminary(Light):
     @property
     def hs_color(self):
         """Return last hs color value set."""
-        return self._hs_color
+        return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
     def color_temp(self):
@@ -245,39 +241,12 @@ class Luminary(Light):
         """Return a unique ID."""
         return self._unique_id
 
-    @property
-    def state_attributes(self):
-        """Return optional state attributes."""
-        data = {}
-        if self._supported_features & SUPPORT_COLOR_TEMP:
-            data[ATTR_MIN_MIREDS] = self._min_mireds
-            data[ATTR_MAX_MIREDS] = self._max_mireds
-
-        if self._supported_features & SUPPORT_EFFECT:
-            data[ATTR_EFFECT_LIST] = self._effect_list
-
-        if self.is_on:
-            if self._supported_features & SUPPORT_BRIGHTNESS:
-                data[ATTR_BRIGHTNESS] = self._brightness
-
-            if self._supported_features & SUPPORT_COLOR_TEMP:
-                data[ATTR_COLOR_TEMP] = self._color_temp
-
-            if self._supported_features & SUPPORT_COLOR:
-                data[ATTR_RGB_COLOR] = self._rgb_color
-                data[ATTR_HS_COLOR] = self._hs_color
-                data[ATTR_XY_COLOR] = self._xy_color
-
-        return data
-
     def play_effect(self, effect, transition):
         """Play selected effect."""
         if effect == EFFECT_RANDOM:
             self._rgb_color = (random.randrange(0, 256),
                                random.randrange(0, 256),
                                random.randrange(0, 256))
-            self._hs_color = color_util.color_RGB_to_hs(*self._rgb_color)
-            self._xy_color = color_util.color_RGB_to_xy(*self._rgb_color)
             self._luminary.set_rgb(*self._rgb_color, transition)
             self._luminary.set_onoff(True)
             return True
@@ -288,31 +257,12 @@ class Luminary(Light):
         """Turn the device on."""
         transition = int(kwargs.get(ATTR_TRANSITION, 0) * 10)
         if ATTR_EFFECT in kwargs:
-            if self.play_effect(kwargs[ATTR_EFFECT], transition):
-                self.schedule_update_ha_state()
-
+            self.play_effect(kwargs[ATTR_EFFECT], transition)
             return
 
         if ATTR_HS_COLOR in kwargs:
-            self._hs_color = kwargs[ATTR_HS_COLOR]
-            self._rgb_color = color_util.color_hs_to_RGB(*self._hs_color)
-            self._xy_color = color_util.color_hs_to_xy(*self._hs_color)
-            self._luminary.set_rgb(*self._rgb_color, transition)
-        elif ATTR_RGB_COLOR in kwargs:
-            self._rgb_color = kwargs[ATTR_RGB_COLOR]
-            self._hs_color = color_util.color_RGB_to_hs(*self._rgb_color)
-            self._xy_color = color_util.color_RGB_to_xy(*self._rgb_color)
-            self._luminary.set_rgb(*self._rgb_color, transition)
-        elif ATTR_XY_COLOR in kwargs:
-            self._xy_color = kwargs[ATTR_XY_COLOR]
-            self._rgb_color = color_util.color_xy_to_RGB(*self._xy_color)
-            self._xy_color = color_util.color_xy_to_hs(*self._xy_color)
-            self._luminary.set_rgb(*self._rgb_color, transition)
-        elif ATTR_COLOR_NAME in kwargs:
-            self._rgb_color = color_util.color_name_to_rgb(
-                kwargs[ATTR_COLOR_NAME])
-            self._hs_color = color_util.color_RGB_to_hs(*self._rgb_color)
-            self._xy_color = color_util.color_RGB_to_xy(*self._rgb_color)
+            self._rgb_color = color_util.color_hs_to_RGB(
+                *kwargs[ATTR_HS_COLOR])
             self._luminary.set_rgb(*self._rgb_color, transition)
 
         if ATTR_COLOR_TEMP in kwargs:
@@ -320,24 +270,14 @@ class Luminary(Light):
             self._luminary.set_temperature(
                 int(color_util.color_temperature_mired_to_kelvin(
                     self._color_temp)), transition)
-        elif ATTR_KELVIN in kwargs:
-            self._color_temp = color_util.color_temperature_kelvin_to_mired(
-                kwargs[ATTR_KELVIN])
-            self._luminary.set_temperature(kwargs[ATTR_KELVIN], transition)
 
         self._is_on = True
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             self._luminary.set_luminance(int(self._brightness / 2.55),
                                          transition)
-        elif ATTR_BRIGHTNESS_PCT in kwargs:
-            self._brightness = int(kwargs[ATTR_BRIGHTNESS_PCT] * 2.55)
-            self._luminary.set_luminance(int(kwargs[ATTR_BRIGHTNESS_PCT]),
-                                         transition)
         else:
             self._luminary.set_onoff(True)
-
-        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -348,8 +288,6 @@ class Luminary(Light):
             self._luminary.set_luminance(0, transition)
         else:
             self._luminary.set_onoff(False)
-
-        self.schedule_update_ha_state()
 
     def update_luminary(self, luminary):
         """Update internal luminary object."""
@@ -379,8 +317,6 @@ class Luminary(Light):
 
         if self._supported_features & SUPPORT_COLOR:
             self._rgb_color = self._luminary.rgb()
-            self._hs_color = color_util.color_RGB_to_hs(*self._rgb_color)
-            self._xy_color = color_util.color_RGB_to_xy(*self._rgb_color)
 
     def update(self):
         """Synchronize state with bridge."""
