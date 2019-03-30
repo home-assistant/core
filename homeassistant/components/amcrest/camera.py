@@ -2,7 +2,8 @@
 import asyncio
 import logging
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import (
+    Camera, SUPPORT_STREAM)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import (
@@ -97,6 +98,11 @@ class AmcrestCam(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        return SUPPORT_STREAM
 
     @property
     def stream_source(self):
