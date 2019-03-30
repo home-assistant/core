@@ -333,7 +333,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     #
     session = async_get_clientsession(hass)
     #
-    # Round location items to 4 decimal digits
+    # Round location items to 4 decimal digits, since that is what the
+    # API wants.
     #
     latitude = round(latitude, 4)
     longitude = round(longitude, 4)
@@ -355,15 +356,14 @@ async def async_setup_platform(hass, config, async_add_entities,
     # station for observations.  If a station was configured, verify
     # that it is in the list for this location.
     #
-    #
-    # Do we have a station from the configuration?
-    #
 
     stationcode = None
 
     #
-    # loop through list of stations to check if code is valid station
-    # for this location
+    # loop through list of stations to check if configured station
+    # is valid for this location, or use first station
+    # if none is configured.  The first station will be the closest
+    # one to the point given.
     #
     for station in stationlist:
         if confstationcode is None:
