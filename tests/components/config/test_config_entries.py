@@ -34,16 +34,20 @@ def client(hass, hass_client):
 @HANDLERS.register('comp1')
 class Comp1ConfigFlow:
     """Config flow with options flow."""
+
     @staticmethod
     @callback
     def async_get_options_flow(config, options):
+        """Get options flow."""
         pass
 
 
 @HANDLERS.register('comp2')
 class Comp2ConfigFlow:
     """Config flow without options flow."""
+    
     def __init__(self):
+        """Init."""
         pass
 
 
