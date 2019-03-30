@@ -109,7 +109,7 @@ class UnifiVideoCamera(Camera):
     def stream_source(self):
         """Return the stream source."""
         caminfo = self._nvr.get_camera(self._uuid)
-        if (caminfo['channels'][0]['isRtspEnabled']):
+        if caminfo['channels'][0]['isRtspEnabled']:
             stream = caminfo['channels'][0]['rtspUris'][0].split(':')[2]
             return 'rtsp://%(host)s:%(stream)s' % dict(
                 host=self._nvr._host, stream=stream)
