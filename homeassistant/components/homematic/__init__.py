@@ -48,6 +48,7 @@ ATTR_PARAMSET = 'paramset'
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
 EVENT_ERROR = 'homematic.error'
+EVENT_LOW_BAT = 'homematic.low_bat'
 
 SERVICE_VIRTUALKEY = 'virtualkey'
 SERVICE_RECONNECT = 'reconnect'
@@ -127,6 +128,11 @@ HM_ATTRIBUTE_SUPPORT = {
     'OPERATING_VOLTAGE': ['voltage', {}],
     'WORKING': ['working', {0: 'No', 1: 'Yes'}]
 }
+
+HM_LOW_BATTERY_ATTRIBUTES = [
+    'LOWBAT',
+    'LOW_BAT'
+]
 
 HM_PRESS_EVENTS = [
     'PRESS_SHORT',
@@ -579,6 +585,13 @@ def _hm_event_handler(hass, interface, device, caller, attribute, value):
 
     _LOGGER.debug("Event %s for %s channel %i", attribute,
                   hmdevice.NAME, channel)
+
+    if attribute in HM_LOW_BATTERY_ATTRIBUTES:
+        if value is True:
+            hass.bus.fire(EVENT_LOW_BAT, {
+                ATTR_NAME: hmdevice.NAME
+            })
+        return
 
     # Keypress event
     if attribute in HM_PRESS_EVENTS:
