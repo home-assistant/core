@@ -226,7 +226,7 @@ class YeelightGenericLight(Light):
     @callback
     def _schedule_immediate_update(self, ipaddr):
         if ipaddr == self.device.ipaddr:
-            self.async_schedule_update_ha_state()
+            self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -309,7 +309,7 @@ class YeelightGenericLight(Light):
     @property
     def hs_color(self) -> tuple:
         """Return the color property."""
-        return self._get_hs_from_properties()
+        return self._hs
 
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
@@ -338,6 +338,9 @@ class YeelightGenericLight(Light):
     def device(self):
         """Return yeelight device."""
         return self._device
+
+    def update(self):
+        self._hs = self._get_hs_from_properties()
 
     def _get_hs_from_properties(self):
         rgb = self._get_property('rgb')
@@ -397,49 +400,6 @@ class YeelightGenericLight(Light):
             self._bulb.start_music()
         else:
             self._bulb.stop_music()
-
-    def update(self) -> None:
-        """Update properties from the bulb."""
-        import yeelight
-        bulb_type = self._bulb.bulb_type
-
-        if bulb_type == yeelight.BulbType.Color:
-            self._supported_features = SUPPORT_YEELIGHT_RGB
-        elif self.light_type == yeelight.enums.LightType.Ambient:
-            self._supported_features = SUPPORT_YEELIGHT_RGB
-        elif bulb_type in (yeelight.BulbType.WhiteTemp,
-                           yeelight.BulbType.WhiteTempMood):
-            if self._is_nightlight_enabled:
-                self._supported_features = SUPPORT_YEELIGHT
-            else:
-                self._supported_features = SUPPORT_YEELIGHT_WHITE_TEMP
-
-        if self.min_mireds is None:
-            model_specs = self._bulb.get_model_specs()
-            self._min_mireds = \
-                kelvin_to_mired(model_specs['color_temp']['max'])
-            self._max_mireds = \
-                kelvin_to_mired(model_specs['color_temp']['min'])
-
-        if bulb_type == yeelight.BulbType.WhiteTempMood:
-            self._is_on = self._get_property('main_power') == 'on'
-        else:
-            self._is_on = self._get_property('power') == 'on'
-
-        if self._is_nightlight_enabled:
-            bright = self._get_property('nl_br')
-        else:
-            bright = self._get_property('bright')
-
-        if bright:
-            self._brightness = round(255 * (int(bright) / 100))
-
-        temp_in_k = self._get_property('ct')
-
-        if temp_in_k:
-            self._color_temp = kelvin_to_mired(int(temp_in_k))
-
-        self._hs = self._get_hs_from_properties()
 
     @_cmd
     def set_brightness(self, brightness, duration) -> None:
