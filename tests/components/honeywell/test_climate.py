@@ -1,5 +1,4 @@
 """The test the Honeywell thermostat module."""
-import socket
 import unittest
 from unittest import mock
 

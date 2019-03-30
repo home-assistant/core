@@ -79,7 +79,7 @@ def _setup_round(username, password, config, add_entities):
             )
     except requests.exceptions.RequestException as err:
         _LOGGER.error(
-            "Connection error logging into the honeywell evohome web service,"
+            "Connection error logging into the honeywell evohome web service, "
             "hint: %s", err)
         return False
     return True
