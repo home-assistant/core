@@ -212,7 +212,7 @@ class TestUVC(unittest.TestCase):
         self.password = 'seekret'
         self.addr = 'host-a'
         self.uvc = uvc.UnifiVideoCamera(self.nvr, self.uuid, self.name,
-                                        self.password,self.addr)
+                                        self.password, self.addr)
         self.nvr.get_camera.return_value = {
             'model': 'UVC Fake',
             'recordingSettings': {
