@@ -158,6 +158,9 @@ jobs:
     parameters:
       python:
         type: string
+      coveralls:
+        type: boolean
+        default: false
     executor:
       name: python
       tag: << parameters.python >>
@@ -179,6 +182,7 @@ jobs:
             if [ -z "$CODE_COVERAGE" ]; then CC_SWITCH=""; else CC_SWITCH="--cov --cov-report html:htmlcov"; fi
             pytest --timeout=9 --duration=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH -- ${TESTFILES}
             script/check_dirty
+            <<# parameters.coveralls >>COVERALLS_PARALLEL=true coveralls<</ parameters.coveralls>>
 
       - store_test_results:
           path: test-reports
@@ -231,6 +235,7 @@ workflows:
           requires:
             - pre-test 3.5.5
           python: 3.5.5-stretch
+          coveralls: true
       - test:
           name: test 3.6
           requires:
