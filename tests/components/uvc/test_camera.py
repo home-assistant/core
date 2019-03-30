@@ -62,8 +62,8 @@ class TestUVCSetup(unittest.TestCase):
             ssl=False
         )
         mock_uvc.assert_has_calls([
-            mock.call(mock_remote.return_value, 'id1', 'Front', 'bar'),
-            mock.call(mock_remote.return_value, 'id2', 'Back', 'bar'),
+            mock.call(mock_remote.return_value, 'id1', 'Front', 'bar', 'foo'),
+            mock.call(mock_remote.return_value, 'id2', 'Back', 'bar', 'foo'),
         ])
 
     @mock.patch('uvcclient.nvr.UVCRemote')
