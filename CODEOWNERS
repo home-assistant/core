@@ -131,6 +131,7 @@ homeassistant/components/gtfs/sensor.py @robbiet480
 
 # H
 homeassistant/components/harmony/* @ehendrix23
+homeassistant/components/heos/* @andrewsayre
 homeassistant/components/hikvision/binary_sensor.py @mezz64
 homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/hive/* @Rendili @KJonline
