@@ -12,6 +12,8 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType  # noqa
 
+REQUIREMENTS = ['elkm1-lib==0.7.14']
+
 DOMAIN = 'elkm1'
 
 CONF_AREA = 'area'
@@ -133,17 +135,20 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
             config[item] = {'enabled': conf[item][CONF_ENABLED],
                             'included': [not conf[item]['include']] * max_}
             try:
-                _included(conf[item]['include'], True, config[item]['included'])
-                _included(conf[item]['exclude'], False, config[item]['included'])
+                _included(conf[item]['include'], True,
+                          config[item]['included'])
+                _included(conf[item]['exclude'], False,
+                          config[item]['included'])
             except (ValueError, vol.Invalid) as err:
                 _LOGGER.error("Config item: %s; %s", item, err)
                 return False
 
-        prefix = conf.get(CONF_PREFIX,"")
+        prefix = conf.get(CONF_PREFIX, "")
         device = devices.get(prefix, None)
-        if device != None:
+        if device is not None:
             if prefix != "":
-                _LOGGER.error("Need to use a prefix configuration command on second and later elk m1s")
+                _LOGGER.error("Need to use a prefix configuration command " +
+                              "on second and later elk m1s")
             else:
                 _LOGGER.error("Duplicate prefix on elk m1s: " + prefix)
         else:

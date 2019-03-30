@@ -12,7 +12,8 @@ async def async_setup_platform(
     elk_datas = hass.data[ELK_DOMAIN]
     for prefix, elk_data in elk_datas.items():
         elk = elk_data['elk']
-        entities = create_elk_entities(elk_data, elk.outputs, 'output', ElkOutput, [])
+        entities = create_elk_entities(elk_data, elk.outputs,
+                                       'output', ElkOutput, [])
         async_add_entities(entities, True)
 
 

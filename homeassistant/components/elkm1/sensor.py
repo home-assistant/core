@@ -1,5 +1,4 @@
 """Support for control of ElkM1 sensors."""
-import logging
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 DEPENDENCIES = [ELK_DOMAIN]
