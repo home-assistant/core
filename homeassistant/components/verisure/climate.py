@@ -6,8 +6,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.components.verisure import HUB as hub
-from homeassistant.components.verisure import CONF_CLIMATE
+from homeassistant.components.verisure import CONF_CLIMATE, HUB as hub
 
 _LOGGER = logging.getLogger(__name__)
 HEAT_PUMPS = None
