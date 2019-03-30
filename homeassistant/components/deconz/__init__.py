@@ -6,11 +6,12 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-# from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts, get_master_gateway
-from .const import CONF_BRIDGEID, DEFAULT_PORT, DOMAIN, _LOGGER
+from .const import (
+    CONF_ALLOW_CLIP_SENSOR, CONF_ALLOW_DECONZ_GROUPS, CONF_BRIDGEID,
+    CONF_MASTER_GATEWAY, DEFAULT_PORT, DOMAIN, _LOGGER)
 from .gateway import DeconzGateway
 
 REQUIREMENTS = ['pydeconz==54']
@@ -178,7 +179,11 @@ async def async_populate_options(hass, config_entry):
     master = not get_master_gateway(hass)
 
     options = {
-        'master': master
+        CONF_MASTER_GATEWAY: master,
+        CONF_ALLOW_CLIP_SENSOR: config_entry.data.get(
+            CONF_ALLOW_CLIP_SENSOR, False),
+        CONF_ALLOW_DECONZ_GROUPS: config_entry.data.get(
+            CONF_ALLOW_DECONZ_GROUPS, True)
     }
 
     hass.config_entries.async_update_entry(config_entry, options=options)

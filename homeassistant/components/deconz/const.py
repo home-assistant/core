@@ -12,6 +12,7 @@ DEFAULT_ALLOW_DECONZ_GROUPS = False
 CONF_ALLOW_CLIP_SENSOR = 'allow_clip_sensor'
 CONF_ALLOW_DECONZ_GROUPS = 'allow_deconz_groups'
 CONF_BRIDGEID = 'bridgeid'
+CONF_MASTER_GATEWAY = 'master'
 
 SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover',
                        'light', 'scene', 'sensor', 'switch']
