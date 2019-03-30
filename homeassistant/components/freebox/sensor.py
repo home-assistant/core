@@ -57,8 +57,8 @@ class FbxRXSensor(Entity):
 
 
 class FbxTXSensor(Entity):
-
     """Update the Freebox TxSensor."""
+
     def __init__(self, hass):
         """Initialize the sensor."""
         self._state = None
