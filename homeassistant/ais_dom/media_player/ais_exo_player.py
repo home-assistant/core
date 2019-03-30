@@ -26,8 +26,8 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_EXO = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
-    SUPPORT_SEEK | SUPPORT_SELECT_SOURCE | SUPPORT_SELECT_SOUND_MODE
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_VOLUME_STEP | SUPPORT_SEEK | SUPPORT_SELECT_SOURCE | SUPPORT_SELECT_SOUND_MODE
 
 SUBSCTRIBE_TOPIC = 'ais/player_status'
 DEFAULT_NAME = 'AIS Dom Odtwarzacz'
@@ -61,6 +61,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         pass
 
     def set_volume_level(self, volume):
+        self._volume_level = volume
         vol = int(volume * 100)
         self.hass.services.call(
             'ais_ai_service',
@@ -101,6 +102,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._media_position = 0
         self._duration = 0
         self._media_content_id = None
+        self._volume_level = 0.5
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -113,10 +115,12 @@ class ExoPlayerDevice(MediaPlayerDevice):
             try:
                 message = json.loads(payload.decode('utf8').replace("'", '"'))
             except Exception as e:
-                _LOGGER.info("problem to json.loads: " + str(e))
+                _LOGGER.error("problem to json.loads: " + str(e))
                 message = json.loads(payload)
-
-            # TODO currentVolume
+            try:
+                self._volume_level = message.get("currentVolume", 0) / 100
+            except Exception as e:
+                _LOGGER.warning("no currentVolume info: " + str(e))
             self._status = message.get("currentStatus", 0)
             self._playing = message.get("playing", False)
             self._media_position = message.get("currentPosition", 0)
@@ -174,6 +178,11 @@ class ExoPlayerDevice(MediaPlayerDevice):
         pass
 
     @property
+    def volume_level(self):
+        """Return the volume level of the Player"""
+        return self._volume_level
+
+    @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         return int(float(self._duration))
@@ -209,6 +218,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
     def volume_up(self):
         """Service to send the exo the command for volume up."""
+        self._volume_level = min(self._volume_level + 0.1, 1)
         self.hass.services.call(
             'ais_ai_service',
             'publish_command_to_frame', {
@@ -219,6 +229,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
     def volume_down(self):
         """Service to send the exo the command for volume down."""
+        self._volume_level = max(self._volume_level - 0.1, 0)
         self.hass.services.call(
             'ais_ai_service',
             'publish_command_to_frame', {
@@ -229,13 +240,15 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Service to send the exo the command for mute."""
-        self.hass.services.call(
-            'ais_ai_service',
-            'publish_command_to_frame', {
-                "key": 'downVolume',
-                "val": True
-            }
-        )
+        pass
+        # TODO
+        #  self.hass.services.call(
+        #     'ais_ai_service',
+        #     'publish_command_to_frame', {
+        #         "key": 'downVolume',
+        #         "val": True
+        #     }
+        # )
 
     @property
     def sound_mode(self):
