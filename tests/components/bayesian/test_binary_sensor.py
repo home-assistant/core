@@ -200,9 +200,9 @@ class TestBayesianBinarySensor(unittest.TestCase):
                     'prob_given_true': 0.8,
                     'prob_given_false': 0.4
                 }, {
-                    'platform': 'state',
-                    'entity_id': 'sensor.test_monitored',
-                    'to_state': 'red',
+                    'platform': 'template',
+                    'value_template': (
+                        '{{ states.sensor.test_monitored.state == "red" }}'),
                     'prob_given_true': 0.2,
                     'prob_given_false': 0.4
                 }],
