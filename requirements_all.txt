@@ -175,6 +175,9 @@ apns2==0.3.0
 # homeassistant.components.aqualogic
 aqualogic==1.0
 
+# homeassistant.components.ampio.air_quality
+asmog==0.0.6
+
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
