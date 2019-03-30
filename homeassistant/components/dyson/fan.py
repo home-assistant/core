@@ -84,9 +84,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Get Dyson Devices from parent component
     has_purecool_devices = False
-    device_names = [device.name for device in hass.data[DYSON_FAN_DEVICES]]
+    device_serials = [device.serial for device in hass.data[DYSON_FAN_DEVICES]]
     for device in hass.data[DYSON_DEVICES]:
-        if device.name not in device_names:
+        if device.serial not in device_serials:
             if isinstance(device, DysonPureCool):
                 has_purecool_devices = True
                 dyson_entity = DysonPureCoolDevice(device)
@@ -550,6 +550,11 @@ class DysonPureCoolDevice(FanEntity):
             int(FanSpeed.FAN_SPEED_9.value),
             int(FanSpeed.FAN_SPEED_10.value),
         ]
+
+    @property
+    def device_serial(self):
+        """return fan's serial number."""
+        return self._device.serial
 
     @property
     def supported_features(self) -> int:

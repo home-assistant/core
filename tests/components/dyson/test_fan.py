@@ -20,6 +20,7 @@ from homeassistant.components.fan import (DOMAIN, ATTR_SPEED, ATTR_SPEED_LIST,
 from homeassistant.const import (SERVICE_TURN_ON,
                                  SERVICE_TURN_OFF,
                                  ATTR_ENTITY_ID)
+from homeassistant.helpers import discovery
 from homeassistant.setup import setup_component, async_setup_component
 from tests.common import get_test_home_assistant
 
@@ -33,7 +34,7 @@ class MockDysonState(DysonPureCoolState):
 
 
 def _get_dyson_purecool_device():
-    """Return a valid device provide by Dyson web services."""
+    """Return a valid device as provided by the Dyson web services."""
     device = mock.Mock(spec=DysonPureCool)
     device.serial = "XX-XXXXX-XX"
     device.name = "Living room"
@@ -732,3 +733,20 @@ async def test_purecool_update_state(devices, login, hass):
     assert attributes[ATTR_SPEED] is SPEED_LOW
     assert attributes[ATTR_OSCILLATING] is False
     assert attributes[dyson.ATTR_DYSON_SPEED_LIST] == _get_supported_speeds()
+
+
+@asynctest.patch('libpurecool.dyson.DysonAccount.login', return_value=True)
+@asynctest.patch('libpurecool.dyson.DysonAccount.devices',
+                 return_value=[_get_dyson_purecool_device()])
+async def test_purecool_component_setup_only_once(devices, login, hass):
+    """Test if entities are created only once."""
+    config = _get_config()
+    await async_setup_component(hass, dyson_parent.DOMAIN, config)
+    await hass.async_block_till_done()
+    discovery.load_platform(hass, "fan", dyson_parent.DOMAIN, {}, config)
+    await hass.async_block_till_done()
+
+    fan = [fan for fan in hass.data[DOMAIN].entities
+           if fan.platform.platform_name == dyson_parent.DOMAIN]
+
+    assert len(fan) == 1
