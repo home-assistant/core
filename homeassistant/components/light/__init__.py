@@ -44,7 +44,7 @@ SUPPORT_EFFECT = 4
 SUPPORT_FLASH = 8
 SUPPORT_COLOR = 16
 SUPPORT_TRANSITION = 32
-SUPPORT_WHITE_VALUE = 128
+SUPPORT_WHITE_VALUE = 64
 
 # Integer that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
