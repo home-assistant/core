@@ -232,8 +232,12 @@ class ONVIFHassCamera(Camera):
     @property
     def supported_features(self):
         """Return supported features."""
-        return SUPPORT_STREAM            
-
+        return SUPPORT_STREAM
+    @property
+    def stream_source(self):
+        """Return the stream source."""
+        return self._input.split(' ')[-1]
+    
     @property
     def name(self):
         """Return the name of this camera."""
