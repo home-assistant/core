@@ -1,6 +1,8 @@
 """Support for control of ElkM1 sensors."""
+import logging
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
+DEPENDENCIES = [ELK_DOMAIN]
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -8,17 +10,20 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    elk = hass.data[ELK_DOMAIN]['elk']
-    entities = create_elk_entities(
-        hass, elk.counters, 'counter', ElkCounter, [])
-    entities = create_elk_entities(
-        hass, elk.keypads, 'keypad', ElkKeypad, entities)
-    entities = create_elk_entities(
-        hass, [elk.panel], 'panel', ElkPanel, entities)
-    entities = create_elk_entities(
-        hass, elk.settings, 'setting', ElkSetting, entities)
-    entities = create_elk_entities(
-        hass, elk.zones, 'zone', ElkZone, entities)
+    elk_datas = hass.data[ELK_DOMAIN]
+    entities = []
+    for prefix, elk_data in elk_datas.items():
+        elk = elk_data['elk']
+        entities = create_elk_entities(
+            elk_data, elk.counters, 'counter', ElkCounter, entities)
+        entities = create_elk_entities(
+            elk_data, elk.keypads, 'keypad', ElkKeypad, entities)
+        entities = create_elk_entities(
+            elk_data, [elk.panel], 'panel', ElkPanel, entities)
+        entities = create_elk_entities(
+            elk_data, elk.settings, 'setting', ElkSetting, entities)
+        entities = create_elk_entities(
+            elk_data, elk.zones, 'zone', ElkZone, entities)
     async_add_entities(entities, True)
 
 
@@ -92,8 +97,9 @@ class ElkKeypad(ElkSensor):
     async def async_added_to_hass(self):
         """Register callback for ElkM1 changes and update entity state."""
         await super().async_added_to_hass()
-        self.hass.data[ELK_DOMAIN]['keypads'][
-            self._element.index] = self.entity_id
+        elk_datas = self.hass.data[ELK_DOMAIN]
+        for prefix, elk_data in elk_datas.items():
+            elk_data['keypads'][self._element.index] = self.entity_id
 
 
 class ElkPanel(ElkSensor):

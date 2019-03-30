@@ -24,6 +24,8 @@ CONF_SETTING = 'setting'
 CONF_TASK = 'task'
 CONF_THERMOSTAT = 'thermostat'
 CONF_ZONE = 'zone'
+CONF_DEVICES = 'devices'
+CONF_PREFIX = 'prefix'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,39 +65,45 @@ def _elk_range_validator(rng):
     return (start, end)
 
 
-CONFIG_SCHEMA_SUBDOMAIN = vol.Schema({
+DEVICE_SCHEMA_SUBDOMAIN = vol.Schema({
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_INCLUDE, default=[]): [_elk_range_validator],
     vol.Optional(CONF_EXCLUDE, default=[]): [_elk_range_validator],
 })
 
+DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PREFIX, default=''): cv.string,
+    vol.Optional(CONF_USERNAME, default=''): cv.string,
+    vol.Optional(CONF_PASSWORD, default=''): cv.string,
+    vol.Optional(CONF_TEMPERATURE_UNIT, default='F'):
+    cv.temperature_unit,
+    vol.Optional(CONF_AREA, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+    vol.Optional(CONF_COUNTER, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+    vol.Optional(CONF_KEYPAD, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+    vol.Optional(CONF_OUTPUT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+    vol.Optional(CONF_PLC, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+    vol.Optional(CONF_SETTING, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+    vol.Optional(CONF_TASK, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+    vol.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+    vol.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
+}, _host_validator)
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_USERNAME, default=''): cv.string,
-            vol.Optional(CONF_PASSWORD, default=''): cv.string,
-            vol.Optional(CONF_TEMPERATURE_UNIT, default='F'):
-                cv.temperature_unit,
-            vol.Optional(CONF_AREA, default={}): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_COUNTER, default={}): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_KEYPAD, default={}): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_OUTPUT, default={}): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_PLC, default={}): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_SETTING, default={}): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_TASK, default={}): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_THERMOSTAT, default={}): CONFIG_SCHEMA_SUBDOMAIN,
-            vol.Optional(CONF_ZONE, default={}): CONFIG_SCHEMA_SUBDOMAIN,
-        },
-        _host_validator,
-    )
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])
+    }),
 }, extra=vol.ALLOW_EXTRA)
+
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
     from elkm1_lib.const import Max
     import elkm1_lib as elkm1
+
+    devices = {}
+    elk_datas = {}
 
     configs = {
         CONF_AREA: Max.AREAS.value,
@@ -115,27 +123,40 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                 raise vol.Invalid("Invalid range {}".format(rng))
             values[rng[0]-1:rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
-    conf = hass_config[DOMAIN]
-    config = {'temperature_unit': conf[CONF_TEMPERATURE_UNIT]}
-    config['panel'] = {'enabled': True, 'included': [True]}
+    for index, conf in enumerate(hass_config[DOMAIN][CONF_DEVICES]):
+        _LOGGER.debug("Setting up elkm1 #" + str(index) + " - " + conf['host'])
 
-    for item, max_ in configs.items():
-        config[item] = {'enabled': conf[item][CONF_ENABLED],
-                        'included': [not conf[item]['include']] * max_}
-        try:
-            _included(conf[item]['include'], True, config[item]['included'])
-            _included(conf[item]['exclude'], False, config[item]['included'])
-        except (ValueError, vol.Invalid) as err:
-            _LOGGER.error("Config item: %s; %s", item, err)
-            return False
+        config = {'temperature_unit': conf[CONF_TEMPERATURE_UNIT]}
+        config['panel'] = {'enabled': True, 'included': [True]}
 
-    elk = elkm1.Elk({'url': conf[CONF_HOST], 'userid': conf[CONF_USERNAME],
-                     'password': conf[CONF_PASSWORD]})
-    elk.connect()
+        for item, max_ in configs.items():
+            config[item] = {'enabled': conf[item][CONF_ENABLED],
+                            'included': [not conf[item]['include']] * max_}
+            try:
+                _included(conf[item]['include'], True, config[item]['included'])
+                _included(conf[item]['exclude'], False, config[item]['included'])
+            except (ValueError, vol.Invalid) as err:
+                _LOGGER.error("Config item: %s; %s", item, err)
+                return False
 
-    _create_elk_services(hass, elk)
+        prefix = conf.get(CONF_PREFIX,"")
+        device = devices.get(prefix, None)
+        if device != None:
+            if prefix != "":
+                _LOGGER.error("Need to use a prefix configuration command on second and later elk m1s")
+            else:
+                _LOGGER.error("Duplicate prefix on elk m1s: " + prefix)
+        else:
+            elk = elkm1.Elk({'url': conf[CONF_HOST], 'userid': conf[CONF_USERNAME],
+                             'password': conf[CONF_PASSWORD]})
+            elk.connect()
 
-    hass.data[DOMAIN] = {'elk': elk, 'config': config, 'keypads': {}}
+            devices[prefix] = elk
+            elk_datas[prefix] = {'elk': elk, 'prefix': prefix, 'config': config, 'keypads': {}}
+
+    _create_elk_services(hass, devices)
+
+    hass.data[DOMAIN] = elk_datas
     for component in SUPPORTED_DOMAINS:
         hass.async_create_task(
             discovery.async_load_platform(hass, component, DOMAIN, {},
@@ -144,12 +165,18 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     return True
 
 
-def _create_elk_services(hass, elk):
+def _create_elk_services(hass, elks):
     def _speak_word_service(service):
+        elk = elks.get('', None)
         elk.panel.speak_word(service.data.get('number'))
-
+        
     def _speak_phrase_service(service):
-        elk.panel.speak_phrase(service.data.get('number'))
+        prefix = service.data.get('prefix', "")
+        elk = elks.get(prefix, None)
+        if elk == None:
+            _LOGGER.error("no elk m1 with prefix: '" + prefix + "'")
+        else:
+            elk.panel.speak_phrase(service.data.get('number'))
 
     hass.services.async_register(
         DOMAIN, 'speak_word', _speak_word_service, SPEAK_SERVICE_SCHEMA)
@@ -157,14 +184,15 @@ def _create_elk_services(hass, elk):
         DOMAIN, 'speak_phrase', _speak_phrase_service, SPEAK_SERVICE_SCHEMA)
 
 
-def create_elk_entities(hass, elk_elements, element_type, class_, entities):
+def create_elk_entities(elk_data, elk_elements, element_type, class_, entities):
     """Create the ElkM1 devices of a particular class."""
-    elk_data = hass.data[DOMAIN]
     if elk_data['config'][element_type]['enabled']:
         elk = elk_data['elk']
+        _LOGGER.debug("create_elk_entities for " + str(elk))
         for element in elk_elements:
             if elk_data['config'][element_type]['included'][element.index]:
-                entities.append(class_(element, elk, elk_data))
+                e = class_(element, elk, elk_data)
+                entities.append(e)
     return entities
 
 
@@ -175,14 +203,15 @@ class ElkEntity(Entity):
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
+        self._prefix = elk_data['prefix']
         self._temperature_unit = elk_data['config']['temperature_unit']
         self._unique_id = 'elkm1_{}'.format(
-            self._element.default_name('_').lower())
+            self._prefix + self._element.default_name('_').lower())
 
     @property
     def name(self):
         """Name of the element."""
-        return self._element.name
+        return self._prefix + self._element.name
 
     @property
     def unique_id(self):

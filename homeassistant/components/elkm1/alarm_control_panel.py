@@ -36,9 +36,11 @@ async def async_setup_platform(hass, config, async_add_entities,
     if discovery_info is None:
         return
 
-    elk = hass.data[ELK_DOMAIN]['elk']
-    entities = create_elk_entities(hass, elk.areas, 'area', ElkArea, [])
-    async_add_entities(entities, True)
+    elk_datas = hass.data[ELK_DOMAIN]
+    for prefix, elk_data in elk_datas.items():
+        elk = elk_data['elk']
+        entities = create_elk_entities(elk_data, elk.areas, 'area', ElkArea, [])
+        async_add_entities(entities, True)
 
     def _dispatch(signal, entity_ids, *args):
         for entity_id in entity_ids:
@@ -103,7 +105,7 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
             return
         if changeset.get('last_user') is not None:
             self._changed_by_entity_id = self.hass.data[
-                ELK_DOMAIN]['keypads'].get(keypad.index, '')
+                ELK_DOMAIN][self._prefix]['keypads'].get(keypad.index, '')
             self.async_schedule_update_ha_state(True)
 
     @property

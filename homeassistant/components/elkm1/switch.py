@@ -9,9 +9,11 @@ async def async_setup_platform(
     """Create the Elk-M1 switch platform."""
     if discovery_info is None:
         return
-    elk = hass.data[ELK_DOMAIN]['elk']
-    entities = create_elk_entities(hass, elk.outputs, 'output', ElkOutput, [])
-    async_add_entities(entities, True)
+    elk_datas = hass.data[ELK_DOMAIN]
+    for prefix, elk_data in elk_datas.items():
+        elk = elk_data['elk']
+        entities = create_elk_entities(elk_data, elk.outputs, 'output', ElkOutput, [])
+        async_add_entities(entities, True)
 
 
 class ElkOutput(ElkEntity, SwitchDevice):
