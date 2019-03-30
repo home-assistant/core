@@ -158,14 +158,13 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
     device = YeelightDevice(hass, ipaddr, device_config)
 
     devices[ipaddr] = device
-
     platform_config = device_config.copy()
     platform_config[CONF_HOST] = ipaddr
     platform_config[CONF_CUSTOM_EFFECTS] = \
         hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
 
     def setup_platforms():
-        device.update()
+        device.setup()
         load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
         load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,
                       hass_config)
@@ -189,19 +188,18 @@ class YeelightDevice:
     @property
     def bulb(self):
         """Return bulb device."""
-        import yeelight
-        if self._bulb_device is None:
-            try:
-                self._bulb_device = yeelight.Bulb(self.ipaddr,
-                                                  model=self._model)
-                self._available = True
-            except yeelight.BulbException as ex:
-                self._available = False
-                _LOGGER.error("Failed to connect to bulb %s, %s: %s",
-                              self.ipaddr, self.name, ex)
-                self._available = False
-
         return self._bulb_device
+
+    def setup(self):
+        import yeelight
+        try:
+            self._bulb_device = yeelight.Bulb(self.ipaddr, model=self._model)
+            self._bulb_device.get_properties(UPDATE_REQUEST_PROPERTIES)
+            self._available = True
+        except yeelight.BulbException as ex:
+            self._available = False
+            _LOGGER.error("Failed to connect to bulb %s, %s: %s",
+                          self.ipaddr, self.name, ex)
 
     @property
     def name(self):

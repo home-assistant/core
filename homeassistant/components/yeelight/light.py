@@ -31,7 +31,8 @@ SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_FLASH)
 
 SUPPORT_YEELIGHT_WHITE_TEMP = (SUPPORT_YEELIGHT |
-                               SUPPORT_COLOR_TEMP)
+                               SUPPORT_COLOR_TEMP |
+                               SUPPORT_EFFECT)
 
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_COLOR |
@@ -144,23 +145,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     lights = []
 
-    def _klass_setup_helper(klass):
+    def _lights_setup_helper(klass):
         lights.append(klass(device, custom_effects=custom_effects))
 
     if device.type == BulbType.White:
-        _klass_setup_helper(YeelightGenericLight)
+        _lights_setup_helper(YeelightGenericLight)
     elif device.type == BulbType.Color:
-        _klass_setup_helper(YeelightColorLight)
+        _lights_setup_helper(YeelightColorLight)
     elif device.type == BulbType.WhiteTemp:
         if device.is_nightlight_supported:
-            _klass_setup_helper(YeelightWithNightLight)
-            _klass_setup_helper(YeelightNightLightMode)
+            _lights_setup_helper(YeelightWithNightLight)
+            _lights_setup_helper(YeelightNightLightMode)
         else:
-            _klass_setup_helper(YeelightWhiteTempLight)
+            _lights_setup_helper(YeelightWhiteTempLight)
     elif device.type == BulbType.WhiteTempMood:
-        _klass_setup_helper(YeelightWithAmbientLight)
-        _klass_setup_helper(YeelightNightLightMode)
-        _klass_setup_helper(YeelightAmbientLight)
+        _lights_setup_helper(YeelightWithAmbientLight)
+        _lights_setup_helper(YeelightNightLightMode)
+        _lights_setup_helper(YeelightAmbientLight)
     else:
         _LOGGER.error("Cannot determinate device type for %s, %s",
                       device.ipaddr, device.name)
