@@ -1,4 +1,8 @@
 """Config flow to configure Heos."""
+import asyncio
+
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 
@@ -23,3 +27,34 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(
             title=format_title(host),
             data={CONF_HOST: host})
+
+    async def async_step_user(self, user_input=None):
+        """Obtain host and validate connection."""
+        from pyheos import Heos
+
+        # Only a single entry is supported
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        if entries:
+            return self.async_abort(reason='already_setup')
+
+        # Try connecting to host if provided
+        errors = {}
+        host = None
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            heos = Heos(host)
+            try:
+                await heos.connect()
+                return await self.async_step_import(user_input)
+            except (asyncio.TimeoutError, ConnectionError):
+                errors[CONF_HOST] = 'connection_failure'
+            finally:
+                await heos.disconnect()
+
+        # Return form
+        return self.async_show_form(
+            step_id='user',
+            data_schema=vol.Schema({
+                vol.Required(CONF_HOST, default=host): str
+            }),
+            errors=errors)
