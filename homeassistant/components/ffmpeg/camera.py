@@ -9,7 +9,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA, Camera, SUPPORT_STREAM)
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
@@ -45,6 +46,16 @@ class FFmpegCamera(Camera):
         self._name = config.get(CONF_NAME)
         self._input = config.get(CONF_INPUT)
         self._extra_arguments = config.get(CONF_EXTRA_ARGUMENTS)
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        return SUPPORT_STREAM
+
+    @property
+    def stream_source(self):
+        """Return the stream source."""
+        return self._input.split(' ')[-1]
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
