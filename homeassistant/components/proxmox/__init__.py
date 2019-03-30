@@ -17,7 +17,6 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 DATA_PROXMOX_NODES = 'proxmox_nodes'
-SIGNAL_PROXMOX_UPDATED = 'proxmox_updated'
 
 CONF_REALM = 'realm'
 CONF_NODES = 'nodes'
