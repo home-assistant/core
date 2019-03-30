@@ -8,11 +8,19 @@ from . import KNOWN_DEVICES, HomeKitEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Homekit motion sensor support."""
-    if discovery_info is not None:
-        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
-        add_entities([HomeKitMotionSensor(accessory, discovery_info)], True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Homekit lighting."""
+    hkid = config_entry.data['AccessoryPairingID']
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def add_service(aid, service):
+        if service['stype'] != 'motion':
+            return False
+        info = {'aid': aid, 'iid': service['iid']}
+        async_add_entities([HomeKitMotionSensor(conn, info)], True)
+        return True
+
+    conn.add_listener(add_service)
 
 
 class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
