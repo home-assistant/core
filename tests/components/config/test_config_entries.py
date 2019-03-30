@@ -45,7 +45,7 @@ class Comp1ConfigFlow:
 @HANDLERS.register('comp2')
 class Comp2ConfigFlow:
     """Config flow without options flow."""
-    
+
     def __init__(self):
         """Init."""
         pass
