@@ -45,6 +45,16 @@ async def test_async_setup_returns_true(hass, config_entry, config):
     assert entries[0] == config_entry
 
 
+async def test_async_setup_no_config_returns_true(hass, config_entry):
+    """Test component setup updates entry from entry only."""
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0] == config_entry
+
+
 async def test_async_setup_entry_loads_platforms(
         hass, config_entry, controller):
     """Test load connects to heos, retrieves players, and loads platforms."""
