@@ -33,10 +33,6 @@ class PlatformNotReady(HomeAssistantError):
     """Error to indicate that platform is not ready."""
 
 
-class ConfigEntryNotReady(HomeAssistantError):
-    """Error to indicate that config entry is not ready."""
-
-
 class IntegrationNotReady(HomeAssistantError):
     """Error to indicate that integration is not ready."""
 
