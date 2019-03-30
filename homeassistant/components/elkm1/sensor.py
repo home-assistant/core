@@ -3,6 +3,7 @@ from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 DEPENDENCIES = [ELK_DOMAIN]
 
+
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Create the Elk-M1 sensor platform."""
@@ -11,7 +12,7 @@ async def async_setup_platform(
 
     elk_datas = hass.data[ELK_DOMAIN]
     entities = []
-    for prefix, elk_data in elk_datas.items():
+    for _, elk_data in elk_datas.items():
         elk = elk_data['elk']
         entities = create_elk_entities(
             elk_data, elk.counters, 'counter', ElkCounter, entities)
@@ -97,9 +98,8 @@ class ElkKeypad(ElkSensor):
         """Register callback for ElkM1 changes and update entity state."""
         await super().async_added_to_hass()
         elk_datas = self.hass.data[ELK_DOMAIN]
-        for prefix, elk_data in elk_datas.items():
+        for _, elk_data in elk_datas.items():
             elk_data['keypads'][self._element.index] = self.entity_id
-
 
 class ElkPanel(ElkSensor):
     """Representation of an Elk-M1 Panel."""

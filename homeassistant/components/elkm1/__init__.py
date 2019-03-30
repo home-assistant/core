@@ -98,7 +98,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
     from elkm1_lib.const import Max
@@ -152,12 +151,16 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
             else:
                 _LOGGER.error("Duplicate prefix on elk m1s: " + prefix)
         else:
-            elk = elkm1.Elk({'url': conf[CONF_HOST], 'userid': conf[CONF_USERNAME],
+            elk = elkm1.Elk({'url': conf[CONF_HOST], 'userid':
+                             conf[CONF_USERNAME],
                              'password': conf[CONF_PASSWORD]})
             elk.connect()
 
             devices[prefix] = elk
-            elk_datas[prefix] = {'elk': elk, 'prefix': prefix, 'config': config, 'keypads': {}}
+            elk_datas[prefix] = {'elk': elk,
+                                 'prefix': prefix,
+                                 'config': config,
+                                 'keypads': {}}
 
     _create_elk_services(hass, devices)
 
@@ -174,11 +177,11 @@ def _create_elk_services(hass, elks):
     def _speak_word_service(service):
         elk = elks.get('', None)
         elk.panel.speak_word(service.data.get('number'))
-        
+
     def _speak_phrase_service(service):
         prefix = service.data.get('prefix', "")
         elk = elks.get(prefix, None)
-        if elk == None:
+        if elk is None:
             _LOGGER.error("no elk m1 with prefix: '" + prefix + "'")
         else:
             elk.panel.speak_phrase(service.data.get('number'))
@@ -189,7 +192,8 @@ def _create_elk_services(hass, elks):
         DOMAIN, 'speak_phrase', _speak_phrase_service, SPEAK_SERVICE_SCHEMA)
 
 
-def create_elk_entities(elk_data, elk_elements, element_type, class_, entities):
+def create_elk_entities(elk_data, elk_elements, element_type,
+                        class_, entities):
     """Create the ElkM1 devices of a particular class."""
     if elk_data['config'][element_type]['enabled']:
         elk = elk_data['elk']

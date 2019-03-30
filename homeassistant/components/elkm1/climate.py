@@ -17,7 +17,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         return
 
     elk_datas = hass.data[ELK_DOMAIN]
-    for prefix, elk_data in elk_datas.items():
+    for _, elk_data in elk_datas.items():
         elk = elk_data['elk']
         async_add_entities(create_elk_entities(
             elk_data, elk.thermostats, 'thermostat', ElkThermostat, []), True)
