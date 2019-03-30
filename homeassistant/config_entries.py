@@ -128,8 +128,7 @@ import weakref
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
-from homeassistant.exceptions import (
-    HomeAssistantError, ConfigEntryNotReady, IntegrationNotReady)
+from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
 
@@ -314,23 +313,6 @@ class ConfigEntry:
             tries += 1
             _LOGGER.warning(
                 'Config entry for %s not ready yet. Retrying in %d seconds.',
-                self.domain, wait_time)
-
-            async def setup_again(now):
-                """Run setup again."""
-                self._async_cancel_retry_setup = None
-                await self.async_setup(hass, component=component, tries=tries)
-
-            self._async_cancel_retry_setup = \
-                hass.helpers.event.async_call_later(wait_time, setup_again)
-            return
-        except IntegrationNotReady:
-            self.state = ENTRY_STATE_SETUP_RETRY
-            wait_time = 2**min(tries, 4) * 5
-            tries += 1
-            _LOGGER.warning(
-                'Integration entry for %s not ready yet. '\
-                'Retrying in %d seconds.',
                 self.domain, wait_time)
 
             async def setup_again(now):

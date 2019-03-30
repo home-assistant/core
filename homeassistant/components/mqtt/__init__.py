@@ -29,7 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import (
-    HomeAssistantError, Unauthorized, IntegrationNotReady)
+    HomeAssistantError, Unauthorized, ConfigEntryNotReady)
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
@@ -578,7 +578,7 @@ async def async_setup_entry(hass, entry):
     success = await hass.data[DATA_MQTT].async_connect()  # type: bool
 
     if not success:
-        return False
+        raise ConfigEntryNotReady
 
     async def async_stop_mqtt(event: Event):
         """Stop MQTT component."""
@@ -702,7 +702,7 @@ class MQTT:
                 self._mqttc.connect, self.broker, self.port, self.keepalive)
         except OSError as err:
             _LOGGER.error("Failed to connect due to exception: %s", err)
-            raise IntegrationNotReady
+            return False
 
         if result != 0:
             import paho.mqtt.client as mqtt
