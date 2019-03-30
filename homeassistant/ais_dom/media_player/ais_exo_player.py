@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, MediaPlayerDevice, SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE, ATTR_MEDIA_DURATION, ATTR_MEDIA_SEEK_POSITION)
+    SUPPORT_SELECT_SOURCE, ATTR_MEDIA_DURATION, ATTR_MEDIA_SEEK_POSITION, SUPPORT_SELECT_SOUND_MODE)
 from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from typing import Optional
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_EXO = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
-    SUPPORT_SEEK | SUPPORT_SELECT_SOURCE
+    SUPPORT_SEEK | SUPPORT_SELECT_SOURCE | SUPPORT_SELECT_SOUND_MODE
 
 SUBSCTRIBE_TOPIC = 'ais/player_status'
 DEFAULT_NAME = 'AIS Dom Odtwarzacz'
@@ -61,7 +61,14 @@ class ExoPlayerDevice(MediaPlayerDevice):
         pass
 
     def set_volume_level(self, volume):
-        pass
+        vol = int(volume * 100)
+        self.hass.services.call(
+            'ais_ai_service',
+            'publish_command_to_frame', {
+                "key": 'setVolume',
+                "val": vol
+            }
+        )
 
     def select_sound_mode(self, sound_mode):
         pass
@@ -109,6 +116,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 _LOGGER.info("problem to json.loads: " + str(e))
                 message = json.loads(payload)
 
+            # TODO currentVolume
             self._status = message.get("currentStatus", 0)
             self._playing = message.get("playing", False)
             self._media_position = message.get("currentPosition", 0)
@@ -228,6 +236,16 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 "val": True
             }
         )
+
+    @property
+    def sound_mode(self):
+        """Return the current matched sound mode."""
+        return "NORMAL"
+
+    @property
+    def sound_mode_list(self):
+        """Return a list of available sound modes."""
+        return ["NORMAL", "BOOST", "TREBLE", "POP", "ROCK", "CLASSIC", "JAZZ", "DANCE", "R&P"]
 
     @property
     def shuffle(self):

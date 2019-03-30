@@ -9,7 +9,6 @@
      data:
        name: ais
    - delay: '3'
-   - service: ais_updater.check_version
    - service: ais_ai_service.publish_command_to_frame
      data:
        key: relaunch
@@ -65,8 +64,10 @@
      data:
        entity_id: camera.remote_access
        filename: "/data/data/pl.sviete.dom/files/home/AIS/dom_access_code.png"
-   - delay: '300'
+   - delay: '60'
    - service: ais_ai_service.prepare_remote_menu
+   - delay: '300'
+   - service: ais_updater.check_version
 
 - id: '201807081853002'
   alias: 'Keyboard Command Received'
@@ -191,17 +192,6 @@
       data_template:
         text: "{{ states('input_text.ais_knowledge_query') }}"
 
-#- id: '201903240901000'
-#  alias: 'Change music service'
-#  initial_state: True
-#  hide_entity: True
-#  trigger:
-#    platform: state
-#    entity_id: input_select.ais_music_service
-#  action:
-#    - service: ais_spotify_service.change_serive
-#      data_template:
-#        service: "{{ states('input_select.ais_music_service') }}"
 
 - id: '201807081905012'
   alias: 'Search YouTube Tracks'

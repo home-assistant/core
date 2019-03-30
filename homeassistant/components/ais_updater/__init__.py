@@ -111,21 +111,6 @@ async def async_setup(hass, config):
                     "apt": apt
                 }
             )
-            # add all entities to keep the order
-            # hass.async_add_job(
-            #     hass.services.async_call(
-            #         'group',
-            #         'set', {
-            #             "object_id": "dom_system_version",
-            #             "entities": [
-            #                 "sensor.version_info",
-            #                 "script.ais_update_system",
-            #                 "camera.remote_access",
-            #                 "input_boolean.ais_remote_access",
-            #                 "sensor.ais_secure_android_id_dom",
-            #                 "script.ais_scan_network_devices",
-            #                 "script.ais_restart_system",
-            #                 "script.ais_stop_system"]}))
 
             hass.states.async_set(
                 'script.ais_update_system', 'off', {
@@ -133,6 +118,9 @@ async def async_setup(hass, config):
                     "icon": "mdi:download"
                 }
             )
+
+            hass.services.async_call(
+                'ais_ai_service', 'say_it', {"text": info})
 
         else:
             info = 'Twój system jest aktualny, wersja ' + newest + '. '

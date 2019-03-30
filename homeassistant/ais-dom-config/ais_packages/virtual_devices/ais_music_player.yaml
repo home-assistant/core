@@ -4,7 +4,7 @@ input_text:
     initial: " "
 input_select:
   ais_music_track_name:
-    name: 'Utwór:'
+    name: 'Wyszukane pozycje:'
     options:
       - "-"
     initial: "-"

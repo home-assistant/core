@@ -664,8 +664,8 @@ def commit_current_position(hass):
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
     elif CURR_ENTITIE == "input_select.ais_music_service":
         _say_it(hass, "Wybrano " + position + ", jakiej muzyki mam wyszukać", None)
+        hass.services.call('input_text', 'set_value', {"entity_id": "input_text.ais_music_query", "value": ""})
         set_curr_entity(hass, 'input_text.ais_music_query')
-        CURR_ENTITIE_ENTERED = True
     else:
         _beep_it(hass, 33)
     # TODO - run the script for the item,
@@ -760,6 +760,8 @@ def select_entity(hass, long_press):
                 CURR_ENTITIE_ENTERED = True
                 if CURR_ENTITIE.startswith('input_text.'):
                     _say_it(hass, "Wpisywanie tekstu włączone", None)
+                    hass.services.call('input_text', 'set_value',
+                                       {"entity_id": CURR_ENTITIE, "value": ""})
                     reset_virtual_keyboard(hass)
                 else:
                     set_next_position(hass)
@@ -1050,11 +1052,13 @@ def go_up_in_menu(hass):
                 # go up in the group menu
                 set_curr_group(hass, None)
                 say_curr_group(hass)
-        elif CURR_ENTITIE == 'media_player.wbudowany_glosnik':
+        elif CURR_ENTITIE == 'media_player.wbudowany_glosnik' and PREV_CURR_GROUP is not None:
             # go back to prev context
             set_curr_group(hass, PREV_CURR_GROUP)
-            set_curr_entity(hass, PREV_CURR_ENTITIE)
-            CURR_ENTITIE_ENTERED = True
+            set_curr_entity(hass, None)
+            CURR_ENTITIE_ENTERED = False
+            PREV_CURR_GROUP['friendly_name']
+            _say_it(hass, PREV_CURR_GROUP['friendly_name'])
         elif not CURR_ENTITIE_ENTERED:
             # go up in the group menu
             set_curr_group(hass, None)
@@ -1140,7 +1144,6 @@ def type_to_input_text_from_virtual_keyboard(hass):
 def go_to_player(hass, say):
     # remember the previous context
     global PREV_CURR_GROUP, PREV_CURR_ENTITIE
-    _LOGGER.error('PREV_CURR_GROUP ' + str(PREV_CURR_GROUP))
     # selecting the player to control via remote
     global CURR_ENTITIE_ENTERED
     if len(GROUP_ENTITIES) == 0:
@@ -2465,6 +2468,7 @@ class AisPlaySpotifyIntent(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots['item']['value']
         success = False
+        # TODO check if we have Spotify enabled
 
         if not item:
             message = 'Nie wiem jaką muzykę mam szukać '

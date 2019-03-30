@@ -8,8 +8,8 @@ import logging
 import asyncio
 from homeassistant.ais_dom import ais_global
 from homeassistant.components import ais_cloud
-from homeassistant.core import callback
 from .config_flow import configured_service, setUrl
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -43,11 +43,6 @@ G_SPOTIFY_FOUND = []
 _CONFIGURING = {}
 
 
-def async_setup_spotify(hass, config, configurator):
-    """Set up the Spotify platform."""
-    return async_setup(hass, config)
-
-
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Spotify platform."""
@@ -71,12 +66,15 @@ def async_setup(hass, config):
             _LOGGER.info("No AIS_SPOTIFY_TOKEN")
     except Exception as e:
         _LOGGER.error("No spotify oauth info: " + str(e))
-        return False
+        return True
 
     cache = hass.config.path(DEFAULT_CACHE_PATH)
+    _LOGGER.info("take gate_id")
     gate_id = ais_global.get_sercure_android_id_dom()
+    _LOGGER.info("gate_id: " + str(gate_id))
     oauth = spotipy.oauth2.SpotifyOAuth(spotify_client_id, spotify_client_secret, spotify_redirect_url,
                                         scope=spotify_scope, cache_path=cache, state=gate_id)
+    setUrl(oauth.get_authorize_url())
     token_info = oauth.get_cached_token()
     if not token_info:
         _LOGGER.info("no spotify token in cache;")
@@ -85,17 +83,12 @@ def async_setup(hass, config):
                 json.dump(AIS_SPOTIFY_TOKEN, outfile)
             token_info = oauth.get_cached_token()
         if not token_info:
-            _LOGGER.info("no spotify token; run configurator")
-            async_request_configuration(hass, config, oauth)
+            _LOGGER.info("no spotify token exit")
             return True
-
-    if hass.data.get(DOMAIN):
-        configurator = hass.components.configurator
-        configurator.request_done(hass.data.get(DOMAIN))
-        del hass.data[DOMAIN]
 
     # register services
     data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
+
 
     @asyncio.coroutine
     def search(call):
@@ -106,58 +99,26 @@ def async_setup(hass, config):
         _LOGGER.info("select_track_name")
         data.process_select_track_name(call)
 
-    def change_serive(call):
-        _LOGGER.info("change_serive")
-        data.change_serive(call)
+    def select_track_uri(call):
+        _LOGGER.info("select_track_uri")
+        data.select_track_uri(call)
+
+    def change_play_queue(call):
+        _LOGGER.info("change_play_queue")
+        data.change_play_queue(call)
 
     hass.services.async_register(DOMAIN, 'search', search)
     hass.services.async_register(DOMAIN, 'select_track_name', select_track_name)
-    hass.services.async_register(DOMAIN, 'change_serive', change_serive)
+    hass.services.async_register(DOMAIN, 'select_track_uri', select_track_uri)
+    hass.services.async_register(DOMAIN, 'change_play_queue', change_play_queue)
 
     return True
-
-
-@callback
-def async_request_configuration(hass, config, oauth):
-    """Request configuration steps from the user."""
-    if len(_CONFIGURING) > 0:
-        return
-    configurator = hass.components.configurator
-    global OAUTH_CLIENT_ID
-    OAUTH_CLIENT_ID = oauth.client_id
-
-    async def async_configuration_callback(data):
-        """Handle configuration changes."""
-        _LOGGER.info('Spotify async_configuration_callback')
-
-        def success():
-            """Signal successful setup."""
-            req_config = _CONFIGURING.pop(OAUTH_CLIENT_ID)
-            configurator.request_done(req_config)
-
-        hass.async_add_job(success)
-        async_setup_spotify(hass, config, configurator)
-
-    _CONFIGURING[OAUTH_CLIENT_ID] = configurator.async_request_config(
-        DEFAULT_NAME,
-        async_configuration_callback,
-        link_name=CONFIGURATOR_LINK_NAME,
-        link_url=oauth.get_authorize_url(),
-        description=CONFIGURATOR_DESCRIPTION,
-        submit_caption=CONFIGURATOR_SUBMIT_CAPTION
-    )
-    setUrl(oauth.get_authorize_url())
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up spotify token as config entry."""
     # setup the Spotify
     if AIS_SPOTIFY_TOKEN is None:
-        # remove configurator
-        # configurator = hass.components.configurator
-        # req_config = _CONFIGURING.pop(OAUTH_CLIENT_ID)
-        # configurator.request_done(req_config)
-
         await async_setup(hass, hass.config)
     return True
 
@@ -221,6 +182,7 @@ class SpotifyData:
         title_prefix = ''
         titles = []
         prev_name = ""
+        item_owner_id = ''
         if type == 'album':
             items = results['albums']['items']
             title_prefix = 'Album: '
@@ -237,7 +199,10 @@ class SpotifyData:
             else:
                 name = item['name']
             prev_name = name
-            i = {"uri": item['uri'], "title": title_prefix + name, "name": name, "type": type}
+            if type == 'playlist':
+                item_owner_id = item['owner']['id']
+            i = {"uri": item['uri'], "title": title_prefix + name, "name": name,
+                 "type": type, "item_owner_id": item_owner_id}
             if len(item['images']) > 0:
                 i["thumbnail"] = item['images'][0]['url']
             else:
@@ -246,6 +211,59 @@ class SpotifyData:
             G_SPOTIFY_FOUND.append(i)
         return titles
 
+    @asyncio.coroutine
+    def get_tracks_list_async(self, item_uri, item_type, item_owner_id, item_image_url):
+        global G_SPOTIFY_TRACKS_INFO
+        items_info = {}
+        idx = 0
+        if item_type == 'album':
+            response = self._spotify.album_tracks(item_uri)
+            for track in response['items']:
+                items_info[idx] = {}
+                items_info[idx]["title"] = track["name"]
+                items_info[idx]["name"] = track["name"]
+                if item_image_url is not None:
+                    items_info[idx]["thumbnail"] = item_image_url
+                else:
+                    items_info[idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
+                items_info[idx]["uri"] = track["uri"]
+                items_info[idx]["mediasource"] = ais_global.G_AN_SPOTIFY
+                items_info[idx]["type"] = track["type"]
+                items_info[idx]["icon"] = 'mdi:play'
+                idx = idx + 1
+        elif item_type == 'artist':
+            response = self._spotify.artist_top_tracks(item_uri)
+            for track in response['tracks']:
+                items_info[idx] = {}
+                items_info[idx]["title"] = track["name"]
+                items_info[idx]["name"] = track["name"]
+                if len(track["album"]["images"]) > 0:
+                    items_info[idx]["thumbnail"] = track["album"]["images"][0]["url"]
+                else:
+                    items_info[idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
+                items_info[idx]["uri"] = track["uri"]
+                items_info[idx]["mediasource"] = ais_global.G_AN_SPOTIFY
+                items_info[idx]["type"] = track["type"]
+                items_info[idx]["icon"] = 'mdi:play'
+                idx = idx + 1
+        else:
+            response = self._spotify.user_playlist(item_owner_id, item_uri)
+            for items in response['tracks']['items']:
+                items_info[idx] = {}
+                items_info[idx]["title"] = items["track"]["name"]
+                items_info[idx]["name"] = items["track"]["name"]
+                if len(items["track"]["album"]["images"]) > 0:
+                    items_info[idx]["thumbnail"] = items["track"]["album"]["images"][0]["url"]
+                else:
+                    items_info[idx]["thumbnail"] = "/static/icons/favicon-100x100.png"
+                items_info[idx]["uri"] = items["track"]["uri"]
+                items_info[idx]["mediasource"] = ais_global.G_AN_SPOTIFY
+                items_info[idx]["type"] = items["track"]["type"]
+                items_info[idx]["icon"] = 'mdi:play'
+                idx = idx + 1
+
+        # update list
+        self.hass.states.async_set("sensor.spotifylist", 0, items_info)
 
     @asyncio.coroutine
     def process_search_async(self, call):
@@ -297,35 +315,24 @@ class SpotifyData:
                 "entity_id": "input_select.ais_music_track_name",
                 "option": G_SPOTIFY_FOUND[0]["title"]})
 
-        # update list
-        items_info = {}
-        for idx, entry in enumerate(G_SPOTIFY_FOUND):
-            items_info[idx] = {}
-            items_info[idx]["title"] = entry["title"]
-            items_info[idx]["name"] = entry["name"]
-            items_info[idx]["thumbnail"] = entry["thumbnail"]
-            items_info[idx]["uri"] = entry["uri"]
-            items_info[idx]["mediasource"] = ais_global.G_AN_SPOTIFY
-            if entry["type"] == 'album':
-                items_info[idx]["icon"] = 'mdi:album'
-            elif entry["type"] == 'artist':
-                items_info[idx]["icon"] = 'mdi:artist-outline'
-            else:
-                items_info[idx]["icon"] = 'mdi:playlist-music'
-        yield from self.hass.states.async_set("sensor.spotifylist", 0, items_info)
-
     def process_select_track_name(self, call):
         _LOGGER.info("process_select_track_name")
         import json
         item_uri = None
+        item_type = None
+        item_owner_id = None
+        item_image_url = None
         # """Search in last search return."""
         name = call.data["name"]
         for item in G_SPOTIFY_FOUND:
             if item["title"] == name:
                 item_uri = item["uri"]
+                item_type = item["type"]
+                item_owner_id = item["item_owner_id"]
+                item_image_url = item["thumbnail"]
                 _audio_info = json.dumps(
-                    {"IMAGE_URL": item["thumbnail"], "NAME": item["title"], "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY}
-                )
+                    {"IMAGE_URL": item["thumbnail"], "NAME": item["title"], "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY})
+                break
 
         if item_uri is not None:
             player_name = self.hass.states.get(
@@ -346,7 +353,41 @@ class SpotifyData:
                     "media_content_type": "ais_info",
                     "media_content_id": _audio_info
                 })
+            # get tracks for item type
+            return run_coroutine_threadsafe(
+                self.get_tracks_list_async(item_uri, item_type, item_owner_id, item_image_url), self.hass.loop).result()
 
+    def select_track_uri(self, call):
+        import json
+        _LOGGER.info("select_track_uri")
+        # """play track by id on sensor list."""
+        call_id = call.data["id"]
+        state = self.hass.states.get('sensor.spotifylist')
+        attr = state.attributes
+        track = attr.get(int(call_id))
 
-    def change_service(self, call):
-        _LOGGER.info("change_service")
+        player_name = self.hass.states.get(
+            'input_select.ais_music_player').state
+        player = ais_cloud.get_player_data(player_name)
+        self.hass.services.call(
+            'media_player',
+            'play_media', {
+                "entity_id": player["entity_id"],
+                "media_content_type": "audio/mp4",
+                "media_content_id": track["uri"]
+            })
+        # set stream image and title
+        _audio_info = json.dumps(
+            {"IMAGE_URL": track["thumbnail"], "NAME": track["title"], "MEDIA_SOURCE": ais_global.G_AN_SPOTIFY})
+        self.hass.services.call(
+            'media_player',
+            'play_media', {
+                "entity_id": player["entity_id"],
+                "media_content_type": "ais_info",
+                "media_content_id": _audio_info
+            })
+
+    def change_play_queue(self, call):
+        # info from android app
+        _LOGGER.info("change_play_queue")
+

@@ -253,16 +253,17 @@ class AisCloudWS:
 
     def ask(self, question, org_answer):
         self.setCloudToken()
-        rest_url = self.url + 'ask?question=' + question + " "
-        rest_url += '&org_answer=' + org_answer
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
+        payload = {'question': question, 'org_answer': org_answer}
+        # rest_url = self.url + 'ask?question=' + question + " "
+        # rest_url += '&org_answer=' + org_answer
+        ws_resp = requests.get(self.url + 'ask', headers=CLOUD_WS_HEADER, params=payload, timeout=5)
         return ws_resp
 
     def audio_type(self, nature):
         self.setCloudToken()
         try:
             rest_url = self.url + "audio_type?nature=" + nature
-            ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=7)
+            ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
             return ws_resp
         except:
             _LOGGER.error("Can't connect to AIS Cloud!!! " + rest_url)
@@ -272,26 +273,26 @@ class AisCloudWS:
         self.setCloudToken()
         rest_url = self.url + "audio_name?nature=" + nature
         rest_url += "&type=" + a_type
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
+        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
     def audio(self, item, a_type, text_input):
         self.setCloudToken()
         rest_url = self.url + "audio?item=" + item + "&type="
         rest_url += a_type + "&text_input=" + text_input
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
+        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
     def key(self, service):
         self.setCloudToken()
         rest_url = self.url + "key?service=" + service
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
+        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
     def delete_key(self, service):
         self.setCloudToken()
         rest_url = self.url + "key?service=" + service
-        ws_resp = requests.delete(rest_url, headers=CLOUD_WS_HEADER)
+        ws_resp = requests.delete(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
 
@@ -1166,7 +1167,7 @@ class AisColudData:
         if _url is not None:
             import requests
             from readability import Document
-            response = requests.get(check_url(_url))
+            response = requests.get(check_url(_url), timeout=5)
             response.encoding = 'utf-8'
             doc = Document(response.text)
             GLOBAL_RSS_NEWS_TEXT += doc.summary()
@@ -1209,7 +1210,7 @@ class AisColudData:
         import requests
         from readability import Document
 
-        response = requests.get(_url)
+        response = requests.get(_url, timeout=5)
         doc = Document(response.text)
         GLOBAL_RSS_HELP_TEXT += doc.summary()
 
