@@ -4,12 +4,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.core import callback
 
 REQUIREMENTS = ['pyaftership==0.1.2']
 
@@ -25,6 +26,8 @@ CONF_TITLE = 'title'
 CONF_TRACKING_NUMBER = 'tracking_number'
 
 DEFAULT_NAME = 'aftership'
+DOMAIN = 'aftership'
+UPDATE_TOPIC = DOMAIN + '_update'
 
 ICON = 'mdi:package-variant-closed'
 
@@ -141,7 +144,13 @@ class AfterShipSensor(Entity):
         """Icon to use in the frontend."""
         return ICON
 
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            UPDATE_TOPIC, self.async_update)
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @callback
     async def async_update(self):
         """Get the latest data from the AfterShip API."""
         await self.aftership.get_trackings()
