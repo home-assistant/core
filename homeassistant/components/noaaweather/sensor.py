@@ -243,7 +243,7 @@ async def get_obs_station_list(nws):
         # scope, so it is a configuration error.
         if status.args[0][0:3] == '404':
             _LOGGER.error("location %s outside of NOAA/NWS scope",
-                    nws.latlon)
+                          nws.latlon)
             raise ConfigEntryNotReady
         #
         # Other errors translate into potential temporary errors
@@ -743,7 +743,6 @@ class NOAACurrentData(Entity):
         if 'timestamp' in obs:
             return obs['timestamp']
         return 0
-
 
     def _process_obs(self, obsprop):
         #
