@@ -94,6 +94,7 @@ from homeassistant.helpers.entity import (
 from homeassistant.util import Throttle
 from homeassistant.exceptions import (
     ConfigEntryNotReady, PlatformNotReady)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 REQUIREMENTS = ['pynws==0.5']
 
@@ -241,7 +242,7 @@ async def get_obs_station_list(nws):
         # else. A 404 indicates the location is outside the NOAA/NWS
         # scope, so it is a configuration error.
         if status.args[0][0:3] == '404':
-            _LOGGER("location %s outside of NOAA/NWS scope",
+            _LOGGER.error("location %s outside of NOAA/NWS scope",
                     nws.latlon)
             raise ConfigEntryNotReady
         #
@@ -330,7 +331,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     #
     # Set up a client aiohttp session for use by the pynws object
     #
-    session = aiohttp.ClientSession()
+    session = async_get_clientsession(hass)
     #
     # Round location items to 4 decimal digits
     #
@@ -499,7 +500,6 @@ class NOAACurrentSensor(Entity):
         # We have a unit mapping to use
         #
         srcunit = UNIT_MAPPING[variable['unitCode']][0]
-        _LOGGER.debug("srcunit=%s, desiredunit=%s", srcunit, desiredunit)
         #
         # If source and desired units are the same, no need to convert
         #
@@ -728,10 +728,22 @@ class NOAACurrentData(Entity):
         #
         # Sort the list so that the oldest observations are first
         #
-        obslist = sorted(obslist, key=lambda obs: obs['timestamp'])
+        obslist = sorted(obslist, key=self._obssortkey)
         for obs in obslist:
             self._process_obs(obs)
         return
+
+    def _obssortkey(self, obs):
+        """Return key to sort observation list with.
+
+        Normally this is timestamp, but if timestamp is not in the
+        entries we will just use the same value for all
+        entries
+        """
+        if 'timestamp' in obs:
+            return obs['timestamp']
+        return 0
+
 
     def _process_obs(self, obsprop):
         #
@@ -781,10 +793,6 @@ class NOAACurrentData(Entity):
         #   null - this is used for min/max temperature values (and maybe
         #           others) when they do not have a valid value.
         #
-        _LOGGER.debug("checking for variables using set %s intersection "
-                      "set %s which is '%s'",
-                      SENSOR_TYPES_SET, set(obsprop),
-                      SENSOR_TYPES_SET.intersection(set(obsprop)))
 
         for variable in SENSOR_TYPES_SET.intersection(
                 set(obsprop)):
