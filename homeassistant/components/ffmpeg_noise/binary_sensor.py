@@ -55,7 +55,7 @@ class FFmpegNoise(FFmpegBinarySensor):
 
     def __init__(self, hass, manager, config):
         """Initialize FFmpeg noise binary sensor."""
-        from haffmpeg import SensorNoise
+        from haffmpeg.sensor import SensorNoise
 
         super().__init__(config)
         self.ffmpeg = SensorNoise(

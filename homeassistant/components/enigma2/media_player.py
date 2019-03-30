@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_PLAYING, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['openwebifpy==1.2.7']
+REQUIREMENTS = ['openwebifpy==3.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +24,9 @@ ATTR_MEDIA_END_TIME = 'media_end_time'
 ATTR_MEDIA_START_TIME = 'media_start_time'
 
 CONF_USE_CHANNEL_ICON = "use_channel_icon"
+CONF_DEEP_STANDBY = "deep_standby"
+CONF_MAC_ADDRESS = "mac_address"
+CONF_SOURCE_BOUQUET = "source_bouquet"
 
 DEFAULT_NAME = 'Enigma2 Media Player'
 DEFAULT_PORT = 80
@@ -31,6 +34,9 @@ DEFAULT_SSL = False
 DEFAULT_USE_CHANNEL_ICON = False
 DEFAULT_USERNAME = 'root'
 DEFAULT_PASSWORD = 'dreambox'
+DEFAULT_DEEP_STANDBY = False
+DEFAULT_MAC_ADDRESS = ''
+DEFAULT_SOURCE_BOUQUET = ''
 
 SUPPORTED_ENIGMA2 = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                     SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | SUPPORT_STOP | \
@@ -46,6 +52,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_USE_CHANNEL_ICON,
                  default=DEFAULT_USE_CHANNEL_ICON): cv.boolean,
+    vol.Optional(CONF_DEEP_STANDBY, default=DEFAULT_DEEP_STANDBY): cv.boolean,
+    vol.Optional(CONF_MAC_ADDRESS, default=DEFAULT_MAC_ADDRESS): cv.string,
+    vol.Optional(CONF_SOURCE_BOUQUET,
+                 default=DEFAULT_SOURCE_BOUQUET): cv.string,
 })
 
 
@@ -62,6 +72,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config[CONF_PASSWORD] = DEFAULT_PASSWORD
         config[CONF_SSL] = DEFAULT_SSL
         config[CONF_USE_CHANNEL_ICON] = DEFAULT_USE_CHANNEL_ICON
+        config[CONF_MAC_ADDRESS] = DEFAULT_MAC_ADDRESS
+        config[CONF_DEEP_STANDBY] = DEFAULT_DEEP_STANDBY
+        config[CONF_SOURCE_BOUQUET] = DEFAULT_SOURCE_BOUQUET
 
     from openwebif.api import CreateDevice
     device = \
@@ -70,7 +83,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                      username=config.get(CONF_USERNAME),
                      password=config.get(CONF_PASSWORD),
                      is_https=config.get(CONF_SSL),
-                     prefer_picon=config.get(CONF_USE_CHANNEL_ICON))
+                     prefer_picon=config.get(CONF_USE_CHANNEL_ICON),
+                     mac_address=config.get(CONF_MAC_ADDRESS),
+                     turn_off_to_deep=config.get(CONF_DEEP_STANDBY),
+                     source_bouquet=config.get(CONF_SOURCE_BOUQUET))
 
     add_devices([Enigma2Device(config[CONF_NAME], device)], True)
 

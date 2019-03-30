@@ -324,7 +324,7 @@ def test_setup_dependencies_platform(hass):
     loader.set_component(hass, 'test_component2',
                          MockModule('test_component2'))
     loader.set_component(
-        hass, 'test_domain.test_component',
+        hass, 'test_component.test_domain',
         MockPlatform(dependencies=['test_component', 'test_component2']))
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)

@@ -131,6 +131,7 @@ homeassistant/components/gtfs/sensor.py @robbiet480
 
 # H
 homeassistant/components/harmony/* @ehendrix23
+homeassistant/components/heos/* @andrewsayre
 homeassistant/components/hikvision/binary_sensor.py @mezz64
 homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/hive/* @Rendili @KJonline
@@ -241,15 +242,16 @@ homeassistant/components/tautulli/sensor.py @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/cover.py @PhracturedBlue
 homeassistant/components/tesla/* @zabuldon
+homeassistant/components/tfiac/* @fredrike @mellado
 homeassistant/components/thethingsnetwork/* @fabaff
 homeassistant/components/threshold/binary_sensor.py @fabaff
 homeassistant/components/tibber/* @danielhiversen
 homeassistant/components/tile/device_tracker.py @bachya
 homeassistant/components/time_date/sensor.py @fabaff
+homeassistant/components/toon/* @frenck
 homeassistant/components/tplink/* @rytilahti
 homeassistant/components/traccar/device_tracker.py @ludeeus
 homeassistant/components/tradfri/* @ggravlingen
-homeassistant/components/toon/* @frenck
 
 # U
 homeassistant/components/uber/sensor.py @robbiet480
@@ -277,12 +279,13 @@ homeassistant/components/xiaomi_tv/media_player.py @fattdev
 
 # Y
 homeassistant/components/yamaha_musiccast/* @jalmeroth
-homeassistant/components/yeelight/light.py @rytilahti
+homeassistant/components/yeelight/* @rytilahti @zewelor
 homeassistant/components/yeelightsunflower/light.py @lindsaymarkward
 homeassistant/components/yi/camera.py @bachya
 
 # Z
 homeassistant/components/zeroconf/* @robbiet480
+homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zoneminder/* @rohankapoorcom
 
 # Other code

@@ -18,11 +18,12 @@ from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME,
     CONF_PORT, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_STANDBY)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 ANDROIDTV_DOMAIN = 'androidtv'
 
-REQUIREMENTS = ['androidtv==0.0.13']
+REQUIREMENTS = ['androidtv==0.0.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +41,8 @@ CONF_ADB_SERVER_IP = 'adb_server_ip'
 CONF_ADB_SERVER_PORT = 'adb_server_port'
 CONF_APPS = 'apps'
 CONF_GET_SOURCES = 'get_sources'
+CONF_TURN_ON_COMMAND = 'turn_on_command'
+CONF_TURN_OFF_COMMAND = 'turn_off_command'
 
 DEFAULT_NAME = 'Android TV'
 DEFAULT_PORT = 5555
@@ -59,27 +62,21 @@ SERVICE_ADB_COMMAND_SCHEMA = vol.Schema({
 })
 
 
-def has_adb_files(value):
-    """Check that ADB key files exist."""
-    priv_key = value
-    pub_key = '{}.pub'.format(value)
-    cv.isfile(pub_key)
-    return cv.isfile(priv_key)
-
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS):
         vol.In(DEVICE_CLASSES),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ADBKEY): has_adb_files,
+    vol.Optional(CONF_ADBKEY): cv.isfile,
     vol.Optional(CONF_ADB_SERVER_IP): cv.string,
     vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT):
         cv.port,
     vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
     vol.Optional(CONF_APPS, default=dict()):
-        vol.Schema({cv.string: cv.string})
+        vol.Schema({cv.string: cv.string}),
+    vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
+    vol.Optional(CONF_TURN_OFF_COMMAND): cv.string
 })
 
 # Translate from `AndroidTV` / `FireTV` reported state to HA state.
@@ -129,19 +126,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         _LOGGER.warning("Could not connect to %s at %s%s",
                         device_name, host, adb_log)
-        return
+        raise PlatformNotReady
 
     if host in hass.data[ANDROIDTV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", host)
     else:
         if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
             device = AndroidTVDevice(aftv, config[CONF_NAME],
-                                     config[CONF_APPS])
+                                     config[CONF_APPS],
+                                     config.get(CONF_TURN_ON_COMMAND),
+                                     config.get(CONF_TURN_OFF_COMMAND))
             device_name = config[CONF_NAME] if CONF_NAME in config \
                 else 'Android TV'
         else:
             device = FireTVDevice(aftv, config[CONF_NAME], config[CONF_APPS],
-                                  config[CONF_GET_SOURCES])
+                                  config[CONF_GET_SOURCES],
+                                  config.get(CONF_TURN_ON_COMMAND),
+                                  config.get(CONF_TURN_OFF_COMMAND))
             device_name = config[CONF_NAME] if CONF_NAME in config \
                 else 'Fire TV'
 
@@ -199,7 +200,8 @@ def adb_decorator(override_available=False):
 class ADBDevice(MediaPlayerDevice):
     """Representation of an Android TV or Fire TV device."""
 
-    def __init__(self, aftv, name, apps):
+    def __init__(self, aftv, name, apps, turn_on_command,
+                 turn_off_command):
         """Initialize the Android TV / Fire TV device."""
         from androidtv.constants import APPS, KEYS
 
@@ -208,6 +210,9 @@ class ADBDevice(MediaPlayerDevice):
         self._apps = APPS
         self._apps.update(apps)
         self._keys = KEYS
+
+        self.turn_on_command = turn_on_command
+        self.turn_off_command = turn_off_command
 
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
@@ -278,12 +283,18 @@ class ADBDevice(MediaPlayerDevice):
     @adb_decorator()
     def turn_on(self):
         """Turn on the device."""
-        self.aftv.turn_on()
+        if self.turn_on_command:
+            self.aftv.adb_shell(self.turn_on_command)
+        else:
+            self.aftv.turn_on()
 
     @adb_decorator()
     def turn_off(self):
         """Turn off the device."""
-        self.aftv.turn_off()
+        if self.turn_off_command:
+            self.aftv.adb_shell(self.turn_off_command)
+        else:
+            self.aftv.turn_off()
 
     @adb_decorator()
     def media_previous_track(self):
@@ -311,9 +322,11 @@ class ADBDevice(MediaPlayerDevice):
 class AndroidTVDevice(ADBDevice):
     """Representation of an Android TV device."""
 
-    def __init__(self, aftv, name, apps):
+    def __init__(self, aftv, name, apps, turn_on_command,
+                 turn_off_command):
         """Initialize the Android TV device."""
-        super().__init__(aftv, name, apps)
+        super().__init__(aftv, name, apps, turn_on_command,
+                         turn_off_command)
 
         self._device = None
         self._muted = None
@@ -392,9 +405,11 @@ class AndroidTVDevice(ADBDevice):
 class FireTVDevice(ADBDevice):
     """Representation of a Fire TV device."""
 
-    def __init__(self, aftv, name, apps, get_sources):
+    def __init__(self, aftv, name, apps, get_sources,
+                 turn_on_command, turn_off_command):
         """Initialize the Fire TV device."""
-        super().__init__(aftv, name, apps)
+        super().__init__(aftv, name, apps, turn_on_command,
+                         turn_off_command)
 
         self._get_sources = get_sources
         self._running_apps = None

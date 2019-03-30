@@ -24,7 +24,7 @@ from .const import (
     CONF_USER_POOL_ID, DOMAIN, MODE_DEV, MODE_PROD)
 from .prefs import CloudPreferences
 
-REQUIREMENTS = ['hass-nabucasa==0.10']
+REQUIREMENTS = ['hass-nabucasa==0.11']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)

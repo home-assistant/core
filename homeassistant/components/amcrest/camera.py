@@ -2,7 +2,8 @@
 import asyncio
 import logging
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import (
+    Camera, SUPPORT_STREAM)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import (
@@ -78,7 +79,7 @@ class AmcrestCam(Camera):
                 self.hass, request, stream_coro)
 
         # streaming via ffmpeg
-        from haffmpeg import CameraMjpeg
+        from haffmpeg.camera import CameraMjpeg
 
         streaming_url = self._camera.rtsp_url(typeno=self._resolution)
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
@@ -86,8 +87,9 @@ class AmcrestCam(Camera):
             streaming_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
+            stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
+                self.hass, request, stream_reader,
                 self._ffmpeg.ffmpeg_stream_content_type)
         finally:
             await stream.close()
@@ -96,6 +98,11 @@ class AmcrestCam(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        return SUPPORT_STREAM
 
     @property
     def stream_source(self):

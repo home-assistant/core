@@ -1,5 +1,6 @@
 # coding: utf-8
 """Constants for the LCN component."""
+from itertools import product
 import re
 
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -36,6 +37,12 @@ LED_PORTS = ['LED1', 'LED2', 'LED3', 'LED4', 'LED5', 'LED6',
              'LED7', 'LED8', 'LED9', 'LED10', 'LED11', 'LED12']
 
 LOGICOP_PORTS = ['LOGICOP1', 'LOGICOP2', 'LOGICOP3', 'LOGICOP4']
+
+BINSENSOR_PORTS = ['BINSENSOR1', 'BINSENSOR2', 'BINSENSOR3', 'BINSENSOR4',
+                   'BINSENSOR5', 'BINSENSOR6', 'BINSENSOR7', 'BINSENSOR8']
+
+KEYS = ['{:s}{:d}'.format(t[0], t[1]) for t in product(['A', 'B', 'C', 'D'],
+                                                       range(1, 9))]
 
 VARIABLES = ['VAR1ORTVAR', 'VAR2ORR1VAR', 'VAR3ORR2VAR',
              'TVAR', 'R1VAR', 'R2VAR',

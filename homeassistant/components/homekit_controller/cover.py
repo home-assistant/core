@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
 from homeassistant.const import (
     STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING)
 
-from . import KNOWN_ACCESSORIES, HomeKitEntity
+from . import KNOWN_DEVICES, HomeKitEntity
 
 STATE_STOPPED = 'stopped'
 
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up HomeKit Cover support."""
     if discovery_info is None:
         return
-    accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+    accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
 
     if discovery_info['device-type'] == 'garage-door-opener':
         add_entities([HomeKitGarageDoorCover(accessory, discovery_info)],
@@ -81,11 +81,6 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
 
     def _update_obstruction_detected(self, value):
         self._obstruction_detected = value
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._state is not None
 
     @property
     def supported_features(self):
@@ -145,11 +140,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
         self._hold = None
         self._obstruction_detected = None
         self.lock_state = None
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._state is not None
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
