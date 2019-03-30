@@ -6,7 +6,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_PORT, CONF_SSL
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA, Camera, SUPPORT_STREAM)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
@@ -98,6 +99,15 @@ class UnifiVideoCamera(Camera):
         """Camera Motion Detection Status."""
         caminfo = self._nvr.get_camera(self._uuid)
         return caminfo['recordingSettings']['motionRecordEnabled']
+
+    @property
+    def stream_source(self):
+        """Return the stream source."""
+        caminfo = self._nvr.get_camera(self._uuid)
+        if (caminfo['channels'][0]['isRtspEnabled']):
+            stream = caminfo['channels'][0]['rtspUris'][0].split(':')[2]
+            return 'rtsp://%(host)s:%(stream)s' % dict(
+                host=self._nvr._host, stream=stream)
 
     @property
     def brand(self):
