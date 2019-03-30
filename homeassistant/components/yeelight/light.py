@@ -163,7 +163,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _klass_setup_helper(YeelightAmbientLight)
     else:
         _LOGGER.error("Cannot determinate device type for %s, %s",
-                      device.ipaddr, device._name)
+                      device.ipaddr, device.name)
 
     hass.data[data_key] += lights
     add_entities(lights, True)

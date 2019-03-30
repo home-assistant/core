@@ -192,13 +192,13 @@ class YeelightDevice:
         import yeelight
         if self._bulb_device is None:
             try:
-                self._bulb_device = yeelight.Bulb(self._ipaddr,
+                self._bulb_device = yeelight.Bulb(self.ipaddr,
                                                   model=self._model)
                 self._available = True
             except yeelight.BulbException as ex:
                 self._available = False
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
-                              self._ipaddr, self._name, ex)
+                              self.ipaddr, self.name, ex)
                 self._available = False
 
         return self._bulb_device
