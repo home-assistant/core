@@ -24,7 +24,7 @@ CONFIG = {
 
 
 async def setup_entry(hass, entry):
-    """Setup entry."""
+    """Test that setup entry works."""
     with patch.object(deconz.DeconzGateway, 'async_setup',
                       return_value=mock_coro(True)), \
             patch.object(deconz.DeconzGateway, 'async_update_device_registry',

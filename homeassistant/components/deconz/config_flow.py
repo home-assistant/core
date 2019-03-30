@@ -140,7 +140,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
             data=self.deconz_config
         )
 
-
     async def async_step_discovery(self, discovery_info):
         """Prepare configuration for a discovered deCONZ bridge.
 
