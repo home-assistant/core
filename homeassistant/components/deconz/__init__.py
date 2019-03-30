@@ -8,7 +8,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
-from .config_flow import configured_hosts, get_master_gateway
+from .config_flow import get_master_gateway
 from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONF_ALLOW_DECONZ_GROUPS, CONF_BRIDGEID,
     CONF_MASTER_GATEWAY, DEFAULT_PORT, DOMAIN, _LOGGER)
@@ -44,16 +44,12 @@ async def async_setup(hass, config):
 
     Discovery has loaded the component if DOMAIN is not present in config.
     """
-    if DOMAIN in config:
-        deconz_config = None
-        if CONF_HOST in config[DOMAIN]:
-            deconz_config = config[DOMAIN]
-        if deconz_config and not configured_hosts(hass):
-            hass.async_add_job(hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={'source': config_entries.SOURCE_IMPORT},
-                data=deconz_config
-            ))
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+        deconz_config = config[DOMAIN]
+        hass.async_add_job(hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data=deconz_config
+        ))
     return True
 
 
