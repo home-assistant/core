@@ -16,7 +16,9 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import (
+    async_track_state_change, async_track_template_result)
+from homeassistant.util import str_to_bool
 
 ATTR_OBSERVATIONS = 'observations'
 ATTR_PROBABILITY = 'probability'
@@ -109,27 +111,26 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         self.current_obs = OrderedDict({})
 
-        to_observe = set()
-        for obs in self._observations:
-            if 'entity_id' in obs:
-                to_observe.update(set([obs.get('entity_id')]))
-            if 'value_template' in obs:
-                to_observe.update(
-                    set(obs.get(CONF_VALUE_TEMPLATE).extract_entities()))
-        self.entity_obs = dict.fromkeys(to_observe, [])
+        def get_or_append(dct, key, val):
+            lst = dct.get(key)
+            if lst:
+                lst.append(val)
+            else:
+                dct[key] = [val]
 
+        self.entity_obs = dict()
+        self.template_obs = dict()
         for ind, obs in enumerate(self._observations):
             obs['id'] = ind
-            if 'entity_id' in obs:
-                self.entity_obs[obs['entity_id']].append(obs)
-            if 'value_template' in obs:
-                for ent in obs.get(CONF_VALUE_TEMPLATE).extract_entities():
-                    self.entity_obs[ent].append(obs)
+            if obs['platform'] == 'template':
+                get_or_append(
+                    self.template_obs, obs.get(CONF_VALUE_TEMPLATE), obs)
+            else:
+                get_or_append(self.entity_obs, obs.get('entity_id'), obs)
 
         self.watchers = {
             'numeric_state': self._process_numeric_state,
             'state': self._process_state,
-            'template': self._process_template
         }
 
     async def async_added_to_hass(self):
@@ -148,16 +149,29 @@ class BayesianBinarySensor(BinarySensorDevice):
 
                 self.watchers[platform](entity_obs)
 
-            prior = self.prior
-            for obs in self.current_obs.values():
-                prior = update_probability(
-                    prior, obs['prob_true'], obs['prob_false'])
-            self.probability = prior
-
-            self.hass.async_add_job(self.async_update_ha_state, True)
+            self._update_priors()
 
         async_track_state_change(
             self.hass, self.entity_obs, async_threshold_sensor_state_listener)
+
+        @callback
+        def async_template_result_changed(template, old_result, new_result):
+            template_obs_list = self.template_obs[template]
+            result = str_to_bool(new_result)
+
+            for obs in template_obs_list:
+                self._update_current_obs(obs, result)
+
+            self._update_priors()
+
+        for template in self.template_obs:
+            template.hass = self.hass
+
+            # result = condition.async_template(self.hass, template)
+            # async_template_result_changed(template, None, result)
+
+            async_track_template_result(
+                self.hass, template, async_template_result_changed)
 
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
@@ -196,13 +210,14 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         self._update_current_obs(entity_observation, should_trigger)
 
-    def _process_template(self, entity_observation):
-        """Add entity to current_obs if template is true."""
-        template = entity_observation.get(CONF_VALUE_TEMPLATE)
-        template.hass = self.hass
-        should_trigger = condition.async_template(
-            self.hass, template, entity_observation)
-        self._update_current_obs(entity_observation, should_trigger)
+    def _update_priors(self):
+        prior = self.prior
+        for obs in self.current_obs.values():
+            prior = update_probability(
+                prior, obs['prob_true'], obs['prob_false'])
+        self.probability = prior
+
+        self.hass.async_add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):
