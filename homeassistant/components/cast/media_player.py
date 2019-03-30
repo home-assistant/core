@@ -869,8 +869,9 @@ class CastDevice(MediaPlayerDevice):
         media_status = self.media_status
         media_controller = self._chromecast.media_controller
 
-        if (media_status is None or media_status.player_state == "UNKNOWN" and
-                self._dynamic_group_cast is not None):
+        if ((media_status is None or media_status.player_state == "UNKNOWN")
+                and self._dynamic_group_cast is not None):
+            media_status = self.dynamic_group_media_status
             media_controller = \
                 self._dynamic_group_cast.media_controller
 
