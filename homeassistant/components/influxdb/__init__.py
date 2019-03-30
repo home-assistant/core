@@ -129,16 +129,23 @@ def setup(hass, config):
         conf[CONF_COMPONENT_CONFIG_GLOB])
     max_tries = conf.get(CONF_RETRY_COUNT)
 
-    try:
-        influx = InfluxDBClient(**kwargs)
-        influx.write_points([])
-    except (exceptions.InfluxDBClientError,
-            requests.exceptions.ConnectionError) as exc:
-        _LOGGER.error("Database host is not accessible due to '%s', please "
-                      "check your entries in the configuration file (host, "
-                      "port, etc.) and verify that the database exists and is "
-                      "READ/WRITE", exc)
-        return False
+    influx = InfluxDBClient(**kwargs)
+    for retry in range(max_tries+1):
+        try:
+            influx.write_points([])
+            break
+        except (exceptions.InfluxDBClientError, IOError,
+                requests.exceptions.ConnectionError) as exc:
+            if retry < max_tries:
+                time.sleep(RETRY_DELAY)
+            else:
+                _LOGGER.error(
+                    "Database host is not accessible due to '%s', please "
+                    "check your entries in the configuration file (host, "
+                    "port, etc.) and verify that the database exists and is "
+                    "READ/WRITE", exc
+                )
+                return False
 
     def event_to_json(event):
         """Add an event to the outgoing Influx list."""
