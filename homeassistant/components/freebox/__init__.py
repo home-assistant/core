@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.components.discovery import SERVICE_FREEBOX
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_track_time_interval
 
 REQUIREMENTS = ['aiofreepybox==0.0.8']
@@ -31,7 +30,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the Freebox component."""
-
     conf = config.get(DOMAIN)
 
     async def discovery_dispatch(service, discovery_info):
@@ -82,7 +80,6 @@ async def get_freebox_connection(hass, config, host, port):
 
 async def async_setup_freebox(hass, config, fbx):
     """Start up the Freebox component platforms."""
-
     await async_update_sensor_data(hass, fbx)
 
     async def close_fbx(event):
@@ -105,6 +102,7 @@ async def async_setup_freebox(hass, config, fbx):
         hass, 'switch', DOMAIN, {}, config))
     hass.async_create_task(discovery.async_load_platform(
         hass, 'device_tracker', DOMAIN, {}, config))
+
 
 async def async_update_sensor_data(hass, fbx):
     """Update sensors datas shared object."""

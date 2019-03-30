@@ -19,13 +19,14 @@ async def async_setup_platform(
 
 class FbxRXSensor(Entity):
     """Update the Freebox RxSensor."""
+
     def __init__(self, hass):
         """Initialize the sensor."""
         self._state = None
         self._name = 'Freebox download speed'
         self._unit = 'KB/s'
         self._hass = hass
-        self._data = None
+        self._datas = None
         self._icon = 'mdi:download'
 
     @property
@@ -56,6 +57,7 @@ class FbxRXSensor(Entity):
 
 
 class FbxTXSensor(Entity):
+
     """Update the Freebox TxSensor."""
     def __init__(self, hass):
         """Initialize the sensor."""
@@ -88,6 +90,6 @@ class FbxTXSensor(Entity):
 
     async def async_update(self):
         """Get the value from fetched datas."""
-        self._datas =  self._hass.data[DATA_FREEBOX_SENSOR]
+        self._datas = self._hass.data[DATA_FREEBOX_SENSOR]
         if self._datas is not None:
             self._state = round(self._datas['rate_up'] / 1000, 2)
