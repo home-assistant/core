@@ -16,7 +16,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     if sector_connection is None:
         _LOGGER.error("SECTOR_DOMAIN is empty")
-        return;
+        return
 
     code = discovery_info[sector_alarm.CONF_CODE]
     panel_id = discovery_info[sector_alarm.CONF_ALARM_ID]
