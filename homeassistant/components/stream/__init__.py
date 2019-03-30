@@ -18,7 +18,7 @@ from homeassistant.loader import bind_hass
 
 from .const import (
     DOMAIN, ATTR_STREAMS, ATTR_ENDPOINTS, CONF_STREAM_SOURCE,
-    CONF_DURATION, CONF_LOOKBACK, SERVICE_RECORD)
+    CONF_BASE_URL, CONF_DURATION, CONF_LOOKBACK, SERVICE_RECORD)
 from .core import PROVIDERS
 from .worker import stream_worker
 from .hls import async_setup_hls
@@ -31,7 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['http']
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_BASE_URL): cv.string,
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 STREAM_SERVICE_SCHEMA = vol.Schema({
@@ -92,8 +94,11 @@ async def async_setup(hass, config):
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = {}
 
+    conf = config.get(DOMAIN)
+    base_url = conf.get(CONF_BASE_URL) or hass.config.api.base_url
+
     # Setup HLS
-    hls_endpoint = async_setup_hls(hass)
+    hls_endpoint = async_setup_hls(hass, base_url)
     hass.data[DOMAIN][ATTR_ENDPOINTS]['hls'] = hls_endpoint
 
     # Setup Recorder

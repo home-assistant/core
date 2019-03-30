@@ -218,7 +218,7 @@ class CameraStreamTrait(_Trait):
         url = await self.hass.components.camera.async_request_stream(
             self.state.entity_id, 'hls')
         self.stream_info = {
-            'cameraStreamAccessUrl': self.hass.config.api.base_url + url
+            'cameraStreamAccessUrl': url
         }
 
 

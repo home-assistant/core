@@ -14,11 +14,11 @@ from .core import StreamView, StreamOutput, PROVIDERS
 
 
 @callback
-def async_setup_hls(hass):
+def async_setup_hls(hass, base_url):
     """Set up api endpoints."""
     hass.http.register_view(HlsPlaylistView())
     hass.http.register_view(HlsSegmentView())
-    return '/api/hls/{}/playlist.m3u8'
+    return "{}{}".format(base_url, '/api/hls/{}/playlist.m3u8')
 
 
 class HlsPlaylistView(StreamView):

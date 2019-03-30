@@ -132,7 +132,7 @@ async def test_camera_stream(hass):
     assert trt.query_attributes() == {}
 
     with patch('homeassistant.components.camera.async_request_stream',
-               return_value=mock_coro('/api/streams/bla')):
+               return_value=mock_coro('http://1.1.1.1:8123/api/streams/bla')):
         await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {})
 
     assert trt.query_attributes() == {

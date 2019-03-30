@@ -644,7 +644,7 @@ async def async_handle_play_stream_service(camera, service_call):
                          keepalive=camera_prefs.preload_stream)
     data = {
         ATTR_ENTITY_ID: entity_ids,
-        ATTR_MEDIA_CONTENT_ID: "{}{}".format(hass.config.api.base_url, url),
+        ATTR_MEDIA_CONTENT_ID: url,
         ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt]
     }
 

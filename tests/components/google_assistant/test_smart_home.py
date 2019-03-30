@@ -569,7 +569,7 @@ async def test_trait_execute_adding_query_data(hass):
     })
 
     with patch('homeassistant.components.camera.async_request_stream',
-               return_value=mock_coro('/api/streams/bla')):
+               return_value=mock_coro('http://1.1.1.1:8123/api/streams/bla')):
         result = await sh.async_handle_message(
             hass, BASIC_CONFIG, None,
             {
