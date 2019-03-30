@@ -63,7 +63,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([UnifiVideoCamera(nvrconn,
                                    camera[identifier],
                                    camera['name'],
-                                   password)
+                                   password,
+                                   addr)
                   for camera in cameras])
     return True
 
@@ -71,13 +72,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class UnifiVideoCamera(Camera):
     """A Ubiquiti Unifi Video Camera."""
 
-    def __init__(self, nvr, uuid, name, password):
+    def __init__(self, nvr, uuid, name, password, addr):
         """Initialize an Unifi camera."""
         super(UnifiVideoCamera, self).__init__()
         self._nvr = nvr
         self._uuid = uuid
         self._name = name
         self._password = password
+        self._addr = addr
         self.is_streaming = False
         self._connect_addr = None
         self._camera = None
@@ -103,7 +105,9 @@ class UnifiVideoCamera(Camera):
     @property
     def supported_features(self):
         """Return supported features."""
-        return SUPPORT_STREAM
+        caminfo = self._nvr.get_camera(self._uuid)
+        if caminfo['channels'][0]['isRtspEnabled']:
+            return SUPPORT_STREAM
 
     @property
     def stream_source(self):
@@ -111,8 +115,7 @@ class UnifiVideoCamera(Camera):
         caminfo = self._nvr.get_camera(self._uuid)
         if caminfo['channels'][0]['isRtspEnabled']:
             stream = caminfo['channels'][0]['rtspUris'][0].split(':')[2]
-            return 'rtsp://%(host)s:%(stream)s' % dict(
-                host=self._nvr._host, stream=stream)
+            return 'rtsp://{}:{}'.format(self._addr, stream)
 
     @property
     def brand(self):
