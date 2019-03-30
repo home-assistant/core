@@ -1,5 +1,7 @@
 """Support for ADS switch platform."""
 import logging
+import asyncio
+import async_timeout
 
 import voluptuous as vol
 
@@ -29,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     ads_var = config.get(CONF_ADS_VAR)
 
-    add_entities([AdsSwitch(ads_hub, name, ads_var)], True)
+    add_entities([AdsSwitch(ads_hub, name, ads_var)])
 
 
 class AdsSwitch(ToggleEntity):
@@ -38,10 +40,11 @@ class AdsSwitch(ToggleEntity):
     def __init__(self, ads_hub, name, ads_var):
         """Initialize the AdsSwitch entity."""
         self._ads_hub = ads_hub
-        self._on_state = False
+        self._on_state = None
         self._name = name
         self._unique_id = ads_var
         self.ads_var = ads_var
+        self._event = None
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -49,11 +52,24 @@ class AdsSwitch(ToggleEntity):
             """Handle device notification."""
             _LOGGER.debug("Variable %s changed its value to %d", name, value)
             self._on_state = value
+            asyncio.run_coroutine_threadsafe(async_event_set(), self.hass.loop)
             self.schedule_update_ha_state()
 
-        self.hass.async_add_job(
+        async def async_event_set():
+            """Set event in async context."""
+            self._event.set()
+
+        self._event = asyncio.Event()
+
+        await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification,
             self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
+        try:
+            with async_timeout.timeout(10):
+                await self._event.wait()
+        except asyncio.TimeoutError:
+            _LOGGER.debug('Variable %s: Timeout during first update',
+                          self.ads_var)
 
     @property
     def is_on(self):
@@ -74,6 +90,11 @@ class AdsSwitch(ToggleEntity):
     def should_poll(self):
         """Return False because entity pushes its state to HA."""
         return False
+
+    @property
+    def available(self):
+        """Return False if state has not been updated yet."""
+        return self._on_state is not None
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
