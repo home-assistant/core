@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
     ATTR_ENTITY_ID)
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import (
+    Camera, PLATFORM_SCHEMA, SUPPORT_STREAM)
 from homeassistant.components.camera.const import DOMAIN
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG, CONF_EXTRA_ARGUMENTS)
@@ -227,6 +228,11 @@ class ONVIFHassCamera(Camera):
                 ffmpeg_manager.ffmpeg_stream_content_type)
         finally:
             await stream.close()
+            
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        return SUPPORT_STREAM            
 
     @property
     def name(self):
