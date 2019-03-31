@@ -37,9 +37,24 @@ class TestUVCSetup(unittest.TestCase):
             'key': 'secret',
         }
         mock_cameras = [
-            {'uuid': 'one', 'name': 'Front', 'id': 'id1', 'addr': 'foo'},
-            {'uuid': 'two', 'name': 'Back', 'id': 'id2', 'addr': 'foo'},
-            {'uuid': 'three', 'name': 'Old AirCam', 'id': 'id3', 'addr': 'foo'},
+            {
+                'uuid': 'one',
+                'name': 'Front',
+                'id': 'id1',
+                'addr': 'foo'
+            },
+            {
+                'uuid': 'two',
+                'name': 'Back',
+                'id': 'id2',
+                'addr': 'foo'
+            },
+            {
+                'uuid': 'three',
+                'name': 'Old AirCam',
+                'id': 'id3',
+                'addr': 'foo'
+            },
         ]
 
         def mock_get_camera(uuid):
