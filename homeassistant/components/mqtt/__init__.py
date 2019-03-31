@@ -110,6 +110,10 @@ ATTR_DISCOVERY_HASH = 'discovery_hash'
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
+CONNECTION_SUCCESS = 'connection_success'
+CONNECTION_FAILED = 'connection_failed'
+CONNECTION_FAILED_RECOVERABLE = 'connection_failed_recoverable'
+
 
 def valid_topic(value: Any) -> str:
     """Validate that this is a valid topic name/filter."""
@@ -577,7 +581,10 @@ async def async_setup_entry(hass, entry):
 
     success = await hass.data[DATA_MQTT].async_connect()  # type: bool
 
-    if not success:
+    if success is CONNECTION_FAILED:
+        return False
+
+    if success is CONNECTION_FAILED_RECOVERABLE:
         raise ConfigEntryNotReady
 
     async def async_stop_mqtt(event: Event):
@@ -702,15 +709,15 @@ class MQTT:
                 self._mqttc.connect, self.broker, self.port, self.keepalive)
         except OSError as err:
             _LOGGER.error("Failed to connect due to exception: %s", err)
-            return False
+            return CONNECTION_FAILED_RECOVERABLE
 
         if result != 0:
             import paho.mqtt.client as mqtt
             _LOGGER.error("Failed to connect: %s", mqtt.error_string(result))
-            return False
+            return CONNECTION_FAILED
 
         self._mqttc.loop_start()
-        return True
+        return CONNECTION_SUCCESS
 
     @callback
     def async_disconnect(self):
