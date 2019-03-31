@@ -1,16 +1,16 @@
-"""
-Support for Growatt Plant energy production sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.growatt/
-"""
+"""Support for Growatt Plant energy production sensors."""
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ["growatt==0.0.2"]
@@ -24,18 +24,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+POWER_KILO_WATT = "kW"
+ENERGY_MEGA_WATT_HOUR = "MWh"
+ENERGY_GIGA_WATT_HOUR = "GWh"
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Growatt Plant sensor."""
     import growatt
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
     growatt_client = growatt.GrowattApi()
 
-    is_login_success = login(growatt_client, username, password)
-    if is_login_success:
+    if login(growatt_client, username, password):
         sensor_today = GrowattPlantToday(
             hass, growatt_client, username, password
         )
@@ -46,9 +49,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             hass, growatt_client, username, password
         )
         add_entities([sensor_today, sensor_total, sensor_current])
-        return True
-
-    return False
 
 
 def login(client, username, password):
@@ -98,12 +98,16 @@ class GrowattPlantTotals(GrowattPlant):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "kWh"
+        return ENERGY_KILO_WATT_HOUR
 
     def _convert_to_kwh(self, value: str, metric_name: str):
         """Convert a value to a kWh value."""
         watts = float(value)
-        multiplier_lookup = {"kWh": 1, "MWh": 1000, "GWh": 1000 * 1000}
+        multiplier_lookup = {
+            ENERGY_KILO_WATT_HOUR: 1,
+            ENERGY_MEGA_WATT_HOUR: 1000,
+            ENERGY_GIGA_WATT_HOUR: 1000 * 1000,
+        }
         return watts * self.convert_multiplier(metric_name, multiplier_lookup)
 
     def _get_total_energy(self, key: str):
@@ -150,7 +154,7 @@ class GrowattPlantCurrent(GrowattPlant):
     def _convert_to_w(self, value: str, metric_name: str):
         """Convert a value to a kWh value."""
         watts = float(value)
-        multiplier_lookup = {"W": 1, "kW": 1000}
+        multiplier_lookup = {POWER_WATT: 1, POWER_KILO_WATT: 1000}
         return watts * self.convert_multiplier(metric_name, multiplier_lookup)
 
     def update(self):
@@ -170,7 +174,7 @@ class GrowattPlantCurrent(GrowattPlant):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "W"
+        return POWER_WATT
 
     @property
     def name(self):

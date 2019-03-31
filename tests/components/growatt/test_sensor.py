@@ -1,26 +1,24 @@
 """The tests for the Growatt platform."""
-import json
 from unittest import mock
 
-import pytest
-import requests_mock
 import growatt
+import pytest
 
-import homeassistant.components.growatt.sensor as victim
+import homeassistant.components.growatt.sensor as growatt_sensor
 
 
 @mock.patch("growatt.GrowattApi.login", return_value={"userId": "1"})
 def test_login(_):
     """Test logging in."""
     client = growatt.GrowattApi()
-    login_success = victim.login(client, "foo", "bar")
+    login_success = growatt_sensor.login(client, "foo", "bar")
     assert login_success
 
 
 def test_convert_multiplier():
     """Test converting multipliers."""
     assert (
-        victim.GrowattPlant(None, None, "", "").convert_multiplier(
+        growatt_sensor.GrowattPlant.convert_multiplier(
             "kg", {"g": 1, "kg": 1000}
         )
         == 1000
@@ -30,7 +28,7 @@ def test_convert_multiplier():
 def test_convert_multiplier_no_value():
     """Test converting multipliers with exception."""
     with pytest.raises(ValueError):
-        victim.GrowattPlant(None, None, "", "").convert_multiplier(
+        growatt_sensor.GrowattPlant.convert_multiplier(
             "kg", {"g": 1, "mg": 0.001}
         )
 
@@ -38,21 +36,11 @@ def test_convert_multiplier_no_value():
 def test_convert_to_kwh():
     """Test converting to kWh."""
     assert (
-        victim.GrowattPlantTotals(None, None, "", "")._convert_to_kwh(
+        growatt_sensor.GrowattPlantTotals(None, None, "", "")._convert_to_kwh(
             "5.42", "GWh"
         )
         == 5420000
     )
-
-
-@mock.patch(
-    "growatt.GrowattApi.plant_detail", return_value={"data": "some-data"}
-)
-def test_plant_list(_):
-    """Test getting the list of plants."""
-    sensor = victim.GrowattPlant(None, growatt.GrowattApi(), "foo", "bar")
-    login_res = sensor._client.plant_detail("1")
-    assert login_res == {"data": "some-data"}
 
 
 dummy_plant_info = {
@@ -76,6 +64,13 @@ dummy_plant_info = {
         "totalEnergySum": "114.9 kWh",
     },
     "success": True,
+    "plantMoneyText": "137.9 ",
+    "plantName": "my plant",
+    "plantId": "107658",
+    "isHaveStorage": "false",
+    "todayEnergy": "0.6 kWh",
+    "totalEnergy": "114.9 kWh",
+    "currentPower": "142 W",
 }
 
 
@@ -83,48 +78,30 @@ dummy_plant_info = {
 @mock.patch("growatt.GrowattApi.plant_list", return_value=dummy_plant_info)
 def test_today_energy(_, __):
     """Test extracting todays energy from plant."""
-    with requests_mock.mock() as m:
-        m.get(
-            "https://server.growatt.com/PlantListAPI.do?userId=1",
-            text=json.dumps(dummy_plant_info),
-        )
-
-        sensor = victim.GrowattPlantToday(
-            None, growatt.GrowattApi(), "foo", "bar"
-        )
-        sensor.update()
-        assert sensor._state == 0.6
+    sensor = growatt_sensor.GrowattPlantToday(
+        None, growatt.GrowattApi(), "foo", "bar"
+    )
+    sensor.update()
+    assert sensor.state == 0.6
 
 
 @mock.patch("growatt.GrowattApi.login", return_value={"userId": "1"})
 @mock.patch("growatt.GrowattApi.plant_list", return_value=dummy_plant_info)
 def test_total_energy(_, __):
     """Test extracting total energy from plant."""
-    with requests_mock.mock() as m:
-        m.get(
-            "https://server.growatt.com/PlantListAPI.do?userId=1",
-            text=json.dumps(dummy_plant_info),
-        )
-
-        sensor = victim.GrowattPlantTotal(
-            None, growatt.GrowattApi(), "foo", "bar"
-        )
-        sensor.update()
-        assert sensor._state == 114.9
+    sensor = growatt_sensor.GrowattPlantTotal(
+        None, growatt.GrowattApi(), "foo", "bar"
+    )
+    sensor.update()
+    assert sensor.state == 114.9
 
 
 @mock.patch("growatt.GrowattApi.login", return_value={"userId": "1"})
 @mock.patch("growatt.GrowattApi.plant_list", return_value=dummy_plant_info)
 def test_current_energy(_, __):
     """Test extracting current energy from plant."""
-    with requests_mock.mock() as m:
-        m.get(
-            "https://server.growatt.com/PlantListAPI.do?userId=1",
-            text=json.dumps(dummy_plant_info),
-        )
-
-        sensor = victim.GrowattPlantCurrent(
-            None, growatt.GrowattApi(), "foo", "bar"
-        )
-        sensor.update()
-        assert sensor._state == 142.0
+    sensor = growatt_sensor.GrowattPlantCurrent(
+        None, growatt.GrowattApi(), "foo", "bar"
+    )
+    sensor.update()
+    assert sensor.state == 142.0

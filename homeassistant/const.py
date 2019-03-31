@@ -324,6 +324,7 @@ ATTR_TEMPERATURE = 'temperature'
 # #### UNITS OF MEASUREMENT ####
 # Power units
 POWER_WATT = 'W'
+POWER_KILO_WATT = 'kW'
 
 # Energy units
 ENERGY_KILO_WATT_HOUR = 'kWh'
