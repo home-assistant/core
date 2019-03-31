@@ -279,16 +279,8 @@ class GenericZLLSensor(GenericHueSensor):
 class HueLightLevel(GenericZLLSensor, Entity):
 
     _entity_id_format = SENSOR_ENTITY_ID_FORMAT
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_ILLUMINANCE
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return "Lux"
+    device_class = DEVICE_CLASS_ILLUMINANCE
+    unit_of_measurement = "Lux"
 
     @property
     def state(self):
@@ -311,16 +303,8 @@ class HueLightLevel(GenericZLLSensor, Entity):
 class HueTemperature(GenericZLLSensor, Entity):
 
     _entity_id_format = SENSOR_ENTITY_ID_FORMAT
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return TEMP_CELSIUS
+    device_class = DEVICE_CLASS_TEMPERATURE
+    unit_of_measurement = TEMP_CELSIUS
 
     @property
     def state(self):
@@ -331,13 +315,10 @@ class HueTemperature(GenericZLLSensor, Entity):
 class HuePresence(GenericZLLSensor, BinarySensorDevice):
 
     _entity_id_format = BINARY_ENTITY_ID_FORMAT
+    device_class = 'presence'
+    icon = 'mdi:run'
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self.sensor.presence
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return 'mdi:run'
