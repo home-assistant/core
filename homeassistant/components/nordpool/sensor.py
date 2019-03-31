@@ -1,7 +1,7 @@
 """Support for Nordpool electrical prices sensors."""
 import logging
 
-from datetime import datetime
+from datetime import (datetime, timedelta)
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -11,9 +11,11 @@ from homeassistant.const import (ATTR_ATTRIBUTION,
                                  CONF_CURRENCY,
                                  CONF_REGION)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['nordpool==0.2']
 
+SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:cash-usd'
@@ -75,6 +77,7 @@ class NordpoolAPI(Entity):
         self._data = None
         self._device_state_attributes = {}
 
+    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Update sensor values."""
         from nordpool import elspot
