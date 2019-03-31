@@ -139,11 +139,12 @@ def setup(hass, config):
             "Database host is not accessible due to '%s', please "
             "check your entries in the configuration file (host, "
             "port, etc.) and verify that the database exists and is "
-            "READ/WRITE. Retrying again in %s sec.", exc, RETRY_INTERVAL
+            "READ/WRITE. Retrying again in %s seconds.", exc, RETRY_INTERVAL
         )
         event_helper.call_later(
             hass, RETRY_INTERVAL, lambda _: setup(hass, config)
         )
+        return True
 
     def event_to_json(event):
         """Add an event to the outgoing Influx list."""
