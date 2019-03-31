@@ -4,32 +4,31 @@ Stock market information from Alpha Vantage.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.alpha_vantage/
 """
-from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_CURRENCY, CONF_NAME)
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from . import (
+    CONF_SYMBOLS,
+    CONF_SYMBOL,
+    DOMAIN as ALPHA_VANTAGE,
+    STOCK_DATA_UPDATED,
+    FOREX_DATA_UPDATED,
+    CONF_FOREIGN_EXCHANGE, CONF_FROM, CONF_TO)
 
-REQUIREMENTS = ['alpha_vantage==2.1.0']
+DEPENDENCIES = ['alpha_vantage']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLOSE = 'close'
 ATTR_HIGH = 'high'
 ATTR_LOW = 'low'
+ATTR_FROM = 'from'
+ATTR_TO = 'to'
 
 ATTRIBUTION = "Stock market information provided by Alpha Vantage"
-
-CONF_FOREIGN_EXCHANGE = 'foreign_exchange'
-CONF_FROM = 'from'
-CONF_SYMBOL = 'symbol'
-CONF_SYMBOLS = 'symbols'
-CONF_TO = 'to'
 
 ICONS = {
     'BTC': 'mdi:currency-btc',
@@ -41,85 +40,30 @@ ICONS = {
     'USD': 'mdi:currency-usd',
 }
 
-SCAN_INTERVAL = timedelta(minutes=5)
-
-SYMBOL_SCHEMA = vol.Schema({
-    vol.Required(CONF_SYMBOL): cv.string,
-    vol.Optional(CONF_CURRENCY): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
-
-CURRENCY_SCHEMA = vol.Schema({
-    vol.Required(CONF_FROM): cv.string,
-    vol.Required(CONF_TO): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_FOREIGN_EXCHANGE):
-        vol.All(cv.ensure_list, [CURRENCY_SCHEMA]),
-    vol.Optional(CONF_SYMBOLS):
-        vol.All(cv.ensure_list, [SYMBOL_SCHEMA]),
-})
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Alpha Vantage sensor."""
-    from alpha_vantage.timeseries import TimeSeries
-    from alpha_vantage.foreignexchange import ForeignExchange
 
-    api_key = config.get(CONF_API_KEY)
-    symbols = config.get(CONF_SYMBOLS, [])
-    conversions = config.get(CONF_FOREIGN_EXCHANGE, [])
-
-    if not symbols and not conversions:
-        msg = 'Warning: No symbols or currencies configured.'
-        hass.components.persistent_notification.create(
-            msg, 'Sensor alpha_vantage')
-        _LOGGER.warning(msg)
-        return
-
-    timeseries = TimeSeries(key=api_key)
+    data = hass.data[ALPHA_VANTAGE]
 
     dev = []
-    for symbol in symbols:
-        try:
-            _LOGGER.debug("Configuring timeseries for symbols: %s",
-                          symbol[CONF_SYMBOL])
-            timeseries.get_intraday(symbol[CONF_SYMBOL])
-        except ValueError:
-            _LOGGER.error(
-                "API Key is not valid or symbol '%s' not known", symbol)
-        dev.append(AlphaVantageSensor(timeseries, symbol))
+    for symbol in discovery_info[CONF_SYMBOLS]:
+        dev.append(AlphaVantageSensor(symbol, data))
 
-    forex = ForeignExchange(key=api_key)
-    for conversion in conversions:
-        from_cur = conversion.get(CONF_FROM)
-        to_cur = conversion.get(CONF_TO)
-        try:
-            _LOGGER.debug("Configuring forex %s - %s", from_cur, to_cur)
-            forex.get_currency_exchange_rate(
-                from_currency=from_cur, to_currency=to_cur)
-        except ValueError as error:
-            _LOGGER.error(
-                "API Key is not valid or currencies '%s'/'%s' not known",
-                from_cur, to_cur)
-            _LOGGER.debug(str(error))
-        dev.append(AlphaVantageForeignExchange(forex, conversion))
+    for conversion in discovery_info[CONF_FOREIGN_EXCHANGE]:
+        dev.append(AlphaVantageForeignExchange(conversion, data))
 
     add_entities(dev, True)
-    _LOGGER.debug("Setup completed")
 
 
 class AlphaVantageSensor(Entity):
     """Representation of a Alpha Vantage sensor."""
 
-    def __init__(self, timeseries, symbol):
+    def __init__(self, symbol, data):
         """Initialize the sensor."""
         self._symbol = symbol[CONF_SYMBOL]
         self._name = symbol.get(CONF_NAME, self._symbol)
-        self._timeseries = timeseries
+        self._data = data
         self.values = None
         self._unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
         self._icon = ICONS.get(symbol.get(CONF_CURRENCY, 'USD'))
@@ -137,46 +81,60 @@ class AlphaVantageSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.values['1. open']
+        return self.values['price']
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.values is not None:
-            return {
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_CLOSE: self.values['4. close'],
-                ATTR_HIGH: self.values['2. high'],
-                ATTR_LOW: self.values['3. low'],
-            }
+        attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
+
+        if self.values.get(ATTR_CLOSE):
+            attributes[ATTR_CLOSE] = self.values.get(ATTR_CLOSE)
+        if self.values.get(ATTR_HIGH):
+            attributes[ATTR_HIGH] = self.values.get(ATTR_HIGH)
+        if self.values.get(ATTR_LOW):
+            attributes[ATTR_LOW] = self.values.get(ATTR_LOW)
+
+        return attributes
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
 
+    @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        async_dispatcher_connect(
+            self.hass, STOCK_DATA_UPDATED, self._schedule_immediate_update
+        )
+
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Requesting new data for symbol %s", self._symbol)
-        all_values, _ = self._timeseries.get_intraday(self._symbol)
-        self.values = next(iter(all_values.values()))
-        _LOGGER.debug("Received new values for symbol %s", self._symbol)
+        self.values = self._data.stock_quotes[self._symbol]
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
 
 
 class AlphaVantageForeignExchange(Entity):
     """Sensor for foreign exchange rates."""
 
-    def __init__(self, foreign_exchange, config):
+    def __init__(self, config, data):
         """Initialize the sensor."""
-        self._foreign_exchange = foreign_exchange
-        self._from_currency = config.get(CONF_FROM)
-        self._to_currency = config.get(CONF_TO)
-        if CONF_NAME in config:
-            self._name = config.get(CONF_NAME)
-        else:
-            self._name = '{}/{}'.format(self._to_currency, self._from_currency)
-        self._unit_of_measurement = self._to_currency
-        self._icon = ICONS.get(self._from_currency, 'USD')
+        self._key = config[CONF_FROM], config[CONF_TO]
+        self._name = config.get(CONF_NAME, '{}/{}'.format(*self._key))
+        self._unit_of_measurement = self._key[1]
+        self._icon = ICONS.get(self._key[0], 'USD')
+        self._data = data
         self.values = None
 
     @property
@@ -192,7 +150,7 @@ class AlphaVantageForeignExchange(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return round(float(self.values['5. Exchange Rate']), 4)
+        return round(float(self.values['Exchange Rate']), 4)
 
     @property
     def icon(self):
@@ -205,15 +163,26 @@ class AlphaVantageForeignExchange(Entity):
         if self.values is not None:
             return {
                 ATTR_ATTRIBUTION: ATTRIBUTION,
-                CONF_FROM: self._from_currency,
-                CONF_TO: self._to_currency,
+                ATTR_FROM: self._key[0],
+                ATTR_TO: self._key[1],
             }
+
+    @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        async_dispatcher_connect(
+            self.hass, FOREX_DATA_UPDATED, self._schedule_immediate_update
+        )
 
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Requesting new data for forex %s - %s",
-                      self._from_currency, self._to_currency)
-        self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
-            from_currency=self._from_currency, to_currency=self._to_currency)
-        _LOGGER.debug("Received new data for forex %s - %s",
-                      self._from_currency, self._to_currency)
+        self.values = self._data.forex_quotes[self._key]
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
