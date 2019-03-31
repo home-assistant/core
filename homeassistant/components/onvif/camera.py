@@ -188,13 +188,14 @@ class ONVIFHassCamera(Camera):
             self.hass.data[ONVIF_DATA] = {}
             self.hass.data[ONVIF_DATA][ENTITIES] = []
         self.hass.data[ONVIF_DATA][ENTITIES].append(self)
+        await self.hass.async_add_executor_job(self.obtain_input_uri)
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg.tools import ImageFrame, IMAGE_JPEG
 
         if not self._input:
-            await self.hass.async_add_job(self.obtain_input_uri)
+            await self.hass.async_add_executor_job(self.obtain_input_uri)
             if not self._input:
                 return None
 
@@ -211,7 +212,7 @@ class ONVIFHassCamera(Camera):
         from haffmpeg.camera import CameraMjpeg
 
         if not self._input:
-            await self.hass.async_add_job(self.obtain_input_uri)
+            await self.hass.async_add_executor_job(self.obtain_input_uri)
             if not self._input:
                 return None
 
@@ -232,12 +233,14 @@ class ONVIFHassCamera(Camera):
     @property
     def supported_features(self):
         """Return supported features."""
-        return SUPPORT_STREAM
+        if self._input:
+            return SUPPORT_STREAM
+        return 0
 
     @property
     def stream_source(self):
         """Return the stream source."""
-        return self._input.split(' ')[-1]
+        return self._input
 
     @property
     def name(self):
