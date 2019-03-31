@@ -37,9 +37,9 @@ class TestUVCSetup(unittest.TestCase):
             'key': 'secret',
         }
         mock_cameras = [
-            {'uuid': 'one', 'name': 'Front', 'id': 'id1'},
-            {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
-            {'uuid': 'three', 'name': 'Old AirCam', 'id': 'id3'},
+            {'uuid': 'one', 'name': 'Front', 'id': 'id1', 'addr': 'foo'},
+            {'uuid': 'two', 'name': 'Back', 'id': 'id2', 'addr': 'foo'},
+            {'uuid': 'three', 'name': 'Old AirCam', 'id': 'id3', 'addr': 'foo'},
         ]
 
         def mock_get_camera(uuid):
@@ -76,8 +76,8 @@ class TestUVCSetup(unittest.TestCase):
             'key': 'secret',
         }
         mock_cameras = [
-            {'uuid': 'one', 'name': 'Front', 'id': 'id1'},
-            {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
+            {'uuid': 'one', 'name': 'Front', 'id': 'id1', 'addr': 'foo'},
+            {'uuid': 'two', 'name': 'Back', 'id': 'id2', 'addr': 'foo'},
         ]
         mock_remote.return_value.index.return_value = mock_cameras
         mock_remote.return_value.get_camera.return_value = {'model': 'UVC'}
@@ -93,8 +93,8 @@ class TestUVCSetup(unittest.TestCase):
             ssl=False
         )
         mock_uvc.assert_has_calls([
-            mock.call(mock_remote.return_value, 'id1', 'Front', 'ubnt'),
-            mock.call(mock_remote.return_value, 'id2', 'Back', 'ubnt'),
+            mock.call(mock_remote.return_value, 'id1', 'Front', 'ubnt', 'foo'),
+            mock.call(mock_remote.return_value, 'id2', 'Back', 'ubnt', 'foo'),
         ])
 
     @mock.patch('uvcclient.nvr.UVCRemote')
@@ -107,8 +107,8 @@ class TestUVCSetup(unittest.TestCase):
             'key': 'secret',
         }
         mock_cameras = [
-            {'uuid': 'one', 'name': 'Front', 'id': 'id1'},
-            {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
+            {'uuid': 'one', 'name': 'Front', 'id': 'id1', 'addr': 'foo'},
+            {'uuid': 'two', 'name': 'Back', 'id': 'id2', 'addr': 'foo'},
         ]
         mock_remote.return_value.index.return_value = mock_cameras
         mock_remote.return_value.get_camera.return_value = {'model': 'UVC'}
@@ -124,8 +124,8 @@ class TestUVCSetup(unittest.TestCase):
             ssl=False
         )
         mock_uvc.assert_has_calls([
-            mock.call(mock_remote.return_value, 'one', 'Front', 'ubnt'),
-            mock.call(mock_remote.return_value, 'two', 'Back', 'ubnt'),
+            mock.call(mock_remote.return_value, 'one', 'Front', 'ubnt', 'foo'),
+            mock.call(mock_remote.return_value, 'two', 'Back', 'ubnt', 'foo'),
         ])
 
     @mock.patch.object(uvc, 'UnifiVideoCamera')
