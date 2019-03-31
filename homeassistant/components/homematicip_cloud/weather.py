@@ -3,6 +3,7 @@
 import logging
 
 from homeassistant.components.weather import WeatherEntity
+from homeassistant.const import TEMP_CELSIUS
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
@@ -55,7 +56,7 @@ class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self.hass.config.units.temperature_unit
+        return TEMP_CELSIUS
 
     @property
     def humidity(self):
