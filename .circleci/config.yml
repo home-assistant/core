@@ -75,20 +75,27 @@ jobs:
   static-check:
     executor:
       name: python
-      tag: 3.7-stretch
+      tag: 3.5.5-stretch
 
     steps:
       - checkout
       - docker-prereqs
+      - install-requirements:
+          python: 3.5.5-stretch
+          test: true
 
       - run:
           name: run static check
           command: |
-            python3 -m venv venv
             . venv/bin/activate
-            pip install -U pip
-            pip install --progress-bar off flake8
             flake8
+
+      - run:
+          name: run static type check
+          command: |
+            . venv/bin/activate
+            TYPING_FILES=$(cat mypyrc)
+            mypy $TYPING_FILES
 
       - install
       - run:
