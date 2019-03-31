@@ -41,7 +41,8 @@ class AdsSwitch(AdsEntity, ToggleEntity):
 
     async def async_added_to_hass(self):
         """Register device notification."""
-        await self.async_initialize_device(self._ads_var, self._ads_hub.PLCTYPE_BOOL)
+        await self.async_initialize_device(self._ads_var,
+                                           self._ads_hub.PLCTYPE_BOOL)
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

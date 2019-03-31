@@ -56,10 +56,11 @@ class AdsSensor(AdsEntity):
 
     async def async_added_to_hass(self):
         """Register device notification."""
-        await self.async_initialize_device(self._ads_var,
-                                           self._ads_hub.ADS_TYPEMAP[self._ads_type],
-                                           STATE_KEY_STATE,
-                                           self._factor)
+        await self.async_initialize_device(
+            self._ads_var,
+            self._ads_hub.ADS_TYPEMAP[self._ads_type],
+            STATE_KEY_STATE,
+            self._factor)
 
     @property
     def state(self):

@@ -217,6 +217,7 @@ class AdsHub:
 
         notification_item.callback(notification_item.name, value)
 
+
 class AdsEntity(Entity):
     """Representation of ADS entity."""
 
