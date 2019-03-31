@@ -3,16 +3,16 @@ import asyncio
 from datetime import timedelta
 import logging
 from time import monotonic
-import random
 
 import async_timeout
 
 from homeassistant.components import hue
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT as BINARY_ENTITY_ID_FORMAT)
-from homeassistant.components.sensor import ENTITY_ID_FORMAT as SENSOR_ENTITY_ID_FORMAT
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT as SENSOR_ENTITY_ID_FORMAT)
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
 DEPENDENCIES = ['hue']
@@ -32,7 +32,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     allow_sensors = bridge.allow_sensors
     if not allow_sensors:
-        _LOGGER.info('Skipping Hue sensor setup. Set allow_hue_sensors to true if you don\'t want this.')
+        _LOGGER.info(
+            'Skipping Hue sensor setup. Set allow_hue_sensors to true if you '
+            'don\'t want this.')
         return
 
     # Hue updates all sensors via a single API call.
@@ -73,10 +75,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         Home Assistant will ask sensors for updates during a polling cycle or
         after it has called a service.
 
-        We keep track of the sensors that are waiting for the request to finish.
-        When new data comes in, we'll trigger an update for all non-waiting
-        sensors. This covers the case where a service is called to enable 2
-        sensors but in the meanwhile some other sensor has changed too.
+        We keep track of the sensors that are waiting for the request to
+        finish. When new data comes in, we'll trigger an update for all
+        non-waiting sensors. This covers the case where a service is called to
+        enable 2 sensors but in the meanwhile some other sensor has changed
+        too.
         """
         nonlocal progress
 
@@ -163,19 +166,15 @@ async def async_update_items(hass, bridge, async_add_entities,
                 device_id = device_id[:23]
             name = api[item_id].name
             if api[item_id].type == aiohue.sensors.TYPE_ZLL_LIGHTLEVEL:
-                _LOGGER.info('Found light level sensor %s (%s)', device_id, api[item_id].uniqueid)
                 if device_id in sensor_device_names:
                     name = LIGHT_LEVEL_NAME_FORMAT.format(
                         sensor_device_names[device_id])
-                _LOGGER.info('Light level sensor name: %s', name)
                 current[item_id] = HueLightLevel(
                     hass, api[item_id], name, request_bridge_update, bridge)
             elif api[item_id].type == aiohue.sensors.TYPE_ZLL_TEMPERATURE:
-                _LOGGER.info('Found temperature sensor %s (%s)', device_id, api[item_id].uniqueid)
                 if device_id in sensor_device_names:
                     name = TEMPERATURE_NAME_FORMAT.format(
                         sensor_device_names[device_id])
-                _LOGGER.info('Temperature sensor name: %s', name)
                 current[item_id] = HueTemperature(
                     hass, api[item_id], name, request_bridge_update, bridge)
 

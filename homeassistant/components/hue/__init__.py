@@ -108,7 +108,8 @@ async def async_setup_entry(hass, entry):
         allow_groups = config[CONF_ALLOW_HUE_GROUPS]
         allow_sensors = config[CONF_ALLOW_HUE_SENSORS]
 
-    bridge = HueBridge(hass, entry, allow_unreachable, allow_groups, allow_sensors)
+    bridge = HueBridge(
+        hass, entry, allow_unreachable, allow_groups, allow_sensors)
 
     if not await bridge.async_setup():
         return False
