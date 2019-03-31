@@ -1,5 +1,7 @@
 """Support for ADS binary sensors."""
 import logging
+import asyncio
+import async_timeout
 
 import voluptuous as vol
 
@@ -41,10 +43,11 @@ class AdsBinarySensor(BinarySensorDevice):
         """Initialize ADS binary sensor."""
         self._name = name
         self._unique_id = ads_var
-        self._state = False
+        self._state = None
         self._device_class = device_class or 'moving'
         self._ads_hub = ads_hub
         self.ads_var = ads_var
+        self._event = None
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -52,11 +55,24 @@ class AdsBinarySensor(BinarySensorDevice):
             """Handle device notifications."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._state = value
+            asyncio.run_coroutine_threadsafe(async_event_set(), self.hass.loop)
             self.schedule_update_ha_state()
 
-        self.hass.async_add_job(
+        async def async_event_set():
+            """Set event in async context."""
+            self._event.set()
+
+        self._event = asyncio.Event()
+
+        await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification,
             self.ads_var, self._ads_hub.PLCTYPE_BOOL, update)
+        try:
+            with async_timeout.timeout(10):
+                await self._event.wait()
+        except asyncio.TimeoutError:
+            _LOGGER.debug('Variable %s: Timeout during first update',
+                          self.ads_var)
 
     @property
     def name(self):
@@ -82,3 +98,8 @@ class AdsBinarySensor(BinarySensorDevice):
     def should_poll(self):
         """Return False because entity pushes its state to HA."""
         return False
+
+    @property
+    def available(self):
+        """Return False if state has not been updated yet."""
+        return self._state is not None
