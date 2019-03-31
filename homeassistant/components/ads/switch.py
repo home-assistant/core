@@ -41,7 +41,7 @@ class AdsSwitch(AdsEntity, SwitchDevice):
 
     @property
     def is_on(self):
-        """Return if the entity state."""
+        """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]
 
     def turn_on(self, **kwargs):
