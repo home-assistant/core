@@ -83,12 +83,13 @@ REAL_TIME_DATA_SCHEMA = vol.Schema({
 
 class SolaxRequestError(Exception):
     """Error to indicate a Solax API request has failed."""
+
     pass
 
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Setup the sensor platform."""
+    """Platform setup."""
     endpoint = RealTimeDataEndpoint(hass, config.get(CONF_IP_ADDRESS))
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
@@ -140,7 +141,7 @@ async def async_solax_real_time_request(hass, schema, ip_address, retry,
 
 
 def parse_solax_battery_response(response):
-    """Manipulate the response from solax endpoint"""
+    """Manipulate the response from solax endpoint."""
     data_list = response['Data']
     result = {}
     for name, index in INVERTER_SENSORS.items():
@@ -184,17 +185,21 @@ class RealTimeDataEndpoint:
 
 
 class Inverter(Entity):
-    """Class for a sensor"""
+    """Class for a sensor."""
+
     def __init__(self, key):
+        """Initialize an inverter sensor."""
         self.key = key
         self.value = None
 
     @property
     def state(self):
+        """State of this inverter attribute."""
         return self.value
 
     @property
     def name(self):
+        """Name of this inverter attribute."""
         return self.key
 
     @property
