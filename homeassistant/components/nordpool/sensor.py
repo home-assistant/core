@@ -11,7 +11,6 @@ from homeassistant.const import (ATTR_ATTRIBUTION,
                                  CONF_CURRENCY,
                                  CONF_REGION)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['nordpool==0.2']
 
@@ -77,7 +76,6 @@ class NordpoolAPI(Entity):
         self._data = None
         self._device_state_attributes = {}
 
-    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Update sensor values."""
         from nordpool import elspot
