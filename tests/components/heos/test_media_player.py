@@ -266,14 +266,14 @@ async def test_select_input_source(
 
 
 async def test_select_input_unknown(
-        hass, config_entry, config, controller):
+        hass, config_entry, config, controller, caplog):
     """Tests selecting an unknown input."""
     await setup_platform(hass, config_entry, config)
-    with pytest.raises(ValueError):
-        await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: 'media_player.test_player',
-             ATTR_INPUT_SOURCE: "Unknown"}, blocking=True)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_INPUT_SOURCE: "Unknown"}, blocking=True)
+    assert "Unknown source: Unknown" in caplog.text
 
 
 async def test_unload_config_entry(hass, config_entry, config, controller):

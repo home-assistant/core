@@ -143,7 +143,8 @@ class SourceManager:
         if input_source is not None:
             return await player.play_input_source(input_source)
 
-        raise ValueError("Unknown source: " + source)
+        _LOGGER.error("Unknown source: %s", source)
+        return None
 
     def get_current_source(self, now_playing_media):
         """Determine current source from now playing media."""

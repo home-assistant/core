@@ -14,6 +14,7 @@ from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
+from . import SourceManager
 from .const import (
     DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
 
@@ -32,7 +33,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
                             async_add_entities):
-    """Add binary sensors for a config entry."""
+    """Add media players for a config entry."""
     players = hass.data[HEOS_DOMAIN][DOMAIN]
     devices = [HeosMediaPlayer(player) for player in players.values()]
     async_add_entities(devices, True)
@@ -48,6 +49,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         self._player = player
         self._signals = []
         self._supported_features = BASE_SUPPORTED_FEATURES
+        self._source_manager = None  # type: SourceManager
         self._play_state_to_state = {
             const.PLAY_STATE_PLAY: STATE_PLAYING,
             const.PLAY_STATE_STOP: STATE_IDLE,
@@ -87,6 +89,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Device added to hass."""
         from pyheos import const
+        self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
         # Update state when attributes of the player change
         self._signals.append(self._player.heos.dispatcher.connect(
             const.SIGNAL_PLAYER_EVENT, self._player_update))
@@ -131,8 +134,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def async_select_source(self, source):
         """Select input source."""
-        await self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER].play_source(
-            source, self._player)
+        await self._source_manager.play_source(source, self._player)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
@@ -262,15 +264,15 @@ class HeosMediaPlayer(MediaPlayerDevice):
         return self._player.shuffle
 
     @property
-    def source(self):
+    def source(self) -> str:
         """Name of the current input source."""
-        return self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]\
-            .get_current_source(self._player.now_playing_media)
+        return self._source_manager.get_current_source(
+            self._player.now_playing_media)
 
     @property
     def source_list(self) -> Sequence[str]:
         """List of available input sources."""
-        return self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER].source_list
+        return self._source_manager.source_list
 
     @property
     def state(self) -> str:
