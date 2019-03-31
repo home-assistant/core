@@ -213,8 +213,11 @@ class StravaLastActivitySensor(StravaSensor):
         self._data = data.get_athlete(athlete_id)
 
     async def async_update(self):
-        await self._data.update(self.hass)
-        self._state = self._data.last_activity
+        try:
+            await self._data.update(self.hass)
+            self._state = self._data.last_activity
+        except:
+            self._state = None
 
     @property
     def name(self):
@@ -246,8 +249,11 @@ class StravaAthleteDetailsSensor(StravaSensor):
         self._data = data.get_athlete(athlete_id)
 
     async def async_update(self):
-        await self._data.update(self.hass)
-        self._state = self._data.details
+        try:
+            await self._data.update(self.hass)
+            self._state = self._data.details
+        except:
+            self._state = None
 
     @property
     def name(self):
@@ -292,8 +298,11 @@ class StravaAthleteStatsSensor(StravaSensor):
         self._data = data.get_athlete(athlete_id)
 
     async def async_update(self):
-        await self._data.update(self.hass)
-        self._state = self._data.stats
+        try:
+            await self._data.update(self.hass)
+            self._state = self._data.stats
+        except:
+            self._state = None
 
     @property
     def name(self):
@@ -338,8 +347,11 @@ class StravaClubSensor(StravaSensor):
         self._data = data.get_club(club_id)
 
     async def async_update(self):
-        await self._data.update(self.hass)
-        self._state = self._data.club
+        try:
+            await self._data.update(self.hass)
+            self._state = self._data.club
+        except:
+            self._state = None
 
     @property
     def name(self):
@@ -376,8 +388,11 @@ class StravaGearSensor(StravaSensor):
         self._data = data.get_gear(gear_id)
 
     async def async_update(self):
-        await self._data.update(self.hass)
-        self._state = self._data.gear
+        try:
+            await self._data.update(self.hass)
+            self._state = self._data.gear
+        except:
+            self._state = None
 
     @property
     def name(self):
