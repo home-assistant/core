@@ -49,7 +49,7 @@ class AdsLight(AdsEntity, Light):
 
         if self._ads_var_brightness is not None:
             await self.async_initialize_device(self._ads_var_brightness,
-                                               self._ads_hub.PLCTYPE_INT,
+                                               self._ads_hub.PLCTYPE_UINT,
                                                STATE_KEY_BRIGHTNESS)
 
     @property
