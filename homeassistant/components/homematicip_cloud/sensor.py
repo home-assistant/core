@@ -12,8 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['homematicip_cloud']
 
 ATTR_TEMPERATURE_OFFSET = 'temperature_offset'
-ATTR_VALVE_STATE = 'valve_state'
-ATTR_VALVE_POSITION = 'valve_position'
 ATTR_WIND_DIRECTION = 'wind_direction'
 ATTR_WIND_DIRECTION_VARIATION = 'wind_direction_variation_in_degree'
 
