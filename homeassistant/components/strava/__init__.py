@@ -23,7 +23,6 @@ CONFIGURATOR_DESCRIPTION = 'To link your Strava account, ' \
 CONFIGURATOR_LINK_NAME = 'Link Strava account'
 CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
 
-DEFAULT_CACHE_PATH = '.strava-token-cache'
 DEFAULT_NAME = 'Strava'
 
 DEPENDENCIES = ['http', 'configurator']
