@@ -28,6 +28,9 @@ PHUE_CONFIG_FILE = 'phue.conf'
 CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
+CONF_ALLOW_HUE_SENSORS = "allow_hue_sensors"
+DEFAULT_ALLOW_HUE_SENSORS = True
+
 BRIDGE_CONFIG_SCHEMA = vol.Schema({
     # Validate as IP address and then convert back to a string.
     vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
@@ -37,6 +40,8 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema({
                  default=DEFAULT_ALLOW_UNREACHABLE): cv.boolean,
     vol.Optional(CONF_ALLOW_HUE_GROUPS,
                  default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
+    vol.Optional(CONF_ALLOW_HUE_SENSORS,
+                 default=DEFAULT_ALLOW_HUE_SENSORS): cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -97,11 +102,13 @@ async def async_setup_entry(hass, entry):
     if config is None:
         allow_unreachable = DEFAULT_ALLOW_UNREACHABLE
         allow_groups = DEFAULT_ALLOW_HUE_GROUPS
+        allow_sensors = DEFAULT_ALLOW_HUE_SENSORS
     else:
         allow_unreachable = config[CONF_ALLOW_UNREACHABLE]
         allow_groups = config[CONF_ALLOW_HUE_GROUPS]
+        allow_sensors = config[CONF_ALLOW_HUE_SENSORS]
 
-    bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
+    bridge = HueBridge(hass, entry, allow_unreachable, allow_groups, allow_sensors)
 
     if not await bridge.async_setup():
         return False
