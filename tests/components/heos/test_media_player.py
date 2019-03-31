@@ -2,7 +2,6 @@
 import asyncio
 
 from pyheos import const
-import pytest
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
