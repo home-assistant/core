@@ -553,7 +553,7 @@ class DysonPureCoolDevice(FanEntity):
 
     @property
     def device_serial(self):
-        """return fan's serial number."""
+        """Return fan's serial number."""
         return self._device.serial
 
     @property
