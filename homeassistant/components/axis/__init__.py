@@ -21,18 +21,17 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up for Axis devices."""
-    if DOMAIN in config:
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
 
         for device_name, device_config in config[DOMAIN].items():
 
             if CONF_NAME not in device_config:
                 device_config[CONF_NAME] = device_name
 
-            if device_config[CONF_HOST] not in configured_devices(hass):
-                hass.async_create_task(hass.config_entries.flow.async_init(
-                    DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-                    data=device_config
-                ))
+            hass.async_create_task(hass.config_entries.flow.async_init(
+                DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+                data=device_config
+            ))
 
     return True
 
