@@ -1,5 +1,5 @@
 """Helper class to implement include/exclude of entities and domains."""
-from typing import Callable, Dict, Iterable, Any
+from typing import Callable, Dict, Iterable, Any, Optional
 
 import voluptuous as vol
 
@@ -112,11 +112,11 @@ def generate_filter(include_domains: Iterable[str],
 class FilterBuilder:
     """Builder class for entity filters."""
 
-    def __init__(self, include_all=False,
-                 include_domains: Iterable[str] = None,
-                 include_entities: Iterable[str] = None,
-                 exclude_domains: Iterable[str] = None,
-                 exclude_entities: Iterable[str] = None):
+    def __init__(self, include_all: bool = False,
+                 include_domains: Optional[Iterable[str]] = None,
+                 include_entities: Optional[Iterable[str]] = None,
+                 exclude_domains: Optional[Iterable[str]] = None,
+                 exclude_entities: Optional[Iterable[str]] = None):
         """Initialiser."""
         self.include_all = include_all
         self.include_domains = set(include_domains or [])
