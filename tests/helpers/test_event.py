@@ -21,6 +21,7 @@ from homeassistant.helpers.event import (
     track_state_change,
     track_time_interval,
     track_template,
+    track_template_result,
     track_same_state,
     track_sunrise,
     track_sunset,
@@ -234,6 +235,80 @@ class TestEventHelpers(unittest.TestCase):
         assert 2 == len(specific_runs)
         assert 2 == len(wildcard_runs)
         assert 2 == len(wildercard_runs)
+
+    def test_track_template_result(self):
+        """Test tracking template."""
+        specific_runs = []
+        wildcard_runs = []
+        wildercard_runs = []
+
+        template_condition = Template(
+            "{{states.sensor.test.state}}",
+            self.hass
+        )
+        template_condition_var = Template(
+            "{{(states.sensor.test.state|int) + test }}",
+            self.hass
+        )
+
+        self.hass.states.set('sensor.test', 5)
+
+        def specific_run_callback(template, old_result, new_result):
+            specific_runs.append(int(new_result))
+
+        track_template_result(self.hass, template_condition,
+                              specific_run_callback)
+
+        @ha.callback
+        def wildcard_run_callback(template, old_result, new_result):
+            wildcard_runs.append((int(old_result), int(new_result)))
+
+        track_template_result(self.hass, template_condition,
+                              wildcard_run_callback)
+
+        @asyncio.coroutine
+        def wildercard_run_callback(template, old_result, new_result):
+            wildercard_runs.append((int(old_result), int(new_result)))
+
+        track_template_result(
+            self.hass, template_condition_var, wildercard_run_callback,
+            {'test': 5})
+        self.hass.block_till_done()
+
+        self.hass.states.set('sensor.test', 30)
+        self.hass.block_till_done()
+
+        assert specific_runs == [30]
+        assert wildcard_runs == [(5, 30)]
+        assert wildercard_runs == [(10, 35)]
+
+        self.hass.states.set('sensor.test', 30)
+        self.hass.block_till_done()
+
+        assert len(specific_runs) == 1
+        assert len(wildcard_runs) == 1
+        assert len(wildercard_runs) == 1
+
+        self.hass.states.set('sensor.test', 5)
+        self.hass.block_till_done()
+
+        assert len(specific_runs) == 2
+        assert len(wildcard_runs) == 2
+        assert len(wildercard_runs) == 2
+
+        self.hass.states.set('sensor.test', 5)
+        self.hass.block_till_done()
+
+        assert len(specific_runs) == 2
+        assert len(wildcard_runs) == 2
+        assert len(wildercard_runs) == 2
+
+        self.hass.states.set('sensor.test', 20)
+        self.hass.block_till_done()
+
+        assert len(specific_runs) == 3
+        assert len(wildcard_runs) == 3
+        assert len(wildercard_runs) == 3
 
     def test_track_same_state_simple_trigger(self):
         """Test track_same_change with trigger simple."""
