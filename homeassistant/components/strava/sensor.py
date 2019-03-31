@@ -201,7 +201,7 @@ class StravaSensor(Entity):
 
     @property
     def available(self):
-        return self._state
+        return self._state is not None
 
 
 class StravaLastActivitySensor(StravaSensor):
