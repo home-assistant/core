@@ -643,7 +643,7 @@ libsoundtouch==0.7.2
 liffylights==0.9.4
 
 # homeassistant.components.osramlightify.light
-lightify==1.0.6.1
+lightify==1.0.7.2
 
 # homeassistant.components.lightwave
 lightwave==0.15
