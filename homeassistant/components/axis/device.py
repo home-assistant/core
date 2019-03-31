@@ -90,6 +90,8 @@ class AxisNetworkDevice:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, 'camera'))
+            self.config_entry.add_update_listener(
+                self.async_new_address_callback)
 
         if self.config_entry.options[CONF_EVENTS]:
             self.hass.async_create_task(
@@ -104,13 +106,23 @@ class AxisNetworkDevice:
         return True
 
     @property
+    def event_new_address(self):
+        """Device specific event to signal new device address."""
+        return 'axis_new_address_{}'.format(self.serial)
+
+    def async_new_address_callback(self, hass, config_entry):
+        """Handle signals of device getting new address."""
+        print('new address')
+        async_dispatcher_send(hass, self.event_new_address)
+
+    @property
     def event_reachable(self):
         """Device specific event to signal a change in connection status."""
         return 'axis_reachable_{}'.format(self.serial)
 
     @callback
     def async_connection_status_callback(self, status):
-        """Handle signals of gateway connection status.
+        """Handle signals of device connection status.
 
         This is called on every RTSP keep-alive message.
         Only signal state change if state change is true.
