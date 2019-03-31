@@ -101,6 +101,7 @@ class ElkKeypad(ElkSensor):
         for _, elk_data in elk_datas.items():
             elk_data['keypads'][self._element.index] = self.entity_id
 
+
 class ElkPanel(ElkSensor):
     """Representation of an Elk-M1 Panel."""
 
