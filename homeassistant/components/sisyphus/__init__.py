@@ -53,8 +53,7 @@ async def async_setup(hass, config):
 
     async def add_table(host, name=None):
         """Add platforms for a single table with the given hostname."""
-        table_holder = TableHolder(session, host, name)
-        tables[host] = table_holder
+        tables[host] = TableHolder(session, host, name)
 
         hass.async_create_task(async_load_platform(
             hass, 'light', DOMAIN, {
@@ -99,7 +98,7 @@ class TableHolder:
     @property
     def available(self):
         """Return true if the table is responding to heartbeats."""
-        if self._table is not None:
+        if self._table:
             return self._table.is_connected
         return False
 
