@@ -157,7 +157,6 @@ def _check_valid_user(hass):
                 entity.entity_id for entity in en_reg.entities.values()
                 if entity.platform == DOMAIN
             ]
-
             for entity_id in rainmachine_entities:
                 if user.permissions.check_entity(entity_id, POLICY_CONTROL):
                     return await service(call)
