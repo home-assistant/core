@@ -106,17 +106,19 @@ class UnifiVideoCamera(Camera):
     def supported_features(self):
         """Return supported features."""
         caminfo = self._nvr.get_camera(self._uuid)
-        if caminfo['channels'][0]['isRtspEnabled']:
-            return SUPPORT_STREAM
+        for channel in caminfo['channels']:
+            if channel['isRtspEnabled']:
+                return SUPPORT_STREAM
         return 0
 
     @property
     def stream_source(self):
         """Return the stream source."""
         caminfo = self._nvr.get_camera(self._uuid)
-        if caminfo['channels'][0]['isRtspEnabled']:
-            stream = caminfo['channels'][0]['rtspUris'][0].split(':')[2]
-            return 'rtsp://{}:{}'.format(self._addr, stream)
+        for channel in caminfo['channels']:
+            if channel['isRtspEnabled']:
+                stream = channel['rtspUris'][0].split(':')[2]
+                return 'rtsp://{}:{}'.format(self._addr, stream)
 
     @property
     def brand(self):
