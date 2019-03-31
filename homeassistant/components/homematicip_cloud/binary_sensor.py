@@ -219,19 +219,6 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,
         return True
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        if super().icon:
-            return super().icon
-        if self._device.motionDetected or self._device.presenceDetected:
-            return 'mdi:motion-sensor'
-        from homematicip.base.enums import WindowState
-        if self._device.windowState is not None and \
-                self._device.windowState != WindowState.CLOSED:
-            return 'mdi:door-open'
-        return None
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes of the security zone group."""
         attr = super().device_state_attributes
@@ -270,22 +257,6 @@ class HomematicipSecuritySensorGroup(HomematicipSecurityZoneSensorGroup,
     def __init__(self, home, device):
         """Initialize security group."""
         super().__init__(home, device, 'Sensors')
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        if super().icon:
-            return super().icon
-        if self._device.powerMainsFailure:
-            return 'mdi:power-plug-off'
-        if self._device.moistureDetected or self._device.waterlevelDetected:
-            return 'mdi:water'
-        from homematicip.base.enums import SmokeDetectorAlarmType
-        if self._device.smokeDetectorAlarmType is not None and \
-                self._device.smokeDetectorAlarmType != \
-                SmokeDetectorAlarmType.IDLE_OFF:
-            return 'mdi:fire'
-        return None
 
     @property
     def device_state_attributes(self):
