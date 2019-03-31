@@ -94,7 +94,7 @@ async def test_new_event_sends_signal(hass):
     axis_device = device.AxisNetworkDevice(hass, entry)
 
     with patch.object(device, 'async_dispatcher_send') as mock_dispatch_send:
-        axis_device.async_signal_callback(action='add', event='event')
+        axis_device.async_event_callback(action='add', event='event')
         await hass.async_block_till_done()
 
     assert len(mock_dispatch_send.mock_calls) == 1

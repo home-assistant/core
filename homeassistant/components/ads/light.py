@@ -1,5 +1,7 @@
 """Support for ADS light sources."""
 import logging
+import asyncio
+import async_timeout
 
 import voluptuous as vol
 
@@ -30,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness,
-                           name)], True)
+                           name)])
 
 
 class AdsLight(Light):
@@ -39,12 +41,13 @@ class AdsLight(Light):
     def __init__(self, ads_hub, ads_var_enable, ads_var_brightness, name):
         """Initialize AdsLight entity."""
         self._ads_hub = ads_hub
-        self._on_state = False
+        self._on_state = None
         self._brightness = None
         self._name = name
         self._unique_id = ads_var_enable
         self.ads_var_enable = ads_var_enable
         self.ads_var_brightness = ads_var_brightness
+        self._event = None
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -52,7 +55,12 @@ class AdsLight(Light):
             """Handle device notifications for state."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
             self._on_state = value
+            asyncio.run_coroutine_threadsafe(async_event_set(), self.hass.loop)
             self.schedule_update_ha_state()
+
+        async def async_event_set():
+            """Set event in async context."""
+            self._event.set()
 
         def update_brightness(name, value):
             """Handle device notification for brightness."""
@@ -60,16 +68,24 @@ class AdsLight(Light):
             self._brightness = value
             self.schedule_update_ha_state()
 
-        self.hass.async_add_executor_job(
+        self._event = asyncio.Event()
+
+        await self.hass.async_add_executor_job(
             self._ads_hub.add_device_notification,
             self.ads_var_enable, self._ads_hub.PLCTYPE_BOOL, update_on_state
         )
         if self.ads_var_brightness is not None:
-            self.hass.async_add_executor_job(
+            await self.hass.async_add_executor_job(
                 self._ads_hub.add_device_notification,
                 self.ads_var_brightness, self._ads_hub.PLCTYPE_INT,
                 update_brightness
             )
+        try:
+            with async_timeout.timeout(10):
+                await self._event.wait()
+        except asyncio.TimeoutError:
+            _LOGGER.debug('Variable %s: Timeout during first update',
+                          self.ads_var_enable)
 
     @property
     def name(self):
@@ -103,6 +119,11 @@ class AdsLight(Light):
         if self.ads_var_brightness is not None:
             support = SUPPORT_BRIGHTNESS
         return support
+
+    @property
+    def available(self):
+        """Return False if state has not been updated yet."""
+        return self._on_state is not None
 
     def turn_on(self, **kwargs):
         """Turn the light on or set a specific dimmer value."""

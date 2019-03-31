@@ -153,6 +153,7 @@ FLOWS = [
     'geofency',
     'gpslogger',
     'hangouts',
+    'heos',
     'homematicip_cloud',
     'hue',
     'ifttt',

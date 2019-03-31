@@ -60,10 +60,10 @@ apns2==0.3.0
 av==6.1.2
 
 # homeassistant.components.axis
-axis==17
+axis==19
 
 # homeassistant.components.zha
-bellows-homeassistant==0.7.1
+bellows-homeassistant==0.7.2
 
 # homeassistant.components.caldav.calendar
 caldav==0.5.0
@@ -132,7 +132,7 @@ hdate==0.8.7
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190327.0
+home-assistant-frontend==20190329.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.13.0
@@ -208,6 +208,9 @@ pydeconz==54
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
+# homeassistant.components.heos
+pyheos==0.2.0
+
 # homeassistant.components.homematic
 pyhomematic==0.1.58
 
@@ -230,7 +233,7 @@ pyopenuv==1.0.9
 pyotp==2.2.6
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.5.0
+pyps4-homeassistant==0.5.2
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
@@ -322,4 +325,4 @@ vultr==0.1.2
 wakeonlan==1.1.6
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.3.0
+zigpy-homeassistant==0.3.1

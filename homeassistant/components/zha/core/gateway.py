@@ -266,6 +266,11 @@ class ZHAGateway:
                 self._hass, self._config, endpoint_id, endpoint,
                 discovery_infos, device, zha_device, is_new_join
             )
+            if endpoint_id != 0:
+                for cluster in endpoint.in_clusters.values():
+                    cluster.bind_only = False
+                for cluster in endpoint.out_clusters.values():
+                    cluster.bind_only = True
 
         if is_new_join:
             # configure the device

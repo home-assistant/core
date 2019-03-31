@@ -175,12 +175,15 @@ apns2==0.3.0
 # homeassistant.components.aqualogic
 aqualogic==1.0
 
+# homeassistant.components.ampio.air_quality
+asmog==0.0.6
+
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
 # homeassistant.components.upnp
 # homeassistant.components.dlna_dmr.media_player
-async-upnp-client==0.14.6
+async-upnp-client==0.14.7
 
 # homeassistant.components.stream
 av==6.1.2
@@ -189,7 +192,10 @@ av==6.1.2
 # avion==0.10
 
 # homeassistant.components.axis
-axis==17
+axis==19
+
+# homeassistant.components.baidu.tts
+baidu-aip==1.6.6
 
 # homeassistant.components.modem_callerid.sensor
 basicmodem==0.7
@@ -206,7 +212,7 @@ batinfo==0.4.2
 beautifulsoup4==4.7.1
 
 # homeassistant.components.zha
-bellows-homeassistant==0.7.1
+bellows-homeassistant==0.7.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.3
@@ -230,13 +236,11 @@ blockchain==1.4.4
 # bme680==1.0.5
 
 # homeassistant.components.route53
+# homeassistant.components.amazon_polly.tts
 # homeassistant.components.aws_lambda.notify
 # homeassistant.components.aws_sns.notify
 # homeassistant.components.aws_sqs.notify
 boto3==1.9.16
-
-# homeassistant.scripts.credstash
-botocore==1.7.34
 
 # homeassistant.components.braviatv.media_player
 braviarc-homeassistant==0.3.7.dev0
@@ -550,7 +554,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190327.0
+home-assistant-frontend==20190329.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.3
@@ -979,7 +983,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==3.0.0
+pychromecast==3.1.0
 
 # homeassistant.components.cmus.media_player
 pycmus==0.1.1
@@ -989,6 +993,9 @@ pycomfoconnect==0.3
 
 # homeassistant.components.coolmaster.climate
 pycoolmasternet==0.0.4
+
+# homeassistant.components.microsoft.tts
+pycsspeechtts==1.0.2
 
 # homeassistant.components.cups.sensor
 # pycups==1.9.73
@@ -1072,6 +1079,9 @@ pygtt==1.1.2
 # homeassistant.components.version.sensor
 pyhaversion==2.0.3
 
+# homeassistant.components.heos
+pyheos==0.2.0
+
 # homeassistant.components.hikvision.binary_sensor
 pyhik==0.2.2
 
@@ -1128,13 +1138,13 @@ pylgnetcast-homeassistant==0.2.0.dev0
 pylgtv==0.1.9
 
 # homeassistant.components.linky.sensor
-pylinky==0.3.0
+pylinky==0.3.3
 
 # homeassistant.components.litejet
 pylitejet==0.1
 
 # homeassistant.components.loopenergy.sensor
-pyloopenergy==0.1.0
+pyloopenergy==0.1.2
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.5.0
@@ -1201,7 +1211,7 @@ pyoppleio==1.0.5
 pyota==2.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==0.4b2
+pyotgw==0.4b3
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -1228,7 +1238,7 @@ pypoint==1.1.1
 pypollencom==2.2.3
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.5.0
+pyps4-homeassistant==0.5.2
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
@@ -1842,13 +1852,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.1.2
+zigpy-deconz==0.1.3
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.3.0
+zigpy-homeassistant==0.3.1
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.1.2
+zigpy-xbee-homeassistant==0.1.3
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
