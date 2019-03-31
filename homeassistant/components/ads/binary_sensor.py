@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_ADS_VAR, DATA_ADS, AdsEntity
+from . import CONF_ADS_VAR, DATA_ADS, AdsEntity, STATE_KEY_STATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +46,11 @@ class AdsBinarySensor(AdsEntity, BinarySensorDevice):
         """Register device notification."""
         await self.async_initialize_device(self._ads_var,
                                            self._ads_hub.PLCTYPE_BOOL)
+
+    @property
+    def is_on(self):
+        """Return if the entity state."""
+        return self._state_dict[STATE_KEY_STATE]
 
     @property
     def device_class(self):

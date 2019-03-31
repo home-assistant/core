@@ -3,12 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
 
-from . import CONF_ADS_VAR, DATA_ADS, AdsEntity
+from . import CONF_ADS_VAR, DATA_ADS, AdsEntity, STATE_KEY_STATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,13 +31,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([AdsSwitch(ads_hub, name, ads_var)])
 
 
-class AdsSwitch(AdsEntity, ToggleEntity):
+class AdsSwitch(AdsEntity, SwitchDevice):
     """Representation of an ADS switch device."""
 
     async def async_added_to_hass(self):
         """Register device notification."""
         await self.async_initialize_device(self._ads_var,
                                            self._ads_hub.PLCTYPE_BOOL)
+
+    @property
+    def is_on(self):
+        """Return if the entity state."""
+        return self._state_dict[STATE_KEY_STATE]
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

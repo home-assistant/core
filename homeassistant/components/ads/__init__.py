@@ -225,17 +225,15 @@ class AdsEntity(Entity):
         """Initialize ADS binary sensor."""
         self._name = name
         self._unique_id = ads_var
-        self._state_dict = dict()
+        self._state_dict = {}
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
         self._event = None
 
-    async def async_initialize_device(self, ads_var, plctype,
-                                      state_key=STATE_KEY_STATE,
-                                      factor=None):
+    async def async_initialize_device(
+            self, ads_var, plctype, state_key=STATE_KEY_STATE, factor=None):
         """Register device notification."""
-
         def update(name, value):
             """Handle device notifications."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
@@ -273,11 +271,6 @@ class AdsEntity(Entity):
     def unique_id(self):
         """Return an unique identifier for this entity."""
         return self._unique_id
-
-    @property
-    def is_on(self):
-        """Return if the entity state."""
-        return self._state_dict[STATE_KEY_STATE]
 
     @property
     def should_poll(self):

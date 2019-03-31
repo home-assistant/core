@@ -9,7 +9,7 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_ADS_VAR, CONF_ADS_VAR_BRIGHTNESS, DATA_ADS, \
-    AdsEntity, STATE_KEY_BRIGHTNESS
+    AdsEntity, STATE_KEY_BRIGHTNESS, STATE_KEY_STATE
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']
@@ -64,6 +64,11 @@ class AdsLight(AdsEntity, Light):
         if self._ads_var_brightness is not None:
             support = SUPPORT_BRIGHTNESS
         return support
+
+    @property
+    def is_on(self):
+        """Return if the entity state."""
+        return self._state_dict[STATE_KEY_STATE]
 
     def turn_on(self, **kwargs):
         """Turn the light on or set a specific dimmer value."""
