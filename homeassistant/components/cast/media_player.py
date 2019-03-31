@@ -508,11 +508,12 @@ class CastDevice(MediaPlayerDevice):
         self.mz_cast_status = {}
         self.mz_media_status = {}
         self.mz_media_status_received = {}
+        self.mz_mgr = None
         self._available = False  # type: bool
         self._dynamic_group_available = False  # type: bool
         self._status_listener = None  # type: Optional[CastStatusListener]
         self._dynamic_group_status_listener = None \
-            # type: Optional[CastStatusListener]
+            # type: Optional[DynamicGroupCastStatusListener]
         self._add_remove_handler = None
         self._del_remove_handler = None
 
@@ -638,10 +639,10 @@ class CastDevice(MediaPlayerDevice):
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
             from pychromecast.controllers.multizone import MultizoneManager
             self.hass.data[CAST_MULTIZONE_MANAGER_KEY] = MultizoneManager()
-        mz_mgr = self.hass.data[CAST_MULTIZONE_MANAGER_KEY]
+        self.mz_mgr = self.hass.data[CAST_MULTIZONE_MANAGER_KEY]
 
         self._status_listener = CastStatusListener(
-            self, chromecast, mz_mgr)
+            self, chromecast, self.mz_mgr)
         self._available = False
         self.cast_status = chromecast.status
         self.media_status = chromecast.media_controller.status
@@ -736,6 +737,7 @@ class CastDevice(MediaPlayerDevice):
         self.mz_cast_status = {}
         self.mz_media_status = {}
         self.mz_media_status_received = {}
+        self.mz_mgr = None
         if self._status_listener is not None:
             self._status_listener.invalidate()
             self._status_listener = None
@@ -857,6 +859,32 @@ class CastDevice(MediaPlayerDevice):
         self.schedule_update_ha_state()
 
     # ========== Service Calls ==========
+    def _media_controller(self):
+        """
+        Return media status.
+
+        First try from our own cast, then dynamic groups and finally
+        groups which our cast is a member in.
+        """
+        media_status = self.media_status
+        media_controller = self._chromecast.media_controller
+
+        if ((media_status is None or media_status.player_state == "UNKNOWN")
+                and self._dynamic_group_cast is not None):
+            media_status = self.dynamic_group_media_status
+            media_controller = \
+                self._dynamic_group_cast.media_controller
+
+        if media_status is None or media_status.player_state == "UNKNOWN":
+            groups = self.mz_media_status
+            for k, val in groups.items():
+                if val and val.player_state != "UNKNOWN":
+                    media_controller = \
+                        self.mz_mgr.get_multizone_mediacontroller(k)
+                    break
+
+        return media_controller
+
     def turn_on(self):
         """Turn on the cast device."""
         import pychromecast
@@ -887,30 +915,37 @@ class CastDevice(MediaPlayerDevice):
 
     def media_play(self):
         """Send play command."""
-        self._chromecast.media_controller.play()
+        media_controller = self._media_controller()
+        media_controller.play()
 
     def media_pause(self):
         """Send pause command."""
-        self._chromecast.media_controller.pause()
+        media_controller = self._media_controller()
+        media_controller.pause()
 
     def media_stop(self):
         """Send stop command."""
-        self._chromecast.media_controller.stop()
+        media_controller = self._media_controller()
+        media_controller.stop()
 
     def media_previous_track(self):
         """Send previous track command."""
-        self._chromecast.media_controller.rewind()
+        media_controller = self._media_controller()
+        media_controller.rewind()
 
     def media_next_track(self):
         """Send next track command."""
-        self._chromecast.media_controller.skip()
+        media_controller = self._media_controller()
+        media_controller.skip()
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
-        self._chromecast.media_controller.seek(position)
+        media_controller = self._media_controller()
+        media_controller.seek(position)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
+        # We do not want this to be forwarded to a group / dynamic group
         self._chromecast.media_controller.play_media(media_id, media_type)
 
     # ========== Properties ==========
