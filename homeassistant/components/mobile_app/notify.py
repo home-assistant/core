@@ -1,8 +1,9 @@
 """Support for mobile_app push notifications."""
+import asyncio
 from datetime import datetime, timezone
 import logging
 
-import requests
+import async_timeout
 
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.notify import (
@@ -14,6 +15,7 @@ from homeassistant.components.mobile_app.const import (
     ATTR_DEVICE_NAME, ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_NAME,
     ATTR_OS_VERSION, ATTR_PUSH_TOKEN, ATTR_PUSH_URL, DATA_CONFIG_ENTRIES,
     DOMAIN)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +24,7 @@ DEPENDENCIES = ["mobile_app"]
 
 
 # pylint: disable=invalid-name
-def log_rate_limits(hass, device_name, resp, level=20):
+def log_rate_limits(hass, device_name, resp, level=logging.INFO):
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]
     resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
@@ -37,23 +39,25 @@ def log_rate_limits(hass, device_name, resp, level=20):
                 str(resetsAtTime).split(".")[0])
 
 
-def get_service(hass, config, discovery_info=None):
+async def get_service(hass, config, discovery_info=None):
     """Get the mobile_app notification service."""
-    return MobileAppNotificationService()
+    session = async_get_clientsession(hass)
+    return MobileAppNotificationService(session)
 
 
 class MobileAppNotificationService(BaseNotificationService):
     """Implement the notification service for mobile_app."""
 
-    def __init__(self):
+    def __init__(self, session):
         """Initialize the service."""
+        self._session = session
 
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
         return push_registrations(self.hass)
 
-    def send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send a message to the Lambda APNS gateway."""
         data = {ATTR_MESSAGE: message}
 
@@ -97,21 +101,29 @@ class MobileAppNotificationService(BaseNotificationService):
 
             data['registration_info'] = reg_info
 
-            req = requests.post(push_url, json=data, timeout=10)
+            try:
+                with async_timeout.timeout(10, loop=self.hass.loop):
+                    response = await self._session.post(push_url, json=data)
+                    result = await response.json()
 
-            if req.status_code != 201:
-                fallback_error = req.json().get("errorMessage",
-                                                "Unknown error")
+                if response.status == 201:
+                    log_rate_limits(self.hass,
+                                    entry_data[ATTR_DEVICE_NAME], result)
+                    return
+
+                fallback_error = result.get("errorMessage",
+                                            "Unknown error")
                 fallback_message = ("Internal server error, "
                                     "please try again later: "
                                     "{}").format(fallback_error)
-                message = req.json().get("message", fallback_message)
-                if req.status_code == 429:
+                message = result.get("message", fallback_message)
+                if response.status_code == 429:
                     _LOGGER.warning(message)
-                    log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME],
-                                    req.json(), 30)
+                    log_rate_limits(self.hass,
+                                    entry_data[ATTR_DEVICE_NAME],
+                                    result, logging.WARNING)
                 else:
                     _LOGGER.error(message)
-            else:
-                log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME],
-                                req.json())
+
+            except asyncio.TimeoutError:
+                _LOGGER.error("Timeout sending notification to %s", push_url)
