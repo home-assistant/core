@@ -161,6 +161,19 @@ class TestLight(unittest.TestCase):
         assert not light.is_on(self.hass, dev2.entity_id)
         assert not light.is_on(self.hass, dev3.entity_id)
 
+        # turn off all lights by setting brightness to 0
+        common.turn_on(self.hass)
+
+        self.hass.block_till_done()
+
+        common.turn_on(self.hass, brightness=0)
+
+        self.hass.block_till_done()
+
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert not light.is_on(self.hass, dev2.entity_id)
+        assert not light.is_on(self.hass, dev3.entity_id)
+
         # toggle all lights
         common.toggle(self.hass)
 
@@ -206,6 +219,32 @@ class TestLight(unittest.TestCase):
         assert {
             light.ATTR_HS_COLOR: (71.059, 100),
         } == data
+
+        # Ensure attributes are filtered when light is turned off
+        common.turn_on(self.hass, dev1.entity_id,
+                       transition=10, brightness=0, color_name='blue')
+        common.turn_on(
+            self.hass, dev2.entity_id, brightness=0, rgb_color=(255, 255, 255),
+            white_value=0)
+        common.turn_on(self.hass, dev3.entity_id, brightness=0,
+                       xy_color=(.4, .6))
+
+        self.hass.block_till_done()
+
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert not light.is_on(self.hass, dev2.entity_id)
+        assert not light.is_on(self.hass, dev3.entity_id)
+
+        _, data = dev1.last_call('turn_off')
+        assert {
+            light.ATTR_TRANSITION: 10,
+        } == data
+
+        _, data = dev2.last_call('turn_off')
+        assert {} == data
+
+        _, data = dev3.last_call('turn_off')
+        assert {} == data
 
         # One of the light profiles
         prof_name, prof_h, prof_s, prof_bri = 'relax', 35.932, 69.412, 144
@@ -292,6 +331,7 @@ class TestLight(unittest.TestCase):
         with open(user_light_file, 'w') as user_file:
             user_file.write('id,x,y,brightness\n')
             user_file.write('test,.4,.6,100\n')
+            user_file.write('test_off,0,0,0\n')
 
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
@@ -305,10 +345,20 @@ class TestLight(unittest.TestCase):
 
         _, data = dev1.last_call('turn_on')
 
+        assert light.is_on(self.hass, dev1.entity_id)
         assert {
             light.ATTR_HS_COLOR: (71.059, 100),
             light.ATTR_BRIGHTNESS: 100
         } == data
+
+        common.turn_on(self.hass, dev1.entity_id, profile='test_off')
+
+        self.hass.block_till_done()
+
+        _, data = dev1.last_call('turn_off')
+
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert {} == data
 
     def test_default_profiles_group(self):
         """Test default turn-on light profile for all lights."""

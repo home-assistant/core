@@ -175,6 +175,17 @@ def preprocess_turn_on_alternatives(params):
         params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
 
 
+def preprocess_turn_off(params):
+    """Process data for turning light off if brightness is 0."""
+    if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
+        # Zero brightness: Light will be turned off
+        params = {k: v for k, v in params.items() if k in [ATTR_TRANSITION,
+                                                           ATTR_FLASH]}
+        return (True, params)  # Light should be turned off
+
+    return (False, None)  # Light should be turned on
+
+
 class SetIntentHandler(intent.IntentHandler):
     """Handle set color intents."""
 
@@ -272,17 +283,24 @@ async def async_setup(hass, config):
                     )
 
         preprocess_turn_on_alternatives(params)
+        turn_lights_off, off_params = preprocess_turn_off(params)
 
         update_tasks = []
         for light in target_lights:
             light.async_set_context(service.context)
 
             pars = params
+            off_pars = off_params
+            turn_light_off = turn_lights_off
             if not pars:
                 pars = params.copy()
                 pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
                 preprocess_turn_on_alternatives(pars)
-            await light.async_turn_on(**pars)
+                turn_light_off, off_pars = preprocess_turn_off(pars)
+            if turn_light_off:
+                await light.async_turn_off(**off_pars)
+            else:
+                await light.async_turn_on(**pars)
 
             if not light.should_poll:
                 continue
