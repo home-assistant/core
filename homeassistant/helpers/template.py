@@ -5,7 +5,6 @@ import logging
 import math
 import random
 import re
-from contextlib import AbstractContextManager
 from datetime import datetime
 from typing import Callable
 
@@ -36,7 +35,7 @@ _ENTITY_COLLECT = None
 # pylint: disable=invalid-name
 
 
-class async_generate_filter(AbstractContextManager, FilterBuilder):
+class async_generate_filter(FilterBuilder):
     """
     Filter function generator for entities touched in template.
 
