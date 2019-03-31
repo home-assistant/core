@@ -69,7 +69,6 @@ class NordpoolAPI(Entity):
         self._name = sens_name
         self._unit_of_measurement = CURRENCY_FRACTION[sens_currency]
         self._region = sens_region
-        self._icon = ICON
         self._state = None
         self._currency = sens_currency
         self._day = None
@@ -125,7 +124,7 @@ class NordpoolAPI(Entity):
     @property
     def icon(self):
         """Sensor icon."""
-        return self._icon
+        return ICON
 
     @property
     def device_state_attributes(self):
