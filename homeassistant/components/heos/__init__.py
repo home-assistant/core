@@ -65,10 +65,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     try:
         await controller.connect(auto_reconnect=True)
     # Auto reconnect only operates if initial connection was successful.
-    except (asyncio.TimeoutError, ConnectionError, CommandError):
+    except (asyncio.TimeoutError, ConnectionError, CommandError) as error:
         await controller.disconnect()
-        _LOGGER.debug("Unable to connect to controller %s", host,
-                      exc_info=True)
+        _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
         raise ConfigEntryNotReady
 
     # Disconnect when shutting down
@@ -82,9 +81,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             controller.get_favorites(),
             controller.get_input_sources()
         )
-    except (asyncio.TimeoutError, ConnectionError, CommandError):
+    except (asyncio.TimeoutError, ConnectionError, CommandError) as error:
         await controller.disconnect()
-        _LOGGER.debug("Unable to retrieve players and sources", exc_info=True)
+        _LOGGER.debug("Unable to retrieve players and sources: %s", error,
+                      exc_info=isinstance(error, CommandError))
         raise ConfigEntryNotReady
 
     source_manager = SourceManager(favorites, inputs)
@@ -177,14 +177,17 @@ class SourceManager:
                     return await asyncio.gather(
                         controller.get_favorites(),
                         controller.get_input_sources())
-                except (asyncio.TimeoutError, ConnectionError, CommandError):
+                except (asyncio.TimeoutError, ConnectionError, CommandError) \
+                        as error:
                     if retry_attempts < self.max_retry_attempts:
                         retry_attempts += 1
                         _LOGGER.debug("Error retrieving sources and will "
-                                      "retry", exc_info=True)
+                                      "retry: %s", error,
+                                      exc_info=isinstance(error, CommandError))
                         await asyncio.sleep(self.retry_delay)
                     else:
-                        _LOGGER.exception("Unable to update sources")
+                        _LOGGER.error("Unable to update sources: %s", error,
+                                      exc_info=isinstance(error, CommandError))
                         return
 
         async def update_sources(event):

@@ -14,7 +14,6 @@ from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
-from . import SourceManager  # noqa
 from .const import (
     DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
 
@@ -49,7 +48,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         self._player = player
         self._signals = []
         self._supported_features = BASE_SUPPORTED_FEATURES
-        self._source_manager = None  # type: SourceManager
+        self._source_manager = None
         self._play_state_to_state = {
             const.PLAY_STATE_PLAY: STATE_PLAYING,
             const.PLAY_STATE_STOP: STATE_IDLE,
