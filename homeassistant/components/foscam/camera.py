@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+from homeassistant.components.camera import (
+    Camera, PLATFORM_SCHEMA, SUPPORT_STREAM)
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.helpers import config_validation as cv
@@ -57,6 +58,8 @@ class FoscamCam(Camera):
         self._foscam_session = FoscamCamera(
             ip_address, port, self._username, self._password, verbose=False)
 
+        self._media_port = self._foscam_session.get_port_info()[1]['mediaPort']
+
     def camera_image(self):
         """Return a still image response from the camera."""
         # Send the request to snap a picture and return raw jpg data
@@ -66,6 +69,20 @@ class FoscamCam(Camera):
             return None
 
         return response
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        return SUPPORT_STREAM
+
+    @property
+    def stream_source(self):
+        """Return the stream source."""
+        return 'rtsp://{}:{}@{}:{}/videoMain'.format(
+            self._username,
+            self._password,
+            self._foscam_session.host,
+            self._media_port)
 
     @property
     def motion_detection_enabled(self):
