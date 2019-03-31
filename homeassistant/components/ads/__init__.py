@@ -235,6 +235,7 @@ class AdsEntity(Entity):
                                       state_key=STATE_KEY_STATE,
                                       factor=None):
         """Register device notification."""
+
         def update(name, value):
             """Handle device notifications."""
             _LOGGER.debug('Variable %s changed its value to %d', name, value)
