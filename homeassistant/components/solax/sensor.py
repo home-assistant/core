@@ -1,11 +1,11 @@
 """Support for Solax inverter via local API."""
 import asyncio
+import json
 
 from datetime import timedelta
 import logging
 
 import aiohttp
-import json
 import async_timeout
 import voluptuous as vol
 
@@ -93,16 +93,18 @@ async def async_setup_platform(hass, config, async_add_entities,
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
-    for x in INVERTER_SENSORS:
-        devices.append(Inverter(x))
+    for sensor in INVERTER_SENSORS:
+        devices.append(Inverter(sensor))
     endpoint.sensors = devices
     async_add_entities(devices)
 
 
-async def async_solax_real_time_request(hass, schema, ip, retry, t_wait=0):
+async def async_solax_real_time_request(hass, schema, ip_address, retry,
+                                        t_wait=0):
+    """Make call to inverter endpoint."""
     if t_wait > 0:
         msg = "Timeout connecting to Solax inverter, waiting %d to retry."
-        _LOGGER.warn(msg, t_wait)
+        _LOGGER.error(msg, t_wait)
         asyncio.sleep(t_wait)
     new_wait = (t_wait*2)+5
     retry = retry - 1
@@ -110,24 +112,24 @@ async def async_solax_real_time_request(hass, schema, ip, retry, t_wait=0):
         session = async_get_clientsession(hass)
 
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            url = REAL_TIME_DATA_ENDPOINT.format(ip_address=ip)
+            url = REAL_TIME_DATA_ENDPOINT.format(ip_address=ip_address)
             req = await session.get(url)
         garbage = await req.read()
         formatted = garbage.decode("utf-8")
         formatted = formatted.replace(",,", ",0.0,").replace(",,", ",0.0,")
         json_response = json.loads(formatted)
         return schema(json_response)
-    except (asyncio.TimeoutError):
+    except asyncio.TimeoutError:
         if retry > 0:
             return await async_solax_real_time_request(hass,
                                                        schema,
-                                                       ip,
+                                                       ip_address,
                                                        retry,
                                                        new_wait)
         _LOGGER.error("Too many timeouts connecting to Solax.")
-    except (aiohttp.ClientError) as clientErr:
+    except (aiohttp.ClientError) as client_err:
         _LOGGER.error("Could not connect to Solax API endpoint")
-        _LOGGER.error(clientErr)
+        _LOGGER.error(client_err)
     except ValueError:
         _LOGGER.error("Received non-JSON data from Solax API endpoint")
     except vol.Invalid as err:
@@ -137,12 +139,13 @@ async def async_solax_real_time_request(hass, schema, ip, retry, t_wait=0):
     raise SolaxRequestError
 
 
-def parse_solax_battery_response(json):
-    data_list = json['Data']
+def parse_solax_battery_response(response):
+    """Manipulate the response from solax endpoint"""
+    data_list = response['Data']
     result = {}
-    for k, v in INVERTER_SENSORS.items():
-        response_index = v[0]
-        result[k] = data_list[response_index]
+    for name, index in INVERTER_SENSORS.items():
+        response_index = index[0]
+        result[name] = data_list[response_index]
     return result
 
 
@@ -163,40 +166,41 @@ class RealTimeDataEndpoint:
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            json = await async_solax_real_time_request(self.hass,
+            resp = await async_solax_real_time_request(self.hass,
                                                        REAL_TIME_DATA_SCHEMA,
                                                        self.ip_address,
                                                        3)
-            self.data = parse_solax_battery_response(json)
+            self.data = parse_solax_battery_response(resp)
             self.ready.set()
         except SolaxRequestError:
             if now is not None:
                 self.ready.clear()
             else:
                 raise PlatformNotReady
-        for s in self.sensors:
-            if s._key in self.data:
-                s._value = self.data[s._key]
-            s.async_schedule_update_ha_state()
+        for sensor in self.sensors:
+            if sensor.key in self.data:
+                sensor.value = self.data[sensor.key]
+            sensor.async_schedule_update_ha_state()
 
 
 class Inverter(Entity):
+    """Class for a sensor"""
     def __init__(self, key):
-        self._key = key
-        self._value = None
+        self.key = key
+        self.value = None
 
     @property
     def state(self):
-        return self._value
+        return self.value
 
     @property
     def name(self):
-        return self._key
+        return self.key
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return INVERTER_SENSORS[self._key][1]
+        return INVERTER_SENSORS[self.key][1]
 
     @property
     def should_poll(self):
