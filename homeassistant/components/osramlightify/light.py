@@ -58,7 +58,7 @@ DEFAULT_BRIGHTNESS = 2
 DEFAULT_KELVIN = 2700
 
 
-def setup_platform(_hass, config, add_entities, _discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Osram Lightify lights."""
     import lightify
 
