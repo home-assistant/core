@@ -1,9 +1,9 @@
 """Plugged In Status Support for the Nissan Leaf."""
 import logging
 
-from homeassistant.components.nissan_leaf import (
-    DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity)
 from homeassistant.components.binary_sensor import BinarySensorDevice
+
+from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 

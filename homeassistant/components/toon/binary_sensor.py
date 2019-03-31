@@ -17,7 +17,7 @@ DEPENDENCIES = ['toon']
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=300)
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,

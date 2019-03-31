@@ -31,10 +31,30 @@ def client(hass, hass_client):
     yield hass.loop.run_until_complete(hass_client())
 
 
+@HANDLERS.register('comp1')
+class Comp1ConfigFlow:
+    """Config flow with options flow."""
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config, options):
+        """Get options flow."""
+        pass
+
+
+@HANDLERS.register('comp2')
+class Comp2ConfigFlow:
+    """Config flow without options flow."""
+
+    def __init__(self):
+        """Init."""
+        pass
+
+
 async def test_get_entries(hass, client):
     """Test get entries."""
     MockConfigEntry(
-        domain='comp',
+        domain='comp1',
         title='Test 1',
         source='bla',
         connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
@@ -47,18 +67,6 @@ async def test_get_entries(hass, client):
         connection_class=core_ce.CONN_CLASS_ASSUMED,
     ).add_to_hass(hass)
 
-    class CompConfigFlow:
-        @staticmethod
-        @callback
-        def async_get_options_flow(config, options):
-            pass
-    HANDLERS['comp'] = CompConfigFlow()
-
-    class Comp2ConfigFlow:
-        def __init__(self):
-            pass
-    HANDLERS['comp2'] = Comp2ConfigFlow()
-
     resp = await client.get('/api/config/config_entries/entry')
     assert resp.status == 200
     data = await resp.json()
@@ -66,7 +74,7 @@ async def test_get_entries(hass, client):
         entry.pop('entry_id')
     assert data == [
         {
-            'domain': 'comp',
+            'domain': 'comp1',
             'title': 'Test 1',
             'source': 'bla',
             'state': 'not_loaded',
@@ -226,6 +234,7 @@ def test_abort(hass, client):
     data = yield from resp.json()
     data.pop('flow_id')
     assert data == {
+        'description_placeholders': None,
         'handler': 'test',
         'reason': 'bla',
         'type': 'abort'
@@ -254,6 +263,10 @@ def test_create_account(hass, client):
                                       json={'handler': 'test'})
 
     assert resp.status == 200
+
+    entries = hass.config_entries.async_entries('test')
+    assert len(entries) == 1
+
     data = yield from resp.json()
     data.pop('flow_id')
     assert data == {
@@ -261,6 +274,7 @@ def test_create_account(hass, client):
         'title': 'Test Entry',
         'type': 'create_entry',
         'version': 1,
+        'result': entries[0].entry_id,
         'description': None,
         'description_placeholders': None,
     }
@@ -316,6 +330,10 @@ def test_two_step_flow(hass, client):
             '/api/config/config_entries/flow/{}'.format(flow_id),
             json={'user_title': 'user-title'})
         assert resp.status == 200
+
+        entries = hass.config_entries.async_entries('test')
+        assert len(entries) == 1
+
         data = yield from resp.json()
         data.pop('flow_id')
         assert data == {
@@ -323,6 +341,7 @@ def test_two_step_flow(hass, client):
             'type': 'create_entry',
             'title': 'user-title',
             'version': 1,
+            'result': entries[0].entry_id,
             'description': None,
             'description_placeholders': None,
         }

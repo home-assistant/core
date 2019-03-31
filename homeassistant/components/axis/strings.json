@@ -1,0 +1,26 @@
+{
+    "config": {
+        "title": "Axis device",
+        "step": {
+            "user": {
+                "title": "Set up Axis device",
+                "data": {
+                    "host": "Host",
+                    "username": "Username",
+                    "password": "Password",
+                    "port": "Port"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "device_unavailable": "Device is not available",
+            "faulty_credentials": "Bad user credentials"
+        },
+        "abort": {
+            "already_configured": "Device is already configured",
+            "bad_config_file": "Bad data from config file",
+            "link_local_address": "Link local addresses are not supported"
+        }
+    }
+}

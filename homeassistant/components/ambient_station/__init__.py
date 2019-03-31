@@ -304,15 +304,26 @@ class AmbientStation:
         self.monitored_conditions = monitored_conditions
         self.stations = {}
 
-    async def ws_connect(self):
-        """Register handlers and connect to the websocket."""
+    async def _attempt_connect(self):
+        """Attempt to connect to the socket (retrying later on fail)."""
         from aioambient.errors import WebsocketError
 
+        try:
+            await self.client.websocket.connect()
+        except WebsocketError as err:
+            _LOGGER.error("Error with the websocket connection: %s", err)
+            self._ws_reconnect_delay = min(
+                2 * self._ws_reconnect_delay, 480)
+            async_call_later(
+                self._hass, self._ws_reconnect_delay, self.ws_connect)
+
+    async def ws_connect(self):
+        """Register handlers and connect to the websocket."""
         async def _ws_reconnect(event_time):
             """Forcibly disconnect from and reconnect to the websocket."""
             _LOGGER.debug('Watchdog expired; forcing socket reconnection')
             await self.client.websocket.disconnect()
-            await self.client.websocket.connect()
+            await self._attempt_connect()
 
         def on_connect():
             """Define a handler to fire when the websocket is connected."""
@@ -381,15 +392,7 @@ class AmbientStation:
         self.client.websocket.on_disconnect(on_disconnect)
         self.client.websocket.on_subscribed(on_subscribed)
 
-        try:
-            await self.client.websocket.connect()
-        except WebsocketError as err:
-            _LOGGER.error("Error with the websocket connection: %s", err)
-
-            self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
-
-            async_call_later(
-                self._hass, self._ws_reconnect_delay, self.ws_connect)
+        await self._attempt_connect()
 
     async def ws_disconnect(self):
         """Disconnect from the websocket."""
@@ -410,6 +413,13 @@ class AmbientWeatherEntity(Entity):
         self._sensor_type = sensor_type
         self._state = None
         self._station_name = station_name
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(
+            self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
+                self._sensor_type))
 
     @property
     def device_info(self):

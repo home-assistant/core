@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.sense import SENSE_DATA
+
+from . import SENSE_DATA
 
 DEPENDENCIES = ['sense']
 
@@ -52,6 +53,8 @@ MDI_ICONS = {
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Sense binary sensor."""
+    if discovery_info is None:
+        return
     data = hass.data[SENSE_DATA]
 
     sense_devices = await data.get_discovered_device_data()
