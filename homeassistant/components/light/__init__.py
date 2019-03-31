@@ -441,13 +441,13 @@ class Light(ToggleEntity):
             data[ATTR_EFFECT_LIST] = self.effect_list
 
         if self.is_on:
-            if self.supported_features & SUPPORT_BRIGHTNESS:
+            if supported_features & SUPPORT_BRIGHTNESS:
                 data[ATTR_BRIGHTNESS] = self.brightness
 
             if supported_features & SUPPORT_COLOR_TEMP:
                 data[ATTR_COLOR_TEMP] = self.color_temp
 
-            if supported_features & SUPPORT_COLOR and self.hs_color:
+            if self.supported_features & SUPPORT_COLOR and self.hs_color:
                 # pylint: disable=unsubscriptable-object,not-an-iterable
                 hs_color = self.hs_color
                 data[ATTR_HS_COLOR] = (
