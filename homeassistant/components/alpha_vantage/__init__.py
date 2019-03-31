@@ -95,7 +95,7 @@ class AlphaVantageData:
         from alpha_vantage.foreignexchange import ForeignExchange
 
         self._hass = hass
-        self._regex = re.compile('(\d+\. )(.+)')
+        self._regex = re.compile('(\\d+\\. )(.+)')
         self._timeseries = TimeSeries(key=api_key)
         self._forex = ForeignExchange(key=api_key)
         self._symbols = symbols
@@ -108,10 +108,12 @@ class AlphaVantageData:
 
     @property
     def stock_quotes(self):
+        """Return the cached stock quotes."""
         return self._stock_quotes
 
     @property
     def forex_quotes(self):
+        """Return the cached foreign exchange quotes."""
         return self._forex_quotes
 
     def update(self, now=None):
@@ -121,7 +123,7 @@ class AlphaVantageData:
 
     def _update_stock_tickers(self):
         """Update cached data for tracked stock tickers."""
-        if len(self._symbols) == 0:
+        if not self._symbols:
             return
         try:
             quotes, _ = self._timeseries.get_batch_stock_quotes(self._symbols)
@@ -142,7 +144,7 @@ class AlphaVantageData:
 
     def _update_currency_data(self):
         """Update cached data for tracked currency conversions."""
-        if len(self._conversions) == 0:
+        if not self._conversions:
             return
         for conversion in self._conversions:
             key = (conversion[CONF_FROM], conversion[CONF_TO])

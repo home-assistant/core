@@ -43,7 +43,6 @@ ICONS = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Alpha Vantage sensor."""
-
     data = hass.data[ALPHA_VANTAGE]
 
     dev = []
