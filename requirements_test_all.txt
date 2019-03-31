@@ -3,7 +3,7 @@
 # make new things fail. Manually update these pins when pulling in a
 # new version
 asynctest==0.12.2
-coveralls==1.2.0
+coveralls==1.7.0
 flake8-docstrings==1.3.0
 flake8==3.7.7
 mock-open==1.3.1

@@ -257,3 +257,7 @@ workflows:
           filters:
             branches:
               only: dev
+
+notify:
+  webhooks:
+    - url: https://coveralls.io/webhook
