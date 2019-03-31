@@ -24,6 +24,7 @@ async def async_trigger(hass, config, action, automation_info):
     @callback
     def template_listener(entity_id, from_s, to_s):
         """Listen for state changes and calls action."""
+        context = to_s.context if to_s else None
         hass.async_run_job(action({
             'trigger': {
                 'platform': 'template',
@@ -31,6 +32,6 @@ async def async_trigger(hass, config, action, automation_info):
                 'from_state': from_s,
                 'to_state': to_s,
             },
-        }, context=to_s.context))
+        }, context=context))
 
     return async_track_template(hass, value_template, template_listener)

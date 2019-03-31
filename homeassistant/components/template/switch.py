@@ -55,6 +55,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             CONF_ENTITY_PICTURE_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
+        state_template.hass = hass
         entity_ids = (device_config.get(ATTR_ENTITY_ID) or
                       state_template.extract_entities())
 

@@ -102,6 +102,7 @@ async def async_setup_platform(
             if entity_ids == MATCH_ALL or manual_entity_ids is not None:
                 continue
 
+            template.hass = hass
             template_entity_ids = template.extract_entities()
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL

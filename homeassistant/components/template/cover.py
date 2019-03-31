@@ -98,26 +98,31 @@ async def async_setup_platform(hass, config, async_add_entities,
             continue
         template_entity_ids = set()
         if state_template is not None:
+            state_template.hass = hass
             temp_ids = state_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
         if position_template is not None:
+            position_template.hass = hass
             temp_ids = position_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
         if tilt_template is not None:
+            tilt_template.hass = hass
             temp_ids = tilt_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
         if icon_template is not None:
+            icon_template.hass = hass
             temp_ids = icon_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
         if entity_picture_template is not None:
+            entity_picture_template.hass = hass
             temp_ids = entity_picture_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
