@@ -1,7 +1,6 @@
 """Define tests for permissions on RainMachine service calls."""
 import asynctest
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.rainmachine.const import DOMAIN
 from homeassistant.core import Context
