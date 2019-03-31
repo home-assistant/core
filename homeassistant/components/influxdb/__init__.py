@@ -135,10 +135,12 @@ def setup(hass, config):
         influx.write_points([])
     except (exceptions.InfluxDBClientError,
             requests.exceptions.ConnectionError) as exc:
-        _LOGGER.warning("Database host is not accessible due to '%s', please "
-                        "check your entries in the configuration file (host, "
-                        "port, etc.) and verify that the database exists and is "
-                        "READ/WRITE. Retrying again in %s sec.", exc, RETRY_INTERVAL)
+        _LOGGER.warning(
+            "Database host is not accessible due to '%s', please "
+            "check your entries in the configuration file (host, "
+            "port, etc.) and verify that the database exists and is "
+            "READ/WRITE. Retrying again in %s sec.", exc, RETRY_INTERVAL
+        )
         event_helper.call_later(
             hass, RETRY_INTERVAL, lambda _: setup(hass, config)
         )
