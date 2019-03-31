@@ -465,7 +465,7 @@ class Light(ToggleEntity):
             if supported_features & SUPPORT_COLOR_TEMP:
                 data[ATTR_COLOR_TEMP] = self.color_temp
 
-            if self.supported_features & SUPPORT_COLOR and self.hs_color:
+            if supported_features & SUPPORT_COLOR and self.hs_color:
                 # pylint: disable=unsubscriptable-object,not-an-iterable
                 hs_color = self.hs_color
                 data[ATTR_HS_COLOR] = (
