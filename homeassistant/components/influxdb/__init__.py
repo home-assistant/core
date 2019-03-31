@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_VERIFY_SSL,
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE,
     STATE_UNKNOWN)
-from homeassistant.helpers import state as state_helper
+from homeassistant.helpers import state as state_helper, event as event_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 
@@ -39,6 +39,7 @@ DOMAIN = 'influxdb'
 TIMEOUT = 5
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
+RETRY_INTERVAL = 60 # seconds
 
 BATCH_TIMEOUT = 1
 BATCH_BUFFER_SIZE = 100
@@ -129,23 +130,18 @@ def setup(hass, config):
         conf[CONF_COMPONENT_CONFIG_GLOB])
     max_tries = conf.get(CONF_RETRY_COUNT)
 
-    influx = InfluxDBClient(**kwargs)
-    for retry in range(max_tries+1):
-        try:
-            influx.write_points([])
-            break
-        except (exceptions.InfluxDBClientError, IOError,
-                requests.exceptions.ConnectionError) as exc:
-            if retry < max_tries:
-                time.sleep(RETRY_DELAY)
-            else:
-                _LOGGER.error(
-                    "Database host is not accessible due to '%s', please "
-                    "check your entries in the configuration file (host, "
-                    "port, etc.) and verify that the database exists and is "
-                    "READ/WRITE", exc
-                )
-                return False
+    try:
+        influx = InfluxDBClient(**kwargs)
+        influx.write_points([])
+    except (exceptions.InfluxDBClientError,
+            requests.exceptions.ConnectionError) as exc:
+        _LOGGER.warning("Database host is not accessible due to '%s', please "
+                        "check your entries in the configuration file (host, "
+                        "port, etc.) and verify that the database exists and is "
+                        "READ/WRITE. Retrying again in %s sec.", exc, RETRY_INTERVAL)
+        event_helper.call_later(
+            hass, RETRY_INTERVAL, lambda _: setup(hass, config)
+        )
 
     def event_to_json(event):
         """Add an event to the outgoing Influx list."""
