@@ -108,6 +108,7 @@ class UnifiVideoCamera(Camera):
         caminfo = self._nvr.get_camera(self._uuid)
         if caminfo['channels'][0]['isRtspEnabled']:
             return SUPPORT_STREAM
+        return 0
 
     @property
     def stream_source(self):
