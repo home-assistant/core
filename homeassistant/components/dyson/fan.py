@@ -7,11 +7,12 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (
     DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.const import CONF_ENTITY_ID
+import homeassistant.helpers.config_validation as cv
+
+from . import DYSON_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 

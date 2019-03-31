@@ -2,9 +2,10 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.amcrest import DATA_AMCREST, SENSORS
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME, CONF_SENSORS
+from homeassistant.helpers.entity import Entity
+
+from . import DATA_AMCREST, SENSORS
 
 DEPENDENCIES = ['amcrest']
 

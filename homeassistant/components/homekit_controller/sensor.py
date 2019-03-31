@@ -1,7 +1,7 @@
 """Support for Homekit sensors."""
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.const import TEMP_CELSIUS
+
+from . import KNOWN_DEVICES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -16,7 +16,7 @@ UNIT_LUX = "lux"
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit sensor support."""
     if discovery_info is not None:
-        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
         devtype = discovery_info['device-type']
 
         if devtype == 'humidity':

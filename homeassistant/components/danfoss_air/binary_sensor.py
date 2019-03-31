@@ -1,7 +1,7 @@
 """Support for the for Danfoss Air HRV binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.danfoss_air import DOMAIN \
-     as DANFOSS_AIR_DOMAIN
+
+from . import DOMAIN as DANFOSS_AIR_DOMAIN
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

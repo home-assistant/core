@@ -14,7 +14,7 @@ DOMAIN = 'lightwave'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema(
-        cv.has_at_least_one_key(CONF_LIGHTS, CONF_SWITCHES), {
+        vol.All(cv.has_at_least_one_key(CONF_LIGHTS, CONF_SWITCHES), {
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_LIGHTS, default={}): {
                 cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string}),
@@ -23,6 +23,7 @@ CONFIG_SCHEMA = vol.Schema({
                 cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string}),
             }
         })
+    )
 }, extra=vol.ALLOW_EXTRA)
 
 

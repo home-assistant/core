@@ -3,9 +3,6 @@ import logging
 
 import voluptuous as vol
 
-# Reuse data and API logic from the sensor implementation
-from homeassistant.components.zamg.sensor import (
-    ATTRIBUTION, CONF_STATION_ID, ZamgData, closest_station, zamg_stations)
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY, ATTR_WEATHER_PRESSURE, ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING, ATTR_WEATHER_WIND_SPEED, PLATFORM_SCHEMA,
@@ -13,6 +10,10 @@ from homeassistant.components.weather import (
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
+
+# Reuse data and API logic from the sensor implementation
+from .sensor import (
+    ATTRIBUTION, CONF_STATION_ID, ZamgData, closest_station, zamg_stations)
 
 _LOGGER = logging.getLogger(__name__)
 

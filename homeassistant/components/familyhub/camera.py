@@ -8,8 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv

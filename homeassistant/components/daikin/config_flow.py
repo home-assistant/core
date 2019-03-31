@@ -6,8 +6,9 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 
-from .const import KEY_HOST, KEY_IP, KEY_MAC
+from .const import KEY_IP, KEY_MAC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class FlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(
             title=host,
             data={
-                KEY_HOST: host,
+                CONF_HOST: host,
                 KEY_MAC: mac
             })
 
@@ -55,14 +56,14 @@ class FlowHandler(config_entries.ConfigFlow):
             return self.async_show_form(
                 step_id='user',
                 data_schema=vol.Schema({
-                    vol.Required(KEY_HOST): str
+                    vol.Required(CONF_HOST): str
                 })
             )
-        return await self._create_device(user_input[KEY_HOST])
+        return await self._create_device(user_input[CONF_HOST])
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        host = user_input.get(KEY_HOST)
+        host = user_input.get(CONF_HOST)
         if not host:
             return await self.async_step_user()
         return await self._create_device(host)

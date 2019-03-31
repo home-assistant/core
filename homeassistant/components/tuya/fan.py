@@ -1,8 +1,9 @@
 """Support for Tuya fans."""
 from homeassistant.components.fan import (
-    ENTITY_ID_FORMAT, FanEntity, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED)
-from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
+    ENTITY_ID_FORMAT, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.const import STATE_OFF
+
+from . import DATA_TUYA, TuyaDevice
 
 DEPENDENCIES = ['tuya']
 
