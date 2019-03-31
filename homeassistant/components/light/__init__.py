@@ -441,7 +441,7 @@ class Light(ToggleEntity):
             data[ATTR_EFFECT_LIST] = self.effect_list
 
         if self.is_on:
-            if supported_features & SUPPORT_BRIGHTNESS:
+            if self.supported_features & SUPPORT_BRIGHTNESS:
                 data[ATTR_BRIGHTNESS] = self.brightness
 
             if supported_features & SUPPORT_COLOR_TEMP:

@@ -155,11 +155,11 @@ class Luminary(Light):
         self._supported_features = []
         self._effect_list = []
         self._is_on = False
-        self._min_mireds = 0
-        self._max_mireds = 0
-        self._brightness = 0
-        self._color_temp = 0
-        self._rgb_color = (0, 0, 0)
+        self._min_mireds = None
+        self._max_mireds = None
+        self._brightness = None
+        self._color_temp = None
+        self._rgb_color = None
 
         self.update_static_attributes()
         self.update_dynamic_attributes()
