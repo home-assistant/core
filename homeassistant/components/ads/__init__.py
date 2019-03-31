@@ -160,28 +160,42 @@ class AdsHub:
 
     def write_by_name(self, name, value, plc_datatype):
         """Write a value to the device."""
+        import pyads
         with self._lock:
-            return self._client.write_by_name(name, value, plc_datatype)
+            try:
+                return self._client.write_by_name(name, value, plc_datatype)
+            except pyads.ADSError as err:
+                _LOGGER.error(err)
+                _LOGGER.error("ADS variable: %s", name)
 
     def read_by_name(self, name, plc_datatype):
         """Read a value from the device."""
+        import pyads
         with self._lock:
-            return self._client.read_by_name(name, plc_datatype)
+            try:
+                return self._client.read_by_name(name, plc_datatype)
+            except pyads.ADSError as err:
+                _LOGGER.error(err)
+                _LOGGER.error("ADS variable: %s", name)
 
     def add_device_notification(self, name, plc_datatype, callback):
         """Add a notification to the ADS devices."""
-        from pyads import NotificationAttrib
-        attr = NotificationAttrib(ctypes.sizeof(plc_datatype))
+        import pyads
+        attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 
         with self._lock:
-            hnotify, huser = self._client.add_device_notification(
-                name, attr, self._device_notification_callback)
-            hnotify = int(hnotify)
-            self._notification_items[hnotify] = NotificationItem(
-                hnotify, huser, name, plc_datatype, callback)
+            try:
+                hnotify, huser = self._client.add_device_notification(
+                    name, attr, self._device_notification_callback)
+                hnotify = int(hnotify)
+                self._notification_items[hnotify] = NotificationItem(
+                    hnotify, huser, name, plc_datatype, callback)
 
-        _LOGGER.debug(
-            "Added device notification %d for variable %s", hnotify, name)
+                _LOGGER.debug(
+                    "Added device notification %d for variable %s", hnotify, name)
+            except pyads.ADSError as err:
+                _LOGGER.error(err)
+                _LOGGER.error("ADS variable: %s", name)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
