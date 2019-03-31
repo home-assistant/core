@@ -44,7 +44,7 @@ ICON_MAPPING_FIELDS = {
     'total_photo_count': 'mdi:image',
     'average_speed': 'mdi:speedometer',
     'max_speed': 'mdi:speedometer',
-    'kilojoules': None,
+    'kilojoules': 'mdi:fire',
     'average_watts': 'mdi:power-plug',
     'device_watts': 'mdi:power-plug',
     'max_watts': 'mdi:power-plug',
