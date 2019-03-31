@@ -35,10 +35,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AdsSwitch(AdsEntity, ToggleEntity):
     """Representation of an ADS switch device."""
 
-    def __init__(self, ads_hub, name, ads_var):
-        """Initialize the AdsSwitch entity."""
-        super().__init__(ads_hub, name, ads_var)
-
     async def async_added_to_hass(self):
         """Register device notification."""
         await self.async_initialize_device(self._ads_var,
