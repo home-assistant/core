@@ -66,7 +66,7 @@ class AxisCamera(MjpegCamera):
         """Return True if device is available."""
         return self.device.available
 
-    def _new_address(self, host):
+    def _new_address(self):
         """Set new device address for video stream."""
         self._mjpeg_url = AXIS_VIDEO.format(self.device.host, self.port)
         self._still_image_url = AXIS_IMAGE.format(self.device.host, self.port)
