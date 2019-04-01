@@ -65,13 +65,14 @@ async def async_setup_platform(hass, config, async_add_entities,
         return False
 
     for zone in zones:
-    	devices.append(CasaTunesZone(zone))
+        devices.append(CasaTunesZone(zone))
 
     for source in sources:
-    	devices.append(CasaTunesPlayer(source))
+        devices.append(CasaTunesPlayer(source))
 
     async_add_entities(devices)
 
+    
 class CasaTunesPlayer(MediaPlayerDevice):
     """Representation of a CasaTunes player."""
 
@@ -137,10 +138,10 @@ class CasaTunesPlayer(MediaPlayerDevice):
     def state(self):
         """Return the state of the device."""
         STATUS_TO_STATE = {
-        	0: STATE_IDLE,
-        	1: STATE_PAUSED,
-        	2: STATE_PLAYING,
-        	3: STATE_ON
+            0: STATE_IDLE,
+            1: STATE_PAUSED,
+            2: STATE_PLAYING,
+            3: STATE_ON
         }
 
         return STATUS_TO_STATE[self._player.status]
