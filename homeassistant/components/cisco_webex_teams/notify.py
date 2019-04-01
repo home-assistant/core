@@ -12,7 +12,7 @@ REQUIREMENTS = ['webexteamssdk==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ROOMID = 'roomid'
+CONF_ROOMID = 'room_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
@@ -35,6 +35,7 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
         from webexteamssdk import WebexTeamsAPI
         self.room = room
         self.client = WebexTeamsAPI(access_token=token)
+        [room for room in self.client.rooms.list()]
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
@@ -45,7 +46,7 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
                 title = "{}{}".format(kwargs.get(ATTR_TITLE), "<br>")
             self.client.messages.create(
                 roomId=self.room,
-                html=title + message)
+                html="{}{}".format(title, message))
         except ApiError as api_error:
             _LOGGER.error("Could not send CiscoWebexTeams notification. "
                           "Error: %s",
