@@ -202,9 +202,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
         This flow is triggered by the discovery component.
         """
-        if configured_hosts(self.hass):
-            return self.async_abort(reason='one_instance_only')
-
         self._hassio_discovery = user_input
 
         return await self.async_step_hassio_confirm()
@@ -216,8 +213,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
             return self.async_create_entry(
                 title=data['addon'], data={
-                    CONF_PORT: data[CONF_HOST],
-                    CONF_HOST: data[CONF_PORT],
+                    CONF_HOST: data[CONF_HOST],
+                    CONF_PORT: data[CONF_PORT],
                     CONF_BRIDGEID: data['serial'],
                     CONF_API_KEY: data[CONF_API_KEY],
                     CONF_ALLOW_CLIP_SENSOR:
