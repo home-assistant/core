@@ -17,8 +17,9 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON,
     STATE_PAUSED, STATE_PLAYING)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['casatunes==0.0.3']
+REQUIREMENTS = ['casatunes==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +47,9 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
+    session = async_get_clientsession(hass)
 
-    ct = CasaTunes(host, port)
+    ct = CasaTunes(host, port, session)
 
     sources = await ct.get_sources()
     zones = await ct.get_zones()
@@ -57,12 +59,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     if sources is False:
         _LOGGER.error("Sources response is incorrect")
         raise PlatformNotReady
-        return False
 
     if zones is False:
         _LOGGER.error("Zones response is incorrect")
         raise PlatformNotReady
-        return False
 
     for zone in zones:
         devices.append(CasaTunesZone(zone))
@@ -137,14 +137,14 @@ class CasaTunesPlayer(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        STATUS_TO_STATE = {
+        status_states = {
             0: STATE_IDLE,
             1: STATE_PAUSED,
             2: STATE_PLAYING,
             3: STATE_ON
         }
 
-        return STATUS_TO_STATE[self._player.status]
+        return status_states.get(self._player.status, STATE_IDLE)
 
     @property
     def supported_features(self):
