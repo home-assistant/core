@@ -1,5 +1,4 @@
 """The tests for the hassio component."""
-import asyncio
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 from aiohttp.client_exceptions import WSServerHandshakeError
@@ -147,7 +146,7 @@ async def test_ingress_websocket(
 
     # Ignore error because we can setup a full IO infrastructure
     with pytest.raises(WSServerHandshakeError):
-        resp = await hassio_client.ws_connect(
+        await hassio_client.ws_connect(
             '/api/hassio_ingress/{}/{}'.format(build_type[0], build_type[1]),
             headers={"X-Test-Header": "beer"}
         )
