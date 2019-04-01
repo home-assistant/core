@@ -117,7 +117,7 @@ class MobileAppNotificationService(BaseNotificationService):
                                     "please try again later: "
                                     "{}").format(fallback_error)
                 message = result.get("message", fallback_message)
-                if response.status_code == 429:
+                if response.status == 429:
                     _LOGGER.warning(message)
                     log_rate_limits(self.hass,
                                     entry_data[ATTR_DEVICE_NAME],
