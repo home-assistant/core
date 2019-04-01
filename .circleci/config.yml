@@ -52,7 +52,7 @@ commands:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -U pip
+            pip install -q -U pip
             <<# parameters.all >>pip install -q --progress-bar off -r requirements_all.txt -c homeassistant/package_constraints.txt<</ parameters.all>>
             <<# parameters.test >>pip install -q --progress-bar off -r requirements_test.txt -c homeassistant/package_constraints.txt<</ parameters.test>>
             <<# parameters.test_all >>pip install -q --progress-bar off -r requirements_test_all.txt -c homeassistant/package_constraints.txt<</ parameters.test_all>>
@@ -68,27 +68,34 @@ commands:
           name: install
           command: |
             . venv/bin/activate
-            pip install --progress-bar off -e .
+            pip install -q --progress-bar off -e .
 
 jobs:
 
   static-check:
     executor:
       name: python
-      tag: 3.7-stretch
+      tag: 3.5.5-stretch
 
     steps:
       - checkout
       - docker-prereqs
+      - install-requirements:
+          python: 3.5.5-stretch
+          test: true
 
       - run:
           name: run static check
           command: |
-            python3 -m venv venv
             . venv/bin/activate
-            pip install -U pip
-            pip install --progress-bar off flake8
             flake8
+
+      - run:
+          name: run static type check
+          command: |
+            . venv/bin/activate
+            TYPING_FILES=$(cat mypyrc)
+            mypy $TYPING_FILES
 
       - install
       - run:
@@ -114,7 +121,7 @@ jobs:
     executor:
       name: python
       tag: 3.7-stretch
-    parallelism: 3
+    parallelism: 2
 
     steps:
       - checkout
@@ -154,7 +161,7 @@ jobs:
     executor:
       name: python
       tag: << parameters.python >>
-    parallelism: 3
+    parallelism: 2
 
     steps:
       - checkout
@@ -172,7 +179,6 @@ jobs:
             if [ -z "$CODE_COVERAGE" ]; then CC_SWITCH=""; else CC_SWITCH="--cov --cov-report html:htmlcov"; fi
             pytest --timeout=9 --duration=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH -- ${TESTFILES}
             script/check_dirty
-          when: always
 
       - store_test_results:
           path: test-reports
@@ -184,6 +190,23 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
+
+  # This job use machine executor, e.g. classic CircleCI VM because we need both lokalise-cli and a Python runtime.
+  # Classic CircleCI included python 2.7.12 and python 3.5.2 managed by pyenv, the Python version may need change if
+  # CircleCI changed its VM in future.
+  upload-translations:
+    machine: true
+
+    steps:
+      - checkout
+
+      - run:
+          name: upload english translations
+          command: |
+            pyenv versions
+            pyenv global 3.5.2
+            docker pull lokalise/lokalise-cli@sha256:2198814ebddfda56ee041a4b427521757dd57f75415ea9693696a64c550cef21
+            script/translations_upload
 
 workflows:
   version: 2
@@ -222,3 +245,9 @@ workflows:
       # - test:
       #     name: test 3.8
       #     python: 3.8-rc-stretch
+      - upload-translations:
+          requires:
+            - static-check
+          filters:
+            branches:
+              only: dev
