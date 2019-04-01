@@ -207,7 +207,7 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         assert result
 
     assert aioclient_mock.call_count == 3
-    assert aioclient_mock.mock_calls[-1][3]['X-HASSIO-KEY'] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]['X-Hassio-Key'] == "123456"
 
 
 @asyncio.coroutine
