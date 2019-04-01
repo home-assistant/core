@@ -213,7 +213,7 @@ workflows:
   build:
     jobs:
       - static-check
-      - pre-install-all-requirements
+      - pre-install-all-requirements:
           requires:
             - static-check
       - pylint:
