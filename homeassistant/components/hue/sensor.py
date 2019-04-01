@@ -20,6 +20,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 PRESENCE_NAME_FORMAT = "{} presence"
 LIGHT_LEVEL_NAME_FORMAT = "{} light level"
+IS_DARK_NAME_FORMAT = "{} is not dark"
 TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,12 +114,19 @@ async def async_update_items(hass, bridge, async_add_entities, current):
         name = api[item_id].name
         primary_sensor = None
         if api[item_id].type == aiohue.sensors.TYPE_ZLL_LIGHTLEVEL:
+            darkness_name = name + ' is not dark'
             if device_id in sensor_device_names:
                 primary_sensor = sensor_device_names[device_id]
                 name = LIGHT_LEVEL_NAME_FORMAT.format(
                     primary_sensor.name)
+                darkness_name = IS_DARK_NAME_FORMAT.format(
+                    primary_sensor.name)
             current[item_id] = HueLightLevel(
                 api[item_id], name, bridge, primary_sensor=primary_sensor)
+            darkness = HueNotDarkness(
+                api[item_id], darkness_name, bridge,
+                primary_sensor=primary_sensor)
+            new_sensors.append(darkness)
         elif api[item_id].type == aiohue.sensors.TYPE_ZLL_TEMPERATURE:
             if device_id in sensor_device_names:
                 primary_sensor = sensor_device_names[device_id]
@@ -143,8 +151,8 @@ class GenericHueSensor:
     def __init__(self, sensor, name, bridge, primary_sensor=None):
         """Initialize the sensor."""
         self.sensor = sensor
-        self._primary_sensor = primary_sensor
         self._name = name
+        self._primary_sensor = primary_sensor
         self.bridge = bridge
 
         if self.swupdatestate == "readytoinstall":
@@ -236,6 +244,37 @@ class HuePresence(GenericZLLSensor, BinarySensorDevice):
         return self.sensor.presence
 
 
+class HueNotDarkness(GenericZLLSensor, BinarySensorDevice):
+    """A binary light sensor entity for a Hue motion sensor device."""
+
+    device_class = 'light'
+
+    @property
+    def is_on(self):
+        """Return the state of the device."""
+        return not self.sensor.dark
+
+    @property
+    def unique_id(self):
+        """Return the ID of this Hue sensor."""
+        return self.sensor.uniqueid + '-not-dark'
+
+    @property
+    def icon(self):
+        """Return an icon representing the entity and its state."""
+        return self.is_on and 'mdi:lightbulb-on' or 'mdi:lightbulb-off'
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = super().device_state_attributes
+        attributes.update({
+            "threshold_dark": self.sensor.tholddark,
+            "threshold_offset": self.sensor.tholdoffset,
+        })
+        return attributes
+
+
 class HueLightLevel(GenericZLLSensor, Entity):
     """The light level sensor entity for a Hue motion sensor device."""
 
@@ -252,8 +291,6 @@ class HueLightLevel(GenericZLLSensor, Entity):
         """Return the device state attributes."""
         attributes = super().device_state_attributes
         attributes.update({
-            "is_dark": self.sensor.dark,
-            "is_daylight": self.sensor.daylight,
             "threshold_dark": self.sensor.tholddark,
             "threshold_offset": self.sensor.tholdoffset,
         })
