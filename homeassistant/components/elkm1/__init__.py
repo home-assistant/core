@@ -149,7 +149,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                 _LOGGER.error("Need to use a prefix configuration command " +
                               "on second and later elk m1s")
             else:
-                _LOGGER.error("Duplicate prefix on elk prefix: %s", m1s)
+                _LOGGER.error("Duplicate prefix on elk m1, prefix: %s", prefix)
         else:
             elk = elkm1.Elk({'url': conf[CONF_HOST], 'userid':
                              conf[CONF_USERNAME],
