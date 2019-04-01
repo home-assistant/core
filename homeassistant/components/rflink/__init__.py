@@ -50,6 +50,7 @@ DEFAULT_SIGNAL_REPETITIONS = 1
 CONNECTION_TIMEOUT = 10
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
+EVENT_SENSOR_READINGS = 'sensor_readings'
 EVENT_KEY_COMMAND = 'command'
 EVENT_KEY_ID = 'id'
 EVENT_KEY_SENSOR = 'sensor'
@@ -292,14 +293,23 @@ class RflinkDevice(Entity):
         self.async_schedule_update_ha_state()
 
         # Put command onto bus for user to subscribe to
-        if self._should_fire_event and identify_event_type(
-                event) == EVENT_KEY_COMMAND:
-            self.hass.bus.async_fire(EVENT_BUTTON_PRESSED, {
-                ATTR_ENTITY_ID: self.entity_id,
-                ATTR_STATE: event[EVENT_KEY_COMMAND],
-            })
-            _LOGGER.debug("Fired bus event for %s: %s",
-                          self.entity_id, event[EVENT_KEY_COMMAND])
+        if self._should_fire_event:
+            if identify_event_type(
+                    event) == EVENT_KEY_COMMAND:
+                self.hass.bus.async_fire(EVENT_BUTTON_PRESSED, {
+                    ATTR_ENTITY_ID: self.entity_id,
+                    ATTR_STATE: event[EVENT_KEY_COMMAND],
+                })
+                _LOGGER.debug("Fired bus event for %s: %s",
+                            self.entity_id, event[EVENT_KEY_COMMAND])
+            elif identify_event_type(
+                    event) == EVENT_KEY_SENSOR:
+                self.hass.bus.async_fire(EVENT_SENSOR_READINGS, {
+                    ATTR_ENTITY_ID: self.entity_id,
+                    ATTR_STATE: self._state,
+                })
+                _LOGGER.debug("Fired bus event for %s: %s",
+                            self.entity_id, self._state)
 
     def _handle_event(self, event):
         """Platform specific event handler."""
