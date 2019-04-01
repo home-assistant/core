@@ -1,4 +1,4 @@
-"""Configuration for HEOS tests."""
+"""Configuration for Rainmachine tests."""
 import pytest
 
 from homeassistant.components.rainmachine.const import DOMAIN
