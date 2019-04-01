@@ -70,6 +70,8 @@ class HueBridge:
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             self.config_entry, 'light'))
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'binary_sensor'))
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             self.config_entry, 'sensor'))
 
         hass.services.async_register(
