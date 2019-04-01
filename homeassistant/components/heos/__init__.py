@@ -136,15 +136,16 @@ class SourceManager:
         index = next((index for index, favorite in self.favorites.items()
                       if favorite.name == source), None)
         if index is not None:
-            return await player.play_favorite(index)
+            await player.play_favorite(index)
+            return
 
         input_source = next((input_source for input_source in self.inputs
                              if input_source.name == source), None)
         if input_source is not None:
-            return await player.play_input_source(input_source)
+            await player.play_input_source(input_source)
+            return
 
         _LOGGER.error("Unknown source: %s", source)
-        return None
 
     def get_current_source(self, now_playing_media):
         """Determine current source from now playing media."""
