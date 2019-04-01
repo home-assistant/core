@@ -303,7 +303,7 @@ class MiroboVacuum(StateVacuumDevice):
     async def async_start(self):
         """Start or resume the cleaning task."""
         await self._try_command(
-            "Unable to start the vacuum: %s", self._vacuum.start)
+            "Unable to start the vacuum: %s", self._vacuum.resume_or_start)
 
     async def async_pause(self):
         """Pause the cleaning task."""
