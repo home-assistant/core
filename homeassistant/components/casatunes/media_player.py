@@ -72,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     async_add_entities(devices)
 
-    
+
 class CasaTunesPlayer(MediaPlayerDevice):
     """Representation of a CasaTunes player."""
 
