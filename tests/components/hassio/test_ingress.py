@@ -61,7 +61,7 @@ async def test_ingress_request_post(
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-HASSIO-KEY"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
     assert aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"] == \
         "/api/hassio_ingress/{}".format(build_type[0])
     assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"
@@ -93,7 +93,7 @@ async def test_ingress_request_put(
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-HASSIO-KEY"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
     assert aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"] == \
         "/api/hassio_ingress/{}".format(build_type[0])
     assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"
@@ -125,7 +125,7 @@ async def test_ingress_request_delete(
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-HASSIO-KEY"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
     assert aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"] == \
         "/api/hassio_ingress/{}".format(build_type[0])
     assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"
@@ -154,7 +154,7 @@ async def test_ingress_websocket(
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-HASSIO-KEY"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
     assert aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"] == \
         "/api/hassio_ingress/{}".format(build_type[0])
     assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"

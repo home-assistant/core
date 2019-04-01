@@ -85,15 +85,16 @@ class HassIOView(HomeAssistantView):
                 "http://{}/{}".format(self._host, path), data=data,
                 headers=headers, timeout=read_timeout
             )
+            print(client.headers)
 
             # Simple request
-            if CONTENT_LENGTH in client.headers:
+            if int(client.headers.get(CONTENT_LENGTH, 0)) < 4194000:
                 # Return Response
                 body = await client.read()
                 return web.Response(
                     content_type=client.content_type,
                     status=client.status,
-                    body=body
+                    body=body,
                 )
 
             # Stream response
@@ -101,7 +102,7 @@ class HassIOView(HomeAssistantView):
             response.content_type = client.content_type
 
             await response.prepare(request)
-            async for data in client.content:
+            async for data in client.content.iter_chunked(4096):
                 await response.write(data)
 
             return response

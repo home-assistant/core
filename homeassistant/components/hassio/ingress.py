@@ -6,9 +6,7 @@ from typing import Dict, Union
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import (
-    CONNECTION, CONTENT_LENGTH, UPGRADE, X_FORWARDED_FOR, X_FORWARDED_HOST,
-    X_FORWARDED_PROTO)
+from aiohttp import hdrs
 from aiohttp.web_exceptions import HTTPBadGateway
 from multidict import CIMultiDict
 
@@ -103,23 +101,21 @@ class HassIOIngress(HomeAssistantView):
                 request.method, url, headers=source_header,
                 params=request.query, data=data, cookies=request.cookies
         ) as result:
-            headers = result.headers.copy()
 
             # Simple request
-            if CONTENT_LENGTH in headers:
-                del headers[CONTENT_LENGTH]
-
+            if (
+                    hdrs.CONTENT_LENGTH in result.headers and
+                    int(result.headers.get(hdrs.CONTENT_LENGTH, 0)) < 4194000
+               ):
                 # Return Response
                 body = await result.read()
                 return web.Response(
-                    headers=headers,
                     status=result.status,
                     body=body
                 )
 
             # Stream response
-            response = web.StreamResponse(
-                status=result.status, headers=headers)
+            response = web.StreamResponse(status=result.status)
             response.content_type = result.content_type
 
             try:
@@ -137,7 +133,13 @@ def _init_header(
         request: web.Request, addon: str
 ) -> Union[CIMultiDict, Dict[str, str]]:
     """Create initial header."""
-    headers = request.headers.copy()
+    headers = {}
+
+    # filter flags
+    for name, value in request.headers.items():
+        if name in (hdrs.CONTENT_LENGTH, hdrs.CONTENT_TYPE):
+            continue
+        headers[name] = value
 
     # Inject token / cleanup later on Supervisor
     headers[X_HASSIO] = os.environ.get('HASSIO_TOKEN', "")
@@ -146,25 +148,25 @@ def _init_header(
     headers[X_INGRESS_PATH] = "/api/hassio_ingress/{}".format(addon)
 
     # Set X-Forwarded-For
-    forward_for = request.headers.get(X_FORWARDED_FOR)
+    forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
     connected_ip = ip_address(request.transport.get_extra_info('peername')[0])
     if forward_for:
         forward_for = "{}, {!s}".format(forward_for, connected_ip)
     else:
         forward_for = "{!s}".format(connected_ip)
-    headers[X_FORWARDED_FOR] = forward_for
+    headers[hdrs.X_FORWARDED_FOR] = forward_for
 
     # Set X-Forwarded-Host
-    forward_host = request.headers.get(X_FORWARDED_HOST)
+    forward_host = request.headers.get(hdrs.X_FORWARDED_HOST)
     if not forward_host:
         forward_host = request.host
-    headers[X_FORWARDED_HOST] = forward_host
+    headers[hdrs.X_FORWARDED_HOST] = forward_host
 
     # Set X-Forwarded-Proto
-    forward_proto = request.headers.get(X_FORWARDED_PROTO)
+    forward_proto = request.headers.get(hdrs.X_FORWARDED_PROTO)
     if not forward_proto:
         forward_proto = request.url.scheme
-    headers[X_FORWARDED_PROTO] = forward_proto
+    headers[hdrs.X_FORWARDED_PROTO] = forward_proto
 
     return headers
 
@@ -173,8 +175,8 @@ def _is_websocket(request: web.Request) -> bool:
     """Return True if request is a websocket."""
     headers = request.headers
 
-    if headers.get(CONNECTION) == "Upgrade" and\
-                    headers.get(UPGRADE) == "websocket":
+    if headers.get(hdrs.CONNECTION) == "Upgrade" and\
+                    headers.get(hdrs.UPGRADE) == "websocket":
         return True
     return False
 
