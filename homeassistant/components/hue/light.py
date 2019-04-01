@@ -406,10 +406,30 @@ class HueLight(Light):
         else:
             command['alert'] = 'none'
 
-        if self.is_group:
-            await self.light.set_action(**command)
-        else:
-            await self.light.set_state(**command)
+        await self.async_set_command(**command)
+
+    async def async_set_command(self, **command):
+        """Send command to light or group and retry on error."""
+        from aiohue.errors import RequestError, ResponseError
+
+        for i in range(0, 3):
+
+            try:
+                if i > 0:
+                    await asyncio.sleep(i * 0.5)
+
+                if self.is_group:
+                    await self.light.set_action(**command)
+                else:
+                    await self.light.set_state(**command)
+
+                break
+
+            except (RequestError, ResponseError) as ex:
+                if i < 2:
+                    _LOGGER.warning('%s, retrying last command', ex)
+                else:
+                    raise
 
     async def async_update(self):
         """Synchronize state with bridge."""
