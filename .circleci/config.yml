@@ -172,7 +172,7 @@ jobs:
       - install
 
       - run:
-          name: run tests
+          name: run tests with code coverage
           command: |
             . venv/bin/activate
             TESTFILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
