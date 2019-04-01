@@ -20,6 +20,7 @@ from .auth import async_setup_auth
 from .discovery import async_setup_discovery
 from .handler import HassIO, HassioAPIError
 from .http import HassIOView
+from .ingress import async_setup_ingress
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -269,5 +270,8 @@ async def async_setup(hass, config):
 
     # Init auth Hass.io feature
     async_setup_auth(hass)
+
+    # Init ingress Hass.io feature
+    async_setup_ingress(hass, host)
 
     return True
