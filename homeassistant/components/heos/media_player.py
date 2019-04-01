@@ -1,22 +1,27 @@
 """Denon HEOS Media Player."""
 from functools import reduce
 from operator import ior
+from typing import Sequence
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN as HEOS_DOMAIN
+from .const import (
+    DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
 
 DEPENDENCIES = ['heos']
 
 BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                           SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \
-                          SUPPORT_SHUFFLE_SET
+                          SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOURCE
 
 
 async def async_setup_platform(
@@ -25,8 +30,9 @@ async def async_setup_platform(
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Add binary sensors for a config entry."""
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
+                            async_add_entities):
+    """Add media players for a config entry."""
     players = hass.data[HEOS_DOMAIN][DOMAIN]
     devices = [HeosMediaPlayer(player) for player in players.values()]
     async_add_entities(devices, True)
@@ -42,6 +48,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         self._player = player
         self._signals = []
         self._supported_features = BASE_SUPPORTED_FEATURES
+        self._source_manager = None
         self._play_state_to_state = {
             const.PLAY_STATE_PLAY: STATE_PLAYING,
             const.PLAY_STATE_STOP: STATE_IDLE,
@@ -74,9 +81,14 @@ class HeosMediaPlayer(MediaPlayerDevice):
             self._media_position_updated_at = utcnow()
         await self.async_update_ha_state(True)
 
+    async def _sources_updated(self):
+        """Handle sources changed."""
+        await self.async_update_ha_state(True)
+
     async def async_added_to_hass(self):
         """Device added to hass."""
         from pyheos import const
+        self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
         # Update state when attributes of the player change
         self._signals.append(self._player.heos.dispatcher.connect(
             const.SIGNAL_PLAYER_EVENT, self._player_update))
@@ -86,6 +98,10 @@ class HeosMediaPlayer(MediaPlayerDevice):
         # Update state upon connect/disconnects
         self._signals.append(self._player.heos.dispatcher.connect(
             const.SIGNAL_HEOS_EVENT, self._heos_event))
+        # Update state when sources change
+        self._signals.append(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_HEOS_SOURCES_UPDATED, self._sources_updated))
 
     async def async_clear_playlist(self):
         """Clear players playlist."""
@@ -114,6 +130,10 @@ class HeosMediaPlayer(MediaPlayerDevice):
     async def async_mute_volume(self, mute):
         """Mute the volume."""
         await self._player.set_mute(mute)
+
+    async def async_select_source(self, source):
+        """Select input source."""
+        await self._source_manager.play_source(source, self._player)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
@@ -218,7 +238,9 @@ class HeosMediaPlayer(MediaPlayerDevice):
     @property
     def media_image_url(self) -> str:
         """Image url of current playing media."""
-        return self._player.now_playing_media.image_url
+        # May be an empty string, if so, return None
+        image_url = self._player.now_playing_media.image_url
+        return image_url if image_url else None
 
     @property
     def media_title(self) -> str:
@@ -239,6 +261,17 @@ class HeosMediaPlayer(MediaPlayerDevice):
     def shuffle(self) -> bool:
         """Boolean if shuffle is enabled."""
         return self._player.shuffle
+
+    @property
+    def source(self) -> str:
+        """Name of the current input source."""
+        return self._source_manager.get_current_source(
+            self._player.now_playing_media)
+
+    @property
+    def source_list(self) -> Sequence[str]:
+        """List of available input sources."""
+        return self._source_manager.source_list
 
     @property
     def state(self) -> str:
