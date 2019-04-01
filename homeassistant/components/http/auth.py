@@ -192,8 +192,8 @@ def setup_auth(hass, app):
               await async_validate_trusted_networks(request)):
             _LOGGER.warning(
                 'Using trusted networks to bypass authentication is going to'
-                ' removed after 0.95 release. You need to use a bearer token'
-                ' to access %s from %s',
+                ' be removed after 0.95 release. You need to use a bearer'
+                ' token to access %s from %s',
                 request.path, request[KEY_REAL_IP])
             authenticated = True
 
