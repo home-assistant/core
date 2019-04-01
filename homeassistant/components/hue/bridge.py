@@ -24,14 +24,12 @@ SCENE_SCHEMA = vol.Schema({
 class HueBridge:
     """Manages a single Hue bridge."""
 
-    def __init__(self, hass, config_entry, allow_unreachable, allow_groups,
-                 allow_sensors):
+    def __init__(self, hass, config_entry, allow_unreachable, allow_groups):
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
         self.allow_unreachable = allow_unreachable
         self.allow_groups = allow_groups
-        self.allow_sensors = allow_sensors
         self.available = True
         self.api = None
 
