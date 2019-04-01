@@ -226,7 +226,7 @@ async def test_discovery_flow_already_configured(hass):
 
     entry = MockConfigEntry(
         domain=axis.DOMAIN,
-        data={axis.CONF_DEVICE: {axis.CONF_HOST: '1.2.3.4'},
+        data={axis.CONF_DEVICE: {axis.config_flow.CONF_HOST: '1.2.3.4'},
               axis.config_flow.CONF_MAC: '1234ABCD'}
     )
     entry.add_to_hass(hass)
