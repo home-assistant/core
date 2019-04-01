@@ -73,11 +73,8 @@ Not all stations have the equipment to measure all of the conditions.
 """
 import datetime
 from datetime import timedelta
-
 import logging
-
 import aiohttp
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -86,6 +83,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS, CONF_NAME, LENGTH_METERS, TEMP_CELSIUS,
     TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES, LENGTH_INCHES,
+    PRESSURE_PA, PRESSURE_MBAR,
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE)
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 import homeassistant.helpers.config_validation as cv
@@ -123,6 +121,15 @@ CONF_STATIONCODE = 'stationcode'
 ATTRIBUTION = "Data provided by National Oceanic "\
                 "and Atmospheric Administration"
 
+#
+# Unit name constants that are not in homeassistant.const yet.
+#
+LENGTH_MILLIMETERS = 'mm'
+ANGLE_DEGREES = '°'
+SPEED_METERS_PER_SECOND = 'm/s'
+SPEED_MILES_PER_HOUR = 'mph'
+SPEED_KM_PER_HOUR = 'km/h'
+RATIO_PERCENT = '%'
 
 # Unit mapping table
 # The NWS API returns a unit of measure value with each
@@ -134,11 +141,11 @@ ATTRIBUTION = "Data provided by National Oceanic "\
 UNIT_MAPPING = {
         'unit:degC': [TEMP_CELSIUS],
         'unit:degF': [TEMP_FAHRENHEIT],
-        'unit:degree_(angle)': ['°'],
+        'unit:degree_(angle)': [ANGLE_DEGREES],
         'unit:m': [LENGTH_METERS],
-        'unit:m_s-1': ['m/s'],
-        'unit:Pa': ['Pa'],
-        'unit:percent': ['%']
+        'unit:m_s-1': [SPEED_METERS_PER_SECOND],
+        'unit:Pa': [PRESSURE_PA],
+        'unit:percent': [RATIO_PERCENT]
 }
 
 # Sensor types are defined like: Name, type of value,
@@ -151,56 +158,63 @@ UNIT_MAPPING = {
 #   array - array of dictionaries.  At this point only case seen
 #           is for cloudLayers, with the items 'base':['value','unitCode']
 #           and 'amount'
+# define names for value types:
+
+VAL_SINGLE = 's'
+VAL_MEASUREMENT = 'm'
+VAL_ARRAY = 'a'
 
 SENSOR_TYPES = {
-    'textDescription': ['Weather', 'single', None, None, None, None],
-    'presentWeather': ['Present Weather', 'single', None, None, None, None],
-    'temperature': ['Temperature', 'measurement',
+    'textDescription': ['Weather', VAL_SINGLE, None, None, None, None],
+    'presentWeather': ['Present Weather', VAL_SINGLE, None, None, None, None],
+    'temperature': ['Temperature', VAL_MEASUREMENT,
                     TEMP_CELSIUS, TEMP_FAHRENHEIT,
                     'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
-    'dewpoint': ['dewpoint', 'measurement',
+    'dewpoint': ['dewpoint', VAL_MEASUREMENT,
                  TEMP_CELSIUS, TEMP_FAHRENHEIT,
                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
-    'windChill': ['Wind Chill', 'measurement',
+    'windChill': ['Wind Chill', VAL_MEASUREMENT,
                   TEMP_CELSIUS, TEMP_FAHRENHEIT,
                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
-    'heatIndex': ['Heat Index', 'measurement',
+    'heatIndex': ['Heat Index', VAL_MEASUREMENT,
                   TEMP_CELSIUS, TEMP_FAHRENHEIT,
                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
-    'windSpeed': ['Wind Speed', 'measurement',
-                  'km/h', 'mph',
+    'windSpeed': ['Wind Speed', VAL_MEASUREMENT,
+                  SPEED_KM_PER_HOUR, SPEED_MILES_PER_HOUR,
                   'mdi:weather-windy', None],
-    'windDirection': ['Wind Bearing', 'measurement',
-                      '°', '°',
+    'windDirection': ['Wind Bearing', VAL_MEASUREMENT,
+                      ANGLE_DEGREES, ANGLE_DEGREES,
                       'mdi:flag-triangle', None],
-    'windGust': ['Wind Gust', 'measurement',
-                 'km/h', 'mph', 'mdi:weather-windy', None],
-    'barometricPressure': ['Pressure', 'measurement', 'mbar', 'mbar',
-                           None, DEVICE_CLASS_PRESSURE],
-    'seaLevelPressure': ['Sea Level Pressure', 'measurement',
-                         'mbar', 'mbar',
+    'windGust': ['Wind Gust', VAL_MEASUREMENT,
+                 SPEED_KM_PER_HOUR, SPEED_MILES_PER_HOUR, 'mdi:weather-windy',
+                 None],
+    'barometricPressure': ['Pressure', VAL_MEASUREMENT, PRESSURE_MBAR,
+                           PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE],
+    'seaLevelPressure': ['Sea Level Pressure', VAL_MEASUREMENT,
+                         PRESSURE_MBAR, PRESSURE_MBAR,
                          None, DEVICE_CLASS_PRESSURE],
     'maxTemperatureLast24Hours': ['Maximum Temperature last 24 Hours',
-                                  'measurement', TEMP_CELSIUS,
+                                  VAL_MEASUREMENT, TEMP_CELSIUS,
                                   TEMP_FAHRENHEIT,
                                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
     'minTemperatureLast24Hours': ['Minimum Temperature last 24 Hours',
-                                  'measurement', TEMP_CELSIUS,
+                                  VAL_MEASUREMENT, TEMP_CELSIUS,
                                   TEMP_FAHRENHEIT,
                                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
-    'precipitationLastHour': ['Precipitation in last hour', 'measurement',
-                              'mm', LENGTH_INCHES,
+    'precipitationLastHour': ['Precipitation in last hour', VAL_MEASUREMENT,
+                              LENGTH_MILLIMETERS, LENGTH_INCHES,
                               'mdi:cup-water', None],
     'precipitationLast3Hours': ['Precipitation in last 3 hours',
-                                'measurement', 'mm', LENGTH_INCHES,
-                                'mdi:cup-water', None],
+                                VAL_MEASUREMENT, LENGTH_MILLIMETERS,
+                                LENGTH_INCHES, 'mdi:cup-water', None],
     'precipitationLast6Hours': ['Precipitation in last 6 hours',
-                                'measurement', 'mm', LENGTH_INCHES,
-                                'mdi:cup-water', None],
-    'relativeHumidity': ['Humidity', 'measurement', '%', '%',
-                         'mdi:water-percent', DEVICE_CLASS_HUMIDITY],
-    'cloudLayers': ['Cloud Layers', 'array', None, None, None, None],
-    'visibility': ['Visibility', 'measurement',
+                                VAL_MEASUREMENT, LENGTH_MILLIMETERS,
+                                LENGTH_INCHES, 'mdi:cup-water', None],
+    'relativeHumidity': ['Humidity', VAL_MEASUREMENT, RATIO_PERCENT,
+                         RATIO_PERCENT, 'mdi:water-percent',
+                         DEVICE_CLASS_HUMIDITY],
+    'cloudLayers': ['Cloud Layers', VAL_ARRAY, None, None, None, None],
+    'visibility': ['Visibility', VAL_MEASUREMENT,
                    LENGTH_KILOMETERS, LENGTH_MILES, None, None]
 }
 
@@ -528,7 +542,7 @@ class NOAACurrentSensor(Entity):
             if desiredunit == LENGTH_KILOMETERS:
                 return result / 1000
             # Is the target unit millimeters? (Used for precipitation)
-            if desiredunit == 'mm':
+            if desiredunit == LENGTH_MILLIMETERS:
                 return result * 1000
             # Is the target unit inches? (Used for precipitation)
             if desiredunit == LENGTH_INCHES:
@@ -539,17 +553,19 @@ class NOAACurrentSensor(Entity):
         #
         # Do we have pressure in Pascals?
         #
-        if srcunit == 'Pa' and desiredunit == 'mbar':
+        if srcunit == PRESSURE_PA and desiredunit == PRESSURE_MBAR:
             return result / 100
         #
         # Do we have a speed in meters/second (wind speed and gusts)
         #
-        if srcunit == 'm/s' and desiredunit == 'mph':
+        if srcunit == SPEED_METERS_PER_SECOND and \
+                desiredunit == SPEED_MILES_PER_HOUR:
             return result * 2.236936292
         #
         # Even for metric we need to convert meters/second
         #
-        if srcunit == 'm/s' and desiredunit == 'km/h':
+        if srcunit == SPEED_METERS_PER_SECOND and \
+                desiredunit == SPEED_KM_PER_HOUR:
             return result * 3.6
         #
         # If we fall through to here we have a unit name in our mapping
@@ -570,12 +586,12 @@ class NOAACurrentSensor(Entity):
             #
             # Now check for type of value for this attribute
             #
-            if SENSOR_TYPES[self._condition][1] == 'single':
+            if SENSOR_TYPES[self._condition][1] == VAL_SINGLE:
                 # attribute itself is the value for single value items
                 _LOGGER.debug("Condition %s is single value='%s'",
                               self._condition, variable)
                 return variable
-            if SENSOR_TYPES[self._condition][1] == 'measurement':
+            if SENSOR_TYPES[self._condition][1] == VAL_MEASUREMENT:
                 # value attribute of variable for measurements
                 _LOGGER.debug("Condition %s is measurement='%s', "
                               "from string '%s'",
@@ -590,7 +606,7 @@ class NOAACurrentSensor(Entity):
                     return res
                 return round(res, 1)
 
-            if SENSOR_TYPES[self._condition][1] == 'array':
+            if SENSOR_TYPES[self._condition][1] == VAL_ARRAY:
                 # The only array types we know how to handle is cloudLayers
                 if self._condition == 'cloudLayers':
                     #
@@ -642,7 +658,7 @@ class NOAACurrentSensor(Entity):
             # Now check for type of value for this attribute
             # Only measurements have units
             #
-            if SENSOR_TYPES[self._condition][1] == 'measurement':
+            if SENSOR_TYPES[self._condition][1] == VAL_MEASUREMENT:
                 # We should have a unitCode supplied from the API response.
                 if self._desiredunit is not None:
                     return self._desiredunit
@@ -733,7 +749,8 @@ class NOAACurrentData(Entity):
             self._process_obs(obs)
         return
 
-    def _obssortkey(self, obs):
+    @staticmethod
+    def _obssortkey(obs):
         """Return key to sort observation list with.
 
         Normally this is timestamp, but if timestamp is not in the
@@ -803,15 +820,15 @@ class NOAACurrentData(Entity):
             # in the dictionary
             #
             if variable not in self.data:
-                if SENSOR_TYPES[variable][1] == 'measurement':
+                if SENSOR_TYPES[variable][1] == VAL_MEASUREMENT:
                     self.data[variable] = "unknown"
-                if SENSOR_TYPES[variable][1] == 'measurement':
+                if SENSOR_TYPES[variable][1] == VAL_MEASUREMENT:
                     self.data[variable] = {
                         'value': None,
                         'unitCode': None,
                         'qualityControl': None,
                         }
-                if SENSOR_TYPES[variable][2] == 'array':
+                if SENSOR_TYPES[variable][2] == VAL_ARRAY:
                     self.data[variable] = dict()
                 self.datatime[variable] = thisupdate
 
