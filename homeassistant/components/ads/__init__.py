@@ -192,7 +192,8 @@ class AdsHub:
                     hnotify, huser, name, plc_datatype, callback)
 
                 _LOGGER.debug(
-                    "Added device notification %d for variable %s", hnotify, name)
+                    "Added device notification %d for variable %s",
+                    hnotify, name)
             except pyads.ADSError as err:
                 _LOGGER.error(err)
                 _LOGGER.error("ADS variable: %s", name)
