@@ -1,8 +1,5 @@
 """
 Support for interfacing with CasaTunes devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.casatunes/
 """
 import logging
 import voluptuous as vol
@@ -47,42 +44,33 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the CasaTunes platform."""
     from casatunes import CasaTunes
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
     ct = CasaTunes(host, port)
 
     sources = await ct.get_sources()
     zones = await ct.get_zones()
 
-    zone_devices = []
-    player_devices = []
+    devices = []
 
     if sources is False:
         _LOGGER.error("Sources response is incorrect")
+        raise PlatformNotReady
         return False
 
     if zones is False:
         _LOGGER.error("Zones response is incorrect")
+        raise PlatformNotReady
         return False
 
     for zone in zones:
-        try:
-            zone_devices.append(CasaTunesZone(zone))
-        except TypeError:
-            _LOGGER.error("Unable to create a zone")
-            raise PlatformNotReady
+    	devices.append(CasaTunesZone(zone))
 
     for source in sources:
-        try:
-            player_devices.append(CasaTunesPlayer(source))
-        except TypeError:
-            _LOGGER.error("Unable to create a player")
-            raise PlatformNotReady
+    	devices.append(CasaTunesPlayer(source))
 
-    async_add_entities(zone_devices)
-    async_add_entities(player_devices)
-
+    async_add_entities(devices)
 
 class CasaTunesPlayer(MediaPlayerDevice):
     """Representation of a CasaTunes player."""
@@ -148,16 +136,14 @@ class CasaTunesPlayer(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        status = self._player.status
+        STATUS_TO_STATE = {
+        	0: STATE_IDLE,
+        	1: STATE_PAUSED,
+        	2: STATE_PLAYING,
+        	3: STATE_ON
+        }
 
-        if status == 0:
-            return STATE_IDLE
-        elif status == 1:
-            return STATE_PAUSED
-        elif status == 2:
-            return STATE_PLAYING
-        else:
-            return STATE_ON
+        return STATUS_TO_STATE[self._player.status]
 
     @property
     def supported_features(self):
@@ -222,10 +208,7 @@ class CasaTunesZone(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._zone.power:
-            return STATE_ON
-        else:
-            return STATE_OFF
+        return STATE_ON if self._zone.power else STATE_OFF
 
     @property
     def volume_level(self):
