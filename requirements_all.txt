@@ -473,7 +473,7 @@ geizhals==0.0.9
 geojson_client==0.3
 
 # homeassistant.components.geo_rss_events.sensor
-georss_client==0.5
+georss_generic_client==0.2
 
 # homeassistant.components.gitter.sensor
 gitterpy==0.1.7

@@ -59,7 +59,7 @@ TEST_REQUIREMENTS = (
     'feedparser-homeassistant',
     'foobot_async',
     'geojson_client',
-    'georss_client',
+    'georss_generic_client',
     'gTTS-token',
     'ha-ffmpeg',
     'hangups',
