@@ -10,7 +10,7 @@ executors:
     parameters:
       tag:
         type: string
-        default: latest  
+        default: latest
     docker:
       - image: circleci/python:<< parameters.tag >>
       - image: circleci/buildpack-deps:stretch
@@ -107,20 +107,20 @@ jobs:
   pre-install-all-requirements:
     executor:
       name: python
-      tag: 3.7-stretch
+      tag: 3.5.5-stretch
 
     steps:
       - checkout
       - docker-prereqs
       - install-requirements:
-          python: 3.7-stretch
+          python: 3.5.5-stretch
           all: true
           test: true
 
   pylint:
     executor:
       name: python
-      tag: 3.7-stretch
+      tag: 3.5.5-stretch
     parallelism: 2
 
     steps:
