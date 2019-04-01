@@ -21,7 +21,7 @@ CONF_DEFAULT_REVERSE = 'default_reverse'
 DATA_SOMFY_MYLINK = 'somfy_mylink_data'
 DOMAIN = 'somfy_mylink'
 SOMFY_MYLINK_COMPONENTS = [
-    'cover', 'scene'
+    'cover'
 ]
 
 
@@ -52,7 +52,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Set up the Demo covers."""
+    """Set up the MyLink platform."""
     from somfy_mylink_synergy import SomfyMyLinkSynergy
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
