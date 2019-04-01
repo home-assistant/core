@@ -165,8 +165,7 @@ class AdsHub:
             try:
                 return self._client.write_by_name(name, value, plc_datatype)
             except pyads.ADSError as err:
-                _LOGGER.error(err)
-                _LOGGER.error("ADS variable: %s", name)
+                _LOGGER.error("Error writing %s: %s", name, err)
 
     def read_by_name(self, name, plc_datatype):
         """Read a value from the device."""
@@ -175,8 +174,7 @@ class AdsHub:
             try:
                 return self._client.read_by_name(name, plc_datatype)
             except pyads.ADSError as err:
-                _LOGGER.error(err)
-                _LOGGER.error("ADS variable: %s", name)
+                _LOGGER.error("Error reading %s: %s", name, err)
 
     def add_device_notification(self, name, plc_datatype, callback):
         """Add a notification to the ADS devices."""
@@ -195,8 +193,7 @@ class AdsHub:
                     "Added device notification %d for variable %s",
                     hnotify, name)
             except pyads.ADSError as err:
-                _LOGGER.error(err)
-                _LOGGER.error("ADS variable: %s", name)
+                _LOGGER.error("Error reading %s: %s", name, err)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
