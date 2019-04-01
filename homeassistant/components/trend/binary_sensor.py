@@ -140,7 +140,7 @@ class SensorTrend(BinarySensorDevice):
                     state = new_state.attributes.get(self._attribute)
                 else:
                     state = new_state.state
-                if state != STATE_UNKNOWN and state != STATE_UNAVAILABLE:
+                if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     sample = (utcnow().timestamp(), float(state))
                     self.samples.append(sample)
                     self.async_schedule_update_ha_state(True)
