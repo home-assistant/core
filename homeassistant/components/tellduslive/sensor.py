@@ -42,7 +42,7 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, disc_info=None):
     """Old way of setting up TelldusLive.
 
     Can only be called when a user accidentally mentions the platform in their
