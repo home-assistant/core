@@ -224,7 +224,8 @@ class WebDavCamera(Camera):
             if self._on:
                 self._schedule_advance()
             if not self._has_images:
-                _LOGGER.info("Image files have appeared on %s", self._client.get_url(''))
+                _LOGGER.info("Image files have appeared on %s",
+                             self._client.get_url(''))
                 self._has_images = True
             return
         if self._has_images:
