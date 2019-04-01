@@ -220,6 +220,7 @@ class GenericHueSensor:
 
 
 class GenericZLLSensor(GenericHueSensor):
+    """Representation of a Hue-brand, physical sensor."""
 
     @property
     def device_state_attributes(self):
@@ -233,6 +234,7 @@ class GenericZLLSensor(GenericHueSensor):
 
 
 class HuePresence(GenericZLLSensor, BinarySensorDevice):
+    """The presence sensor entity for a Hue motion sensor device."""
 
     _entity_id_format = BINARY_ENTITY_ID_FORMAT
     device_class = 'presence'
@@ -245,6 +247,7 @@ class HuePresence(GenericZLLSensor, BinarySensorDevice):
 
 
 class HueLightLevel(GenericZLLSensor, Entity):
+    """The light level sensor entity for a Hue motion sensor device."""
 
     _entity_id_format = SENSOR_ENTITY_ID_FORMAT
     device_class = DEVICE_CLASS_ILLUMINANCE
@@ -269,6 +272,7 @@ class HueLightLevel(GenericZLLSensor, Entity):
 
 
 class HueTemperature(GenericZLLSensor, Entity):
+    """The temperature sensor entity for a Hue motion sensor device."""
 
     _entity_id_format = SENSOR_ENTITY_ID_FORMAT
     device_class = DEVICE_CLASS_TEMPERATURE
