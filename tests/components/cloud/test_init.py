@@ -83,7 +83,6 @@ async def test_remote_services(hass, mock_cloud_fixture, hass_read_only_user):
     assert mock_disconnect.called is False
 
 
-
 async def test_startup_shutdown_events(hass, mock_cloud_fixture):
     """Test if the cloud will start on startup event."""
     with patch(
