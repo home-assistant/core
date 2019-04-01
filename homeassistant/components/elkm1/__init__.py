@@ -125,7 +125,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
             values[rng[0]-1:rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
     for index, conf in enumerate(hass_config[DOMAIN][CONF_DEVICES]):
-        _LOGGER.debug("Setting up elkm1 #" + str(index) + " - " + conf['host'])
+        _LOGGER.debug("Setting up elkm1 #%d - %s", index, conf['host'])
 
         config = {'temperature_unit': conf[CONF_TEMPERATURE_UNIT]}
         config['panel'] = {'enabled': True, 'included': [True]}
@@ -149,7 +149,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                 _LOGGER.error("Need to use a prefix configuration command " +
                               "on second and later elk m1s")
             else:
-                _LOGGER.error("Duplicate prefix on elk m1s: " + prefix)
+                _LOGGER.error("Duplicate prefix on elk prefix: %s", m1s)
         else:
             elk = elkm1.Elk({'url': conf[CONF_HOST], 'userid':
                              conf[CONF_USERNAME],
@@ -182,7 +182,7 @@ def _create_elk_services(hass, elks):
         prefix = service.data.get('prefix', "")
         elk = elks.get(prefix, None)
         if elk is None:
-            _LOGGER.error("no elk m1 with prefix: '" + prefix + "'")
+            _LOGGER.error("no elk m1 with prefix: '%s'", prefix)
         else:
             elk.panel.speak_phrase(service.data.get('number'))
 
@@ -197,11 +197,10 @@ def create_elk_entities(elk_data, elk_elements, element_type,
     """Create the ElkM1 devices of a particular class."""
     if elk_data['config'][element_type]['enabled']:
         elk = elk_data['elk']
-        _LOGGER.debug("create_elk_entities for " + str(elk))
+        _LOGGER.debug("create_elk_entities for %s", elk)
         for element in elk_elements:
             if elk_data['config'][element_type]['included'][element.index]:
-                e = class_(element, elk, elk_data)
-                entities.append(e)
+                entities.append(class_(element, elk, elk_data))
     return entities
 
 
