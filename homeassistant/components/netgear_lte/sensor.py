@@ -36,6 +36,8 @@ async def async_setup_platform(
             sensors.append(SMSSensor(modem_data, sensor_type))
         elif sensor_type == SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
+        else:
+            sensors.append(GenericSensor(modem_data, sensor_type))
 
     async_add_entities(sensors)
 
@@ -106,3 +108,12 @@ class UsageSensor(LTESensor):
     def state(self):
         """Return the state of the sensor."""
         return round(self.modem_data.data.usage / 1024**2, 1)
+
+
+class GenericSensor(LTESensor):
+    """Sensor entity with raw state."""
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return getattr(self.modem_data.data, self.sensor_type)
