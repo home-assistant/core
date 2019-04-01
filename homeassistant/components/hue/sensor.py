@@ -14,6 +14,9 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import utcnow
+
 
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -30,81 +33,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     cur_sensors = {}
 
-    # Hue updates all sensors via a single API call.
-    #
-    # If we call a service to update 2 sensors, we only want the API to be
-    # called once.
-    #
-    # The throttle decorator will return right away if a call is currently
-    # in progress. This means that if we are updating 2 sensors, the first one
-    # is in the update method, the second one will skip it and assume the
-    # update went through and updates it's data, not good!
-    #
-    # The current mechanism will make sure that all sensors will wait till
-    # the update call is done before writing their data to the state machine.
-    #
-    # An alternative approach would be to disable automatic polling by Home
-    # Assistant and take control ourselves. This works great for polling as now
-    # we trigger from 1 time update an update to all entities. However it gets
-    # tricky from inside async_turn_on and async_turn_off.
-    #
-    # If automatic polling is enabled, Home Assistant will call the entity
-    # update method after it is done calling all the services. This means that
-    # when we update, we know all commands have been processed. If we trigger
-    # the update from inside async_turn_on, the update will not capture the
-    # changes to the second entity until the next polling update because the
-    # throttle decorator will prevent the call.
-
-    progress = None
-    sensor_progress = set()
-
-    async def request_update(object_id):
-        """Request an update.
-
-        We will only make 1 request to the server for updating at a time. If a
-        request is in progress, we will join the request that is in progress.
-
-        This approach is possible because should_poll=True. That means that
-        Home Assistant will ask sensors for updates during a polling cycle or
-        after it has called a service.
-
-        We keep track of the sensors that are waiting for the request to
-        finish. When new data comes in, we'll trigger an update for all
-        non-waiting sensors. This covers the case where a service is called to
-        enable 2 sensors but in the meanwhile some other sensor has changed
-        too.
-        """
-        nonlocal progress
-
-        sensor_progress.add(object_id)
-
-        if progress is not None:
-            return await progress
-
-        progress = asyncio.ensure_future(update_bridge())
-        result = await progress
-        progress = None
-        sensor_progress.clear()
-        return result
-
-    async def update_bridge():
+    async def async_update_bridge(now):
         """Update the values of the bridge.
 
         Will update sensors from the bridge.
         """
-        tasks = []
-        tasks.append(async_update_items(
-            hass, bridge, async_add_entities, request_update, cur_sensors,
-            sensor_progress
-        ))
 
-        await asyncio.wait(tasks)
+        await async_update_items(
+            hass, bridge, async_add_entities, cur_sensors)
 
-    await update_bridge()
+        async_track_point_in_utc_time(
+            hass, async_update_bridge, utcnow() + SCAN_INTERVAL)
+
+    await async_update_bridge(None)
 
 
-async def async_update_items(hass, bridge, async_add_entities,
-                             request_bridge_update, current, progress_waiting):
+async def async_update_items(hass, bridge, async_add_entities, current):
     """Update sensors from the bridge."""
     import aiohue
 
@@ -123,10 +67,6 @@ async def async_update_items(hass, bridge, async_add_entities,
         _LOGGER.error('Unable to reach bridge %s (%s)', bridge.host, err)
         bridge.available = False
 
-        for sensor_id, sensor in current.items():
-            if sensor_id not in progress_waiting:
-                sensor.async_schedule_update_ha_state()
-
         return
 
     finally:
@@ -140,42 +80,61 @@ async def async_update_items(hass, bridge, async_add_entities,
     new_sensors = []
     sensor_device_names = {}
 
+    # Physical Hue motion sensors present as three sensors in the API: a
+    # presence sensor, a temperature sensor, and a light level sensor. Of
+    # these, only the presence sensor is assigned the user-friendly name that
+    # the user has given to the device. Each of these sensors is linked by a
+    # common device_id, which is the first twenty-three characters of the
+    # unique id (then followed by a hyphen and an ID specific to the individual
+    # sensor).
+    #
+    # To set up neat values, and assign the sensor entities to the same device,
+    # we first, iterate over all the sensors and find the Hue presence sensors,
+    # then iterate over all the remaining sensors - finding the remaining ones
+    # that may or may not be related to the presence sensors.
     for item_id in api:
-        if item_id not in current:
-            name = PRESENCE_NAME_FORMAT.format(api[item_id].name)
-            if api[item_id].type == aiohue.sensors.TYPE_ZLL_PRESENCE:
-                s = HuePresence(
-                    hass, api[item_id], name, request_bridge_update,
-                    bridge)
-                sensor_device_names[s.device_id] = api[item_id].name
-                current[item_id] = s
+        if item_id in current:
+            continue
+
+        name = PRESENCE_NAME_FORMAT.format(api[item_id].name)
+        if api[item_id].type == aiohue.sensors.TYPE_ZLL_PRESENCE:
+            s = HuePresence(hass, api[item_id], name, bridge)
+            sensor_device_names[s.device_id] = api[item_id]
+            current[item_id] = s
+            new_sensors.append(s)
 
     # Iterate again now we have all the presence sensors, and add the related
-    # sensors with nice names
+    # sensors with nice names.
     for item_id in api:
-        if item_id not in current:
-            device_id = api[item_id].uniqueid
-            if device_id and len(device_id) > 23:
-                device_id = device_id[:23]
-            name = api[item_id].name
-            if api[item_id].type == aiohue.sensors.TYPE_ZLL_LIGHTLEVEL:
-                if device_id in sensor_device_names:
-                    name = LIGHT_LEVEL_NAME_FORMAT.format(
-                        sensor_device_names[device_id])
-                current[item_id] = HueLightLevel(
-                    hass, api[item_id], name, request_bridge_update, bridge)
-            elif api[item_id].type == aiohue.sensors.TYPE_ZLL_TEMPERATURE:
-                if device_id in sensor_device_names:
-                    name = TEMPERATURE_NAME_FORMAT.format(
-                        sensor_device_names[device_id])
-                current[item_id] = HueTemperature(
-                    hass, api[item_id], name, request_bridge_update, bridge)
+        if item_id in current:
+            continue
 
-            if item_id in current:
-                new_sensors.append(current[item_id])
+        # Work out the shared device ID, as described above
+        device_id = api[item_id].uniqueid
+        if device_id and len(device_id) > 23:
+            device_id = device_id[:23]
+        name = api[item_id].name
+        primary_sensor = None
+        if api[item_id].type == aiohue.sensors.TYPE_ZLL_LIGHTLEVEL:
+            if device_id in sensor_device_names:
+                primary_sensor = sensor_device_names[device_id]
+                name = LIGHT_LEVEL_NAME_FORMAT.format(
+                    primary_sensor.name)
+            current[item_id] = HueLightLevel(
+                hass, api[item_id], name, bridge,
+                primary_sensor=primary_sensor)
+        elif api[item_id].type == aiohue.sensors.TYPE_ZLL_TEMPERATURE:
+            if device_id in sensor_device_names:
+                primary_sensor = sensor_device_names[device_id]
+                name = TEMPERATURE_NAME_FORMAT.format(
+                    primary_sensor.name)
+            current[item_id] = HueTemperature(
+                hass, api[item_id], name, bridge,
+                primary_sensor=primary_sensor)
+        else:
+            continue
 
-        elif item_id not in progress_waiting:
-            current[item_id].async_schedule_update_ha_state()
+        new_sensors.append(current[item_id])
 
     if new_sensors:
         async_add_entities(new_sensors)
@@ -184,12 +143,15 @@ async def async_update_items(hass, bridge, async_add_entities,
 class GenericHueSensor:
     """Representation of a Hue sensor."""
 
-    def __init__(self, hass, sensor, name, request_bridge_update, bridge):
+    should_poll = False
+
+    def __init__(self, hass, sensor, name, bridge,
+                 primary_sensor=None):
         """Initialize the sensor."""
         self.hass = hass
         self.sensor = sensor
+        self._primary_sensor = primary_sensor
         self._name = name
-        self.async_request_bridge_update = request_bridge_update
         self.bridge = bridge
 
         if self.swupdatestate == "readytoinstall":
@@ -203,7 +165,18 @@ class GenericHueSensor:
             self._entity_id_format, self.name, hass=hass)
 
     @property
+    def primary_sensor(self):
+        """Return the entity which represents the primary sensor of
+        this device.
+        """
+
+        return self._primary_sensor or self.sensor
+
+    @property
     def device_id(self):
+        """Return the ID that represents the physical device this
+        sensor is part of.
+        """
         return self.unique_id[:23]
 
     @property
@@ -224,34 +197,26 @@ class GenericHueSensor:
 
     @property
     def swupdatestate(self):
-        return self.sensor.raw.get('swupdate', {}).get('state')
+        """The state of available software updates for this device."""
+        return self.primary_sensor.raw.get('swupdate', {}).get('state')
 
     @property
     def device_info(self):
-        """Return the device info."""
+        """Return the device info to link individual entities together
+        in the hass device registry.
+        """
+
         return {
             'identifiers': {
-                (hue.DOMAIN, self.unique_id)
+                (hue.DOMAIN, self.device_id)
             },
-            'name': self.name,
-            'manufacturer': self.sensor.manufacturername,
-            # productname added in Hue Bridge API 1.24
-            # (published 03/05/2018)
-            'model': self.sensor.productname or self.sensor.modelid,
-            # Not yet exposed as properties in aiohue
-            'sw_version': self.sensor.swversion,
+            'name': self.primary_sensor.name,
+            'manufacturer': self.primary_sensor.manufacturername,
+            'model': self.primary_sensor.productname or \
+                self.primary_sensor.modelid,
+            'sw_version': self.primary_sensor.swversion,
             'via_hub': (hue.DOMAIN, self.bridge.api.config.bridgeid),
         }
-
-    async def async_update(self):
-        """Synchronize state with bridge."""
-        await self.async_request_bridge_update(self.sensor.id)
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        attributes = {}
-        return attributes
 
 
 class GenericZLLSensor(GenericHueSensor):
@@ -259,14 +224,24 @@ class GenericZLLSensor(GenericHueSensor):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super().device_state_attributes
-        attributes.update({
+        return {
             "battery": self.sensor.battery,
             "last_updated": self.sensor.lastupdated,
             "on": self.sensor.on,
             "reachable": self.sensor.reachable,
-        })
-        return attributes
+        }
+
+
+class HuePresence(GenericZLLSensor, BinarySensorDevice):
+
+    _entity_id_format = BINARY_ENTITY_ID_FORMAT
+    device_class = 'presence'
+    icon = 'mdi:run'
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self.sensor.presence
 
 
 class HueLightLevel(GenericZLLSensor, Entity):
@@ -303,15 +278,3 @@ class HueTemperature(GenericZLLSensor, Entity):
     def state(self):
         """Return the state of the device."""
         return self.sensor.temperature / 100
-
-
-class HuePresence(GenericZLLSensor, BinarySensorDevice):
-
-    _entity_id_format = BINARY_ENTITY_ID_FORMAT
-    device_class = 'presence'
-    icon = 'mdi:run'
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self.sensor.presence
