@@ -5,13 +5,11 @@ import logging
 
 import async_timeout
 
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT,
     BaseNotificationService)
 from homeassistant.components.mobile_app.const import (
-    ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME, ATTR_APP_VERSION,
-    ATTR_DEVICE_NAME, ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_NAME,
+    ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_VERSION, ATTR_DEVICE_NAME,
     ATTR_OS_VERSION, ATTR_PUSH_TOKEN, ATTR_PUSH_URL, DATA_CONFIG_ENTRIES,
     DOMAIN)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -97,15 +95,8 @@ class MobileAppNotificationService(BaseNotificationService):
             data[ATTR_PUSH_TOKEN] = push_token
 
             reg_info = {
-                ATTR_APP_DATA: app_data,
                 ATTR_APP_ID: entry_data[ATTR_APP_ID],
-                ATTR_APP_NAME: entry_data[ATTR_APP_NAME],
                 ATTR_APP_VERSION: entry_data[ATTR_APP_VERSION],
-                ATTR_DEVICE_NAME: entry_data[ATTR_DEVICE_NAME],
-                ATTR_MANUFACTURER: entry_data[ATTR_MANUFACTURER],
-                ATTR_MODEL: entry_data[ATTR_MODEL],
-                ATTR_OS_NAME: entry_data[ATTR_OS_NAME],
-                CONF_WEBHOOK_ID: entry_data[CONF_WEBHOOK_ID],
             }
             if ATTR_OS_VERSION in entry_data:
                 reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
