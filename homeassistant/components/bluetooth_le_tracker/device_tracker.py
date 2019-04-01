@@ -6,6 +6,7 @@ from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
     load_config, SOURCE_TYPE_BLUETOOTH_LE
 )
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,6 +20,13 @@ def setup_scanner(hass, config, see, discovery_info=None):
     # pylint: disable=import-error
     import pygatt
     new_devices = {}
+    adapter = None
+
+    async def async_stop():
+        if adapter is not None:
+            adapter.kill()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
 
     def see_device(address, name, new_device=False):
         """Mark a device as seen."""
@@ -45,6 +53,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     def discover_ble_devices():
         """Discover Bluetooth LE devices."""
+        nonlocal adapter
+
         _LOGGER.debug("Discovering Bluetooth LE devices")
         try:
             adapter = pygatt.GATTToolBackend()
