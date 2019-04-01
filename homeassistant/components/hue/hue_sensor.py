@@ -22,7 +22,8 @@ TEMPERATURE_NAME_FORMAT = "{} temperature"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities, binary=False):
+async def async_setup_entry(hass, config_entry, async_add_entities,
+                            binary=False):
     """Set up the Hue sensors from a config entry."""
     bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     cur_sensors = {}
