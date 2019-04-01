@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+import fnmatch
 import importlib
 import os
 import pkgutil
 import re
 import sys
-import fnmatch
 
 COMMENT_REQUIREMENTS = (
     'Adafruit-DHT',
@@ -74,7 +74,7 @@ TEST_REQUIREMENTS = (
     'homematicip',
     'influxdb',
     'jsonpath',
-    'libpurecoollink',
+    'libpurecool',
     'libsoundtouch',
     'luftdaten',
     'mbddns',
