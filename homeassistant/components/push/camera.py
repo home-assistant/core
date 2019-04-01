@@ -14,7 +14,8 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
-    STATE_IDLE, STATE_RECORDING, DOMAIN
+    STATE_IDLE, STATE_RECORDING
+from homeassistant.components.camera.const import DOMAIN
 from homeassistant.core import callback
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv

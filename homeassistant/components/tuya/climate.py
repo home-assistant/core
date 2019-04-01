@@ -1,14 +1,14 @@
 """Support for the Tuya climate devices."""
-from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL, STATE_ECO,
-    STATE_FAN_ONLY, STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.fan import SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH
-from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
-
+    STATE_AUTO, STATE_COOL, STATE_ECO, STATE_FAN_ONLY, STATE_HEAT,
+    SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+
+from . import DATA_TUYA, TuyaDevice
 
 DEPENDENCIES = ['tuya']
 DEVICE_TYPE = 'climate'

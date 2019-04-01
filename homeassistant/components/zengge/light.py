@@ -157,6 +157,6 @@ class ZenggeLight(Light):
         rgb = self._bulb.get_colour()
         hsv = color_util.color_RGB_to_hsv(*rgb)
         self._hs_color = hsv[:2]
-        self._brightness = hsv[2]
+        self._brightness = (hsv[2] / 100) * 255
         self._white = self._bulb.get_white()
         self._state = self._bulb.get_on()

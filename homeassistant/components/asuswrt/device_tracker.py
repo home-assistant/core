@@ -6,8 +6,9 @@ https://home-assistant.io/components/device_tracker.asuswrt/
 """
 import logging
 
-from homeassistant.components.asuswrt import DATA_ASUSWRT
 from homeassistant.components.device_tracker import DeviceScanner
+
+from . import DATA_ASUSWRT
 
 DEPENDENCIES = ['asuswrt']
 

@@ -1,19 +1,17 @@
 """Support for HomematicIP Cloud sensors."""
 import logging
 
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
     POWER_WATT, TEMP_CELSIUS)
+
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['homematicip_cloud']
 
 ATTR_TEMPERATURE_OFFSET = 'temperature_offset'
-ATTR_VALVE_STATE = 'valve_state'
-ATTR_VALVE_POSITION = 'valve_position'
 ATTR_WIND_DIRECTION = 'wind_direction'
 ATTR_WIND_DIRECTION_VARIATION = 'wind_direction_variation_in_degree'
 

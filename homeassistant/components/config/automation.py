@@ -2,10 +2,11 @@
 from collections import OrderedDict
 import uuid
 
-from homeassistant.components.config import EditIdBasedConfigView
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.components.automation import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.const import CONF_ID, SERVICE_RELOAD
 import homeassistant.helpers.config_validation as cv
+
+from . import EditIdBasedConfigView
 
 CONFIG_PATH = 'automations.yaml'
 

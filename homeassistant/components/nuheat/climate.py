@@ -4,28 +4,21 @@ Support for NuHeat thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.nuheat/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DOMAIN,
-    SUPPORT_HOLD_MODE,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    STATE_AUTO,
-    STATE_HEAT,
-    STATE_IDLE)
-from homeassistant.components.nuheat import DOMAIN as NUHEAT_DOMAIN
+    DOMAIN, STATE_AUTO, STATE_HEAT, STATE_IDLE, SUPPORT_HOLD_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
+
+from . import DOMAIN as NUHEAT_DOMAIN
 
 DEPENDENCIES = ["nuheat"]
 

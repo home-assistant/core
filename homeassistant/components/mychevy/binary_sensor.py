@@ -1,13 +1,12 @@
 """Support for MyChevy binary sensors."""
 import logging
 
-from homeassistant.components.mychevy import (
-    EVBinarySensorConfig, DOMAIN as MYCHEVY_DOMAIN, UPDATE_TOPIC
-)
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT, BinarySensorDevice)
 from homeassistant.core import callback
 from homeassistant.util import slugify
+
+from . import DOMAIN as MYCHEVY_DOMAIN, UPDATE_TOPIC, EVBinarySensorConfig
 
 _LOGGER = logging.getLogger(__name__)
 

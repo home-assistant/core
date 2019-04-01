@@ -2,11 +2,11 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.isy994 import (
-    ISY994_NODES, ISY994_PROGRAMS, ISYDevice)
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.helpers.typing import ConfigType
+
+from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 

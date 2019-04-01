@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+import fnmatch
 import importlib
 import os
 import pkgutil
 import re
 import sys
-import fnmatch
 
 COMMENT_REQUIREMENTS = (
     'Adafruit-DHT',
@@ -41,18 +41,19 @@ COMMENT_REQUIREMENTS = (
 TEST_REQUIREMENTS = (
     'aioambient',
     'aioautomatic',
+    'aiobotocore',
     'aiohttp_cors',
     'aiohue',
     'aiounifi',
     'apns2',
     'av',
+    'axis',
     'caldav',
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
     'eebrightbox',
     'emulated_roku',
-    'enturclient',
     'ephem',
     'evohomeclient',
     'feedparser-homeassistant',
@@ -73,7 +74,7 @@ TEST_REQUIREMENTS = (
     'homematicip',
     'influxdb',
     'jsonpath',
-    'libpurecoollink',
+    'libpurecool',
     'libsoundtouch',
     'luftdaten',
     'mbddns',
@@ -89,6 +90,7 @@ TEST_REQUIREMENTS = (
     'pyblackbird',
     'pydeconz',
     'pydispatcher',
+    'pyheos',
     'pyhomematic',
     'pylitejet',
     'pymonoprice',
@@ -222,7 +224,7 @@ def gather_modules():
                 if fnmatch.fnmatch(package, pattern):
                     break
             else:
-                print("{}: {}".format(package, err))
+                print("{}: {}".format(package.replace('.', '/') + '.py', err))
                 errors.append(package)
             continue
 

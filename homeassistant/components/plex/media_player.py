@@ -170,21 +170,31 @@ def setup_plexserver(
                     config, device, None, plex_sessions, update_devices,
                     update_sessions)
                 plex_clients[device.machineIdentifier] = new_client
+                _LOGGER.debug("New device: %s", device.machineIdentifier)
                 new_plex_clients.append(new_client)
             else:
+                _LOGGER.debug("Refreshing device: %s",
+                              device.machineIdentifier)
                 plex_clients[device.machineIdentifier].refresh(device, None)
 
         # add devices with a session and no client (ex. PlexConnect Apple TV's)
         if config.get(CONF_INCLUDE_NON_CLIENTS):
             for machine_identifier, (session, player) in plex_sessions.items():
+                if machine_identifier in available_client_ids:
+                    # Avoid using session if already added as a device.
+                    _LOGGER.debug("Skipping session, device exists: %s",
+                                  machine_identifier)
+                    continue
                 if (machine_identifier not in plex_clients
                         and machine_identifier is not None):
                     new_client = PlexClient(
                         config, player, session, plex_sessions, update_devices,
                         update_sessions)
                     plex_clients[machine_identifier] = new_client
+                    _LOGGER.debug("New session: %s", machine_identifier)
                     new_plex_clients.append(new_client)
                 else:
+                    _LOGGER.debug("Refreshing session: %s", machine_identifier)
                     plex_clients[machine_identifier].refresh(None, session)
 
         clients_to_remove = []
@@ -312,6 +322,7 @@ class PlexClient(MediaPlayerDevice):
         self._media_image_url = None
         self._media_title = None
         self._media_position = None
+        self._media_position_updated_at = None
         # Music
         self._media_album_artist = None
         self._media_album_name = None
@@ -351,7 +362,6 @@ class PlexClient(MediaPlayerDevice):
         self._media_duration = None
         self._media_image_url = None
         self._media_title = None
-        self._media_position = None
         # Music
         self._media_album_artist = None
         self._media_album_name = None
@@ -407,7 +417,21 @@ class PlexClient(MediaPlayerDevice):
                 self._make = self._player.device
             else:
                 self._is_player_available = False
-            self._media_position = self._session.viewOffset
+
+            # Calculate throttled position for proper progress display.
+            position = int(self._session.viewOffset / 1000)
+            now = dt_util.utcnow()
+            if self._media_position is not None:
+                pos_diff = (position - self._media_position)
+                time_diff = now - self._media_position_updated_at
+                if (pos_diff != 0 and
+                        abs(time_diff.total_seconds() - pos_diff) > 5):
+                    self._media_position_updated_at = now
+                    self._media_position = position
+            else:
+                self._media_position_updated_at = now
+                self._media_position = position
+
             self._media_content_id = self._session.ratingKey
             self._media_content_rating = getattr(
                 self._session, 'contentRating', None)
@@ -416,7 +440,7 @@ class PlexClient(MediaPlayerDevice):
 
         if self._is_player_active and self._session is not None:
             self._session_type = self._session.type
-            self._media_duration = self._session.duration
+            self._media_duration = int(self._session.duration / 1000)
             #  title (movie name, tv episode name, music song name)
             self._media_title = self._session.title
             # media type
@@ -610,6 +634,16 @@ class PlexClient(MediaPlayerDevice):
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         return self._media_duration
+
+    @property
+    def media_position(self):
+        """Return the duration of current playing media in seconds."""
+        return self._media_position
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid."""
+        return self._media_position_updated_at
 
     @property
     def media_image_url(self):

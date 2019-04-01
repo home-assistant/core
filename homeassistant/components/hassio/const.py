@@ -9,6 +9,7 @@ ATTR_UUID = 'uuid'
 ATTR_USERNAME = 'username'
 ATTR_PASSWORD = 'password'
 
-X_HASSIO = 'X-HASSIO-KEY'
-X_HASS_USER_ID = 'X-HASS-USER-ID'
-X_HASS_IS_ADMIN = 'X-HASS-IS-ADMIN'
+X_HASSIO = 'X-Hassio-Key'
+X_INGRESS_PATH = "X-Ingress-Path"
+X_HASS_USER_ID = 'X-Hass-User-ID'
+X_HASS_IS_ADMIN = 'X-Hass-Is-Admin'
