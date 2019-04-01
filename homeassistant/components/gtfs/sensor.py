@@ -268,9 +268,8 @@ def get_next_departure(schedule: Any, start_station_id: Any,
                 timetable[idx] = {**row, **extras}
 
     # Flag last departures.
-    for idx in [yesterday_last, today_last]:
-        if idx is not None:
-            timetable[idx]['last'] = True
+    for idx in filter(None, [yesterday_last, today_last]):
+        timetable[idx]['last'] = True
 
     _LOGGER.debug("Timetable: %s", sorted(timetable.keys()))
 
