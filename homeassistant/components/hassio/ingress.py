@@ -16,7 +16,7 @@ from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import X_HASSIO
+from .const import X_HASSIO, X_INGRESS_PATH
 
 
 @callback
@@ -74,7 +74,7 @@ class HassIOIngress(HomeAssistantView):
         await ws_server.prepare(request)
 
         url = self._create_url(addon, path)
-        source_header = _init_header(request, False)
+        source_header = _init_header(request, addon)
 
         # Start proxy
         async with self._websession.ws_connect(
@@ -97,7 +97,7 @@ class HassIOIngress(HomeAssistantView):
         """Ingress route for request."""
         url = self._create_url(addon, path)
         data = await request.read()
-        source_header = _init_header(request, True)
+        source_header = _init_header(request, addon)
 
         async with self._websession.request(
                 request.method, url, headers=source_header,
@@ -134,16 +134,16 @@ class HassIOIngress(HomeAssistantView):
 
 
 def _init_header(
-        request: web.Request, use_source: bool
+        request: web.Request, addon: str
 ) -> Union[CIMultiDict, Dict[str, str]]:
     """Create initial header."""
-    if use_source:
-        headers = request.headers.copy()
-    else:
-        headers = {}
+    headers = request.headers.copy()
 
     # Inject token / cleanup later on Supervisor
     headers[X_HASSIO] = os.environ.get('HASSIO_TOKEN', "")
+
+    # Ingress information
+    headers[X_INGRESS_PATH] = "/api/hassio_ingress/{}".format(addon)
 
     # Set X-Forwarded-For
     forward_for = request.headers.get(X_FORWARDED_FOR)

@@ -125,5 +125,5 @@ async def test_forwarding_user_info(hassio_client, hass_admin_user,
     assert len(aioclient_mock.mock_calls) == 1
 
     req_headers = aioclient_mock.mock_calls[0][-1]
-    req_headers['X-HASS-USER-ID'] == hass_admin_user.id
-    req_headers['X-HASS-IS-ADMIN'] == '1'
+    req_headers['X-Hass-User-ID'] == hass_admin_user.id
+    req_headers['X-Hass-Is-Admin'] == '1'

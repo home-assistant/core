@@ -1,6 +1,8 @@
 """The tests for the hassio component."""
 import asyncio
 
+from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
+from aiohttp.client_exceptions import WSServerHandshakeError
 import pytest
 
 
@@ -19,7 +21,7 @@ async def test_ingress_request_get(
 
     resp = await hassio_client.get(
         '/api/hassio_ingress/{}/{}'.format(build_type[0], build_type[1]),
-        headers={"x-test-header": "beer"}
+        headers={"X-Test-Header": "beer"}
     )
 
     # Check we got right response
@@ -29,8 +31,13 @@ async def test_ingress_request_get(
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["X-HASSIO-KEY"] == "123456"
-    assert aioclient_mock.mock_calls[-1][3]["x-test-header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"] == \
+        "/api/hassio_ingress/{}".format(build_type[0])
+    assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_FOR]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_HOST]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_PROTO]
 
 
 @pytest.mark.parametrize(
@@ -48,7 +55,7 @@ async def test_ingress_request_post(
 
     resp = await hassio_client.post(
         '/api/hassio_ingress/{}/{}'.format(build_type[0], build_type[1]),
-        headers={"x-test-header": "beer"}
+        headers={"X-Test-Header": "beer"}
     )
 
     # Check we got right response
@@ -59,7 +66,12 @@ async def test_ingress_request_post(
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[-1][3]["X-HASSIO-KEY"] == "123456"
-    assert aioclient_mock.mock_calls[-1][3]["x-test-header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"] == \
+        "/api/hassio_ingress/{}".format(build_type[0])
+    assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_FOR]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_HOST]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_PROTO]
 
 
 @pytest.mark.parametrize(
@@ -77,7 +89,7 @@ async def test_ingress_request_put(
 
     resp = await hassio_client.put(
         '/api/hassio_ingress/{}/{}'.format(build_type[0], build_type[1]),
-        headers={"x-test-header": "beer"}
+        headers={"X-Test-Header": "beer"}
     )
 
     # Check we got right response
@@ -88,7 +100,12 @@ async def test_ingress_request_put(
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[-1][3]["X-HASSIO-KEY"] == "123456"
-    assert aioclient_mock.mock_calls[-1][3]["x-test-header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"] == \
+        "/api/hassio_ingress/{}".format(build_type[0])
+    assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_FOR]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_HOST]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_PROTO]
 
 
 @pytest.mark.parametrize(
@@ -106,7 +123,7 @@ async def test_ingress_request_delete(
 
     resp = await hassio_client.delete(
         '/api/hassio_ingress/{}/{}'.format(build_type[0], build_type[1]),
-        headers={"x-test-header": "beer"}
+        headers={"X-Test-Header": "beer"}
     )
 
     # Check we got right response
@@ -117,4 +134,39 @@ async def test_ingress_request_delete(
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[-1][3]["X-HASSIO-KEY"] == "123456"
-    assert aioclient_mock.mock_calls[-1][3]["x-test-header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"] == \
+        "/api/hassio_ingress/{}".format(build_type[0])
+    assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_FOR]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_HOST]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_PROTO]
+
+
+@pytest.mark.parametrize(
+    'build_type', [
+        ("a3_vl", "test/beer/ws"), ("core", "ws.php"),
+        ("local", "panel/config/stream"), ("jk_921", "hulk")
+    ])
+async def test_ingress_websocket(
+        hassio_client, build_type, aioclient_mock):
+    """Test no auth needed for ."""
+    aioclient_mock.get(
+        "http://127.0.0.1/addons/{}/web/{}".format(build_type[0], build_type[1])
+    )
+
+    # Ignore error because we can setup a full IO infrastructure
+    with pytest.raises(WSServerHandshakeError):
+        resp = await hassio_client.ws_connect(
+            '/api/hassio_ingress/{}/{}'.format(build_type[0], build_type[1]),
+            headers={"X-Test-Header": "beer"}
+        )
+
+    # Check we forwarded command
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[-1][3]["X-HASSIO-KEY"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"] == \
+        "/api/hassio_ingress/{}".format(build_type[0])
+    assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_FOR]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_HOST]
+    assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_PROTO]
