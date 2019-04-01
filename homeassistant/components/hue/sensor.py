@@ -212,8 +212,9 @@ class GenericHueSensor:
             },
             'name': self.primary_sensor.name,
             'manufacturer': self.primary_sensor.manufacturername,
-            'model': self.primary_sensor.productname or \
-                self.primary_sensor.modelid,
+            'model': (
+                self.primary_sensor.productname or
+                self.primary_sensor.modelid),
             'sw_version': self.primary_sensor.swversion,
             'via_hub': (hue.DOMAIN, self.bridge.api.config.bridgeid),
         }
