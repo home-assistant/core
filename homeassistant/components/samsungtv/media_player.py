@@ -15,8 +15,9 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF,
     STATE_ON)
@@ -33,9 +34,13 @@ DEFAULT_TIMEOUT = 1
 
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
+SOURCES = {
+    'TV': 'KEY_DTV',
+    'HDMI': 'KEY_HDMI'
+}
 
 SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
-    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
+    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE | \
     SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -195,6 +200,11 @@ class SamsungTVDevice(MediaPlayerDevice):
         return self._muted
 
     @property
+    def source_list(self):
+        """List of available input sources."""
+        return SOURCES.keys()
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         if self._mac:
@@ -269,6 +279,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         for digit in media_id:
             await self.hass.async_add_job(self.send_key, 'KEY_' + digit)
             await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
+        await self.hass.async_add_job(self.send_key, 'KEY_ENTER')
 
     def turn_on(self):
         """Turn the media player on."""
@@ -276,3 +287,12 @@ class SamsungTVDevice(MediaPlayerDevice):
             self._wol.send_magic_packet(self._mac)
         else:
             self.send_key('KEY_POWERON')
+
+    async def async_select_source(self, source):
+        """Select input source."""
+        if source not in SOURCES:
+            _LOGGER.error('Unsupported source')
+            return
+
+        await self.hass.async_add_job(self.send_key, SOURCES[source])
+        await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
