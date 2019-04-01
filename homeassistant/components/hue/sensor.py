@@ -7,13 +7,10 @@ from time import monotonic
 import async_timeout
 
 from homeassistant.components import hue
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, ENTITY_ID_FORMAT as BINARY_ENTITY_ID_FORMAT)
-from homeassistant.components.sensor import (
-    ENTITY_ID_FORMAT as SENSOR_ENTITY_ID_FORMAT)
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -98,7 +95,7 @@ async def async_update_items(hass, bridge, async_add_entities, current):
 
         name = PRESENCE_NAME_FORMAT.format(api[item_id].name)
         if api[item_id].type == aiohue.sensors.TYPE_ZLL_PRESENCE:
-            s = HuePresence(hass, api[item_id], name, bridge)
+            sensor = HuePresence(api[item_id], name, bridge)
             sensor_device_names[s.device_id] = api[item_id]
             current[item_id] = s
             new_sensors.append(s)
@@ -121,16 +118,14 @@ async def async_update_items(hass, bridge, async_add_entities, current):
                 name = LIGHT_LEVEL_NAME_FORMAT.format(
                     primary_sensor.name)
             current[item_id] = HueLightLevel(
-                hass, api[item_id], name, bridge,
-                primary_sensor=primary_sensor)
+                api[item_id], name, bridge, primary_sensor=primary_sensor)
         elif api[item_id].type == aiohue.sensors.TYPE_ZLL_TEMPERATURE:
             if device_id in sensor_device_names:
                 primary_sensor = sensor_device_names[device_id]
                 name = TEMPERATURE_NAME_FORMAT.format(
                     primary_sensor.name)
             current[item_id] = HueTemperature(
-                hass, api[item_id], name, bridge,
-                primary_sensor=primary_sensor)
+                api[item_id], name, bridge, primary_sensor=primary_sensor)
         else:
             continue
 
@@ -145,10 +140,8 @@ class GenericHueSensor:
 
     should_poll = False
 
-    def __init__(self, hass, sensor, name, bridge,
-                 primary_sensor=None):
+    def __init__(self, sensor, name, bridge, primary_sensor=None):
         """Initialize the sensor."""
-        self.hass = hass
         self.sensor = sensor
         self._primary_sensor = primary_sensor
         self._name = name
@@ -160,9 +153,6 @@ class GenericHueSensor:
                 "sensor in the Philips Hue App."
             )
             _LOGGER.warning(err, self.name)
-
-        self.entity_id = async_generate_entity_id(
-            self._entity_id_format, self.name, hass=hass)
 
     @property
     def primary_sensor(self):
@@ -237,7 +227,6 @@ class GenericZLLSensor(GenericHueSensor):
 class HuePresence(GenericZLLSensor, BinarySensorDevice):
     """The presence sensor entity for a Hue motion sensor device."""
 
-    _entity_id_format = BINARY_ENTITY_ID_FORMAT
     device_class = 'presence'
     icon = 'mdi:run'
 
@@ -250,7 +239,6 @@ class HuePresence(GenericZLLSensor, BinarySensorDevice):
 class HueLightLevel(GenericZLLSensor, Entity):
     """The light level sensor entity for a Hue motion sensor device."""
 
-    _entity_id_format = SENSOR_ENTITY_ID_FORMAT
     device_class = DEVICE_CLASS_ILLUMINANCE
     unit_of_measurement = "Lux"
 
@@ -275,7 +263,6 @@ class HueLightLevel(GenericZLLSensor, Entity):
 class HueTemperature(GenericZLLSensor, Entity):
     """The temperature sensor entity for a Hue motion sensor device."""
 
-    _entity_id_format = SENSOR_ENTITY_ID_FORMAT
     device_class = DEVICE_CLASS_TEMPERATURE
     unit_of_measurement = TEMP_CELSIUS
 
