@@ -418,7 +418,7 @@ evohomeclient==0.2.8
 
 # homeassistant.components.dlib_face_detect.image_processing
 # homeassistant.components.dlib_face_identify.image_processing
-# face_recognition==1.0.0
+# face_recognition==1.2.3
 
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.3
