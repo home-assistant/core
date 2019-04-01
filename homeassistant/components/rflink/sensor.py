@@ -10,12 +10,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
+    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES,
+    ATTR_STATE, CONF_FIRE_EVENT, CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES,
     DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, EVENT_KEY_ID, EVENT_KEY_SENSOR,
     EVENT_KEY_UNIT, SIGNAL_AVAILABILITY, SIGNAL_HANDLE_EVENT, TMP_ENTITY,
     RflinkDevice, remove_deprecated)
@@ -38,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.string: vol.Schema({
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_SENSOR_TYPE): cv.string,
+            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
