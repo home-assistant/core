@@ -218,6 +218,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
                 title=data['addon'], data={
                     CONF_PORT: data[CONF_HOST],
                     CONF_HOST: data[CONF_PORT],
+                    CONF_BRIDGEID: data[CONF_BRIDGEID],
                     CONF_API_KEY: data[CONF_API_KEY],
                     CONF_ALLOW_CLIP_SENSOR:
                         user_input[CONF_ALLOW_CLIP_SENSOR],
