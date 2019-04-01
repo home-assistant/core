@@ -14,6 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_INITIAL = 'initial'
 ATTR_STEP = 'step'
+ATTR_MINIMUM = 'minimum'
+ATTR_MAXIMUM = 'maximum'
 
 CONF_INITIAL = 'initial'
 CONF_RESTORE = 'restore'
@@ -33,11 +35,12 @@ SERVICE_SETUP = 'setup'
 SERVICE_SCHEMA_SIMPLE = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
+
 SERVICE_SCHEMA_SETUP = vol.Schema({
     ATTR_ENTITY_ID: cv.comp_entity_ids,
-    vol.Optional(CONF_MINIMUM): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(CONF_MAXIMUM): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(CONF_STEP): cv.positive_int,
+    vol.Optional(ATTR_MINIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(ATTR_MAXIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(ATTR_STEP): cv.positive_int,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -147,12 +150,14 @@ class Counter(RestoreEntity):
             ret[CONF_MAXIMUM] = self._max
         return ret
 
-    def __check_boundaries(self):
-        """Check if in range of min/max values."""
+    def compute_next_state(self, state):
+        """Keep the state within the range of min/max values."""
         if self._min is not None:
-            self._state = max(self._min, self._state)
+            state = max(self._min, state)
         if self._max is not None:
-            self._state = min(self._max, self._state)
+            state = min(self._max, state)
+
+        return state
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
@@ -162,25 +167,21 @@ class Counter(RestoreEntity):
         if self._restore:
             state = await self.async_get_last_state()
             if state is not None:
-                self._state = int(state.state)
-                self.__check_boundaries()
+                self._state = self.compute_next_state(int(state.state))
 
     async def async_decrement(self):
         """Decrement the counter."""
-        self._state -= self._step
-        self.__check_boundaries()
+        self._state = self.compute_next_state(self._state - self._step)
         await self.async_update_ha_state()
 
     async def async_increment(self):
         """Increment a counter."""
-        self._state += self._step
-        self.__check_boundaries()
+        self._state = self.compute_next_state(self._state + self._step)
         await self.async_update_ha_state()
 
     async def async_reset(self):
         """Reset a counter."""
-        self._state = self._initial
-        self.__check_boundaries()
+        self._state = self.compute_next_state(self._initial)
         await self.async_update_ha_state()
 
     async def async_setup(self, **kwargs):
@@ -192,5 +193,5 @@ class Counter(RestoreEntity):
         if CONF_STEP in kwargs:
             self._step = kwargs[CONF_STEP]
 
-        self.__check_boundaries()
+        self._state = self.compute_next_state(self._state)
         await self.async_update_ha_state()
