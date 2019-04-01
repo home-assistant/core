@@ -78,16 +78,6 @@ class SomfyShade(CoverDevice, RestoreEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
 
-    async def async_added_to_hass(self):
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if self._state is not None:
-            return
-        state = await super().async_get_last_state()
-        if state:
-            self._state = state.state
-            self._state_ts = state.last_updated
-
     async def async_open_cover(self, **kwargs):
         """Wrap Homeassistant calls to open the cover."""
         if not self._reverse:
