@@ -1,11 +1,11 @@
 """Test Axis device."""
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from tests.common import mock_coro, MockConfigEntry
 
-from homeassistant.components.axis import camera, device, errors
+from homeassistant.components.axis import device, errors
 from homeassistant.components.axis.camera import AxisCamera
 
 DEVICE_DATA = {
