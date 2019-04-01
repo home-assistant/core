@@ -26,7 +26,6 @@ CONF_SETTING = 'setting'
 CONF_TASK = 'task'
 CONF_THERMOSTAT = 'thermostat'
 CONF_ZONE = 'zone'
-CONF_DEVICES = 'devices'
 CONF_PREFIX = 'prefix'
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,9 +91,7 @@ DEVICE_SCHEMA = vol.Schema({
 }, _host_validator)
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])
-    }),
+    DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA])
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -124,7 +121,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                 raise vol.Invalid("Invalid range {}".format(rng))
             values[rng[0]-1:rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
-    for index, conf in enumerate(hass_config[DOMAIN][CONF_DEVICES]):
+    for index, conf in enumerate(hass_config[DOMAIN]):
         _LOGGER.debug("Setting up elkm1 #%d - %s", index, conf['host'])
 
         config = {'temperature_unit': conf[CONF_TEMPERATURE_UNIT]}
