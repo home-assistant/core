@@ -28,14 +28,14 @@
                     "allow_deconz_groups": "Allow importing deCONZ groups"
                 }
             }
+        },
+        "error": {
+            "no_key": "Couldn't get an API key"
+        },
+        "abort": {
+            "already_configured": "Bridge is already configured",
+            "no_bridges": "No deCONZ bridges discovered",
+            "one_instance_only": "Component only supports one deCONZ instance"
         }
-    },
-    "error": {
-        "no_key": "Couldn't get an API key"
-    },
-    "abort": {
-        "already_configured": "Bridge is already configured",
-        "no_bridges": "No deCONZ bridges discovered",
-        "one_instance_only": "Component only supports one deCONZ instance"
     }
 }
