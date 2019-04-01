@@ -17,7 +17,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ["mobile_app"]
+DEPENDENCIES = ['mobile_app']
 
 
 def push_registrations(hass):
@@ -35,16 +35,16 @@ def push_registrations(hass):
 # pylint: disable=invalid-name
 def log_rate_limits(hass, device_name, resp, level=logging.INFO):
     """Output rate limit log line at given level."""
-    rate_limits = resp["rateLimits"]
-    resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
+    rate_limits = resp['rateLimits']
+    resetsAt = dt_util.parse_datetime(rate_limits['resetsAt'])
     resetsAtTime = resetsAt - datetime.now(timezone.utc)
     rate_limit_msg = ("mobile_app push notification rate limits for %s: "
                       "%d sent, %d allowed, %d errors, "
                       "resets in %s")
     _LOGGER.log(level, rate_limit_msg,
                 device_name,
-                rate_limits["successful"],
-                rate_limits["maximum"], rate_limits["errors"],
+                rate_limits['successful'],
+                rate_limits['maximum'], rate_limits['errors'],
                 str(resetsAtTime).split(".")[0])
 
 
