@@ -96,9 +96,9 @@ async def async_update_items(hass, bridge, async_add_entities, current):
         name = PRESENCE_NAME_FORMAT.format(api[item_id].name)
         if api[item_id].type == aiohue.sensors.TYPE_ZLL_PRESENCE:
             sensor = HuePresence(api[item_id], name, bridge)
-            sensor_device_names[s.device_id] = api[item_id]
-            current[item_id] = s
-            new_sensors.append(s)
+            sensor_device_names[sensor.device_id] = api[item_id]
+            current[item_id] = sensor
+            new_sensors.append(sensor)
 
     # Iterate again now we have all the presence sensors, and add the related
     # sensors with nice names.
