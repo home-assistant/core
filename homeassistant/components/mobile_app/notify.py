@@ -9,7 +9,6 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT,
     BaseNotificationService)
-from homeassistant.components.mobile_app import push_registrations
 from homeassistant.components.mobile_app.const import (
     ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME, ATTR_APP_VERSION,
     ATTR_DEVICE_NAME, ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_NAME,
@@ -21,6 +20,18 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ["mobile_app"]
+
+
+def push_registrations(hass):
+    """Return a dictionary of push enabled registrations."""
+    targets = {}
+    for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items():
+        data = entry.data
+        app_data = data[ATTR_APP_DATA]
+        if ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data:
+            device_name = data[ATTR_DEVICE_NAME]
+            targets[device_name] = webhook_id
+    return targets
 
 
 # pylint: disable=invalid-name
