@@ -11,7 +11,6 @@ from homeassistant.components import mqtt
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_SERVICE, EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import (
@@ -611,7 +610,7 @@ def test_setup_embedded_with_embedded(hass):
         assert _start.call_count == 1
 
 
-async def test_setup_throws_ConfigEntryNotReady_if_no_connect_broker(hass):
+async def test_setup_fails_if_no_connect_broker(hass):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={
         mqtt.CONF_BROKER: 'test-broker'
@@ -619,12 +618,7 @@ async def test_setup_throws_ConfigEntryNotReady_if_no_connect_broker(hass):
 
     with mock.patch('paho.mqtt.client.Client') as mock_client:
         mock_client().connect = lambda *args: 1
-        try:
-            await mqtt.async_setup_entry(hass, entry)
-        except ConfigEntryNotReady:
-            pass
-        finally:
-            assert False, 'ConfigEntryNotReady not raised'
+        assert not await mqtt.async_setup_entry(hass, entry)
 
 
 async def test_setup_uses_certificate_on_certificate_set_to_auto(
