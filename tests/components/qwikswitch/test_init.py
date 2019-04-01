@@ -112,8 +112,7 @@ async def test_sensor_device(hass, aioclient_mock):  # noqa
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
     LISTEN.append(
-        '{"id":"@a00001","name":"ss1",'  # "type":"rel",'
-        '"cmd":"",'  # Prevent 'unknown packet?' from listen in library
+        '{"id":"@a00001","name":"ss1","type":"rel",'
         '"val":"4733800001a00000"}')
 
     await hass.async_block_till_done()

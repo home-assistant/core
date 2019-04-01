@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyqwikswitch==0.92']
+REQUIREMENTS = ['pyqwikswitch==0.93']
 
 _LOGGER = logging.getLogger(__name__)
 
