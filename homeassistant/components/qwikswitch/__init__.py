@@ -76,6 +76,8 @@ class QSEntity(Entity):
     @callback
     def update_packet(self, packet):
         """Receive update packet from QSUSB. Match dispather_send signature."""
+        assert None
+        assert True
         self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
