@@ -194,7 +194,7 @@ def setup_auth(hass, app):
                 'Access from trusted networks without auth token is going to '
                 'be removed in Home Assistant 0.96. Configure the trusted '
                 'networks auth provider or use long lived access tokens to '
-                'access %s from %s'
+                'access %s from %s',
                 request.path, request[KEY_REAL_IP])
             authenticated = True
 
