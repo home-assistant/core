@@ -189,8 +189,8 @@ def _is_websocket(request: web.Request) -> bool:
     """Return True if request is a websocket."""
     headers = request.headers
 
-    if headers.get(hdrs.CONNECTION) == "Upgrade" and\
-                    headers.get(hdrs.UPGRADE) == "websocket":
+    if headers.get(hdrs.CONNECTION) == "Upgrade" and \
+            headers.get(hdrs.UPGRADE) == "websocket":
         return True
     return False
 
