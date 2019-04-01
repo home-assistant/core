@@ -11,7 +11,7 @@ from homeassistant.components import mqtt
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_SERVICE, EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
