@@ -191,9 +191,10 @@ def setup_auth(hass, app):
         elif (trusted_networks and
               await async_validate_trusted_networks(request)):
             _LOGGER.warning(
-                'Using trusted networks to bypass authentication is going to'
-                ' be removed after 0.95 release. You need to use a bearer'
-                ' token to access %s from %s',
+                'Access from trusted networks without auth token is going to '
+                'be removed in Home Assistant 0.96. Configure the trusted '
+                'networks auth provider or use long lived access tokens to '
+                'access %s from %s'
                 request.path, request[KEY_REAL_IP])
             authenticated = True
 
