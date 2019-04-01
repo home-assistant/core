@@ -28,9 +28,6 @@ PHUE_CONFIG_FILE = 'phue.conf'
 CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
-CONF_ALLOW_HUE_SENSORS = "allow_hue_sensors"
-DEFAULT_ALLOW_HUE_SENSORS = True
-
 BRIDGE_CONFIG_SCHEMA = vol.Schema({
     # Validate as IP address and then convert back to a string.
     vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
@@ -40,8 +37,6 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema({
                  default=DEFAULT_ALLOW_UNREACHABLE): cv.boolean,
     vol.Optional(CONF_ALLOW_HUE_GROUPS,
                  default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
-    vol.Optional(CONF_ALLOW_HUE_SENSORS,
-                 default=DEFAULT_ALLOW_HUE_SENSORS): cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({

@@ -30,13 +30,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     cur_sensors = {}
 
-    allow_sensors = bridge.allow_sensors
-    if not allow_sensors:
-        _LOGGER.info(
-            'Skipping Hue sensor setup. Set allow_hue_sensors to true if you '
-            'don\'t want this.')
-        return
-
     # Hue updates all sensors via a single API call.
     #
     # If we call a service to update 2 sensors, we only want the API to be
