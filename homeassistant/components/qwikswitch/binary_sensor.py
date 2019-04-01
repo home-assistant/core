@@ -35,7 +35,7 @@ class QSBinarySensor(QSEntity, BinarySensorDevice):
 
     def __init__(self, sensor):
         """Initialize the sensor."""
-        from pyqwikswitch import SENSORS
+        from pyqwikswitch.qwikswitch import SENSORS
 
         super().__init__(sensor['id'], sensor['name'])
         self.channel = sensor['channel']
