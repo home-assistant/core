@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_DOMAIN
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['adal==1.2.1', 'aiohttp==3.5.4']
+REQUIREMENTS = ['adal==1.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
