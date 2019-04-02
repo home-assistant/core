@@ -22,22 +22,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the CiscoWebexTeams notification service."""
+
+    from webexteamssdk import WebexTeamsAPI
+    client = WebexTeamsAPI(access_token=config[CONF_TOKEN])
+    # Validate the token by calling an api
+    # pylint:disable=expression-not-assigned
+    [room for room in client.rooms.list()]
+
     return CiscoWebexTeamsNotificationService(
-        config[CONF_TOKEN],
+        client,
         config[CONF_ROOM_ID])
 
 
 class CiscoWebexTeamsNotificationService(BaseNotificationService):
     """The Cisco Webex Teams Notification Service."""
 
-    def __init__(self, token, room):
+    def __init__(self, client, room):
         """Initialize the service."""
-        from webexteamssdk import WebexTeamsAPI
         self.room = room
-        self.client = WebexTeamsAPI(access_token=token)
-        # List all rooms which validates the token
-        # pylint:disable=expression-not-assigned
-        [room for room in self.client.rooms.list()]
+        self.client = client
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
