@@ -171,6 +171,6 @@ class AlarmControlPanel(Entity):
         state_attr = {
             ATTR_CODE_FORMAT: self.code_format,
             ATTR_CHANGED_BY: self.changed_by,
-            ATTR_CODE_ARM_REQUIRED, self.code_arm_required
+            ATTR_CODE_ARM_REQUIRED: self.code_arm_required
         }
         return state_attr
