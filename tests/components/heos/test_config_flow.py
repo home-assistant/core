@@ -77,6 +77,6 @@ async def test_create_entry_with_discovery(hass, controller):
     result = await flow.async_step_user(data)
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['title'] == 'Controller (127.0.0.1)'
-    assert result['data'] == data
+    assert result['data'] == {'host': '127.0.0.1'}
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
