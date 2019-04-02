@@ -58,10 +58,9 @@ class FoscamCam(Camera):
         self._foscam_session = FoscamCamera(
             ip_address, port, self._username, self._password, verbose=False)
 
+        self._media_port = None
         result, response = self._foscam_session.get_port_info()
-        if result == FOSCAM_COMM_ERROR:
-            self._media_port = None
-        else:
+        if result == 0:
             self._media_port = response['mediaPort']
 
     def camera_image(self):
@@ -90,7 +89,7 @@ class FoscamCam(Camera):
                 self._password,
                 self._foscam_session.host,
                 self._media_port)
-        return 0
+        return None
 
     @property
     def motion_detection_enabled(self):
