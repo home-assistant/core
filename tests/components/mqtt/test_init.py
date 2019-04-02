@@ -633,6 +633,7 @@ async def test_setup_throws_ConfigEntryNotReady_if_no_connect_broker(hass):
         with pytest.raises(ConfigEntryNotReady):
             await mqtt.async_setup_entry(hass, {})
 
+
 async def test_setup_uses_certificate_on_certificate_set_to_auto(
         hass, mock_MQTT):
     """Test setup uses bundled certs when certificate is set to auto."""
