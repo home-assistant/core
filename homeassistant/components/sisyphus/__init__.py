@@ -53,7 +53,7 @@ async def async_setup(hass, config):
 
     async def add_table(host, name=None):
         """Add platforms for a single table with the given hostname."""
-        tables[host] = TableHolder(session, host, name)
+        tables[host] = TableHolder(hass, session, host, name)
 
         hass.async_create_task(async_load_platform(
             hass, 'light', DOMAIN, {
@@ -87,19 +87,19 @@ async def async_setup(hass, config):
 class TableHolder:
     """Holds table objects and makes them available to platforms."""
 
-    def __init__(self, session, host, name):
+    def __init__(self, hass, session, host, name):
         """Initialize the table holder."""
+        self._hass = hass
         self._session = session
         self._host = host
         self._name = name
-        self._table_lock = asyncio.Lock()
-        self._table = None
+        self._table_task = None
 
     @property
     def available(self):
         """Return true if the table is responding to heartbeats."""
-        if self._table:
-            return self._table.is_connected
+        if self._table_task and self._table_task.done():
+            return self._table_task.result().is_connected
         return False
 
     @property
@@ -109,18 +109,23 @@ class TableHolder:
 
     async def get_table(self):
         """Return the Table held by this holder, connecting to it if needed."""
-        from sisyphus_control import Table
-        with await self._table_lock:
-            if self._table is None:
-                self._table = await Table.connect(self._host, self._session)
-                if self._name is None:
-                    self._name = self._table.name
-                _LOGGER.debug("Connected to %s at %s", self._name, self._host)
+        if not self._table_task:
+            self._table_task = self._hass.async_create_task(
+                self._connect_table())
 
+        return await self._table_task
+
+    async def _connect_table(self):
+        from sisyphus_control import Table
+        self._table = await Table.connect(self._host, self._session)
+        if self._name is None:
+            self._name = self._table.name
+            _LOGGER.debug("Connected to %s at %s", self._name, self._host)
         return self._table
 
     async def close(self):
         """Close the table held by this holder, if any."""
-        with await self._table_lock:
-            if self._table is not None:
-                await self._table.close()
+        if self._table:
+            await self._table.close()
+            self._table = None
+            self._table_task = None
