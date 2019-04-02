@@ -1,8 +1,8 @@
 """Helpers to deal with permissions."""
 from functools import wraps
 
-from typing import (
-    TYPE_CHECKING, Callable, Dict, List, Optional, Union, cast)  # noqa: F401
+from typing import (  # noqa: F401
+    TYPE_CHECKING, Callable, Dict, List, Optional, Union, cast)
 
 from homeassistant.exceptions import Unauthorized, UnknownUser
 
