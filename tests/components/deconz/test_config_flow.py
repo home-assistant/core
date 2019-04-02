@@ -267,6 +267,18 @@ async def test_options(hass, aioclient_mock):
     }
 
 
+async def test_hassio_single_instance(hass):
+    """Test we only allow a single config flow."""
+    MockConfigEntry(domain='deconz', data={
+        'host': '1.2.3.4'
+    }).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        'deconz', context={'source': 'hassio'})
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'one_instance_only'
+
+
 async def test_hassio_confirm(hass):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(

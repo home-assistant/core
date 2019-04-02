@@ -202,6 +202,9 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
         This flow is triggered by the discovery component.
         """
+        if configured_hosts(self.hass):
+            return self.async_abort(reason='one_instance_only')
+
         self._hassio_discovery = user_input
 
         return await self.async_step_hassio_confirm()
