@@ -92,7 +92,7 @@ ephem==3.7.6.0
 
 # homeassistant.components.evohome
 # homeassistant.components.honeywell.climate
-evohomeclient==0.2.8
+evohomeclient==0.3.2
 
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
