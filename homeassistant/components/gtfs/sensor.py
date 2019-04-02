@@ -55,6 +55,8 @@ CONF_TOMORROW = 'include_tomorrow'
 DEFAULT_NAME = 'GTFS Sensor'
 DEFAULT_PATH = 'gtfs'
 
+KEY_DATA = 'gtfs'
+
 BICYCLE_ALLOWED_DEFAULT = STATE_UNKNOWN
 BICYCLE_ALLOWED_OPTIONS = {
     1: True,
@@ -372,11 +374,31 @@ def setup_platform(hass: HomeAssistantType, config: ConfigType,
 
     sqlite_file = "{}.sqlite?check_same_thread=False".format(gtfs_root)
     joined_path = os.path.join(gtfs_dir, sqlite_file)
+
+    # Reduce chances for race conditions when creating the database
+    if not os.path.isfile(joined_path):
+        import time
+        import random
+        time.sleep(random.randrange(10, 3000) / 1000)
+
     gtfs = pygtfs.Schedule(joined_path)
 
+    # Build the database, or wait for a previous thread to complete it first
     # pylint: disable=no-member
     if not gtfs.feeds:
-        pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
+        if KEY_DATA not in hass.data:
+            hass.data[KEY_DATA] = dict()
+        key_lock = 'lock'
+
+        if key_lock not in hass.data[KEY_DATA]:
+            hass.data[KEY_DATA][key_lock] = threading.Lock()
+        with hass.data[KEY_DATA][key_lock]:
+            if not gtfs.feeds:
+                _LOGGER.info(
+                    "Creating database for \"%s\", this may take some time",
+                    data)
+                pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
+                _LOGGER.info("Database \"%s.sqlite\" creation complete", data)
 
     add_entities([
         GTFSDepartureSensor(gtfs, name, origin, destination, offset,
