@@ -39,6 +39,7 @@ class OpenThermGateway(ClimateDevice):
         self.temp_precision = config.get(CONF_PRECISION)
         self._current_operation = STATE_IDLE
         self._current_temperature = None
+        self._new_target_temperature = None
         self._target_temperature = None
         self._away_mode_a = None
         self._away_mode_b = None
@@ -63,11 +64,10 @@ class OpenThermGateway(ClimateDevice):
         else:
             self._current_operation = STATE_IDLE
         self._current_temperature = status.get(self._gw_vars.DATA_ROOM_TEMP)
-
-        temp = status.get(self._gw_vars.DATA_ROOM_SETPOINT_OVRD)
-        if temp is None:
-            temp = status.get(self._gw_vars.DATA_ROOM_SETPOINT)
-        self._target_temperature = temp
+        temp_upd = status.get(self._gw_vars.DATA_ROOM_SETPOINT)
+        if self._target_temperature != temp_upd:
+            self._new_target_temperature = None
+        self._target_temperature = temp_upd
 
         # GPIO mode 5: 0 == Away
         # GPIO mode 6: 1 == Away
@@ -138,7 +138,7 @@ class OpenThermGateway(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._target_temperature
+        return self._new_target_temperature or self._target_temperature
 
     @property
     def target_temperature_step(self):
@@ -154,7 +154,9 @@ class OpenThermGateway(ClimateDevice):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
             temp = float(kwargs[ATTR_TEMPERATURE])
-            self._target_temperature = await self._gateway.set_target_temp(
+            if temp == self.target_temperature:
+                return
+            self._new_target_temperature = await self._gateway.set_target_temp(
                 temp)
             self.async_schedule_update_ha_state()
 
