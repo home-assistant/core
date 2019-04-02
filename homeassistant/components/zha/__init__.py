@@ -1,9 +1,4 @@
-"""
-Support for Zigbee Home Automation devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
-"""
+"""Support for Zigbee Home Automation devices."""
 import logging
 
 import voluptuous as vol
