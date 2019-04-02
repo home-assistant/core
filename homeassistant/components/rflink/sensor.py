@@ -4,15 +4,18 @@ Support for Rflink sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rflink/
 """
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
+    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_UNIT_OF_MEASUREMENT,
+    CONF_FORCE_UPDATE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.helpers.event as evt
 
 from . import (
     CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES,
@@ -31,6 +34,8 @@ SENSOR_ICONS = {
 }
 
 CONF_SENSOR_TYPE = 'sensor_type'
+CONF_EXPIRE_AFTER = 'expire_after'
+DEFAULT_FORCE_UPDATE = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
@@ -39,6 +44,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_SENSOR_TYPE): cv.string,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE):
+                cv.boolean,
+            vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
             vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             # deprecated config options
@@ -96,14 +104,36 @@ class RflinkSensor(RflinkDevice):
     """Representation of a Rflink sensor."""
 
     def __init__(self, device_id, sensor_type, unit_of_measurement,
-                 initial_event=None, **kwargs):
+                expire_after=0, force_update=None, initial_event=None,
+                **kwargs):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
         self._unit_of_measurement = unit_of_measurement
+        self._force_update = force_update
+        self._expire_after = expire_after
+        self._expiration_trigger = None
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
     def _handle_event(self, event):
         """Domain specific event handler."""
+
+        # auto-expire enabled?
+        if self._expire_after > 0:
+            # Reset old trigger
+            if self._expiration_trigger:
+                self._expiration_trigger()
+                self._expiration_trigger = None
+
+            def expire_after_listener(now):
+                """Invalidate sensor's state after a delay."""
+                self._expiration_trigger = None
+                self._state = None
+                self.async_schedule_update_ha_state()
+
+            # Set new trigger
+            self._expiration_trigger = evt.async_call_later(
+                self.hass, self._expire_after, expire_after_listener)
+
         self._state = event['value']
 
     async def async_added_to_hass(self):
@@ -147,3 +177,9 @@ class RflinkSensor(RflinkDevice):
         """Return possible sensor specific icon."""
         if self._sensor_type in SENSOR_ICONS:
             return SENSOR_ICONS[self._sensor_type]
+
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._force_update
