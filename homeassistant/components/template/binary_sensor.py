@@ -26,11 +26,16 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DELAY_ON = 'delay_on'
 CONF_DELAY_OFF = 'delay_off'
+CONF_ATTRIBUTE_TEMPLATES = 'attribute_templates'
+
+ATTRIBUTES_PREFIX = '_attributes.'
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+    vol.Optional(CONF_ATTRIBUTE_TEMPLATES):
+        vol.Schema({cv.string: cv.template}),
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -57,14 +62,20 @@ async def async_setup_platform(hass, config, async_add_entities,
             CONF_ENTITY_PICTURE_TEMPLATE)
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
+        attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES)
 
         invalid_templates = []
 
-        for tpl_name, template in (
-                (CONF_VALUE_TEMPLATE, value_template),
-                (CONF_ICON_TEMPLATE, icon_template),
-                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
-        ):
+        templates = dict((
+            (CONF_VALUE_TEMPLATE, value_template),
+            (CONF_ICON_TEMPLATE, icon_template),
+            (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
+        ))
+
+        if attribute_templates is not None:
+            templates.update(attribute_templates)
+
+        for tpl_name, template in templates.items():
             if template is None:
                 continue
             template.hass = hass
@@ -76,7 +87,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
                 # Cut off _template from name
-                invalid_templates.append(tpl_name[:-9])
+                invalid_templates.append(tpl_name.replace('_template', ''))
             elif entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
 
@@ -102,7 +113,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             BinarySensorTemplate(
                 hass, device, friendly_name, device_class, value_template,
                 icon_template, entity_picture_template, entity_ids,
-                delay_on, delay_off)
+                delay_on, delay_off, attribute_templates)
             )
     if not sensors:
         _LOGGER.error("No sensors added")
@@ -117,7 +128,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
     def __init__(self, hass, device, friendly_name, device_class,
                  value_template, icon_template, entity_picture_template,
-                 entity_ids, delay_on, delay_off):
+                 entity_ids, delay_on, delay_off, attribute_templates):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -133,6 +144,8 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
+        self._attribute_templates = attribute_templates
+        self._attributes = {}
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -180,6 +193,11 @@ class BinarySensorTemplate(BinarySensorDevice):
         return self._device_class
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
@@ -199,14 +217,26 @@ class BinarySensorTemplate(BinarySensorDevice):
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
 
-        for property_name, template in (
-                ('_icon', self._icon_template),
-                ('_entity_picture', self._entity_picture_template)):
+        templates = dict((
+            ('_icon', self._icon_template),
+            ('_entity_picture', self._entity_picture_template),
+        ))
+
+        if self._attribute_templates is not None:
+            templates.update({'{}{}'.format(ATTRIBUTES_PREFIX,key): value}
+                                  for key, value
+                                  in self._attribute_templates.items()})
+
+        for property_name, template in templates.items():
             if template is None:
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                if property_name.startswith(ATTRIBUTES_PREFIX):
+                    attribute_name = property_name.replace(ATTRIBUTES_PREFIX, '')
+                    self._attributes[attribute_name] = template.async_render()
+                else:
+                    setattr(self, property_name, template.async_render())
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace('_', ' ')
                 if ex.args and ex.args[0].startswith(
