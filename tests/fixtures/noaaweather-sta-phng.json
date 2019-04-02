@@ -1,0 +1,352 @@
+{
+    "@context": [
+        "https://raw.githubusercontent.com/geojson/geojson-ld/master/contexts/geojson-base.jsonld",
+        {
+            "wx": "https://api.weather.gov/ontology#",
+            "s": "https://schema.org/",
+            "geo": "http://www.opengis.net/ont/geosparql#",
+            "unit": "http://codes.wmo.int/common/unit/",
+            "@vocab": "https://api.weather.gov/ontology#",
+            "geometry": {
+                "@id": "s:GeoCoordinates",
+                "@type": "geo:wktLiteral"
+            },
+            "city": "s:addressLocality",
+            "state": "s:addressRegion",
+            "distance": {
+                "@id": "s:Distance",
+                "@type": "s:QuantitativeValue"
+            },
+            "bearing": {
+                "@type": "s:QuantitativeValue"
+            },
+            "value": {
+                "@id": "s:value"
+            },
+            "unitCode": {
+                "@id": "s:unitCode",
+                "@type": "@id"
+            },
+            "forecastOffice": {
+                "@type": "@id"
+            },
+            "forecastGridData": {
+                "@type": "@id"
+            },
+            "publicZone": {
+                "@type": "@id"
+            },
+            "county": {
+                "@type": "@id"
+            },
+            "observationStations": {
+                "@container": "@list",
+                "@type": "@id"
+            }
+        }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "https://api.weather.gov/stations/PHNG",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -157.76555999999999,
+                    21.453890000000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHNG",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 4.8768000000000002,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHNG",
+                "name": "Kaneohe, Marine Corps Air Station",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHNL",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -157.94306,
+                    21.327500000000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHNL",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 3.048,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHNL",
+                "name": "Honolulu, Honolulu International Airport",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHHI",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -158.03333000000001,
+                    21.483329999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHHI",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 255.11760000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHHI",
+                "name": "Wheeler Air Force Base / Oahu",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHJR",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -158.06806,
+                    21.308330000000002
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHJR",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 10.058400000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHJR",
+                "name": "Oahu, Kalaeloa Airport",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHMK",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -157.09999999999999,
+                    21.149999999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHMK",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 138.0744,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHMK",
+                "name": "Kaunakakai, Molokai Airport",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHNY",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -156.95139,
+                    20.78556
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHNY",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 398.98320000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHNY",
+                "name": "Lanai City, Lanai Airport",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHJH",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -156.67465999999999,
+                    20.963069900000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHJH",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 64.00800000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHJH",
+                "name": "Lahaina - West Maui",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHOG",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -156.43693999999999,
+                    20.892499900000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHOG",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 15.849600000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHOG",
+                "name": "Kahului, Kahului Airport",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHLI",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -159.34110989999999,
+                    21.983889999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHLI",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 45.110400000000006,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHLI",
+                "name": "Lihue, Lihue Airport",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHBK",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -159.78639000000001,
+                    22.036390000000001
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHBK",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 3.9624000000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHBK",
+                "name": "Kekaha, Pacific Missile Test Facility Barking Sands",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHKO",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -156.05055999999999,
+                    19.740829999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHKO",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 13.106400000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHKO",
+                "name": "Kailua / Kona, Keahole Airport",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHSF",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -155.55000000000001,
+                    19.783329999999999
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHSF",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 1887.0168000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHSF",
+                "name": "Bradshaw Army Air Field / Hawaii",
+                "timeZone": "Pacific/Honolulu"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/PHTO",
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -155.05582989999999,
+                    19.72222
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/stations/PHTO",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "value": 10.972800000000001,
+                    "unitCode": "unit:m"
+                },
+                "stationIdentifier": "PHTO",
+                "name": "Hilo, Hilo International Airport",
+                "timeZone": "Pacific/Honolulu"
+            }
+        }
+    ],
+    "observationStations": [
+        "https://api.weather.gov/stations/PHNG",
+        "https://api.weather.gov/stations/PHNL",
+        "https://api.weather.gov/stations/PHHI",
+        "https://api.weather.gov/stations/PHJR",
+        "https://api.weather.gov/stations/PHMK",
+        "https://api.weather.gov/stations/PHNY",
+        "https://api.weather.gov/stations/PHJH",
+        "https://api.weather.gov/stations/PHOG",
+        "https://api.weather.gov/stations/PHLI",
+        "https://api.weather.gov/stations/PHBK",
+        "https://api.weather.gov/stations/PHKO",
+        "https://api.weather.gov/stations/PHSF",
+        "https://api.weather.gov/stations/PHTO"
+    ]
+}

@@ -150,7 +150,8 @@ UNIT_MAPPING = {
 
 # Sensor types are defined like: Name, type of value,
 #                       preferred metric units, preferred imperial units
-#                       icon, device class, METAR name, METAR units
+#                       icon, device class, METAR name, METAR value unit,
+#                       unit string to use for METAR value
 # where type is one of:
 #   single - single value, for example textDescription or presentWeather
 #   measurement - single measurement as a dictionary of attributes
@@ -165,64 +166,73 @@ VAL_MEASUREMENT = 'm'
 VAL_ARRAY = 'a'
 
 SENSOR_TYPES = {
-    'textDescription': ['Weather', VAL_SINGLE, None, None, None, None, None],
-    'presentWeather': ['Present Weather', VAL_ARRAY, None, None, None, None],
+    'textDescription': ['Weather', VAL_SINGLE, None, None, None, None, None,
+                        None],
+    'presentWeather': ['Present Weather', VAL_ARRAY, None, None, None, None,
+                       None],
     'temperature': ['Temperature', VAL_MEASUREMENT,
                     TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                    'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, 'temp', 'C'],
+                    'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, 'temp', 'C',
+                    'unit:degC'],
     'dewpoint': ['dewpoint', VAL_MEASUREMENT,
                  TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, 'dewpt', 'C'],
+                 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, 'dewpt', 'C',
+                 'unit:degC'],
     'windChill': ['Wind Chill', VAL_MEASUREMENT,
                   TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, None, None],
+                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, None, None,
+                  None],
     'heatIndex': ['Heat Index', VAL_MEASUREMENT,
                   TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, None, None],
+                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, None, None,
+                  None],
     'windSpeed': ['Wind Speed', VAL_MEASUREMENT,
                   SPEED_KM_PER_HOUR, SPEED_MILES_PER_HOUR,
-                  'mdi:weather-windy', None, 'wind_speed', 'MPS'],
+                  'mdi:weather-windy', None, 'wind_speed', 'MPS',
+                  'unit:m_s-1'],
     'windDirection': ['Wind Bearing', VAL_MEASUREMENT,
                       ANGLE_DEGREES, ANGLE_DEGREES,
-                      'mdi:flag-triangle', None, 'wind_dir', None],
+                      'mdi:flag-triangle', None, 'wind_dir', None,
+                      'unit:degree_(angle)'],
     'windGust': ['Wind Gust', VAL_MEASUREMENT,
                  SPEED_KM_PER_HOUR, SPEED_MILES_PER_HOUR, 'mdi:weather-windy',
-                 None, 'wind_gust', 'MPS'],
+                 None, 'wind_gust', 'MPS', 'unit:m_s-1'],
     'barometricPressure': ['Pressure', VAL_MEASUREMENT, PRESSURE_MBAR,
                            PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE,
-                           'press', 'HPA'],
+                           'press', 'HPA', 'unit:Pa'],
     'seaLevelPressure': ['Sea Level Pressure', VAL_MEASUREMENT,
                          PRESSURE_MBAR, PRESSURE_MBAR,
                          None, DEVICE_CLASS_PRESSURE,
-                         'press_sea_level', 'HPA'],
+                         'press_sea_level', 'HPA', 'unit:Pa'],
     'maxTemperatureLast24Hours': ['Maximum Temperature last 24 Hours',
                                   VAL_MEASUREMENT, TEMP_CELSIUS,
                                   TEMP_FAHRENHEIT,
                                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE,
-                                  'max_temp_24hr', 'C'],
+                                  'max_temp_24hr', 'C', 'unit:degC'],
     'minTemperatureLast24Hours': ['Minimum Temperature last 24 Hours',
                                   VAL_MEASUREMENT, TEMP_CELSIUS,
                                   TEMP_FAHRENHEIT,
                                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE,
-                                  'min_temp_24hr', 'C'],
+                                  'min_temp_24hr', 'C', 'unit:degc'],
     'precipitationLastHour': ['Precipitation in last hour', VAL_MEASUREMENT,
                               LENGTH_MILLIMETERS, LENGTH_INCHES,
                               'mdi:cup-water', None,
-                              'precip_1hr', 'M'],
+                              'precip_1hr', 'M', 'unit:m'],
     'precipitationLast3Hours': ['Precipitation in last 3 hours',
                                 VAL_MEASUREMENT, LENGTH_MILLIMETERS,
                                 LENGTH_INCHES, 'mdi:cup-water', None,
-                                'precip_3hr', 'M'],
+                                'precip_3hr', 'M', 'unit:m'],
     'precipitationLast6Hours': ['Precipitation in last 6 hours',
                                 VAL_MEASUREMENT, LENGTH_MILLIMETERS,
                                 LENGTH_INCHES, 'mdi:cup-water', None,
-                                'precip_6hr', 'M'],
+                                'precip_6hr', 'M', 'unit:m'],
     'relativeHumidity': ['Humidity', VAL_MEASUREMENT, RATIO_PERCENT,
                          RATIO_PERCENT, 'mdi:water-percent',
-                         DEVICE_CLASS_HUMIDITY, None, None],
-    'cloudLayers': ['Cloud Layers', VAL_ARRAY, None, None, None, None],
+                         DEVICE_CLASS_HUMIDITY, None, None, None],
+    'cloudLayers': ['Cloud Layers', VAL_ARRAY, None, None, None, None, None],
     'visibility': ['Visibility', VAL_MEASUREMENT,
-                   LENGTH_KILOMETERS, LENGTH_MILES, None, None, 'vis', 'M']
+                   LENGTH_KILOMETERS, LENGTH_MILES, None, None, 'vis', 'M',
+                   'unit:m']
 }
 
 SENSOR_TYPES_SET = set(SENSOR_TYPES)
@@ -256,7 +266,7 @@ async def get_obs_station_list(nws):
         #
         _LOGGER.error("Error getting station list for %s: %s",
                       nws.latlon, status)
-        raise ConfigEntryNotReady
+        return None
     except aiohttp.ClientResponseError as status:
         #
         # Check if the response error is a 404 (not found) or something
@@ -265,7 +275,7 @@ async def get_obs_station_list(nws):
         if status.args[0][0:3] == '404':
             _LOGGER.error("location %s outside of NOAA/NWS scope",
                           nws.latlon)
-            raise ConfigEntryNotReady
+            return None
         #
         # Other errors translate into potential temporary errors
         # from the API server, so indicate that the target is not
@@ -283,12 +293,6 @@ async def get_obs_station_list(nws):
         _LOGGER.error("Error accessing API for %s: %s",
                       nws.latlon, status)
         raise PlatformNotReady
-    #
-    # If we didn't get a station value, there is something wrong
-    # with the configuration
-    #
-    if res is None:
-        raise ConfigEntryNotReady
     #
     # Return the list of stations.
     #
@@ -318,7 +322,7 @@ async def get_obs_for_station(nws, errorstate):
     return res
 
 
-def _get_metar_value(metar, variable):
+def get_metar_value(metar, variable):
     """Return a variable from the METAR record.
 
     This returns the VAL_MEASUREMENT dict that corresponds to
@@ -330,7 +334,7 @@ def _get_metar_value(metar, variable):
 
     metaritem = SENSOR_TYPES[variable][6]
     if metaritem is None:
-        return None 
+        return None
     metarunit = SENSOR_TYPES[variable][7]
     if not hasattr(metar, metaritem):
         _LOGGER.debug("No METAR item for %s(%s)", variable, metaritem)
@@ -346,29 +350,26 @@ def _get_metar_value(metar, variable):
     # We have some value from the METAR record.  Create the
     # dict with 'value', 'unitCode' and 'qualityControl' items
     #
-    metarvalue = getattr(metar, metaritem).value(units=metarunit)
+    if metarunit is not None:
+        metarvalue = getattr(metar, metaritem).value(units=metarunit)
+    else:
+        metarvalue = getattr(metar, metaritem).value()
     res = dict()
     res['value'] = metarvalue
     #
     # Deal with units (and one conversion)
     #
-    if metarunit == 'C':
-        res['unitCode'] = 'unit:degC'
-    if metarunit == 'M':
-        res['unitCode'] = 'unit:m'
+    res['unitCode'] = SENSOR_TYPES[variable][8]
     if metarunit == 'HPA':
         #
         # Special case for pressure, since these normally
         # come back from NOAA/NWS in Pascals, which the Metar
         # object doesn't handle.  So, convert from HPa to Pa
         #
-        res['value'] = metarvalue * 10
-        res['unitCode'] = 'unit:Pa'
-    if metarunit == 'MPS':
-        res['unitCode'] = 'unit:m_s-1'
+        res['value'] = metarvalue * 100
 
     res['qualityControl'] = 'qc:S'
-    _LOGGER.debug("_get_metar_value returning %s", res)
+    _LOGGER.debug("get_metar_value returning %s", res)
     return res
 
 
@@ -856,14 +857,17 @@ class NOAACurrentData(Entity):
         # individual measurement item.
         #
         if 'rawMessage' in obsprop:
-            #
-            # parse the METAR message so that we can use the values
-            # if not in individual measurement item.
-            #
-            try:
-                metar = Metar.Metar(obsprop['rawMessage'])
-            except Metar.ParserError:
+            if obsprop['rawMessage'] is None:
                 metar = None
+            else:
+                #
+                # parse the METAR message so that we can use the values
+                # if not in individual measurement item.
+                #
+                try:
+                    metar = Metar.Metar(obsprop['rawMessage'])
+                except Metar.ParserError:
+                    metar = None
 
         #
         # Now loop through all observation values returned and set the
@@ -920,7 +924,7 @@ class NOAACurrentData(Entity):
                     # check if we have a metar value
                     if metar is None:
                         continue
-                    res = _get_metar_value(metar, variable)
+                    res = get_metar_value(metar, variable)
                     if res is not None:
                         _LOGGER.warning(
                             "using Metar value %s for %s instead of %s",
