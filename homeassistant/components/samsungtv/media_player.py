@@ -295,4 +295,3 @@ class SamsungTVDevice(MediaPlayerDevice):
             return
 
         await self.hass.async_add_job(self.send_key, SOURCES[source])
-        await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
