@@ -7,7 +7,8 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.event import call_later
 
 from .const import (
-    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, PAIRING_FILE, HOMEKIT_DIR
+    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_DEVICES,
+    PAIRING_FILE, HOMEKIT_DIR
 )
 
 
@@ -75,6 +76,8 @@ class HKDevice():
         self.pairing_lock = asyncio.Lock(loop=hass.loop)
 
         self.pairing = self.controller.pairings.get(hkid)
+
+        hass.data[KNOWN_DEVICES][hkid] = self
 
         if self.pairing is not None:
             self.accessory_setup()
