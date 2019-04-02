@@ -135,10 +135,11 @@ class Schedule:
         for rule in loaded_rules:
             if dt.parse_time(rule['start']) >= dt.parse_time(rule['end']):
                 _LOGGER.error("Rule end is before start")
-                return None
-            self.rules.append(
-                Rule(rule))
+            else:
+                self.rules.append(
+                    Rule(rule))
         self.update_rule_listeners()
+        self.exec_schedule(dt.now())
 
     async def async_load_rules(self):
         """Load rules from storage."""
@@ -147,8 +148,8 @@ class Schedule:
             self.generate_defaults()
             await self.async_save_rules()
         else:
-            self.load_rules_dict(loaded_rules["rules"])
             self.defaults = loaded_rules["defaults"]
+            self.load_rules_dict(loaded_rules["rules"])
 
     def update_rule_listeners(self):
         """Add listeners for all times that have rule changes."""
