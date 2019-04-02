@@ -77,7 +77,7 @@ async def gen_storage(hass, rules=[], defaults=TEST_DEFAULTS_BASE):
 
 
 @pytest.fixture
-async def mock_services(hass):
+def mock_services(hass):
     """Mock the services used by the schedule."""
     calls_set_temp = async_mock_service(
         hass, DOMAIN_CLIMATE, SERVICE_SET_TEMP)
