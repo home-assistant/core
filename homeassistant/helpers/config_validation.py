@@ -171,11 +171,6 @@ def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     return value if isinstance(value, list) else [value]
 
 
-def ensure_none(value: Any) -> Any:
-    """Ensure a falsey value is None."""
-    return value if value else None
-
-
 def entity_id(value: Any) -> str:
     """Validate Entity ID."""
     value = string(value).lower()
@@ -352,6 +347,11 @@ def positive_timedelta(value: timedelta) -> timedelta:
     if value < timedelta(0):
         raise vol.Invalid('Time period should be positive')
     return value
+
+
+def remove_falsy(value: Sequence[T]) -> Sequence[T]:
+    """Remove falsy values from a list."""
+    return [v for v in value if v]
 
 
 def service(value):

@@ -51,7 +51,7 @@ PERSON_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): vol.All(
-        cv.ensure_none, cv.ensure_list, vol.Any([PERSON_SCHEMA], []))
+        cv.ensure_list, cv.remove_falsy, vol.Any([PERSON_SCHEMA], []))
 }, extra=vol.ALLOW_EXTRA)
 
 _UNDEF = object()
