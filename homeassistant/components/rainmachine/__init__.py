@@ -4,7 +4,6 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.util import authorized_service_call
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_IP_ADDRESS, CONF_PASSWORD,
@@ -12,6 +11,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_SWITCHES)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.auth import authorized_service_call
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
