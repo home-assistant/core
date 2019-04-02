@@ -21,6 +21,7 @@ omit =
     homeassistant/components/alarmdecoder/*
     homeassistant/components/alarmdotcom/alarm_control_panel.py
     homeassistant/components/alpha_vantage/sensor.py
+    homeassistant/components/amazon_polly/tts.py
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
@@ -49,6 +50,7 @@ omit =
     homeassistant/components/aws_lambda/notify.py
     homeassistant/components/aws_sns/notify.py
     homeassistant/components/aws_sqs/notify.py
+    homeassistant/components/baidu/tts.py
     homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
@@ -93,6 +95,7 @@ omit =
     homeassistant/components/clicksend_tts/notify.py
     homeassistant/components/cloudflare/*
     homeassistant/components/cmus/media_player.py
+    homeassistant/components/co2signal/*
     homeassistant/components/coinbase/*
     homeassistant/components/comed_hourly_pricing/sensor.py
     homeassistant/components/comfoconnect/*
@@ -342,6 +345,7 @@ omit =
     homeassistant/components/meteo_france/*
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
+    homeassistant/components/microsoft/tts.py
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/device_tracker.py
     homeassistant/components/mill/climate.py
@@ -423,6 +427,7 @@ omit =
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/media_player.py
     homeassistant/components/pi_hole/sensor.py
+    homeassistant/components/picotts/tts.py
     homeassistant/components/piglow/light.py
     homeassistant/components/pilight/*
     homeassistant/components/ping/binary_sensor.py
@@ -606,10 +611,6 @@ omit =
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/*
     homeassistant/components/travisci/sensor.py
-    homeassistant/components/tts/amazon_polly.py
-    homeassistant/components/tts/baidu.py
-    homeassistant/components/tts/microsoft.py
-    homeassistant/components/tts/picotts.py
     homeassistant/components/tuya/*
     homeassistant/components/twilio_call/notify.py
     homeassistant/components/twilio_sms/notify.py
@@ -651,6 +652,7 @@ omit =
     homeassistant/components/wirelesstag/*
     homeassistant/components/worldtidesinfo/sensor.py
     homeassistant/components/worxlandroid/sensor.py
+    homeassistant/components/wunderlist/*
     homeassistant/components/x10/light.py
     homeassistant/components/xbox_live/sensor.py
     homeassistant/components/xeoma/camera.py
@@ -664,7 +666,7 @@ omit =
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yamaha/media_player.py
     homeassistant/components/yamaha_musiccast/media_player.py
-    homeassistant/components/yeelight/light.py
+    homeassistant/components/yeelight/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
     homeassistant/components/zabbix/*
