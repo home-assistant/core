@@ -223,7 +223,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         ))
 
         if self._attribute_templates is not None:
-            templates.update({'{}{}'.format(ATTRIBUTES_PREFIX,key): value
+            templates.update({'{}{}'.format(ATTRIBUTES_PREFIX, key): value
                              for key, value
                              in self._attribute_templates.items()})
 
@@ -233,7 +233,8 @@ class BinarySensorTemplate(BinarySensorDevice):
 
             try:
                 if property_name.startswith(ATTRIBUTES_PREFIX):
-                    attribute_name = property_name.replace(ATTRIBUTES_PREFIX, '')
+                    attribute_name = property_name.replace(ATTRIBUTES_PREFIX,
+                                                           '')
                     self._attributes[attribute_name] = template.async_render()
                 else:
                     setattr(self, property_name, template.async_render())
