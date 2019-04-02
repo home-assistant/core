@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     name = config[CONF_NAME]
     host = config[CONF_HOST]
-    path = config.get(CONF_PATH)
+    path = config[CONF_PATH]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     token = config.get(CONF_TOKEN)
