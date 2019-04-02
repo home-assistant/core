@@ -74,7 +74,7 @@ async def test_create_entry_with_discovery(hass, controller):
         'udn': 'uuid:e61de70c-2250-1c22-0080-0005cdf512be',
         'upnp_device_type': 'urn:schemas-denon-com:device:AiosDevice:1'
     }
-    result = await flow.async_step_user(data)
+    result = await flow.async_step_discovery(data)
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['title'] == 'Controller (127.0.0.1)'
     assert result['data'] == {'host': '127.0.0.1'}
