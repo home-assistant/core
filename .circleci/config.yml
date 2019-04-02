@@ -213,18 +213,26 @@ workflows:
   build:
     jobs:
       - static-check
-      - pre-install-all-requirements
+      - pre-install-all-requirements:
+          requires:
+            - static-check
       - pylint:
           requires:
             - pre-install-all-requirements
       - pre-test:
           name: pre-test 3.5.5
+          requires:
+            - static-check
           python: 3.5.5-stretch
       - pre-test:
           name: pre-test 3.6
+          requires:
+            - static-check
           python: 3.6-stretch
       - pre-test:
           name: pre-test 3.7
+          requires:
+            - static-check
           python: 3.7-stretch
       - test:
           name: test 3.5.5
