@@ -1,6 +1,4 @@
-"""
-Support for interfacing with CasaTunes devices.
-"""
+"""Support for interfacing with CasaTunes devices."""
 import logging
 import voluptuous as vol
 
@@ -19,13 +17,20 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['casatunes==0.0.4']
+REQUIREMENTS = ['casatunes==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'CasaTunes'
 DEFAULT_PORT = 8735
 DEFAULT_TIMEOUT = 10
+
+STATUS_TO_STATES = {
+    0: STATE_IDLE,
+    1: STATE_PAUSED,
+    2: STATE_PLAYING,
+    3: STATE_ON
+}
 
 SUPPORT_CT_ZONE = SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF | \
                   SUPPORT_TURN_ON | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
@@ -64,11 +69,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         _LOGGER.error("Zones response is incorrect")
         raise PlatformNotReady
 
-    for zone in zones:
-        devices.append(CasaTunesZone(zone))
+    devices.extend([CasaTunesZone(zone) for zone in zones])
 
-    for source in sources:
-        devices.append(CasaTunesPlayer(source))
+    devices.extend([CasaTunesPlayer(source) for source in sources])
 
     async_add_entities(devices)
 
@@ -137,14 +140,7 @@ class CasaTunesPlayer(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        status_states = {
-            0: STATE_IDLE,
-            1: STATE_PAUSED,
-            2: STATE_PLAYING,
-            3: STATE_ON
-        }
-
-        return status_states.get(self._player.status, STATE_IDLE)
+        return STATUS_TO_STATES.get(self._player.status, None)
 
     @property
     def supported_features(self):
@@ -163,7 +159,7 @@ class CasaTunesPlayer(MediaPlayerDevice):
 
     async def async_media_seek(self, position):
         """Send seek command."""
-        await self._player.seek(position)
+        await self._player.seek(int(position))
 
     async def async_media_previous_track(self):
         """Send previous track command."""
