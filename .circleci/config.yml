@@ -10,7 +10,7 @@ executors:
     parameters:
       tag:
         type: string
-        default: latest  
+        default: latest
     docker:
       - image: circleci/python:<< parameters.tag >>
       - image: circleci/buildpack-deps:stretch
@@ -53,6 +53,7 @@ commands:
             python3 -m venv venv
             . venv/bin/activate
             pip install -q -U pip
+            pip install -q -U setuptools
             <<# parameters.all >>pip install -q --progress-bar off -r requirements_all.txt -c homeassistant/package_constraints.txt<</ parameters.all>>
             <<# parameters.test >>pip install -q --progress-bar off -r requirements_test.txt -c homeassistant/package_constraints.txt<</ parameters.test>>
             <<# parameters.test_all >>pip install -q --progress-bar off -r requirements_test_all.txt -c homeassistant/package_constraints.txt<</ parameters.test_all>>
@@ -107,27 +108,27 @@ jobs:
   pre-install-all-requirements:
     executor:
       name: python
-      tag: 3.7-stretch
+      tag: 3.5.5-stretch
 
     steps:
       - checkout
       - docker-prereqs
       - install-requirements:
-          python: 3.7-stretch
+          python: 3.5.5-stretch
           all: true
           test: true
 
   pylint:
     executor:
       name: python
-      tag: 3.7-stretch
+      tag: 3.5.5-stretch
     parallelism: 2
 
     steps:
       - checkout
       - docker-prereqs
       - install-requirements:
-          python: 3.7-stretch
+          python: 3.5.5-stretch
           all: true
           test: true
       - install
