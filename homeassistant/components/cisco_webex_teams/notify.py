@@ -12,11 +12,11 @@ REQUIREMENTS = ['webexteamssdk==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ROOMID = 'room_id'
+CONF_ROOM_ID = 'room_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
-    vol.Required(CONF_ROOMID): cv.string,
+    vol.Required(CONF_ROOM_ID): cv.string,
 })
 
 
@@ -24,7 +24,7 @@ def get_service(hass, config, discovery_info=None):
     """Get the CiscoWebexTeams notification service."""
     return CiscoWebexTeamsNotificationService(
         config[CONF_TOKEN],
-        config[CONF_ROOMID])
+        config[CONF_ROOM_ID])
 
 
 class CiscoWebexTeamsNotificationService(BaseNotificationService):
