@@ -1,7 +1,6 @@
 """Support for RainMachine devices."""
 import logging
 from datetime import timedelta
-from functools import wraps
 
 import voluptuous as vol
 
@@ -128,7 +127,6 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.ensure_list, [CONTROLLER_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
-
 
 
 async def async_setup(hass, config):
