@@ -23,6 +23,7 @@ omit =
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
+    homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/*
     homeassistant/components/androidtv/*
     homeassistant/components/anel_pwrctrl/switch.py

@@ -75,19 +75,6 @@ class AmcrestSensor(Entity):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Pulling data from %s sensor.", self._name)
 
-        try:
-            version, build_date = self._camera.software_information
-            self._attrs['Build Date'] = build_date.split('=')[-1]
-            self._attrs['Version'] = version.split('=')[-1]
-        except ValueError:
-            self._attrs['Build Date'] = 'Not Available'
-            self._attrs['Version'] = 'Not Available'
-
-        try:
-            self._attrs['Serial Number'] = self._camera.serial_number
-        except ValueError:
-            self._attrs['Serial Number'] = 'Not Available'
-
         if self._sensor_type == 'motion_detector':
             self._state = self._camera.is_motion_detected
             self._attrs['Record Mode'] = self._camera.record_mode

@@ -10,10 +10,6 @@ DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_POWER_CONSUMPTION = 'power_consumption'
-ATTR_ENERGIE_COUNTER = 'energie_counter'
-ATTR_PROFILE_MODE = 'profile_mode'
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
