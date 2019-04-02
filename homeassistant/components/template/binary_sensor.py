@@ -227,6 +227,7 @@ class BinarySensorTemplate(BinarySensorDevice):
                                   for key, value
                                   in self._attribute_templates.items()})
 
+
         for property_name, template in templates.items():
             if template is None:
                 continue
@@ -234,6 +235,7 @@ class BinarySensorTemplate(BinarySensorDevice):
             try:
                 if property_name.startswith(ATTRIBUTES_PREFIX):
                     attribute_name = property_name.replace(ATTRIBUTES_PREFIX, '')
+
                     self._attributes[attribute_name] = template.async_render()
                 else:
                     setattr(self, property_name, template.async_render())
