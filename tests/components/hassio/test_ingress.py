@@ -136,7 +136,8 @@ async def test_ingress_request_delete(
 @pytest.mark.parametrize(
     'build_type', [
         ("a3_vl", "test/beer/ws"), ("core", "ws.php"),
-        ("local", "panel/config/stream"), ("jk_921", "hulk")
+        ("local", "panel/config/stream"), ("jk_921", "hulk"),
+        ("demo", "ws/connection?id=9&token=SJAKWS283")
     ])
 async def test_ingress_websocket(
         hassio_client, build_type, aioclient_mock):

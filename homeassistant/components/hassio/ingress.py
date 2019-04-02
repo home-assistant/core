@@ -71,8 +71,13 @@ class HassIOIngress(HomeAssistantView):
         ws_server = web.WebSocketResponse()
         await ws_server.prepare(request)
 
+        # Preparing
         url = self._create_url(addon, path)
         source_header = _init_header(request, addon)
+
+        # Support GET query
+        if request.query_string:
+            url = "{}?{}".format(url, request.query_string)
 
         # Start proxy
         async with self._websession.ws_connect(
