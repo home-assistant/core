@@ -1238,7 +1238,7 @@ pypollencom==2.2.3
 pyps4-homeassistant==0.5.2
 
 # homeassistant.components.qwikswitch
-pyqwikswitch==0.8
+pyqwikswitch==0.93
 
 # homeassistant.components.nmbs.sensor
 pyrail==0.0.3
