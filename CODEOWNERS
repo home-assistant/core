@@ -73,8 +73,6 @@ homeassistant/components/arest/* @fabaff
 homeassistant/components/asuswrt/device_tracker.py @kennedyshead
 homeassistant/components/automatic/device_tracker.py @armills
 homeassistant/components/axis/* @kane610
-homeassistant/components/*/arest.py @fabaff
-homeassistant/components/*/axis.py @kane610
 homeassistant/components/azuredns/* @Cloudenius
 
 # B

@@ -44,7 +44,6 @@ omit =
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/asuswrt/device_tracker.py
     homeassistant/components/august/*
-    homeassistant/components/axis/*
     homeassistant/components/azuredns/*
     homeassistant/components/automatic/device_tracker.py
     homeassistant/components/avion/light.py
