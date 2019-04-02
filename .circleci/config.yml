@@ -172,13 +172,14 @@ jobs:
       - install
 
       - run:
-          name: run tests
+          name: run tests with code coverage
           command: |
             . venv/bin/activate
+            CC_SWITCH="--cov --cov-report="
             TESTFILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
-            if [ -z "$CODE_COVERAGE" ]; then CC_SWITCH=""; else CC_SWITCH="--cov --cov-report html:htmlcov"; fi
             pytest --timeout=9 --duration=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH -- ${TESTFILES}
             script/check_dirty
+            codecov
 
       - store_test_results:
           path: test-reports
