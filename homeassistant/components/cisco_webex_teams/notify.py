@@ -35,6 +35,8 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
         from webexteamssdk import WebexTeamsAPI
         self.room = room
         self.client = WebexTeamsAPI(access_token=token)
+        # List all rooms which validates the token
+        # pylint:disable=expression-not-assigned
         [room for room in self.client.rooms.list()]
 
     def send_message(self, message="", **kwargs):
