@@ -741,7 +741,7 @@ nessclient==0.9.15
 netdata==0.1.2
 
 # homeassistant.components.discovery
-netdisco==2.5.0
+netdisco==2.6.0
 
 # homeassistant.components.neurio_energy.sensor
 neurio==0.3.1
