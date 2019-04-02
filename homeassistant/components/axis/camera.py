@@ -52,8 +52,7 @@ class AxisCamera(MjpegCamera):
     async def async_added_to_hass(self):
         """Subscribe camera events."""
         self.unsub_dispatcher.append(async_dispatcher_connect(
-            self.hass, 'axis_{}_new_ip'.format(self.device.name),
-            self._new_ip))
+            self.hass, self.device.event_new_address, self._new_address))
         self.unsub_dispatcher.append(async_dispatcher_connect(
             self.hass, self.device.event_reachable, self.update_callback))
 
@@ -67,10 +66,10 @@ class AxisCamera(MjpegCamera):
         """Return True if device is available."""
         return self.device.available
 
-    def _new_ip(self, host):
-        """Set new IP for video stream."""
-        self._mjpeg_url = AXIS_VIDEO.format(host, self.port)
-        self._still_image_url = AXIS_IMAGE.format(host, self.port)
+    def _new_address(self):
+        """Set new device address for video stream."""
+        self._mjpeg_url = AXIS_VIDEO.format(self.device.host, self.port)
+        self._still_image_url = AXIS_IMAGE.format(self.device.host, self.port)
 
     @property
     def unique_id(self):
