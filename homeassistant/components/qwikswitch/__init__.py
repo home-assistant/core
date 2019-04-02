@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyqwikswitch==0.8']
+REQUIREMENTS = ['pyqwikswitch==0.93']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,7 +119,8 @@ class QSToggleEntity(QSEntity):
 async def async_setup(hass, config):
     """Qwiskswitch component setup."""
     from pyqwikswitch.async_ import QSUsb
-    from pyqwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, QSType, SENSORS
+    from pyqwikswitch.qwikswitch import (
+        CMD_BUTTONS, QS_CMD, QS_ID, QSType, SENSORS)
 
     # Add cmd's to in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
