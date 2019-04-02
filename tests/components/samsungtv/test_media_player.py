@@ -323,6 +323,15 @@ async def test_play_media(hass, samsung_mock):
         assert len(sleeps) == 3
 
 
+async def test_select_source(hass, samsung_mock):
+    """Test for select_source."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.send_key = mock.Mock()
+    await device.async_select_source("HDMI")
+    exp = [call("KEY_HDMI")]
+    assert device.send_key.call_args_list == exp
+
+
 async def test_play_media_invalid_type(hass, samsung_mock):
     """Test for play_media with invalid media type."""
     url = "https://example.com"
