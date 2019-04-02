@@ -117,7 +117,9 @@ class UnifiVideoCamera(Camera):
         for channel in self._caminfo['channels']:
             if channel['isRtspEnabled']:
                 stream = channel['rtspUris'][0].split(':')[2]
-                return 'rtsp://{}:{}'.format(self._caminfo['controllerHostAddress'], stream)
+                return 'rtsp://{}:{}'.format(
+                    self._caminfo['controllerHostAddress'],
+                    stream)
             return None
 
     @property
