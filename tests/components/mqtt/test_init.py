@@ -625,11 +625,11 @@ async def test_setup_fails_if_no_connect_broker(hass):
 async def test_setup_throws_ConfigEntryNotReady_if_no_connect_broker(hass):
     """Test for setup failure if connection to broker is missing."""
 
-    def raise_(ex):
-        raise ex
+    def raise_os_error_mock():
+        raise Exception('OSError')
 
     with mock.patch('paho.mqtt.client.Client') as mock_client:
-        mock_client().connect = lambda *args: raise_(Exception('OSError'))
+        mock_client().connect = lambda *args: raise_os_error_mock
         with pytest.raises(ConfigEntryNotReady):
             await mqtt.async_setup_entry(hass, {})
 
