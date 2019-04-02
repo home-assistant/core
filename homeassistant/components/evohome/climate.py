@@ -81,7 +81,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 
     # evohomeclient has exposed no means of accessing non-default location
     # (i.e. loc_idx > 0) other than using a protected member, such as below
-    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]     # noqa: E501; pylint: disable=protected-access
+    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
     _LOGGER.debug(
         "Found Controller, id=%s [%s], name=%s (location_idx=%s)",
@@ -522,7 +522,7 @@ class EvoController(EvoClimateDevice):
     def _set_operation_mode(self, operation_mode):
         try:
             import evohomeclient2
-            self._obj._set_status(operation_mode)                                # noqa: E501; pylint: disable=protected-access
+            self._obj._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
         except (requests.exceptions.RequestException,
                 evohomeclient2.AuthenticationError) as err:
             self._handle_exception(err)
