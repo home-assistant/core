@@ -22,7 +22,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the CiscoWebexTeams notification service."""
-
     from webexteamssdk import WebexTeamsAPI
     client = WebexTeamsAPI(access_token=config[CONF_TOKEN])
     # Validate the token by calling an api
