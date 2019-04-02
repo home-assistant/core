@@ -4,7 +4,6 @@ Support for Rflink sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rflink/
 """
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -104,8 +103,8 @@ class RflinkSensor(RflinkDevice):
     """Representation of a Rflink sensor."""
 
     def __init__(self, device_id, sensor_type, unit_of_measurement,
-                expire_after=0, force_update=None, initial_event=None,
-                **kwargs):
+                 expire_after=0, force_update=None, initial_event=None,
+                 **kwargs):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
         self._unit_of_measurement = unit_of_measurement
@@ -177,7 +176,6 @@ class RflinkSensor(RflinkDevice):
         """Return possible sensor specific icon."""
         if self._sensor_type in SENSOR_ICONS:
             return SENSOR_ICONS[self._sensor_type]
-
 
     @property
     def force_update(self):
