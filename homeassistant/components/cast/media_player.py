@@ -931,7 +931,7 @@ class CastDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send previous track command."""
         media_controller = self._media_controller()
-        media_controller.queue_next()
+        media_controller.queue_prev()
 
     def media_next_track(self):
         """Send next track command."""
