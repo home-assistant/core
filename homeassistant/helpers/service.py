@@ -333,9 +333,10 @@ async def _handle_service_platform_call(func, data, entities, context):
 
 @bind_hass
 @ha.callback
-def async_register_admin_service(hass: typing.HomeAssistantType, domain: str,
-                                 service: str, service_func: Callable,
-                                 schema: vol.Schema) -> None:
+def async_register_admin_service(
+        hass: typing.HomeAssistantType, domain: str,
+        service: str, service_func: Callable,
+        schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA)) -> None:
     """Register a service that requires admin access."""
     @wraps(service_func)
     async def admin_handler(call):
