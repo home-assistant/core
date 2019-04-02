@@ -3,11 +3,12 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.hue.hue_sensor import (
-    GenericZLLSensor, async_setup_entry)
+    GenericZLLSensor, async_setup_entry as shared_async_setup_entry)
 
 
-# No-op to trick static code analysis tools.
-async_setup_entry = async_setup_entry
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    await shared_async_setup_entry(
+        hass, config_entry, async_add_entities)
 
 
 class HueLightLevel(GenericZLLSensor, Entity):
