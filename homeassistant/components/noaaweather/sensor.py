@@ -94,7 +94,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady, PlatformNotReady)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pynws==0.5']
+REQUIREMENTS = ['pynws==0.5', 'metar==1.7.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,14 +150,14 @@ UNIT_MAPPING = {
 
 # Sensor types are defined like: Name, type of value,
 #                       preferred metric units, preferred imperial units
-#                       icon, device class
+#                       icon, device class, METAR name, METAR units
 # where type is one of:
 #   single - single value, for example textDescription or presentWeather
 #   measurement - single measurement as a dictionary of attributes
 #                   'unitCode' and 'value' attributes expected
 #   array - array of dictionaries.  At this point only case seen
 #           is for cloudLayers, with the items 'base':['value','unitCode']
-#           and 'amount'
+#           and 'amount', and with presentWeather.
 # define names for value types:
 
 VAL_SINGLE = 's'
@@ -165,57 +165,64 @@ VAL_MEASUREMENT = 'm'
 VAL_ARRAY = 'a'
 
 SENSOR_TYPES = {
-    'textDescription': ['Weather', VAL_SINGLE, None, None, None, None],
-    'presentWeather': ['Present Weather', VAL_SINGLE, None, None, None, None],
+    'textDescription': ['Weather', VAL_SINGLE, None, None, None, None, None],
+    'presentWeather': ['Present Weather', VAL_ARRAY, None, None, None, None],
     'temperature': ['Temperature', VAL_MEASUREMENT,
                     TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                    'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
+                    'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, 'temp', 'C'],
     'dewpoint': ['dewpoint', VAL_MEASUREMENT,
                  TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
+                 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, 'dewpt', 'C'],
     'windChill': ['Wind Chill', VAL_MEASUREMENT,
                   TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
+                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, None, None],
     'heatIndex': ['Heat Index', VAL_MEASUREMENT,
                   TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
+                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, None, None],
     'windSpeed': ['Wind Speed', VAL_MEASUREMENT,
                   SPEED_KM_PER_HOUR, SPEED_MILES_PER_HOUR,
-                  'mdi:weather-windy', None],
+                  'mdi:weather-windy', None, 'wind_speed', 'MPS'],
     'windDirection': ['Wind Bearing', VAL_MEASUREMENT,
                       ANGLE_DEGREES, ANGLE_DEGREES,
-                      'mdi:flag-triangle', None],
+                      'mdi:flag-triangle', None, 'wind_dir', None],
     'windGust': ['Wind Gust', VAL_MEASUREMENT,
                  SPEED_KM_PER_HOUR, SPEED_MILES_PER_HOUR, 'mdi:weather-windy',
-                 None],
+                 None, 'wind_gust', 'MPS'],
     'barometricPressure': ['Pressure', VAL_MEASUREMENT, PRESSURE_MBAR,
-                           PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE],
+                           PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE,
+                           'press', 'HPA'],
     'seaLevelPressure': ['Sea Level Pressure', VAL_MEASUREMENT,
                          PRESSURE_MBAR, PRESSURE_MBAR,
-                         None, DEVICE_CLASS_PRESSURE],
+                         None, DEVICE_CLASS_PRESSURE,
+                         'press_sea_level', 'HPA'],
     'maxTemperatureLast24Hours': ['Maximum Temperature last 24 Hours',
                                   VAL_MEASUREMENT, TEMP_CELSIUS,
                                   TEMP_FAHRENHEIT,
-                                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
+                                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE,
+                                  'max_temp_24hr', 'C'],
     'minTemperatureLast24Hours': ['Minimum Temperature last 24 Hours',
                                   VAL_MEASUREMENT, TEMP_CELSIUS,
                                   TEMP_FAHRENHEIT,
-                                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
+                                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE,
+                                  'min_temp_24hr', 'C'],
     'precipitationLastHour': ['Precipitation in last hour', VAL_MEASUREMENT,
                               LENGTH_MILLIMETERS, LENGTH_INCHES,
-                              'mdi:cup-water', None],
+                              'mdi:cup-water', None,
+                              'precip_1hr', 'M'],
     'precipitationLast3Hours': ['Precipitation in last 3 hours',
                                 VAL_MEASUREMENT, LENGTH_MILLIMETERS,
-                                LENGTH_INCHES, 'mdi:cup-water', None],
+                                LENGTH_INCHES, 'mdi:cup-water', None,
+                                'precip_3hr', 'M'],
     'precipitationLast6Hours': ['Precipitation in last 6 hours',
                                 VAL_MEASUREMENT, LENGTH_MILLIMETERS,
-                                LENGTH_INCHES, 'mdi:cup-water', None],
+                                LENGTH_INCHES, 'mdi:cup-water', None,
+                                'precip_6hr', 'M'],
     'relativeHumidity': ['Humidity', VAL_MEASUREMENT, RATIO_PERCENT,
                          RATIO_PERCENT, 'mdi:water-percent',
-                         DEVICE_CLASS_HUMIDITY],
+                         DEVICE_CLASS_HUMIDITY, None, None],
     'cloudLayers': ['Cloud Layers', VAL_ARRAY, None, None, None, None],
     'visibility': ['Visibility', VAL_MEASUREMENT,
-                   LENGTH_KILOMETERS, LENGTH_MILES, None, None]
+                   LENGTH_KILOMETERS, LENGTH_MILES, None, None, 'vis', 'M']
 }
 
 SENSOR_TYPES_SET = set(SENSOR_TYPES)
@@ -308,6 +315,60 @@ async def get_obs_for_station(nws, errorstate):
             _LOGGER.error("Error getting observations for station %s - %s",
                           nws.station, status)
         return None
+    return res
+
+
+def _get_metar_value(metar, variable):
+    """Return a variable from the METAR record.
+
+    This returns the VAL_MEASUREMENT dict that corresponds to
+    the value provided for the variable in the METAR record that
+    was found in the observation.  If there is no value, it will return
+    None.
+    """
+    _LOGGER.debug("Checking for METAR value for %s in %s", variable, metar)
+
+    metaritem = SENSOR_TYPES[variable][6]
+    if metaritem is None:
+        return None 
+    metarunit = SENSOR_TYPES[variable][7]
+    if not hasattr(metar, metaritem):
+        _LOGGER.debug("No METAR item for %s(%s)", variable, metaritem)
+        return None
+    #
+    # Ensure there is a value
+    #
+    if not hasattr(getattr(metar, metaritem), 'value'):
+        _LOGGER.debug("No metar item %s for %s", metaritem, variable)
+        return None
+
+    #
+    # We have some value from the METAR record.  Create the
+    # dict with 'value', 'unitCode' and 'qualityControl' items
+    #
+    metarvalue = getattr(metar, metaritem).value(units=metarunit)
+    res = dict()
+    res['value'] = metarvalue
+    #
+    # Deal with units (and one conversion)
+    #
+    if metarunit == 'C':
+        res['unitCode'] = 'unit:degC'
+    if metarunit == 'M':
+        res['unitCode'] = 'unit:m'
+    if metarunit == 'HPA':
+        #
+        # Special case for pressure, since these normally
+        # come back from NOAA/NWS in Pascals, which the Metar
+        # object doesn't handle.  So, convert from HPa to Pa
+        #
+        res['value'] = metarvalue * 10
+        res['unitCode'] = 'unit:Pa'
+    if metarunit == 'MPS':
+        res['unitCode'] = 'unit:m_s-1'
+
+    res['qualityControl'] = 'qc:S'
+    _LOGGER.debug("_get_metar_value returning %s", res)
     return res
 
 
@@ -762,6 +823,7 @@ class NOAACurrentData(Entity):
         return 0
 
     def _process_obs(self, obsprop):
+        from metar import Metar
         #
         # Get the timestamp of the report, if any
         #
@@ -787,6 +849,21 @@ class NOAACurrentData(Entity):
         # Remember time this update was from
         #
         self.lastupdate = thisupdate
+        #
+        # Check if observation has a "rawMessage" attribute.  This contains
+        # the METAR format record, and may have valid information
+        # for some of the measurements that are not returned in the
+        # individual measurement item.
+        #
+        if 'rawMessage' in obsprop:
+            #
+            # parse the METAR message so that we can use the values
+            # if not in individual measurement item.
+            #
+            try:
+                metar = Metar.Metar(obsprop['rawMessage'])
+            except Metar.ParserError:
+                metar = None
 
         #
         # Now loop through all observation values returned and set the
@@ -839,7 +916,16 @@ class NOAACurrentData(Entity):
             if 'qualityControl' in obsprop[variable]:
                 qcval = obsprop[variable]['qualityControl']
                 if qcval == 'qc:Z':
-                    # No update of value
+                    # No update of value in individual entry
+                    # check if we have a metar value
+                    if metar is None:
+                        continue
+                    res = _get_metar_value(metar, variable)
+                    if res is not None:
+                        _LOGGER.warning(
+                            "using Metar value %s for %s instead of %s",
+                            res, variable, obsprop[variable])
+                        self.data[variable] = res
                     continue
                 if qcval in ('qc:S', 'qc:C'):
                     # Valid value, just update data.
@@ -909,7 +995,7 @@ class NOAACurrentData(Entity):
                 #
                 # Other items, check for qc:V
                 #
-                if qcval == "qc:V":
+                if qcval == 'qc:V':
                     if 'value' in obsprop[variable]:
                         if obsprop[variable]['value'] is not None:
                             self.data[variable] = obsprop[variable]
