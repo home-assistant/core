@@ -624,7 +624,6 @@ async def test_setup_fails_if_no_connect_broker(hass):
 
 async def test_setup_throws_ConfigEntryNotReady_if_no_connect_broker(hass):
     """Test for setup failure if connection to broker is missing."""
-
     def raise_os_error_mock():
         raise Exception('OSError')
 
