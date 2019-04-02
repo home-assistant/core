@@ -80,9 +80,9 @@ def setup(hass, hass_config):
     except evohomeclient2.AuthenticationError as err:
         _LOGGER.error(
             "setup(): Failed to authenticate with the vendor's server. "
-            "Check your username (%s) and password are correct. "
+            "Check your username and password are correct. "
             "Resolve any errors and restart HA. Message is: %s",
-            evo_data['params'][CONF_USERNAME], err
+            err
         )
         return False
 
