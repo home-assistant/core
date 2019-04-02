@@ -265,3 +265,40 @@ async def test_options(hass, aioclient_mock):
         'allow_clip_sensor': False,
         'allow_deconz_groups': False
     }
+
+
+async def test_hassio_confirm(hass):
+    """Test we can finish a config flow."""
+    result = await hass.config_entries.flow.async_init(
+        'deconz',
+        data={
+            'addon': 'Mock Addon',
+            'host': 'mock-deconz',
+            'port': 8080,
+            'serial': 'aa:bb',
+            'api_key': '1234567890ABCDEF',
+        },
+        context={'source': 'hassio'}
+    )
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'hassio_confirm'
+    assert result['description_placeholders'] == {
+        'addon': 'Mock Addon',
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result['flow_id'], {
+            'allow_clip_sensor': True,
+            'allow_deconz_groups': True,
+        }
+    )
+
+    assert result['type'] == 'create_entry'
+    assert result['result'].data == {
+        'host': 'mock-deconz',
+        'port': 8080,
+        'bridgeid': 'aa:bb',
+        'api_key': '1234567890ABCDEF',
+        'allow_clip_sensor': True,
+        'allow_deconz_groups': True,
+    }
