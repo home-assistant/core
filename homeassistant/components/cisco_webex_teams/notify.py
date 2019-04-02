@@ -47,13 +47,13 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         from webexteamssdk import ApiError
+        title = ""
+        if kwargs.get(ATTR_TITLE) is not None:
+            title = "{}{}".format(kwargs.get(ATTR_TITLE), "<br>")
+
         try:
-            title = ""
-            if kwargs.get(ATTR_TITLE) is not None:
-                title = "{}{}".format(kwargs.get(ATTR_TITLE), "<br>")
-            self.client.messages.create(
-                roomId=self.room,
-                html="{}{}".format(title, message))
+            self.client.messages.create(roomId=self.room,
+                                        html="{}{}".format(title, message))
         except ApiError as api_error:
             _LOGGER.error("Could not send CiscoWebexTeams notification. "
                           "Error: %s",
