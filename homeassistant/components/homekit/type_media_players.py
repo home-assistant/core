@@ -1,20 +1,29 @@
 """Class to hold all media player accessories."""
 import logging
 
-from pyhap.const import CATEGORY_SWITCH
+from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
+    ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_VOLUME_MUTED, ATTR_MEDIA_VOLUME_LEVEL,
+    SERVICE_SELECT_SOURCE, DOMAIN)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    ATTR_ENTITY_ID, CONF_TYPE, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
     STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
 
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    CHAR_NAME, CHAR_ON, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, SERV_SWITCH)
+    CHAR_ACTIVE, CHAR_ACTIVE_IDENTIFIER, CHAR_CONFIGURED_NAME,
+    CHAR_CURRENT_VISIBILITY_STATE, CHAR_IDENTIFIER, CHAR_INPUT_SOURCE_TYPE,
+    CHAR_IS_CONFIGURED, CHAR_NAME, CHAR_ON, CHAR_SLEEP_DISCOVER_MODE,
+    CHAR_MUTE, CHAR_VOLUME_CONTROL_TYPE, CHAR_VOLUME_SELECTOR, CHAR_VOLUME,
+    CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+    FEATURE_PLAY_STOP, FEATURE_SELECT_SOURCE, FEATURE_TOGGLE_MUTE,
+    FEATURE_VOLUME_STEP, SERV_SWITCH, SERV_TELEVISION, SERV_TELEVISION_SPEAKER,
+    SERV_INPUT_SOURCE, TYPE_SWITCH, TYPE_TELEVISION)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,10 +43,87 @@ class MediaPlayer(HomeAccessory):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
         self._flag = {FEATURE_ON_OFF: False, FEATURE_PLAY_PAUSE: False,
-                      FEATURE_PLAY_STOP: False, FEATURE_TOGGLE_MUTE: False}
+                      FEATURE_PLAY_STOP: False, FEATURE_TOGGLE_MUTE: False,
+                      FEATURE_SELECT_SOURCE: False}
         self.chars = {FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
-                      FEATURE_PLAY_STOP: None, FEATURE_TOGGLE_MUTE: None}
+                      FEATURE_PLAY_STOP: None, FEATURE_TOGGLE_MUTE: None,
+                      FEATURE_SELECT_SOURCE: None}
         feature_list = self.config[CONF_FEATURE_LIST]
+
+        self.sources = []
+
+        a_type = self.config.get(CONF_TYPE, TYPE_SWITCH)
+
+        if a_type == TYPE_TELEVISION and FEATURE_ON_OFF in feature_list:
+
+            self.category = CATEGORY_TELEVISION
+            television = self.add_preload_service(SERV_TELEVISION,
+                                                  CHAR_CONFIGURED_NAME)
+            television.configure_char(CHAR_CONFIGURED_NAME,
+                                      value=self.display_name)
+            television.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
+            self.chars[FEATURE_ON_OFF] = television.configure_char(
+                CHAR_ACTIVE, value=False, setter_callback=self.set_on_off)
+
+            if FEATURE_TOGGLE_MUTE in feature_list:
+
+                television_speaker = self.add_preload_service(
+                                                SERV_TELEVISION_SPEAKER,
+                                                [
+                                                    CHAR_NAME, CHAR_ACTIVE,
+                                                    CHAR_VOLUME_CONTROL_TYPE,
+                                                    CHAR_VOLUME_SELECTOR,
+                                                    CHAR_VOLUME
+                                                ])
+                television.add_linked_service(television_speaker)
+
+                name = '{} {}'.format(self.display_name, 'Volume')
+                television_speaker.configure_char(CHAR_NAME, value=name)
+                television_speaker.configure_char(CHAR_ACTIVE, value=1)
+
+                self.chars[FEATURE_TOGGLE_MUTE] \
+                    = television_speaker.configure_char(
+                    CHAR_MUTE, value=False,
+                    setter_callback=self.set_toggle_mute)
+
+                if FEATURE_VOLUME_STEP in feature_list:
+                    television_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE,
+                                                      value=1)
+                    television_speaker.configure_char(
+                        CHAR_VOLUME_SELECTOR,
+                        setter_callback=self.set_volume_step)
+
+            if FEATURE_SELECT_SOURCE in feature_list:
+
+                self.chars[FEATURE_SELECT_SOURCE] \
+                        = television.configure_char(
+                        CHAR_ACTIVE_IDENTIFIER,
+                        setter_callback=self.set_input_source_set)
+                _LOGGER.error('%s: Sources to %s',
+                      self.entity_id, repr(self.hass.states.get(self.entity_id)))
+                return
+                self.sources = self.hass.states.get(self.entity_id).attributes.get('source_list')
+                for index, source in enumerate(self.sources):
+                    input_service = self.add_preload_service(
+                                    SERV_INPUT_SOURCE,
+                                    [
+                                        CHAR_IDENTIFIER,
+                                    ])
+                    television.add_linked_service(input_service)
+
+                    input_service.configure_char(CHAR_CONFIGURED_NAME,
+                                                 value=source)
+                    input_service.configure_char(CHAR_IDENTIFIER, value=index)
+                    input_service.configure_char(CHAR_IS_CONFIGURED,
+                                                 value=True)
+                    inputType = 3 if "hdmi" in source.lower() else 0
+                    input_service.configure_char(CHAR_INPUT_SOURCE_TYPE,
+                                                 value=inputType)
+                    input_service.configure_char(CHAR_CURRENT_VISIBILITY_STATE,
+                                                 value=False)
+
+            self.set_primary_service(television)
+            return
 
         if FEATURE_ON_OFF in feature_list:
             name = self.generate_service_name(FEATURE_ON_OFF)
@@ -107,6 +193,26 @@ class MediaPlayer(HomeAccessory):
                   ATTR_MEDIA_VOLUME_MUTED: value}
         self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
+    def set_volume_step(self, value):
+        """Send volume step value if call came from HomeKit."""
+        _LOGGER.debug('%s: Step tv_volume for "tv_volume" to %s',
+                      self.entity_id, value)
+
+        service = SERVICE_VOLUME_DOWN if value else SERVICE_VOLUME_UP
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        self.call_service(DOMAIN, service, params)
+
+    def set_input_source_set(self, value):
+        """Send input set value if call came from HomeKit."""
+        _LOGGER.debug('%s: Set tv_select_source for "tv_select_source" to %s',
+                      self.entity_id, value)
+
+        source = self.sources[value]
+        self._flag[FEATURE_SELECT_SOURCE] = True
+        params = {ATTR_ENTITY_ID: self.entity_id,
+                  ATTR_INPUT_SOURCE: source}
+        self.call_service(DOMAIN, SERVICE_SELECT_SOURCE, params)
+
     def update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state
@@ -142,3 +248,16 @@ class MediaPlayer(HomeAccessory):
                               self.entity_id, current_state)
                 self.chars[FEATURE_TOGGLE_MUTE].set_value(current_state)
             self._flag[FEATURE_TOGGLE_MUTE] = False
+
+        if self.chars[FEATURE_SELECT_SOURCE]:
+            sourceName = new_state.attributes.get(ATTR_INPUT_SOURCE)
+            if not self._flag[FEATURE_SELECT_SOURCE]:
+                _LOGGER.debug(
+                            '%s: Set current state for "select_source" to %s',
+                            self.entity_id, sourceName)
+                if sourceName in self.sources:
+                    index = self.sources.index(sourceName)
+                    self.chars[FEATURE_SELECT_SOURCE].set_value(index)
+                else:
+                    self.chars[FEATURE_SELECT_SOURCE].set_value(-1)
+            self._flag[FEATURE_SELECT_SOURCE] = False

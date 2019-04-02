@@ -13,8 +13,9 @@ import homeassistant.util.temperature as temp_util
 
 from .const import (
     CONF_FEATURE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, HOMEKIT_NOTIFY_ID, TYPE_FAUCET,
-    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
+    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, FEATURE_VOLUME_STEP,
+    FEATURE_SELECT_SOURCE, HOMEKIT_NOTIFY_ID, TYPE_FAUCET, TYPE_OUTLET,
+    TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_TELEVISION, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,8 @@ BASIC_INFO_SCHEMA = vol.Schema({
 
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list,
+    vol.Optional(CONF_TYPE, default=TYPE_SWITCH): vol.All(
+        cv.string, vol.In((TYPE_TELEVISION))),
 })
 
 
@@ -35,7 +38,8 @@ CODE_SCHEMA = BASIC_INFO_SCHEMA.extend({
 MEDIA_PLAYER_SCHEMA = vol.Schema({
     vol.Required(CONF_FEATURE): vol.All(
         cv.string, vol.In((FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-                           FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE))),
+                           FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE,
+                           FEATURE_SELECT_SOURCE, FEATURE_VOLUME_STEP))),
 })
 
 SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend({
@@ -101,6 +105,10 @@ def validate_media_player_features(state, feature_list):
         supported_modes.append(FEATURE_PLAY_STOP)
     if features & media_player.const.SUPPORT_VOLUME_MUTE:
         supported_modes.append(FEATURE_TOGGLE_MUTE)
+    if features & media_player.const.SUPPORT_VOLUME_STEP:
+        supported_modes.append(FEATURE_VOLUME_STEP)
+    if features & media_player.const.SUPPORT_SELECT_SOURCE:
+        supported_modes.append(FEATURE_SELECT_SOURCE)
 
     error_list = []
     for feature in feature_list:
