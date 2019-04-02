@@ -318,7 +318,7 @@ async def test_play_media(hass, samsung_mock):
         device.send_key = mock.Mock()
         await device.async_play_media(MEDIA_TYPE_CHANNEL, "576")
 
-        exp = [call("KEY_5"), call("KEY_7"), call("KEY_6")]
+        exp = [call("KEY_5"), call("KEY_7"), call("KEY_6"), call("KEY_ENTER")]
         assert device.send_key.call_args_list == exp
         assert len(sleeps) == 3
 
