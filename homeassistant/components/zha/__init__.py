@@ -171,8 +171,5 @@ async def async_unload_entry(hass, config_entry):
     for entity_id in entity_ids:
         await component.async_remove_entity(entity_id)
 
-    # clean up events
-    hass.data[DATA_ZHA][DATA_ZHA_CORE_EVENTS].clear()
-
     del hass.data[DATA_ZHA]
     return True
