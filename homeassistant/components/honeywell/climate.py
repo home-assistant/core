@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.honeywell/
 """
 import logging
-import socket
 import datetime
 
 import requests
@@ -21,7 +20,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)
 
-REQUIREMENTS = ['evohomeclient==0.2.8', 'somecomfort==0.5.2']
+REQUIREMENTS = ['evohomeclient==0.3.2', 'somecomfort==0.5.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,9 +77,10 @@ def _setup_round(username, password, config, add_entities):
                 [RoundThermostat(evo_api, zone['id'], i == 0, away_temp)],
                 True
             )
-    except socket.error:
+    except requests.exceptions.RequestException as err:
         _LOGGER.error(
-            "Connection error logging into the honeywell evohome web service")
+            "Connection error logging into the honeywell evohome web service, "
+            "hint: %s", err)
         return False
     return True
 
