@@ -223,7 +223,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         ))
 
         if self._attribute_templates is not None:
-            templates.update({'{}{}'.format(ATTRIBUTES_PREFIX,key): value}
+            templates.update({'{}{}'.format(ATTRIBUTES_PREFIX,key): value
                              for key, value
                              in self._attribute_templates.items()})
 
