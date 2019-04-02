@@ -171,6 +171,11 @@ def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     return value if isinstance(value, list) else [value]
 
 
+def ensure_none(value: Any) -> Any:
+    """Ensure a falsey value is None."""
+    return value if value else None
+
+
 def entity_id(value: Any) -> str:
     """Validate Entity ID."""
     value = string(value).lower()

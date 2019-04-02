@@ -1,20 +1,20 @@
 """The tests for the person component."""
 from unittest.mock import Mock
 
+import pytest
+
+from homeassistant.components.device_tracker import (
+    ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS, SOURCE_TYPE_ROUTER)
 from homeassistant.components.person import (
     ATTR_SOURCE, ATTR_USER_ID, DOMAIN, PersonManager)
 from homeassistant.const import (
-    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_GPS_ACCURACY,
-    STATE_UNKNOWN, EVENT_HOMEASSISTANT_START)
-from homeassistant.components.device_tracker import (
-    ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS, SOURCE_TYPE_ROUTER)
+    ATTR_GPS_ACCURACY, ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE,
+    EVENT_HOMEASSISTANT_START, STATE_UNKNOWN)
 from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 
-import pytest
-
 from tests.common import (
-    mock_component, mock_restore_cache, mock_coro_func, assert_setup_component)
+    assert_setup_component, mock_component, mock_coro_func, mock_restore_cache)
 
 DEVICE_TRACKER = 'device_tracker.test_tracker'
 DEVICE_TRACKER_2 = 'device_tracker.test_tracker_2'
@@ -313,7 +313,7 @@ async def test_duplicate_ids(hass, hass_admin_user):
 async def test_create_person_during_run(hass):
     """Test that person is updated if created while hass is running."""
     config = {DOMAIN: {}}
-    with assert_setup_component(1):
+    with assert_setup_component(0):
         assert await async_setup_component(hass, DOMAIN, config)
     hass.states.async_set(DEVICE_TRACKER, 'home')
     await hass.async_block_till_done()

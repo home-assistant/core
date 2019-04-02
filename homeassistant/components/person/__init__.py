@@ -51,7 +51,7 @@ PERSON_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): vol.All(
-        cv.ensure_list, vol.Any([PERSON_SCHEMA], [vol.Schema({})]))
+        cv.ensure_none, cv.ensure_list, vol.Any([PERSON_SCHEMA], []))
 }, extra=vol.ALLOW_EXTRA)
 
 _UNDEF = object()
@@ -81,10 +81,6 @@ class PersonManager:
 
         config_data = self.config_data = OrderedDict()
         for conf in config_persons:
-            if not conf:
-                _LOGGER.warning("log config empty")
-                continue
-            _LOGGER.warning("log config ok %s", conf)
             person_id = conf[CONF_ID]
 
             if person_id in config_data:
@@ -272,9 +268,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the person component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     conf_persons = config.get(DOMAIN, [])
-    _LOGGER.warning(conf_persons)
     manager = hass.data[DOMAIN] = PersonManager(hass, component, conf_persons)
-    _LOGGER.warning(manager.config_data)
     await manager.async_initialize()
 
     websocket_api.async_register_command(hass, ws_list_person)
