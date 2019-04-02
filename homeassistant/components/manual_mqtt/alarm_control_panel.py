@@ -248,6 +248,11 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
             return alarm.FORMAT_NUMBER
         return alarm.FORMAT_TEXT
 
+    @property
+    def code_arm_required(self):
+        """Whether the code is required for arm actions."""
+        return self._code_arm_required
+
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if not self._validate_code(code, STATE_ALARM_DISARMED):
