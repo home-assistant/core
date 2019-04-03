@@ -145,10 +145,11 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
         This flow is triggered by the discovery component.
         """
-        deconz_config = {}
-        deconz_config[CONF_HOST] = discovery_info.get(CONF_HOST)
-        deconz_config[CONF_PORT] = discovery_info.get(CONF_PORT)
-        deconz_config[CONF_BRIDGEID] = discovery_info.get('serial')
+        deconz_config = {
+            CONF_HOST: discovery_info[CONF_HOST],
+            CONF_PORT: discovery_info[CONF_PORT],
+            CONF_BRIDGEID: discovery_info['serial']
+        }
 
         if deconz_config[CONF_HOST] in configured_hosts(self.hass):
             return self.async_abort(reason='one_instance_only')
@@ -196,7 +197,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
                 CONF_API_KEY: self._hassio_discovery[CONF_API_KEY]
             }
 
-            return self._create_entry()
+            return await self._create_entry()
 
         return self.async_show_form(
             step_id='hassio_confirm',
