@@ -6,7 +6,7 @@ from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.ign_sismologia.geo_location import (
     ATTR_EXTERNAL_ID, SCAN_INTERVAL, ATTR_REGION,
-    ATTR_MAGNITUDE, ATTR_IMAGE_URL, ATTR_PUBLICATION_DATE)
+    ATTR_MAGNITUDE, ATTR_IMAGE_URL, ATTR_PUBLICATION_DATE, ATTR_TITLE)
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
     CONF_RADIUS, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME, \
     ATTR_UNIT_OF_MEASUREMENT, ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE
@@ -96,6 +96,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: 38.0,
                 ATTR_LONGITUDE: -3.0,
                 ATTR_FRIENDLY_NAME: "M 5.7 - Region 1",
+                ATTR_TITLE: "Title 1",
                 ATTR_REGION: "Region 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE:
@@ -115,6 +116,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: 38.1,
                 ATTR_LONGITUDE: -3.1,
                 ATTR_FRIENDLY_NAME: "M 4.6",
+                ATTR_TITLE: "Title 2",
                 ATTR_MAGNITUDE: 4.6,
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: 'ign_sismologia'}
@@ -128,6 +130,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: 38.2,
                 ATTR_LONGITUDE: -3.2,
                 ATTR_FRIENDLY_NAME: "Region 3",
+                ATTR_TITLE: "Title 3",
                 ATTR_REGION: "Region 3",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: 'ign_sismologia'}
