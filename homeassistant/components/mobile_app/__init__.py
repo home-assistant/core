@@ -52,7 +52,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         except ValueError:
             pass
 
-    discovery.load_platform(hass, 'notify', DOMAIN, {}, config)
+    hass.async_create_task(discovery.async_load_platform(
+        hass, 'notify', DOMAIN, {}, config))
 
     return True
 
