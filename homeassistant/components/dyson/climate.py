@@ -1,9 +1,4 @@
-"""
-Support for Dyson Pure Hot+Cool link fan.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.dyson/
-"""
+"""Support for Dyson Pure Hot+Cool link fan."""
 import logging
 
 from homeassistant.components.climate import ClimateDevice

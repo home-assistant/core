@@ -1,9 +1,4 @@
-"""
-Support for Duke Energy Gas and Electric meters.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.duke_energy/
-"""
+"""Support for Duke Energy Gas and Electric meters."""
 import logging
 
 import voluptuous as vol

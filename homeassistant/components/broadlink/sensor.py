@@ -1,9 +1,4 @@
-"""
-Support for the Broadlink RM2 Pro (only temperature) and A1 devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.broadlink/
-"""
+"""Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
 from datetime import timedelta
 import binascii
 import logging

@@ -1,9 +1,4 @@
-"""
-Support to interface with the Emby API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.emby/
-"""
+"""Support to interface with the Emby API."""
 import logging
 
 import voluptuous as vol

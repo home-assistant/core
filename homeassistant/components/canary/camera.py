@@ -1,9 +1,4 @@
-"""
-Support for Canary camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.canary/
-"""
+"""Support for Canary camera."""
 import asyncio
 from datetime import timedelta
 import logging
