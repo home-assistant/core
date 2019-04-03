@@ -28,6 +28,9 @@ def push_registrations(hass):
         app_data = data[ATTR_APP_DATA]
         if ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data:
             device_name = data[ATTR_DEVICE_NAME]
+            if device_name in targets:
+                _LOGGER.warning("Found duplicate device name %s", device_name)
+                continue
             targets[device_name] = webhook_id
     return targets
 
