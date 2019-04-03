@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components import (
+    binary_sensor,
     camera,
     cover,
     group,
@@ -126,7 +127,7 @@ class BrightnessTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain == light.DOMAIN:
             return features & light.SUPPORT_BRIGHTNESS
@@ -192,7 +193,7 @@ class CameraStreamTrait(_Trait):
     stream_info = None
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain == camera.DOMAIN:
             return features & camera.SUPPORT_STREAM
@@ -235,7 +236,7 @@ class OnOffTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain in (
             group.DOMAIN,
@@ -284,7 +285,7 @@ class ColorSpectrumTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != light.DOMAIN:
             return False
@@ -340,7 +341,7 @@ class ColorTemperatureTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != light.DOMAIN:
             return False
@@ -413,7 +414,7 @@ class SceneTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain in (scene.DOMAIN, script.DOMAIN)
 
@@ -449,7 +450,7 @@ class DockTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain == vacuum.DOMAIN
 
@@ -483,7 +484,7 @@ class StartStopTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain == vacuum.DOMAIN
 
@@ -553,7 +554,7 @@ class TemperatureSettingTrait(_Trait):
     google_to_hass = {value: key for key, value in hass_to_google.items()}
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != climate.DOMAIN:
             return False
@@ -738,7 +739,7 @@ class LockUnlockTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain == lock.DOMAIN
 
@@ -789,7 +790,7 @@ class FanSpeedTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != fan.DOMAIN:
             return False
@@ -940,7 +941,7 @@ class ModesTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != media_player.DOMAIN:
             return False
@@ -1041,13 +1042,25 @@ class OpenCloseTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
-        return domain == cover.DOMAIN
+        if domain == cover.DOMAIN:
+            return True
+
+        return domain == binary_sensor.DOMAIN and device_class in (
+            binary_sensor.DEVICE_CLASS_DOOR,
+            binary_sensor.DEVICE_CLASS_GARAGE_DOOR,
+            binary_sensor.DEVICE_CLASS_LOCK,
+            binary_sensor.DEVICE_CLASS_OPENING,
+            binary_sensor.DEVICE_CLASS_WINDOW,
+        )
 
     def sync_attributes(self):
         """Return opening direction."""
-        return {}
+        attrs = {}
+        if self.state.domain == binary_sensor.DOMAIN:
+            attrs['queryOnlyOpenClose'] = True
+        return attrs
 
     def query_attributes(self):
         """Return state query attributes."""
@@ -1063,6 +1076,12 @@ class OpenCloseTrait(_Trait):
                     response['openPercent'] = 100
                 else:
                     response['openPercent'] = 0
+
+        elif domain == binary_sensor.DOMAIN:
+            if self.state.state == STATE_ON:
+                response['openPercent'] = 100
+            else:
+                response['openPercent'] = 0
 
         return response
 
