@@ -470,7 +470,7 @@ async def test_service_unknown_user(hass):
         """Define a protected service."""
         pass
 
-    _protected_service = service.authorized_service_call(hass, 'test_domain')(
+    _protected_service = service.verify_domain_control(hass, 'test_domain')(
         protected_service)
 
     hass.services.async_register(
@@ -491,7 +491,7 @@ async def test_service_unauthorized_user(hass, hass_read_only_user):
         """Define a protected service."""
         pass
 
-    _protected_service = service.authorized_service_call(hass, 'test_domain')(
+    _protected_service = service.verify_domain_control(hass, 'test_domain')(
         protected_service)
 
     hass.services.async_register(

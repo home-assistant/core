@@ -34,43 +34,6 @@ SERVICE_DESCRIPTION_CACHE = 'service_description_cache'
 
 
 @bind_hass
-def authorized_service_call(hass: HomeAssistantType, domain: str) -> Callable:
-    """Ensure user of a config entry-enabled service call has permission."""
-    def decorator(service: 'Service') -> Callable:
-        """Decorate."""
-        @wraps(service)
-        async def check_permissions(
-                call: 'ServiceCall') -> Any:
-            """Check user permission and raise before call if unauthorized."""
-            if not call.context.user_id:
-                return await service(call)
-
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(
-                    context=call.context, permission=POLICY_CONTROL)
-
-            reg = await hass.helpers.entity_registry.async_get_registry()
-            entities = [
-                entity.entity_id for entity in reg.entities.values()
-                if entity.platform == domain
-            ]
-
-            for entity_id in entities:
-                if user.permissions.check_entity(entity_id, POLICY_CONTROL):
-                    return await service(call)
-
-            raise Unauthorized(
-                context=call.context,
-                permission=POLICY_CONTROL,
-            )
-
-        return check_permissions
-
-    return decorator
-
-
-@bind_hass
 def call_from_config(hass, config, blocking=False, variables=None,
                      validate_config=True):
     """Call a service based on a config hash."""
@@ -401,3 +364,40 @@ def async_register_admin_service(
     hass.services.async_register(
         domain, service, admin_handler, schema
     )
+
+
+@bind_hass
+def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
+    """Ensure permission to access any entity under a domain during service call."""
+    def decorator(service: 'Service') -> Callable:
+        """Decorate."""
+        @wraps(service)
+        async def check_permissions(
+                call: 'ServiceCall') -> Any:
+            """Check user permission and raise before call if unauthorized."""
+            if not call.context.user_id:
+                return await service(call)
+
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(
+                    context=call.context, permission=POLICY_CONTROL)
+
+            reg = await hass.helpers.entity_registry.async_get_registry()
+            entities = [
+                entity.entity_id for entity in reg.entities.values()
+                if entity.platform == domain
+            ]
+
+            for entity_id in entities:
+                if user.permissions.check_entity(entity_id, POLICY_CONTROL):
+                    return await service(call)
+
+            raise Unauthorized(
+                context=call.context,
+                permission=POLICY_CONTROL,
+            )
+
+        return check_permissions
+
+    return decorator

@@ -14,7 +14,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import authorized_service_call
+from homeassistant.helpers.service import verify_domain_control
 
 from .config_flow import configured_instances
 from .const import (
@@ -158,7 +158,7 @@ async def async_setup_entry(hass, config_entry):
     from regenmaschine import login
     from regenmaschine.errors import RainMachineError
 
-    _authorized_service_call = authorized_service_call(hass, DOMAIN)
+    _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
@@ -200,69 +200,69 @@ async def async_setup_entry(hass, config_entry):
             refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def disable_program(call):
         """Disable a program."""
         await rainmachine.client.programs.disable(
             call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def disable_zone(call):
         """Disable a zone."""
         await rainmachine.client.zones.disable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def enable_program(call):
         """Enable a program."""
         await rainmachine.client.programs.enable(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def enable_zone(call):
         """Enable a zone."""
         await rainmachine.client.zones.enable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def pause_watering(call):
         """Pause watering for a set number of seconds."""
         await rainmachine.client.watering.pause_all(call.data[CONF_SECONDS])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def start_program(call):
         """Start a particular program."""
         await rainmachine.client.programs.start(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def start_zone(call):
         """Start a particular zone for a certain amount of time."""
         await rainmachine.client.zones.start(
             call.data[CONF_ZONE_ID], call.data[CONF_ZONE_RUN_TIME])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def stop_all(call):
         """Stop all watering."""
         await rainmachine.client.watering.stop_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def stop_program(call):
         """Stop a program."""
         await rainmachine.client.programs.stop(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def stop_zone(call):
         """Stop a zone."""
         await rainmachine.client.zones.stop(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    @_authorized_service_call
+    @_verify_domain_control
     async def unpause_watering(call):
         """Unpause watering."""
         await rainmachine.client.watering.unpause_all()
