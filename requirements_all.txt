@@ -1194,6 +1194,9 @@ pynuki==1.3.2
 # homeassistant.components.nut.sensor
 pynut2==2.1.2
 
+# homeassistant.components.nuvo.media_player
+pynuvo==0.2
+
 # homeassistant.components.nx584.alarm_control_panel
 # homeassistant.components.nx584.binary_sensor
 pynx584==0.4
