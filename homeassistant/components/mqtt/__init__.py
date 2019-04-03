@@ -579,12 +579,12 @@ async def async_setup_entry(hass, entry):
         tls_version=tls_version,
     )
 
-    success = await hass.data[DATA_MQTT].async_connect()  # type: bool
+    result = await hass.data[DATA_MQTT].async_connect()  # type: bool
 
-    if success is CONNECTION_FAILED:
+    if result == CONNECTION_FAILED:
         return False
 
-    if success is CONNECTION_FAILED_RECOVERABLE:
+    if result == CONNECTION_FAILED_RECOVERABLE:
         raise ConfigEntryNotReady
 
     async def async_stop_mqtt(event: Event):
