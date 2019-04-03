@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    POWER_WATT, TEMP_CELSIUS)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE, POWER_WATT, TEMP_CELSIUS)
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
@@ -237,6 +237,11 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
     def __init__(self, home, device):
         """Initialize the  device."""
         super().__init__(home, device, 'Power')
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_POWER
 
     @property
     def state(self):
