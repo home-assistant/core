@@ -373,6 +373,7 @@ async def test_dynamic_group_media_states(hass: HomeAssistantType):
     player_media_status = MagicMock(images=None)
 
     # Player has no state, dynamic group is playing -> Should report 'playing'
+    entity._dynamic_group_cast = MagicMock()
     group_media_status.player_is_playing = True
     entity.new_dynamic_group_media_status(group_media_status)
     await hass.async_block_till_done()
