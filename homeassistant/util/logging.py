@@ -130,7 +130,7 @@ def catch_log_exception(
         func: Callable[..., Any],
         format_err: Callable[..., Any],
         *args: Any) -> Callable[[], None]:
-    """Decorate an callback to catch and log exceptions."""
+    """Decorate a callback to catch and log exceptions."""
     def log_exception(*args: Any) -> None:
         module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
         # Do not print the wrapper in the traceback
@@ -154,6 +154,15 @@ def catch_log_exception(
             except Exception:  # pylint: disable=broad-except
                 log_exception(*args)
         wrapper_func = async_wrapper
+    elif inspect.iscoroutine(func):
+        @wraps(func)
+        async def async_wrapper(*args: Any) -> None:
+            """Catch and log exception."""
+            try:
+                return await func
+            except Exception:  # pylint: disable=broad-except
+                log_exception(*args)
+        wrapper_func = async_wrapper()
     else:
         @wraps(func)
         def wrapper(*args: Any) -> None:

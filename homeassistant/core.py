@@ -14,6 +14,7 @@ import os
 import pathlib
 import sys
 import threading
+import traceback
 from time import monotonic
 import uuid
 
@@ -43,6 +44,7 @@ from homeassistant.util.async_ import (
 from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.util import location, slugify
+from homeassistant.util.logging import catch_log_exception
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
 # Typing imports that create a circular dependency
@@ -281,14 +283,35 @@ class HomeAssistant:
         return task
 
     @callback
-    def async_create_task(self, target: Coroutine) -> asyncio.tasks.Task:
+    def async_catching_create_task(
+            self, target: Coroutine) -> asyncio.tasks.Task:
+        """Create a task from within the eventloop and print exception.
+
+        This method must be run in the event loop.
+
+        target: target to call.
+        """
+        self.async_create_task(target, True)
+
+    @callback
+    def async_create_task(
+            self, target: Coroutine, catch=False) -> asyncio.tasks.Task:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.
 
         target: target to call.
         """
-        task = self.loop.create_task(target)  # type: asyncio.tasks.Task
+        trace = traceback.extract_stack()
+        wrapped_target = target
+        if catch:
+            wrapped_target = catch_log_exception(
+                target, lambda *args:
+                "Exception in {} called from\n {}".format(
+                    target.__name__, "".join(traceback.format_list(trace))))
+
+        task = \
+            self.loop.create_task(wrapped_target)  # type: asyncio.tasks.Task
 
         if self._track_task:
             self._pending_tasks.append(task)
