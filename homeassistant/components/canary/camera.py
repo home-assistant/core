@@ -18,16 +18,17 @@ from homeassistant.util import Throttle
 
 from . import DATA_CANARY, DEFAULT_TIMEOUT
 
-CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-
 DEPENDENCIES = ['canary', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+DEFAULT_ARGUMENTS = '-pred 1'
+
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
 })
 
 
