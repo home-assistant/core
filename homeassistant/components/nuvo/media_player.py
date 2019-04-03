@@ -150,7 +150,7 @@ class NuvoZone(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         if self._volume is None:
             return None
-        return (( int(self._volume) + 78) / 78)
+        return ((int(self._volume) + 78)/78)
 
     @property
     def is_volume_muted(self):
@@ -208,19 +208,19 @@ class NuvoZone(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._nuvo.set_volume(self._zone_id, int( (volume * 78) - 78) )
+        self._nuvo.set_volume(self._zone_id,int((volume*78)-78))
 
     def volume_up(self):
         """Volume up the media player."""
         if self._volume is None:
             return
-        self._nuvo.set_volume(self._zone_id, min(self._volume + 1, 0))
+        self._nuvo.set_volume(self._zone_id,min(self._volume+1,0))
 
     def volume_down(self):
         """Volume down media player."""
         if self._volume is None:
             return
-        self._nuvo.set_volume(self._zone_id, max(self._volume - 1, -78))
+        self._nuvo.set_volume(self._zone_id,max(self._volume-1,-78))
 
 
 
