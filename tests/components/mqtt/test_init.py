@@ -627,6 +627,17 @@ async def test_setup_throws_ConfigEntryNotReady_if_no_connect_broker(hass):
             assert False, 'ConfigEntryNotReady not raised'
 
 
+async def test_setup_throws_ConfigEntryNotReady_if_no_connect_broker(hass):
+    """Test for setup failure if connection to broker is missing."""
+    def raise_os_error_mock():
+        raise Exception('OSError')
+
+    with mock.patch('paho.mqtt.client.Client') as mock_client:
+        mock_client().connect = lambda *args: raise_os_error_mock
+        with pytest.raises(ConfigEntryNotReady):
+            await mqtt.async_setup_entry(hass, {})
+
+
 async def test_setup_uses_certificate_on_certificate_set_to_auto(
         hass, mock_MQTT):
     """Test setup uses bundled certs when certificate is set to auto."""
