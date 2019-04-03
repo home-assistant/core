@@ -986,7 +986,8 @@ class CastDevice(MediaPlayerDevice):
         media_status = self.media_status
         media_status_received = self.media_status_received
 
-        if media_status is None or media_status.player_state == "UNKNOWN":
+        if ((media_status is None or media_status.player_state == "UNKNOWN")
+                and self._dynamic_group_cast is not None):
             media_status = self.dynamic_group_media_status
             media_status_received = self.dynamic_group_media_status_received
 
