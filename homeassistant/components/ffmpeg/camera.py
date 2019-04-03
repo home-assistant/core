@@ -20,11 +20,13 @@ from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['ffmpeg']
+
 DEFAULT_NAME = 'FFmpeg'
+DEFAULT_ARGUMENTS = "-pred 1"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_INPUT): cv.string,
-    vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
+    vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
