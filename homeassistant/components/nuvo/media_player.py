@@ -152,7 +152,7 @@ class NuvoZone(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         if self._volume is None:
             return None
-        return ((int(self._volume) + 78)/78)
+        return int((self._volume + 78)/78)
 
     @property
     def is_volume_muted(self):
