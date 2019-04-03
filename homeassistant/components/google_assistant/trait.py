@@ -27,6 +27,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    ATTR_ASSUMED_STATE,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
@@ -1055,11 +1056,19 @@ class OpenCloseTrait(_Trait):
         response = {}
 
         if domain == cover.DOMAIN:
-            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
-            if position is not None:
-                response['openPercent'] = position
+            # When it's an assumed state, we will always report it as 50%
+            # Google will not issue an open command if the assumed state is
+            # open, even if that is currently incorrect.
+            if self.state.attributes.get(ATTR_ASSUMED_STATE):
+                response['openPercent'] = 50
             else:
-                if self.state.state != cover.STATE_CLOSED:
+                position = self.state.attributes.get(
+                    cover.ATTR_CURRENT_POSITION
+                )
+
+                if position is not None:
+                    response['openPercent'] = position
+                elif self.state.state != cover.STATE_CLOSED:
                     response['openPercent'] = 100
                 else:
                     response['openPercent'] = 0
