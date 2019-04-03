@@ -27,7 +27,7 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
     DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
-    DEVICE_CLASS_POWER,  # pressure (W/kW)
+    DEVICE_CLASS_POWER,  # power (W/kW)
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
