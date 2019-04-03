@@ -611,19 +611,30 @@ def test_setup_embedded_with_embedded(hass):
         assert _start.call_count == 1
 
 
+async def test_setup_fails_if_no_connect_broker(hass):
+    """Test for setup failure if connection to broker is missing."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={
+        mqtt.CONF_BROKER: 'test-broker'
+    })
+
+    with mock.patch('paho.mqtt.client.Client') as mock_client:
+        mock_client().connect = lambda *args: 1
+        assert not await mqtt.async_setup_entry(hass, entry)
+
+
 async def test_setup_throws_ConfigEntryNotReady_if_no_connect_broker(hass):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={
         mqtt.CONF_BROKER: 'test-broker'
     })
-    
+
     def raise_os_error_mock():
         raise Exception('OSError')
 
     with mock.patch('paho.mqtt.client.Client') as mock_client:
         mock_client().connect = lambda *args: raise_os_error_mock
         with pytest.raises(ConfigEntryNotReady):
-            await mqtt.async_setup_entry(hass, {})
+            await mqtt.async_setup_entry(hass, entry)
 
 
 async def test_setup_uses_certificate_on_certificate_set_to_auto(
