@@ -63,9 +63,9 @@ async def test_setup(hass):
                                     tzinfo=datetime.timezone.utc),
         magnitude=5.7, image_url='http://image.url/map.jpg')
     mock_entry_2 = _generate_mock_feed_entry(
-        '2345', 'Title 2', 20.5, (38.1, -3.1))
+        '2345', 'Title 2', 20.5, (38.1, -3.1), magnitude=4.6)
     mock_entry_3 = _generate_mock_feed_entry(
-        '3456', 'Title 3', 25.5, (38.2, -3.2))
+        '3456', 'Title 3', 25.5, (38.2, -3.2), region='Region 3')
     mock_entry_4 = _generate_mock_feed_entry(
         '4567', 'Title 4', 12.5, (38.3, -3.3))
 
@@ -105,31 +105,33 @@ async def test_setup(hass):
                 ATTR_MAGNITUDE: 5.7,
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: 'ign_sismologia'}
-            assert round(abs(float(state.state)-15.5), 7) == 0
+            assert float(state.state) == 15.5
 
-            state = hass.states.get("geo_location.title_2")
+            state = hass.states.get("geo_location.m_4_6")
             assert state is not None
-            assert state.name == "Title 2"
+            assert state.name == "M 4.6"
             assert state.attributes == {
                 ATTR_EXTERNAL_ID: "2345",
                 ATTR_LATITUDE: 38.1,
                 ATTR_LONGITUDE: -3.1,
-                ATTR_FRIENDLY_NAME: "Title 2",
+                ATTR_FRIENDLY_NAME: "M 4.6",
+                ATTR_MAGNITUDE: 4.6,
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: 'ign_sismologia'}
-            assert round(abs(float(state.state)-20.5), 7) == 0
+            assert float(state.state) == 20.5
 
-            state = hass.states.get("geo_location.title_3")
+            state = hass.states.get("geo_location.region_3")
             assert state is not None
-            assert state.name == "Title 3"
+            assert state.name == "Region 3"
             assert state.attributes == {
                 ATTR_EXTERNAL_ID: "3456",
                 ATTR_LATITUDE: 38.2,
                 ATTR_LONGITUDE: -3.2,
-                ATTR_FRIENDLY_NAME: "Title 3",
+                ATTR_FRIENDLY_NAME: "Region 3",
+                ATTR_REGION: "Region 3",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: 'ign_sismologia'}
-            assert round(abs(float(state.state)-25.5), 7) == 0
+            assert float(state.state) == 25.5
 
             # Simulate an update - one existing, one new entry,
             # one outdated entry
