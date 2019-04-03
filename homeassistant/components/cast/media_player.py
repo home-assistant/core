@@ -12,8 +12,8 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET)
+    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     CONF_HOST, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
@@ -36,9 +36,9 @@ CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 
 DEFAULT_PORT = 8009
 
-SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY
+SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA | \
+               SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
+               SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
 
 # Stores a threading.Lock that is held by the internal pychromecast discovery.
 INTERNAL_DISCOVERY_RUNNING_KEY = 'cast_discovery_running'
@@ -931,12 +931,12 @@ class CastDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send previous track command."""
         media_controller = self._media_controller()
-        media_controller.rewind()
+        media_controller.queue_prev()
 
     def media_next_track(self):
         """Send next track command."""
         media_controller = self._media_controller()
-        media_controller.skip()
+        media_controller.queue_next()
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
@@ -1130,7 +1130,18 @@ class CastDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_CAST
+        support = SUPPORT_CAST
+        media_status, _ = self._media_status()
+
+        if media_status:
+            if media_status.supports_queue_next:
+                support |= SUPPORT_PREVIOUS_TRACK
+            if media_status.supports_queue_next:
+                support |= SUPPORT_NEXT_TRACK
+            if media_status.supports_seek:
+                support |= SUPPORT_SEEK
+
+        return support
 
     @property
     def media_position(self):

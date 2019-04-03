@@ -479,16 +479,16 @@ async def test_dynamic_group_media_control(hass: HomeAssistantType):
     group_media_status.player_is_playing = True
     entity.new_dynamic_group_media_status(group_media_status)
     entity.media_previous_track()
-    assert entity._dynamic_group_cast.media_controller.rewind.called
-    assert not chromecast.media_controller.rewind.called
+    assert entity._dynamic_group_cast.media_controller.queue_prev.called
+    assert not chromecast.media_controller.queue_prev.called
 
     # Player is paused, dynamic group is playing -> Should not forward
     player_media_status.player_is_playing = False
     player_media_status.player_is_paused = True
     entity.new_media_status(player_media_status)
     entity.media_next_track()
-    assert not entity._dynamic_group_cast.media_controller.skip.called
-    assert chromecast.media_controller.skip.called
+    assert not entity._dynamic_group_cast.media_controller.queue_next.called
+    assert chromecast.media_controller.queue_next.called
 
     # Player is in unknown state, dynamic group is playing -> Should forward
     player_media_status.player_state = "UNKNOWN"
