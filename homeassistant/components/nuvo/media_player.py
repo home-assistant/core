@@ -51,6 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuvo multi zone amplifier platform."""
     port = config.get(CONF_PORT)
