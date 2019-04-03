@@ -465,7 +465,6 @@ async def test_register_admin_service(hass, hass_read_only_user,
 
 async def test_service_unknown_user(hass):
     """Test the correct exception is raised with an unknown user."""
-
     def protected_service(call):
         """Define a protected service."""
         pass
@@ -486,7 +485,6 @@ async def test_service_unknown_user(hass):
 
 async def test_service_unauthorized_user(hass, hass_read_only_user):
     """Test the correct exception is raised with an unauthorized user."""
-
     def protected_service(call):
         """Define a protected service."""
         pass
