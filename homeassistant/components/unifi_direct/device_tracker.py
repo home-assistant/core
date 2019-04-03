@@ -1,9 +1,4 @@
-"""
-Support for Unifi AP direct access.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.unifi_direct/
-"""
+"""Support for Unifi AP direct access."""
 import logging
 import json
 

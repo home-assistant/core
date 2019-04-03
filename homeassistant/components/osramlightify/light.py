@@ -1,9 +1,4 @@
-"""
-Support for Osram Lightify.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.osramlightify/
-"""
+"""Support for Osram Lightify."""
 import logging
 import random
 import socket

@@ -1,9 +1,4 @@
-"""
-Support for getting the disk temperature of a host.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.hddtemp/
-"""
+"""Support for getting the disk temperature of a host."""
 import logging
 from datetime import timedelta
 from telnetlib import Telnet

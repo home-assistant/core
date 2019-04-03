@@ -1,9 +1,4 @@
-"""
-Lights on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/light.zha/
-"""
+"""Lights on Zigbee Home Automation networks."""
 from datetime import timedelta
 import logging
 

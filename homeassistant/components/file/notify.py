@@ -1,9 +1,4 @@
-"""
-Support for file notification.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.file/
-"""
+"""Support for file notification."""
 import logging
 import os
 

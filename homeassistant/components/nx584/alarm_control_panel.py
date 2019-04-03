@@ -1,9 +1,4 @@
-"""
-Support for NX584 alarm control panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.nx584/
-"""
+"""Support for NX584 alarm control panels."""
 import logging
 
 import requests

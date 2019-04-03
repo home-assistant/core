@@ -1,9 +1,4 @@
-"""
-Support for MQTT climate devices.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.mqtt/
-"""
+"""Support for MQTT climate devices."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for Mikrotik routers as device tracker.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.mikrotik/
-"""
+"""Support for Mikrotik routers as device tracker."""
 import logging
 
 import ssl

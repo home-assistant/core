@@ -1,9 +1,4 @@
-"""
-Support for QNAP NAS Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.qnap/
-"""
+"""Support for QNAP NAS Sensors."""
 import logging
 from datetime import timedelta
 

@@ -1,9 +1,4 @@
-"""
-Support for Ness D8X/D16X alarm panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.ness_alarm/
-"""
+"""Support for Ness D8X/D16X alarm panel."""
 
 import logging
 

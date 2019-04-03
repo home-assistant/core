@@ -1,9 +1,4 @@
-"""
-Support for Tile® Bluetooth trackers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.tile/
-"""
+"""Support for Tile® Bluetooth trackers."""
 import logging
 from datetime import timedelta
 

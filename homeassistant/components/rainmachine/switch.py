@@ -1,9 +1,4 @@
-"""
-This component provides support for RainMachine programs and zones.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.rainmachine/
-"""
+"""This component provides support for RainMachine programs and zones."""
 from datetime import datetime
 import logging
 

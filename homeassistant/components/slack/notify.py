@@ -1,9 +1,4 @@
-"""
-Slack platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.slack/
-"""
+"""Slack platform for notify component."""
 import logging
 
 import requests
