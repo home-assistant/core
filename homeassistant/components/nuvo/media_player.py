@@ -6,9 +6,11 @@ import voluptuous as vol
 
 # Import the device class from home assistant component
 from homeassistant.components.media_player import (
-    DOMAIN, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE,
+    MediaPlayerDevice, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA)
+from homeassistant.components.media_player.const import (
+    DOMAIN, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
