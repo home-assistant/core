@@ -396,6 +396,7 @@ omit =
     homeassistant/components/nuimo_controller/*
     homeassistant/components/nuki/lock.py
     homeassistant/components/nut/sensor.py
+    homeassistant/components/nuvo/media_player.py
     homeassistant/components/nx584/alarm_control_panel.py
     homeassistant/components/nzbget/sensor.py
     homeassistant/components/octoprint/*
