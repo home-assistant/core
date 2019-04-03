@@ -1,9 +1,4 @@
-"""
-Support for Canary alarm.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.canary/
-"""
+"""Support for Canary alarm."""
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel

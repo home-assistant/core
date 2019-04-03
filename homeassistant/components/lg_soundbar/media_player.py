@@ -1,9 +1,4 @@
-"""
-Support for LG soundbars.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.lg_soundbar/
-"""
+"""Support for LG soundbars."""
 import logging
 
 from homeassistant.components.media_player import (

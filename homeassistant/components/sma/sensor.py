@@ -1,9 +1,4 @@
-"""
-SMA Solar Webconnect interface.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sma/
-"""
+"""SMA Solar Webconnect interface."""
 import asyncio
 from datetime import timedelta
 import logging

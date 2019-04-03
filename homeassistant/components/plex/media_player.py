@@ -1,9 +1,4 @@
-"""
-Support to interface with the Plex API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.plex/
-"""
+"""Support to interface with the Plex API."""
 from datetime import timedelta
 import json
 import logging

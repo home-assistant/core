@@ -1,9 +1,4 @@
-"""
-Camera platform that receives images through HTTP POST.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/camera.push/
-"""
+"""Camera platform that receives images through HTTP POST."""
 import logging
 import asyncio
 

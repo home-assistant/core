@@ -1,9 +1,4 @@
-"""
-Support for custom shell commands to retrieve values.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.command_line/
-"""
+"""Support for custom shell commands to retrieve values."""
 from datetime import timedelta
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Support for Sky Hub.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.sky_hub/
-"""
+"""Support for Sky Hub."""
 import logging
 import re
 

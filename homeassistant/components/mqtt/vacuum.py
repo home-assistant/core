@@ -1,9 +1,4 @@
-"""
-Support for a generic MQTT vacuum.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum.mqtt/
-"""
+"""Support for a generic MQTT vacuum."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-This platform provides binary sensors for key RainMachine data.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.rainmachine/
-"""
+"""This platform provides binary sensors for key RainMachine data."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice

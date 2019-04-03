@@ -1,9 +1,4 @@
-"""
-Provide functionality to stream video source.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/stream/
-"""
+"""Provide functionality to stream video source."""
 import logging
 import threading
 

@@ -1,9 +1,4 @@
-"""
-Sensor for monitoring the contents of a folder.
-
-For more details about this platform, refer to the documentation at
-https://home-assistant.io/components/sensor.folder/
-"""
+"""Sensor for monitoring the contents of a folder."""
 from datetime import timedelta
 import glob
 import logging

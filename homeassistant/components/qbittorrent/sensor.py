@@ -1,9 +1,4 @@
-"""
-Support for monitoring the qBittorrent API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.qbittorrent/
-"""
+"""Support for monitoring the qBittorrent API."""
 import logging
 
 import voluptuous as vol

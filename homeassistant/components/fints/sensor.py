@@ -1,9 +1,4 @@
-"""
-Read the balance of your bank accounts via FinTS.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fints/
-"""
+"""Read the balance of your bank accounts via FinTS."""
 
 from collections import namedtuple
 from datetime import timedelta

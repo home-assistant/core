@@ -1,9 +1,4 @@
-"""
-Sensor platform for Brottsplatskartan information.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.brottsplatskartan/
-"""
+"""Sensor platform for Brottsplatskartan information."""
 from collections import defaultdict
 from datetime import timedelta
 import logging

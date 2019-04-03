@@ -1,9 +1,4 @@
-"""
-Support for Hikvision event stream events represented as binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.hikvision/
-"""
+"""Support for Hikvision event stream events represented as binary sensors."""
 import logging
 from datetime import timedelta
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for mill wifi-enabled home heaters.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.mill/
-"""
+"""Support for mill wifi-enabled home heaters."""
 
 import logging
 

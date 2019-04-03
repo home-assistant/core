@@ -1,9 +1,4 @@
-"""
-Support for Ankuoo RecSwitch MS6126 devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.recswitch/
-"""
+"""Support for Ankuoo RecSwitch MS6126 devices."""
 
 import logging
 

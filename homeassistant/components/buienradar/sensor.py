@@ -1,9 +1,4 @@
-"""
-Support for Buienradar.nl weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.buienradar/
-"""
+"""Support for Buienradar.nl weather service."""
 import asyncio
 from datetime import datetime, timedelta
 import logging

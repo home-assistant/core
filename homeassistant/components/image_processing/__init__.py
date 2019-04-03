@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with image processing services.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/image_processing/
-"""
+"""Provides functionality to interact with image processing services."""
 import asyncio
 from datetime import timedelta
 import logging
