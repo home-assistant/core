@@ -14,10 +14,8 @@ if TYPE_CHECKING:
 
 def authorized_service_call(hass: HomeAssistantType, domain: str) -> Callable:
     """Ensure user of a config entry-enabled service call has permission."""
-
     def decorator(service: 'Service') -> Callable:
         """Decorate."""
-
         @wraps(service)
         async def check_permissions(
                 call: 'ServiceCall') -> Any:
