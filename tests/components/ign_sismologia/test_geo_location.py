@@ -28,8 +28,8 @@ CONFIG_WITH_CUSTOM_LOCATION = {
         {
             'platform': 'ign_sismologia',
             CONF_RADIUS: 200,
-            CONF_LATITUDE: 15.1,
-            CONF_LONGITUDE: 25.2
+            CONF_LATITUDE: 40.4,
+            CONF_LONGITUDE: -3.7
         }
     ]
 }
@@ -88,12 +88,14 @@ async def test_setup(hass):
             all_states = hass.states.async_all()
             assert len(all_states) == 3
 
-            state = hass.states.get("geo_location.title_1")
+            state = hass.states.get("geo_location.m_5_7_region_1")
             assert state is not None
-            assert state.name == "Title 1"
+            assert state.name == "M 5.7 - Region 1"
             assert state.attributes == {
-                ATTR_EXTERNAL_ID: "1234", ATTR_LATITUDE: -31.0,
-                ATTR_LONGITUDE: 150.0, ATTR_FRIENDLY_NAME: "Title 1",
+                ATTR_EXTERNAL_ID: "1234",
+                ATTR_LATITUDE: 38.0,
+                ATTR_LONGITUDE: -3.0,
+                ATTR_FRIENDLY_NAME: "M 5.7 - Region 1",
                 ATTR_REGION: "Region 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE:
@@ -109,8 +111,10 @@ async def test_setup(hass):
             assert state is not None
             assert state.name == "Title 2"
             assert state.attributes == {
-                ATTR_EXTERNAL_ID: "2345", ATTR_LATITUDE: -31.1,
-                ATTR_LONGITUDE: 150.1, ATTR_FRIENDLY_NAME: "Title 2",
+                ATTR_EXTERNAL_ID: "2345",
+                ATTR_LATITUDE: 38.1,
+                ATTR_LONGITUDE: -3.1,
+                ATTR_FRIENDLY_NAME: "Title 2",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: 'ign_sismologia'}
             assert round(abs(float(state.state)-20.5), 7) == 0
@@ -119,8 +123,10 @@ async def test_setup(hass):
             assert state is not None
             assert state.name == "Title 3"
             assert state.attributes == {
-                ATTR_EXTERNAL_ID: "3456", ATTR_LATITUDE: -31.2,
-                ATTR_LONGITUDE: 150.2, ATTR_FRIENDLY_NAME: "Title 3",
+                ATTR_EXTERNAL_ID: "3456",
+                ATTR_LATITUDE: 38.2,
+                ATTR_LONGITUDE: -3.2,
+                ATTR_FRIENDLY_NAME: "Title 3",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: 'ign_sismologia'}
             assert round(abs(float(state.state)-25.5), 7) == 0
@@ -176,5 +182,5 @@ async def test_setup_with_custom_location(hass):
             assert len(all_states) == 1
 
             assert mock_feed.call_args == call(
-                (15.1, 25.2), filter_minimum_magnitude=0.0,
+                (40.4, -3.7), filter_minimum_magnitude=0.0,
                 filter_radius=200.0)
