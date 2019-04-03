@@ -725,6 +725,9 @@ mycroftapi==2.0
 # homeassistant.components.usps
 myusps==1.3.2
 
+# homeassistant.components.n26
+n26==0.2.7
+
 # homeassistant.components.nad.media_player
 nad_receiver==0.0.11
 
