@@ -49,10 +49,11 @@ async def test_setup_entry(hass):
     entry = MockConfigEntry(
         domain=axis.DOMAIN, data={axis.device.CONF_MAC: '0123'})
 
-    mock_device = Mock()
-    mock_device.async_setup.return_value = mock_coro(True)
-    mock_device.async_update_device_registry.return_value = mock_coro(True)
-    mock_device.serial.return_value = '1'
+    mock_device = axis.AxisNetworkDevice(hass, entry)
+    mock_device.async_setup = Mock(return_value=mock_coro(True))
+    mock_device.async_update_device_registry = \
+        Mock(return_value=mock_coro(True))
+    mock_device.async_reset = Mock(return_value=mock_coro(True))
 
     with patch.object(axis, 'AxisNetworkDevice') as mock_device_class, \
             patch.object(
@@ -62,6 +63,7 @@ async def test_setup_entry(hass):
         assert await axis.async_setup_entry(hass, entry)
 
     assert len(hass.data[axis.DOMAIN]) == 1
+    assert '0123' in hass.data[axis.DOMAIN]
 
 
 async def test_setup_entry_fails(hass):
@@ -77,6 +79,28 @@ async def test_setup_entry_fails(hass):
 
         assert not await axis.async_setup_entry(hass, entry)
 
+    assert not hass.data[axis.DOMAIN]
+
+
+async def test_unload_entry(hass):
+    """Test successful unload of entry."""
+    entry = MockConfigEntry(
+        domain=axis.DOMAIN, data={axis.device.CONF_MAC: '0123'})
+
+    mock_device = axis.AxisNetworkDevice(hass, entry)
+    mock_device.async_setup = Mock(return_value=mock_coro(True))
+    mock_device.async_update_device_registry = \
+        Mock(return_value=mock_coro(True))
+    mock_device.async_reset = Mock(return_value=mock_coro(True))
+
+    with patch.object(axis, 'AxisNetworkDevice') as mock_device_class, \
+            patch.object(
+                axis, 'async_populate_options', return_value=mock_coro(True)):
+        mock_device_class.return_value = mock_device
+
+        assert await axis.async_setup_entry(hass, entry)
+
+    assert await axis.async_unload_entry(hass, entry)
     assert not hass.data[axis.DOMAIN]
 
 

@@ -56,6 +56,11 @@ class AxisCamera(MjpegCamera):
         self.unsub_dispatcher.append(async_dispatcher_connect(
             self.hass, self.device.event_reachable, self.update_callback))
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect device object when removed."""
+        for unsub_dispatcher in self.unsub_dispatcher:
+            unsub_dispatcher()
+
     @property
     def supported_features(self):
         """Return supported features."""

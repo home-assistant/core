@@ -4,7 +4,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DEVICE, CONF_NAME, CONF_TRIGGER_TIME, EVENT_HOMEASSISTANT_STOP)
+    CONF_DEVICE, CONF_MAC, CONF_NAME, CONF_TRIGGER_TIME,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import DEVICE_SCHEMA
@@ -53,6 +54,12 @@ async def async_setup_entry(hass, config_entry):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
 
     return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload Axis device config entry."""
+    device = hass.data[DOMAIN].pop(config_entry.data[CONF_MAC])
+    return await device.async_reset()
 
 
 async def async_populate_options(hass, config_entry):
