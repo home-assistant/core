@@ -1,17 +1,18 @@
 """Config flow to configure deCONZ component."""
 import asyncio
+
 import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
-    CONF_ALLOW_DECONZ_GROUPS, CONF_ALLOW_CLIP_SENSOR, DEFAULT_PORT, DOMAIN)
-
-CONF_BRIDGEID = 'bridgeid'
+    CONF_ALLOW_CLIP_SENSOR, CONF_ALLOW_DECONZ_GROUPS, CONF_BRIDGEID,
+    DEFAULT_ALLOW_CLIP_SENSOR, DEFAULT_ALLOW_DECONZ_GROUPS, DEFAULT_PORT,
+    DOMAIN)
 
 
 @callback
@@ -27,6 +28,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+
+    _hassio_discovery = None
 
     def __init__(self):
         """Initialize the deCONZ config flow."""
@@ -151,8 +154,10 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         return self.async_show_form(
             step_id='options',
             data_schema=vol.Schema({
-                vol.Optional(CONF_ALLOW_CLIP_SENSOR): bool,
-                vol.Optional(CONF_ALLOW_DECONZ_GROUPS): bool,
+                vol.Optional(CONF_ALLOW_CLIP_SENSOR,
+                             default=DEFAULT_ALLOW_CLIP_SENSOR): bool,
+                vol.Optional(CONF_ALLOW_DECONZ_GROUPS,
+                             default=DEFAULT_ALLOW_DECONZ_GROUPS): bool,
             }),
         )
 
@@ -191,3 +196,45 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         user_input = {CONF_ALLOW_CLIP_SENSOR: True,
                       CONF_ALLOW_DECONZ_GROUPS: True}
         return await self.async_step_options(user_input=user_input)
+
+    async def async_step_hassio(self, user_input=None):
+        """Prepare configuration for a Hass.io deCONZ bridge.
+
+        This flow is triggered by the discovery component.
+        """
+        if configured_hosts(self.hass):
+            return self.async_abort(reason='one_instance_only')
+
+        self._hassio_discovery = user_input
+
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(self, user_input=None):
+        """Confirm a Hass.io discovery."""
+        if user_input is not None:
+            data = self._hassio_discovery
+
+            return self.async_create_entry(
+                title=data['addon'], data={
+                    CONF_HOST: data[CONF_HOST],
+                    CONF_PORT: data[CONF_PORT],
+                    CONF_BRIDGEID: data['serial'],
+                    CONF_API_KEY: data[CONF_API_KEY],
+                    CONF_ALLOW_CLIP_SENSOR:
+                        user_input[CONF_ALLOW_CLIP_SENSOR],
+                    CONF_ALLOW_DECONZ_GROUPS:
+                        user_input[CONF_ALLOW_DECONZ_GROUPS],
+                })
+
+        return self.async_show_form(
+            step_id='hassio_confirm',
+            description_placeholders={
+                'addon': self._hassio_discovery['addon']
+            },
+            data_schema=vol.Schema({
+                vol.Optional(CONF_ALLOW_CLIP_SENSOR,
+                             default=DEFAULT_ALLOW_CLIP_SENSOR): bool,
+                vol.Optional(CONF_ALLOW_DECONZ_GROUPS,
+                             default=DEFAULT_ALLOW_DECONZ_GROUPS): bool,
+            })
+        )
