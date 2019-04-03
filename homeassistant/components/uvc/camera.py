@@ -82,11 +82,12 @@ class UnifiVideoCamera(Camera):
         self._connect_addr = None
         self._camera = None
         self._caminfo = None
+        self._rtspUri = None
         self._motion_status = False
 
     async def async_added_to_hass(self):
         """Load data init callbacks."""
-        await self.hass.async_add_job(self.camera_info)
+        await self.hass.async_add_executor_job(self.load_camera_info)
 
     @property
     def name(self):
@@ -106,21 +107,14 @@ class UnifiVideoCamera(Camera):
     @property
     def supported_features(self):
         """Return supported features."""
-        for channel in self._caminfo['channels']:
-            if channel['isRtspEnabled']:
-                return SUPPORT_STREAM
+        if self._rtspUri:
+            return SUPPORT_STREAM
         return 0
 
     @property
     def stream_source(self):
         """Return the stream source."""
-        for channel in self._caminfo['channels']:
-            if channel['isRtspEnabled']:
-                stream = channel['rtspUris'][0].split(':')[2]
-                return 'rtsp://{}:{}'.format(
-                    self._caminfo['controllerHostAddress'],
-                    stream)
-            return None
+        return self._rtspUri
 
     @property
     def brand(self):
@@ -131,6 +125,17 @@ class UnifiVideoCamera(Camera):
     def model(self):
         """Return the model of this camera."""
         return self._caminfo['model']
+
+    def load_camera_info(self):
+        """Return camera data from the NVR controller."""
+        self._caminfo = self._nvr.get_camera(self._uuid)
+        for channel in self._caminfo['channels']:
+            if channel['isRtspEnabled']:
+                stream = channel['rtspUris'][0].split(':')[2]
+                self._rtspUri = 'rtsp://{}:{}'.format(
+                    self._caminfo['controllerHostAddress'],
+                    stream)
+                break
 
     def _login(self):
         """Login to the camera."""
@@ -171,9 +176,6 @@ class UnifiVideoCamera(Camera):
 
         self._camera = camera
         return True
-
-    def camera_info(self):
-        self._caminfo = self._nvr.get_camera(self._uuid)
 
     def camera_image(self):
         """Return the image of this camera."""
