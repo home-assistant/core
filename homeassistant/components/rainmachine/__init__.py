@@ -11,10 +11,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_SWITCHES)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.auth import authorized_service_call
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import authorized_service_call
 
 from .config_flow import configured_instances
 from .const import (
