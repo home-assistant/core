@@ -368,7 +368,7 @@ def async_register_admin_service(
 
 @bind_hass
 def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
-    """Ensure permission to access any entity under a domain during service call."""
+    """Ensure permission to access any entity under domain in service call."""
     def decorator(service: 'Service') -> Callable:
         """Decorate."""
         @wraps(service)
