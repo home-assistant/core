@@ -16,9 +16,6 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
-from homeassistant.components.lifx import (
-    DOMAIN as LIFX_DOMAIN, DATA_LIFX_MANAGER, CONF_SERVER, CONF_PORT,
-    CONF_BROADCAST)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -26,6 +23,10 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import async_extract_entity_ids
 import homeassistant.util.color as color_util
+
+from . import (
+    CONF_BROADCAST, CONF_PORT, CONF_SERVER, DATA_LIFX_MANAGER,
+    DOMAIN as LIFX_DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 

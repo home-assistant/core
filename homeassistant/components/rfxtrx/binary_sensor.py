@@ -6,15 +6,14 @@ import voluptuous as vol
 from homeassistant.components import rfxtrx
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.components.rfxtrx import (
-    ATTR_NAME, CONF_AUTOMATIC_ADD, CONF_DATA_BITS, CONF_DEVICES,
-    CONF_FIRE_EVENT, CONF_OFF_DELAY)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_DEVICE_CLASS, CONF_NAME)
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import event as evt
-from homeassistant.util import dt as dt_util
-from homeassistant.util import slugify
+from homeassistant.helpers import config_validation as cv, event as evt
+from homeassistant.util import dt as dt_util, slugify
+
+from . import (
+    ATTR_NAME, CONF_AUTOMATIC_ADD, CONF_DATA_BITS, CONF_DEVICES,
+    CONF_FIRE_EVENT, CONF_OFF_DELAY)
 
 _LOGGER = logging.getLogger(__name__)
 

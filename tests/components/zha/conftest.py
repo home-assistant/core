@@ -6,7 +6,8 @@ from homeassistant.components.zha.core.const import (
     DOMAIN, DATA_ZHA, COMPONENTS
 )
 from homeassistant.components.zha.core.gateway import ZHAGateway
-from homeassistant.components.zha.core.gateway import establish_device_mappings
+from homeassistant.components.zha.core.registries import \
+    establish_device_mappings
 from homeassistant.components.zha.core.channels.registry \
     import populate_channel_registry
 from .common import async_setup_entry
@@ -36,7 +37,9 @@ async def zha_gateway_fixture(hass):
             hass.data[DATA_ZHA].get(component, {})
         )
     zha_storage = await async_get_registry(hass)
-    return ZHAGateway(hass, {}, zha_storage)
+    gateway = ZHAGateway(hass, {})
+    gateway.zha_storage = zha_storage
+    return gateway
 
 
 @pytest.fixture(autouse=True)

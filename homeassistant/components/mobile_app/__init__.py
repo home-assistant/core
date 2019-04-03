@@ -2,13 +2,13 @@
 from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.webhook import async_register as webhook_register
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
-                    ATTR_MODEL, ATTR_OS_VERSION, DATA_BINARY_SENSOR,
-                    DATA_CONFIG_ENTRIES, DATA_DELETED_IDS, DATA_DEVICES,
-                    DATA_SENSOR, DATA_STORE, DOMAIN, STORAGE_KEY,
+from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
+                    ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
+                    DATA_BINARY_SENSOR, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
+                    DATA_DEVICES, DATA_SENSOR, DATA_STORE, DOMAIN, STORAGE_KEY,
                     STORAGE_VERSION)
 
 from .http_api import RegistrationsView
@@ -51,6 +51,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
                              handle_webhook)
         except ValueError:
             pass
+
+    hass.async_create_task(discovery.async_load_platform(
+        hass, 'notify', DOMAIN, {}, config))
 
     return True
 

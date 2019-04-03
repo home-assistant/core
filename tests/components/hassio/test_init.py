@@ -8,6 +8,7 @@ import pytest
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.setup import async_setup_component
 from homeassistant.components.hassio import STORAGE_KEY
+from homeassistant.components import frontend
 
 from tests.common import mock_coro
 
@@ -42,6 +43,28 @@ def test_setup_api_ping(hass, aioclient_mock):
     assert aioclient_mock.call_count == 3
     assert hass.components.hassio.get_homeassistant_version() == "10.0"
     assert hass.components.hassio.is_hassio()
+
+
+async def test_setup_api_panel(hass, aioclient_mock):
+    """Test setup with API ping."""
+    assert await async_setup_component(hass, 'frontend', {})
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, 'hassio', {})
+        assert result
+
+    panels = hass.data[frontend.DATA_PANELS]
+
+    assert panels.get('hassio').to_response() == {
+        'component_name': 'custom',
+        'icon': 'hass:home-assistant',
+        'title': 'Hass.io',
+        'url_path': 'hassio',
+        'require_admin': True,
+        'config': {'_panel_custom': {'embed_iframe': True,
+                                     'js_url': '/api/hassio/app/entrypoint.js',
+                                     'name': 'hassio-main',
+                                     'trust_external': False}},
+    }
 
 
 @asyncio.coroutine
@@ -184,7 +207,7 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         assert result
 
     assert aioclient_mock.call_count == 3
-    assert aioclient_mock.mock_calls[-1][3]['X-HASSIO-KEY'] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]['X-Hassio-Key'] == "123456"
 
 
 @asyncio.coroutine
@@ -196,8 +219,8 @@ def test_fail_setup_without_environ_var(hass):
 
 
 @asyncio.coroutine
-def test_fail_setup_cannot_connect(hass, caplog):
-    """Fail setup if cannot connect."""
+def test_warn_when_cannot_connect(hass, caplog):
+    """Fail warn when we cannot connect."""
     with patch.dict(os.environ, MOCK_ENVIRON), \
             patch('homeassistant.components.hassio.HassIO.is_connected',
                   Mock(return_value=mock_coro(None))):

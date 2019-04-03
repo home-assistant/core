@@ -6,8 +6,9 @@ https://home-assistant.io/components/sensor.qwikswitch/
 """
 import logging
 
-from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH, QSEntity
 from homeassistant.core import callback
+
+from . import DOMAIN as QWIKSWITCH, QSEntity
 
 DEPENDENCIES = [QWIKSWITCH]
 

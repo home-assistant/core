@@ -10,20 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components import climate, mqtt
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, ClimateDevice)
 from homeassistant.components.climate.const import (
-    ATTR_OPERATION_MODE, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP,
-    STATE_AUTO, STATE_COOL,
-    STATE_DRY, STATE_FAN_ONLY, STATE_HEAT, SUPPORT_AUX_HEAT, SUPPORT_AWAY_MODE,
-    SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
+    ATTR_OPERATION_MODE, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, STATE_AUTO,
+    STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT, SUPPORT_AUX_HEAT,
+    SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE, SUPPORT_HOLD_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID, MQTT_BASE_PLATFORM_SCHEMA, MqttAttributes,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_OFF,
     STATE_ON)
@@ -31,6 +24,12 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
+    CONF_UNIQUE_ID, MQTT_BASE_PLATFORM_SCHEMA, MqttAttributes,
+    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 

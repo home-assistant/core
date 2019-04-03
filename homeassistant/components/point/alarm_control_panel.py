@@ -3,12 +3,12 @@ import logging
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN, AlarmControlPanel)
-from homeassistant.components.point.const import (
-    DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,14 +1,13 @@
 """Support for Vera sensors."""
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+
+from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
 
