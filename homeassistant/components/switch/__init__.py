@@ -1,4 +1,4 @@
-"""Component to interface with various switches that can be controlled remotely."""
+"""Component to interface with switches that can be controlled remotely."""
 from datetime import timedelta
 import logging
 

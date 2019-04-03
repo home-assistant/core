@@ -1,4 +1,4 @@
-"""Component to interface with various locks that can be controlled remotely."""
+"""Component to interface with locks that can be controlled remotely."""
 from datetime import timedelta
 import functools as ft
 import logging
