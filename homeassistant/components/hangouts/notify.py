@@ -3,11 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.hangouts.const import (
-    CONF_DEFAULT_CONVERSATIONS, DOMAIN, SERVICE_SEND_MESSAGE, TARGETS_SCHEMA)
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, PLATFORM_SCHEMA,
     BaseNotificationService)
+
+from .const import (
+    CONF_DEFAULT_CONVERSATIONS, DOMAIN, SERVICE_SEND_MESSAGE, TARGETS_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 

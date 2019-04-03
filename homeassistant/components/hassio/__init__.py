@@ -6,7 +6,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import SERVICE_CHECK_CONFIG
+from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_NAME, SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP)
@@ -20,6 +20,7 @@ from .auth import async_setup_auth
 from .discovery import async_setup_discovery
 from .handler import HassIO, HassioAPIError
 from .http import HassIOView
+from .ingress import async_setup_ingress
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,6 +189,7 @@ async def async_setup(hass, config):
             sidebar_icon='hass:home-assistant',
             js_url='/api/hassio/app/entrypoint.js',
             embed_iframe=True,
+            require_admin=True,
         )
 
     await hassio.update_hass_api(config.get('http', {}), refresh_token.token)
@@ -268,5 +270,8 @@ async def async_setup(hass, config):
 
     # Init auth Hass.io feature
     async_setup_auth(hass)
+
+    # Init ingress Hass.io feature
+    async_setup_ingress(hass, host)
 
     return True

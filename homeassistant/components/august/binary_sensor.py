@@ -1,9 +1,10 @@
 """Support for August binary sensors."""
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta, datetime
 
-from homeassistant.components.august import DATA_AUGUST
-from homeassistant.components.binary_sensor import (BinarySensorDevice)
+from homeassistant.components.binary_sensor import BinarySensorDevice
+
+from . import DATA_AUGUST
 
 _LOGGER = logging.getLogger(__name__)
 

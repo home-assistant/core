@@ -1,11 +1,12 @@
 """Support for Wink lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_COLOR, Light)
-from homeassistant.components.wink import DOMAIN, WinkDevice
+    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 from homeassistant.util import color as color_util
-from homeassistant.util.color import \
-    color_temperature_mired_to_kelvin as mired_to_kelvin
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin as mired_to_kelvin)
+
+from . import DOMAIN, WinkDevice
 
 DEPENDENCIES = ['wink']
 
