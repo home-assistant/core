@@ -63,7 +63,7 @@ async def setup_push_receiver(hass, aioclient_mock):
 
 
 async def test_notify_works(hass, aioclient_mock, setup_push_receiver):
-    """Return two new registrations."""
+    """Test notify works."""
     assert hass.services.has_service('notify', 'mobile_app_test') is True
     assert await hass.services.async_call('notify', 'mobile_app_test',
                                           {'message': 'Hello world'},
