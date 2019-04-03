@@ -21,7 +21,8 @@ from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import trait, helpers, const
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE,
+    ATTR_ASSUMED_STATE)
 from homeassistant.core import State, DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE
 from homeassistant.util import color
 from tests.common import async_mock_service, mock_coro
@@ -1059,12 +1060,30 @@ async def test_openclose_cover(hass):
     assert trait.OpenCloseTrait.supported(cover.DOMAIN,
                                           cover.SUPPORT_SET_POSITION)
 
+    # No position
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {
+        'openPercent': 100
+    }
+
+    # Assumed state
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+        ATTR_ASSUMED_STATE: True,
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {
+        'openPercent': 50
+    }
+
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
         cover.ATTR_CURRENT_POSITION: 75
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
-
     assert trt.query_attributes() == {
         'openPercent': 75
     }
