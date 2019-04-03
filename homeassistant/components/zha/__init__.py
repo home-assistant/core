@@ -16,15 +16,14 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import api
 from .core import ZHAGateway
+from .core.channels.registry import populate_channel_registry
 from .core.const import (
     COMPONENTS, CONF_BAUDRATE, CONF_DATABASE, CONF_DEVICE_CONFIG,
-    CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA,
-    DATA_ZHA_CONFIG, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS,
-    DATA_ZHA_RADIO, DEFAULT_BAUDRATE, DATA_ZHA_GATEWAY,
-    DEFAULT_RADIO_TYPE, DOMAIN, RadioType, DATA_ZHA_CORE_EVENTS, ENABLE_QUIRKS)
-from .core.registries import establish_device_mappings
-from .core.channels.registry import populate_channel_registry
+    CONF_RADIO_TYPE, CONF_USB_PATH, DATA_ZHA, DATA_ZHA_CONFIG,
+    DATA_ZHA_CORE_COMPONENT, DATA_ZHA_DISPATCHERS, DATA_ZHA_GATEWAY,
+    DEFAULT_BAUDRATE, DEFAULT_RADIO_TYPE, DOMAIN, ENABLE_QUIRKS, RadioType)
 from .core.patches import apply_cluster_listener_patch
+from .core.registries import establish_device_mappings
 
 REQUIREMENTS = [
     'bellows-homeassistant==0.7.2',
@@ -143,9 +142,9 @@ async def async_setup_entry(hass, config_entry):
 
     async def async_zha_shutdown(event):
         """Handle shutdown tasks."""
+        await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
         await hass.data[DATA_ZHA][
             DATA_ZHA_GATEWAY].async_update_device_storage()
-        hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
 
     hass.bus.async_listen_once(
         ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
@@ -154,6 +153,8 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload ZHA config entry."""
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
+
     api.async_unload_api(hass)
 
     dispatchers = hass.data[DATA_ZHA].get(DATA_ZHA_DISPATCHERS, [])
@@ -169,12 +170,6 @@ async def async_unload_entry(hass, config_entry):
     entity_ids = [entity.entity_id for entity in component.entities]
     for entity_id in entity_ids:
         await component.async_remove_entity(entity_id)
-
-    # clean up events
-    hass.data[DATA_ZHA][DATA_ZHA_CORE_EVENTS].clear()
-
-    _LOGGER.debug("Closing zha radio")
-    hass.data[DATA_ZHA][DATA_ZHA_RADIO].close()
 
     del hass.data[DATA_ZHA]
     return True
