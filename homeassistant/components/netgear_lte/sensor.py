@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY, DISPATCHER_NETGEAR_LTE
-from .sensor_types import SENSOR_SMS, SENSOR_USAGE
+from .sensor_types import SENSOR_SMS, SENSOR_USAGE, SENSOR_UNITS
 
 DEPENDENCIES = ['netgear_lte']
 
@@ -36,6 +36,8 @@ async def async_setup_platform(
             sensors.append(SMSSensor(modem_data, sensor_type))
         elif sensor_type == SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
+        else:
+            sensors.append(GenericSensor(modem_data, sensor_type))
 
     async_add_entities(sensors)
 
@@ -79,14 +81,19 @@ class LTESensor(Entity):
         """Return a unique ID like 'usage_5TG365AB0078V'."""
         return self._unique_id
 
-
-class SMSSensor(LTESensor):
-    """Unread SMS sensor entity."""
-
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Netgear LTE SMS"
+        return "Netgear LTE {}".format(self.sensor_type)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return SENSOR_UNITS[self.sensor_type]
+
+
+class SMSSensor(LTESensor):
+    """Unread SMS sensor entity."""
 
     @property
     def state(self):
@@ -98,16 +105,15 @@ class UsageSensor(LTESensor):
     """Data usage sensor entity."""
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return "MiB"
+    def state(self):
+        """Return the state of the sensor."""
+        return round(self.modem_data.data.usage / 1024**2, 1)
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "Netgear LTE usage"
+
+class GenericSensor(LTESensor):
+    """Sensor entity with raw state."""
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return round(self.modem_data.data.usage / 1024**2, 1)
+        return getattr(self.modem_data.data, self.sensor_type)
