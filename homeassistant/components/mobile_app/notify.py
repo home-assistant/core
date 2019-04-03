@@ -51,7 +51,7 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
                 str(resetsAtTime).split(".")[0])
 
 
-async def get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the mobile_app notification service."""
     session = async_get_clientsession(hass)
     return MobileAppNotificationService(session)
