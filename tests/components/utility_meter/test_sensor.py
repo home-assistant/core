@@ -6,10 +6,11 @@ from unittest.mock import patch
 from contextlib import contextmanager
 
 from tests.common import async_fire_time_changed
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_START, ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.components.utility_meter.const import DOMAIN
+from homeassistant.components.utility_meter.const import (
+    DOMAIN, SERVICE_SELECT_TARIFF, ATTR_TARIFF)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ async def test_state(hass):
         'utility_meter': {
             'energy_bill': {
                 'source': 'sensor.energy',
-            }
+                'tariffs': ['onpeak', 'midpeak', 'offpeak']},
         }
     }
 
@@ -51,10 +52,42 @@ async def test_state(hass):
                               force_update=True)
         await hass.async_block_till_done()
 
-    state = hass.states.get('sensor.energy_bill')
+    state = hass.states.get('sensor.energy_bill_onpeak')
     assert state is not None
-
     assert state.state == '1'
+
+    state = hass.states.get('sensor.energy_bill_midpeak')
+    assert state is not None
+    assert state.state == '0'
+
+    state = hass.states.get('sensor.energy_bill_offpeak')
+    assert state is not None
+    assert state.state == '0'
+
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, {
+        ATTR_ENTITY_ID: 'utility_meter.energy_bill', ATTR_TARIFF: 'offpeak'
+        }, blocking=True)
+
+    await hass.async_block_till_done()
+
+    now = dt_util.utcnow() + timedelta(seconds=20)
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=now):
+        hass.states.async_set(entity_id, 6, {"unit_of_measurement": "kWh"},
+                              force_update=True)
+        await hass.async_block_till_done()
+
+    state = hass.states.get('sensor.energy_bill_onpeak')
+    assert state is not None
+    assert state.state == '1'
+
+    state = hass.states.get('sensor.energy_bill_midpeak')
+    assert state is not None
+    assert state.state == '0'
+
+    state = hass.states.get('sensor.energy_bill_offpeak')
+    assert state is not None
+    assert state.state == '3'
 
 
 async def test_net_consumption(hass):
