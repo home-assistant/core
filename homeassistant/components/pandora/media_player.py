@@ -1,9 +1,4 @@
-"""
-Component for controlling Pandora stations through the pianobar client.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/media_player.pandora/
-"""
+"""Component for controlling Pandora stations through the pianobar client."""
 from datetime import timedelta
 import logging
 import os

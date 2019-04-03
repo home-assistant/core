@@ -1,9 +1,4 @@
-"""
-Support for Yamaha Receivers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.yamaha/
-"""
+"""Support for Yamaha Receivers."""
 import logging
 
 import requests

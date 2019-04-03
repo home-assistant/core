@@ -1,9 +1,4 @@
-"""
-Support for Zyxel Keenetic NDMS2 based routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.keenetic_ndms2/
-"""
+"""Support for Zyxel Keenetic NDMS2 based routers."""
 import logging
 
 import voluptuous as vol

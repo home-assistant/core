@@ -1,9 +1,4 @@
-"""
-Tracking for bluetooth low energy devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.bluetooth_le_tracker/
-"""
+"""Tracking for bluetooth low energy devices."""
 import logging
 
 from homeassistant.helpers.event import track_point_in_utc_time

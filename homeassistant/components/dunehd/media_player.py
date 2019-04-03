@@ -1,9 +1,4 @@
-"""
-DuneHD implementation of the media player.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/media_player.dunehd/
-"""
+"""DuneHD implementation of the media player."""
 import voluptuous as vol
 
 from homeassistant.components.media_player import (

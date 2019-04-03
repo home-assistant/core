@@ -1,9 +1,4 @@
-"""
-Support for Decora dimmers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.decora/
-"""
+"""Support for Decora dimmers."""
 import importlib
 import logging
 from functools import wraps

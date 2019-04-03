@@ -1,9 +1,4 @@
-"""
-Integrate with FreeDNS Dynamic DNS service at freedns.afraid.org.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/freedns/
-"""
+"""Integrate with FreeDNS Dynamic DNS service at freedns.afraid.org."""
 import asyncio
 from datetime import timedelta
 import logging

@@ -1,9 +1,4 @@
-"""
-Support for Qwikswitch Relays and Dimmers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.qwikswitch/
-"""
+"""Support for Qwikswitch Relays and Dimmers."""
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
 
 from . import DOMAIN as QWIKSWITCH, QSToggleEntity

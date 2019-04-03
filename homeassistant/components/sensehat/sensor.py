@@ -1,9 +1,4 @@
-"""
-Support for Sense HAT sensors.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.sensehat
-"""
+"""Support for Sense HAT sensors."""
 import os
 import logging
 from datetime import timedelta

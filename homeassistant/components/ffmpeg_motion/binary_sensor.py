@@ -1,9 +1,4 @@
-"""
-Provides a binary sensor which is a collection of ffmpeg tools.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.ffmpeg_motion/
-"""
+"""Provides a binary sensor which is a collection of ffmpeg tools."""
 import logging
 
 import voluptuous as vol

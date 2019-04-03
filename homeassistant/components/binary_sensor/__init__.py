@@ -1,9 +1,4 @@
-"""
-Component to interface with binary sensors.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor/
-"""
+"""Component to interface with binary sensors."""
 
 from datetime import timedelta
 import logging

@@ -1,9 +1,4 @@
-"""
-Support for Qwikswitch Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.qwikswitch/
-"""
+"""Support for Qwikswitch Sensors."""
 import logging
 
 from homeassistant.core import callback

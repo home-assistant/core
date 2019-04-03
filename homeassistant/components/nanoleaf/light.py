@@ -1,9 +1,4 @@
-"""
-Support for Nanoleaf Lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.nanoleaf/
-"""
+"""Support for Nanoleaf Lights."""
 import logging
 
 import voluptuous as vol

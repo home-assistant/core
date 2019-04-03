@@ -1,9 +1,4 @@
-"""
-Support for the Lyft API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.lyft/
-"""
+"""Support for the Lyft API."""
 import logging
 from datetime import timedelta
 

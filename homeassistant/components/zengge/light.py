@@ -1,9 +1,4 @@
-"""
-Support for Zengge lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.zengge/
-"""
+"""Support for Zengge lights."""
 import logging
 
 import voluptuous as vol

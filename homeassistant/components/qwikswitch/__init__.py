@@ -1,9 +1,4 @@
-"""
-Support for Qwikswitch devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/qwikswitch/
-"""
+"""Support for Qwikswitch devices."""
 import logging
 
 import voluptuous as vol

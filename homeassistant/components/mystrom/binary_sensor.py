@@ -1,9 +1,4 @@
-"""
-Support for the myStrom buttons.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.mystrom/
-"""
+"""Support for the myStrom buttons."""
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice

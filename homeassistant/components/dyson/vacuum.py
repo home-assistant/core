@@ -1,9 +1,4 @@
-"""
-Support for the Dyson 360 eye vacuum cleaner robot.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum.dyson/
-"""
+"""Support for the Dyson 360 eye vacuum cleaner robot."""
 import logging
 
 from homeassistant.components.vacuum import (

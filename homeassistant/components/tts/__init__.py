@@ -1,9 +1,4 @@
-"""
-Provide functionality to TTS.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/
-"""
+"""Provide functionality to TTS."""
 import asyncio
 import ctypes
 import functools as ft
