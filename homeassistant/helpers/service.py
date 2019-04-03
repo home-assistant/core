@@ -3,7 +3,7 @@ import asyncio
 from functools import wraps
 import logging
 from os import path
-from typing import Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 import voluptuous as vol
 
@@ -18,6 +18,10 @@ from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
+from .typing import HomeAssistantType
+if TYPE_CHECKING:
+    from homeassistant.core import Service, ServiceCall  # noqa
+
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
 CONF_SERVICE_ENTITY_ID = 'entity_id'
@@ -27,6 +31,43 @@ CONF_SERVICE_DATA_TEMPLATE = 'data_template'
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = 'service_description_cache'
+
+
+@bind_hass
+def authorized_service_call(hass: HomeAssistantType, domain: str) -> Callable:
+    """Ensure user of a config entry-enabled service call has permission."""
+    def decorator(service: 'Service') -> Callable:
+        """Decorate."""
+        @wraps(service)
+        async def check_permissions(
+                call: 'ServiceCall') -> Any:
+            """Check user permission and raise before call if unauthorized."""
+            if not call.context.user_id:
+                return await service(call)
+
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(
+                    context=call.context, permission=POLICY_CONTROL)
+
+            reg = await hass.helpers.entity_registry.async_get_registry()
+            entities = [
+                entity.entity_id for entity in reg.entities.values()
+                if entity.platform == domain
+            ]
+
+            for entity_id in entities:
+                if user.permissions.check_entity(entity_id, POLICY_CONTROL):
+                    return await service(call)
+
+            raise Unauthorized(
+                context=call.context,
+                permission=POLICY_CONTROL,
+            )
+
+        return check_permissions
+
+    return decorator
 
 
 @bind_hass

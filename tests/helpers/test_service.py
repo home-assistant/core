@@ -461,3 +461,45 @@ async def test_register_admin_service(hass, hass_read_only_user,
         ))
     assert len(calls) == 1
     assert calls[0].context.user_id == hass_admin_user.id
+
+
+async def test_service_unknown_user(hass):
+    """Test the correct exception is raised with an unknown user."""
+
+    def protected_service(call):
+        """Define a protected service."""
+        pass
+
+    _protected_service = service.authorized_service_call(hass, 'test_domain')(
+        protected_service)
+
+    hass.services.async_register(
+        'test_domain', 'test_service', _protected_service, schema=None)
+
+    with pytest.raises(exceptions.UnknownUser):
+        await hass.services.async_call(
+            'test_domain',
+            'test_service', {},
+            blocking=True,
+            context=ha.Context(user_id='fake_user_id'))
+
+
+async def test_service_unauthorized_user(hass, hass_read_only_user):
+    """Test the correct exception is raised with an unauthorized user."""
+
+    def protected_service(call):
+        """Define a protected service."""
+        pass
+
+    _protected_service = service.authorized_service_call(hass, 'test_domain')(
+        protected_service)
+
+    hass.services.async_register(
+        'test_domain', 'test_service', _protected_service, schema=None)
+
+    with pytest.raises(exceptions.Unauthorized):
+        await hass.services.async_call(
+            'test_domain',
+            'test_service', {},
+            blocking=True,
+            context=ha.Context(user_id=hass_read_only_user.id))
