@@ -1,17 +1,18 @@
 """Support for OpenTherm Gateway climate devices."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
 from homeassistant.components.climate.const import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_NAME, PRECISION_HALVES, PRECISION_TENTHS,
-    PRECISION_WHOLE, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
+    TEMP_CELSIUS)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import async_generate_entity_id
 
 from . import (
-    CONF_FLOOR_TEMP, CONF_PRECISION, DATA_DEVICE, DATA_GW_VARS,
-    DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE)
+    CONF_CLIMATE, CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS,
+    DATA_OPENTHERM_GW)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,20 +22,23 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the opentherm_gw device."""
-    gateway = OpenThermGateway(hass, discovery_info)
+    gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
+    gateway = OpenThermClimate(gw)
     async_add_entities([gateway])
 
 
-class OpenThermGateway(ClimateDevice):
+class OpenThermClimate(ClimateDevice):
     """Representation of a climate device."""
 
-    def __init__(self, hass, config):
+    def __init__(self, gw):
         """Initialize the device."""
-        self._gateway = hass.data[DATA_OPENTHERM_GW][DATA_DEVICE]
-        self._gw_vars = hass.data[DATA_OPENTHERM_GW][DATA_GW_VARS]
-        self.friendly_name = config.get(CONF_NAME)
-        self.floor_temp = config.get(CONF_FLOOR_TEMP)
-        self.temp_precision = config.get(CONF_PRECISION)
+        self._gateway = gw
+        self._gw_vars = gw.vars
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, gw.gw_id,
+                                                  hass=gw.hass)
+        self.friendly_name = gw.gw_id
+        self.floor_temp = gw.config[CONF_CLIMATE][CONF_FLOOR_TEMP]
+        self.temp_precision = gw.config[CONF_CLIMATE].get(CONF_PRECISION)
         self._current_operation = STATE_IDLE
         self._current_temperature = None
         self._new_target_temperature = None
@@ -47,7 +51,7 @@ class OpenThermGateway(ClimateDevice):
     async def async_added_to_hass(self):
         """Connect to the OpenTherm Gateway device."""
         _LOGGER.debug("Added device %s", self.friendly_name)
-        async_dispatcher_connect(self.hass, SIGNAL_OPENTHERM_GW_UPDATE,
+        async_dispatcher_connect(self.hass, self._gateway.update_signal,
                                  self.receive_report)
 
     async def receive_report(self, status):
@@ -126,9 +130,9 @@ class OpenThermGateway(ClimateDevice):
         if self._current_temperature is None:
             return
         if self.floor_temp is True:
-            if self.temp_precision == PRECISION_HALVES:
+            if self.precision == PRECISION_HALVES:
                 return int(2 * self._current_temperature) / 2
-            if self.temp_precision == PRECISION_TENTHS:
+            if self.precision == PRECISION_TENTHS:
                 return int(10 * self._current_temperature) / 10
             return int(self._current_temperature)
         return self._current_temperature
