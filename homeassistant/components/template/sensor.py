@@ -22,7 +22,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 
-CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
+CONF_ATTRIBUTE_TEMPLATES = 'attribute_templates'
+
+ATTRIBUTES_PREFIX = '_attributes.'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -231,17 +233,18 @@ class SensorTemplate(Entity):
         ))
 
         if self._attribute_templates is not None:
-            templates.update(dict(('_attributes.' + key, value)
-                                  for key, value
-                                  in self._attribute_templates.items()))
+            templates.update({'{}{}'.format(ATTRIBUTES_PREFIX, key): value
+                              for key, value
+                              in self._attribute_templates.items()})
 
         for property_name, template in templates.items():
             if template is None:
                 continue
 
             try:
-                if property_name.startswith("_attributes."):
-                    attribute_name = property_name.replace("_attributes.", "")
+                if property_name.startswith(ATTRIBUTES_PREFIX):
+                    attribute_name = property_name.replace(ATTRIBUTES_PREFIX,
+                                                           '')
                     self._attributes[attribute_name] = template.async_render()
                 else:
                     setattr(self, property_name, template.async_render())
