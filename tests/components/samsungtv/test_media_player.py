@@ -352,6 +352,7 @@ async def test_play_media_channel_as_non_positive(hass, samsung_mock):
 async def test_select_source(hass, samsung_mock):
     """Test for select_source."""
     device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
     device.send_key = mock.Mock()
     await device.async_select_source("HDMI")
     exp = [call("KEY_HDMI")]
