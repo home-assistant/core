@@ -253,21 +253,21 @@ class TestEventHelpers(unittest.TestCase):
 
         self.hass.states.set('sensor.test', 5)
 
-        def specific_run_callback(template, old_result, new_result):
+        def specific_run_callback(event, template, old_result, new_result):
             specific_runs.append(int(new_result))
 
         track_template_result(self.hass, template_condition,
                               specific_run_callback)
 
         @ha.callback
-        def wildcard_run_callback(template, old_result, new_result):
+        def wildcard_run_callback(event, template, old_result, new_result):
             wildcard_runs.append((int(old_result), int(new_result)))
 
         track_template_result(self.hass, template_condition,
                               wildcard_run_callback)
 
         @asyncio.coroutine
-        def wildercard_run_callback(template, old_result, new_result):
+        def wildercard_run_callback(event, template, old_result, new_result):
             wildercard_runs.append((int(old_result), int(new_result)))
 
         track_template_result(

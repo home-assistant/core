@@ -155,7 +155,8 @@ class BayesianBinarySensor(BinarySensorDevice):
             self.hass, self.entity_obs, async_threshold_sensor_state_listener)
 
         @callback
-        def async_template_result_changed(template, old_result, new_result):
+        def async_template_result_changed(
+                event, template, old_result, new_result):
             template_obs_list = self.template_obs[template]
             result = str_to_bool(new_result)
 

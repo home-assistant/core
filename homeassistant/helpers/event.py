@@ -4,13 +4,12 @@ from datetime import timedelta
 
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.helpers.template import async_generate_filter
 from homeassistant.loader import bind_hass
 
 from ..const import (ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED,
                      MATCH_ALL, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 from ..core import HomeAssistant, callback
-from ..util import dt as dt_util
+from ..util import dt as dt_util, str_to_bool
 from ..util.async_ import run_callback_threadsafe
 
 # PyLint does not like the use of threaded_listener_factory
@@ -93,37 +92,30 @@ track_state_change = threaded_listener_factory(async_track_state_change)
 @bind_hass
 def async_track_template(hass, template, action, variables=None):
     """Add a listener that fires when a a template evaluates to 'true'."""
-    from . import condition
-
-    # pylint: disable=unused-variable
-    with async_generate_filter() as last_entity_filter:
-        last_result = condition.async_template(
-            hass, template, variables)
-    if last_result:
-        hass.async_run_job(action, 'all', None, None)
+    # See if the event needs to fire on registration.
+    (result, entity_filter) = \
+        template.async_render_with_collect(variables)
+    if str_to_bool(result):
+        # figure out an entity ID.
+        state = None
+        for st in hass.states.async_all():
+            if entity_filter(st.entity_id):
+                state = st
+                break
+        entity_id = None if state is None else state.entity_id
+        hass.async_run_job(
+            action, entity_id, state, state)
 
     @callback
-    def state_changed_listener(event):
+    def state_changed_listener(event, template, last_result, result):
         """Check if condition is correct and run action."""
-        nonlocal last_entity_filter, last_result
-
-        entity_id = event.data.get('entity_id')
-        if not last_entity_filter(entity_id):
-            return
-
-        with async_generate_filter() as entity_filter:
-            result = condition.async_template(
-                hass, template, variables)
-        last_entity_filter = entity_filter
-
-        # Check to see if the result has changed and is true.
-        if not last_result and result:
-            hass.async_run_job(action, entity_id,
+        if not str_to_bool(last_result) and str_to_bool(result):
+            hass.async_run_job(action, event.data.get('entity_id'),
                                event.data.get('old_state'),
                                event.data.get('new_state'))
-        last_result = result
 
-    return hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
+    return async_track_template_result(
+        hass, template, state_changed_listener, variables)
 
 
 track_template = threaded_listener_factory(async_track_template)
@@ -133,33 +125,37 @@ track_template = threaded_listener_factory(async_track_template)
 @bind_hass
 def async_track_template_result(hass, template, action, variables=None):
     """Add a listener that fires when a the result of a template changes."""
-    try:
-        # pylint: disable=unused-variable
-        with async_generate_filter() as last_entity_filter:
-            last_result = template.async_render(variables)
-    except TemplateError:
+    # pylint: disable=unused-variable
+    (last_result, entity_filter) = \
+        template.async_render_with_collect(variables)
+    if isinstance(last_result, TemplateError):
         last_result = None
 
     @callback
     def state_changed_listener(event):
         """Check if condition is correct and run action."""
-        nonlocal last_entity_filter, last_result
+        nonlocal entity_filter, last_result
 
         entity_id = event.data.get('entity_id')
-        if not last_entity_filter(entity_id):
+        # Optimisation: if the old and new states are not None then this is
+        # a state change rather than a life-cycle event, and therefore we
+        # only need to check the include entities.
+        old_state = event.data.get('old_state')
+        new_state = event.data.get('new_state')
+        if old_state is not None and new_state is not None:
+            if entity_id not in entity_filter.include_entities:
+                return
+        elif not entity_filter(entity_id):
             return
 
-        try:
-            with async_generate_filter() as entity_filter:
-                result = template.async_render(variables)
-        except TemplateError:
+        (result, entity_filter) = \
+            template.async_render_with_collect(variables)
+        if isinstance(result, TemplateError):
             return
-        finally:
-            last_entity_filter = entity_filter
 
         # Check to see if the result has changed
         if result != last_result:
-            hass.async_run_job(action, template, last_result, result)
+            hass.async_run_job(action, event, template, last_result, result)
             last_result = result
 
     return hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
