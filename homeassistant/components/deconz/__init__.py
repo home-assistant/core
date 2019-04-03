@@ -34,9 +34,14 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Optional(SERVICE_ENTITY): cv.entity_id,
     vol.Optional(SERVICE_FIELD): cv.matches_regex('/.*'),
     vol.Required(SERVICE_DATA): dict,
+    vol.Optional(CONF_BRIDGEID): str
 }), cv.has_at_least_one_key(SERVICE_ENTITY, SERVICE_FIELD))
 
 SERVICE_DEVICE_REFRESH = 'device_refresh'
+
+SERVICE_DEVICE_REFRESCH_SCHEMA = vol.All(vol.Schema({
+    vol.Optional(CONF_BRIDGEID): str
+}))
 
 
 async def async_setup(hass, config):
@@ -92,9 +97,11 @@ async def async_setup_entry(hass, config_entry):
         """
         field = call.data.get(SERVICE_FIELD, '')
         entity_id = call.data.get(SERVICE_ENTITY)
-        data = call.data.get(SERVICE_DATA)
+        data = call.data[SERVICE_DATA]
 
         gateway = get_master_gateway(hass)
+        if CONF_BRIDGEID in call.data:
+            gateway = hass.data[DOMAIN][call.data[CONF_BRIDGEID]]
 
         if entity_id:
             try:
@@ -111,6 +118,8 @@ async def async_setup_entry(hass, config_entry):
     async def async_refresh_devices(call):
         """Refresh available devices from deCONZ."""
         gateway = get_master_gateway(hass)
+        if CONF_BRIDGEID in call.data:
+            gateway = hass.data[DOMAIN][call.data[CONF_BRIDGEID]]
 
         groups = set(gateway.api.groups.keys())
         lights = set(gateway.api.lights.keys())
@@ -144,7 +153,8 @@ async def async_setup_entry(hass, config_entry):
         )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_DEVICE_REFRESH, async_refresh_devices)
+        DOMAIN, SERVICE_DEVICE_REFRESH, async_refresh_devices,
+        schema=SERVICE_DEVICE_REFRESCH_SCHEMA)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
     return True
