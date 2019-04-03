@@ -191,6 +191,8 @@ def setup_auth(hass, app):
         elif (trusted_networks and
               await async_validate_trusted_networks(request)):
             if request.path not in old_auth_warning:
+                # When removing this, don't forget to remove the print logic
+                # in http/view.py
                 request['deprecate_warning_message'] = \
                     'Access from trusted networks without auth token is ' \
                     'going to be removed in Home Assistant 0.96. Configure ' \
