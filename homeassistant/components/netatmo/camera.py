@@ -4,10 +4,11 @@ import logging
 import requests
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_VERIFY_SSL
-from homeassistant.components.netatmo import CameraData
-from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.helpers import config_validation as cv
+
+from . import CameraData
 
 DEPENDENCIES = ['netatmo']
 

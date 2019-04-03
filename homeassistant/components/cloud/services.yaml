@@ -1,4 +1,4 @@
-# Describes the format for available light services
+# Describes the format for available cloud services
 
 remote_connect:
   description: Make instance UI available outside over NabuCasa cloud.

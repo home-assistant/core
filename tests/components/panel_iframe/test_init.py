@@ -41,11 +41,13 @@ class TestPanelIframe(unittest.TestCase):
                         'icon': 'mdi:network-wireless',
                         'title': 'Router',
                         'url': 'http://192.168.1.1',
+                        'require_admin': True,
                     },
                     'weather': {
                         'icon': 'mdi:weather',
                         'title': 'Weather',
                         'url': 'https://www.wunderground.com/us/ca/san-diego',
+                        'require_admin': True,
                     },
                     'api': {
                         'icon': 'mdi:weather',
@@ -67,7 +69,8 @@ class TestPanelIframe(unittest.TestCase):
             'config': {'url': 'http://192.168.1.1'},
             'icon': 'mdi:network-wireless',
             'title': 'Router',
-            'url_path': 'router'
+            'url_path': 'router',
+            'require_admin': True,
         }
 
         assert panels.get('weather').to_response() == {
@@ -76,6 +79,7 @@ class TestPanelIframe(unittest.TestCase):
             'icon': 'mdi:weather',
             'title': 'Weather',
             'url_path': 'weather',
+            'require_admin': True,
         }
 
         assert panels.get('api').to_response() == {
@@ -84,6 +88,7 @@ class TestPanelIframe(unittest.TestCase):
             'icon': 'mdi:weather',
             'title': 'Api',
             'url_path': 'api',
+            'require_admin': False,
         }
 
         assert panels.get('ftp').to_response() == {
@@ -92,4 +97,5 @@ class TestPanelIframe(unittest.TestCase):
             'icon': 'mdi:weather',
             'title': 'FTP',
             'url_path': 'ftp',
+            'require_admin': False,
         }

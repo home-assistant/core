@@ -5,9 +5,9 @@ from typing import Callable
 from homeassistant.components.fan import (
     DOMAIN, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
     FanEntity)
-from homeassistant.components.isy994 import (
-    ISY994_NODES, ISY994_PROGRAMS, ISYDevice)
 from homeassistant.helpers.typing import ConfigType
+
+from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 

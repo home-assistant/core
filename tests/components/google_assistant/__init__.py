@@ -1,3 +1,5 @@
+
+
 """Tests for the Google Assistant integration."""
 
 DEMO_DEVICES = [{
@@ -93,9 +95,9 @@ DEMO_DEVICES = [{
         'name': 'Living Room Window'
     },
     'traits':
-    ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
+    ['action.devices.traits.OpenClose'],
     'type':
-    'action.devices.types.SWITCH',
+    'action.devices.types.BLINDS',
     'willReportState':
     False
 }, {
@@ -105,9 +107,9 @@ DEMO_DEVICES = [{
         'name': 'Hall Window'
     },
     'traits':
-    ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
+    ['action.devices.traits.OpenClose'],
     'type':
-    'action.devices.types.SWITCH',
+    'action.devices.types.BLINDS',
     'willReportState':
     False
 }, {
@@ -115,16 +117,18 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'Garage Door'
     },
-    'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.SWITCH',
+    'traits': ['action.devices.traits.OpenClose'],
+    'type':
+    'action.devices.types.BLINDS',
     'willReportState': False
 }, {
     'id': 'cover.kitchen_window',
     'name': {
         'name': 'Kitchen Window'
     },
-    'traits': ['action.devices.traits.OnOff'],
-    'type': 'action.devices.types.SWITCH',
+    'traits': ['action.devices.traits.OpenClose'],
+    'type':
+    'action.devices.types.BLINDS',
     'willReportState': False
 }, {
     'id': 'group.all_covers',
@@ -231,10 +235,7 @@ DEMO_DEVICES = [{
     'name': {
         'name': 'HeatPump'
     },
-    'traits': [
-        'action.devices.traits.OnOff',
-        'action.devices.traits.TemperatureSetting'
-    ],
+    'traits': ['action.devices.traits.TemperatureSetting'],
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False
 }, {

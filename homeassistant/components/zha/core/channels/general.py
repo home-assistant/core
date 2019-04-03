@@ -7,12 +7,11 @@ https://home-assistant.io/components/zha/
 import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from . import ZigbeeChannel, parse_and_log_command
+from . import ZigbeeChannel, parse_and_log_command, MAINS_POWERED
 from ..helpers import get_attr_id_by_name
 from ..const import (
-    SIGNAL_ATTR_UPDATED,
-    SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL, SIGNAL_STATE_ATTR, BASIC_CHANNEL,
-    ON_OFF_CHANNEL, LEVEL_CHANNEL, POWER_CONFIGURATION_CHANNEL
+    SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL,
+    SIGNAL_STATE_ATTR
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +25,6 @@ class OnOffChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize OnOffChannel."""
         super().__init__(cluster, device)
-        self.name = ON_OFF_CHANNEL
         self._state = None
 
     @callback
@@ -66,9 +64,14 @@ class OnOffChannel(ZigbeeChannel):
 
     async def async_update(self):
         """Initialize channel."""
-        _LOGGER.debug("Attempting to update onoff state")
+        from_cache = not self.device.power_source == MAINS_POWERED
+        _LOGGER.debug(
+            "%s is attempting to update onoff state - from cache: %s",
+            self._unique_id,
+            from_cache
+        )
         self._state = bool(
-            await self.get_attribute_value(self.ON_OFF, from_cache=False))
+            await self.get_attribute_value(self.ON_OFF, from_cache=from_cache))
         await super().async_update()
 
 
@@ -76,11 +79,6 @@ class LevelControlChannel(ZigbeeChannel):
     """Channel for the LevelControl Zigbee cluster."""
 
     CURRENT_LEVEL = 0
-
-    def __init__(self, cluster, device):
-        """Initialize LevelControlChannel."""
-        super().__init__(cluster, device)
-        self.name = LEVEL_CHANNEL
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -149,7 +147,6 @@ class BasicChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize BasicChannel."""
         super().__init__(cluster, device)
-        self.name = BASIC_CHANNEL
         self._power_source = None
 
     async def async_configure(self):
@@ -170,11 +167,6 @@ class BasicChannel(ZigbeeChannel):
 
 class PowerConfigurationChannel(ZigbeeChannel):
     """Channel for the zigbee power configuration cluster."""
-
-    def __init__(self, cluster, device):
-        """Initialize PowerConfigurationChannel."""
-        super().__init__(cluster, device)
-        self.name = POWER_CONFIGURATION_CHANNEL
 
     @callback
     def attribute_updated(self, attrid, value):

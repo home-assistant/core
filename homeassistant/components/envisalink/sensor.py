@@ -3,10 +3,11 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.envisalink import (
-    DATA_EVL, PARTITION_SCHEMA, CONF_PARTITIONNAME, EnvisalinkDevice,
-    SIGNAL_KEYPAD_UPDATE, SIGNAL_PARTITION_UPDATE)
 from homeassistant.helpers.entity import Entity
+
+from . import (
+    CONF_PARTITIONNAME, DATA_EVL, PARTITION_SCHEMA, SIGNAL_KEYPAD_UPDATE,
+    SIGNAL_PARTITION_UPDATE, EnvisalinkDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
