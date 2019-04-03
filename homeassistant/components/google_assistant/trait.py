@@ -1056,6 +1056,9 @@ class OpenCloseTrait(_Trait):
         response = {}
 
         if domain == cover.DOMAIN:
+            # When it's an assumed state, we will always report it as 50%
+            # Google will not issue an open command if the assumed state is
+            # open, even if that is currently incorrect.
             if self.state.attributes.get(ATTR_ASSUMED_STATE):
                 response['openPercent'] = 50
             else:
