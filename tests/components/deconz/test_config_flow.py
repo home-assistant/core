@@ -161,6 +161,7 @@ async def test_bridge_discovery_already_configured(hass):
 
     result = await flow.async_step_discovery({
         'host': '1.2.3.4',
+        'port': 80,
         'serial': 'id'
     })
 
@@ -245,8 +246,8 @@ async def test_hassio_confirm(hass):
         data={
             'addon': 'Mock Addon',
             'host': 'mock-deconz',
-            'port': 8080,
-            'serial': 'aa:bb',
+            'port': 80,
+            'serial': 'id',
             'api_key': '1234567890ABCDEF',
         },
         context={'source': 'hassio'}
@@ -258,18 +259,13 @@ async def test_hassio_confirm(hass):
     }
 
     result = await hass.config_entries.flow.async_configure(
-        result['flow_id'], {
-            'allow_clip_sensor': True,
-            'allow_deconz_groups': True,
-        }
+        result['flow_id'], user_input={}
     )
 
     assert result['type'] == 'create_entry'
     assert result['result'].data == {
         'host': 'mock-deconz',
-        'port': 8080,
-        'bridgeid': 'aa:bb',
-        'api_key': '1234567890ABCDEF',
-        'allow_clip_sensor': True,
-        'allow_deconz_groups': True,
+        'port': 80,
+        'bridgeid': 'id',
+        'api_key': '1234567890ABCDEF'
     }
