@@ -1131,9 +1131,14 @@ async def test_openclose_binary_sensor(hass, device_class):
         'openPercent': 100
     }
 
-    calls = async_mock_service(
-        hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
-    await trt.execute(
-        trait.COMMAND_OPENCLOSE, BASIC_DATA,
-        {'openPercent': 50})
-    assert len(calls) == 0
+    trt = trait.OpenCloseTrait(hass, State('binary_sensor.test', STATE_OFF, {
+        ATTR_DEVICE_CLASS: device_class,
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {
+        'queryOnlyOpenClose': True,
+    }
+
+    assert trt.query_attributes() == {
+        'openPercent': 0
+    }
