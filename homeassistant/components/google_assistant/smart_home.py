@@ -9,7 +9,7 @@ from homeassistant.util.decorator import Registry
 from homeassistant.core import callback
 from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES, CONF_NAME, STATE_UNAVAILABLE,
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_DEVICE_CLASS,
 )
 from homeassistant.components import (
     camera,
@@ -92,10 +92,11 @@ class _GoogleEntity:
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         self._traits = [Trait(self.hass, state, self.config)
                         for Trait in trait.TRAITS
-                        if Trait.supported(domain, features)]
+                        if Trait.supported(domain, features, device_class)]
         return self._traits
 
     async def sync_serialize(self):
