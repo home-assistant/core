@@ -98,29 +98,29 @@ class MediaPlayer(HomeAccessory):
                 self.chars[FEATURE_SELECT_SOURCE] \
                         = television.configure_char(
                         CHAR_ACTIVE_IDENTIFIER,
-                        setter_callback=self.set_input_source_set)
-                _LOGGER.error('%s: Sources to %s',
-                      self.entity_id, repr(self.hass.states.get(self.entity_id)))
-                return
+                        setter_callback=self.set_input_source)
+
                 self.sources = self.hass.states.get(self.entity_id).attributes.get('source_list')
                 for index, source in enumerate(self.sources):
                     input_service = self.add_preload_service(
                                     SERV_INPUT_SOURCE,
                                     [
                                         CHAR_IDENTIFIER,
+                                        CHAR_NAME
                                     ])
-                    television.add_linked_service(input_service)
 
                     input_service.configure_char(CHAR_CONFIGURED_NAME,
                                                  value=source)
+                    input_service.configure_char(CHAR_NAME, value=source)
                     input_service.configure_char(CHAR_IDENTIFIER, value=index)
                     input_service.configure_char(CHAR_IS_CONFIGURED,
                                                  value=True)
-                    inputType = 3 if "hdmi" in source.lower() else 0
+                    input_type = 3 if "hdmi" in source.lower() else 0
                     input_service.configure_char(CHAR_INPUT_SOURCE_TYPE,
-                                                 value=inputType)
+                                                 value=input_type)
                     input_service.configure_char(CHAR_CURRENT_VISIBILITY_STATE,
                                                  value=False)
+                    television.add_linked_service(input_service)
 
             self.set_primary_service(television)
             return
@@ -202,7 +202,7 @@ class MediaPlayer(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.call_service(DOMAIN, service, params)
 
-    def set_input_source_set(self, value):
+    def set_input_source(self, value):
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug('%s: Set tv_select_source for "tv_select_source" to %s',
                       self.entity_id, value)
@@ -257,7 +257,7 @@ class MediaPlayer(HomeAccessory):
                             self.entity_id, sourceName)
                 if sourceName in self.sources:
                     index = self.sources.index(sourceName)
-                    self.chars[FEATURE_SELECT_SOURCE].set_value(index)
+                    self.chars[FEATURE_SELECT_SOURCE].set_value(index+1)
                 else:
-                    self.chars[FEATURE_SELECT_SOURCE].set_value(-1)
+                    self.chars[FEATURE_SELECT_SOURCE].set_value(0)
             self._flag[FEATURE_SELECT_SOURCE] = False

@@ -21,6 +21,11 @@ class HeosFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    async def async_step_discovery(self, discovery_info):
+        """Handle a discovered Heos device."""
+        return await self.async_step_user(
+            {CONF_HOST: discovery_info[CONF_HOST]})
+
     async def async_step_import(self, user_input=None):
         """Occurs when an entry is setup through config."""
         host = user_input[CONF_HOST]
@@ -32,7 +37,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         """Obtain host and validate connection."""
         from pyheos import Heos
 
-        # Only a single entry is supported
+        # Only a single entry is needed for all devices
         entries = self.hass.config_entries.async_entries(DOMAIN)
         if entries:
             return self.async_abort(reason='already_setup')

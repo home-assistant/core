@@ -40,6 +40,8 @@ ATTR_MANUFACTURER = 'manufacturer'
 ATTR_MODEL = 'model'
 ATTR_OS_NAME = 'os_name'
 ATTR_OS_VERSION = 'os_version'
+ATTR_PUSH_TOKEN = 'push_token'
+ATTR_PUSH_URL = 'push_url'
 ATTR_SUPPORTS_ENCRYPTION = 'supports_encryption'
 
 ATTR_EVENT_DATA = 'event_data'

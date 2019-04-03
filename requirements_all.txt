@@ -414,7 +414,7 @@ eternalegypt==0.0.6
 
 # homeassistant.components.evohome
 # homeassistant.components.honeywell.climate
-evohomeclient==0.2.8
+evohomeclient==0.3.2
 
 # homeassistant.components.dlib_face_detect.image_processing
 # homeassistant.components.dlib_face_identify.image_processing
@@ -741,7 +741,7 @@ nessclient==0.9.15
 netdata==0.1.2
 
 # homeassistant.components.discovery
-netdisco==2.5.0
+netdisco==2.6.0
 
 # homeassistant.components.neurio_energy.sensor
 neurio==0.3.1
@@ -980,7 +980,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==3.1.0
+pychromecast==3.2.0
 
 # homeassistant.components.cmus.media_player
 pycmus==0.1.1
@@ -1238,7 +1238,7 @@ pypollencom==2.2.3
 pyps4-homeassistant==0.5.2
 
 # homeassistant.components.qwikswitch
-pyqwikswitch==0.8
+pyqwikswitch==0.93
 
 # homeassistant.components.nmbs.sensor
 pyrail==0.0.3
@@ -1782,6 +1782,9 @@ watchdog==0.8.3
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
+
+# homeassistant.components.cisco_webex_teams.notify
+webexteamssdk==1.1.1
 
 # homeassistant.components.gpmdp.media_player
 websocket-client==0.54.0
