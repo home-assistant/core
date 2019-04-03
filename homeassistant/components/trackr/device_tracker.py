@@ -1,9 +1,4 @@
-"""
-Support for the TrackR platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.trackr/
-"""
+"""Support for the TrackR platform."""
 import logging
 
 import voluptuous as vol

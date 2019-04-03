@@ -1,9 +1,4 @@
-"""
-Support for monitoring an OpenEVSE Charger.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.openevse/
-"""
+"""Support for monitoring an OpenEVSE Charger."""
 import logging
 
 from requests import RequestException

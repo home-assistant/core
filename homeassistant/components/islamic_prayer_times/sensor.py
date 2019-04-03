@@ -1,9 +1,4 @@
-"""
-Platform to retrieve Islamic prayer times information for Home Assistant.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.islamic_prayer_times/
-"""
+"""Platform to retrieve Islamic prayer times information for Home Assistant."""
 import logging
 from datetime import datetime, timedelta
 

@@ -1,9 +1,4 @@
-"""
-Support for Rflink switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rflink/
-"""
+"""Support for Rflink switches."""
 import logging
 
 import voluptuous as vol

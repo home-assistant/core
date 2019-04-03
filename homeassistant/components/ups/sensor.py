@@ -1,9 +1,4 @@
-"""
-Sensor for UPS packages.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ups/
-"""
+"""Sensor for UPS packages."""
 from collections import defaultdict
 import logging
 from datetime import timedelta

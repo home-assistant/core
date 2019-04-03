@@ -1,9 +1,4 @@
-"""
-Support for Openhome Devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.openhome/
-"""
+"""Support for Openhome Devices."""
 import logging
 
 from homeassistant.components.media_player import (

@@ -1,9 +1,4 @@
-"""
-Support for Denon Network Receivers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.denon/
-"""
+"""Support for Denon Network Receivers."""
 import logging
 import telnetlib
 

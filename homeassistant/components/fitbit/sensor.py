@@ -1,9 +1,4 @@
-"""
-Support for the Fitbit API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fitbit/
-"""
+"""Support for the Fitbit API."""
 import os
 import logging
 import datetime

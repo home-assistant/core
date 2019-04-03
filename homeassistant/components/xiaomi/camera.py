@@ -1,9 +1,4 @@
-"""
-This component provides support for Xiaomi Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.xiaomi/
-"""
+"""This component provides support for Xiaomi Cameras."""
 import asyncio
 import logging
 

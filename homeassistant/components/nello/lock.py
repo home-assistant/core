@@ -1,9 +1,4 @@
-"""
-Nello.io lock platform.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/lock.nello/
-"""
+"""Nello.io lock platform."""
 from itertools import filterfalse
 import logging
 

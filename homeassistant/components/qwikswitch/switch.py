@@ -1,9 +1,4 @@
-"""
-Support for Qwikswitch relays.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.qwikswitch/
-"""
+"""Support for Qwikswitch relays."""
 from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN as QWIKSWITCH, QSToggleEntity

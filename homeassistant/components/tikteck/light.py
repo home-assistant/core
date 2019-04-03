@@ -1,9 +1,4 @@
-"""
-Support for Tikteck lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.tikteck/
-"""
+"""Support for Tikteck lights."""
 import logging
 
 import voluptuous as vol

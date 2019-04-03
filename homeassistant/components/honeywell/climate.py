@@ -1,9 +1,4 @@
-"""
-Support for Honeywell Round Connected and Honeywell Evohome thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.honeywell/
-"""
+"""Support for Honeywell Round Connected and Honeywell Evohome thermostats."""
 import logging
 import datetime
 

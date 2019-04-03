@@ -1,9 +1,4 @@
-"""
-Component to allow running Python scripts.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/python_script/
-"""
+"""Component to allow running Python scripts."""
 import datetime
 import glob
 import logging

@@ -1,9 +1,4 @@
-"""
-Support for Sensors using public Netatmo data.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.netatmo_public/.
-"""
+"""Support for Sensors using public Netatmo data."""
 from datetime import timedelta
 import logging
 

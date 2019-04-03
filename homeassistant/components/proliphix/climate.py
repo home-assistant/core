@@ -1,9 +1,4 @@
-"""
-Support for Proliphix NT10e Thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.proliphix/
-"""
+"""Support for Proliphix NT10e Thermostats."""
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA

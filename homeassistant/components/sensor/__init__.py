@@ -1,9 +1,4 @@
-"""
-Component to interface with various sensors that can be monitored.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor/
-"""
+"""Component to interface with various sensors that can be monitored."""
 
 from datetime import timedelta
 import logging

@@ -1,9 +1,4 @@
-"""
-Support for Netgear routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.netgear/
-"""
+"""Support for Netgear routers."""
 import logging
 
 import voluptuous as vol

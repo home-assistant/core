@@ -1,9 +1,4 @@
-"""
-Yale Smart Alarm client for interacting with the Yale Smart Alarm System API.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/alarm_control_panel.yale_smart_alarm
-"""
+"""Component for interacting with the Yale Smart Alarm System API."""
 import logging
 
 import voluptuous as vol

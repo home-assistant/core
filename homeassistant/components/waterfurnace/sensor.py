@@ -1,9 +1,4 @@
-"""
-Support for Waterfurnace.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.waterfurnace/
-"""
+"""Support for Waterfurnace."""
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import TEMP_FAHRENHEIT

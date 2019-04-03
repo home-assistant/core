@@ -1,9 +1,4 @@
-"""
-Support for Sensirion SHT31 temperature and humidity sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sht31/
-"""
+"""Support for Sensirion SHT31 temperature and humidity sensor."""
 
 from datetime import timedelta
 import logging

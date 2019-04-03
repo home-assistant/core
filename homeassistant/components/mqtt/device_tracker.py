@@ -1,9 +1,4 @@
-"""
-Support for tracking MQTT enabled devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.mqtt/
-"""
+"""Support for tracking MQTT enabled devices."""
 import logging
 
 import voluptuous as vol

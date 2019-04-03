@@ -1,9 +1,4 @@
-"""
-Support for Sesame, by CANDY HOUSE.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/lock.sesame/
-"""
+"""Support for Sesame, by CANDY HOUSE."""
 from typing import Callable
 import voluptuous as vol
 

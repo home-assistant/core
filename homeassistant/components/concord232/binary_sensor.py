@@ -1,9 +1,4 @@
-"""
-Support for exposing Concord232 elements as sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.concord232/
-"""
+"""Support for exposing Concord232 elements as sensors."""
 import datetime
 import logging
 

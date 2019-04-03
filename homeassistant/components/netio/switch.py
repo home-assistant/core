@@ -1,9 +1,4 @@
-"""
-The Netio switch component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.netio/
-"""
+"""The Netio switch component."""
 import logging
 from collections import namedtuple
 from datetime import timedelta

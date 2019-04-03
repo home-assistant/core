@@ -1,9 +1,4 @@
-"""
-Support for Clementine Music Player as media player.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.clementine/
-"""
+"""Support for Clementine Music Player as media player."""
 from datetime import timedelta
 import logging
 import time
