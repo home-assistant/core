@@ -579,7 +579,7 @@ async def async_setup_entry(hass, entry):
         tls_version=tls_version,
     )
 
-    result = await hass.data[DATA_MQTT].async_connect()  # type: bool
+    result = await hass.data[DATA_MQTT].async_connect()  # type: str
 
     if result == CONNECTION_FAILED:
         return False
@@ -698,7 +698,7 @@ class MQTT:
             await self.hass.async_add_job(
                 self._mqttc.publish, topic, payload, qos, retain)
 
-    async def async_connect(self) -> bool:
+    async def async_connect(self) -> str:
         """Connect to the host. Does process messages yet.
 
         This method is a coroutine.
