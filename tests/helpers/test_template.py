@@ -14,7 +14,7 @@ from homeassistant.const import (
     LENGTH_METERS, MASS_GRAMS, PRESSURE_PA, TEMP_CELSIUS, VOLUME_LITERS)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
-from homeassistant.helpers.entityfilter import FilterBuilder
+from homeassistant.helpers.entityfilter import EntityFilter
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
@@ -40,21 +40,15 @@ class TestHelpersTemplate(unittest.TestCase):
         """Stop down stuff we started."""
         self.hass.stop()
 
-    def create_builder(self, template_str, variables=None):
+    def generate_filter(self, template_str, variables=None):
         """Create filter from template."""
-        with template.async_generate_filter():
-            # pylint: disable=protected-access
-            builder = template._ENTITY_COLLECT
-            tmp = template.Template(template_str, self.hass)
-            try:
-                tmp.render(variables)
-            except TemplateError:
-                pass
-        return builder
+        tmp = template.Template(template_str, self.hass)
+        (_, filt) = tmp.async_render_with_collect(variables)
+        return filt
 
     def extract_entities(self, template_str, variables=None):
         """Extract entities from a template."""
-        filt = self.create_builder(template_str, variables)
+        filt = self.generate_filter(template_str, variables)
         assert (
             not filt.include_domains
             and not filt.exclude_domains
@@ -938,11 +932,11 @@ class TestHelpersTemplate(unittest.TestCase):
         assert not self.extract_entities(
                 "{{ value_json is defined }}")
 
-        assert self.create_builder("""
+        assert self.generate_filter("""
 {% for state in states.sensor %}
   {{ state.entity_id }}={{ state.state }},d
 {% endfor %}
-            """) == FilterBuilder(include_domains=['sensor'])
+            """) == EntityFilter(include_domains=['sensor'])
 
     def test_extract_entities_match_entities(self):
         """Test extract entities function with entities stuff."""

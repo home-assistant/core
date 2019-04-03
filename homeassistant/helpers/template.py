@@ -6,7 +6,7 @@ import math
 import random
 import re
 from datetime import datetime
-from typing import Callable
+from typing import Union
 
 import jinja2
 from jinja2 import contextfilter
@@ -19,7 +19,7 @@ from homeassistant.core import State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.helpers.entityfilter import FilterBuilder
+from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
@@ -31,47 +31,6 @@ _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _ENTITY_COLLECT = None
-
-# pylint: disable=invalid-name
-
-
-class async_generate_filter(FilterBuilder):
-    """
-    Filter function generator for entities touched in template.
-
-    Returns Generate a filter function that returns true for any entity IDs
-    passed to it that are used to calculate results of the template.
-
-    Usage:
-      with async_generate_filter() as entities:
-        template1.async_render(variables)
-        template2.async_render(variables)
-    """
-
-    def __init__(self):
-        """Initialise."""
-        super().__init__()
-        self._filter = None
-
-    def __enter__(self) -> Callable[[str], bool]:
-        """Return `self` upon entering the runtime context."""
-        global _ENTITY_COLLECT
-
-        assert _ENTITY_COLLECT is None
-        _ENTITY_COLLECT = self
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Raise any exception triggered within the runtime context."""
-        global _ENTITY_COLLECT
-        self._filter = self.build()
-        _ENTITY_COLLECT = None
-
-    def __call__(self, entity_id: str) -> bool:
-        """Invoke the filter."""
-        if self._filter is None:
-            return super().__call__(entity_id)
-        return self._filter
 
 
 @bind_hass
@@ -124,14 +83,10 @@ class Template:
     @callback
     def extract_entities(self, variables=None):
         """Deprecated. Will go soon."""
-        with async_generate_filter() as entities:
-            try:
-                self.async_render(variables)
-            except TemplateError:
-                pass
-            if not entities.include_entities:
-                return '*'
-            return entities.include_entities
+        (_, entity_filter) = self.async_render_with_collect(variables)
+        if entity_filter.include_all or not entity_filter.include_entities:
+            return '*'
+        return entity_filter.include_entities
 
     def render(self, variables: TemplateVarsType = None, **kwargs):
         """Render given template."""
@@ -158,6 +113,24 @@ class Template:
             return self._compiled.render(kwargs).strip()
         except jinja2.TemplateError as err:
             raise TemplateError(err)
+
+    @callback
+    def async_render_with_collect(
+            self, variables: TemplateVarsType = None,
+            **kwargs) -> (Union[str, TemplateError],
+                          EntityFilter):
+        """Render the template and collect an entity filter."""
+        global _ENTITY_COLLECT
+
+        assert _ENTITY_COLLECT is None
+        _ENTITY_COLLECT = EntityFilter()
+        try:
+            result = self.async_render(variables, **kwargs)
+            return (result, _ENTITY_COLLECT)
+        except TemplateError as ex:
+            return (ex, _ENTITY_COLLECT)
+        finally:
+            _ENTITY_COLLECT = None
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
         """Render template with value exposed.
@@ -314,6 +287,12 @@ class TemplateState(State):
 
     def __getattribute__(self, name):
         """Return an attribute of the state."""
+        # This one doesn't count as an access of the state
+        # since we either found it by looking direct for the ID
+        # or got it off an iterator.
+        if name == 'entity_id':
+            state = object.__getattribute__(self, '_state')
+            return getattr(state, name)
         if name in TemplateState.__dict__:
             return object.__getattribute__(self, name)
         state = self._access_state()
