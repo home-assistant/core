@@ -70,6 +70,7 @@ class MyQDevice(CoverDevice):
             _LOGGER.debug("%s: Closing MyQ device", self.name)
             await self._device.close_connection()
 
+        # Register callback with HA
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     @property
