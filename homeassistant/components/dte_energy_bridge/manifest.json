@@ -1,6 +1,6 @@
 {
   "domain": "dte_energy_bridge",
-  "name": "Dte_energy_bridge",
+  "name": "Dte energy bridge",
   "documentation": "https://www.home-assistant.io/components/dte_energy_bridge",
   "requirements": [],
   "dependencies": [],

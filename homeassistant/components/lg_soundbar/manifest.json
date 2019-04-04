@@ -1,6 +1,6 @@
 {
   "domain": "lg_soundbar",
-  "name": "Lg_soundbar",
+  "name": "Lg soundbar",
   "documentation": "https://www.home-assistant.io/components/lg_soundbar",
   "requirements": [],
   "dependencies": [],

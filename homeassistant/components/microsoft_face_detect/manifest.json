@@ -1,6 +1,6 @@
 {
   "domain": "microsoft_face_detect",
-  "name": "Microsoft_face_detect",
+  "name": "Microsoft face detect",
   "documentation": "https://www.home-assistant.io/components/microsoft_face_detect",
   "requirements": [],
   "dependencies": [],

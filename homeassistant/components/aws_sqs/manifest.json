@@ -1,6 +1,6 @@
 {
   "domain": "aws_sqs",
-  "name": "Aws_sqs",
+  "name": "Aws sqs",
   "documentation": "https://www.home-assistant.io/components/aws_sqs",
   "requirements": [],
   "dependencies": [],

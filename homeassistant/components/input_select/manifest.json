@@ -1,6 +1,6 @@
 {
   "domain": "input_select",
-  "name": "Input_select",
+  "name": "Input select",
   "documentation": "https://www.home-assistant.io/components/input_select",
   "requirements": [],
   "dependencies": [],

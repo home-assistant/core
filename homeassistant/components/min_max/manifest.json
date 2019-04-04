@@ -1,6 +1,6 @@
 {
   "domain": "min_max",
-  "name": "Min_max",
+  "name": "Min max",
   "documentation": "https://www.home-assistant.io/components/min_max",
   "requirements": [],
   "dependencies": [],

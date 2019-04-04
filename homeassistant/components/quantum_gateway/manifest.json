@@ -1,6 +1,6 @@
 {
   "domain": "quantum_gateway",
-  "name": "Quantum_gateway",
+  "name": "Quantum gateway",
   "documentation": "https://www.home-assistant.io/components/quantum_gateway",
   "requirements": [],
   "dependencies": [],

@@ -1,6 +1,6 @@
 {
   "domain": "dlib_face_detect",
-  "name": "Dlib_face_detect",
+  "name": "Dlib face detect",
   "documentation": "https://www.home-assistant.io/components/dlib_face_detect",
   "requirements": [],
   "dependencies": [],

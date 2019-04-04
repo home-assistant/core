@@ -1,6 +1,6 @@
 {
   "domain": "rpi_gpio_pwm",
-  "name": "Rpi_gpio_pwm",
+  "name": "Rpi gpio pwm",
   "documentation": "https://www.home-assistant.io/components/rpi_gpio_pwm",
   "requirements": [],
   "dependencies": [],

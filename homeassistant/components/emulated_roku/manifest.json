@@ -1,6 +1,6 @@
 {
   "domain": "emulated_roku",
-  "name": "Emulated_roku",
+  "name": "Emulated roku",
   "documentation": "https://www.home-assistant.io/components/emulated_roku",
   "requirements": [
     "emulated_roku==0.1.8"

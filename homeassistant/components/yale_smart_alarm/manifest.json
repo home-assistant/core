@@ -1,6 +1,6 @@
 {
   "domain": "yale_smart_alarm",
-  "name": "Yale_smart_alarm",
+  "name": "Yale smart alarm",
   "documentation": "https://www.home-assistant.io/components/yale_smart_alarm",
   "requirements": [],
   "dependencies": [],

@@ -1,6 +1,6 @@
 {
   "domain": "deutsche_bahn",
-  "name": "Deutsche_bahn",
+  "name": "Deutsche bahn",
   "documentation": "https://www.home-assistant.io/components/deutsche_bahn",
   "requirements": [],
   "dependencies": [],

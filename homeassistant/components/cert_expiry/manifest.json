@@ -1,6 +1,6 @@
 {
   "domain": "cert_expiry",
-  "name": "Cert_expiry",
+  "name": "Cert expiry",
   "documentation": "https://www.home-assistant.io/components/cert_expiry",
   "requirements": [],
   "dependencies": [],

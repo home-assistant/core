@@ -1,6 +1,6 @@
 {
   "domain": "google_maps",
-  "name": "Google_maps",
+  "name": "Google maps",
   "documentation": "https://www.home-assistant.io/components/google_maps",
   "requirements": [],
   "dependencies": [],

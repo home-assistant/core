@@ -1,6 +1,6 @@
 {
   "domain": "lifx_legacy",
-  "name": "Lifx_legacy",
+  "name": "Lifx legacy",
   "documentation": "https://www.home-assistant.io/components/lifx_legacy",
   "requirements": [],
   "dependencies": [],

@@ -1,6 +1,6 @@
 {
   "domain": "input_datetime",
-  "name": "Input_datetime",
+  "name": "Input datetime",
   "documentation": "https://www.home-assistant.io/components/input_datetime",
   "requirements": [],
   "dependencies": [],

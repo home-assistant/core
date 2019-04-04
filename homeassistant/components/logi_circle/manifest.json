@@ -1,6 +1,6 @@
 {
   "domain": "logi_circle",
-  "name": "Logi_circle",
+  "name": "Logi circle",
   "documentation": "https://www.home-assistant.io/components/logi_circle",
   "requirements": [
     "logi_circle==0.1.7"

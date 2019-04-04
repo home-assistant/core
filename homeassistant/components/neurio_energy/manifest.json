@@ -1,6 +1,6 @@
 {
   "domain": "neurio_energy",
-  "name": "Neurio_energy",
+  "name": "Neurio energy",
   "documentation": "https://www.home-assistant.io/components/neurio_energy",
   "requirements": [],
   "dependencies": [],

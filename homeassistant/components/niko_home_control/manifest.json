@@ -1,6 +1,6 @@
 {
   "domain": "niko_home_control",
-  "name": "Niko_home_control",
+  "name": "Niko home control",
   "documentation": "https://www.home-assistant.io/components/niko_home_control",
   "requirements": [],
   "dependencies": [],

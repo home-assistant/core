@@ -1,6 +1,6 @@
 {
   "domain": "lg_netcast",
-  "name": "Lg_netcast",
+  "name": "Lg netcast",
   "documentation": "https://www.home-assistant.io/components/lg_netcast",
   "requirements": [],
   "dependencies": [],

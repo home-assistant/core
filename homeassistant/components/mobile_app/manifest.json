@@ -1,6 +1,6 @@
 {
   "domain": "mobile_app",
-  "name": "Mobile_app",
+  "name": "Mobile app",
   "documentation": "https://www.home-assistant.io/components/mobile_app",
   "requirements": [
     "PyNaCl==1.3.0"

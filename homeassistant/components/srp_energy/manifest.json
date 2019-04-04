@@ -1,6 +1,6 @@
 {
   "domain": "srp_energy",
-  "name": "Srp_energy",
+  "name": "Srp energy",
   "documentation": "https://www.home-assistant.io/components/srp_energy",
   "requirements": [],
   "dependencies": [],

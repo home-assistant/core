@@ -1,6 +1,6 @@
 {
   "domain": "launch_library",
-  "name": "Launch_library",
+  "name": "Launch library",
   "documentation": "https://www.home-assistant.io/components/launch_library",
   "requirements": [],
   "dependencies": [],

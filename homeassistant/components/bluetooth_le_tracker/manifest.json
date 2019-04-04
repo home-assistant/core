@@ -1,6 +1,6 @@
 {
   "domain": "bluetooth_le_tracker",
-  "name": "Bluetooth_le_tracker",
+  "name": "Bluetooth le tracker",
   "documentation": "https://www.home-assistant.io/components/bluetooth_le_tracker",
   "requirements": [],
   "dependencies": [],

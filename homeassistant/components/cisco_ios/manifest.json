@@ -1,6 +1,6 @@
 {
   "domain": "cisco_ios",
-  "name": "Cisco_ios",
+  "name": "Cisco ios",
   "documentation": "https://www.home-assistant.io/components/cisco_ios",
   "requirements": [],
   "dependencies": [],

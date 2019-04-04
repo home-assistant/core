@@ -1,6 +1,6 @@
 {
   "domain": "waze_travel_time",
-  "name": "Waze_travel_time",
+  "name": "Waze travel time",
   "documentation": "https://www.home-assistant.io/components/waze_travel_time",
   "requirements": [],
   "dependencies": [],

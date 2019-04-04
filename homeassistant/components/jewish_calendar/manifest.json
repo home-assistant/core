@@ -1,6 +1,6 @@
 {
   "domain": "jewish_calendar",
-  "name": "Jewish_calendar",
+  "name": "Jewish calendar",
   "documentation": "https://www.home-assistant.io/components/jewish_calendar",
   "requirements": [],
   "dependencies": [],

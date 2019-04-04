@@ -1,6 +1,6 @@
 {
   "domain": "lifx_cloud",
-  "name": "Lifx_cloud",
+  "name": "Lifx cloud",
   "documentation": "https://www.home-assistant.io/components/lifx_cloud",
   "requirements": [],
   "dependencies": [],

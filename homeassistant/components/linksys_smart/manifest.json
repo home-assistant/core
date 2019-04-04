@@ -1,6 +1,6 @@
 {
   "domain": "linksys_smart",
-  "name": "Linksys_smart",
+  "name": "Linksys smart",
   "documentation": "https://www.home-assistant.io/components/linksys_smart",
   "requirements": [],
   "dependencies": [],

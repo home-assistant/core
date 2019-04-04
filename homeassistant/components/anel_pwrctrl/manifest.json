@@ -1,6 +1,6 @@
 {
   "domain": "anel_pwrctrl",
-  "name": "Anel_pwrctrl",
+  "name": "Anel pwrctrl",
   "documentation": "https://www.home-assistant.io/components/anel_pwrctrl",
   "requirements": [],
   "dependencies": [],

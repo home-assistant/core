@@ -1,6 +1,6 @@
 {
   "domain": "default_config",
-  "name": "Default_config",
+  "name": "Default config",
   "documentation": "https://www.home-assistant.io/components/default_config",
   "requirements": [],
   "dependencies": [

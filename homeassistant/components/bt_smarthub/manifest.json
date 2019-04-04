@@ -1,6 +1,6 @@
 {
   "domain": "bt_smarthub",
-  "name": "Bt_smarthub",
+  "name": "Bt smarthub",
   "documentation": "https://www.home-assistant.io/components/bt_smarthub",
   "requirements": [],
   "dependencies": [],

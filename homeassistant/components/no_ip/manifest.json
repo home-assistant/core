@@ -1,6 +1,6 @@
 {
   "domain": "no_ip",
-  "name": "No_ip",
+  "name": "No ip",
   "documentation": "https://www.home-assistant.io/components/no_ip",
   "requirements": [],
   "dependencies": [],

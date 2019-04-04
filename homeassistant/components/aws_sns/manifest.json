@@ -1,6 +1,6 @@
 {
   "domain": "aws_sns",
-  "name": "Aws_sns",
+  "name": "Aws sns",
   "documentation": "https://www.home-assistant.io/components/aws_sns",
   "requirements": [],
   "dependencies": [],

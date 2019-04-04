@@ -1,6 +1,6 @@
 {
   "domain": "edp_redy",
-  "name": "Edp_redy",
+  "name": "Edp redy",
   "documentation": "https://www.home-assistant.io/components/edp_redy",
   "requirements": [
     "edp_redy==0.0.3"

@@ -1,6 +1,6 @@
 {
   "domain": "swiss_public_transport",
-  "name": "Swiss_public_transport",
+  "name": "Swiss public transport",
   "documentation": "https://www.home-assistant.io/components/swiss_public_transport",
   "requirements": [],
   "dependencies": [],

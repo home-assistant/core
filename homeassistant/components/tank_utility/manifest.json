@@ -1,6 +1,6 @@
 {
   "domain": "tank_utility",
-  "name": "Tank_utility",
+  "name": "Tank utility",
   "documentation": "https://www.home-assistant.io/components/tank_utility",
   "requirements": [],
   "dependencies": [],

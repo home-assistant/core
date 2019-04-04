@@ -1,6 +1,6 @@
 {
   "domain": "amazon_polly",
-  "name": "Amazon_polly",
+  "name": "Amazon polly",
   "documentation": "https://www.home-assistant.io/components/amazon_polly",
   "requirements": [],
   "dependencies": [],

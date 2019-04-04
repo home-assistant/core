@@ -1,6 +1,6 @@
 {
   "domain": "keyboard_remote",
-  "name": "Keyboard_remote",
+  "name": "Keyboard remote",
   "documentation": "https://www.home-assistant.io/components/keyboard_remote",
   "requirements": [
     "evdev==0.6.1"

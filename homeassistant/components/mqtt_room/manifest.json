@@ -1,6 +1,6 @@
 {
   "domain": "mqtt_room",
-  "name": "Mqtt_room",
+  "name": "Mqtt room",
   "documentation": "https://www.home-assistant.io/components/mqtt_room",
   "requirements": [],
   "dependencies": [],

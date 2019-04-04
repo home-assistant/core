@@ -1,6 +1,6 @@
 {
   "domain": "usgs_earthquakes_feed",
-  "name": "Usgs_earthquakes_feed",
+  "name": "Usgs earthquakes feed",
   "documentation": "https://www.home-assistant.io/components/usgs_earthquakes_feed",
   "requirements": [],
   "dependencies": [],

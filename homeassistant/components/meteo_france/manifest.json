@@ -1,6 +1,6 @@
 {
   "domain": "meteo_france",
-  "name": "Meteo_france",
+  "name": "Meteo france",
   "documentation": "https://www.home-assistant.io/components/meteo_france",
   "requirements": [
     "meteofrance==0.3.4"

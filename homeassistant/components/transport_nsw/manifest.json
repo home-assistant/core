@@ -1,6 +1,6 @@
 {
   "domain": "transport_nsw",
-  "name": "Transport_nsw",
+  "name": "Transport nsw",
   "documentation": "https://www.home-assistant.io/components/transport_nsw",
   "requirements": [],
   "dependencies": [],

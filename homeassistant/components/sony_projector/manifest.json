@@ -1,6 +1,6 @@
 {
   "domain": "sony_projector",
-  "name": "Sony_projector",
+  "name": "Sony projector",
   "documentation": "https://www.home-assistant.io/components/sony_projector",
   "requirements": [],
   "dependencies": [],

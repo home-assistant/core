@@ -1,6 +1,6 @@
 {
   "domain": "unifi_direct",
-  "name": "Unifi_direct",
+  "name": "Unifi direct",
   "documentation": "https://www.home-assistant.io/components/unifi_direct",
   "requirements": [],
   "dependencies": [],

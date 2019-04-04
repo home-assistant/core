@@ -1,6 +1,6 @@
 {
   "domain": "serial_pm",
-  "name": "Serial_pm",
+  "name": "Serial pm",
   "documentation": "https://www.home-assistant.io/components/serial_pm",
   "requirements": [],
   "dependencies": [],

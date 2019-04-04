@@ -1,6 +1,6 @@
 {
   "domain": "cppm_tracker",
-  "name": "Cppm_tracker",
+  "name": "Cppm tracker",
   "documentation": "https://www.home-assistant.io/components/cppm_tracker",
   "requirements": [],
   "dependencies": [],

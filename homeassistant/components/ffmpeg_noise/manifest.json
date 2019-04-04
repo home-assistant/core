@@ -1,6 +1,6 @@
 {
   "domain": "ffmpeg_noise",
-  "name": "Ffmpeg_noise",
+  "name": "Ffmpeg noise",
   "documentation": "https://www.home-assistant.io/components/ffmpeg_noise",
   "requirements": [],
   "dependencies": [],
