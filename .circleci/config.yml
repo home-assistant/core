@@ -92,6 +92,12 @@ jobs:
             flake8
 
       - run:
+          name: validate CODEOWNERS
+          command: |
+            . venv/bin/activate
+            python script/manifest/codeowners.py validate
+
+      - run:
           name: run static type check
           command: |
             . venv/bin/activate
