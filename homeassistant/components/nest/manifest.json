@@ -6,5 +6,7 @@
     "python-nest==4.1.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@awarecan"
+  ]
 }

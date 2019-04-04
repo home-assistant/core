@@ -6,5 +6,7 @@
     "YesssSMS==0.2.3"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@flowolf"
+  ]
 }

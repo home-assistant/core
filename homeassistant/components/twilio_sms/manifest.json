@@ -4,5 +4,7 @@
   "documentation": "https://www.home-assistant.io/components/twilio_sms",
   "requirements": [],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@robbiet480"
+  ]
 }

@@ -6,5 +6,7 @@
     "boto3==1.9.16"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@robbiet480"
+  ]
 }

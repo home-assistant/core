@@ -4,5 +4,7 @@
   "documentation": "https://www.home-assistant.io/components/twilio_call",
   "requirements": [],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@robbiet480"
+  ]
 }

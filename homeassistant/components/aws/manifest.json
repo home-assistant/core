@@ -6,5 +6,8 @@
     "aiobotocore==0.10.2"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@awarecan",
+    "@robbiet480"
+  ]
 }

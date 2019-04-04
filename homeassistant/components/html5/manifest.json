@@ -1,10 +1,12 @@
 {
   "domain": "html5",
-  "name": "Html5",
+  "name": "HTML5 Notifications",
   "documentation": "https://www.home-assistant.io/components/html5",
   "requirements": [
     "pywebpush==1.6.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@robbiet480"
+  ]
 }

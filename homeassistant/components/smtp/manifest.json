@@ -4,5 +4,7 @@
   "documentation": "https://www.home-assistant.io/components/smtp",
   "requirements": [],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@fabaff"
+  ]
 }
