@@ -1,0 +1,10 @@
+{
+  "domain": "introduction",
+  "name": "Introduction",
+  "documentation": "https://www.home-assistant.io/components/introduction",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}
