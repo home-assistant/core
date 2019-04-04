@@ -2,7 +2,9 @@
   "domain": "lifx_legacy",
   "name": "Lifx legacy",
   "documentation": "https://www.home-assistant.io/components/lifx_legacy",
-  "requirements": [],
+  "requirements": [
+    "liffylights==0.9.4"
+  ],
   "dependencies": [],
   "codeowners": [
     "@amelchio"

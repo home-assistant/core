@@ -2,7 +2,9 @@
   "domain": "anthemav",
   "name": "Anthemav",
   "documentation": "https://www.home-assistant.io/components/anthemav",
-  "requirements": [],
+  "requirements": [
+    "anthemav==1.1.10"
+  ],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "github",
   "name": "Github",
   "documentation": "https://www.home-assistant.io/components/github",
-  "requirements": [],
+  "requirements": [
+    "PyGithub==1.43.5"
+  ],
   "dependencies": [],
   "codeowners": []
 }

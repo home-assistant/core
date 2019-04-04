@@ -2,7 +2,9 @@
   "domain": "flux_led",
   "name": "Flux led",
   "documentation": "https://www.home-assistant.io/components/flux_led",
-  "requirements": [],
+  "requirements": [
+    "flux_led==0.22"
+  ],
   "dependencies": [],
   "codeowners": []
 }

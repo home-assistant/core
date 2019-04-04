@@ -2,7 +2,9 @@
   "domain": "met",
   "name": "Met",
   "documentation": "https://www.home-assistant.io/components/met",
-  "requirements": [],
+  "requirements": [
+    "pyMetno==0.4.6"
+  ],
   "dependencies": [],
   "codeowners": [
     "@danielhiversen"

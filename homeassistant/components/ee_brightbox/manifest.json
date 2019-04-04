@@ -2,7 +2,9 @@
   "domain": "ee_brightbox",
   "name": "Ee brightbox",
   "documentation": "https://www.home-assistant.io/components/ee_brightbox",
-  "requirements": [],
+  "requirements": [
+    "eebrightbox==0.0.4"
+  ],
   "dependencies": [],
   "codeowners": []
 }

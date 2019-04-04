@@ -2,7 +2,9 @@
   "domain": "free_mobile",
   "name": "Free mobile",
   "documentation": "https://www.home-assistant.io/components/free_mobile",
-  "requirements": [],
+  "requirements": [
+    "freesms==0.1.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

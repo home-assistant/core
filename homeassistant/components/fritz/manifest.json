@@ -2,7 +2,9 @@
   "domain": "fritz",
   "name": "Fritz",
   "documentation": "https://www.home-assistant.io/components/fritz",
-  "requirements": [],
+  "requirements": [
+    "fritzconnection==0.6.5"
+  ],
   "dependencies": [],
   "codeowners": []
 }

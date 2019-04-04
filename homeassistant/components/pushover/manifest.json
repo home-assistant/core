@@ -2,7 +2,9 @@
   "domain": "pushover",
   "name": "Pushover",
   "documentation": "https://www.home-assistant.io/components/pushover",
-  "requirements": [],
+  "requirements": [
+    "python-pushover==0.3"
+  ],
   "dependencies": [],
   "codeowners": []
 }

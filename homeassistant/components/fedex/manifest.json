@@ -2,7 +2,9 @@
   "domain": "fedex",
   "name": "Fedex",
   "documentation": "https://www.home-assistant.io/components/fedex",
-  "requirements": [],
+  "requirements": [
+    "fedexdeliverymanager==1.0.6"
+  ],
   "dependencies": [],
   "codeowners": []
 }

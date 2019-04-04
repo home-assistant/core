@@ -2,7 +2,9 @@
   "domain": "panasonic_bluray",
   "name": "Panasonic bluray",
   "documentation": "https://www.home-assistant.io/components/panasonic_bluray",
-  "requirements": [],
+  "requirements": [
+    "panacotta==0.1"
+  ],
   "dependencies": [],
   "codeowners": []
 }

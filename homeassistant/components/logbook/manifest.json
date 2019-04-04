@@ -4,8 +4,8 @@
   "documentation": "https://www.home-assistant.io/components/logbook",
   "requirements": [],
   "dependencies": [
-    "recorder",
-    "frontend"
+    "frontend",
+    "recorder"
   ],
   "codeowners": []
 }

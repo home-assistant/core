@@ -2,7 +2,9 @@
   "domain": "tikteck",
   "name": "Tikteck",
   "documentation": "https://www.home-assistant.io/components/tikteck",
-  "requirements": [],
+  "requirements": [
+    "tikteck==0.4"
+  ],
   "dependencies": [],
   "codeowners": []
 }

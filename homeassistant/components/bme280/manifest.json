@@ -2,7 +2,10 @@
   "domain": "bme280",
   "name": "Bme280",
   "documentation": "https://www.home-assistant.io/components/bme280",
-  "requirements": [],
+  "requirements": [
+    "i2csense==0.0.4",
+    "smbus-cffi==0.5.1"
+  ],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "switchbot",
   "name": "Switchbot",
   "documentation": "https://www.home-assistant.io/components/switchbot",
-  "requirements": [],
+  "requirements": [
+    "PySwitchbot==0.5"
+  ],
   "dependencies": [],
   "codeowners": [
     "@danielhiversen"

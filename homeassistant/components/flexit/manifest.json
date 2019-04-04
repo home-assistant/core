@@ -2,7 +2,9 @@
   "domain": "flexit",
   "name": "Flexit",
   "documentation": "https://www.home-assistant.io/components/flexit",
-  "requirements": [],
+  "requirements": [
+    "pyflexit==0.3"
+  ],
   "dependencies": [],
   "codeowners": []
 }

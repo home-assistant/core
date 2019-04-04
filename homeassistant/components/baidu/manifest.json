@@ -2,7 +2,9 @@
   "domain": "baidu",
   "name": "Baidu",
   "documentation": "https://www.home-assistant.io/components/baidu",
-  "requirements": [],
+  "requirements": [
+    "baidu-aip==1.6.6"
+  ],
   "dependencies": [],
   "codeowners": []
 }

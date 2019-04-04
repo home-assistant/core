@@ -2,7 +2,9 @@
   "domain": "cups",
   "name": "Cups",
   "documentation": "https://www.home-assistant.io/components/cups",
-  "requirements": [],
+  "requirements": [
+    "pycups==1.9.73"
+  ],
   "dependencies": [],
   "codeowners": [
     "@fabaff"

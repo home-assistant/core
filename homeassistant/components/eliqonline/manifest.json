@@ -2,7 +2,9 @@
   "domain": "eliqonline",
   "name": "Eliqonline",
   "documentation": "https://www.home-assistant.io/components/eliqonline",
-  "requirements": [],
+  "requirements": [
+    "eliqonline==1.2.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

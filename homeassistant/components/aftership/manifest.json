@@ -2,7 +2,9 @@
   "domain": "aftership",
   "name": "Aftership",
   "documentation": "https://www.home-assistant.io/components/aftership",
-  "requirements": [],
+  "requirements": [
+    "pyaftership==0.1.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

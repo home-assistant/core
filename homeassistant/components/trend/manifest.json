@@ -2,7 +2,9 @@
   "domain": "trend",
   "name": "Trend",
   "documentation": "https://www.home-assistant.io/components/trend",
-  "requirements": [],
+  "requirements": [
+    "numpy==1.16.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

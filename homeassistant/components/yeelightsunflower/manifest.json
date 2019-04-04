@@ -2,7 +2,9 @@
   "domain": "yeelightsunflower",
   "name": "Yeelightsunflower",
   "documentation": "https://www.home-assistant.io/components/yeelightsunflower",
-  "requirements": [],
+  "requirements": [
+    "yeelightsunflower==0.0.10"
+  ],
   "dependencies": [],
   "codeowners": [
     "@lindsaymarkward"

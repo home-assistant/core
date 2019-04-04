@@ -2,7 +2,9 @@
   "domain": "gitter",
   "name": "Gitter",
   "documentation": "https://www.home-assistant.io/components/gitter",
-  "requirements": [],
+  "requirements": [
+    "gitterpy==0.1.7"
+  ],
   "dependencies": [],
   "codeowners": [
     "@fabaff"

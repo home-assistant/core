@@ -2,7 +2,9 @@
   "domain": "proliphix",
   "name": "Proliphix",
   "documentation": "https://www.home-assistant.io/components/proliphix",
-  "requirements": [],
+  "requirements": [
+    "proliphix==0.4.1"
+  ],
   "dependencies": [],
   "codeowners": []
 }

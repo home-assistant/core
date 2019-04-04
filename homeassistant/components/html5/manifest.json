@@ -2,7 +2,9 @@
   "domain": "html5",
   "name": "Html5",
   "documentation": "https://www.home-assistant.io/components/html5",
-  "requirements": [],
+  "requirements": [
+    "pywebpush==1.6.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

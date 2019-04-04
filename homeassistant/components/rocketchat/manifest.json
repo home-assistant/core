@@ -2,7 +2,9 @@
   "domain": "rocketchat",
   "name": "Rocketchat",
   "documentation": "https://www.home-assistant.io/components/rocketchat",
-  "requirements": [],
+  "requirements": [
+    "rocketchat-API==0.6.1"
+  ],
   "dependencies": [],
   "codeowners": []
 }

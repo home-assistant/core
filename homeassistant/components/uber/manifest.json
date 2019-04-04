@@ -2,7 +2,9 @@
   "domain": "uber",
   "name": "Uber",
   "documentation": "https://www.home-assistant.io/components/uber",
-  "requirements": [],
+  "requirements": [
+    "uber_rides==0.6.0"
+  ],
   "dependencies": [],
   "codeowners": [
     "@robbiet480"

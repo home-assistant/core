@@ -3,8 +3,8 @@
   "name": "Tellstick",
   "documentation": "https://www.home-assistant.io/components/tellstick",
   "requirements": [
-    "tellcore-py==1.1.2",
-    "tellcore-net==0.4"
+    "tellcore-net==0.4",
+    "tellcore-py==1.1.2"
   ],
   "dependencies": [],
   "codeowners": []

@@ -2,7 +2,9 @@
   "domain": "recswitch",
   "name": "Recswitch",
   "documentation": "https://www.home-assistant.io/components/recswitch",
-  "requirements": [],
+  "requirements": [
+    "pyrecswitch==1.0.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "hp_ilo",
   "name": "Hp ilo",
   "documentation": "https://www.home-assistant.io/components/hp_ilo",
-  "requirements": [],
+  "requirements": [
+    "python-hpilo==3.9"
+  ],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "apns",
   "name": "Apns",
   "documentation": "https://www.home-assistant.io/components/apns",
-  "requirements": [],
+  "requirements": [
+    "apns2==0.3.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "awair",
   "name": "Awair",
   "documentation": "https://www.home-assistant.io/components/awair",
-  "requirements": [],
+  "requirements": [
+    "python_awair==0.0.3"
+  ],
   "dependencies": [],
   "codeowners": []
 }

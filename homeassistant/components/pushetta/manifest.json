@@ -2,7 +2,9 @@
   "domain": "pushetta",
   "name": "Pushetta",
   "documentation": "https://www.home-assistant.io/components/pushetta",
-  "requirements": [],
+  "requirements": [
+    "pushetta==1.0.15"
+  ],
   "dependencies": [],
   "codeowners": []
 }

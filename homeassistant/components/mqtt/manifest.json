@@ -3,6 +3,7 @@
   "name": "Mqtt",
   "documentation": "https://www.home-assistant.io/components/mqtt",
   "requirements": [
+    "hbmqtt==0.9.4",
     "paho-mqtt==1.4.0"
   ],
   "dependencies": [],

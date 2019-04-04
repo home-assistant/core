@@ -2,7 +2,9 @@
   "domain": "gtfs",
   "name": "Gtfs",
   "documentation": "https://www.home-assistant.io/components/gtfs",
-  "requirements": [],
+  "requirements": [
+    "pygtfs==0.1.5"
+  ],
   "dependencies": [],
   "codeowners": [
     "@robbiet480"

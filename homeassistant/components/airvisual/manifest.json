@@ -2,7 +2,9 @@
   "domain": "airvisual",
   "name": "Airvisual",
   "documentation": "https://www.home-assistant.io/components/airvisual",
-  "requirements": [],
+  "requirements": [
+    "pyairvisual==3.0.1"
+  ],
   "dependencies": [],
   "codeowners": [
     "@bachya"

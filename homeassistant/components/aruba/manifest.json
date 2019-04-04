@@ -2,7 +2,9 @@
   "domain": "aruba",
   "name": "Aruba",
   "documentation": "https://www.home-assistant.io/components/aruba",
-  "requirements": [],
+  "requirements": [
+    "pexpect==4.6.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

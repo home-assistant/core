@@ -2,7 +2,9 @@
   "domain": "openevse",
   "name": "Openevse",
   "documentation": "https://www.home-assistant.io/components/openevse",
-  "requirements": [],
+  "requirements": [
+    "openevsewifi==0.4"
+  ],
   "dependencies": [],
   "codeowners": []
 }

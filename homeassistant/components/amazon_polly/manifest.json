@@ -2,7 +2,9 @@
   "domain": "amazon_polly",
   "name": "Amazon polly",
   "documentation": "https://www.home-assistant.io/components/amazon_polly",
-  "requirements": [],
+  "requirements": [
+    "boto3==1.9.16"
+  ],
   "dependencies": [],
   "codeowners": []
 }

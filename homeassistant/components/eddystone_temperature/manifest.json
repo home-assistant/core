@@ -2,7 +2,10 @@
   "domain": "eddystone_temperature",
   "name": "Eddystone temperature",
   "documentation": "https://www.home-assistant.io/components/eddystone_temperature",
-  "requirements": [],
+  "requirements": [
+    "beacontools[scan]==1.2.3",
+    "construct==2.9.45"
+  ],
   "dependencies": [],
   "codeowners": []
 }

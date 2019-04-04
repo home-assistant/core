@@ -2,7 +2,9 @@
   "domain": "coinmarketcap",
   "name": "Coinmarketcap",
   "documentation": "https://www.home-assistant.io/components/coinmarketcap",
-  "requirements": [],
+  "requirements": [
+    "coinmarketcap==5.0.3"
+  ],
   "dependencies": [],
   "codeowners": []
 }

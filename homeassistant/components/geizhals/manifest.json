@@ -2,7 +2,9 @@
   "domain": "geizhals",
   "name": "Geizhals",
   "documentation": "https://www.home-assistant.io/components/geizhals",
-  "requirements": [],
+  "requirements": [
+    "geizhals==0.0.9"
+  ],
   "dependencies": [],
   "codeowners": []
 }

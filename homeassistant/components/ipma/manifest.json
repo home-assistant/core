@@ -2,7 +2,9 @@
   "domain": "ipma",
   "name": "Ipma",
   "documentation": "https://www.home-assistant.io/components/ipma",
-  "requirements": [],
+  "requirements": [
+    "pyipma==1.2.1"
+  ],
   "dependencies": [],
   "codeowners": [
     "@dgomes"

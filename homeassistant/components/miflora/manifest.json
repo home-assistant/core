@@ -2,7 +2,9 @@
   "domain": "miflora",
   "name": "Miflora",
   "documentation": "https://www.home-assistant.io/components/miflora",
-  "requirements": [],
+  "requirements": [
+    "miflora==0.4.0"
+  ],
   "dependencies": [],
   "codeowners": [
     "@danielhiversen",

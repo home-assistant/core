@@ -2,7 +2,9 @@
   "domain": "glances",
   "name": "Glances",
   "documentation": "https://www.home-assistant.io/components/glances",
-  "requirements": [],
+  "requirements": [
+    "glances_api==0.2.0"
+  ],
   "dependencies": [],
   "codeowners": [
     "@fabaff"

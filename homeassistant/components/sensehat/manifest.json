@@ -2,7 +2,9 @@
   "domain": "sensehat",
   "name": "Sensehat",
   "documentation": "https://www.home-assistant.io/components/sensehat",
-  "requirements": [],
+  "requirements": [
+    "sense-hat==2.2.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

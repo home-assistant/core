@@ -2,7 +2,9 @@
   "domain": "norway_air",
   "name": "Norway air",
   "documentation": "https://www.home-assistant.io/components/norway_air",
-  "requirements": [],
+  "requirements": [
+    "pyMetno==0.4.6"
+  ],
   "dependencies": [],
   "codeowners": []
 }

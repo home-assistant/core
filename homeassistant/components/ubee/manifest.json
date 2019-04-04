@@ -2,7 +2,9 @@
   "domain": "ubee",
   "name": "Ubee",
   "documentation": "https://www.home-assistant.io/components/ubee",
-  "requirements": [],
+  "requirements": [
+    "pyubee==0.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

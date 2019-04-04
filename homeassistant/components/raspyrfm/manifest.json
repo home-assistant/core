@@ -2,7 +2,9 @@
   "domain": "raspyrfm",
   "name": "Raspyrfm",
   "documentation": "https://www.home-assistant.io/components/raspyrfm",
-  "requirements": [],
+  "requirements": [
+    "raspyrfm-client==1.2.8"
+  ],
   "dependencies": [],
   "codeowners": []
 }

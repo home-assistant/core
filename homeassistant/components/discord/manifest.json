@@ -2,7 +2,9 @@
   "domain": "discord",
   "name": "Discord",
   "documentation": "https://www.home-assistant.io/components/discord",
-  "requirements": [],
+  "requirements": [
+    "discord.py==0.16.12"
+  ],
   "dependencies": [],
   "codeowners": []
 }

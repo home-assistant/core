@@ -2,7 +2,9 @@
   "domain": "gtt",
   "name": "Gtt",
   "documentation": "https://www.home-assistant.io/components/gtt",
-  "requirements": [],
+  "requirements": [
+    "pygtt==1.1.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

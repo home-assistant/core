@@ -2,7 +2,9 @@
   "domain": "uvc",
   "name": "Uvc",
   "documentation": "https://www.home-assistant.io/components/uvc",
-  "requirements": [],
+  "requirements": [
+    "uvcclient==0.11.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

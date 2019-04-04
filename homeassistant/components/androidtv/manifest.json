@@ -2,7 +2,9 @@
   "domain": "androidtv",
   "name": "Androidtv",
   "documentation": "https://www.home-assistant.io/components/androidtv",
-  "requirements": [],
+  "requirements": [
+    "androidtv==0.0.14"
+  ],
   "dependencies": [],
   "codeowners": []
 }

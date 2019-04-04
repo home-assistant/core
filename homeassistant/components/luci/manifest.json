@@ -2,7 +2,9 @@
   "domain": "luci",
   "name": "Luci",
   "documentation": "https://www.home-assistant.io/components/luci",
-  "requirements": [],
+  "requirements": [
+    "openwrt-luci-rpc==1.0.5"
+  ],
   "dependencies": [],
   "codeowners": []
 }

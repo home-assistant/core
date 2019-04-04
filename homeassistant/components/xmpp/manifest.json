@@ -2,7 +2,9 @@
   "domain": "xmpp",
   "name": "Xmpp",
   "documentation": "https://www.home-assistant.io/components/xmpp",
-  "requirements": [],
+  "requirements": [
+    "slixmpp==1.4.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

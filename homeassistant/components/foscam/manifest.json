@@ -2,7 +2,9 @@
   "domain": "foscam",
   "name": "Foscam",
   "documentation": "https://www.home-assistant.io/components/foscam",
-  "requirements": [],
+  "requirements": [
+    "libpyfoscam==1.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

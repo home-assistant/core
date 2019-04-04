@@ -2,7 +2,9 @@
   "domain": "metoffice",
   "name": "Metoffice",
   "documentation": "https://www.home-assistant.io/components/metoffice",
-  "requirements": [],
+  "requirements": [
+    "datapoint==0.4.3"
+  ],
   "dependencies": [],
   "codeowners": []
 }

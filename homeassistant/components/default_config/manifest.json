@@ -15,11 +15,11 @@
     "mobile_app",
     "person",
     "script",
+    "stream",
     "sun",
     "system_health",
     "updater",
-    "zeroconf",
-    "stream"
+    "zeroconf"
   ],
   "codeowners": []
 }

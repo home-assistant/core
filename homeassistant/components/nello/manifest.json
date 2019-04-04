@@ -2,7 +2,9 @@
   "domain": "nello",
   "name": "Nello",
   "documentation": "https://www.home-assistant.io/components/nello",
-  "requirements": [],
+  "requirements": [
+    "pynello==2.0.2"
+  ],
   "dependencies": [],
   "codeowners": [
     "@pschmitt"

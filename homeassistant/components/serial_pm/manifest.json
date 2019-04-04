@@ -2,7 +2,9 @@
   "domain": "serial_pm",
   "name": "Serial pm",
   "documentation": "https://www.home-assistant.io/components/serial_pm",
-  "requirements": [],
+  "requirements": [
+    "pmsensor==0.4"
+  ],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "nanoleaf",
   "name": "Nanoleaf",
   "documentation": "https://www.home-assistant.io/components/nanoleaf",
-  "requirements": [],
+  "requirements": [
+    "pynanoleaf==0.0.5"
+  ],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "ritassist",
   "name": "Ritassist",
   "documentation": "https://www.home-assistant.io/components/ritassist",
-  "requirements": [],
+  "requirements": [
+    "ritassist==0.9.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "discogs",
   "name": "Discogs",
   "documentation": "https://www.home-assistant.io/components/discogs",
-  "requirements": [],
+  "requirements": [
+    "discogs_client==2.2.1"
+  ],
   "dependencies": [],
   "codeowners": [
     "@thibmaek"

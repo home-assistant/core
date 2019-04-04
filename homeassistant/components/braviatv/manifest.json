@@ -2,7 +2,9 @@
   "domain": "braviatv",
   "name": "Braviatv",
   "documentation": "https://www.home-assistant.io/components/braviatv",
-  "requirements": [],
+  "requirements": [
+    "braviarc-homeassistant==0.3.7.dev0"
+  ],
   "dependencies": [],
   "codeowners": [
     "@robbiet480"

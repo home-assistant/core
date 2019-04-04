@@ -2,7 +2,9 @@
   "domain": "touchline",
   "name": "Touchline",
   "documentation": "https://www.home-assistant.io/components/touchline",
-  "requirements": [],
+  "requirements": [
+    "pytouchline==0.7"
+  ],
   "dependencies": [],
   "codeowners": []
 }

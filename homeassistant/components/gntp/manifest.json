@@ -2,7 +2,9 @@
   "domain": "gntp",
   "name": "Gntp",
   "documentation": "https://www.home-assistant.io/components/gntp",
-  "requirements": [],
+  "requirements": [
+    "gntp==1.0.3"
+  ],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "yr",
   "name": "Yr",
   "documentation": "https://www.home-assistant.io/components/yr",
-  "requirements": [],
+  "requirements": [
+    "xmltodict==0.11.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

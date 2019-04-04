@@ -2,7 +2,9 @@
   "domain": "ruter",
   "name": "Ruter",
   "documentation": "https://www.home-assistant.io/components/ruter",
-  "requirements": [],
+  "requirements": [
+    "pyruter==1.1.0"
+  ],
   "dependencies": [],
   "codeowners": [
     "@ludeeus"

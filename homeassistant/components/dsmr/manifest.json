@@ -2,7 +2,9 @@
   "domain": "dsmr",
   "name": "Dsmr",
   "documentation": "https://www.home-assistant.io/components/dsmr",
-  "requirements": [],
+  "requirements": [
+    "dsmr_parser==0.12"
+  ],
   "dependencies": [],
   "codeowners": []
 }

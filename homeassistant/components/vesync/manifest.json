@@ -2,7 +2,9 @@
   "domain": "vesync",
   "name": "Vesync",
   "documentation": "https://www.home-assistant.io/components/vesync",
-  "requirements": [],
+  "requirements": [
+    "pyvesync_v2==0.9.6"
+  ],
   "dependencies": [],
   "codeowners": []
 }

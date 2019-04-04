@@ -2,7 +2,9 @@
   "domain": "netio",
   "name": "Netio",
   "documentation": "https://www.home-assistant.io/components/netio",
-  "requirements": [],
+  "requirements": [
+    "pynetio==0.1.9.1"
+  ],
   "dependencies": [],
   "codeowners": []
 }

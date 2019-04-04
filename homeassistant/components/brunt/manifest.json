@@ -2,7 +2,9 @@
   "domain": "brunt",
   "name": "Brunt",
   "documentation": "https://www.home-assistant.io/components/brunt",
-  "requirements": [],
+  "requirements": [
+    "brunt==0.1.3"
+  ],
   "dependencies": [],
   "codeowners": [
     "@eavanvalkenburg"

@@ -2,7 +2,9 @@
   "domain": "nilu",
   "name": "Nilu",
   "documentation": "https://www.home-assistant.io/components/nilu",
-  "requirements": [],
+  "requirements": [
+    "niluclient==0.1.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

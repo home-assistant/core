@@ -2,7 +2,9 @@
   "domain": "roomba",
   "name": "Roomba",
   "documentation": "https://www.home-assistant.io/components/roomba",
-  "requirements": [],
+  "requirements": [
+    "roombapy==1.3.1"
+  ],
   "dependencies": [],
   "codeowners": [
     "@pschmitt"

@@ -4,8 +4,8 @@
   "documentation": "https://www.home-assistant.io/components/history",
   "requirements": [],
   "dependencies": [
-    "recorder",
-    "http"
+    "http",
+    "recorder"
   ],
   "codeowners": [
     "@home-assistant/core"

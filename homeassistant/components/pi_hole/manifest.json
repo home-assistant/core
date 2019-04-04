@@ -2,7 +2,9 @@
   "domain": "pi_hole",
   "name": "Pi hole",
   "documentation": "https://www.home-assistant.io/components/pi_hole",
-  "requirements": [],
+  "requirements": [
+    "hole==0.3.0"
+  ],
   "dependencies": [],
   "codeowners": [
     "@fabaff"

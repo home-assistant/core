@@ -2,7 +2,9 @@
   "domain": "soundtouch",
   "name": "Soundtouch",
   "documentation": "https://www.home-assistant.io/components/soundtouch",
-  "requirements": [],
+  "requirements": [
+    "libsoundtouch==0.7.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

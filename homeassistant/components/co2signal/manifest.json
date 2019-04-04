@@ -2,7 +2,9 @@
   "domain": "co2signal",
   "name": "Co2signal",
   "documentation": "https://www.home-assistant.io/components/co2signal",
-  "requirements": [],
+  "requirements": [
+    "co2signal==0.4.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

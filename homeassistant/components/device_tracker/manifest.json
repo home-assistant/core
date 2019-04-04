@@ -4,8 +4,8 @@
   "documentation": "https://www.home-assistant.io/components/device_tracker",
   "requirements": [],
   "dependencies": [
-    "zone",
-    "group"
+    "group",
+    "zone"
   ],
   "codeowners": []
 }

@@ -2,7 +2,9 @@
   "domain": "qnap",
   "name": "Qnap",
   "documentation": "https://www.home-assistant.io/components/qnap",
-  "requirements": [],
+  "requirements": [
+    "qnapstats==0.2.7"
+  ],
   "dependencies": [],
   "codeowners": [
     "@colinodell"

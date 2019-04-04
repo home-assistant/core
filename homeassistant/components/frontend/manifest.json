@@ -7,12 +7,12 @@
   ],
   "dependencies": [
     "api",
-    "websocket_api",
-    "http",
-    "system_log",
     "auth",
+    "http",
+    "lovelace",
     "onboarding",
-    "lovelace"
+    "system_log",
+    "websocket_api"
   ],
   "codeowners": [
     "@home-assistant/core"

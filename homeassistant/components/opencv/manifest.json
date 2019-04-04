@@ -2,7 +2,9 @@
   "domain": "opencv",
   "name": "Opencv",
   "documentation": "https://www.home-assistant.io/components/opencv",
-  "requirements": [],
+  "requirements": [
+    "numpy==1.16.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

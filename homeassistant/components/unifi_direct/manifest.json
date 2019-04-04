@@ -2,7 +2,9 @@
   "domain": "unifi_direct",
   "name": "Unifi direct",
   "documentation": "https://www.home-assistant.io/components/unifi_direct",
-  "requirements": [],
+  "requirements": [
+    "pexpect==4.6.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

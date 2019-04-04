@@ -2,7 +2,9 @@
   "domain": "nut",
   "name": "Nut",
   "documentation": "https://www.home-assistant.io/components/nut",
-  "requirements": [],
+  "requirements": [
+    "pynut2==2.1.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

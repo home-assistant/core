@@ -3,7 +3,8 @@
   "name": "Unifi",
   "documentation": "https://www.home-assistant.io/components/unifi",
   "requirements": [
-    "aiounifi==4"
+    "aiounifi==4",
+    "pyunifi==2.16"
   ],
   "dependencies": [],
   "codeowners": [

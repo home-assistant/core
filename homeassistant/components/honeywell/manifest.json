@@ -2,7 +2,10 @@
   "domain": "honeywell",
   "name": "Honeywell",
   "documentation": "https://www.home-assistant.io/components/honeywell",
-  "requirements": [],
+  "requirements": [
+    "evohomeclient==0.3.2",
+    "somecomfort==0.5.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

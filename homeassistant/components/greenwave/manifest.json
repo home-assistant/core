@@ -2,7 +2,9 @@
   "domain": "greenwave",
   "name": "Greenwave",
   "documentation": "https://www.home-assistant.io/components/greenwave",
-  "requirements": [],
+  "requirements": [
+    "greenwavereality==0.5.1"
+  ],
   "dependencies": [],
   "codeowners": []
 }

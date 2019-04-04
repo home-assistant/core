@@ -2,7 +2,9 @@
   "domain": "rpi_gpio_pwm",
   "name": "Rpi gpio pwm",
   "documentation": "https://www.home-assistant.io/components/rpi_gpio_pwm",
-  "requirements": [],
+  "requirements": [
+    "pwmled==1.4.1"
+  ],
   "dependencies": [],
   "codeowners": []
 }

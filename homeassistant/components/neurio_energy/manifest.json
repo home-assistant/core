@@ -2,7 +2,9 @@
   "domain": "neurio_energy",
   "name": "Neurio energy",
   "documentation": "https://www.home-assistant.io/components/neurio_energy",
-  "requirements": [],
+  "requirements": [
+    "neurio==0.3.1"
+  ],
   "dependencies": [],
   "codeowners": []
 }

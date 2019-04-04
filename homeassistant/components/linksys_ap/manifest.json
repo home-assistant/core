@@ -2,7 +2,9 @@
   "domain": "linksys_ap",
   "name": "Linksys ap",
   "documentation": "https://www.home-assistant.io/components/linksys_ap",
-  "requirements": [],
+  "requirements": [
+    "beautifulsoup4==4.7.1"
+  ],
   "dependencies": [],
   "codeowners": []
 }
