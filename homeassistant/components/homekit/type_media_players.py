@@ -9,9 +9,10 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE, DOMAIN)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_TYPE, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_STOP, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
-    STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
+    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_STOP, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, SERVICE_VOLUME_MUTE, SERVICE_VOLUME_UP,
+    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET, STATE_OFF, STATE_PLAYING,
+    STATE_UNKNOWN)
 
 from . import TYPES
 from .accessories import HomeAccessory
@@ -19,8 +20,8 @@ from .const import (
     CHAR_ACTIVE, CHAR_ACTIVE_IDENTIFIER, CHAR_CONFIGURED_NAME,
     CHAR_CURRENT_VISIBILITY_STATE, CHAR_IDENTIFIER, CHAR_INPUT_SOURCE_TYPE,
     CHAR_IS_CONFIGURED, CHAR_NAME, CHAR_ON, CHAR_SLEEP_DISCOVER_MODE,
-    CHAR_MUTE, CHAR_VOLUME_CONTROL_TYPE, CHAR_VOLUME_SELECTOR, CHAR_VOLUME,
-    CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+    CHAR_MUTE, CHAR_REMOTE_KEY, CHAR_VOLUME_CONTROL_TYPE, CHAR_VOLUME_SELECTOR,
+    CHAR_VOLUME, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP, FEATURE_SELECT_SOURCE, FEATURE_TOGGLE_MUTE,
     FEATURE_VOLUME_STEP, SERV_SWITCH, SERV_TELEVISION, SERV_TELEVISION_SPEAKER,
     SERV_INPUT_SOURCE, TYPE_SWITCH, TYPE_TELEVISION)
@@ -32,6 +33,25 @@ MODE_FRIENDLY_NAME = {
     FEATURE_PLAY_PAUSE: 'Play/Pause',
     FEATURE_PLAY_STOP: 'Play/Stop',
     FEATURE_TOGGLE_MUTE: 'Mute',
+}
+
+REMOTE_KEYS = {
+    0: "Rewind",
+    1: "FastForward",
+    2: "NextTrack",
+    3: "PreviousTrack",
+    4: "ArrowUp",
+    5: "ArrowDown",
+    6: "ArrowLeft",
+    7: "ArrowRight",
+    8: "Select",
+    9: "Back",
+    10: "Exit",
+    15: "Information"
+}
+
+MEDIA_PLAYER_KEYS = {
+    11: SERVICE_MEDIA_PLAY_PAUSE,
 }
 
 
@@ -58,12 +78,21 @@ class MediaPlayer(HomeAccessory):
 
             self.category = CATEGORY_TELEVISION
             television = self.add_preload_service(SERV_TELEVISION,
-                                                  CHAR_CONFIGURED_NAME)
+                                                  [
+                                                      CHAR_CONFIGURED_NAME,
+                                                      CHAR_REMOTE_KEY
+                                                  ])
             television.configure_char(CHAR_CONFIGURED_NAME,
                                       value=self.display_name)
             television.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
             self.chars[FEATURE_ON_OFF] = television.configure_char(
                 CHAR_ACTIVE, value=False, setter_callback=self.set_on_off)
+
+            if FEATURE_PLAY_PAUSE in feature_list:
+                self.chars[FEATURE_PLAY_PAUSE] \
+                        = television.configure_char(
+                        CHAR_REMOTE_KEY,
+                        setter_callback=self.set_remote_key)
 
             if FEATURE_TOGGLE_MUTE in feature_list:
 
@@ -204,7 +233,7 @@ class MediaPlayer(HomeAccessory):
 
     def set_input_source(self, value):
         """Send input set value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set tv_select_source for "tv_select_source" to %s',
+        _LOGGER.debug('%s: Set select_source for "select_source" to %s',
                       self.entity_id, value)
 
         source = self.sources[value]
@@ -212,6 +241,16 @@ class MediaPlayer(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_INPUT_SOURCE: source}
         self.call_service(DOMAIN, SERVICE_SELECT_SOURCE, params)
+
+    def set_remote_key(self, value):
+        """Send remote key value if call came from HomeKit."""
+        _LOGGER.debug('%s: Set remote key for "play_pause" to %s',
+                      self.entity_id, value)
+
+        if value in MEDIA_PLAYER_KEYS:
+            service = MEDIA_PLAYER_KEYS[value]
+            params = {ATTR_ENTITY_ID: self.entity_id}
+            self.call_service(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
