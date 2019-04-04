@@ -1,6 +1,5 @@
 """All methods needed to bootstrap a Home Assistant instance."""
 import asyncio
-import collections
 import logging.handlers
 import os
 from timeit import default_timer as timer
@@ -248,10 +247,9 @@ async def async_process_deps_reqs(
         os.path.join(os.path.dirname(module.__file__), 'manifest.json')
     )
 
-    if (isinstance(manifest, collections.Mapping)
-            and manifest.get('dependencies')):
+    if manifest.get('dependencies'):  # type: ignore
         dep_success = await _async_process_dependencies(
-            hass, config, name, manifest['dependencies'])
+            hass, config, name, manifest['dependencies'])  # type: ignore
 
         if not dep_success:
             raise HomeAssistantError("Could not set up all dependencies.")
