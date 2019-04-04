@@ -7,6 +7,6 @@
     "http"
   ],
   "codeowners": [
-    "@home-assistant/hassio"
+    "@home-assistant/hass-io"
   ]
 }
