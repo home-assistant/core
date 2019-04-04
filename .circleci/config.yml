@@ -86,12 +86,6 @@ jobs:
           test: true
 
       - run:
-          name: validate manifests
-          command: |
-            . venv/bin/activate
-            python script/manifest/validate.py
-
-      - run:
           name: run static check
           command: |
             . venv/bin/activate
@@ -105,6 +99,13 @@ jobs:
             mypy $TYPING_FILES
 
       - install
+
+      - run:
+          name: validate manifests
+          command: |
+            . venv/bin/activate
+            python script/manifest/validate.py
+
       - run:
           name: run gen_requirements_all
           command: |
