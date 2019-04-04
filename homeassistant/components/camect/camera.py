@@ -1,10 +1,4 @@
-"""
-This platform provides support to streaming any camera supported by Camect
-Home using WebRTC.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.camect/
-"""
+"""Support for streaming any camera supported by Camect."""
 from typing import Dict
 
 from homeassistant.components import camect, camera
@@ -78,6 +72,7 @@ class Camera(camera.Camera):
         return None
 
     def camera_image(self):
+        """Return a still image response from the camera."""
         return self._home.snapshot_camera(self._device_id)
 
     @property

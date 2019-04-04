@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv, discovery
 
-REQUIREMENTS = ['camect-py==0.1.1']
+REQUIREMENTS = ['camect-py==0.1.2']
 
 ATTR_MODE = 'mode'
 CONF_CAMERA_IDS = 'camera_ids'
