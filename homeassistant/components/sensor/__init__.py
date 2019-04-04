@@ -5,12 +5,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TIMESTAMP, DEVICE_CLASS_PRESSURE)
+    DEVICE_CLASS_POWER, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP)
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
+from homeassistant.helpers.entity_component import EntityComponent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
     DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
+    DEVICE_CLASS_POWER,  # power (W/kW)
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
