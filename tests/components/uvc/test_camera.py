@@ -226,7 +226,7 @@ class TestUVC(unittest.TestCase):
                     'isRtspEnabled': True,
                     'rtspUris': ['rtsp://host-b:7447/stream_1']
                 }
-            ]
+            ],
             'host': 'host-a',
             'internalHost': 'host-b',
             'username': 'admin',
