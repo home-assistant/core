@@ -90,7 +90,7 @@ async def async_setup_platform(
     sensors = []
     for var in gw.binary_sensors:
         device_class = sensor_info[var][0]
-        friendly_name_format = sensor_info[var][1].format(gw.gw_id)
+        friendly_name_format = sensor_info[var][1]
         sensors.append(OpenThermBinarySensor(gw, var, device_class,
                                              friendly_name_format))
     async_add_entities(sensors)
@@ -107,7 +107,7 @@ class OpenThermBinarySensor(BinarySensorDevice):
         self._var = var
         self._state = None
         self._device_class = device_class
-        self._friendly_name = friendly_name_format.format(gw.gw_id)
+        self._friendly_name = friendly_name_format.format(gw.name)
 
     async def async_added_to_hass(self):
         """Subscribe to updates from the component."""

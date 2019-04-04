@@ -10,9 +10,7 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
 
-from . import (
-    CONF_CLIMATE, CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS,
-    DATA_OPENTHERM_GW)
+from . import CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +34,9 @@ class OpenThermClimate(ClimateDevice):
         self._gw_vars = gw.vars
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, gw.gw_id,
                                                   hass=gw.hass)
-        self.friendly_name = gw.gw_id
-        self.floor_temp = gw.config[CONF_CLIMATE][CONF_FLOOR_TEMP]
-        self.temp_precision = gw.config[CONF_CLIMATE].get(CONF_PRECISION)
+        self.friendly_name = gw.name
+        self.floor_temp = gw.climate_config[CONF_FLOOR_TEMP]
+        self.temp_precision = gw.climate_config.get(CONF_PRECISION)
         self._current_operation = STATE_IDLE
         self._current_temperature = None
         self._new_target_temperature = None
@@ -145,7 +143,7 @@ class OpenThermClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self.temp_precision
+        return self.precision
 
     @property
     def is_away_mode_on(self):
@@ -158,8 +156,8 @@ class OpenThermClimate(ClimateDevice):
             temp = float(kwargs[ATTR_TEMPERATURE])
             if temp == self.target_temperature:
                 return
-            self._new_target_temperature = await self._gateway.set_target_temp(
-                temp)
+            self._new_target_temperature = (
+                await self._gateway.gateway.set_target_temp(temp))
             self.async_schedule_update_ha_state()
 
     @property

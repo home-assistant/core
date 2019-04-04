@@ -172,7 +172,7 @@ class OpenThermSensor(Entity):
         self._value = None
         self._device_class = device_class
         self._unit = unit
-        self._friendly_name = friendly_name_format.format(gw.gw_id)
+        self._friendly_name = friendly_name_format.format(gw.name)
 
     async def async_added_to_hass(self):
         """Subscribe to updates from the component."""

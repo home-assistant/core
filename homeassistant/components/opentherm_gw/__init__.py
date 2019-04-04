@@ -9,8 +9,8 @@ from homeassistant.components.climate import DOMAIN as COMP_CLIMATE
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
 from homeassistant.const import (
     ATTR_DATE, ATTR_ID, ATTR_TEMPERATURE, ATTR_TIME, CONF_DEVICE,
-    CONF_MONITORED_VARIABLES, EVENT_HOMEASSISTANT_STOP, PRECISION_HALVES,
-    PRECISION_TENTHS, PRECISION_WHOLE)
+    CONF_MONITORED_VARIABLES, CONF_NAME, EVENT_HOMEASSISTANT_STOP,
+    PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE)
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -50,13 +50,12 @@ CLIMATE_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {
-        cv.string: {
-            vol.Required(CONF_DEVICE): cv.string,
-            vol.Optional(CONF_CLIMATE, default={}): CLIMATE_SCHEMA,
-            vol.Optional(CONF_MONITORED_VARIABLES, default=[]): [cv.string],
-        },
-    },
+    DOMAIN: cv.schema_with_slug_keys({
+        vol.Required(CONF_DEVICE): cv.string,
+        vol.Optional(CONF_CLIMATE, default={}): CLIMATE_SCHEMA,
+        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): [cv.string],
+        vol.Optional(CONF_NAME): cv.string,
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -231,7 +230,8 @@ class OpenThermGatewayDevice():
         import pyotgw
         self.hass = hass
         self.gw_id = gw_id
-        self.config = config
+        self.name = config.get(CONF_NAME, gw_id)
+        self.climate_config = config[CONF_CLIMATE]
         self.binary_sensors = []
         self.sensors = []
         self.status = {}
@@ -240,18 +240,17 @@ class OpenThermGatewayDevice():
         self.vars = pyotgw.vars
         hass.async_create_task(async_load_platform(hass, COMP_CLIMATE, DOMAIN,
                                                    self.gw_id, hass_config))
-        monitored_vars = config.get(CONF_MONITORED_VARIABLES)
+        monitored_vars = config[CONF_MONITORED_VARIABLES]
         if monitored_vars:
             hass.async_create_task(
                 self.setup_monitored_vars(monitored_vars, hass_config))
         # Schedule directly on the loop to avoid blocking HA startup.
-        hass.loop.create_task(self.connect_and_subscribe())
+        hass.loop.create_task(self.connect_and_subscribe(config[CONF_DEVICE]))
 
-    async def connect_and_subscribe(self):
+    async def connect_and_subscribe(self, device_path):
         """Connect to serial device and subscribe report handler."""
-        await self.gateway.connect(self.hass.loop, self.config[CONF_DEVICE])
-        _LOGGER.debug("Connected to OpenTherm Gateway at %s",
-                      self.config[CONF_DEVICE])
+        await self.gateway.connect(self.hass.loop, device_path)
+        _LOGGER.debug("Connected to OpenTherm Gateway at %s", device_path)
 
         async def cleanup(event):
             """Reset overrides on the gateway."""
