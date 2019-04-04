@@ -419,7 +419,7 @@ class AmbientWeatherEntity(Entity):
         """Return True if entity is available."""
         return bool(
             self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
-                self._sensor_type))
+                self._sensor_type) is not None)
 
     @property
     def device_info(self):
