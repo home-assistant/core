@@ -7,7 +7,7 @@ import pkgutil
 import re
 import sys
 
-from .manifest.requirements import gather_requirements_from_manifests
+from script.manifest.requirements import gather_requirements_from_manifests
 
 COMMENT_REQUIREMENTS = (
     'Adafruit-DHT',
