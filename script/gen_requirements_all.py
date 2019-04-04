@@ -2,11 +2,12 @@
 """Generate an updated requirements_all.txt."""
 import fnmatch
 import importlib
-import json
 import os
 import pkgutil
 import re
 import sys
+
+from script.manifest.requirements import gather_requirements_from_manifests
 
 COMMENT_REQUIREMENTS = (
     'Adafruit-DHT',
@@ -214,46 +215,8 @@ def gather_modules():
 
     errors = []
 
-    for package in sorted(
-            explore_module('homeassistant.components', False) +
-            explore_module('homeassistant.scripts', True) +
-            explore_module('homeassistant.auth', True)):
-        try:
-            module = importlib.import_module(package)
-        except ImportError as err:
-            for pattern in IGNORE_PACKAGES:
-                if fnmatch.fnmatch(package, pattern):
-                    break
-            else:
-                print("{}: {}".format(package.replace('.', '/') + '.py', err))
-                errors.append(package)
-            continue
-
-        manifest_path = os.path.join(
-            os.path.dirname(module.__file__),
-            'manifest.json'
-        )
-
-        manifest_file_exists = os.path.isfile(manifest_path)
-        if (not manifest_file_exists
-                and not getattr(module, 'REQUIREMENTS', None)):
-            continue
-
-        if manifest_file_exists:
-            with open(manifest_path, 'r') as manifest_file:
-                manifest = json.loads(manifest_file.read())
-
-                if not manifest.get('requirements'):
-                    continue
-                process_requirements(
-                    errors,
-                    manifest['requirements'],
-                    package,
-                    reqs
-                )
-
-        elif getattr(module, 'REQUIREMENTS', None):
-            process_requirements(errors, module.REQUIREMENTS, package, reqs)
+    gather_requirements_from_manifests(process_requirements, errors, reqs)
+    gather_requirements_from_modules(errors, reqs)
 
     for key in reqs:
         reqs[key] = sorted(reqs[key],
@@ -268,12 +231,32 @@ def gather_modules():
     return reqs
 
 
+def gather_requirements_from_modules(errors, reqs):
+    """Collect the requirements from the modules directly."""
+    for package in sorted(
+            explore_module('homeassistant.scripts', True) +
+            explore_module('homeassistant.auth', True)):
+        try:
+            module = importlib.import_module(package)
+        except ImportError as err:
+            for pattern in IGNORE_PACKAGES:
+                if fnmatch.fnmatch(package, pattern):
+                    break
+            else:
+                print("{}: {}".format(package.replace('.', '/') + '.py', err))
+                errors.append(package)
+            continue
+
+        if getattr(module, 'REQUIREMENTS', None):
+            process_requirements(errors, module.REQUIREMENTS, package, reqs)
+
+
 def process_requirements(errors, module_requirements, package, reqs):
     """Process all of the requirements."""
     for req in module_requirements:
         if req in IGNORE_REQ:
             continue
-        if '://' in req and 'pyharmony' not in req:
+        if '://' in req:
             errors.append(
                 "{}[Only pypi dependencies are allowed: {}]".format(
                     package, req))
