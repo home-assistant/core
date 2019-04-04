@@ -1192,9 +1192,9 @@ pyota==2.0.5
 # homeassistant.components.opentherm_gw
 pyotgw==0.4b3
 
-# homeassistant.components.otp
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
+# homeassistant.components.otp
 pyotp==2.2.6
 
 # homeassistant.components.owlet
