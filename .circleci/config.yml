@@ -88,6 +88,7 @@ jobs:
       - run:
           name: validate manifests
           command: |
+            . venv/bin/activate
             python script/manifest/validate.py
 
       - run:
