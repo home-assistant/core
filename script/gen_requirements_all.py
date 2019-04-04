@@ -269,6 +269,7 @@ def gather_modules():
 
 
 def process_requirements(errors, module_requirements, package, reqs):
+    """Process all of the requirements."""
     for req in module_requirements:
         if req in IGNORE_REQ:
             continue
