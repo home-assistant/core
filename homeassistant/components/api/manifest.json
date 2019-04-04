@@ -1,6 +1,6 @@
 {
   "domain": "api",
-  "name": "Api",
+  "name": "Home Assistant API",
   "documentation": "https://www.home-assistant.io/components/api",
   "requirements": [],
   "dependencies": [

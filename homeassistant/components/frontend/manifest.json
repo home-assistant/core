@@ -1,6 +1,6 @@
 {
   "domain": "frontend",
-  "name": "Frontend",
+  "name": "Home Assistant Frontend",
   "documentation": "https://www.home-assistant.io/components/frontend",
   "requirements": [
     "home-assistant-frontend==20190331.0"

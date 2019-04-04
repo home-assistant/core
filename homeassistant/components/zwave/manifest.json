@@ -1,6 +1,6 @@
 {
   "domain": "zwave",
-  "name": "Zwave",
+  "name": "Z-Wave",
   "documentation": "https://www.home-assistant.io/components/zwave",
   "requirements": [
     "homeassistant-pyozw==0.1.3",

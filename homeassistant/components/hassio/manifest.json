@@ -1,7 +1,7 @@
 {
   "domain": "hassio",
-  "name": "Hassio",
-  "documentation": "https://www.home-assistant.io/components/hassio",
+  "name": "Hass.io",
+  "documentation": "https://www.home-assistant.io/hassio",
   "requirements": [],
   "dependencies": [
     "http"

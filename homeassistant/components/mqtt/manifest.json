@@ -1,6 +1,6 @@
 {
   "domain": "mqtt",
-  "name": "Mqtt",
+  "name": "MQTT",
   "documentation": "https://www.home-assistant.io/components/mqtt",
   "requirements": [
     "hbmqtt==0.9.4",
