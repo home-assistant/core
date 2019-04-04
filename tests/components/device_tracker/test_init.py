@@ -175,7 +175,7 @@ async def test_gravatar_and_picture(hass):
 @patch(
     'homeassistant.components.device_tracker.DeviceTracker.see')
 @patch(
-    'homeassistant.components.device_tracker.demo.setup_scanner',
+    'homeassistant.components.demo.device_tracker.setup_scanner',
     autospec=True)
 async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
     """Test discovery of device_tracker demo platform."""
@@ -408,10 +408,10 @@ async def test_see_state(hass, yaml_devices):
                                                     timedelta(seconds=0))
     assert len(config) == 1
 
-    state = hass.states.get('device_tracker.examplecom')
+    state = hass.states.get('device_tracker.example_com')
     attrs = state.attributes
     assert state.state == 'Work'
-    assert state.object_id == 'examplecom'
+    assert state.object_id == 'example_com'
     assert state.name == 'example.com'
     assert attrs['friendly_name'] == 'example.com'
     assert attrs['battery'] == 100
@@ -626,7 +626,7 @@ def test_see_schema_allowing_ios_calls():
     device_tracker.SERVICE_SEE_PAYLOAD_SCHEMA({
         'dev_id': 'Test',
         "battery": 35,
-        "battery_status": 'Unplugged',
+        "battery_status": 'Not Charging',
         "gps": [10.0, 10.0],
         "gps_accuracy": 300,
         "hostname": 'beer',

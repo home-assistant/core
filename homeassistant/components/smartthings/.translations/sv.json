@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "app_not_installed": "V\u00e4nligen se till att du har installerat och auktoriserad Home Assistant SmartApp och f\u00f6rs\u00f6k igen.",
+            "app_setup_error": "Det gick inte att installera Home Assistant SmartApp. V\u00e4nligen f\u00f6rs\u00f6k igen.",
+            "base_url_not_https": "Den `base_url`f\u00f6r `http` komponenten m\u00e5ste konfigureras och b\u00f6rja med `https://`.",
+            "token_already_setup": "Token har redan installerats.",
+            "token_forbidden": "Token har inte det som kr\u00e4vs inom omf\u00e5ng f\u00f6r OAuth.",
+            "token_invalid_format": "Token m\u00e5ste vara i UID/GUID-format",
+            "token_unauthorized": "Denna token \u00e4r ogiltig eller inte l\u00e4ngre auktoriserad.",
+            "webhook_error": "SmartThings kunde inte validera endpoint konfigurerad i \" base_url`. V\u00e4nligen granska kraven f\u00f6r komponenten."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "\u00c5tkomsttoken"
+                },
+                "description": "V\u00e4nligen ange en [personlig \u00e5tkomsttoken]({token_url}) f\u00f6r SmartThings som har skapats enligt [instruktionerna]({component_url}).",
+                "title": "Ange personlig \u00e5tkomsttoken"
+            },
+            "wait_install": {
+                "description": "Installera Home Assistant SmartApp p\u00e5 minst en plats och klicka p\u00e5 Skicka.",
+                "title": "Installera SmartApp"
+            }
+        },
+        "title": "SmartThings"
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning af ZHA."
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke oprette forbindelse til ZHA-enhed."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radio_type": "Radio type",
+                    "usb_path": "Sti til USB enhed"
+                },
+                "description": "Tom",
+                "title": "ZHA"
+            }
+        },
+        "title": "ZHA"
+    }
+}

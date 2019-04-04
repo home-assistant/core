@@ -4,8 +4,9 @@ from unittest.mock import patch, Mock
 
 from aiohttp import WSMsgType
 import pytest
+import voluptuous as vol
 
-from homeassistant.components.websocket_api import const, commands, messages
+from homeassistant.components.websocket_api import const, messages
 
 
 @pytest.fixture
@@ -56,7 +57,7 @@ def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
     for idx in range(10):
         yield from websocket_client.send_json({
             'id': idx + 1,
-            'type': commands.TYPE_PING,
+            'type': 'ping',
         })
     msg = yield from websocket_client.receive()
     assert msg.type == WSMsgType.close
@@ -90,3 +91,26 @@ async def test_handler_failing(hass, websocket_client):
     assert msg['type'] == const.TYPE_RESULT
     assert not msg['success']
     assert msg['error']['code'] == const.ERR_UNKNOWN_ERROR
+
+
+async def test_invalid_vol(hass, websocket_client):
+    """Test a command that raises invalid vol error."""
+    hass.components.websocket_api.async_register_command(
+        'bla', Mock(side_effect=TypeError),
+        messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+            'type': 'bla',
+            vol.Required('test_config'): str
+        }))
+
+    await websocket_client.send_json({
+        'id': 5,
+        'type': 'bla',
+        'test_config': 5
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == const.TYPE_RESULT
+    assert not msg['success']
+    assert msg['error']['code'] == const.ERR_INVALID_FORMAT
+    assert 'expected str for dictionary value' in msg['error']['message']

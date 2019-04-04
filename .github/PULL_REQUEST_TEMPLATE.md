@@ -1,3 +1,7 @@
+## Breaking Change:
+
+<!-- What is breaking and why we have to break it. Remove this section only if it was NOT a breaking change. -->
+
 ## Description:
 
 
@@ -27,5 +31,5 @@ If the code communicates with devices, web services, or third-party tools:
 If the code does not interact with devices:
   - [ ] Tests have been added to verify that the new code works.
 
-[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L14
-[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L54
+[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard/__init__.py#L14
+[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard/__init__.py#L23

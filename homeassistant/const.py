@@ -1,17 +1,20 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 84
-PATCH_VERSION = '6'
+MINOR_VERSION = 91
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
 
-# Format for platforms
-PLATFORM_FORMAT = '{}.{}'
+# Format for platform files
+PLATFORM_FORMAT = '{platform}.{domain}'
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
+
+# Entity target all constant
+ENTITY_MATCH_ALL = 'all'
 
 # If no name is specified
 DEVICE_DEFAULT_NAME = 'Unnamed Device'
@@ -144,6 +147,11 @@ CONF_TTL = 'ttl'
 CONF_TYPE = 'type'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM = 'unit_system'
+
+# Deprecated in 0.88.0, invalidated in 0.91.0, remove in 0.92.0
+CONF_UPDATE_INTERVAL = 'update_interval'
+CONF_UPDATE_INTERVAL_INVALIDATION_VERSION = '0.91.0'
+
 CONF_URL = 'url'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
@@ -237,6 +245,9 @@ ATTR_NAME = 'name'
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'
 
+# Contains one string or a list of strings, each being an area id
+ATTR_AREA_ID = 'area_id'
+
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME = 'friendly_name'
 
@@ -311,6 +322,13 @@ ATTR_DEVICE_CLASS = 'device_class'
 ATTR_TEMPERATURE = 'temperature'
 
 # #### UNITS OF MEASUREMENT ####
+# Power units
+POWER_WATT = 'W'
+
+# Energy units
+ENERGY_KILO_WATT_HOUR = 'kWh'
+ENERGY_WATT_HOUR = 'Wh'
+
 # Temperature units
 TEMP_CELSIUS = '°C'
 TEMP_FAHRENHEIT = '°F'
@@ -324,6 +342,13 @@ LENGTH_INCHES = 'in'  # type: str
 LENGTH_FEET = 'ft'  # type: str
 LENGTH_YARD = 'yd'  # type: str
 LENGTH_MILES = 'mi'  # type: str
+
+# Pressure units
+PRESSURE_PA = 'Pa'  # type: str
+PRESSURE_HPA = 'hPa'  # type: str
+PRESSURE_MBAR = 'mbar'  # type: str
+PRESSURE_INHG = 'inHg'  # type: str
+PRESSURE_PSI = 'psi'  # type: str
 
 # Volume units
 VOLUME_LITERS = 'L'  # type: str
@@ -437,6 +462,7 @@ UNIT_NOT_RECOGNIZED_TEMPLATE = '{} is not a recognized {} unit.'  # type: str
 
 LENGTH = 'length'  # type: str
 MASS = 'mass'  # type: str
+PRESSURE = 'pressure'  # type: str
 VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
 SPEED_MS = 'speed_ms'  # type: str

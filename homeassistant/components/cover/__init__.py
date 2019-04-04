@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
 from homeassistant.helpers import intent
@@ -21,7 +22,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT,
     SERVICE_STOP_COVER_TILT, SERVICE_SET_COVER_TILT_POSITION, STATE_OPEN,
-    STATE_CLOSED, STATE_UNKNOWN, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
+    STATE_CLOSED, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,12 +35,27 @@ ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+# Refer to the cover dev docs for device class descriptions
+DEVICE_CLASS_AWNING = 'awning'
+DEVICE_CLASS_BLIND = 'blind'
+DEVICE_CLASS_CURTAIN = 'curtain'
+DEVICE_CLASS_DAMPER = 'damper'
+DEVICE_CLASS_DOOR = 'door'
+DEVICE_CLASS_GARAGE = 'garage'
+DEVICE_CLASS_SHADE = 'shade'
+DEVICE_CLASS_SHUTTER = 'shutter'
+DEVICE_CLASS_WINDOW = 'window'
 DEVICE_CLASSES = [
-    'damper',
-    'garage',        # Garage door control
-    'window',        # Window control
+    DEVICE_CLASS_AWNING,
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_CURTAIN,
+    DEVICE_CLASS_DAMPER,
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHADE,
+    DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASS_WINDOW
 ]
-
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 SUPPORT_OPEN = 1
@@ -60,7 +76,7 @@ INTENT_OPEN_COVER = 'HassOpenCover'
 INTENT_CLOSE_COVER = 'HassCloseCover'
 
 COVER_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 COVER_SET_COVER_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
@@ -178,7 +194,7 @@ class CoverDevice(Entity):
         closed = self.is_closed
 
         if closed is None:
-            return STATE_UNKNOWN
+            return None
 
         return STATE_CLOSED if closed else STATE_OPEN
 

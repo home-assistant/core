@@ -8,10 +8,10 @@
         "step": {
             "user": {
                 "data": {
-                    "show_on_map": "Mostra al mapa",
+                    "show_on_map": "Mostrar al mapa",
                     "station_id": "Identificador del sensor Luftdaten"
                 },
-                "title": "Crear Luftdaten"
+                "title": "Configuraci\u00f3 de Luftdaten"
             }
         },
         "title": "Luftdaten"

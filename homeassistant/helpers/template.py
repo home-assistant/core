@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import State, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
+from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
@@ -115,7 +116,7 @@ class Template:
         """Extract all entities for state_changed listener."""
         return extract_entities(self.template, variables)
 
-    def render(self, variables=None, **kwargs):
+    def render(self, variables: TemplateVarsType = None, **kwargs):
         """Render given template."""
         if variables is not None:
             kwargs.update(variables)
@@ -123,7 +124,8 @@ class Template:
         return run_callback_threadsafe(
             self.hass.loop, self.async_render, kwargs).result()
 
-    def async_render(self, variables=None, **kwargs):
+    def async_render(self, variables: TemplateVarsType = None,
+                     **kwargs) -> str:
         """Render given template.
 
         This method must be run in the event loop.
@@ -149,7 +151,8 @@ class Template:
             error_value).result()
 
     def async_render_with_possible_json_value(self, value,
-                                              error_value=_SENTINEL):
+                                              error_value=_SENTINEL,
+                                              variables=None):
         """Render template with value exposed.
 
         If valid JSON will expose value_json too.
@@ -159,12 +162,12 @@ class Template:
         if self._compiled is None:
             self._ensure_compiled()
 
-        variables = {
-            'value': value
-        }
+        variables = dict(variables or {})
+        variables['value'] = value
+
         try:
             variables['value_json'] = json.loads(value)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
         try:
@@ -439,10 +442,18 @@ class TemplateMethods:
         return None
 
 
-def forgiving_round(value, precision=0):
+def forgiving_round(value, precision=0, method="common"):
     """Round accepted strings."""
     try:
-        value = round(float(value), precision)
+        # support rounding methods like jinja
+        multiplier = float(10 ** precision)
+        if method == "ceil":
+            value = math.ceil(float(value) * multiplier) / multiplier
+        elif method == "floor":
+            value = math.floor(float(value) * multiplier) / multiplier
+        else:
+            # if method is common or something else, use common rounding
+            value = round(float(value), precision)
         return int(value) if precision == 0 else value
     except (ValueError, TypeError):
         # If value can't be converted to float
@@ -654,6 +665,7 @@ ENV.filters['sin'] = sine
 ENV.filters['cos'] = cosine
 ENV.filters['tan'] = tangent
 ENV.filters['sqrt'] = square_root
+ENV.filters['as_timestamp'] = forgiving_as_timestamp
 ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc

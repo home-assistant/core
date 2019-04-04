@@ -7,10 +7,11 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
+from asyncio import Event
 from collections import OrderedDict
 from itertools import chain
 import logging
-from typing import Optional
+from typing import List, Optional, cast
 import weakref
 
 import attr
@@ -19,6 +20,8 @@ from homeassistant.core import callback, split_entity_id, valid_entity_id
 from homeassistant.loader import bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.yaml import load_yaml
+
+from .typing import HomeAssistantType
 
 PATH_REGISTRY = 'entity_registry.yaml'
 DATA_REGISTRY = 'entity_registry'
@@ -122,8 +125,15 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
         if entity_id:
             return self._async_update_entity(
-                entity_id, config_entry_id=config_entry_id,
-                device_id=device_id)
+                entity_id,
+                config_entry_id=config_entry_id,
+                device_id=device_id,
+                # When we changed our slugify algorithm, we invalidated some
+                # stored entity IDs with either a __ or ending in _.
+                # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
+                # removed when we release 1.0 or in 2020.
+                new_entity_id='.'.join(slugify(part) for part
+                                       in entity_id.split('.', 1)))
 
         entity_id = self.async_generate_entity_id(
             domain, suggested_object_id or '{}_{}'.format(platform, unique_id),
@@ -141,6 +151,12 @@ class EntityRegistry:
                      domain, platform, entity_id)
         self.async_schedule_save()
         return entity
+
+    @callback
+    def async_remove(self, entity_id):
+        """Remove an entity from registry."""
+        self.entities.pop(entity_id)
+        self.async_schedule_save()
 
     @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF,
@@ -264,19 +280,34 @@ class EntityRegistry:
 
 
 @bind_hass
-async def async_get_registry(hass) -> EntityRegistry:
+async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
     """Return entity registry instance."""
-    task = hass.data.get(DATA_REGISTRY)
+    reg_or_evt = hass.data.get(DATA_REGISTRY)
 
-    if task is None:
-        async def _load_reg():
-            registry = EntityRegistry(hass)
-            await registry.async_load()
-            return registry
+    if not reg_or_evt:
+        evt = hass.data[DATA_REGISTRY] = Event()
 
-        task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
+        reg = EntityRegistry(hass)
+        await reg.async_load()
 
-    return await task
+        hass.data[DATA_REGISTRY] = reg
+        evt.set()
+        return reg
+
+    if isinstance(reg_or_evt, Event):
+        evt = reg_or_evt
+        await evt.wait()
+        return cast(EntityRegistry, hass.data.get(DATA_REGISTRY))
+
+    return cast(EntityRegistry, reg_or_evt)
+
+
+@callback
+def async_entries_for_device(registry: EntityRegistry, device_id: str) \
+        -> List[RegistryEntry]:
+    """Return entries that match a device."""
+    return [entry for entry in registry.entities.values()
+            if entry.device_id == device_id]
 
 
 async def _async_migrate(entities):

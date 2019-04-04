@@ -5,7 +5,7 @@
             "one_instance_allowed": "Kun \u00e9n enkelt forekomst er n\u00f8dvendig."
         },
         "create_entry": {
-            "default": "For \u00e5 sende hendelser til Home Assistant, m\u00e5 du sette opp [Webhooks with Mailgun]({mailgun_url}).\n\nFyll ut f\u00f8lgende informasjon:\n\n- URL: `{webhook_url}`\n- Metode: POST\n- Innholdstype: application/x-www-form-urlencoded\n\nSe [dokumentasjonen]({docs_url}) om hvordan du konfigurerer automatiseringer for \u00e5 h\u00e5ndtere innkommende data."
+            "default": "For \u00e5 sende hendelser til Home Assistant, m\u00e5 du sette opp [Webhooks with Mailgun]({mailgun_url}).\n\nFyll ut f\u00f8lgende informasjon:\n\n- URL: `{webhook_url}`\n- Metode: POST\n- Innholdstype: application/json\n\nSe [dokumentasjonen]({docs_url}) om hvordan du konfigurerer automatiseringer for \u00e5 h\u00e5ndtere innkommende data."
         },
         "step": {
             "user": {

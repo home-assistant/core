@@ -27,17 +27,19 @@ class TestUtil(unittest.TestCase):
 
     def test_slugify(self):
         """Test slugify."""
-        assert "test" == util.slugify("T-!@#$!#@$!$est")
+        assert "t_est" == util.slugify("T-!@#$!#@$!$est")
         assert "test_more" == util.slugify("Test More")
         assert "test_more" == util.slugify("Test_(More)")
         assert "test_more" == util.slugify("Tèst_Mörê")
-        assert "b827eb000000" == util.slugify("B8:27:EB:00:00:00")
-        assert "testcom" == util.slugify("test.com")
-        assert "greg_phone__exp_wayp1" == \
+        assert "b8_27_eb_00_00_00" == util.slugify("B8:27:EB:00:00:00")
+        assert "test_com" == util.slugify("test.com")
+        assert "greg_phone_exp_wayp1" == \
             util.slugify("greg_phone - exp_wayp1")
         assert "we_are_we_are_a_test_calendar" == \
             util.slugify("We are, we are, a... Test Calendar")
         assert "test_aouss_aou" == util.slugify("Tèst_äöüß_ÄÖÜ")
+        assert "ying_shi_ma" == util.slugify("影師嗎")
+        assert "keihuonto" == util.slugify("けいふぉんと")
 
     def test_repr_helper(self):
         """Test repr_helper."""
@@ -102,67 +104,6 @@ class TestUtil(unittest.TestCase):
 
         with pytest.raises(TypeError):
             TestEnum.FIRST >= 1
-
-    def test_ordered_set(self):
-        """Test ordering of set."""
-        set1 = util.OrderedSet([1, 2, 3, 4])
-        set2 = util.OrderedSet([3, 4, 5])
-
-        assert 4 == len(set1)
-        assert 3 == len(set2)
-
-        assert 1 in set1
-        assert 2 in set1
-        assert 3 in set1
-        assert 4 in set1
-        assert 5 not in set1
-
-        assert 1 not in set2
-        assert 2 not in set2
-        assert 3 in set2
-        assert 4 in set2
-        assert 5 in set2
-
-        set1.add(5)
-        assert 5 in set1
-
-        set1.discard(5)
-        assert 5 not in set1
-
-        # Try again while key is not in
-        set1.discard(5)
-        assert 5 not in set1
-
-        assert [1, 2, 3, 4] == list(set1)
-        assert [4, 3, 2, 1] == list(reversed(set1))
-
-        assert 1 == set1.pop(False)
-        assert [2, 3, 4] == list(set1)
-
-        assert 4 == set1.pop()
-        assert [2, 3] == list(set1)
-
-        assert 'OrderedSet()' == str(util.OrderedSet())
-        assert 'OrderedSet([2, 3])' == str(set1)
-
-        assert set1 == util.OrderedSet([2, 3])
-        assert set1 != util.OrderedSet([3, 2])
-        assert set1 == set([2, 3])
-        assert set1 == {3, 2}
-        assert set1 == [2, 3]
-        assert set1 == [3, 2]
-        assert set1 != {2}
-
-        set3 = util.OrderedSet(set1)
-        set3.update(set2)
-
-        assert [3, 4, 5, 2] == set3
-        assert [3, 4, 5, 2] == set1 | set2
-        assert [3] == set1 & set2
-        assert [2] == set1 - set2
-
-        set1.update([1, 2], [5, 6])
-        assert [2, 3, 1, 5, 6] == set1
 
     def test_throttle(self):
         """Test the add cooldown decorator."""

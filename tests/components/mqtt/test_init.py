@@ -1,22 +1,22 @@
 """The tests for the MQTT component."""
 import asyncio
+import ssl
 import unittest
 from unittest import mock
-import ssl
 
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import mqtt
+from homeassistant.const import (
+    ATTR_DOMAIN, ATTR_SERVICE, EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-from homeassistant.components import mqtt
-from homeassistant.const import (EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE,
-                                 EVENT_HOMEASSISTANT_STOP)
 
-from tests.common import (get_test_home_assistant, mock_coro,
-                          mock_mqtt_component,
-                          threadsafe_coroutine_factory, fire_mqtt_message,
-                          async_fire_mqtt_message, MockConfigEntry)
+from tests.common import (
+    MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
+    fire_mqtt_message, get_test_home_assistant, mock_coro, mock_mqtt_component,
+    threadsafe_coroutine_factory)
 
 
 @pytest.fixture
@@ -231,6 +231,19 @@ class TestMQTTComponent(unittest.TestCase):
             'model': 'Glass',
             'sw_version': '0.1-beta',
         })
+        # full device info with via_hub
+        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
+            'identifiers': ['helloworld', 'hello'],
+            'connections': [
+                ["mac", "02:5b:26:a8:dc:12"],
+                ["zigbee", "zigbee_id"],
+            ],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+            'via_hub': 'test-hub',
+        })
         # no identifiers
         with pytest.raises(vol.Invalid):
             mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
@@ -303,8 +316,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'test-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'test-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
         unsub()
 
@@ -330,8 +343,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'test-topic/bier/on' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'test-topic/bier/on' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_level_wildcard_no_subtree_match(self):
         """Test the subscription of wildcard topics."""
@@ -359,8 +372,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'test-topic/bier/on' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'test-topic/bier/on' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_subtree_wildcard_root_topic(self):
         """Test the subscription of wildcard topics."""
@@ -370,8 +383,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'test-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'test-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_subtree_wildcard_no_match(self):
         """Test the subscription of wildcard topics."""
@@ -390,8 +403,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'hi/test-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'hi/test-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_level_wildcard_and_wildcard_subtree_topic(self):
         """Test the subscription of wildcard topics."""
@@ -401,8 +414,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert 'hi/test-topic/here-iam' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert 'hi/test-topic/here-iam' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_level_wildcard_and_wildcard_level_no_match(self):
         """Test the subscription of wildcard topics."""
@@ -430,8 +443,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert '$test-topic/subtree/on' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert '$test-topic/subtree/on' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_sys_root_and_wildcard_topic(self):
         """Test the subscription of $ root and wildcard topics."""
@@ -441,8 +454,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert '$test-topic/some-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert '$test-topic/some-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_topic_sys_root_and_wildcard_subtree_topic(self):
         """Test the subscription of $ root and wildcard subtree topics."""
@@ -453,8 +466,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert '$test-topic/subtree/some-topic' == self.calls[0][0]
-        assert 'test-payload' == self.calls[0][1]
+        assert '$test-topic/subtree/some-topic' == self.calls[0][0].topic
+        assert 'test-payload' == self.calls[0][0].payload
 
     def test_subscribe_special_characters(self):
         """Test the subscription to topics with special characters."""
@@ -466,8 +479,8 @@ class TestMQTTCallbacks(unittest.TestCase):
         fire_mqtt_message(self.hass, topic, payload)
         self.hass.block_till_done()
         assert 1 == len(self.calls)
-        assert topic == self.calls[0][0]
-        assert payload == self.calls[0][1]
+        assert topic == self.calls[0][0].topic
+        assert payload == self.calls[0][0].payload
 
     def test_mqtt_failed_connection_results_in_disconnect(self):
         """Test if connection failure leads to disconnect."""
@@ -736,3 +749,55 @@ def test_mqtt_subscribes_topics_on_connect(hass):
 async def test_setup_fails_without_config(hass):
     """Test if the MQTT component fails to load with no config."""
     assert not await async_setup_component(hass, mqtt.DOMAIN, {})
+
+
+async def test_message_callback_exception_gets_logged(hass, caplog):
+    """Test exception raised by message handler."""
+    await async_mock_mqtt_component(hass)
+
+    @callback
+    def bad_handler(*args):
+        """Record calls."""
+        raise Exception('This is a bad message callback')
+
+    await mqtt.async_subscribe(hass, 'test-topic', bad_handler)
+    async_fire_mqtt_message(hass, 'test-topic', 'test')
+    await hass.async_block_till_done()
+
+    assert \
+        "Exception in bad_handler when handling msg on 'test-topic':" \
+        " 'test'" in caplog.text
+
+
+async def test_mqtt_ws_subscription(hass, hass_ws_client):
+    """Test MQTT websocket subscription."""
+    await async_mock_mqtt_component(hass)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'mqtt/subscribe',
+        'topic': 'test-topic',
+    })
+    response = await client.receive_json()
+    assert response['success']
+
+    async_fire_mqtt_message(hass, 'test-topic', 'test1')
+    async_fire_mqtt_message(hass, 'test-topic', 'test2')
+
+    response = await client.receive_json()
+    assert response['event']['topic'] == 'test-topic'
+    assert response['event']['payload'] == 'test1'
+
+    response = await client.receive_json()
+    assert response['event']['topic'] == 'test-topic'
+    assert response['event']['payload'] == 'test2'
+
+    # Unsubscribe
+    await client.send_json({
+        'id': 8,
+        'type': 'unsubscribe_events',
+        'subscription': 5,
+    })
+    response = await client.receive_json()
+    assert response['success']

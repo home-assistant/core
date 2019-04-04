@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
+import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -15,8 +16,16 @@ from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 def configured_sensors(hass):
     """Return a set of configured Luftdaten sensors."""
     return set(
-        '{0}'.format(entry.data[CONF_SENSOR_ID])
+        entry.data[CONF_SENSOR_ID]
         for entry in hass.config_entries.async_entries(DOMAIN))
+
+
+@callback
+def duplicate_stations(hass):
+    """Return a set of duplicate configured Luftdaten stations."""
+    stations = [int(entry.data[CONF_SENSOR_ID])
+                for entry in hass.config_entries.async_entries(DOMAIN)]
+    return {x for x in stations if stations.count(x) > 1}
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -30,7 +39,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
     def _show_form(self, errors=None):
         """Show the form to the user."""
         data_schema = OrderedDict()
-        data_schema[vol.Required(CONF_SENSOR_ID)] = str
+        data_schema[vol.Required(CONF_SENSOR_ID)] = cv.positive_int
         data_schema[vol.Optional(CONF_SHOW_ON_MAP, default=False)] = bool
 
         return self.async_show_form(
@@ -72,4 +81,4 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input.update({CONF_SCAN_INTERVAL: scan_interval.seconds})
 
-        return self.async_create_entry(title=sensor_id, data=user_input)
+        return self.async_create_entry(title=str(sensor_id), data=user_input)

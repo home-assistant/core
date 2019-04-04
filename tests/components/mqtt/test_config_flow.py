@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 @pytest.fixture(autouse=True)

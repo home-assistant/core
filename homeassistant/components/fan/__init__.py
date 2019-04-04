@@ -12,12 +12,12 @@ import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
-                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID,
-                                 STATE_UNKNOWN)
+                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,30 +61,30 @@ PROP_TO_ATTR = {
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_SPEED): cv.string
 })  # type: dict
 
 FAN_TURN_ON_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_SPEED): cv.string
 })  # type: dict
 
 FAN_TURN_OFF_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids
 })  # type: dict
 
 FAN_OSCILLATE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_OSCILLATING): cv.boolean
 })  # type: dict
 
 FAN_TOGGLE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids
 })
 
 FAN_SET_DIRECTION_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_DIRECTION): cv.string
 })  # type: dict
 
@@ -94,7 +94,7 @@ def is_on(hass, entity_id: str = None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
-    return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
+    return state.attributes[ATTR_SPEED] not in [SPEED_OFF, None]
 
 
 async def async_setup(hass, config: dict):
@@ -199,7 +199,7 @@ class FanEntity(ToggleEntity):
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        return self.speed not in [SPEED_OFF, STATE_UNKNOWN]
+        return self.speed not in [SPEED_OFF, None]
 
     @property
     def speed(self) -> str:

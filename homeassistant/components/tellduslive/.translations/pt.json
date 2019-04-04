@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "TelldusLive j\u00e1 est\u00e1 configurado",
+            "already_setup": "TelldusLive j\u00e1 est\u00e1 configurado",
+            "authorize_url_fail": "Erro desconhecido ao gerar um URL de autoriza\u00e7\u00e3o.",
+            "authorize_url_timeout": "Limite temporal ultrapassado ao gerar um URL de autoriza\u00e7\u00e3o.",
+            "unknown": "Ocorreu um erro desconhecido"
+        },
+        "error": {
+            "auth_error": "Erro de autentica\u00e7\u00e3o, por favor tente novamente"
+        },
+        "step": {
+            "auth": {
+                "description": "Para ligar \u00e0 sua conta do TelldusLive: \n 1. Clique no link abaixo \n 2. Fa\u00e7a o login no Telldus Live \n 3. Autorize **{app_name}** (clique em **Sim**). \n 4. Volte aqui e clique em **ENVIAR**. \n\n [Ligar \u00e0 TelldusLive] ( {auth_url} )",
+                "title": "Autenticar no TelldusLive"
+            },
+            "user": {
+                "data": {
+                    "host": "Servidor"
+                },
+                "description": "Vazio",
+                "title": "Escolher endpoint."
+            }
+        },
+        "title": "Telldus Live"
+    }
+}

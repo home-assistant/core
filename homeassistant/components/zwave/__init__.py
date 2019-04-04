@@ -1,9 +1,4 @@
-"""
-Support for Z-Wave.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zwave/
-"""
+"""Support for Z-Wave."""
 import asyncio
 import copy
 import logging
@@ -42,7 +37,7 @@ from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import (check_node_schema, check_value_schema, node_name,
                    check_has_unique_id, is_node_parsed)
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'homeassistant-pyozw==0.1.1']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'homeassistant-pyozw==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,8 +169,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
             cv.positive_int,
-        vol.Optional(CONF_USB_STICK_PATH, default=DEFAULT_CONF_USB_STICK_PATH):
-            cv.string,
+        vol.Optional(CONF_USB_STICK_PATH): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -244,7 +238,8 @@ async def async_setup(hass, config):
         hass.async_create_task(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
-                CONF_USB_STICK_PATH: conf[CONF_USB_STICK_PATH],
+                CONF_USB_STICK_PATH: conf.get(
+                    CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
                 CONF_NETWORK_KEY: conf.get(CONF_NETWORK_KEY),
             }
         ))
@@ -276,15 +271,20 @@ async def async_setup_entry(hass, config_entry):
         config.get(CONF_DEVICE_CONFIG_DOMAIN),
         config.get(CONF_DEVICE_CONFIG_GLOB))
 
+    usb_path = config.get(
+        CONF_USB_STICK_PATH, config_entry.data[CONF_USB_STICK_PATH])
+
+    _LOGGER.info('Z-Wave USB path is %s', usb_path)
+
     # Setup options
     options = ZWaveOption(
-        config_entry.data[CONF_USB_STICK_PATH],
+        usb_path,
         user_path=hass.config.config_dir,
         config_path=config.get(CONF_CONFIG_PATH))
 
     options.set_console_output(use_debug)
 
-    if CONF_NETWORK_KEY in config_entry.data:
+    if config_entry.data.get(CONF_NETWORK_KEY):
         options.addOption("NetworkKey", config_entry.data[CONF_NETWORK_KEY])
 
     await hass.async_add_executor_job(options.lock)
@@ -379,7 +379,7 @@ async def async_setup_entry(hass, config_entry):
 
     def network_ready():
         """Handle the query of all awake nodes."""
-        _LOGGER.info("Zwave network is ready for use. All awake nodes "
+        _LOGGER.info("Z-Wave network is ready for use. All awake nodes "
                      "have been queried. Sleeping nodes will be "
                      "queried when they awake.")
         hass.bus.fire(const.EVENT_NETWORK_READY)
