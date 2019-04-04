@@ -1,4 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
+import asyncio
 import logging
 import logging.handlers
 import os
@@ -9,10 +10,10 @@ from typing import Any, Optional, Dict, Set
 
 import voluptuous as vol
 
-from homeassistant import (
-    core, config as conf_util, config_entries, components as core_components,
-    loader)
-from homeassistant.components import persistent_notification
+from homeassistant import core, config as conf_util, config_entries, loader
+from homeassistant.components import (
+    persistent_notification, homeassistant as core_component
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import AsyncHandler
@@ -139,7 +140,7 @@ async def async_from_config_dict(config: Dict[str, Any],
             pass
 
     # setup components
-    res = await core_components.async_setup(hass, config)
+    res = await core_component.async_setup(hass, config)
     if not res:
         _LOGGER.error("Home Assistant core failed to initialize. "
                       "Further initialization aborted")
@@ -156,6 +157,12 @@ async def async_from_config_dict(config: Dict[str, Any],
                 async_setup_component(hass, component, config))
 
     await hass.async_block_till_done()
+
+    # Kick off loading the registries. They don't need to be awaited.
+    asyncio.gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry(),
+        hass.helpers.area_registry.async_get_registry())
 
     # stage 1
     for component in components:

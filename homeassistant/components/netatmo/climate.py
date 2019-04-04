@@ -315,6 +315,8 @@ class HomeData:
             self.home_id = self.homedata.gethomeId(self.home)
         except TypeError:
             _LOGGER.error("Error when getting home data.")
+        except AttributeError:
+            _LOGGER.error("No default_home in HomeData.")
         except pyatmo.NoDevice:
             _LOGGER.debug("No thermostat devices available.")
 

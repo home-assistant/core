@@ -1,8 +1,9 @@
 """Support for Abode Security System covers."""
 import logging
 
-from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.cover import CoverDevice
+
+from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 DEPENDENCIES = ['abode']
 

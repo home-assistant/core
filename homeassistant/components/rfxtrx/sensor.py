@@ -4,14 +4,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import rfxtrx
-from homeassistant.components.rfxtrx import (
-    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, CONF_AUTOMATIC_ADD, CONF_DATA_TYPE,
-    CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
+
+from . import (
+    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, CONF_AUTOMATIC_ADD, CONF_DATA_TYPE,
+    CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
 
 DEPENDENCIES = ['rfxtrx']
 

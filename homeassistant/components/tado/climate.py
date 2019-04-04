@@ -7,7 +7,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.components.tado import DATA_TADO
+
+from . import DATA_TADO
 
 _LOGGER = logging.getLogger(__name__)
 

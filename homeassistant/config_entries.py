@@ -146,6 +146,7 @@ FLOWS = [
     'ais_spotify_service',
     'ais_host',
     'ambient_station',
+    'axis',
     'cast',
     'daikin',
     'deconz',

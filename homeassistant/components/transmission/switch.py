@@ -1,13 +1,12 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 import logging
 
-from homeassistant.components.transmission import (
-    DATA_TRANSMISSION, DATA_UPDATED)
-from homeassistant.const import (
-    STATE_OFF, STATE_ON)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
+
+from . import DATA_TRANSMISSION, DATA_UPDATED
 
 DEPENDENCIES = ['transmission']
 

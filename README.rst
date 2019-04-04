@@ -7,7 +7,7 @@ To get started:
 
 .. code:: bash
 
-    python3 -m pip install homeassistant
+    python3 -m pip install ais-dom
     hass --open-ui
 
 Check out `home-assistant.io <https://home-assistant.io>`__ for `a
@@ -23,17 +23,3 @@ Featured integrations
 
 The system is built using a modular approach so support for other devices or actions can be implemented easily. See also the `section on architecture <https://developers.home-assistant.io/docs/en/architecture_index.html>`__ and the `section on creating your own
 components <https://developers.home-assistant.io/docs/en/creating_component_index.html>`__.
-
-If you run into issues while using Home Assistant or during development
-of a component, check the `Home Assistant help section <https://home-assistant.io/help/>`__ of our website for further help and information.
-
-.. |Build Status| image:: https://travis-ci.org/home-assistant/home-assistant.svg?branch=master
-   :target: https://travis-ci.org/home-assistant/home-assistant
-.. |Coverage Status| image:: https://img.shields.io/coveralls/home-assistant/home-assistant.svg
-   :target: https://coveralls.io/r/home-assistant/home-assistant?branch=master
-.. |Chat Status| image:: https://img.shields.io/discord/330944238910963714.svg
-   :target: https://discord.gg/c5DvZ4e
-.. |screenshot-states| image:: https://raw.github.com/sviete/ai-speaker-home-assistant/master/docs/screenshots.png
-   :target: https://home-assistant.io/demo/
-.. |screenshot-components| image:: https://raw.github.com/home-assistant/home-assistant/dev/docs/screenshot-components.png
-   :target: https://home-assistant.io/components/

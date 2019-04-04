@@ -38,6 +38,7 @@ PACKAGE_CUSTOM_COMPONENTS = 'custom_components'
 PACKAGE_BUILTIN = 'homeassistant.components'
 PACKAGE_AIS_DOM = 'homeassistant.ais_dom'
 LOOKUP_PATHS = [PACKAGE_AIS_DOM, PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+COMPONENTS_WITH_BAD_PLATFORMS = ['automation', 'mqtt', 'telegram_bot']
 
 
 class LoaderError(Exception):
@@ -84,7 +85,11 @@ def get_platform(hass,  # type: HomeAssistant
     """
     # If the platform has a component, we will limit the platform loading path
     # to be the same source (custom/built-in).
-    component = _load_file(hass, platform_name, LOOKUP_PATHS)
+    if domain not in COMPONENTS_WITH_BAD_PLATFORMS:
+        component = _load_file(hass, platform_name, LOOKUP_PATHS)
+    else:
+        # avoid load component for legacy platform
+        component = None
 
     # Until we have moved all platforms under their component/own folder, it
     # can be that the component is None.
@@ -100,10 +105,22 @@ def get_platform(hass,  # type: HomeAssistant
     if platform is not None:
         return platform
 
-    # Legacy platform check: light/hue.py
-    platform = _load_file(
-        hass, PLATFORM_FORMAT.format(domain=platform_name, platform=domain),
-        base_paths)
+    # Legacy platform check for automation: components/automation/event.py
+    if component is None and domain in COMPONENTS_WITH_BAD_PLATFORMS:
+        platform = _load_file(
+            hass,
+            PLATFORM_FORMAT.format(domain=platform_name, platform=domain),
+            base_paths
+        )
+
+    # Legacy platform check for custom: custom_components/light/hue.py
+    # Only check if the component was also in custom components.
+    if component is None or base_paths[0] == PACKAGE_CUSTOM_COMPONENTS:
+        platform = _load_file(
+            hass,
+            PLATFORM_FORMAT.format(domain=platform_name, platform=domain),
+            [PACKAGE_CUSTOM_COMPONENTS]
+        )
 
     if platform is None:
         if component is None:
@@ -114,8 +131,8 @@ def get_platform(hass,  # type: HomeAssistant
         _LOGGER.error("Unable to find platform %s.%s", platform_name, extra)
         return None
 
-    if platform.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
-        _LOGGER.warning(
+    if domain not in COMPONENTS_WITH_BAD_PLATFORMS:
+        _LOGGER.error(
             "Integrations need to be in their own folder. Change %s/%s.py to "
             "%s/%s.py. This will stop working soon.",
             domain, platform_name, platform_name, domain)

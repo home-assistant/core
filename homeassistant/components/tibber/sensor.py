@@ -1,16 +1,15 @@
 """Support for Tibber sensors."""
 import asyncio
-
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
 import aiohttp
 
-from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import dt as dt_util
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt as dt_util
+
+from . import DOMAIN as TIBBER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +68,7 @@ class TibberSensorElPrice(Entity):
             return
 
         if (not self._last_data_timestamp or
-                (self._last_data_timestamp - now).total_seconds()/3600 < 12
+                (self._last_data_timestamp - now).total_seconds() / 3600 < 12
                 or not self._is_available):
             _LOGGER.debug("Asking for new data.")
             await self._fetch_data()
@@ -136,12 +135,13 @@ class TibberSensorElPrice(Entity):
         for key, price_total in self._tibber_home.price_total.items():
             price_time = dt_util.as_local(dt_util.parse_datetime(key))
             price_total = round(price_total, 3)
-            time_diff = (now - price_time).total_seconds()/60
+            time_diff = (now - price_time).total_seconds() / 60
             if (not self._last_data_timestamp or
                     price_time > self._last_data_timestamp):
                 self._last_data_timestamp = price_time
             if 0 <= time_diff < 60:
                 state = price_total
+                level = self._tibber_home.price_level[key]
                 self._last_updated = price_time
             if now.date() == price_time.date():
                 max_price = max(max_price, price_total)
@@ -152,6 +152,7 @@ class TibberSensorElPrice(Entity):
         self._device_state_attributes['max_price'] = max_price
         self._device_state_attributes['avg_price'] = round(sum_price / num, 3)
         self._device_state_attributes['min_price'] = min_price
+        self._device_state_attributes['price_level'] = level
         return state is not None
 
 
@@ -232,4 +233,4 @@ class TibberSensorRT(Entity):
         """Return a unique ID."""
         home = self._tibber_home.info['viewer']['home']
         _id = home['meteringPointData']['consumptionEan']
-        return'{}_rt_consumption'.format(_id)
+        return '{}_rt_consumption'.format(_id)

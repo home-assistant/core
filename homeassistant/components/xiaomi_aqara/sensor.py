@@ -1,11 +1,11 @@
 """Support for Xiaomi Aqara sensors."""
 import logging
 
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS, DEVICE_CLASS_PRESSURE)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+
+from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 
