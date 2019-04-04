@@ -2,6 +2,7 @@
 """Generate an updated requirements_all.txt."""
 import fnmatch
 import importlib
+import json
 import os
 import pkgutil
 import re
@@ -214,7 +215,7 @@ def gather_modules():
     errors = []
 
     for package in sorted(
-            explore_module('homeassistant.components', True) +
+            explore_module('homeassistant.components', False) +
             explore_module('homeassistant.scripts', True) +
             explore_module('homeassistant.auth', True)):
         try:
@@ -228,21 +229,31 @@ def gather_modules():
                 errors.append(package)
             continue
 
-        if not getattr(module, 'REQUIREMENTS', None):
+        manifest_path = os.path.join(
+            os.path.dirname(module.__file__),
+            'manifest.json'
+        )
+
+        manifest_file_exists = os.path.isfile(manifest_path)
+        if (not manifest_file_exists
+                and not getattr(module, 'REQUIREMENTS', None)):
             continue
 
-        for req in module.REQUIREMENTS:
-            if req in IGNORE_REQ:
-                continue
-            if '://' in req and 'pyharmony' not in req:
-                errors.append(
-                    "{}[Only pypi dependencies are allowed: {}]".format(
-                        package, req))
-            if req.partition('==')[1] == '' and req not in IGNORE_PIN:
-                errors.append(
-                    "{}[Please pin requirement {}, see {}]".format(
-                        package, req, URL_PIN))
-            reqs.setdefault(req, []).append(package)
+        if manifest_file_exists:
+            with open(manifest_path, 'r') as manifest_file:
+                manifest = json.loads(manifest_file.read())
+
+                if not manifest.get('requirements'):
+                    continue
+                process_requirements(
+                    errors,
+                    manifest['requirements'],
+                    package,
+                    reqs
+                )
+
+        elif getattr(module, 'REQUIREMENTS', None):
+            process_requirements(errors, module.REQUIREMENTS, package, reqs)
 
     for key in reqs:
         reqs[key] = sorted(reqs[key],
@@ -255,6 +266,21 @@ def gather_modules():
         return None
 
     return reqs
+
+
+def process_requirements(errors, module_requirements, package, reqs):
+    for req in module_requirements:
+        if req in IGNORE_REQ:
+            continue
+        if '://' in req and 'pyharmony' not in req:
+            errors.append(
+                "{}[Only pypi dependencies are allowed: {}]".format(
+                    package, req))
+        if req.partition('==')[1] == '' and req not in IGNORE_PIN:
+            errors.append(
+                "{}[Please pin requirement {}, see {}]".format(
+                    package, req, URL_PIN))
+        reqs.setdefault(req, []).append(package)
 
 
 def generate_requirements_list(reqs):
