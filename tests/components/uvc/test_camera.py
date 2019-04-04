@@ -217,6 +217,16 @@ class TestUVC(unittest.TestCase):
             'recordingSettings': {
                 'fullTimeRecordEnabled': True,
             },
+            'channels': [
+                {
+                    'isRtspEnabled': False,
+                    'rtspUris': ['rtsp://host-b:7447/stream_0']
+                },
+                {
+                    'isRtspEnabled': True,
+                    'rtspUris': ['rtsp://host-b:7447/stream_1']
+                }
+            ]
             'host': 'host-a',
             'internalHost': 'host-b',
             'username': 'admin',
