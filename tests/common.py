@@ -443,6 +443,7 @@ class MockModule:
                  async_migrate_entry=None, async_remove_entry=None):
         """Initialize the mock module."""
         self.__name__ = 'homeassistant.components.{}'.format(domain)
+        self.__file__ = 'homeassistant/components/{}'.format(domain)
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
@@ -482,7 +483,8 @@ class MockModule:
 class MockPlatform:
     """Provide a fake platform."""
 
-    __name__ = "homeassistant.components.light.bla"
+    __name__ = 'homeassistant.components.light.bla'
+    __file__ = 'homeassistant/components/light/bla'
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,

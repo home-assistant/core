@@ -1,6 +1,7 @@
 """All methods needed to bootstrap a Home Assistant instance."""
 import asyncio
 import logging.handlers
+import os
 from timeit import default_timer as timer
 
 from types import ModuleType
@@ -11,6 +12,7 @@ from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async_ import run_coroutine_threadsafe
+from homeassistant.util import json as json_util
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -240,7 +242,19 @@ async def async_process_deps_reqs(
     elif name in processed:
         return
 
-    if hasattr(module, 'DEPENDENCIES'):
+    manifest = await hass.async_add_executor_job(
+        json_util.load_json,
+        os.path.join(os.path.dirname(module.__file__), 'manifest.json')
+    )
+
+    if manifest.get('dependencies'):
+        dep_success = await _async_process_dependencies(
+            hass, config, name, manifest['dependencies'])  # type: ignore
+
+        if not dep_success:
+            raise HomeAssistantError("Could not set up all dependencies.")
+
+    elif hasattr(module, 'DEPENDENCIES'):
         dep_success = await _async_process_dependencies(
             hass, config, name, module.DEPENDENCIES)  # type: ignore
 
