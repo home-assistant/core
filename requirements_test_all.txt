@@ -35,7 +35,7 @@ PyTransportNSW==0.1.1
 YesssSMS==0.2.3
 
 # homeassistant.components.ambient_station
-aioambient==0.1.3
+aioambient==0.2.0
 
 # homeassistant.components.automatic.device_tracker
 aioautomatic==0.6.5
