@@ -330,9 +330,12 @@ class TestMediaPlayer(unittest.TestCase):
         config = validate_config(config)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
-
+        self.hass.add_job(ump.async_added_to_hass)
+        self.hass.block_till_done()
         assert STATE_ON == ump.master_state
+
         self.hass.states.set('input_boolean.test', STATE_ON)
+        self.hass.block_till_done()
         assert STATE_OFF == ump.master_state
 
     def test_master_state_with_bad_attrs(self):

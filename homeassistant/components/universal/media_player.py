@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.exceptions import TemplateError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +96,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             self._attrs[key] = attr
         self._child_state = None
         self._state_template = state_template
+        self._state_template_result = None
         if state_template is not None:
             self._state_template.hass = hass
 
@@ -111,12 +113,23 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         depend = copy(self._children)
         for entity in self._attrs.values():
             depend.append(entity[0])
-        if self._state_template is not None:
-            for entity in self._state_template.extract_entities():
-                depend.append(entity)
-
         self.hass.helpers.event.async_track_state_change(
             list(set(depend)), async_on_dependency_update)
+
+        @callback
+        def async_on_template_change(event, template, last_result, result):
+            self._state_template_result = result
+            self.async_schedule_update_ha_state(True)
+
+        if self._state_template is not None:
+            try:
+                self._state_template_result = \
+                    self._state_template.async_render()
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._state_template_result = None
+            self.hass.helpers.event.async_track_template_result(
+                self._state_template, async_on_template_change)
 
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
@@ -174,7 +187,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def master_state(self):
         """Return the master state for entity or None."""
         if self._state_template is not None:
-            return self._state_template.async_render()
+            return self._state_template_result
         if CONF_STATE in self._attrs:
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1])
