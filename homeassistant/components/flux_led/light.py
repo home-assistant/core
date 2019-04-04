@@ -277,6 +277,11 @@ class FluxLight(Light):
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
 
+        # handle W only mode (use brightness instead of white value)
+        if self._mode == MODE_WHITE:
+            self._bulb.setWarmWhite255(brightness)
+            return
+
         # Show warning if effect set with rgb, brightness, or white level
         if effect and (brightness or white or hs_color):
             _LOGGER.warning("RGB, brightness and white level are ignored when"
@@ -312,12 +317,8 @@ class FluxLight(Light):
             self._color = (self._color[0], self._color[1],
                            brightness / 255 * 100)
 
-        # handle W only mode (use brightness instead of white value)
-        if self._mode == MODE_WHITE:
-            self._bulb.setRgbw(0, 0, 0, w=brightness)
-
         # handle RGBW mode
-        elif self._mode == MODE_RGBW:
+        if self._mode == MODE_RGBW:
             if white is None:
                 self._bulb.setRgbw(*color_util.color_hsv_to_RGB(*self._color))
             else:
@@ -337,7 +338,7 @@ class FluxLight(Light):
             try:
                 self._connect()
                 self._error_reported = False
-                if self._bulb.getRgb() != (0, 0, 0):
+                if self._mode != MODE_WHITE and self._bulb.getRgb() != (0, 0, 0):
                     color = self._bulb.getRgbw()
                     self._color = color_util.color_RGB_to_hsv(*color[0:3])
                     self._white_value = color[3]
@@ -349,7 +350,9 @@ class FluxLight(Light):
                     self._error_reported = True
                 return
         self._bulb.update_state(retry=2)
-        if self._bulb.getRgb() != (0, 0, 0):
+        if self._mode != MODE_WHITE and self._bulb.getRgb() != (0, 0, 0):
             color = self._bulb.getRgbw()
             self._color = color_util.color_RGB_to_hsv(*color[0:3])
             self._white_value = color[3]
+        elif self._mode == MODE_WHITE:
+            self._white_value = self._bulb.getRgbw()[3]
