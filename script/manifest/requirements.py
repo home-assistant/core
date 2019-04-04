@@ -5,13 +5,7 @@ from .manifest_helper import iter_manifests
 def gather_requirements_from_manifests(process_requirements, errors, reqs):
     """Gather all of the requirements from manifests."""
     for manifest in iter_manifests():
-        if manifest.get('domain') is None:
-            errors.append(manifest)
-            errors.append(
-                'An invalid manifest exists. Please run'
-                'script/manifest/validate.py'
-            )
-            continue
+        assert manifest['domain']
 
         if manifest.get('requirements') is None:
             errors.append(
