@@ -24,7 +24,7 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN,
     PLATFORM_SCHEMA, BaseNotificationService)
 
-REQUIREMENTS = ['pywebpush==1.6.0']
+REQUIREMENTS = ['pywebpush==1.9.2']
 
 DEPENDENCIES = ['frontend']
 
