@@ -8,10 +8,11 @@ from typing import Dict, Union
 import aiohttp
 from aiohttp import hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway
+from multidict import CIMultiDict
+
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
-from multidict import CIMultiDict
 
 from .const import X_HASSIO, X_INGRESS_PATH
 
