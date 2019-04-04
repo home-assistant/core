@@ -53,10 +53,13 @@ class FoscamCam(Camera):
         self._foscam_session = FoscamCamera(
             ip_address, port, self._username, self._password, verbose=False)
 
-        self._media_port = None
+        self._rtsp_port = None
         result, response = self._foscam_session.get_port_info()
         if result == 0:
-            self._media_port = response['mediaPort']
+            if 'rtspPort' in response.keys():
+                self._rtsp_port = response['rtspPort']
+            elif 'mediaPort' in response.keys():
+                self._rtsp_port = response['mediaPort']
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -71,19 +74,19 @@ class FoscamCam(Camera):
     @property
     def supported_features(self):
         """Return supported features."""
-        if self._media_port:
+        if self._rtsp_port:
             return SUPPORT_STREAM
         return 0
 
     @property
     def stream_source(self):
         """Return the stream source."""
-        if self._media_port:
+        if self._rtsp_port:
             return 'rtsp://{}:{}@{}:{}/videoMain'.format(
                 self._username,
                 self._password,
                 self._foscam_session.host,
-                self._media_port)
+                self._rtsp_port)
         return None
 
     @property
