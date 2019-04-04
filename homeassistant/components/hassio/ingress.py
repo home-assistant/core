@@ -30,7 +30,7 @@ class HassIOIngress(HomeAssistantView):
     """Hass.io view to handle base part."""
 
     name = "api:hassio:ingress"
-    url = "/api/hassio_ingress/{addon}/{path:.+}"
+    url = "/api/hassio_ingress/{token}/{path:.+}"
     requires_auth = False
 
     def __init__(self, host: str, websession: aiohttp.ClientSession):
@@ -38,21 +38,21 @@ class HassIOIngress(HomeAssistantView):
         self._host = host
         self._websession = websession
 
-    def _create_url(self, addon: str, path: str) -> str:
+    def _create_url(self, token: str, path: str) -> str:
         """Create URL to service."""
-        return "http://{}/addons/{}/web/{}".format(self._host, addon, path)
+        return "http://{}/ingress/{}/{}".format(self._host, token, path)
 
     async def _handle(
-            self, request: web.Request, addon: str, path: str
+            self, request: web.Request, token: str, path: str
     ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
         """Route data to Hass.io ingress service."""
         try:
             # Websocket
             if _is_websocket(request):
-                return await self._handle_websocket(request, addon, path)
+                return await self._handle_websocket(request, token, path)
 
             # Request
-            return await self._handle_request(request, addon, path)
+            return await self._handle_request(request, token, path)
 
         except aiohttp.ClientError:
             pass
@@ -65,15 +65,15 @@ class HassIOIngress(HomeAssistantView):
     delete = _handle
 
     async def _handle_websocket(
-            self, request: web.Request, addon: str, path: str
+            self, request: web.Request, token: str, path: str
     ) -> web.WebSocketResponse:
         """Ingress route for websocket."""
         ws_server = web.WebSocketResponse()
         await ws_server.prepare(request)
 
         # Preparing
-        url = self._create_url(addon, path)
-        source_header = _init_header(request, addon)
+        url = self._create_url(token, path)
+        source_header = _init_header(request, token)
 
         # Support GET query
         if request.query_string:
@@ -95,12 +95,12 @@ class HassIOIngress(HomeAssistantView):
         return ws_server
 
     async def _handle_request(
-            self, request: web.Request, addon: str, path: str
+            self, request: web.Request, token: str, path: str
     ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
-        url = self._create_url(addon, path)
+        url = self._create_url(token, path)
         data = await request.read()
-        source_header = _init_header(request, addon)
+        source_header = _init_header(request, token)
 
         async with self._websession.request(
                 request.method, url, headers=source_header,
@@ -136,7 +136,7 @@ class HassIOIngress(HomeAssistantView):
 
 
 def _init_header(
-        request: web.Request, addon: str
+        request: web.Request, token: str
 ) -> Union[CIMultiDict, Dict[str, str]]:
     """Create initial header."""
     headers = {}
@@ -151,7 +151,7 @@ def _init_header(
     headers[X_HASSIO] = os.environ.get('HASSIO_TOKEN', "")
 
     # Ingress information
-    headers[X_INGRESS_PATH] = "/api/hassio_ingress/{}".format(addon)
+    headers[X_INGRESS_PATH] = "/api/hassio_ingress/{}".format(token)
 
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
