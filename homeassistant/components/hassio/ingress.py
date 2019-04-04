@@ -126,7 +126,7 @@ class HassIOIngress(HomeAssistantView):
 
             try:
                 await response.prepare(request)
-                async for data in result.content:
+                async for data in result.content.iter_chunked(4096):
                     await response.write(data)
 
             except (aiohttp.ClientError, aiohttp.ClientPayloadError):
