@@ -1410,20 +1410,12 @@ async def async_setup(hass, config):
 
     async_register(hass, INTENT_GET_WEATHER, [
             '[aktualna] pogoda',
-            'pogoda w {location}',
-            'pogoda we {location}',
-            'jaka jest pogoda',
-            'jaka jest pogoda w {location}',
-            'jaka jest pogoda we {location}'
+            'jaka jest pogoda'
     ])
     async_register(hass, INTENT_GET_WEATHER_48, [
             'prognoza pogody',
             'pogoda prognoza',
-            'pogoda jutro',
-            'pogoda jutro w {location}',
-            'pogoda jutro we {location}',
-            'jaka będzie pogoda',
-            'jaka będzie pogoda w {location}'
+            'jaka będzie pogoda'
     ])
     async_register(hass, INTENT_CLIMATE_SET_TEMPERATURE, [
         "Ustaw temperaturę [ogrzewania] [na] {temp} stopni [w] {item} ",
