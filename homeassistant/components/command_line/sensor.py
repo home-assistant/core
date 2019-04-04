@@ -1,9 +1,4 @@
-"""
-Allows to configure custom shell commands to turn a value for a sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.command_line/
-"""
+"""Allows to configure custom shell commands to turn a value for a sensor."""
 import collections
 from datetime import timedelta
 import json

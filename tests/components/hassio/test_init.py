@@ -207,7 +207,7 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         assert result
 
     assert aioclient_mock.call_count == 3
-    assert aioclient_mock.mock_calls[-1][3]['X-HASSIO-KEY'] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]['X-Hassio-Key'] == "123456"
 
 
 @asyncio.coroutine
@@ -219,8 +219,8 @@ def test_fail_setup_without_environ_var(hass):
 
 
 @asyncio.coroutine
-def test_fail_setup_cannot_connect(hass, caplog):
-    """Fail setup if cannot connect."""
+def test_warn_when_cannot_connect(hass, caplog):
+    """Fail warn when we cannot connect."""
     with patch.dict(os.environ, MOCK_ENVIRON), \
             patch('homeassistant.components.hassio.HassIO.is_connected',
                   Mock(return_value=mock_coro(None))):

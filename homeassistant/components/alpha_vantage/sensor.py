@@ -1,9 +1,4 @@
-"""
-Stock market information from Alpha Vantage.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.alpha_vantage/
-"""
+"""Stock market information from Alpha Vantage."""
 from datetime import timedelta
 import logging
 

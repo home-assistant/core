@@ -422,6 +422,7 @@ def _account_data(cloud):
     }
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.async_response
 @_ws_handle_cloud_errors
@@ -436,6 +437,7 @@ async def websocket_remote_connect(hass, connection, msg):
     connection.send_result(msg['id'], _account_data(cloud))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.async_response
 @_ws_handle_cloud_errors

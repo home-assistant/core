@@ -1,9 +1,4 @@
-"""
-Support for Piglow LED's.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.piglow/
-"""
+"""Support for Piglow LED's."""
 import logging
 import subprocess
 

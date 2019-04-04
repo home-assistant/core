@@ -1,9 +1,4 @@
-"""
-Sensor for data from Austrian "Zentralanstalt für Meteorologie und Geodynamik".
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.zamg/
-"""
+"""Sensor for the Austrian "Zentralanstalt für Meteorologie und Geodynamik"."""
 import csv
 from datetime import datetime, timedelta
 import gzip

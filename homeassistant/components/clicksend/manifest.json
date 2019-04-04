@@ -1,0 +1,8 @@
+{
+  "domain": "clicksend",
+  "name": "Clicksend",
+  "documentation": "https://www.home-assistant.io/components/clicksend",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

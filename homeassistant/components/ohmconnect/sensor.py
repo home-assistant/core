@@ -1,9 +1,4 @@
-"""
-Support for OhmConnect.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/sensor.ohmconnect/
-"""
+"""Support for OhmConnect."""
 import logging
 from datetime import timedelta
 

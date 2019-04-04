@@ -1,9 +1,4 @@
-"""
-Support for TP-Link routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.tplink/
-"""
+"""Support for TP-Link routers."""
 import base64
 from datetime import datetime
 import hashlib

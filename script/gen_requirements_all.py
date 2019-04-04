@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+import fnmatch
 import importlib
 import os
 import pkgutil
 import re
 import sys
-import fnmatch
 
 COMMENT_REQUIREMENTS = (
     'Adafruit-DHT',
@@ -54,13 +54,12 @@ TEST_REQUIREMENTS = (
     'dsmr_parser',
     'eebrightbox',
     'emulated_roku',
-    'enturclient',
     'ephem',
     'evohomeclient',
     'feedparser-homeassistant',
     'foobot_async',
     'geojson_client',
-    'georss_client',
+    'georss_generic_client',
     'gTTS-token',
     'ha-ffmpeg',
     'hangups',
@@ -75,7 +74,7 @@ TEST_REQUIREMENTS = (
     'homematicip',
     'influxdb',
     'jsonpath',
-    'libpurecoollink',
+    'libpurecool',
     'libsoundtouch',
     'luftdaten',
     'mbddns',
@@ -91,6 +90,7 @@ TEST_REQUIREMENTS = (
     'pyblackbird',
     'pydeconz',
     'pydispatcher',
+    'pyheos',
     'pyhomematic',
     'pylitejet',
     'pymonoprice',

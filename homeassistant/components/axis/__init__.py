@@ -4,15 +4,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_TRIGGER_TIME,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_DEVICE, CONF_NAME, CONF_TRIGGER_TIME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 
-from .config_flow import configured_devices, DEVICE_SCHEMA
+from .config_flow import DEVICE_SCHEMA
 from .const import CONF_CAMERA, CONF_EVENTS, DEFAULT_TRIGGER_TIME, DOMAIN
 from .device import AxisNetworkDevice, get_device
 
-REQUIREMENTS = ['axis==17']
+REQUIREMENTS = ['axis==19']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.schema_with_slug_keys(DEVICE_SCHEMA),
@@ -21,18 +20,17 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up for Axis devices."""
-    if DOMAIN in config:
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
 
         for device_name, device_config in config[DOMAIN].items():
 
             if CONF_NAME not in device_config:
                 device_config[CONF_NAME] = device_name
 
-            if device_config[CONF_HOST] not in configured_devices(hass):
-                hass.async_create_task(hass.config_entries.flow.async_init(
-                    DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-                    data=device_config
-                ))
+            hass.async_create_task(hass.config_entries.flow.async_init(
+                DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+                data=device_config
+            ))
 
     return True
 
@@ -51,6 +49,8 @@ async def async_setup_entry(hass, config_entry):
         return False
 
     hass.data[DOMAIN][device.serial] = device
+
+    await device.async_update_device_registry()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
 

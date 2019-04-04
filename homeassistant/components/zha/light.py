@@ -1,9 +1,4 @@
-"""
-Lights on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/light.zha/
-"""
+"""Lights on Zigbee Home Automation networks."""
 from datetime import timedelta
 import logging
 
@@ -11,6 +6,7 @@ from homeassistant.components import light
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 from .const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, COLOR_CHANNEL,
@@ -97,11 +93,6 @@ class Light(ZhaEntity, light.Light):
                 self._hs_color = (0, 0)
 
     @property
-    def should_poll(self) -> bool:
-        """Poll state from device."""
-        return True
-
-    @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
         if self._state is None:
@@ -157,6 +148,7 @@ class Light(ZhaEntity, light.Light):
         if self._level_channel:
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level)
+        async_track_time_interval(self.hass, self.refresh, SCAN_INTERVAL)
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -247,3 +239,7 @@ class Light(ZhaEntity, light.Light):
         if self._level_channel:
             self._brightness = await self._level_channel.get_attribute_value(
                 'current_level')
+
+    async def refresh(self, time):
+        """Call async_update at an interval."""
+        await self.async_update()

@@ -1,0 +1,12 @@
+{
+  "domain": "waqi",
+  "name": "Waqi",
+  "documentation": "https://www.home-assistant.io/components/waqi",
+  "requirements": [
+    "waqiasync==1.0.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@andrey-git"
+  ]
+}

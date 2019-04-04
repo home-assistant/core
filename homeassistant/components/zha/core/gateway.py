@@ -10,35 +10,31 @@ import collections
 import itertools
 import logging
 import os
-
 import traceback
+
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
+
+from ..api import async_get_device_info
+from .channels import MAINS_POWERED, ZDOChannel
 from .const import (
-    DATA_ZHA, DATA_ZHA_CORE_COMPONENT, DOMAIN, SIGNAL_REMOVE, DATA_ZHA_GATEWAY,
-    CONF_USB_PATH, CONF_BAUDRATE, DEFAULT_BAUDRATE, CONF_RADIO_TYPE,
-    DATA_ZHA_RADIO, CONF_DATABASE, DEFAULT_DATABASE_NAME, DATA_ZHA_BRIDGE_ID,
-    RADIO, CONTROLLER, RADIO_DESCRIPTION, BELLOWS, ZHA, ZIGPY, ZIGPY_XBEE,
-    ZIGPY_DECONZ, ORIGINAL, CURRENT, DEBUG_LEVELS, ADD_DEVICE_RELAY_LOGGERS,
-    TYPE, NWK, IEEE, MODEL, SIGNATURE, ATTR_MANUFACTURER, RAW_INIT,
-    ZHA_GW_MSG, DEVICE_REMOVED, DEVICE_INFO, DEVICE_FULL_INIT, DEVICE_JOINED,
-    LOG_OUTPUT, LOG_ENTRY
-)
-from .device import ZHADevice, DeviceStatus
-from .channels import (
-    ZDOChannel, MAINS_POWERED
-)
-from .helpers import convert_ieee
+    ADD_DEVICE_RELAY_LOGGERS, ATTR_MANUFACTURER, BELLOWS, CONF_BAUDRATE,
+    CONF_DATABASE, CONF_RADIO_TYPE, CONF_USB_PATH, CONTROLLER, CURRENT,
+    DATA_ZHA, DATA_ZHA_BRIDGE_ID, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_GATEWAY,
+    DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
+    DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
+    LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
+    SIGNAL_REMOVE, SIGNATURE, TYPE, ZHA, ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ,
+    ZIGPY_XBEE)
+from .device import DeviceStatus, ZHADevice
 from .discovery import (
-    async_process_endpoint, async_dispatch_discovery_info,
-    async_create_device_entity
-)
-from .store import async_get_registry
+    async_create_device_entity, async_dispatch_discovery_info,
+    async_process_endpoint)
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
-from ..api import async_get_device_info
+from .store import async_get_registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +76,6 @@ class ZHAGateway:
         radio = radio_details[RADIO]
         self.radio_description = RADIO_TYPES[radio_type][RADIO_DESCRIPTION]
         await radio.connect(usb_path, baudrate)
-        self._hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
 
         if CONF_DATABASE in self._config:
             database = self._config[CONF_DATABASE]
@@ -169,9 +164,8 @@ class ZHAGateway:
                     }
                 )
 
-    def get_device(self, ieee_str):
+    def get_device(self, ieee):
         """Return ZHADevice for given ieee."""
-        ieee = convert_ieee(ieee_str)
         return self._devices.get(ieee)
 
     def get_entity_reference(self, entity_id):
@@ -271,6 +265,11 @@ class ZHAGateway:
                 self._hass, self._config, endpoint_id, endpoint,
                 discovery_infos, device, zha_device, is_new_join
             )
+            if endpoint_id != 0:
+                for cluster in endpoint.in_clusters.values():
+                    cluster.bind_only = False
+                for cluster in endpoint.out_clusters.values():
+                    cluster.bind_only = True
 
         if is_new_join:
             # configure the device
@@ -311,6 +310,11 @@ class ZHAGateway:
                     DEVICE_INFO: device_info
                 }
             )
+
+    async def shutdown(self):
+        """Stop ZHA Controller Application."""
+        _LOGGER.debug("Shutting down ZHA ControllerApplication")
+        await self.application_controller.shutdown()
 
 
 @callback

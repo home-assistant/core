@@ -29,8 +29,8 @@ async def async_setup_platform(
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     from homematicip.aio.device import (
-        AsyncShutterContact, AsyncMotionDetectorIndoor, AsyncSmokeDetector,
-        AsyncWaterSensor, AsyncRotaryHandleSensor,
+        AsyncDevice, AsyncShutterContact, AsyncMotionDetectorIndoor,
+        AsyncSmokeDetector, AsyncWaterSensor, AsyncRotaryHandleSensor,
         AsyncMotionDetectorPushButton, AsyncWeatherSensor,
         AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
 
@@ -56,6 +56,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                AsyncWeatherSensorPro)):
             devices.append(HomematicipStormSensor(home, device))
             devices.append(HomematicipSunshineSensor(home, device))
+        if isinstance(device, AsyncDevice) and device.lowBat is not None:
+            devices.append(HomematicipBatterySensor(home, device))
 
     for group in home.groups:
         if isinstance(group, AsyncSecurityGroup):
@@ -195,6 +197,24 @@ class HomematicipSunshineSensor(HomematicipGenericDevice, BinarySensorDevice):
             attr[ATTR_TODAY_SUNSHINE_DURATION] = \
                 self._device.todaySunshineDuration
         return attr
+
+
+class HomematicipBatterySensor(HomematicipGenericDevice, BinarySensorDevice):
+    """Representation of a HomematicIP Cloud low battery sensor."""
+
+    def __init__(self, home, device):
+        """Initialize battery sensor."""
+        super().__init__(home, device, 'Battery')
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return 'battery'
+
+    @property
+    def is_on(self):
+        """Return true if battery is low."""
+        return self._device.lowBat
 
 
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,

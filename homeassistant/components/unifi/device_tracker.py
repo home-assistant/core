@@ -1,9 +1,4 @@
-"""
-Support for Unifi WAP controllers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.unifi/
-"""
+"""Support for Unifi WAP controllers."""
 import logging
 from datetime import timedelta
 import voluptuous as vol

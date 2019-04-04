@@ -1,9 +1,4 @@
-"""
-Notification support for Homematic.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.homematic/
-"""
+"""Notification support for Homematic."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for Sensibo wifi-enabled home thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.sensibo/
-"""
+"""Support for Sensibo wifi-enabled home thermostats."""
 
 import asyncio
 import logging
@@ -12,16 +7,15 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE, ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID,
-    STATE_ON, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    ATTR_CURRENT_HUMIDITY, DOMAIN,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    DOMAIN, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
     SUPPORT_ON_OFF, STATE_HEAT, STATE_COOL, STATE_FAN_ONLY, STATE_DRY,
     STATE_AUTO)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_STATE, ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID,
+    STATE_ON, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -86,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                 devices.append(SensiboClimate(
                     client, dev, hass.config.units.temperature_unit))
     except (aiohttp.client_exceptions.ClientConnectorError,
-            asyncio.TimeoutError):
+            asyncio.TimeoutError, pysensibo.SensiboError):
         _LOGGER.exception('Failed to connect to Sensibo servers.')
         raise PlatformNotReady
 
@@ -128,6 +122,7 @@ class SensiboClimate(ClimateDevice):
         self._id = data['id']
         self._external_state = None
         self._units = units
+        self._available = False
         self._do_update(data)
 
     @property
@@ -139,7 +134,7 @@ class SensiboClimate(ClimateDevice):
         self._name = data['room']['name']
         self._measurements = data['measurements']
         self._ac_states = data['acState']
-        self._status = data['connectionStatus']['isAlive']
+        self._available = data['connectionStatus']['isAlive']
         capabilities = data['remoteCapabilities']
         self._operations = [SENSIBO_TO_HA[mode] for mode
                             in capabilities['modes']]
@@ -168,8 +163,7 @@ class SensiboClimate(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_CURRENT_HUMIDITY: self.current_humidity,
-                'battery': self.current_battery}
+        return {'battery': self.current_battery}
 
     @property
     def temperature_unit(self):
@@ -179,7 +173,7 @@ class SensiboClimate(ClimateDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._status
+        return self._available
 
     @property
     def target_temperature(self):
@@ -348,10 +342,13 @@ class SensiboClimate(ClimateDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
+        import pysensibo
         try:
             with async_timeout.timeout(TIMEOUT):
                 data = await self._client.async_get_device(
                     self._id, _FETCH_FIELDS)
                 self._do_update(data)
-        except aiohttp.client_exceptions.ClientError:
+        except (aiohttp.client_exceptions.ClientError,
+                pysensibo.SensiboError):
             _LOGGER.warning('Failed to connect to Sensibo servers.')
+            self._available = False

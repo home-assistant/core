@@ -1,9 +1,4 @@
-"""
-Integration with the Rachio Iro sprinkler system controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.rachio/
-"""
+"""Integration with the Rachio Iro sprinkler system controller."""
 from abc import abstractmethod
 import logging
 

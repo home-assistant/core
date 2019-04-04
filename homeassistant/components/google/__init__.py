@@ -36,6 +36,7 @@ CONF_TRACK = 'track'
 CONF_SEARCH = 'search'
 CONF_OFFSET = 'offset'
 CONF_IGNORE_AVAILABILITY = 'ignore_availability'
+CONF_MAX_RESULTS = 'max_results'
 
 DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
@@ -69,6 +70,7 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema({
     vol.Optional(CONF_OFFSET): cv.string,
     vol.Optional(CONF_SEARCH): cv.string,
     vol.Optional(CONF_TRACK): cv.boolean,
+    vol.Optional(CONF_MAX_RESULTS): cv.positive_int,
 })
 
 DEVICE_SCHEMA = vol.Schema({

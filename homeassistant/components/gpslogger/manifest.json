@@ -1,0 +1,10 @@
+{
+  "domain": "gpslogger",
+  "name": "Gpslogger",
+  "documentation": "https://www.home-assistant.io/components/gpslogger",
+  "requirements": [],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": []
+}

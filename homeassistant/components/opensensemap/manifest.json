@@ -1,0 +1,10 @@
+{
+  "domain": "opensensemap",
+  "name": "Opensensemap",
+  "documentation": "https://www.home-assistant.io/components/opensensemap",
+  "requirements": [
+    "opensensemap-api==0.1.5"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

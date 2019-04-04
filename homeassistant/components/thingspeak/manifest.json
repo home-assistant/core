@@ -1,0 +1,10 @@
+{
+  "domain": "thingspeak",
+  "name": "Thingspeak",
+  "documentation": "https://www.home-assistant.io/components/thingspeak",
+  "requirements": [
+    "thingspeak==0.4.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

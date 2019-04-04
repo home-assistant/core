@@ -1,9 +1,4 @@
-"""
-Fans on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/fan.zha/
-"""
+"""Fans on Zigbee Home Automation networks."""
 import logging
 
 from homeassistant.core import callback
