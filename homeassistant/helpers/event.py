@@ -1,6 +1,7 @@
 """Helpers for listening to events."""
 import functools as ft
 from datetime import timedelta
+import logging
 
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.sun import get_astral_event_next
@@ -11,6 +12,9 @@ from ..const import (ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED,
 from ..core import HomeAssistant, callback
 from ..util import dt as dt_util, str_to_bool
 from ..util.async_ import run_callback_threadsafe
+
+
+_LOGGER = logging.getLogger(__name__)
 
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
@@ -95,14 +99,24 @@ def async_track_template(hass, template, action, variables=None):
     # See if the event needs to fire on registration.
     (result, entity_filter) = \
         template.async_render_with_collect(variables)
-    if str_to_bool(result):
+    if isinstance(result, TemplateError):
+        _LOGGER.error(
+            "Error during template evaluation: %s", result)
+    elif str_to_bool(result):
         # figure out an entity ID.
         state = None
-        for st in hass.states.async_all():
-            if entity_filter(st.entity_id):
-                state = st
+        entity_id = None
+        for eid in entity_filter.include_entities:
+            state = hass.states.get(eid)
+            if state:
+                entity_id = eid
                 break
-        entity_id = None if state is None else state.entity_id
+        if not state:
+            for st in hass.states.async_all():
+                if entity_filter(st.entity_id):
+                    state = st
+                    entity_id = st.entity_id
+                    break
         hass.async_run_job(
             action, entity_id, state, state)
 
@@ -129,6 +143,7 @@ def async_track_template_result(hass, template, action, variables=None):
     (last_result, entity_filter) = \
         template.async_render_with_collect(variables)
     if isinstance(last_result, TemplateError):
+        _LOGGER.error("Error during template evaluation: %s", last_result)
         last_result = None
 
     @callback
@@ -151,6 +166,7 @@ def async_track_template_result(hass, template, action, variables=None):
         (result, entity_filter) = \
             template.async_render_with_collect(variables)
         if isinstance(result, TemplateError):
+            _LOGGER.error("Error during template evaluation: %s", last_result)
             return
 
         # Check to see if the result has changed
