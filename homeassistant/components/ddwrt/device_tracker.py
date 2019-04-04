@@ -40,7 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a DD-WRT scanner."""
-
     try:
         return DdWrtDeviceScanner(config[DOMAIN])
     except ConnectionError:
@@ -77,6 +76,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         return self.last_results
 
     def get_device_name(self, device):
+        """Scan the devices to get a name if it isn't set already."""
         if device not in self.mac2name:
             return self.scan_table(device)
 
@@ -121,10 +121,11 @@ class DdWrtDeviceScanner(DeviceScanner):
                 if mac in self.mac2name:
                     # Make sure the index is not out of scope.
                     if _verify_out_of_scope(idx * set_columns, elements):
-                        self.mac2name[mac] = elements[idx * set_columns]
-                        # If the name is a *, it means the name wasn't found in the
-                        # dhcp_lease table. Check on the arp_table instead.
-                        if elements[idx * set_columns] == '*' and table != 'arp_table':
+                        name = elements[idx * set_columns]
+                        self.mac2name[mac] = name
+                        # If the name is a *, it means the name wasn't found in
+                        # the dhcp_lease table. Check on the arp_table instead.
+                        if name == '*' and table != 'arp_table':
                             self.scan_table(device, 'arp_table')
 
         return self.mac2name.get(device)
@@ -141,7 +142,6 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         elif self.type.lower() == 'dhcp':
             _LOGGER.info("Checking DHCP leases")
-            #url = 'http://{}/Info.live.htm'.format(self.host)
             url = 'http://{}/Status_Lan.live.asp'.format(self.host)
             extract_key = 'dhcp_leases'
         else:
@@ -213,7 +213,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         # For 'active_wireless', every 10 elements represents one host,
         num_clients = int(len(elements) / 10)
 
-        attributes = {}
+        attrs = {}
         # This loops through each wireless client and
         # then assign a variable to each 'column'.
         for idx in range(0, num_clients):
@@ -233,23 +233,24 @@ class DdWrtDeviceScanner(DeviceScanner):
             current_mac_lookup = idx * 10 + column_indexes['mac']
 
             if elements[current_mac_lookup] == device:
-                # Looping through the requested monitoring conditions and get the data.
-                for monitored_value in self.monitored_conditions: 
+                # Looping through the requested monitoring conditions
+                for monitored_value in self.monitored_conditions:
                     column_index = column_indexes[monitored_value]
-                    attributes[monitored_value] = elements[idx * 10 + column_index]
+                    attrs[monitored_value] = elements[idx * 10 + column_index]
                     # TX and RX rate have a M at the end of the string,
                     # here we remove it for convenience.
                     if monitored_value in ['tx_rate', 'rx_rate']:
-                        attributes[monitored_value] = attributes[monitored_value][:-1]
+                        attrs[monitored_value] = attrs[monitored_value][:-1]
 
-        _LOGGER.debug("Device MAC %s attributes %s", device, attributes)
-        return attributes
+        _LOGGER.debug("Device MAC %s attributes %s", device, attrs)
+        return attrs
 
 
 def _parse_ddwrt_response(data_str):
     """Parse the DD-WRT data format."""
     return {
         key: val for key, val in _DDWRT_DATA_REGEX.findall(data_str)}
+
 
 def _verify_out_of_scope(index, elements):
     """Check if an index is out of scope.
