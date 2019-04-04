@@ -7,10 +7,10 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SENSORS, CONF_SWITCHES, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
+    CONF_BINARY_SENSORS, CONF_SENSORS, CONF_SWITCHES, CONF_SCAN_INTERVAL,
+    HTTP_BASIC_AUTHENTICATION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-
 
 REQUIREMENTS = ['amcrest==1.3.0']
 DEPENDENCIES = ['ffmpeg']
@@ -52,6 +52,10 @@ STREAM_SOURCE_LIST = {
     'rtsp': 2,
 }
 
+BINARY_SENSORS = {
+    'motion_detected': 'Motion Detected'
+}
+
 # Sensor types are defined like: Name, units, icon
 SENSORS = {
     'motion_detector': ['Motion Detected', None, 'mdi:run'],
@@ -82,6 +86,8 @@ CONFIG_SCHEMA = vol.Schema({
             cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
             cv.time_period,
+        vol.Optional(CONF_BINARY_SENSORS):
+            vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
         vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSORS)]),
         vol.Optional(CONF_SWITCHES):
@@ -94,15 +100,23 @@ def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
     from amcrest import AmcrestCamera, AmcrestError
 
-    hass.data[DATA_AMCREST] = {}
+    hass.data.setdefault(DATA_AMCREST, {})
     amcrest_cams = config[DOMAIN]
 
     for device in amcrest_cams:
+        name = device[CONF_NAME]
+        if name in hass.data[DATA_AMCREST]:
+            _LOGGER.error('Name %s already used: skipping', name)
+            continue
+
+        username = device[CONF_USERNAME]
+        password = device[CONF_PASSWORD]
+
         try:
-            camera = AmcrestCamera(device.get(CONF_HOST),
-                                   device.get(CONF_PORT),
-                                   device.get(CONF_USERNAME),
-                                   device.get(CONF_PASSWORD)).camera
+            camera = AmcrestCamera(device[CONF_HOST],
+                                   device[CONF_PORT],
+                                   username,
+                                   password).camera
             # pylint: disable=pointless-statement
             camera.current_time
 
@@ -116,23 +130,19 @@ def setup(hass, config):
                 notification_id=NOTIFICATION_ID)
             continue
 
-        ffmpeg_arguments = device.get(CONF_FFMPEG_ARGUMENTS)
-        name = device.get(CONF_NAME)
-        resolution = RESOLUTION_LIST[device.get(CONF_RESOLUTION)]
+        ffmpeg_arguments = device[CONF_FFMPEG_ARGUMENTS]
+        resolution = RESOLUTION_LIST[device[CONF_RESOLUTION]]
+        binary_sensors = device.get(CONF_BINARY_SENSORS)
         sensors = device.get(CONF_SENSORS)
         switches = device.get(CONF_SWITCHES)
-        stream_source = STREAM_SOURCE_LIST[device.get(CONF_STREAM_SOURCE)]
-
-        username = device.get(CONF_USERNAME)
-        password = device.get(CONF_PASSWORD)
+        stream_source = STREAM_SOURCE_LIST[device[CONF_STREAM_SOURCE]]
 
         # currently aiohttp only works with basic authentication
         # only valid for mjpeg streaming
-        if username is not None and password is not None:
-            if device.get(CONF_AUTHENTICATION) == HTTP_BASIC_AUTHENTICATION:
-                authentication = aiohttp.BasicAuth(username, password)
-            else:
-                authentication = None
+        if device[CONF_AUTHENTICATION] == HTTP_BASIC_AUTHENTICATION:
+            authentication = aiohttp.BasicAuth(username, password)
+        else:
+            authentication = None
 
         hass.data[DATA_AMCREST][name] = AmcrestDevice(
             camera, name, authentication, ffmpeg_arguments, stream_source,
@@ -143,7 +153,19 @@ def setup(hass, config):
                 CONF_NAME: name,
             }, config)
 
+        if binary_sensors:
+            discovery.load_platform(
+                hass, 'binary_sensor', DOMAIN, {
+                    CONF_NAME: name,
+                    CONF_BINARY_SENSORS: binary_sensors
+                }, config)
+
         if sensors:
+            if 'motion_detector' in sensors:
+                _LOGGER.warning(
+                    'sensors option motion_detector is deprecated. '
+                    'Please remove from your configuration and '
+                    'use binary_sensors option motion_detected instead.')
             discovery.load_platform(
                 hass, 'sensor', DOMAIN, {
                     CONF_NAME: name,
@@ -157,7 +179,7 @@ def setup(hass, config):
                     CONF_SWITCHES: switches
                 }, config)
 
-    return True
+    return len(hass.data[DATA_AMCREST]) >= 1
 
 
 class AmcrestDevice:
