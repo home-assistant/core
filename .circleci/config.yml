@@ -86,6 +86,11 @@ jobs:
           test: true
 
       - run:
+          name: validate manifests
+          command: |
+            python script/manifest/validate.py
+
+      - run:
           name: run static check
           command: |
             . venv/bin/activate
