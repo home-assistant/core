@@ -7,7 +7,7 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "Kiszolg\u00e1l\u00f3 neve vagy IP c\u00edme",
+                    "ip_address": "Hosztn\u00e9v vagy IP c\u00edm",
                     "password": "Jelsz\u00f3",
                     "port": "Port"
                 },
