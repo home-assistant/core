@@ -1,9 +1,4 @@
-"""
-Support for Russound multizone controllers using RIO Protocol.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.russound_rio/
-"""
+"""Support for Russound multizone controllers using RIO Protocol."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for Rova garbage calendar.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rova/
-"""
+"""Support for Rova garbage calendar."""
 
 from datetime import datetime, timedelta
 import logging

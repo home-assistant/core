@@ -1,9 +1,4 @@
-"""
-Support for ONVIF Cameras with FFmpeg as decoder.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.onvif/
-"""
+"""Support for ONVIF Cameras with FFmpeg as decoder."""
 import asyncio
 import logging
 import os
@@ -33,7 +28,7 @@ DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
-DEFAULT_ARGUMENTS = '-q:v 2'
+DEFAULT_ARGUMENTS = '-pred 1'
 DEFAULT_PROFILE = 0
 
 CONF_PROFILE = "profile"

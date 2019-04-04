@@ -1,0 +1,12 @@
+{
+  "domain": "blink",
+  "name": "Blink",
+  "documentation": "https://www.home-assistant.io/components/blink",
+  "requirements": [
+    "blinkpy==0.13.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fronzbot"
+  ]
+}

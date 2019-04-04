@@ -1,9 +1,4 @@
-"""
-Support for Linky.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.linky/
-"""
+"""Support for Linky."""
 import logging
 import json
 from datetime import timedelta

@@ -1,0 +1,14 @@
+{
+  "domain": "zeroconf",
+  "name": "Zeroconf",
+  "documentation": "https://www.home-assistant.io/components/zeroconf",
+  "requirements": [
+    "zeroconf==0.21.3"
+  ],
+  "dependencies": [
+    "api"
+  ],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

@@ -1,9 +1,4 @@
-"""
-Integration with the Rachio Iro sprinkler system controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/rachio/
-"""
+"""Integration with the Rachio Iro sprinkler system controller."""
 import asyncio
 import logging
 from typing import Optional

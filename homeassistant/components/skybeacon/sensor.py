@@ -1,9 +1,4 @@
-"""
-Support for Skybeacon temperature/humidity Bluetooth LE sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.skybeacon/
-"""
+"""Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
 import logging
 import threading
 from uuid import UUID

@@ -1,9 +1,4 @@
-"""
-Support for interacting with Spotify Connect.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.spotify/
-"""
+"""Support for interacting with Spotify Connect."""
 from datetime import timedelta
 import logging
 

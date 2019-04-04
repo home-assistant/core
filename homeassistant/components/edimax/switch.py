@@ -1,9 +1,4 @@
-"""
-Support for Edimax switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.edimax/
-"""
+"""Support for Edimax switches."""
 import logging
 
 import voluptuous as vol

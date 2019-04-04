@@ -1,9 +1,4 @@
-"""
-Support for the demo image processing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/demo/
-"""
+"""Support for the demo image processing."""
 from homeassistant.components.image_processing import (
     ImageProcessingFaceEntity, ATTR_CONFIDENCE, ATTR_NAME, ATTR_AGE,
     ATTR_GENDER

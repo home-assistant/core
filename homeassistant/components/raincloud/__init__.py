@@ -1,9 +1,4 @@
-"""
-Support for Melnor RainCloud sprinkler water timer.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/raincloud/
-"""
+"""Support for Melnor RainCloud sprinkler water timer."""
 from datetime import timedelta
 import logging
 

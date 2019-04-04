@@ -1,9 +1,4 @@
-"""
-Support for HTU21D temperature and humidity sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.htu21d/
-"""
+"""Support for HTU21D temperature and humidity sensor."""
 from datetime import timedelta
 from functools import partial
 import logging

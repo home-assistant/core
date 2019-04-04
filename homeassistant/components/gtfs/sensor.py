@@ -1,9 +1,4 @@
-"""
-Support for GTFS (Google/General Transport Format Schema).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gtfs/
-"""
+"""Support for GTFS (Google/General Transport Format Schema)."""
 import datetime
 import logging
 import os

@@ -1,9 +1,4 @@
-"""
-Support for Yamaha MusicCast Receivers.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/media_player.yamaha_musiccast/
-"""
+"""Support for Yamaha MusicCast Receivers."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Component to interface with cameras.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/camera/
-"""
+"""Component to interface with cameras."""
 import asyncio
 import base64
 import collections

@@ -1,0 +1,12 @@
+{
+  "domain": "automation",
+  "name": "Automation",
+  "documentation": "https://www.home-assistant.io/components/automation",
+  "requirements": [],
+  "dependencies": [
+    "group"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

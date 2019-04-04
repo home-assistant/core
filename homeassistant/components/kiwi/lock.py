@@ -1,9 +1,4 @@
-"""
-Support for the KIWI.KI lock platform.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/lock.kiwi/
-"""
+"""Support for the KIWI.KI lock platform."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for MQTT fans.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/fan.mqtt/
-"""
+"""Support for MQTT fans."""
 import logging
 
 import voluptuous as vol

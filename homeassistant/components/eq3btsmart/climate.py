@@ -1,9 +1,4 @@
-"""
-Support for eQ-3 Bluetooth Smart thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.eq3btsmart/
-"""
+"""Support for eQ-3 Bluetooth Smart thermostats."""
 import logging
 
 import voluptuous as vol

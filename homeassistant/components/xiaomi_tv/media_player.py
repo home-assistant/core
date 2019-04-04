@@ -1,9 +1,4 @@
-"""
-Add support for the Xiaomi TVs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/xiaomi_tv/
-"""
+"""Add support for the Xiaomi TVs."""
 import logging
 
 import voluptuous as vol

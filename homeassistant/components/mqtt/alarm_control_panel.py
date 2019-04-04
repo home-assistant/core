@@ -1,9 +1,4 @@
-"""
-This platform enables the possibility to control a MQTT alarm.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.mqtt/
-"""
+"""This platform enables the possibility to control a MQTT alarm."""
 import logging
 import re
 

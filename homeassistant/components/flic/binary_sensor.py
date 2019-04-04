@@ -1,9 +1,4 @@
-"""
-Support to use flic buttons as a binary sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.flic/
-"""
+"""Support to use flic buttons as a binary sensor."""
 import logging
 import threading
 
