@@ -1,0 +1,10 @@
+{
+  "domain": "linode",
+  "name": "Linode",
+  "documentation": "https://www.home-assistant.io/components/linode",
+  "requirements": [
+    "linode-api==4.1.9b1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

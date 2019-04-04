@@ -1,0 +1,8 @@
+{
+  "domain": "insteon_plm",
+  "name": "Insteon plm",
+  "documentation": "https://www.home-assistant.io/components/insteon_plm",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
