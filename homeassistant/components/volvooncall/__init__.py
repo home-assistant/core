@@ -1,21 +1,20 @@
 """Support for Volvo On Call."""
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_NAME, CONF_RESOURCES,
-                                 CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL,
-                                 CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.const import (
+    CONF_NAME, CONF_PASSWORD, CONF_RESOURCES, CONF_SCAN_INTERVAL, CONF_USERNAME
+)
+from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
-    async_dispatcher_connect)
+    async_dispatcher_connect, async_dispatcher_send
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 DOMAIN = 'volvooncall'
