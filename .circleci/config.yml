@@ -99,6 +99,13 @@ jobs:
             mypy $TYPING_FILES
 
       - install
+
+      - run:
+          name: validate manifests
+          command: |
+            . venv/bin/activate
+            python script/manifest/validate.py
+
       - run:
           name: run gen_requirements_all
           command: |
