@@ -9,12 +9,12 @@ from aiohttp.web_exceptions import (
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.components.http.ban import process_success_login
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import KEY_AUTHENTICATED, KEY_REAL_IP, KEY_HASS
+from .ban import process_success_login
+from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,12 +98,14 @@ def request_handler_factory(view, handler):
 
         if view.requires_auth:
             if authenticated:
+                if 'deprecate_warning_message' in request:
+                    _LOGGER.warning(request['deprecate_warning_message'])
                 await process_success_login(request)
             else:
                 raise HTTPUnauthorized()
 
-        _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request.get(KEY_REAL_IP), authenticated)
+        _LOGGER.debug('Serving %s to %s (auth: %s)',
+                      request.path, request.get(KEY_REAL_IP), authenticated)
 
         try:
             result = handler(request, **request.match_info)

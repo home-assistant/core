@@ -9,6 +9,7 @@
         },
         "error": {
             "login_failed": "No s'ha pogut sincronitzar amb la PlayStation 4. Verifica el codi PIN.",
+            "no_ipaddress": "Introdueix l'adre\u00e7a IP de la PlayStation 4 que vulguis configurar.",
             "not_ready": "La PlayStation 4 no est\u00e0 engegada o no s'ha connectada a la xarxa."
         },
         "step": {
@@ -24,6 +25,14 @@
                     "region": "Regi\u00f3"
                 },
                 "description": "Introdueix la informaci\u00f3 de la teva PlayStation 4. Pel 'PIN', ves a 'Configuraci\u00f3' de la PlayStation 4, despr\u00e9s navega fins a 'Configuraci\u00f3 de la connexi\u00f3 de l'aplicaci\u00f3 m\u00f2bil' i selecciona 'Afegir dispositiu'. Introdueix el PIN que es mostra.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP (deixa-ho en blanc si fas servir la detecci\u00f3 autom\u00e0tica).",
+                    "mode": "Mode de configuraci\u00f3"
+                },
+                "description": "Selecciona el mode de configuraci\u00f3. El camp de l'adre\u00e7a IP es pot deixar en blanc si selecciones descobriment autom\u00e0tic (els dispositius es descobriran autom\u00e0ticament).",
                 "title": "PlayStation 4"
             }
         },

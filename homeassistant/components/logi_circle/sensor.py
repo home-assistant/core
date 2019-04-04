@@ -3,17 +3,17 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.logi_circle import (
-    ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DOMAIN as LOGI_CIRCLE_DOMAIN)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING,
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
-    STATE_ON, STATE_OFF)
+    ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, CONF_ENTITY_NAMESPACE,
+    CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.dt import as_local
+
+from . import (
+    ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DOMAIN as LOGI_CIRCLE_DOMAIN)
 
 DEPENDENCIES = ['logi_circle']
 

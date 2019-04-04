@@ -4,12 +4,13 @@ import logging
 
 from aiohttp.web import Response
 
-from homeassistant.components.config import EditKeyBasedConfigView
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.zwave import DEVICE_CONFIG_SCHEMA_ENTRY, const
 from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
 import homeassistant.core as ha
 import homeassistant.helpers.config_validation as cv
+
+from . import EditKeyBasedConfigView
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_PATH = 'zwave_device_config.yaml'

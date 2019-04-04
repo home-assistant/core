@@ -112,7 +112,7 @@ def stream_worker(hass, stream, quit_event):
                 a_packet, buffer = create_stream_buffer(
                     stream_output, video_stream, audio_frame)
                 audio_packets[buffer.astream] = a_packet
-                outputs[stream_output.format] = buffer
+                outputs[stream_output.name] = buffer
 
         # First video packet tends to have a weird dts/pts
         if first_packet:

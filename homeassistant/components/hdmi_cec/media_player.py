@@ -1,7 +1,6 @@
 """Support for HDMI CEC devices as media players."""
 import logging
 
-from homeassistant.components.hdmi_cec import ATTR_NEW, CecDevice
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
@@ -9,6 +8,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+
+from . import ATTR_NEW, CecDevice
 
 DEPENDENCIES = ['hdmi_cec']
 

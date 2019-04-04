@@ -41,18 +41,19 @@ COMMENT_REQUIREMENTS = (
 TEST_REQUIREMENTS = (
     'aioambient',
     'aioautomatic',
+    'aiobotocore',
     'aiohttp_cors',
     'aiohue',
     'aiounifi',
     'apns2',
     'av',
+    'axis',
     'caldav',
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
     'eebrightbox',
     'emulated_roku',
-    'enturclient',
     'ephem',
     'evohomeclient',
     'feedparser-homeassistant',
@@ -217,11 +218,12 @@ def gather_modules():
             explore_module('homeassistant.auth', True)):
         try:
             module = importlib.import_module(package)
-        except ImportError:
+        except ImportError as err:
             for pattern in IGNORE_PACKAGES:
                 if fnmatch.fnmatch(package, pattern):
                     break
             else:
+                print("{}: {}".format(package.replace('.', '/') + '.py', err))
                 errors.append(package)
             continue
 

@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.scene import Scene
-from homeassistant.components.wink import DOMAIN, WinkDevice
+
+from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
