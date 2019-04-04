@@ -8,7 +8,8 @@ import pytest
 @pytest.mark.parametrize(
     'build_type', [
         ("a3_vl", "test/beer/ping?index=1"), ("core", "index.html"),
-        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5")
+        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5"),
+        ("fsadjf10312", "")
     ])
 async def test_ingress_request_get(
         hassio_client, build_type, aioclient_mock):
@@ -40,7 +41,8 @@ async def test_ingress_request_get(
 @pytest.mark.parametrize(
     'build_type', [
         ("a3_vl", "test/beer/ping?index=1"), ("core", "index.html"),
-        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5")
+        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5"),
+        ("fsadjf10312", "")
     ])
 async def test_ingress_request_post(
         hassio_client, build_type, aioclient_mock):
@@ -72,7 +74,8 @@ async def test_ingress_request_post(
 @pytest.mark.parametrize(
     'build_type', [
         ("a3_vl", "test/beer/ping?index=1"), ("core", "index.html"),
-        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5")
+        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5"),
+        ("fsadjf10312", "")
     ])
 async def test_ingress_request_put(
         hassio_client, build_type, aioclient_mock):
@@ -104,7 +107,8 @@ async def test_ingress_request_put(
 @pytest.mark.parametrize(
     'build_type', [
         ("a3_vl", "test/beer/ping?index=1"), ("core", "index.html"),
-        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5")
+        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5"),
+        ("fsadjf10312", "")
     ])
 async def test_ingress_request_delete(
         hassio_client, build_type, aioclient_mock):
