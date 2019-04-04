@@ -21,7 +21,8 @@ VALID_CONFIG_MINIMAL = {
         'api_key': 'foo',
         'forecast': [1, 2],
         'hourly_forecast': [1, 2],
-        'monitored_conditions': ['summary', 'icon', 'temperature_high'],
+        'monitored_conditions': ['summary', 'icon', 'temperature_high',
+                                 'alerts'],
         'scan_interval': timedelta(seconds=120),
     }
 }
@@ -47,7 +48,7 @@ VALID_CONFIG_LANG_DE = {
         'language': 'de',
         'monitored_conditions': ['summary', 'icon', 'temperature_high',
                                  'minutely_summary', 'hourly_summary',
-                                 'daily_summary', 'humidity', ],
+                                 'daily_summary', 'humidity', 'alerts'],
         'scan_interval': timedelta(seconds=120),
     }
 }
@@ -161,10 +162,17 @@ class TestDarkSkySetup(unittest.TestCase):
 
         assert mock_get_forecast.called
         assert mock_get_forecast.call_count == 1
-        assert len(self.hass.states.entity_ids()) == 12
+        assert len(self.hass.states.entity_ids()) == 13
 
         state = self.hass.states.get('sensor.dark_sky_summary')
         assert state is not None
         assert state.state == 'Clear'
         assert state.attributes.get('friendly_name') == \
             'Dark Sky Summary'
+
+        state = self.hass.states.get('sensor.dark_sky_alerts')
+        assert state is not None
+        assert state.state == '2'
+        assert state.attributes.get('title_1') == \
+            "Red Flag Warning"
+        print(state)
