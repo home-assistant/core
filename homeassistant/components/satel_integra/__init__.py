@@ -57,15 +57,9 @@ PARTITION_SCHEMA = vol.Schema(
 
 def is_alarm_code_necessary(value):
     """Check if alarm code must be configured."""
-<<<<<<< e9568e6c7d73d867f6efcc843245c24572490b4c
-    if value.get(CONF_SWITCHABLE_OUTPUTS) and CONF_DEVICE_CODE not in value:
-=======
     if not isinstance(value, dict):
         raise vol.Invalid('key dependencies require a dict')
-    if CONF_SWITCHABLE_OUTPUTS in value\
-       and value[CONF_SWITCHABLE_OUTPUTS]\
-       and CONF_DEVICE_CODE not in value:
->>>>>>> Linter fixes.
+    if value.get(CONF_SWITCHABLE_OUTPUTS) and CONF_DEVICE_CODE not in value:
         raise vol.Invalid('You need to specify alarm '
                           ' code to use switchable_outputs')
 

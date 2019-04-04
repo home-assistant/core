@@ -1,5 +1,4 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
-import asyncio
 import logging
 
 
@@ -45,9 +44,11 @@ class SatelIntegraSwitch(SwitchDevice):
         self._name = device_name
         self._state = False
         self._code = code
+        self._satel = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+        self._satel = self.hass.data[DATA_SATEL]
         async_dispatcher_connect(
             self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated)
 
@@ -66,20 +67,14 @@ class SatelIntegraSwitch(SwitchDevice):
         """Turn the device on."""
         _LOGGER.debug("Switch: %s status: %s,"
                       " turning on", self._name, self._state)
-        await self.hass.data[DATA_SATEL]\
-                  .set_output(self._code, self._device_number, True)
-        await asyncio.sleep(0.3)
-        self._state = True
+        await self._satel.set_output(self._code, self._device_number, True)
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGER.debug("Switch name: %s status: %s,"
                       " turning off", self._name, self._state)
-        await self.hass.data[DATA_SATEL]\
-                  .set_output(self._code, self._device_number, False)
-        await asyncio.sleep(0.3)
-        self._state = False
+        await self._satel.set_output(self._code, self._device_number, False)
         self.async_schedule_update_ha_state()
 
     @property
@@ -90,8 +85,7 @@ class SatelIntegraSwitch(SwitchDevice):
 
     def _read_state(self):
         """Read state of the device."""
-        return self._device_number in\
-            self.hass.data[DATA_SATEL].violated_outputs
+        return self._device_number in self._satel.violated_outputs
 
     @property
     def name(self):

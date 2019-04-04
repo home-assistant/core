@@ -48,10 +48,13 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         self._state = None
         self._arm_home_mode = arm_home_mode
         self._partition_id = partition_id
+        self._satel = None
+
 
     async def async_added_to_hass(self):
         """Update alarm status and register callbacks for future updates."""
         _LOGGER.debug("Starts listening for panel messages")
+        self._satel = self.hass.data[DATA_SATEL]
         self._update_alarm_status()
         async_dispatcher_connect(
             self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status)
@@ -74,8 +77,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         # Default - disarmed:
         hass_alarm_status = STATE_ALARM_DISARMED
 
-        satel_controller = self.hass.data[DATA_SATEL]
-        if not satel_controller.connected:
+        if not self._satel.connected:
             return None
 
         state_map = OrderedDict([
@@ -89,13 +91,11 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
             (AlarmState.EXIT_COUNTDOWN_OVER_10, STATE_ALARM_PENDING),
             (AlarmState.EXIT_COUNTDOWN_UNDER_10, STATE_ALARM_PENDING)
         ])
-        _LOGGER.debug("State map of Satel: %s",
-                      satel_controller.partition_states)
+        _LOGGER.debug("State map of Satel: %s", self._satel.partition_states)
 
         for satel_state, ha_state in state_map.items():
-            if satel_state in satel_controller.partition_states and\
-               self._partition_id in\
-                    satel_controller.partition_states[satel_state]:
+            if satel_state in self._satel.partition_states and\
+               self._partition_id in self._satel.partition_states[satel_state]:
                 hass_alarm_status = ha_state
                 break
 
@@ -131,25 +131,24 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
         _LOGGER.debug("Disarming, self._state: %s", self._state)
 
-        await self.hass.data[DATA_SATEL].disarm(code, [self._partition_id])
+        await self._satel.disarm(code, [self._partition_id])
 
         if clear_alarm_necessary:
             # Wait 1s before clearing the alarm
             await asyncio.sleep(1)
-            await self.hass.data[DATA_SATEL]\
-                      .clear_alarm(code, [self._partition_id])
+            await self._satel.clear_alarm(code, [self._partition_id])
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         _LOGGER.debug("Arming away")
 
         if code:
-            await self.hass.data[DATA_SATEL].arm(code, [self._partition_id])
+            await self._satel.arm(code, [self._partition_id])
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         _LOGGER.debug("Arming home")
 
         if code:
-            await self.hass.data[DATA_SATEL]\
+            await self._satel\
                       .arm(code, [self._partition_id], self._arm_home_mode)
