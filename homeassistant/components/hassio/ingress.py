@@ -30,7 +30,7 @@ class HassIOIngress(HomeAssistantView):
     """Hass.io view to handle base part."""
 
     name = "api:hassio:ingress"
-    url = "/api/hassio_ingress/{token}/{path:.+}"
+    url = "/api/hassio_ingress/{token}/{path:.*}"
     requires_auth = False
 
     def __init__(self, host: str, websession: aiohttp.ClientSession):
