@@ -3,7 +3,7 @@ from .manifest_helper import iter_manifests
 
 
 def gather_requirements_from_manifests(process_requirements, errors, reqs):
-    """Gather all of the requirements from manifests"""
+    """Gather all of the requirements from manifests."""
     for manifest in iter_manifests():
         if manifest.get('domain') is None:
             errors.append(manifest)
