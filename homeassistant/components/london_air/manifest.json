@@ -1,0 +1,8 @@
+{
+  "domain": "london_air",
+  "name": "London air",
+  "documentation": "https://www.home-assistant.io/components/london_air",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

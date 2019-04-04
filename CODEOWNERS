@@ -18,7 +18,11 @@ homeassistant/components/frontend/* @home-assistant/core
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/history/* @home-assistant/core
 homeassistant/components/http/* @home-assistant/core
-homeassistant/components/input_*/* @home-assistant/core
+homeassistant/components/input_boolean/* @home-assistant/core
+homeassistant/components/input_datetime/* @home-assistant/core
+homeassistant/components/input_number/* @home-assistant/core
+homeassistant/components/input_select/* @home-assistant/core
+homeassistant/components/input_text/* @home-assistant/core
 homeassistant/components/introduction/* @home-assistant/core
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/lovelace/* @home-assistant/core
@@ -42,7 +46,6 @@ Dockerfile @home-assistant/docker
 virtualization/Docker/* @home-assistant/docker
 
 homeassistant/components/zwave/* @home-assistant/z-wave
-homeassistant/components/*/zwave.py @home-assistant/z-wave
 
 homeassistant/components/hassio/* @home-assistant/hassio
 
@@ -223,7 +226,8 @@ homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/sql/sensor.py @dgomes
 homeassistant/components/statistics/sensor.py @fabaff
-homeassistant/components/swiss_*/* @fabaff
+homeassistant/components/swiss_public_transport/* @fabaff
+homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/switchbot/switch.py @danielhiversen
 homeassistant/components/switchmate/switch.py @danielhiversen
 homeassistant/components/synology_srm/device_tracker.py @aerialls
