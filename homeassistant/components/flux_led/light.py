@@ -271,7 +271,10 @@ class FluxLight(Light):
 
     def _turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
-        self._bulb.turnOn()
+        if not self.is_on:
+            self._bulb.turnOn()
+            if kwargs.get(ATTR_BRIGHTNESS) is None:
+                return
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -294,7 +297,6 @@ class FluxLight(Light):
                               random.randint(0, 255),
                               random.randint(0, 255))
             return
-
         if effect == EFFECT_CUSTOM:
             if self._custom_effect:
                 self._bulb.setCustomPattern(
