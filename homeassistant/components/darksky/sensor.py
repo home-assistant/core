@@ -157,10 +157,11 @@ CONDITION_PICTURES = {
 
 # Language Supported Codes
 LANGUAGE_CODES = [
-    'ar', 'az', 'be', 'bg', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
-    'et', 'fi', 'fr', 'he', 'hr', 'hu', 'id', 'is', 'it', 'ja', 'ka', 'ko',
-    'kw', 'lv', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv',
-    'tet', 'tr', 'uk', 'x-pig-latin', 'zh', 'zh-tw',
+    'ar', 'az', 'be', 'bg', 'bn', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en',
+    'ja', 'ka', 'kn', 'ko', 'eo', 'es', 'et', 'fi', 'fr', 'he', 'hi', 'hr',
+    'hu', 'id', 'is', 'it', 'kw', 'lv', 'ml', 'mr', 'nb', 'nl', 'pa', 'pl',
+    'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv', 'ta', 'te', 'tet', 'tr', 'uk',
+    'ur', 'x-pig-latin', 'zh', 'zh-tw',
 ]
 
 ALLOWED_UNITS = ['auto', 'si', 'us', 'ca', 'uk', 'uk2']
