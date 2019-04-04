@@ -82,7 +82,7 @@ class UnifiVideoCamera(Camera):
         self._connect_addr = None
         self._camera = None
         self._caminfo = None
-        self._rtspUri = None
+        self._rtsp_uri = None
         self._motion_status = False
 
     async def async_added_to_hass(self):
@@ -107,14 +107,14 @@ class UnifiVideoCamera(Camera):
     @property
     def supported_features(self):
         """Return supported features."""
-        if self._rtspUri:
+        if self._rtsp_uri:
             return SUPPORT_STREAM
         return 0
 
     @property
     def stream_source(self):
         """Return the stream source."""
-        return self._rtspUri
+        return self._rtsp_uri
 
     @property
     def brand(self):
@@ -132,7 +132,7 @@ class UnifiVideoCamera(Camera):
         for channel in self._caminfo['channels']:
             if channel['isRtspEnabled']:
                 stream = channel['rtspUris'][0].split(':')[2]
-                self._rtspUri = 'rtsp://{}:{}'.format(
+                self._rtsp_uri = 'rtsp://{}:{}'.format(
                     self._caminfo['controllerHostAddress'],
                     stream)
                 break
