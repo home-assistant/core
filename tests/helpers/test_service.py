@@ -3,7 +3,7 @@ import asyncio
 from collections import OrderedDict
 from copy import deepcopy
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import voluptuous as vol
 import pytest
@@ -18,8 +18,8 @@ from homeassistant.auth.permissions import PolicyPermissions
 from homeassistant.helpers import (
     service, template, device_registry as dev_reg, entity_registry as ent_reg)
 from tests.common import (
-    get_test_home_assistant, mock_service, mock_coro, mock_registry,
-    mock_device_registry)
+    MockConfigEntry, MockModule, get_test_home_assistant, mock_service,
+    mock_coro, mock_registry, mock_device_registry)
 
 
 @pytest.fixture
@@ -463,11 +463,29 @@ async def test_register_admin_service(hass, hass_read_only_user,
     assert calls[0].context.user_id == hass_admin_user.id
 
 
-async def test_service_unknown_user(hass):
-    """Test the correct exception is raised with an unknown user."""
+async def test_verify_domain_control(
+        hass, hass_admin_user, hass_read_only_user):
+    """Test domain verification in a service call."""
+    config_entry = MockConfigEntry(domain='test_domain', title='Test Domain')
+    config_entry.add_to_hass(hass)
+
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_migrate_entry = MagicMock(return_value=mock_coro(True))
+    loader.set_component(
+        hass, 'test_domain',
+        MockModule(
+            'test_domain',
+            async_setup_entry=mock_setup_entry,
+            async_migrate_entry=mock_migrate_entry))
+
+    assert await async_setup_component(hass, 'test_domain')
+    await hass.async_block_till_done()
+
+    calls = []
+
     def protected_service(call):
         """Define a protected service."""
-        pass
+        calls.append(call)
 
     _protected_service = service.verify_domain_control(hass, 'test_domain')(
         protected_service)
@@ -475,6 +493,7 @@ async def test_service_unknown_user(hass):
     hass.services.async_register(
         'test_domain', 'test_service', _protected_service, schema=None)
 
+    # Test an unknown user:
     with pytest.raises(exceptions.UnknownUser):
         await hass.services.async_call(
             'test_domain',
@@ -482,22 +501,26 @@ async def test_service_unknown_user(hass):
             blocking=True,
             context=ha.Context(user_id='fake_user_id'))
 
-
-async def test_service_unauthorized_user(hass, hass_read_only_user):
-    """Test the correct exception is raised with an unauthorized user."""
-    def protected_service(call):
-        """Define a protected service."""
-        pass
-
-    _protected_service = service.verify_domain_control(hass, 'test_domain')(
-        protected_service)
-
-    hass.services.async_register(
-        'test_domain', 'test_service', _protected_service, schema=None)
-
+    # Test an unauthorized user:
     with pytest.raises(exceptions.Unauthorized):
         await hass.services.async_call(
             'test_domain',
             'test_service', {},
             blocking=True,
             context=ha.Context(user_id=hass_read_only_user.id))
+
+    # Test an admin user:
+    await hass.services.async_call(
+        'test_domain',
+        'test_service', {},
+        blocking=True,
+        context=ha.Context(user_id=hass_admin_user.id))
+
+    # Test no passed user (i.e., via an automation):
+    await hass.services.async_call(
+        'test_domain',
+        'test_service', {},
+        blocking=True,
+        context=ha.Context(user_id=None))
+
+    assert len(calls) == 2

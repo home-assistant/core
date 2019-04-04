@@ -20,7 +20,7 @@ from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from .typing import HomeAssistantType
 if TYPE_CHECKING:
-    from homeassistant.core import Service, ServiceCall  # noqa
+    from homeassistant.core import ServiceCall  # noqa
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
@@ -369,14 +369,14 @@ def async_register_admin_service(
 @bind_hass
 def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
     """Ensure permission to access any entity under domain in service call."""
-    def decorator(service: 'Service') -> Callable:
+    def decorator(service: Callable) -> Callable:
         """Decorate."""
         @wraps(service)
         async def check_permissions(
                 call: 'ServiceCall') -> Any:
             """Check user permission and raise before call if unauthorized."""
             if not call.context.user_id:
-                return await service(call)
+                return await hass.async_add_job(service, call)
 
             user = await hass.auth.async_get_user(call.context.user_id)
             if user is None:
@@ -391,7 +391,7 @@ def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
 
             for entity_id in entities:
                 if user.permissions.check_entity(entity_id, POLICY_CONTROL):
-                    return await service(call)
+                    return await hass.async_add_job(service, call)
 
             raise Unauthorized(
                 context=call.context,

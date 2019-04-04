@@ -7,7 +7,7 @@ from homeassistant.core import Context
 from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def setup_platform(hass, config_entry):
