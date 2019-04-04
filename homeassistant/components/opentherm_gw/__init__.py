@@ -74,6 +74,10 @@ async def async_setup(hass, config):
 async def register_services(hass):
     """Register services for the component."""
     import pyotgw.vars as gw_vars
+    service_reset_schema = vol.Schema({
+        vol.Required(ATTR_GW_ID): vol.All(
+            cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])),
+    })
     service_set_clock_schema = vol.Schema({
         vol.Required(ATTR_GW_ID): vol.All(
             cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])),
@@ -136,7 +140,8 @@ async def register_services(hass):
         status = await gw.gateway.set_mode(mode_rst)
         gw.status = status
         async_dispatcher_send(hass, gw.update_signal, gw.status)
-    hass.services.async_register(DOMAIN, SERVICE_RESET_GATEWAY, reset_gateway)
+    hass.services.async_register(DOMAIN, SERVICE_RESET_GATEWAY, reset_gateway,
+                                 service_reset_schema)
 
     async def set_control_setpoint(call):
         """Set the control setpoint on the OpenTherm Gateway."""

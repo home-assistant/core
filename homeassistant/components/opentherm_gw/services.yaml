@@ -2,6 +2,10 @@
 
 reset_gateway:
   description: Reset the OpenTherm Gateway.
+  fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
 
 set_clock:
   description: Set the clock and day of the week on the connected thermostat.
