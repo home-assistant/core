@@ -237,9 +237,6 @@ blockchain==1.4.4
 
 # homeassistant.components.route53
 # homeassistant.components.amazon_polly.tts
-# homeassistant.components.aws_lambda.notify
-# homeassistant.components.aws_sns.notify
-# homeassistant.components.aws_sqs.notify
 boto3==1.9.16
 
 # homeassistant.components.braviatv.media_player
