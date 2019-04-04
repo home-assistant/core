@@ -1,0 +1,10 @@
+{
+  "domain": "gtfs",
+  "name": "Gtfs",
+  "documentation": "https://www.home-assistant.io/components/gtfs",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "ritassist",
+  "name": "Ritassist",
+  "documentation": "https://www.home-assistant.io/components/ritassist",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

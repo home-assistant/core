@@ -1,0 +1,10 @@
+{
+  "domain": "tile",
+  "name": "Tile",
+  "documentation": "https://www.home-assistant.io/components/tile",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

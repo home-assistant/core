@@ -1,0 +1,8 @@
+{
+  "domain": "eddystone_temperature",
+  "name": "Eddystone_temperature",
+  "documentation": "https://www.home-assistant.io/components/eddystone_temperature",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

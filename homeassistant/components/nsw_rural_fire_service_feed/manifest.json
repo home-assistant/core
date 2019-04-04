@@ -1,0 +1,8 @@
+{
+  "domain": "nsw_rural_fire_service_feed",
+  "name": "Nsw_rural_fire_service_feed",
+  "documentation": "https://www.home-assistant.io/components/nsw_rural_fire_service_feed",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

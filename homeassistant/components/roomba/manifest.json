@@ -1,0 +1,10 @@
+{
+  "domain": "roomba",
+  "name": "Roomba",
+  "documentation": "https://www.home-assistant.io/components/roomba",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@pschmitt"
+  ]
+}

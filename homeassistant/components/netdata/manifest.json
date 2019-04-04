@@ -1,0 +1,10 @@
+{
+  "domain": "netdata",
+  "name": "Netdata",
+  "documentation": "https://www.home-assistant.io/components/netdata",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

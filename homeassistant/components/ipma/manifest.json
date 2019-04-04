@@ -1,0 +1,10 @@
+{
+  "domain": "ipma",
+  "name": "Ipma",
+  "documentation": "https://www.home-assistant.io/components/ipma",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@dgomes"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "dlink",
+  "name": "Dlink",
+  "documentation": "https://www.home-assistant.io/components/dlink",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

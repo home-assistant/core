@@ -1,0 +1,8 @@
+{
+  "domain": "fedex",
+  "name": "Fedex",
+  "documentation": "https://www.home-assistant.io/components/fedex",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

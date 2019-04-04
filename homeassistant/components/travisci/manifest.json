@@ -1,0 +1,8 @@
+{
+  "domain": "travisci",
+  "name": "Travisci",
+  "documentation": "https://www.home-assistant.io/components/travisci",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

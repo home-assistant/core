@@ -1,0 +1,8 @@
+{
+  "domain": "trackr",
+  "name": "Trackr",
+  "documentation": "https://www.home-assistant.io/components/trackr",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "webostv",
+  "name": "Webostv",
+  "documentation": "https://www.home-assistant.io/components/webostv",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

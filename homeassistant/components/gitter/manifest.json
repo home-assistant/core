@@ -1,0 +1,10 @@
+{
+  "domain": "gitter",
+  "name": "Gitter",
+  "documentation": "https://www.home-assistant.io/components/gitter",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

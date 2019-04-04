@@ -1,0 +1,8 @@
+{
+  "domain": "venstar",
+  "name": "Venstar",
+  "documentation": "https://www.home-assistant.io/components/venstar",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

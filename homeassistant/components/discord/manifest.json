@@ -1,0 +1,8 @@
+{
+  "domain": "discord",
+  "name": "Discord",
+  "documentation": "https://www.home-assistant.io/components/discord",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

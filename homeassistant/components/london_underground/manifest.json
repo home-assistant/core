@@ -1,0 +1,8 @@
+{
+  "domain": "london_underground",
+  "name": "London_underground",
+  "documentation": "https://www.home-assistant.io/components/london_underground",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

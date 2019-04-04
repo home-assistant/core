@@ -1,0 +1,8 @@
+{
+  "domain": "mvglive",
+  "name": "Mvglive",
+  "documentation": "https://www.home-assistant.io/components/mvglive",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

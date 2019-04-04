@@ -1,0 +1,8 @@
+{
+  "domain": "flic",
+  "name": "Flic",
+  "documentation": "https://www.home-assistant.io/components/flic",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

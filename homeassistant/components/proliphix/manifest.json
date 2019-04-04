@@ -1,0 +1,8 @@
+{
+  "domain": "proliphix",
+  "name": "Proliphix",
+  "documentation": "https://www.home-assistant.io/components/proliphix",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

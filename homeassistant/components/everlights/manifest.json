@@ -1,0 +1,8 @@
+{
+  "domain": "everlights",
+  "name": "Everlights",
+  "documentation": "https://www.home-assistant.io/components/everlights",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

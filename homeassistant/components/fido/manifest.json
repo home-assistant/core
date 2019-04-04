@@ -1,0 +1,8 @@
+{
+  "domain": "fido",
+  "name": "Fido",
+  "documentation": "https://www.home-assistant.io/components/fido",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

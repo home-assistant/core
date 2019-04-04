@@ -1,0 +1,10 @@
+{
+  "domain": "mailgun",
+  "name": "Mailgun",
+  "documentation": "https://www.home-assistant.io/components/mailgun",
+  "requirements": [],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": []
+}

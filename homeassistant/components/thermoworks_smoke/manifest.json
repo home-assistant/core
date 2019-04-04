@@ -1,0 +1,8 @@
+{
+  "domain": "thermoworks_smoke",
+  "name": "Thermoworks_smoke",
+  "documentation": "https://www.home-assistant.io/components/thermoworks_smoke",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

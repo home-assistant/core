@@ -1,0 +1,8 @@
+{
+  "domain": "bme280",
+  "name": "Bme280",
+  "documentation": "https://www.home-assistant.io/components/bme280",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

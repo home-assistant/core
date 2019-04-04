@@ -1,0 +1,10 @@
+{
+  "domain": "shodan",
+  "name": "Shodan",
+  "documentation": "https://www.home-assistant.io/components/shodan",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

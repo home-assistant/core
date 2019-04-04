@@ -1,0 +1,8 @@
+{
+  "domain": "dht",
+  "name": "Dht",
+  "documentation": "https://www.home-assistant.io/components/dht",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

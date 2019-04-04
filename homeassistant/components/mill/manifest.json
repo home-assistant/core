@@ -1,0 +1,10 @@
+{
+  "domain": "mill",
+  "name": "Mill",
+  "documentation": "https://www.home-assistant.io/components/mill",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@danielhiversen"
+  ]
+}

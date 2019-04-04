@@ -1,0 +1,8 @@
+{
+  "domain": "nilu",
+  "name": "Nilu",
+  "documentation": "https://www.home-assistant.io/components/nilu",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

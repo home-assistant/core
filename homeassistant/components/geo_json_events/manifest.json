@@ -1,0 +1,8 @@
+{
+  "domain": "geo_json_events",
+  "name": "Geo_json_events",
+  "documentation": "https://www.home-assistant.io/components/geo_json_events",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

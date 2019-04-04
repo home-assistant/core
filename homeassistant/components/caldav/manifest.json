@@ -1,0 +1,8 @@
+{
+  "domain": "caldav",
+  "name": "Caldav",
+  "documentation": "https://www.home-assistant.io/components/caldav",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

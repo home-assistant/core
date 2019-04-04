@@ -1,0 +1,10 @@
+{
+  "domain": "mediaroom",
+  "name": "Mediaroom",
+  "documentation": "https://www.home-assistant.io/components/mediaroom",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@dgomes"
+  ]
+}

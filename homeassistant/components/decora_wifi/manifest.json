@@ -1,0 +1,8 @@
+{
+  "domain": "decora_wifi",
+  "name": "Decora_wifi",
+  "documentation": "https://www.home-assistant.io/components/decora_wifi",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

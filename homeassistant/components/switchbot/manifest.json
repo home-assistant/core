@@ -1,0 +1,10 @@
+{
+  "domain": "switchbot",
+  "name": "Switchbot",
+  "documentation": "https://www.home-assistant.io/components/switchbot",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@danielhiversen"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "htu21d",
+  "name": "Htu21d",
+  "documentation": "https://www.home-assistant.io/components/htu21d",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

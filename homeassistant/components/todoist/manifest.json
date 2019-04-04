@@ -1,0 +1,8 @@
+{
+  "domain": "todoist",
+  "name": "Todoist",
+  "documentation": "https://www.home-assistant.io/components/todoist",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

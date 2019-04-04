@@ -1,0 +1,10 @@
+{
+  "domain": "alpha_vantage",
+  "name": "Alpha_vantage",
+  "documentation": "https://www.home-assistant.io/components/alpha_vantage",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

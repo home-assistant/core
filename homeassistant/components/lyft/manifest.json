@@ -1,0 +1,8 @@
+{
+  "domain": "lyft",
+  "name": "Lyft",
+  "documentation": "https://www.home-assistant.io/components/lyft",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

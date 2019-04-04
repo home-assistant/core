@@ -1,0 +1,8 @@
+{
+  "domain": "touchline",
+  "name": "Touchline",
+  "documentation": "https://www.home-assistant.io/components/touchline",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "automatic",
+  "name": "Automatic",
+  "documentation": "https://www.home-assistant.io/components/automatic",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@armills"
+  ]
+}

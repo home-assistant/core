@@ -1,0 +1,8 @@
+{
+  "domain": "nederlandse_spoorwegen",
+  "name": "Nederlandse_spoorwegen",
+  "documentation": "https://www.home-assistant.io/components/nederlandse_spoorwegen",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "honeywell",
+  "name": "Honeywell",
+  "documentation": "https://www.home-assistant.io/components/honeywell",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

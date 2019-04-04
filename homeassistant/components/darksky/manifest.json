@@ -1,0 +1,10 @@
+{
+  "domain": "darksky",
+  "name": "Darksky",
+  "documentation": "https://www.home-assistant.io/components/darksky",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

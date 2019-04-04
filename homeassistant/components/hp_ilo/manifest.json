@@ -1,0 +1,8 @@
+{
+  "domain": "hp_ilo",
+  "name": "Hp_ilo",
+  "documentation": "https://www.home-assistant.io/components/hp_ilo",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

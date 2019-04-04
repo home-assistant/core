@@ -1,0 +1,8 @@
+{
+  "domain": "cmus",
+  "name": "Cmus",
+  "documentation": "https://www.home-assistant.io/components/cmus",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

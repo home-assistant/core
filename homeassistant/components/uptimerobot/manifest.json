@@ -1,0 +1,10 @@
+{
+  "domain": "uptimerobot",
+  "name": "Uptimerobot",
+  "documentation": "https://www.home-assistant.io/components/uptimerobot",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@ludeeus"
+  ]
+}

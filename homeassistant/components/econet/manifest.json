@@ -1,0 +1,8 @@
+{
+  "domain": "econet",
+  "name": "Econet",
+  "documentation": "https://www.home-assistant.io/components/econet",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

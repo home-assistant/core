@@ -1,0 +1,8 @@
+{
+  "domain": "yr",
+  "name": "Yr",
+  "documentation": "https://www.home-assistant.io/components/yr",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

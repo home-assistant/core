@@ -1,0 +1,8 @@
+{
+  "domain": "alarmdotcom",
+  "name": "Alarmdotcom",
+  "documentation": "https://www.home-assistant.io/components/alarmdotcom",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

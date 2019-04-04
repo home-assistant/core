@@ -1,0 +1,10 @@
+{
+  "domain": "ruter",
+  "name": "Ruter",
+  "documentation": "https://www.home-assistant.io/components/ruter",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@ludeeus"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "baidu",
+  "name": "Baidu",
+  "documentation": "https://www.home-assistant.io/components/baidu",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "systemmonitor",
+  "name": "Systemmonitor",
+  "documentation": "https://www.home-assistant.io/components/systemmonitor",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "nmap_tracker",
+  "name": "Nmap_tracker",
+  "documentation": "https://www.home-assistant.io/components/nmap_tracker",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

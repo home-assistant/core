@@ -1,0 +1,8 @@
+{
+  "domain": "epson",
+  "name": "Epson",
+  "documentation": "https://www.home-assistant.io/components/epson",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "opencv",
+  "name": "Opencv",
+  "documentation": "https://www.home-assistant.io/components/opencv",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,12 @@
+{
+  "domain": "device_sun_light_trigger",
+  "name": "Device_sun_light_trigger",
+  "documentation": "https://www.home-assistant.io/components/device_sun_light_trigger",
+  "requirements": [],
+  "dependencies": [
+    "light",
+    "device_tracker",
+    "group"
+  ],
+  "codeowners": []
+}

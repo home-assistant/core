@@ -1,0 +1,8 @@
+{
+  "domain": "frontier_silicon",
+  "name": "Frontier_silicon",
+  "documentation": "https://www.home-assistant.io/components/frontier_silicon",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

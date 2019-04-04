@@ -1,0 +1,8 @@
+{
+  "domain": "osramlightify",
+  "name": "Osramlightify",
+  "documentation": "https://www.home-assistant.io/components/osramlightify",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

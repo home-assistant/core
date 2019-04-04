@@ -1,0 +1,8 @@
+{
+  "domain": "lacrosse",
+  "name": "Lacrosse",
+  "documentation": "https://www.home-assistant.io/components/lacrosse",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

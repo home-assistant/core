@@ -1,0 +1,10 @@
+{
+  "domain": "sql",
+  "name": "Sql",
+  "documentation": "https://www.home-assistant.io/components/sql",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@dgomes"
+  ]
+}

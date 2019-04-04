@@ -1,0 +1,8 @@
+{
+  "domain": "flux_led",
+  "name": "Flux_led",
+  "documentation": "https://www.home-assistant.io/components/flux_led",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

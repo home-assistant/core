@@ -1,0 +1,10 @@
+{
+  "domain": "glances",
+  "name": "Glances",
+  "documentation": "https://www.home-assistant.io/components/glances",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

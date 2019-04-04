@@ -1,0 +1,11 @@
+{
+  "domain": "proximity",
+  "name": "Proximity",
+  "documentation": "https://www.home-assistant.io/components/proximity",
+  "requirements": [],
+  "dependencies": [
+    "zone",
+    "device_tracker"
+  ],
+  "codeowners": []
+}

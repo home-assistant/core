@@ -1,0 +1,8 @@
+{
+  "domain": "temper",
+  "name": "Temper",
+  "documentation": "https://www.home-assistant.io/components/temper",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "qbittorrent",
+  "name": "Qbittorrent",
+  "documentation": "https://www.home-assistant.io/components/qbittorrent",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

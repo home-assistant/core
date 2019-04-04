@@ -1,0 +1,8 @@
+{
+  "domain": "blackbird",
+  "name": "Blackbird",
+  "documentation": "https://www.home-assistant.io/components/blackbird",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

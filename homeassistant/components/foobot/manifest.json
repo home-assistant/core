@@ -1,0 +1,8 @@
+{
+  "domain": "foobot",
+  "name": "Foobot",
+  "documentation": "https://www.home-assistant.io/components/foobot",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

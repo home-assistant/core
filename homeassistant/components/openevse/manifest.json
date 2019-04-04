@@ -1,0 +1,8 @@
+{
+  "domain": "openevse",
+  "name": "Openevse",
+  "documentation": "https://www.home-assistant.io/components/openevse",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

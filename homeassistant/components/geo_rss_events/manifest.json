@@ -1,0 +1,8 @@
+{
+  "domain": "geo_rss_events",
+  "name": "Geo_rss_events",
+  "documentation": "https://www.home-assistant.io/components/geo_rss_events",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "gntp",
+  "name": "Gntp",
+  "documentation": "https://www.home-assistant.io/components/gntp",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

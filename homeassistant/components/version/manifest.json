@@ -1,0 +1,10 @@
+{
+  "domain": "version",
+  "name": "Version",
+  "documentation": "https://www.home-assistant.io/components/version",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

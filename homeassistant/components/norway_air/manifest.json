@@ -1,0 +1,8 @@
+{
+  "domain": "norway_air",
+  "name": "Norway_air",
+  "documentation": "https://www.home-assistant.io/components/norway_air",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

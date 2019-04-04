@@ -1,0 +1,8 @@
+{
+  "domain": "vasttrafik",
+  "name": "Vasttrafik",
+  "documentation": "https://www.home-assistant.io/components/vasttrafik",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "tfiac",
+  "name": "Tfiac",
+  "documentation": "https://www.home-assistant.io/components/tfiac",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fredrike",
+    "@mellado"
+  ]
+}

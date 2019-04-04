@@ -1,0 +1,8 @@
+{
+  "domain": "volkszaehler",
+  "name": "Volkszaehler",
+  "documentation": "https://www.home-assistant.io/components/volkszaehler",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

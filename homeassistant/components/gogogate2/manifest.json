@@ -1,0 +1,8 @@
+{
+  "domain": "gogogate2",
+  "name": "Gogogate2",
+  "documentation": "https://www.home-assistant.io/components/gogogate2",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "vlc",
+  "name": "Vlc",
+  "documentation": "https://www.home-assistant.io/components/vlc",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

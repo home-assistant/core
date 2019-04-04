@@ -1,0 +1,12 @@
+{
+  "domain": "api",
+  "name": "Api",
+  "documentation": "https://www.home-assistant.io/components/api",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

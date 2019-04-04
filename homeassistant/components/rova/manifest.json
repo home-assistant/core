@@ -1,0 +1,8 @@
+{
+  "domain": "rova",
+  "name": "Rova",
+  "documentation": "https://www.home-assistant.io/components/rova",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

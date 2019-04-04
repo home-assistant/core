@@ -1,0 +1,8 @@
+{
+  "domain": "upc_connect",
+  "name": "Upc_connect",
+  "documentation": "https://www.home-assistant.io/components/upc_connect",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

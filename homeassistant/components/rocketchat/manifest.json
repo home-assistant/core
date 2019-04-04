@@ -1,0 +1,8 @@
+{
+  "domain": "rocketchat",
+  "name": "Rocketchat",
+  "documentation": "https://www.home-assistant.io/components/rocketchat",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "waqi",
+  "name": "Waqi",
+  "documentation": "https://www.home-assistant.io/components/waqi",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@andrey-git"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "zestimate",
+  "name": "Zestimate",
+  "documentation": "https://www.home-assistant.io/components/zestimate",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

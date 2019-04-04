@@ -1,0 +1,10 @@
+{
+  "domain": "hikvision",
+  "name": "Hikvision",
+  "documentation": "https://www.home-assistant.io/components/hikvision",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@mezz64"
+  ]
+}

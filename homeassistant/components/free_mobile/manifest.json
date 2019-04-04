@@ -1,0 +1,8 @@
+{
+  "domain": "free_mobile",
+  "name": "Free_mobile",
+  "documentation": "https://www.home-assistant.io/components/free_mobile",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

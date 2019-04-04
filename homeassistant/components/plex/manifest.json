@@ -1,0 +1,8 @@
+{
+  "domain": "plex",
+  "name": "Plex",
+  "documentation": "https://www.home-assistant.io/components/plex",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

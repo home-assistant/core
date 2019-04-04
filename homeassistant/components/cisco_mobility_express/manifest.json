@@ -1,0 +1,8 @@
+{
+  "domain": "cisco_mobility_express",
+  "name": "Cisco_mobility_express",
+  "documentation": "https://www.home-assistant.io/components/cisco_mobility_express",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

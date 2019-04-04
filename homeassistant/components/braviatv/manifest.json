@@ -1,0 +1,10 @@
+{
+  "domain": "braviatv",
+  "name": "Braviatv",
+  "documentation": "https://www.home-assistant.io/components/braviatv",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

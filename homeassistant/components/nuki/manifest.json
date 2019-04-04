@@ -1,0 +1,10 @@
+{
+  "domain": "nuki",
+  "name": "Nuki",
+  "documentation": "https://www.home-assistant.io/components/nuki",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@pschmitt"
+  ]
+}

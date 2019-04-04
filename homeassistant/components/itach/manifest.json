@@ -1,0 +1,8 @@
+{
+  "domain": "itach",
+  "name": "Itach",
+  "documentation": "https://www.home-assistant.io/components/itach",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

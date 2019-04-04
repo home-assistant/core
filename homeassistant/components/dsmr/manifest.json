@@ -1,0 +1,8 @@
+{
+  "domain": "dsmr",
+  "name": "Dsmr",
+  "documentation": "https://www.home-assistant.io/components/dsmr",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

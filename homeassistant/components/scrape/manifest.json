@@ -1,0 +1,10 @@
+{
+  "domain": "scrape",
+  "name": "Scrape",
+  "documentation": "https://www.home-assistant.io/components/scrape",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "kwb",
+  "name": "Kwb",
+  "documentation": "https://www.home-assistant.io/components/kwb",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

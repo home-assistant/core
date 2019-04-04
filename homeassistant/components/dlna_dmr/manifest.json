@@ -1,0 +1,8 @@
+{
+  "domain": "dlna_dmr",
+  "name": "Dlna_dmr",
+  "documentation": "https://www.home-assistant.io/components/dlna_dmr",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

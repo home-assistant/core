@@ -1,0 +1,8 @@
+{
+  "domain": "github",
+  "name": "Github",
+  "documentation": "https://www.home-assistant.io/components/github",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

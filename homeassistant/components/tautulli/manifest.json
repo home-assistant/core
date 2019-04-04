@@ -1,0 +1,10 @@
+{
+  "domain": "tautulli",
+  "name": "Tautulli",
+  "documentation": "https://www.home-assistant.io/components/tautulli",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@ludeeus"
+  ]
+}

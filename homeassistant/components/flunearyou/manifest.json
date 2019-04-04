@@ -1,0 +1,10 @@
+{
+  "domain": "flunearyou",
+  "name": "Flunearyou",
+  "documentation": "https://www.home-assistant.io/components/flunearyou",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "eq3btsmart",
+  "name": "Eq3btsmart",
+  "documentation": "https://www.home-assistant.io/components/eq3btsmart",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@rytilahti"
+  ]
+}

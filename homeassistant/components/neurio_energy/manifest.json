@@ -1,0 +1,8 @@
+{
+  "domain": "neurio_energy",
+  "name": "Neurio_energy",
+  "documentation": "https://www.home-assistant.io/components/neurio_energy",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

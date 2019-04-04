@@ -1,0 +1,8 @@
+{
+  "domain": "tof",
+  "name": "Tof",
+  "documentation": "https://www.home-assistant.io/components/tof",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

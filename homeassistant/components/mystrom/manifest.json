@@ -1,0 +1,10 @@
+{
+  "domain": "mystrom",
+  "name": "Mystrom",
+  "documentation": "https://www.home-assistant.io/components/mystrom",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

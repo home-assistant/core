@@ -1,0 +1,8 @@
+{
+  "domain": "flexit",
+  "name": "Flexit",
+  "documentation": "https://www.home-assistant.io/components/flexit",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

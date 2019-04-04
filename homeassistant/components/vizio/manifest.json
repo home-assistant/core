@@ -1,0 +1,8 @@
+{
+  "domain": "vizio",
+  "name": "Vizio",
+  "documentation": "https://www.home-assistant.io/components/vizio",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "simplepush",
+  "name": "Simplepush",
+  "documentation": "https://www.home-assistant.io/components/simplepush",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "proxy",
+  "name": "Proxy",
+  "documentation": "https://www.home-assistant.io/components/proxy",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

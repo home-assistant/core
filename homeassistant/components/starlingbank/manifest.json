@@ -1,0 +1,8 @@
+{
+  "domain": "starlingbank",
+  "name": "Starlingbank",
+  "documentation": "https://www.home-assistant.io/components/starlingbank",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

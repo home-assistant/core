@@ -1,0 +1,8 @@
+{
+  "domain": "buienradar",
+  "name": "Buienradar",
+  "documentation": "https://www.home-assistant.io/components/buienradar",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "mhz19",
+  "name": "Mhz19",
+  "documentation": "https://www.home-assistant.io/components/mhz19",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

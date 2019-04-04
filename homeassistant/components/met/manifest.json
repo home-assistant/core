@@ -1,0 +1,10 @@
+{
+  "domain": "met",
+  "name": "Met",
+  "documentation": "https://www.home-assistant.io/components/met",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@danielhiversen"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "rmvtransport",
+  "name": "Rmvtransport",
+  "documentation": "https://www.home-assistant.io/components/rmvtransport",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@cgtobi"
+  ]
+}

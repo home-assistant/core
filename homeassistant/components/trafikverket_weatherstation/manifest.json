@@ -1,0 +1,8 @@
+{
+  "domain": "trafikverket_weatherstation",
+  "name": "Trafikverket_weatherstation",
+  "documentation": "https://www.home-assistant.io/components/trafikverket_weatherstation",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

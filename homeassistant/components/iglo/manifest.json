@@ -1,0 +1,8 @@
+{
+  "domain": "iglo",
+  "name": "Iglo",
+  "documentation": "https://www.home-assistant.io/components/iglo",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

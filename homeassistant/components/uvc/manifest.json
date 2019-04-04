@@ -1,0 +1,8 @@
+{
+  "domain": "uvc",
+  "name": "Uvc",
+  "documentation": "https://www.home-assistant.io/components/uvc",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

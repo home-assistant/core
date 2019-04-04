@@ -1,0 +1,8 @@
+{
+  "domain": "anel_pwrctrl",
+  "name": "Anel_pwrctrl",
+  "documentation": "https://www.home-assistant.io/components/anel_pwrctrl",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

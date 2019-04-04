@@ -1,0 +1,8 @@
+{
+  "domain": "rejseplanen",
+  "name": "Rejseplanen",
+  "documentation": "https://www.home-assistant.io/components/rejseplanen",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

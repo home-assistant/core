@@ -1,0 +1,10 @@
+{
+  "domain": "harmony",
+  "name": "Harmony",
+  "documentation": "https://www.home-assistant.io/components/harmony",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@ehendrix23"
+  ]
+}

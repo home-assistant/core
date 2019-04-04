@@ -1,0 +1,8 @@
+{
+  "domain": "synology",
+  "name": "Synology",
+  "documentation": "https://www.home-assistant.io/components/synology",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

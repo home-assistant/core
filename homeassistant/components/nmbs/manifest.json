@@ -1,0 +1,10 @@
+{
+  "domain": "nmbs",
+  "name": "Nmbs",
+  "documentation": "https://www.home-assistant.io/components/nmbs",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@thibmaek"
+  ]
+}

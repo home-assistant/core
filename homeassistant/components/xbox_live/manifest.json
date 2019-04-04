@@ -1,0 +1,8 @@
+{
+  "domain": "xbox_live",
+  "name": "Xbox_live",
+  "documentation": "https://www.home-assistant.io/components/xbox_live",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

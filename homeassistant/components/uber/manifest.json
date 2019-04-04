@@ -1,0 +1,10 @@
+{
+  "domain": "uber",
+  "name": "Uber",
+  "documentation": "https://www.home-assistant.io/components/uber",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

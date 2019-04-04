@@ -1,0 +1,10 @@
+{
+  "domain": "cpuspeed",
+  "name": "Cpuspeed",
+  "documentation": "https://www.home-assistant.io/components/cpuspeed",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

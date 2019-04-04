@@ -1,0 +1,8 @@
+{
+  "domain": "sensehat",
+  "name": "Sensehat",
+  "documentation": "https://www.home-assistant.io/components/sensehat",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

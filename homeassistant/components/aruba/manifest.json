@@ -1,0 +1,8 @@
+{
+  "domain": "aruba",
+  "name": "Aruba",
+  "documentation": "https://www.home-assistant.io/components/aruba",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

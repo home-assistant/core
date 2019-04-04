@@ -1,0 +1,8 @@
+{
+  "domain": "linky",
+  "name": "Linky",
+  "documentation": "https://www.home-assistant.io/components/linky",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

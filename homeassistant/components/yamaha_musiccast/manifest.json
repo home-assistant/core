@@ -1,0 +1,10 @@
+{
+  "domain": "yamaha_musiccast",
+  "name": "Yamaha_musiccast",
+  "documentation": "https://www.home-assistant.io/components/yamaha_musiccast",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@jalmeroth"
+  ]
+}

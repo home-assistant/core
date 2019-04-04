@@ -1,0 +1,10 @@
+{
+  "domain": "ohmconnect",
+  "name": "Ohmconnect",
+  "documentation": "https://www.home-assistant.io/components/ohmconnect",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

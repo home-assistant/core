@@ -1,0 +1,8 @@
+{
+  "domain": "soundtouch",
+  "name": "Soundtouch",
+  "documentation": "https://www.home-assistant.io/components/soundtouch",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "openweathermap",
+  "name": "Openweathermap",
+  "documentation": "https://www.home-assistant.io/components/openweathermap",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

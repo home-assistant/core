@@ -1,0 +1,8 @@
+{
+  "domain": "lw12wifi",
+  "name": "Lw12wifi",
+  "documentation": "https://www.home-assistant.io/components/lw12wifi",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

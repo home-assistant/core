@@ -1,0 +1,10 @@
+{
+  "domain": "liveboxplaytv",
+  "name": "Liveboxplaytv",
+  "documentation": "https://www.home-assistant.io/components/liveboxplaytv",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@pschmitt"
+  ]
+}

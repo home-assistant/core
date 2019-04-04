@@ -1,0 +1,8 @@
+{
+  "domain": "luci",
+  "name": "Luci",
+  "documentation": "https://www.home-assistant.io/components/luci",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

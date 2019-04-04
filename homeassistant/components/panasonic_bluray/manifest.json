@@ -1,0 +1,8 @@
+{
+  "domain": "panasonic_bluray",
+  "name": "Panasonic_bluray",
+  "documentation": "https://www.home-assistant.io/components/panasonic_bluray",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

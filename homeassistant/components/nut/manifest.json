@@ -1,0 +1,8 @@
+{
+  "domain": "nut",
+  "name": "Nut",
+  "documentation": "https://www.home-assistant.io/components/nut",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "postnl",
+  "name": "Postnl",
+  "documentation": "https://www.home-assistant.io/components/postnl",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

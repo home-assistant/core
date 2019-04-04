@@ -1,0 +1,8 @@
+{
+  "domain": "futurenow",
+  "name": "Futurenow",
+  "documentation": "https://www.home-assistant.io/components/futurenow",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "concord232",
+  "name": "Concord232",
+  "documentation": "https://www.home-assistant.io/components/concord232",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

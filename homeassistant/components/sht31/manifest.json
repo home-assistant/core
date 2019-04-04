@@ -1,0 +1,8 @@
+{
+  "domain": "sht31",
+  "name": "Sht31",
+  "documentation": "https://www.home-assistant.io/components/sht31",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "yi",
+  "name": "Yi",
+  "documentation": "https://www.home-assistant.io/components/yi",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

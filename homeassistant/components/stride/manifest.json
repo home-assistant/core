@@ -1,0 +1,8 @@
+{
+  "domain": "stride",
+  "name": "Stride",
+  "documentation": "https://www.home-assistant.io/components/stride",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

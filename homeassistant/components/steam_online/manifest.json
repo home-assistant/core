@@ -1,0 +1,8 @@
+{
+  "domain": "steam_online",
+  "name": "Steam_online",
+  "documentation": "https://www.home-assistant.io/components/steam_online",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

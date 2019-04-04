@@ -1,0 +1,8 @@
+{
+  "domain": "acer_projector",
+  "name": "Acer_projector",
+  "documentation": "https://www.home-assistant.io/components/acer_projector",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

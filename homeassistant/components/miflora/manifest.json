@@ -1,0 +1,11 @@
+{
+  "domain": "miflora",
+  "name": "Miflora",
+  "documentation": "https://www.home-assistant.io/components/miflora",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@danielhiversen",
+    "@ChristianKuehnel"
+  ]
+}

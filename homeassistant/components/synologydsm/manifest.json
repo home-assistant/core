@@ -1,0 +1,8 @@
+{
+  "domain": "synologydsm",
+  "name": "Synologydsm",
+  "documentation": "https://www.home-assistant.io/components/synologydsm",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

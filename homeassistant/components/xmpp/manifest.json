@@ -1,0 +1,8 @@
+{
+  "domain": "xmpp",
+  "name": "Xmpp",
+  "documentation": "https://www.home-assistant.io/components/xmpp",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

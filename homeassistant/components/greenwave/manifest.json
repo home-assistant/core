@@ -1,0 +1,8 @@
+{
+  "domain": "greenwave",
+  "name": "Greenwave",
+  "documentation": "https://www.home-assistant.io/components/greenwave",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

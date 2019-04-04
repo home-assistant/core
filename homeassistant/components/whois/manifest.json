@@ -1,0 +1,8 @@
+{
+  "domain": "whois",
+  "name": "Whois",
+  "documentation": "https://www.home-assistant.io/components/whois",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

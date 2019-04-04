@@ -1,0 +1,8 @@
+{
+  "domain": "skybeacon",
+  "name": "Skybeacon",
+  "documentation": "https://www.home-assistant.io/components/skybeacon",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

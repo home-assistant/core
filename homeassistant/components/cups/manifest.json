@@ -1,0 +1,10 @@
+{
+  "domain": "cups",
+  "name": "Cups",
+  "documentation": "https://www.home-assistant.io/components/cups",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

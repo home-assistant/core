@@ -1,0 +1,8 @@
+{
+  "domain": "bbox",
+  "name": "Bbox",
+  "documentation": "https://www.home-assistant.io/components/bbox",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

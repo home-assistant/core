@@ -1,0 +1,8 @@
+{
+  "domain": "hunterdouglas_powerview",
+  "name": "Hunterdouglas_powerview",
+  "documentation": "https://www.home-assistant.io/components/hunterdouglas_powerview",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

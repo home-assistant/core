@@ -1,0 +1,8 @@
+{
+  "domain": "linksys_ap",
+  "name": "Linksys_ap",
+  "documentation": "https://www.home-assistant.io/components/linksys_ap",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

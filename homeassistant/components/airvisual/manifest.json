@@ -1,0 +1,10 @@
+{
+  "domain": "airvisual",
+  "name": "Airvisual",
+  "documentation": "https://www.home-assistant.io/components/airvisual",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

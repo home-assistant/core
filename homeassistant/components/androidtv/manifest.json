@@ -1,0 +1,8 @@
+{
+  "domain": "androidtv",
+  "name": "Androidtv",
+  "documentation": "https://www.home-assistant.io/components/androidtv",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

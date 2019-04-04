@@ -1,0 +1,10 @@
+{
+  "domain": "sma",
+  "name": "Sma",
+  "documentation": "https://www.home-assistant.io/components/sma",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@kellerza"
+  ]
+}

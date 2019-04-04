@@ -1,0 +1,8 @@
+{
+  "domain": "aws_lambda",
+  "name": "Aws_lambda",
+  "documentation": "https://www.home-assistant.io/components/aws_lambda",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

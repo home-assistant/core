@@ -1,0 +1,8 @@
+{
+  "domain": "twitter",
+  "name": "Twitter",
+  "documentation": "https://www.home-assistant.io/components/twitter",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "fints",
+  "name": "Fints",
+  "documentation": "https://www.home-assistant.io/components/fints",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

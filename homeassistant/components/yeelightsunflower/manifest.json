@@ -1,0 +1,10 @@
+{
+  "domain": "yeelightsunflower",
+  "name": "Yeelightsunflower",
+  "documentation": "https://www.home-assistant.io/components/yeelightsunflower",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@lindsaymarkward"
+  ]
+}

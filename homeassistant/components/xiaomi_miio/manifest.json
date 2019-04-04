@@ -1,0 +1,11 @@
+{
+  "domain": "xiaomi_miio",
+  "name": "Xiaomi_miio",
+  "documentation": "https://www.home-assistant.io/components/xiaomi_miio",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@rytilahti",
+    "@syssi"
+  ]
+}

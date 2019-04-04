@@ -1,0 +1,8 @@
+{
+  "domain": "ee_brightbox",
+  "name": "Ee_brightbox",
+  "documentation": "https://www.home-assistant.io/components/ee_brightbox",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

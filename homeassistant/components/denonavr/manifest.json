@@ -1,0 +1,8 @@
+{
+  "domain": "denonavr",
+  "name": "Denonavr",
+  "documentation": "https://www.home-assistant.io/components/denonavr",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "brunt",
+  "name": "Brunt",
+  "documentation": "https://www.home-assistant.io/components/brunt",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@eavanvalkenburg"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "qrcode",
+  "name": "Qrcode",
+  "documentation": "https://www.home-assistant.io/components/qrcode",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

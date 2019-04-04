@@ -1,0 +1,12 @@
+{
+  "domain": "esphome",
+  "name": "Esphome",
+  "documentation": "https://www.home-assistant.io/components/esphome",
+  "requirements": [
+    "aioesphomeapi==1.7.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@OttoWinter"
+  ]
+}

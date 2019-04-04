@@ -1,0 +1,8 @@
+{
+  "domain": "ups",
+  "name": "Ups",
+  "documentation": "https://www.home-assistant.io/components/ups",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

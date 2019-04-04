@@ -1,0 +1,8 @@
+{
+  "domain": "api_streams",
+  "name": "Api_streams",
+  "documentation": "https://www.home-assistant.io/components/api_streams",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

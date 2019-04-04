@@ -1,0 +1,8 @@
+{
+  "domain": "recollect_waste",
+  "name": "Recollect_waste",
+  "documentation": "https://www.home-assistant.io/components/recollect_waste",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

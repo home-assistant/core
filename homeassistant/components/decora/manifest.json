@@ -1,0 +1,8 @@
+{
+  "domain": "decora",
+  "name": "Decora",
+  "documentation": "https://www.home-assistant.io/components/decora",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

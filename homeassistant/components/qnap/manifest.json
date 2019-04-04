@@ -1,0 +1,10 @@
+{
+  "domain": "qnap",
+  "name": "Qnap",
+  "documentation": "https://www.home-assistant.io/components/qnap",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@colinodell"
+  ]
+}

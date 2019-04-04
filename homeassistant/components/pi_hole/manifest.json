@@ -1,0 +1,10 @@
+{
+  "domain": "pi_hole",
+  "name": "Pi_hole",
+  "documentation": "https://www.home-assistant.io/components/pi_hole",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

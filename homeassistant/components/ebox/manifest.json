@@ -1,0 +1,8 @@
+{
+  "domain": "ebox",
+  "name": "Ebox",
+  "documentation": "https://www.home-assistant.io/components/ebox",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

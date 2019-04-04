@@ -1,0 +1,8 @@
+{
+  "domain": "reddit",
+  "name": "Reddit",
+  "documentation": "https://www.home-assistant.io/components/reddit",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

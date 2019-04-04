@@ -1,0 +1,8 @@
+{
+  "domain": "oem",
+  "name": "Oem",
+  "documentation": "https://www.home-assistant.io/components/oem",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

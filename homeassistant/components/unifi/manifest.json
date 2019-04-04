@@ -1,0 +1,12 @@
+{
+  "domain": "unifi",
+  "name": "Unifi",
+  "documentation": "https://www.home-assistant.io/components/unifi",
+  "requirements": [
+    "aiounifi==4"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@kane610"
+  ]
+}

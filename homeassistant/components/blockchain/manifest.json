@@ -1,0 +1,8 @@
+{
+  "domain": "blockchain",
+  "name": "Blockchain",
+  "documentation": "https://www.home-assistant.io/components/blockchain",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

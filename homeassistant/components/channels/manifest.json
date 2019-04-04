@@ -1,0 +1,8 @@
+{
+  "domain": "channels",
+  "name": "Channels",
+  "documentation": "https://www.home-assistant.io/components/channels",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

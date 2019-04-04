@@ -1,0 +1,10 @@
+{
+  "domain": "pollen",
+  "name": "Pollen",
+  "documentation": "https://www.home-assistant.io/components/pollen",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

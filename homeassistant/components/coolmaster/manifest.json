@@ -1,0 +1,10 @@
+{
+  "domain": "coolmaster",
+  "name": "Coolmaster",
+  "documentation": "https://www.home-assistant.io/components/coolmaster",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@OnFreund"
+  ]
+}

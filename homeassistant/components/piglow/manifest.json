@@ -1,0 +1,8 @@
+{
+  "domain": "piglow",
+  "name": "Piglow",
+  "documentation": "https://www.home-assistant.io/components/piglow",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

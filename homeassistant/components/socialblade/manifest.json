@@ -1,0 +1,8 @@
+{
+  "domain": "socialblade",
+  "name": "Socialblade",
+  "documentation": "https://www.home-assistant.io/components/socialblade",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

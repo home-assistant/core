@@ -1,0 +1,8 @@
+{
+  "domain": "sochain",
+  "name": "Sochain",
+  "documentation": "https://www.home-assistant.io/components/sochain",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

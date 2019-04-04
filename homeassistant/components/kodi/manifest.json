@@ -1,0 +1,10 @@
+{
+  "domain": "kodi",
+  "name": "Kodi",
+  "documentation": "https://www.home-assistant.io/components/kodi",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@armills"
+  ]
+}

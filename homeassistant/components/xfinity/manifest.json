@@ -1,0 +1,10 @@
+{
+  "domain": "xfinity",
+  "name": "Xfinity",
+  "documentation": "https://www.home-assistant.io/components/xfinity",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@cisasteelersfan"
+  ]
+}

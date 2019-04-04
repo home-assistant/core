@@ -1,0 +1,10 @@
+{
+  "domain": "mpd",
+  "name": "Mpd",
+  "documentation": "https://www.home-assistant.io/components/mpd",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

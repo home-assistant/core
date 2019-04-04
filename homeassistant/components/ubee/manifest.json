@@ -1,0 +1,8 @@
+{
+  "domain": "ubee",
+  "name": "Ubee",
+  "documentation": "https://www.home-assistant.io/components/ubee",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

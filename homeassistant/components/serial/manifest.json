@@ -1,0 +1,10 @@
+{
+  "domain": "serial",
+  "name": "Serial",
+  "documentation": "https://www.home-assistant.io/components/serial",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

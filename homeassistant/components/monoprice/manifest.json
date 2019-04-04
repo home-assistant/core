@@ -1,0 +1,10 @@
+{
+  "domain": "monoprice",
+  "name": "Monoprice",
+  "documentation": "https://www.home-assistant.io/components/monoprice",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@etsinko"
+  ]
+}

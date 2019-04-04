@@ -1,0 +1,8 @@
+{
+  "domain": "envirophat",
+  "name": "Envirophat",
+  "documentation": "https://www.home-assistant.io/components/envirophat",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

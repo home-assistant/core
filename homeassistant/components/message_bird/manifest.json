@@ -1,0 +1,8 @@
+{
+  "domain": "message_bird",
+  "name": "Message_bird",
+  "documentation": "https://www.home-assistant.io/components/message_bird",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

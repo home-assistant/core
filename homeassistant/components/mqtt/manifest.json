@@ -1,0 +1,12 @@
+{
+  "domain": "mqtt",
+  "name": "Mqtt",
+  "documentation": "https://www.home-assistant.io/components/mqtt",
+  "requirements": [
+    "paho-mqtt==1.4.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

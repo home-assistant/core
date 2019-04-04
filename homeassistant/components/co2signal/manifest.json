@@ -1,0 +1,8 @@
+{
+  "domain": "co2signal",
+  "name": "Co2signal",
+  "documentation": "https://www.home-assistant.io/components/co2signal",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

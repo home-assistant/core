@@ -1,0 +1,8 @@
+{
+  "domain": "rpi_rf",
+  "name": "Rpi_rf",
+  "documentation": "https://www.home-assistant.io/components/rpi_rf",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

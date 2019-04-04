@@ -1,0 +1,10 @@
+{
+  "domain": "fixer",
+  "name": "Fixer",
+  "documentation": "https://www.home-assistant.io/components/fixer",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

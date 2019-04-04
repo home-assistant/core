@@ -1,0 +1,10 @@
+{
+  "domain": "xiaomi_tv",
+  "name": "Xiaomi_tv",
+  "documentation": "https://www.home-assistant.io/components/xiaomi_tv",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fattdev"
+  ]
+}

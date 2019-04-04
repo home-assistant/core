@@ -1,0 +1,8 @@
+{
+  "domain": "bh1750",
+  "name": "Bh1750",
+  "documentation": "https://www.home-assistant.io/components/bh1750",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "synology_srm",
+  "name": "Synology_srm",
+  "documentation": "https://www.home-assistant.io/components/synology_srm",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@aerialls"
+  ]
+}

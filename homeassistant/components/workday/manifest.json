@@ -1,0 +1,8 @@
+{
+  "domain": "workday",
+  "name": "Workday",
+  "documentation": "https://www.home-assistant.io/components/workday",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

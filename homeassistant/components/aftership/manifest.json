@@ -1,0 +1,8 @@
+{
+  "domain": "aftership",
+  "name": "Aftership",
+  "documentation": "https://www.home-assistant.io/components/aftership",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

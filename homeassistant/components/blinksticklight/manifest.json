@@ -1,0 +1,8 @@
+{
+  "domain": "blinksticklight",
+  "name": "Blinksticklight",
+  "documentation": "https://www.home-assistant.io/components/blinksticklight",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

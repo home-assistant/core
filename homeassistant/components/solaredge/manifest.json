@@ -1,0 +1,8 @@
+{
+  "domain": "solaredge",
+  "name": "Solaredge",
+  "documentation": "https://www.home-assistant.io/components/solaredge",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

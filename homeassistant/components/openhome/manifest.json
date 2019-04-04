@@ -1,0 +1,8 @@
+{
+  "domain": "openhome",
+  "name": "Openhome",
+  "documentation": "https://www.home-assistant.io/components/openhome",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
