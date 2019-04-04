@@ -7,8 +7,9 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.camera import Camera
-from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from . import DOMAIN as DOORBIRD_DOMAIN
 
 DEPENDENCIES = ['doorbird']
 

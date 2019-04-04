@@ -1,4 +1,6 @@
 """Support for locks through the SmartThings cloud API."""
+from typing import Optional, Sequence
+
 from homeassistant.components.lock import LockDevice
 
 from . import SmartThingsEntity
@@ -8,9 +10,12 @@ DEPENDENCIES = ['smartthings']
 
 ST_STATE_LOCKED = 'locked'
 ST_LOCK_ATTR_MAP = {
-    'method': 'method',
     'codeId': 'code_id',
+    'codeName': 'code_name',
+    'lockName': 'lock_name',
+    'method': 'method',
     'timeout': 'timeout',
+    'usedCode': 'used_code'
 }
 
 
@@ -25,13 +30,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
         [SmartThingsLock(device) for device in broker.devices.values()
-         if is_lock(device)])
+         if broker.any_assigned(device.device_id, 'lock')])
 
 
-def is_lock(device):
-    """Determine if the device supports the lock capability."""
+def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+    """Return all capabilities supported if minimum required are present."""
     from pysmartthings import Capability
-    return Capability.lock in device.capabilities
+
+    if Capability.lock in capabilities:
+        return [Capability.lock]
+    return None
 
 
 class SmartThingsLock(SmartThingsEntity, LockDevice):

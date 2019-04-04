@@ -6,7 +6,6 @@ from aiohttp import web
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import ATTR_BATTERY
-from homeassistant.components.device_tracker.tile import ATTR_ALTITUDE
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, \
     HTTP_OK, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
@@ -20,6 +19,7 @@ DEPENDENCIES = ['webhook']
 
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
+ATTR_ALTITUDE = 'altitude'
 ATTR_ACCURACY = 'accuracy'
 ATTR_ACTIVITY = 'activity'
 ATTR_DEVICE = 'device'
@@ -103,6 +103,11 @@ async def async_unload_entry(hass, entry):
 
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
+
+
+# pylint: disable=invalid-name
+async_remove_entry = config_entry_flow.webhook_async_remove_entry
+
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,

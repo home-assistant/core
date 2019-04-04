@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "Error al obtener las credenciales.",
+            "devices_configured": "Todos los dispositivos encontrados ya est\u00e1n configurados.",
+            "no_devices_found": "No se encontraron dispositivos PlayStation 4 en la red.",
+            "port_987_bind_error": "No se pudo enlazar al puerto 987.",
+            "port_997_bind_error": "No se pudo enlazar al puerto 997."
+        },
+        "error": {
+            "login_failed": "No se ha podido emparejar con PlayStation 4. Verifique que el PIN sea correcto.",
+            "not_ready": "PlayStation 4 no est\u00e1 encendida o conectada a la red."
+        },
+        "step": {
+            "creds": {
+                "description": "Credenciales necesarias. Presione 'Enviar' y luego en la aplicaci\u00f3n de la segunda pantalla de PS4, actualice los dispositivos y seleccione el dispositivo 'Home-Assistant' para continuar.",
+                "title": "Playstation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "Direcci\u00f3n IP",
+                    "name": "Nombre",
+                    "region": "Regi\u00f3n"
+                },
+                "description": "Ingresa tu informaci\u00f3n de PlayStation 4. Para 'PIN', navegue hasta 'Configuraci\u00f3n' en su consola PlayStation 4. Luego navegue a 'Configuraci\u00f3n de conexi\u00f3n de la aplicaci\u00f3n m\u00f3vil' y seleccione 'Agregar dispositivo'. Ingrese el PIN que se muestra.",
+                "title": "Playstation 4"
+            }
+        },
+        "title": "Playstation 4"
+    }
+}

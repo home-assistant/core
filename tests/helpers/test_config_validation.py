@@ -1,14 +1,15 @@
 """Test config validators."""
-from datetime import timedelta, datetime, date
+from datetime import date, datetime, timedelta
 import enum
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from unittest.mock import Mock, patch
+import uuid
 
-import homeassistant
 import pytest
 import voluptuous as vol
 
+import homeassistant
 import homeassistant.helpers.config_validation as cv
 
 
@@ -288,6 +289,11 @@ def test_time_period():
     assert timedelta(seconds=180) == schema('180')
     assert timedelta(hours=23, minutes=59) == schema('23:59')
     assert -1 * timedelta(hours=1, minutes=15) == schema('-1:15')
+
+
+def test_remove_falsy():
+    """Test remove falsy."""
+    assert cv.remove_falsy([0, None, 1, "1", {}, [], ""]) == [1, "1"]
 
 
 def test_service():
@@ -713,7 +719,7 @@ def test_deprecated_with_default(caplog, schema):
 
 def test_deprecated_with_replacement_key_and_default(caplog, schema):
     """
-    Test deprecation behaves correctly when only a replacement key is provided.
+    Test deprecation with a replacement key and default.
 
     Expected behavior:
         - Outputs the appropriate deprecation warning if key is detected
@@ -747,6 +753,22 @@ def test_deprecated_with_replacement_key_and_default(caplog, schema):
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 0
     assert {'venus': True, 'jupiter': False} == output
+
+    deprecated_schema_with_default = vol.All(
+        vol.Schema({
+            'venus': cv.boolean,
+            vol.Optional('mars', default=False): cv.boolean,
+            vol.Optional('jupiter', default=False): cv.boolean
+        }),
+        cv.deprecated('mars', replacement_key='jupiter', default=False)
+    )
+
+    test_data = {'mars': True}
+    output = deprecated_schema_with_default(test_data.copy())
+    assert len(caplog.records) == 1
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please replace it with 'jupiter'") in caplog.text
+    assert {'jupiter': True} == output
 
 
 def test_deprecated_with_replacement_key_invalidation_version_default(
@@ -891,7 +913,7 @@ def test_matches_regex():
         schema("  nrtd   ")
 
     test_str = "This is a test including uiae."
-    assert (schema(test_str) == test_str)
+    assert schema(test_str) == test_str
 
 
 def test_is_regex():
@@ -947,3 +969,24 @@ def test_entity_id_allow_old_validation(caplog):
             assert "Found invalid entity_id {}".format(value) in caplog.text
 
         assert len(cv.INVALID_ENTITY_IDS_FOUND) == 2
+
+
+def test_uuid4_hex(caplog):
+    """Test uuid validation."""
+    schema = vol.Schema(cv.uuid4_hex)
+
+    for value in ['Not a hex string', '0', 0]:
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    with pytest.raises(vol.Invalid):
+        # the 13th char should be 4
+        schema('a03d31b22eee1acc9b90eec40be6ed23')
+
+    with pytest.raises(vol.Invalid):
+        # the 17th char should be 8-a
+        schema('a03d31b22eee4acc7b90eec40be6ed23')
+
+    _hex = uuid.uuid4().hex
+    assert schema(_hex) == _hex
+    assert schema(_hex.upper()) == _hex

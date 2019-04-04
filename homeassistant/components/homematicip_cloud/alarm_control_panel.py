@@ -2,18 +2,15 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED)
 
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['homematicip_cloud']
-
-HMIP_ZONE_AWAY = 'EXTERNAL'
-HMIP_ZONE_HOME = 'INTERNAL'
 
 
 async def async_setup_platform(
@@ -42,7 +39,7 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     def __init__(self, home, device):
         """Initialize the security zone group."""
         device.modelType = 'Group-SecurityZone'
-        device.windowState = ''
+        device.windowState = None
         super().__init__(home, device)
 
     @property
@@ -52,7 +49,8 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
 
         if self._device.active:
             if (self._device.sabotage or self._device.motionDetected or
-                    self._device.windowState == WindowState.OPEN):
+                    self._device.windowState == WindowState.OPEN or
+                    self._device.windowState == WindowState.TILTED):
                 return STATE_ALARM_TRIGGERED
 
             active = self._home.get_security_zones_activation()

@@ -24,12 +24,14 @@ def cast_mock():
     """Mock pychromecast."""
     with patch.dict('sys.modules', {
         'pychromecast': MagicMock(),
+        'pychromecast.controllers.multizone': MagicMock(),
     }):
         yield
 
 
 # pylint: disable=invalid-name
 FakeUUID = UUID('57355bce-9364-4aa6-ac1e-eb849dccf9e2')
+FakeGroupUUID = UUID('57355bce-9364-4aa6-ac1e-eb849dccf9e3')
 
 
 def get_fake_chromecast(info: ChromecastInfo):
@@ -222,13 +224,6 @@ async def test_normal_chromecast_not_starting_discovery(hass):
         assert setup_discovery.call_count == 1
 
 
-async def test_normal_raises_platform_not_ready(hass):
-    """Test cast platform raises PlatformNotReady if HTTP dial fails."""
-    with patch('pychromecast.dial.get_device_status', return_value=None):
-        with pytest.raises(PlatformNotReady):
-            await async_setup_cast(hass, {'host': 'host1'})
-
-
 async def test_replay_past_chromecasts(hass):
     """Test cast platform re-playing past chromecasts when adding new one."""
     cast_group1 = get_fake_chromecast_info(host='host1', port=42)
@@ -262,6 +257,10 @@ async def test_entity_media_states(hass: HomeAssistantType):
                return_value=full_info):
         chromecast, entity = await async_setup_media_player_cast(hass, info)
 
+    entity._available = True
+    entity.schedule_update_ha_state()
+    await hass.async_block_till_done()
+
     state = hass.states.get('media_player.speaker')
     assert state is not None
     assert state.name == 'Speaker'
@@ -275,16 +274,16 @@ async def test_entity_media_states(hass: HomeAssistantType):
     state = hass.states.get('media_player.speaker')
     assert state.state == 'playing'
 
-    entity.new_media_status(media_status)
     media_status.player_is_playing = False
     media_status.player_is_paused = True
+    entity.new_media_status(media_status)
     await hass.async_block_till_done()
     state = hass.states.get('media_player.speaker')
     assert state.state == 'paused'
 
-    entity.new_media_status(media_status)
     media_status.player_is_paused = False
     media_status.player_is_idle = True
+    entity.new_media_status(media_status)
     await hass.async_block_till_done()
     state = hass.states.get('media_player.speaker')
     assert state.state == 'idle'
@@ -301,6 +300,208 @@ async def test_entity_media_states(hass: HomeAssistantType):
     await hass.async_block_till_done()
     state = hass.states.get('media_player.speaker')
     assert state.state == 'unknown'
+
+
+async def test_group_media_states(hass: HomeAssistantType):
+    """Test media states are read from group if entity has no state."""
+    info = get_fake_chromecast_info()
+    full_info = attr.evolve(info, model_name='google home',
+                            friendly_name='Speaker', uuid=FakeUUID)
+
+    with patch('pychromecast.dial.get_device_status',
+               return_value=full_info):
+        chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.schedule_update_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('media_player.speaker')
+    assert state is not None
+    assert state.name == 'Speaker'
+    assert state.state == 'unknown'
+    assert entity.unique_id == full_info.uuid
+
+    group_media_status = MagicMock(images=None)
+    player_media_status = MagicMock(images=None)
+
+    # Player has no state, group is playing -> Should report 'playing'
+    group_media_status.player_is_playing = True
+    entity.multizone_new_media_status(str(FakeGroupUUID), group_media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.speaker')
+    assert state.state == 'playing'
+
+    # Player is paused, group is playing -> Should report 'paused'
+    player_media_status.player_is_playing = False
+    player_media_status.player_is_paused = True
+    entity.new_media_status(player_media_status)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.speaker')
+    assert state.state == 'paused'
+
+    # Player is in unknown state, group is playing -> Should report 'playing'
+    player_media_status.player_state = "UNKNOWN"
+    entity.new_media_status(player_media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.speaker')
+    assert state.state == 'playing'
+
+
+async def test_dynamic_group_media_states(hass: HomeAssistantType):
+    """Test media states are read from group if entity has no state."""
+    info = get_fake_chromecast_info()
+    full_info = attr.evolve(info, model_name='google home',
+                            friendly_name='Speaker', uuid=FakeUUID)
+
+    with patch('pychromecast.dial.get_device_status',
+               return_value=full_info):
+        chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.schedule_update_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('media_player.speaker')
+    assert state is not None
+    assert state.name == 'Speaker'
+    assert state.state == 'unknown'
+    assert entity.unique_id == full_info.uuid
+
+    group_media_status = MagicMock(images=None)
+    player_media_status = MagicMock(images=None)
+
+    # Player has no state, dynamic group is playing -> Should report 'playing'
+    entity._dynamic_group_cast = MagicMock()
+    group_media_status.player_is_playing = True
+    entity.new_dynamic_group_media_status(group_media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.speaker')
+    assert state.state == 'playing'
+
+    # Player is paused, dynamic group is playing -> Should report 'paused'
+    player_media_status.player_is_playing = False
+    player_media_status.player_is_paused = True
+    entity.new_media_status(player_media_status)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.speaker')
+    assert state.state == 'paused'
+
+    # Player is in unknown state, dynamic group is playing -> Should report
+    # 'playing'
+    player_media_status.player_state = "UNKNOWN"
+    entity.new_media_status(player_media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.speaker')
+    assert state.state == 'playing'
+
+
+async def test_group_media_control(hass: HomeAssistantType):
+    """Test media states are read from group if entity has no state."""
+    info = get_fake_chromecast_info()
+    full_info = attr.evolve(info, model_name='google home',
+                            friendly_name='Speaker', uuid=FakeUUID)
+
+    with patch('pychromecast.dial.get_device_status',
+               return_value=full_info):
+        chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.schedule_update_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('media_player.speaker')
+    assert state is not None
+    assert state.name == 'Speaker'
+    assert state.state == 'unknown'
+    assert entity.unique_id == full_info.uuid
+
+    group_media_status = MagicMock(images=None)
+    player_media_status = MagicMock(images=None)
+
+    # Player has no state, group is playing -> Should forward calls to group
+    group_media_status.player_is_playing = True
+    entity.multizone_new_media_status(str(FakeGroupUUID), group_media_status)
+    entity.media_play()
+    grp_media = entity.mz_mgr.get_multizone_mediacontroller(str(FakeGroupUUID))
+    assert grp_media.play.called
+    assert not chromecast.media_controller.play.called
+
+    # Player is paused, group is playing -> Should not forward
+    player_media_status.player_is_playing = False
+    player_media_status.player_is_paused = True
+    entity.new_media_status(player_media_status)
+    entity.media_pause()
+    grp_media = entity.mz_mgr.get_multizone_mediacontroller(str(FakeGroupUUID))
+    assert not grp_media.pause.called
+    assert chromecast.media_controller.pause.called
+
+    # Player is in unknown state, group is playing -> Should forward to group
+    player_media_status.player_state = "UNKNOWN"
+    entity.new_media_status(player_media_status)
+    entity.media_stop()
+    grp_media = entity.mz_mgr.get_multizone_mediacontroller(str(FakeGroupUUID))
+    assert grp_media.stop.called
+    assert not chromecast.media_controller.stop.called
+
+    # Verify play_media is not forwarded
+    entity.play_media(None, None)
+    assert not grp_media.play_media.called
+    assert chromecast.media_controller.play_media.called
+
+
+async def test_dynamic_group_media_control(hass: HomeAssistantType):
+    """Test media states are read from group if entity has no state."""
+    info = get_fake_chromecast_info()
+    full_info = attr.evolve(info, model_name='google home',
+                            friendly_name='Speaker', uuid=FakeUUID)
+
+    with patch('pychromecast.dial.get_device_status',
+               return_value=full_info):
+        chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.schedule_update_ha_state()
+    entity._dynamic_group_cast = MagicMock()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('media_player.speaker')
+    assert state is not None
+    assert state.name == 'Speaker'
+    assert state.state == 'unknown'
+    assert entity.unique_id == full_info.uuid
+
+    group_media_status = MagicMock(images=None)
+    player_media_status = MagicMock(images=None)
+
+    # Player has no state, dynamic group is playing -> Should forward
+    group_media_status.player_is_playing = True
+    entity.new_dynamic_group_media_status(group_media_status)
+    entity.media_previous_track()
+    assert entity._dynamic_group_cast.media_controller.queue_prev.called
+    assert not chromecast.media_controller.queue_prev.called
+
+    # Player is paused, dynamic group is playing -> Should not forward
+    player_media_status.player_is_playing = False
+    player_media_status.player_is_paused = True
+    entity.new_media_status(player_media_status)
+    entity.media_next_track()
+    assert not entity._dynamic_group_cast.media_controller.queue_next.called
+    assert chromecast.media_controller.queue_next.called
+
+    # Player is in unknown state, dynamic group is playing -> Should forward
+    player_media_status.player_state = "UNKNOWN"
+    entity.new_media_status(player_media_status)
+    entity.media_seek(None)
+    assert entity._dynamic_group_cast.media_controller.seek.called
+    assert not chromecast.media_controller.seek.called
+
+    # Verify play_media is not forwarded
+    entity.play_media(None, None)
+    assert not entity._dynamic_group_cast.media_controller.play_media.called
+    assert chromecast.media_controller.play_media.called
 
 
 async def test_disconnect_on_stop(hass: HomeAssistantType):

@@ -1,0 +1,12 @@
+{
+  "domain": "sql",
+  "name": "Sql",
+  "documentation": "https://www.home-assistant.io/components/sql",
+  "requirements": [
+    "sqlalchemy==1.3.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@dgomes"
+  ]
+}

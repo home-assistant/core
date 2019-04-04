@@ -1,0 +1,10 @@
+{
+  "domain": "comfoconnect",
+  "name": "Comfoconnect",
+  "documentation": "https://www.home-assistant.io/components/comfoconnect",
+  "requirements": [
+    "pycomfoconnect==0.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

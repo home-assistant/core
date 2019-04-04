@@ -4,10 +4,11 @@ import logging
 import requests
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_VERIFY_SSL
-from homeassistant.components.netatmo import CameraData
-from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.helpers import config_validation as cv
+
+from . import CameraData
 
 DEPENDENCIES = ['netatmo']
 
@@ -31,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
     import pyatmo
     try:
-        data = CameraData(netatmo.NETATMO_AUTH, home)
+        data = CameraData(hass, netatmo.NETATMO_AUTH, home)
         for camera_name in data.get_camera_names():
             camera_type = data.get_camera_type(camera=camera_name, home=home)
             if CONF_CAMERAS in config:
@@ -40,6 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     continue
             add_entities([NetatmoCamera(data, camera_name, home,
                                         camera_type, verify_ssl)])
+        data.get_persons()
     except pyatmo.NoDevice:
         return None
 

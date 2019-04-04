@@ -1,0 +1,13 @@
+{
+  "domain": "pollen",
+  "name": "Pollen",
+  "documentation": "https://www.home-assistant.io/components/pollen",
+  "requirements": [
+    "numpy==1.16.2",
+    "pypollencom==2.2.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

@@ -227,8 +227,8 @@ class HueLight(Light):
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
             if self.light.swupdatestate == "readytoinstall":
                 err = (
-                    "Please check for software updates of the bridge "
-                    "and/or the bulb: %s, in the Philips Hue App."
+                    "Please check for software updates of the %s "
+                    "bulb in the Philips Hue App."
                 )
                 _LOGGER.warning(err, self.name)
             if self.gamut:

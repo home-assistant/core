@@ -5,7 +5,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_UPDATE_INTERVAL
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -23,10 +23,8 @@ DEFAULT_INTERVAL = timedelta(hours=1)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_INTERVAL):
-            vol.All(
-                cv.time_period, cv.positive_timedelta
-            ),
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
+            vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_MANUAL, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -39,7 +37,7 @@ async def async_setup(hass, config):
 
     if not conf[CONF_MANUAL]:
         async_track_time_interval(
-            hass, data.update, conf[CONF_UPDATE_INTERVAL]
+            hass, data.update, conf[CONF_SCAN_INTERVAL]
         )
 
     def update(call=None):

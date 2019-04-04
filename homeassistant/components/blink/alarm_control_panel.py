@@ -2,10 +2,10 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.blink import (
-    BLINK_DATA, DEFAULT_ATTRIBUTION)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY)
+    ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED)
+
+from . import BLINK_DATA, DEFAULT_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 

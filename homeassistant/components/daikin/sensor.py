@@ -1,18 +1,20 @@
 """Support for Daikin AC sensors."""
 import logging
 
-from homeassistant.components.daikin import DOMAIN as DAIKIN_DOMAIN
-from homeassistant.components.daikin.const import (
-    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, SENSOR_TYPE_TEMPERATURE,
-    SENSOR_TYPES)
 from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.unit_system import UnitSystem
 
+from . import DOMAIN as DAIKIN_DOMAIN
+from .const import (
+    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, SENSOR_TYPE_TEMPERATURE,
+    SENSOR_TYPES)
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up the Daikin sensors.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -96,9 +98,9 @@ class DaikinClimateSensor(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-    def update(self):
+    async def async_update(self):
         """Retrieve latest state."""
-        self._api.update()
+        await self._api.async_update()
 
     @property
     def device_info(self):

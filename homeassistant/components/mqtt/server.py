@@ -1,9 +1,4 @@
-"""
-Support for a local MQTT broker.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/#use-the-embedded-broker
-"""
+"""Support for a local MQTT broker."""
 import asyncio
 import logging
 import tempfile
@@ -40,12 +35,12 @@ def async_start(hass, password, server_config):
     from hbmqtt.broker import Broker, BrokerException
 
     passwd = tempfile.NamedTemporaryFile()
+
+    gen_server_config, client_config = generate_config(hass, passwd, password)
+
     try:
         if server_config is None:
-            server_config, client_config = generate_config(
-                hass, passwd, password)
-        else:
-            client_config = None
+            server_config = gen_server_config
 
         broker = Broker(server_config, hass.loop)
         yield from broker.start()

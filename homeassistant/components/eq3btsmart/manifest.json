@@ -1,0 +1,13 @@
+{
+  "domain": "eq3btsmart",
+  "name": "Eq3btsmart",
+  "documentation": "https://www.home-assistant.io/components/eq3btsmart",
+  "requirements": [
+    "construct==2.9.45",
+    "python-eq3bt==0.1.9"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@rytilahti"
+  ]
+}

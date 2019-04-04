@@ -1,8 +1,9 @@
 """Support for EDP re:dy plugs/switches."""
 import logging
 
-from homeassistant.components.edp_redy import EdpRedyDevice, EDP_REDY
 from homeassistant.components.switch import SwitchDevice
+
+from . import EDP_REDY, EdpRedyDevice
 
 _LOGGER = logging.getLogger(__name__)
 

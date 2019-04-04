@@ -442,10 +442,18 @@ class TemplateMethods:
         return None
 
 
-def forgiving_round(value, precision=0):
+def forgiving_round(value, precision=0, method="common"):
     """Round accepted strings."""
     try:
-        value = round(float(value), precision)
+        # support rounding methods like jinja
+        multiplier = float(10 ** precision)
+        if method == "ceil":
+            value = math.ceil(float(value) * multiplier) / multiplier
+        elif method == "floor":
+            value = math.floor(float(value) * multiplier) / multiplier
+        else:
+            # if method is common or something else, use common rounding
+            value = round(float(value), precision)
         return int(value) if precision == 0 else value
     except (ValueError, TypeError):
         # If value can't be converted to float
@@ -657,6 +665,7 @@ ENV.filters['sin'] = sine
 ENV.filters['cos'] = cosine
 ENV.filters['tan'] = tangent
 ENV.filters['sqrt'] = square_root
+ENV.filters['as_timestamp'] = forgiving_as_timestamp
 ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc

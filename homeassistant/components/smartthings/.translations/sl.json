@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "app_not_installed": "Prepri\u010dajte se, da ste namestili in pooblastili Home Assistant SmartApp in poskusite znova.",
+            "app_setup_error": "SmartApp ni mogo\u010de nastaviti. Prosim poskusite ponovno.",
+            "base_url_not_https": "`Base_url` za` http 'komponento je treba konfigurirati in za\u010deti z `https: //`.",
+            "token_already_setup": "\u017deton je \u017ee nastavljen.",
+            "token_forbidden": "\u017deton nima zahtevanih OAuth obsegov.",
+            "token_invalid_format": "\u017deton mora biti v formatu UID / GUID",
+            "token_unauthorized": "\u017deton ni veljaven ali ni ve\u010d poobla\u0161\u010den.",
+            "webhook_error": "SmartThings ni mogel potrditi kon\u010dne to\u010dke nastavljene v 'base_url`. Prosimo, preglejte zahteve komponente."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "\u017deton za dostop"
+                },
+                "description": "Prosimo vnesite Smartthings [\u017deton za osebni dostop]({token_url}) ki je bil kreiran v skladu z [navodili]({component_url}).",
+                "title": "Vnesite \u017eeton za osebni dostop"
+            },
+            "wait_install": {
+                "description": "Prosimo, namestite Home Assistant SmartApp v vsaj eni lokaciji in kliknite po\u0161lji.",
+                "title": "Namesti SmartApp"
+            }
+        },
+        "title": "SmartThings"
+    }
+}

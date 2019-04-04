@@ -1,9 +1,4 @@
-"""
-Camera that loads a picture from an MQTT topic.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.mqtt/
-"""
+"""Camera that loads a picture from an MQTT topic."""
 
 import asyncio
 import logging
@@ -12,16 +7,16 @@ import voluptuous as vol
 
 from homeassistant.components import camera, mqtt
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttDiscoveryUpdate,
-    subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttDiscoveryUpdate,
+    subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,14 +92,14 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Handle new MQTT messages."""
-            self._last_image = payload
+            self._last_image = msg.payload
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
