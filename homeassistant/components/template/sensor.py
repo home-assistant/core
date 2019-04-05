@@ -45,8 +45,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     for device, device_config in config[CONF_SENSORS].items():
         state_template = device_config[CONF_VALUE_TEMPLATE]
-        last_changed_template = device_config[CONF_LAST_CHANGED_TEMPLATE]
-        last_updated_template = device_config[CONF_LAST_UPDATED_TEMPLATE]
+        last_changed_template = device_config.get(CONF_LAST_CHANGED_TEMPLATE)
+        last_updated_template = device_config.get(CONF_LAST_UPDATED_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
@@ -133,6 +133,10 @@ class SensorTemplate(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
         self._state = None
+        self._last_changed_template = last_changed_template
+        self._last_changed = None
+        self._last_updated_template = last_updated_template
+        self._last_updated = None
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
         self._icon = None
@@ -169,6 +173,16 @@ class SensorTemplate(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def last_changed(self):
+        """Return the last_changed to use for state management, if any."""
+        return self._last_changed
+
+    @property
+    def last_updated(self):
+        """Return the last_updated to use for state management, if any."""
+        return self._last_updated
 
     @property
     def icon(self):
@@ -210,6 +224,8 @@ class SensorTemplate(Entity):
                 _LOGGER.error('Could not render template %s: %s', self._name,
                               ex)
         for property_name, template in (
+                ('_last_changed', self._last_changed_template),
+                ('_last_updated', self._last_updated_template),
                 ('_icon', self._icon_template),
                 ('_entity_picture', self._entity_picture_template),
                 ('_name', self._friendly_name_template)):

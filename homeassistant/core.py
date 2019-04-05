@@ -663,12 +663,16 @@ class State:
     """
 
     __slots__ = ['entity_id', 'state', 'attributes',
-                 'last_changed', 'last_updated', 'context']
+                 'last_changed', 'last_updated',
+                 'provided_last_changed', 'provided_last_updated',
+                 'context']
 
     def __init__(self, entity_id: str, state: Any,
                  attributes: Optional[Dict] = None,
                  last_changed: Optional[datetime.datetime] = None,
                  last_updated: Optional[datetime.datetime] = None,
+                 provided_last_changed: Optional[datetime.datetime] = None,
+                 provided_last_updated: Optional[datetime.datetime] = None,
                  context: Optional[Context] = None,
                  # Temp, because database can still store invalid entity IDs
                  # Remove with 1.0 or in 2020.
@@ -691,6 +695,8 @@ class State:
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
+        self.provided_last_changed = provided_last_changed
+        self.provided_last_updated = provided_last_updated
         self.context = context or Context()
 
     @property
@@ -723,6 +729,8 @@ class State:
                 'attributes': dict(self.attributes),
                 'last_changed': self.last_changed,
                 'last_updated': self.last_updated,
+                'provided_last_changed': self.provided_last_changed,
+                'provided_last_updated': self.provided_last_updated,
                 'context': self.context.as_dict()}
 
     @classmethod
@@ -737,6 +745,7 @@ class State:
                 'state' in json_dict):
             return None
 
+        # System managed datetimes
         last_changed = json_dict.get('last_changed')
 
         if isinstance(last_changed, str):
@@ -747,6 +756,17 @@ class State:
         if isinstance(last_updated, str):
             last_updated = dt_util.parse_datetime(last_updated)
 
+        # Provided datetimes
+        provided_last_changed = json_dict.get('last_changed')
+
+        if isinstance(provided_last_changed, str):
+            provided_last_changed = dt_util.parse_datetime(provided_last_changed)
+
+        provided_last_updated = json_dict.get('provided_last_updated')
+
+        if isinstance(provided_last_updated, str):
+            provided_last_updated = dt_util.parse_datetime(provided_last_updated)
+
         context = json_dict.get('context')
         if context:
             context = Context(
@@ -756,6 +776,7 @@ class State:
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated,
+                   provided_last_changed, provided_last_updated,
                    context)
 
     def __eq__(self, other: Any) -> bool:
@@ -868,8 +889,8 @@ class StateMachine:
     def set(self, entity_id: str, new_state: Any,
             attributes: Optional[Dict] = None,
             force_update: bool = False,
-            last_changed: Optional[datetime.datetime] = None,
-            last_updated: Optional[datetime.datetime] = None,
+            provided_last_changed: Optional[datetime.datetime] = None,
+            provided_last_updated: Optional[datetime.datetime] = None,
             context: Optional[Context] = None) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -881,15 +902,15 @@ class StateMachine:
         run_callback_threadsafe(
             self._loop,
             self.async_set, entity_id, new_state, attributes, force_update,
-            last_changed, last_updated, context,
+            provided_last_changed, provided_last_updated, context,
         ).result()
 
     @callback
     def async_set(self, entity_id: str, new_state: Any,
                   attributes: Optional[Dict] = None,
                   force_update: bool = False,
-                  last_changed: Optional[datetime.datetime] = None,
-                  last_updated: Optional[datetime.datetime] = None,
+                  provided_last_changed: Optional[datetime.datetime] = None,
+                  provided_last_updated: Optional[datetime.datetime] = None,
                   context: Optional[Context] = None) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -907,15 +928,12 @@ class StateMachine:
         if old_state is None:
             same_state = False
             same_attr = False
-            new_last_changed = None
-            new_last_updated = None
+            last_changed = None
         else:
             same_state = (old_state.state == new_state and
                           not force_update)
             same_attr = old_state.attributes == attributes
-            new_last_changed = old_state.last_changed if same_state \
-                else last_changed
-            new_last_updated = last_updated
+            last_changed = old_state.last_changed if same_state else None
 
         if same_state and same_attr:
             return
@@ -923,8 +941,8 @@ class StateMachine:
         if context is None:
             context = Context()
 
-        state = State(entity_id, new_state, attributes, new_last_changed,
-                      new_last_updated, context)
+        state = State(entity_id, new_state, attributes, last_changed, None,
+                      provided_last_changed, provided_last_updated, context)
         self._states[entity_id] = state
         self._bus.async_fire(EVENT_STATE_CHANGED, {
             'entity_id': entity_id,
