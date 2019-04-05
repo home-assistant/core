@@ -179,6 +179,16 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema({
     vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }, required=True)
 
+
+def embedded_broker_deprecated(value):
+    """Warn user that embedded MQTT broker is deprecated."""
+    _LOGGER.warning(
+        "The embedded MQTT broker has been deprecated and will stop working"
+        "after June 5th, 2019. Use an external broker instead. For"
+        "instructions, see https://www.home-assistant.io/docs/mqtt/broker")
+    return value
+
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_CLIENT_ID): cv.string,
@@ -198,7 +208,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Any('auto', '1.0', '1.1', '1.2'),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
-        vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
+        vol.Optional(CONF_EMBEDDED):
+            vol.All(HBMQTT_CONFIG_SCHEMA, embedded_broker_deprecated),
         vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
         vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
