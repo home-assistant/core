@@ -2,8 +2,7 @@ binary_sensor:
   - platform: ping
     host: powiedz.co
     count: 2
-    scan_interval: 60
-
+    scan_interval: 180
 sensor:
   - platform: mqtt
     state_topic: ais/version/sensor

@@ -10,18 +10,12 @@ sensor:
       ais_android_wifi_current_network_info:
         value_template: "Brak informacji o połączeniu WiFi"
 
-  - platform: ais_android_cmd
-    command: getprop net.hostname
+  - platform: mqtt
     name: local_host_name
-    scan_interval: 3600
-  - platform: command_line
-    command: python3 -c "import socket; print((([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-              if not ip.startswith('127.')] or [[(s.connect(('8.8.8.8', 53)),
-              s.getsockname()[0], s.close()) for s in
-              [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]])
-              + ['no IP found'])[0])"
+    state_topic: ais/local_host_name/sensor
+  - platform: mqtt
     name: internal_ip_address
-    scan_interval: 360
+    state_topic: ais/internal_ip_address/sensor
   - platform: ais_long_text
     name: ais_rss_help_text
     package: homeassistant.components.ais_cloud

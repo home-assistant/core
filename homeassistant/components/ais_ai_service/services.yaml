@@ -24,12 +24,9 @@ process_code:
 process_command_from_frame:
   description: Przetwarzanie wiadomości/komendy z aplikacji android.
   fields:
-    topic:
-      description: Temat wiadomości.
-      example: 'ais/speech_command'
-    payload:
-      description: Wiadomość.
-      example: 'Jest godzina 12:15.'
+    data:
+      description: Przykładowy komunikat o zmianie adresu IP.
+      example: '{"topic": ""ais/ip_state_change_info", "payload": "{\"ip\": \"192.168.1.1\"}"}'
 
 publish_command_to_frame:
   description: Publikowanie komendy do aplikacji android.

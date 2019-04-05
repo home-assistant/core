@@ -43,6 +43,8 @@ def setup(hass, config):
     if host_name.endswith('.local'):
         host_name = host_name[:-len('.local')]
 
+    hass.states.async_set("sensor.local_host_name", host_name,
+                          {"friendly_name": "Lokalna nazwa hosta", "icon": "mdi:dns"})
     try:
         ip = socket.inet_pton(socket.AF_INET, host_ip)
     except socket.error:

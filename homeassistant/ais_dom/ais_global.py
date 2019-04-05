@@ -92,22 +92,25 @@ def set_my_ssid(ssid):
 
 def get_my_global_ip():
     if GLOBAL_MY_IP is None:
-        set_global_my_ip()
+        set_global_my_ip(None)
     return GLOBAL_MY_IP
 
 
-def set_global_my_ip():
+def set_global_my_ip(pIP):
     global GLOBAL_MY_IP
-    try:
-        GLOBAL_MY_IP = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-                  if not ip.startswith('127.')] or [[(s.connect(('8.8.8.8', 53)),
-                  s.getsockname()[0], s.close()) for s in
-                  [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]])
-                  + ['no IP found'])[0]
-    except Exception as e:
-        _LOGGER.error("Error: " + str(e))
-        GLOBAL_MY_IP = '127.0.0.1'
+    if pIP is None:
+        try:
+            GLOBAL_MY_IP = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
+                      if not ip.startswith('127.')] or [[(s.connect(('8.8.8.8', 53)),
+                      s.getsockname()[0], s.close()) for s in
+                      [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]])
+                      + ['no IP found'])[0]
+        except Exception as e:
+            _LOGGER.error("Error: " + str(e))
+            GLOBAL_MY_IP = '127.0.0.1'
+    else:
+        GLOBAL_MY_IP = pIP
 
 
-set_global_my_ip()
+set_global_my_ip(None)
 

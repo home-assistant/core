@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.mqtt/
 import logging
 import json
 from typing import Optional
-
+from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -37,6 +37,7 @@ CONF_UNIQUE_ID = 'unique_id'
 DEFAULT_NAME = 'MQTT Sensor'
 DEFAULT_FORCE_UPDATE = False
 DEPENDENCIES = ['mqtt']
+SCAN_INTERVAL = timedelta(seconds=600000000)
 
 MQTT_DEVICES = []
 NET_DEVICES = []

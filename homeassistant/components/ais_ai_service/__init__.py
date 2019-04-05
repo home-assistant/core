@@ -1298,6 +1298,14 @@ async def async_setup(hass, config):
                     break
 
     @asyncio.coroutine
+    def check_local_ip(service):
+        """Set the local ip in app."""
+        _LOGGER.info("check_local_ip")
+        ip = ais_global.get_my_global_ip()
+        hass.states.async_set(
+            "sensor.internal_ip_address", ip, {"friendly_name": "Lokalny adres IP", "icon": "mdi:access-point-network"})
+
+    @asyncio.coroutine
     def publish_command_to_frame(service):
         key = service.data['key']
         val = service.data['val']
@@ -1376,6 +1384,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'prepare_remote_menu', prepare_remote_menu)
     hass.services.async_register(DOMAIN, 'on_new_iot_device_selection', on_new_iot_device_selection)
     hass.services.async_register(DOMAIN, 'set_context', set_context)
+    hass.services.async_register(DOMAIN, 'check_local_ip', check_local_ip)
 
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())
@@ -1517,6 +1526,9 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_PREV, ['[włącz] poprzedni', '[włącz] wcześniejszy', '[graj] poprzedni',
                                        '[graj] wcześniejszy'])
     async_register(hass, INTENT_SAY_IT, ['Powiedz', 'Mów', 'Powiedz {item}', 'Mów {item}', 'Echo {item}'])
+
+    # initial status of the player
+    hass.states.async_set("sensor.ais_player_mode", 'radio_player')
 
     return True
 
@@ -1809,7 +1821,7 @@ def _process_command_from_frame(hass, service):
             info += cci["state"]
         # check if we are now online
         if ais_global.GLOBAL_MY_IP == "127.0.0.1":
-            ais_global.set_global_my_ip()
+            ais_global.set_global_my_ip(None)
             if ais_global.GLOBAL_MY_IP != "127.0.0.1":
                 pass
                 # if yes then try to reload the cloud and other components
@@ -1824,11 +1836,15 @@ def _process_command_from_frame(hass, service):
         return
     elif service.data["topic"] == 'ais/go_to_player':
         go_to_player(hass, False)
+    elif service.data["topic"] == 'ais/ip_state_change_info':
+        pl = json.loads(service.data["payload"])
+        ais_global.set_global_my_ip(pl["ip"])
+        hass.states.async_set("sensor.internal_ip_address", pl["ip"],
+                              {"friendly_name": "Lokalny adres IP", "icon": "mdi:access-point-network"})
     else:
         # TODO process this without mqtt
         # player_status and speech_status
-        mqtt.async_publish(
-            hass, service.data["topic"], service.data["payload"], 2)
+        mqtt.async_publish(hass, service.data["topic"], service.data["payload"], 2)
         # TODO
     return
 
@@ -1883,9 +1899,8 @@ def _say_it(hass, message, caller_ip=None):
 
     # check if we should inform back the caller speaker
     # the local caller has ip like 192.168.1.45
-    # internal_ip = hass.states.get('sensor.internal_ip_address').state
     if ais_global.GLOBAL_MY_IP is None:
-        ais_global.set_global_my_ip()
+        ais_global.set_global_my_ip(None)
     if caller_ip is not None:
         if caller_ip not in ['localhost', '127.0.0.1', device_ip, ais_global.GLOBAL_MY_IP]:
             l_hosts.append(caller_ip)
@@ -2745,8 +2760,7 @@ class AisStop(intent.IntentHandler):
     def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
-            'media_player', 'media_stop')
+        yield from hass.services.async_call('media_player', 'media_stop', {"entity_id": "all"})
         message = 'ok, stop'
         return message, True
 
