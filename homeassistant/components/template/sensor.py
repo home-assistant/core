@@ -226,23 +226,26 @@ class SensorTemplate(Entity):
                 self._state = None
                 _LOGGER.error('Could not render template %s: %s', self._name,
                               ex)
-        # if self._last_changed_template is not None:
-        #     last_changed = self._last_changed_template.async_render()
-        #     if isinstance(last_changed, str):
-        #         last_changed = dt_util.parse_datetime(last_changed)
-        #     if self._state is not None:
-        #         self._state.provided_last_changed = last_changed
-        #
-        # if self._last_updated_template is not None:
-        #     last_updated = self._last_updated_template.async_render()
-        #     if isinstance(last_updated, str):
-        #         last_updated = dt_util.parse_datetime(last_updated)
-        #     if self._state is not None:
-        #         self._state.provided_last_updated = last_updated
+
+        if self._provided_last_changed_template is not None:
+            provided_last_changed = self._provided_last_changed_template\
+                .async_render()
+            if provided_last_changed:
+                if isinstance(provided_last_changed, str):
+                    provided_last_changed = dt_util\
+                        .parse_datetime(provided_last_changed)
+                setattr(self, '_provided_last_changed', provided_last_changed)
+
+        if self._provided_last_updated_template is not None:
+            provided_last_updated = self._provided_last_updated_template\
+                .async_render()
+            if provided_last_updated:
+                if isinstance(provided_last_updated, str):
+                    provided_last_updated = dt_util\
+                        .parse_datetime(provided_last_updated)
+                setattr(self, '_provided_last_updated', provided_last_updated)
 
         for property_name, template in (
-                ('_provided_last_changed', self._provided_last_changed_template),
-                ('_provided_last_updated', self._provided_last_updated_template),
                 ('_icon', self._icon_template),
                 ('_entity_picture', self._entity_picture_template),
                 ('_name', self._friendly_name_template)):
