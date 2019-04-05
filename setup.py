@@ -39,9 +39,9 @@ REQUIRES = [
     'bcrypt==3.1.6',
     'certifi>=2018.04.16',
     'jinja2>=2.10',
-    'PyJWT==1.6.4',
+    'PyJWT==1.7.1',
     # PyJWT has loose dependency. We want the latest one.
-    'cryptography==2.5',
+    'cryptography==2.6.1',
     'pip>=8.0.3',
     'python-slugify==1.2.6',
     'pytz>=2018.07',
