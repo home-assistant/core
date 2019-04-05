@@ -85,7 +85,6 @@ class HassIOView(HomeAssistantView):
                 "http://{}/{}".format(self._host, path), data=data,
                 headers=headers, timeout=read_timeout
             )
-            print(client.headers)
 
             # Simple request
             if int(client.headers.get(CONTENT_LENGTH, 0)) < 4194000:

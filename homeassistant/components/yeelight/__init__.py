@@ -111,37 +111,6 @@ UPDATE_REQUEST_PROPERTIES = [
 ]
 
 
-def _transitions_config_parser(transitions):
-    """Parse transitions config into initialized objects."""
-    import yeelight
-
-    transition_objects = []
-    for transition_config in transitions:
-        transition, params = list(transition_config.items())[0]
-        transition_objects.append(getattr(yeelight, transition)(*params))
-
-    return transition_objects
-
-
-def _parse_custom_effects(effects_config):
-    import yeelight
-
-    effects = {}
-    for config in effects_config:
-        params = config[CONF_FLOW_PARAMS]
-        action = yeelight.Flow.actions[params[ATTR_ACTION]]
-        transitions = _transitions_config_parser(
-            params[ATTR_TRANSITIONS])
-
-        effects[config[CONF_NAME]] = {
-            ATTR_COUNT: params[ATTR_COUNT],
-            ATTR_ACTION: action,
-            ATTR_TRANSITIONS: transitions
-        }
-
-    return effects
-
-
 def setup(hass, config):
     """Set up the Yeelight bulbs."""
     conf = config.get(DOMAIN, {})
@@ -192,9 +161,8 @@ def _setup_device(hass, hass_config, ipaddr, device_config):
 
     platform_config = device_config.copy()
     platform_config[CONF_HOST] = ipaddr
-    platform_config[CONF_CUSTOM_EFFECTS] = _parse_custom_effects(
+    platform_config[CONF_CUSTOM_EFFECTS] = \
         hass_config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
-    )
 
     load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, hass_config)
     load_platform(hass, BINARY_SENSOR_DOMAIN, DOMAIN, platform_config,

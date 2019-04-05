@@ -8,12 +8,13 @@ import pytest
 @pytest.mark.parametrize(
     'build_type', [
         ("a3_vl", "test/beer/ping?index=1"), ("core", "index.html"),
-        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5")
+        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5"),
+        ("fsadjf10312", "")
     ])
 async def test_ingress_request_get(
         hassio_client, build_type, aioclient_mock):
     """Test no auth needed for ."""
-    aioclient_mock.get("http://127.0.0.1/addons/{}/web/{}".format(
+    aioclient_mock.get("http://127.0.0.1/ingress/{}/{}".format(
         build_type[0], build_type[1]), text="test")
 
     resp = await hassio_client.get(
@@ -40,12 +41,13 @@ async def test_ingress_request_get(
 @pytest.mark.parametrize(
     'build_type', [
         ("a3_vl", "test/beer/ping?index=1"), ("core", "index.html"),
-        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5")
+        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5"),
+        ("fsadjf10312", "")
     ])
 async def test_ingress_request_post(
         hassio_client, build_type, aioclient_mock):
     """Test no auth needed for ."""
-    aioclient_mock.post("http://127.0.0.1/addons/{}/web/{}".format(
+    aioclient_mock.post("http://127.0.0.1/ingress/{}/{}".format(
         build_type[0], build_type[1]), text="test")
 
     resp = await hassio_client.post(
@@ -72,12 +74,13 @@ async def test_ingress_request_post(
 @pytest.mark.parametrize(
     'build_type', [
         ("a3_vl", "test/beer/ping?index=1"), ("core", "index.html"),
-        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5")
+        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5"),
+        ("fsadjf10312", "")
     ])
 async def test_ingress_request_put(
         hassio_client, build_type, aioclient_mock):
     """Test no auth needed for ."""
-    aioclient_mock.put("http://127.0.0.1/addons/{}/web/{}".format(
+    aioclient_mock.put("http://127.0.0.1/ingress/{}/{}".format(
         build_type[0], build_type[1]), text="test")
 
     resp = await hassio_client.put(
@@ -104,12 +107,13 @@ async def test_ingress_request_put(
 @pytest.mark.parametrize(
     'build_type', [
         ("a3_vl", "test/beer/ping?index=1"), ("core", "index.html"),
-        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5")
+        ("local", "panel/config"), ("jk_921", "editor.php?idx=3&ping=5"),
+        ("fsadjf10312", "")
     ])
 async def test_ingress_request_delete(
         hassio_client, build_type, aioclient_mock):
     """Test no auth needed for ."""
-    aioclient_mock.delete("http://127.0.0.1/addons/{}/web/{}".format(
+    aioclient_mock.delete("http://127.0.0.1/ingress/{}/{}".format(
         build_type[0], build_type[1]), text="test")
 
     resp = await hassio_client.delete(
@@ -142,7 +146,7 @@ async def test_ingress_request_delete(
 async def test_ingress_websocket(
         hassio_client, build_type, aioclient_mock):
     """Test no auth needed for ."""
-    aioclient_mock.get("http://127.0.0.1/addons/{}/web/{}".format(
+    aioclient_mock.get("http://127.0.0.1/ingress/{}/{}".format(
         build_type[0], build_type[1]))
 
     # Ignore error because we can setup a full IO infrastructure
