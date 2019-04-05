@@ -755,7 +755,7 @@ nuheat==0.3.0
 numpy==1.16.2
 
 # homeassistant.components.oasa_telematics.sensor
-oasatelematics==0.2
+oasatelematics==0.3
 
 # homeassistant.components.google
 oauth2client==4.0.0

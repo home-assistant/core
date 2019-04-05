@@ -1,12 +1,4 @@
-"""
-Support for OASA Telematics from telematics.oasa.gr.
-
-Real-time Information for Buses and Trolleys
-For more info on the API see:
-https://oasa-telematics-api.readthedocs.io/en/latest/
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.oasa_telematics/
-"""
+"""Support for OASA Telematics from telematics.oasa.gr."""
 import logging
 from datetime import timedelta
 from operator import itemgetter
@@ -15,18 +7,21 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import (
+    CONF_NAME, ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['oasatelematics==0.2']
+REQUIREMENTS = ['oasatelematics==0.3']
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STOP_ID = 'Stop ID'
-ATTR_STOP_NAME = 'Stop Name'
-ATTR_ROUTE_ID = 'Route ID'
-ATTR_ROUTE_NAME = 'Route Name'
-ATTR_DUE_IN = 'Due in'
-ATTR_NEXT_ARRIVAL = 'Next arrival'
+ATTR_STOP_ID = 'stop_id'
+ATTR_STOP_NAME = 'stop_name'
+ATTR_ROUTE_ID = 'route_id'
+ATTR_ROUTE_NAME = 'route_name'
+ATTR_NEXT_ARRIVAL = 'next_arrival'
+ATTR_SECOND_NEXT_ARRIVAL = 'second_next_arrival'
+ATTR_NEXT_DEPARTURE = 'next_departure'
 
 ATTRIBUTION = "Data retrieved from telematics.oasa.gr"
 
@@ -45,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OASA Telematics sensor."""
     name = config[CONF_NAME]
     stop_id = config[CONF_STOP_ID]
@@ -53,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = OASATelematicsData(stop_id, route_id)
 
-    add_devices([OASATelematicsSensor(
+    add_entities([OASATelematicsSensor(
         data, stop_id, route_id, name)], True)
 
 
@@ -74,6 +69,11 @@ class OASATelematicsSensor(Entity):
         return self._name
 
     @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_TIMESTAMP
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
@@ -83,16 +83,23 @@ class OASATelematicsSensor(Entity):
         """Return the state attributes."""
         params = {}
         if self._times is not None:
-            next_arrival = None
+            next_arrival_data = self._times[0]
+            if ATTR_NEXT_ARRIVAL in next_arrival_data:
+                next_arrival = next_arrival_data[ATTR_NEXT_ARRIVAL]
+                params.update({
+                    ATTR_NEXT_ARRIVAL: next_arrival.isoformat()
+                })
             if len(self._times) > 1:
-                next_arrival = ('{} min'.format(
-                    str(self._times[1][ATTR_DUE_IN])))
+                second_next_arrival_time = self._times[1][ATTR_NEXT_ARRIVAL]
+                if second_next_arrival_time is not None:
+                    second_arrival = second_next_arrival_time
+                    params.update({
+                        ATTR_SECOND_NEXT_ARRIVAL: second_arrival.isoformat()
+                    })
             params.update({
-                ATTR_DUE_IN: str(self._times[0][ATTR_DUE_IN]),
                 ATTR_ROUTE_ID: self._times[0][ATTR_ROUTE_ID],
                 ATTR_STOP_ID: self._stop_id,
                 ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_NEXT_ARRIVAL: next_arrival
             })
         params.update({
             ATTR_ROUTE_NAME: self._name_data[ATTR_ROUTE_NAME],
@@ -103,7 +110,7 @@ class OASATelematicsSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return 'min'
+        return 'ISO8601'
 
     @property
     def icon(self):
@@ -115,11 +122,9 @@ class OASATelematicsSensor(Entity):
         self.data.update()
         self._times = self.data.info
         self._name_data = self.data.name_data
-        try:
-            self._state = self._times[0][ATTR_DUE_IN]
-        except TypeError:
-            pass
-
+        next_arrival_data = self._times[0]
+        if ATTR_NEXT_ARRIVAL in next_arrival_data:
+            self._state = next_arrival_data[ATTR_NEXT_ARRIVAL].isoformat()
 
 class OASATelematicsData():
     """The class for handling data retrieval."""
@@ -130,19 +135,13 @@ class OASATelematicsData():
         self.stop_id = stop_id
         self.route_id = route_id
         self.info = self.empty_result()
-        self.name_data = self.empty_name_data()
         self.oasa_api = oasatelematics
+        self.name_data = {ATTR_ROUTE_NAME: self.get_route_name(),
+                          ATTR_STOP_NAME: self.get_stop_name()}
 
     def empty_result(self):
         """Object returned when no arrivals are found."""
-        return [{ATTR_DUE_IN: 'n/a',
-                 ATTR_ROUTE_ID: self.route_id}]
-
-    @staticmethod
-    def empty_name_data():
-        """Object returned when no stop/route name data are found."""
-        return [{ATTR_STOP_NAME: 'n/a',
-                 ATTR_ROUTE_NAME: 'n/a'}]
+        return [{ATTR_ROUTE_ID: self.route_id}]
 
     def get_route_name(self):
         """Get the route name from the API."""
@@ -151,8 +150,8 @@ class OASATelematicsData():
             if route:
                 return route[0].get('route_departure_eng')
         except TypeError:
-            _LOGGER.debug("Cannot get route name from OASA API")
-        return 'n/a'
+            _LOGGER.error("Cannot get route name from OASA API")
+        return None
 
     def get_stop_name(self):
         """Get the stop name from the API."""
@@ -161,17 +160,11 @@ class OASATelematicsData():
             if name_data:
                 return name_data[0].get('stop_descr_matrix_eng')
         except TypeError:
-            _LOGGER.debug("Cannot get  stop name from OASA API")
-        return 'n/a'
+            _LOGGER.error("Cannot get stop name from OASA API")
+        return None
 
     def update(self):
         """Get the latest arrival data from telematics.oasa.gr API."""
-        route = self.get_route_name()
-        stop_name = self.get_stop_name()
-
-        self.name_data = {ATTR_ROUTE_NAME: route,
-                          ATTR_STOP_NAME: stop_name}
-
         self.info = []
 
         results = self.oasa_api.getStopArrivals(self.stop_id)
@@ -182,12 +175,13 @@ class OASATelematicsData():
 
         # Parse results
         results = [r for r in results if r.get('route_code') in self.route_id]
+        current_time = dt_util.utcnow()
 
         for result in results:
-            due_in_minutes = result.get('btime2')
-
-            if due_in_minutes is not None:
-                arrival_data = {ATTR_DUE_IN: due_in_minutes,
+            arrival_min = int(result.get('btime2'))
+            if arrival_min is not None:
+                timestamp = current_time + timedelta(minutes=arrival_min)
+                arrival_data = {ATTR_NEXT_ARRIVAL: timestamp,
                                 ATTR_ROUTE_ID: self.route_id}
                 self.info.append(arrival_data)
 
@@ -197,5 +191,5 @@ class OASATelematicsData():
             return
 
         # Sort the data by time
-        sort = sorted(self.info, key=lambda x: int(itemgetter(ATTR_DUE_IN)(x)))
+        sort = sorted(self.info, itemgetter(ATTR_NEXT_ARRIVAL))
         self.info = sort
