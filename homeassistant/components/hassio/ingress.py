@@ -1,20 +1,22 @@
 """Hass.io Add-on ingress service."""
 import asyncio
-from ipaddress import ip_address
+import logging
 import os
+from ipaddress import ip_address
 from typing import Dict, Union
 
 import aiohttp
-from aiohttp import web
-from aiohttp import hdrs
+from aiohttp import hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway
 from multidict import CIMultiDict
 
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import X_HASSIO, X_INGRESS_PATH
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -54,8 +56,8 @@ class HassIOIngress(HomeAssistantView):
             # Request
             return await self._handle_request(request, token, path)
 
-        except aiohttp.ClientError:
-            pass
+        except aiohttp.ClientError as err:
+            _LOGGER.debug("Ingress error with %s / %s: %s", token, path, err)
 
         raise HTTPBadGateway() from None
 
@@ -126,11 +128,11 @@ class HassIOIngress(HomeAssistantView):
 
             try:
                 await response.prepare(request)
-                async for data in result.content:
+                async for data in result.content.iter_chunked(4096):
                     await response.write(data)
 
-            except (aiohttp.ClientError, aiohttp.ClientPayloadError):
-                pass
+            except (aiohttp.ClientError, aiohttp.ClientPayloadError) as err:
+                _LOGGER.debug("Stream error %s / %s: %s", token, path, err)
 
             return response
 
@@ -183,7 +185,7 @@ def _response_header(response: aiohttp.ClientResponse) -> Dict[str, str]:
 
     for name, value in response.headers.items():
         if name in (hdrs.TRANSFER_ENCODING, hdrs.CONTENT_LENGTH,
-                    hdrs.CONTENT_TYPE):
+                    hdrs.CONTENT_TYPE, hdrs.CONTENT_ENCODING):
             continue
         headers[name] = value
 
