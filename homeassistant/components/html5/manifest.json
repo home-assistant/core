@@ -3,7 +3,7 @@
   "name": "HTML5 Notifications",
   "documentation": "https://www.home-assistant.io/components/html5",
   "requirements": [
-    "pywebpush==1.6.0"
+    "pywebpush==1.9.2"
   ],
   "dependencies": [],
   "codeowners": [
