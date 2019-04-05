@@ -244,7 +244,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
     msg = mqtt.Message(topic, payload, qos, retain)
-    hass.async_run_job(hass.data['mqtt']._mqtt_on_message, None, None, msg)
+    hass.data['mqtt']._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -287,8 +287,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
-@asyncio.coroutine
-def async_mock_mqtt_component(hass, config=None):
+async def async_mock_mqtt_component(hass, config=None):
     """Mock the MQTT component."""
     if config is None:
         config = {mqtt.CONF_BROKER: 'mock-broker'}
@@ -299,10 +298,11 @@ def async_mock_mqtt_component(hass, config=None):
         mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
 
-        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
+        result = await async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: config
         })
         assert result
+        await hass.async_block_till_done()
 
         hass.data['mqtt'] = MagicMock(spec_set=hass.data['mqtt'],
                                       wraps=hass.data['mqtt'])
