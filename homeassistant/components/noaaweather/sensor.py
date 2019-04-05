@@ -679,6 +679,7 @@ class NOAACurrentSensor(Entity):
                     if variable:
                         return variable[0]['amount']
                     return None
+
             if SENSOR_TYPES[self._condition][1] is not None:
                 # We only get here if the type of value is something we don't
                 # understand
@@ -930,6 +931,25 @@ class NOAACurrentData(Entity):
                             "using Metar value %s for %s instead of %s",
                             res, variable, obsprop[variable])
                         self.data[variable] = res
+                        self.datatime[variable] = thisupdate
+                    if variable != 'windGust':
+                        continue
+                    #
+                    # Special case for windGust - if it has
+                    # qc:Z it may be because there are no
+                    # current gusts, not because the value
+                    # is missing. Check if there is a valid
+                    # value for windSpeed.
+                    #
+                    if 'windSpeed' not in obsprop:
+                        continue
+                    if 'qualityControl' not in obsprop[variable]:
+                        continue
+                    if obsprop['windSpeed']['qualityControl'] == 'qc:Z' and \
+                                get_metar_value(metar, 'windSpeed') is None:
+                        self.data[variable] = obsprop[variable]
+                        self.datatime[variable] = thisupdate
+                        continue
                     continue
                 if qcval in ('qc:S', 'qc:C'):
                     # Valid value, just update data.

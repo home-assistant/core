@@ -55,7 +55,7 @@ VALID_CONFIG_PHNG_FULL = {
         'platform': 'noaaweather',
         'latitude': 21.4131,
         'longitude': -157.7574,
-        'stationcode' : 'PHNG',
+        'stationcode': 'PHNG',
         'monitored_conditions': [
             'temperature',
             'textDescription',
@@ -119,7 +119,7 @@ def test_setup_with_config(hass, aioclient_mock):
 
     with assert_setup_component(1, 'sensor'):
         yield from async_setup_component(
-             hass, 'sensor', VALID_CONFIG_KJFK_MINIMAL)
+            hass, 'sensor', VALID_CONFIG_KJFK_MINIMAL)
 
 
 @asyncio.coroutine
@@ -210,7 +210,7 @@ def test_setup_badconfstation(hass, aioclient_mock):
 @asyncio.coroutine
 def test_setup_badobs(hass, aioclient_mock):
     """Test for configuration with bad station.
-    
+
     In this case, a request for station observations returns valid json
     but with no data values.  The result will be a sensor with no
     conditions available.

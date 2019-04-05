@@ -65,7 +65,7 @@
                 "rawMessage": "KJFK 301851Z 16019KT 10SM FEW130 SCT200 BKN250 13/07 A2998 RMK AO2 PK WND 17027/1829 SLP153 T01280072",
                 "textDescription": "Mostly Cloudy and Windy",
                 "icon": "https://api.weather.gov/icons/land/day/wind_bkn?size=medium",
-                "presentWeather": [],
+                "presentWeather": [{"weather": "rain", "intensity": "light", "rawString": "-RA", "modifier": null}],
                 "temperature": {
                     "value": 11.700000000000011,
                     "unitCode": "unit:degC",
