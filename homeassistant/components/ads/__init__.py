@@ -185,6 +185,9 @@ class AdsHub:
             try:
                 hnotify, huser = self._client.add_device_notification(
                     name, attr, self._device_notification_callback)
+            except pyads.ADSError as err:
+                _LOGGER.error("Error subscribing to %s: %s", name, err)
+            else:
                 hnotify = int(hnotify)
                 self._notification_items[hnotify] = NotificationItem(
                     hnotify, huser, name, plc_datatype, callback)
@@ -192,8 +195,6 @@ class AdsHub:
                 _LOGGER.debug(
                     "Added device notification %d for variable %s",
                     hnotify, name)
-            except pyads.ADSError as err:
-                _LOGGER.error("Error subscribing to %s: %s", name, err)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
