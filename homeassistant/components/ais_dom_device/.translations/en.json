@@ -1,0 +1,30 @@
+{
+    "config": {
+        "title": "Urządzenie AIS dom",
+        "step": {
+           "confirm": {
+                "description": "Czy chcosz dodać nowe urządzenie AIS dom? \n\n ![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)",
+                "title": "Dodawanie urządzenia AIS dom"
+           },
+          "one": {
+                "description": "Krok 1\n\n ![AIS logo](/static/icons/ais_s20_1.jpg)\n\n podłącz urządzenie do zasilania blisko Twojego routera WiFi - do którego sieci będziesz dołączał urządzenie.",
+                "title": "Podłącz urządzenie do prądu"
+            },
+          "two": {
+                "description": "Krok 2\n\n ![AIS logo](/static/icons/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu. Urządzenie uruchomi się domyślnie w tym trybie jeżelli nie było jeszcze dodane do sieci WiFi.\nŻeby wymusić tryb parowania ( w celu np. przełączenia urządzenia do innej sieci WiFi), naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.",
+                "title": "Poczekaj na tryb praowania"
+            },
+          "three": {
+                "description": "Krok 2\n\n ![AIS logo](/static/icons/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu. Urządzenie uruchomi się domyślnie w tym trybie jeżelli nie było jeszcze dodane do sieci WiFi.\nŻeby wymusić tryb parowania ( w celu np. przełączenia urządzenia do innej sieci WiFi), naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.",
+                "title": "Poczekaj na tryb praowania"
+            },
+          "init": {
+                "description": "TODO",
+                "title": "Potwierdzenie dodania"
+            }
+        }
+        },
+        "abort": {
+            "single_instance_allowed": "Only a single Spotify integration is allowed. If you want to configure it again, first delete the current integration."
+        }
+}

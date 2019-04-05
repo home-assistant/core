@@ -1,0 +1,19 @@
+{
+    "config": {
+        "title": "AIS Serwis Asystent Google",
+        "step": {
+            "init": {
+                "description": "To connect the Spotify account: \n 1. Click the link below\n 2. Log in to Spotify \n 3. Authorize ** Home assistant ** \n 4.Go back here and click ** SUBMIT **. \n\n ![AIS logo](/static/icons/favicon-100x100.png) [Uwierzytelnienie  na Spotify]({auth_url})",
+                "title": "Authentication for Spotify"
+            },
+           "confirm": {
+                "description": "Do you want to configure access to Spotify?",
+                "title": "Spotify Service",
+                "test": "ok"
+           }
+        },
+        "abort": {
+            "single_instance_allowed": "Only a single Spotify integration is allowed. If you want to configure it again, first delete the current integration."
+        }
+    }
+}

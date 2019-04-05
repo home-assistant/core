@@ -1,9 +1,14 @@
 # Describes the format for available AIS cloud services
 ask:
-  description: Pytanie do bazy wiedzy
+  description: Pytanie do bazy wiedzy "Google knowledge graph"
   fields:
     text:
       description: Pytanie
       example: 'Co to jest Google?'
 
-
+ask_wiki:
+  description: Pytanie do Wikipedii
+  fields:
+    text:
+      description: Pytanie
+      example: 'Wikipedia Google'

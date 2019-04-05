@@ -54,6 +54,7 @@ INTENT_PLAY_PODCAST = 'AisPlayPodcast'
 INTENT_PLAY_YT_MUSIC = 'AisPlayYtMusic'
 INTENT_PLAY_SPOTIFY = 'AisPlaySpotify'
 INTENT_ASK_QUESTION = 'AisAskQuestion'
+INTENT_ASKWIKI_QUESTION = 'AisAskWikiQuestion'
 INTENT_CHANGE_CONTEXT = 'AisChangeContext'
 INTENT_GET_WEATHER = 'AisGetWeather'
 INTENT_GET_WEATHER_48 = 'AisGetWeather48'
@@ -1266,7 +1267,11 @@ async def async_setup(hass, config):
     def say_it(service):
         """Info to the user."""
         text = service.data[ATTR_TEXT]
-        _say_it(hass, text, None)
+        if 'img' in service.data:
+            img = service.data['img']
+        else:
+            img = None
+        _say_it(hass, text, None, img)
 
     def welcome_home(service):
         """Welcome message."""
@@ -1401,6 +1406,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisPlayYtMusicIntent())
     hass.helpers.intent.async_register(AisPlaySpotifyIntent())
     hass.helpers.intent.async_register(AskQuestionIntent())
+    hass.helpers.intent.async_register(AskWikiQuestionIntent())
     hass.helpers.intent.async_register(ChangeContextIntent())
     hass.helpers.intent.async_register(AisGetWeather())
     hass.helpers.intent.async_register(AisGetWeather48())
@@ -1517,6 +1523,7 @@ async def async_setup(hass, config):
         'Informację na temat {item}', 'Co wiesz o {item}',
         'Co wiesz na temat {item}', 'Opowiedz o {item}',
         'Kim są {item}', 'Kto to {item}'])
+    async_register(hass, INTENT_ASKWIKI_QUESTION, ['Wikipedia {item}', 'wiki {item}', 'encyklopedia {item}'])
     async_register(hass, INTENT_OPEN_COVER, ['Otwórz {item}', 'Odsłoń {item}'])
     async_register(hass, INTENT_CLOSE_COVER, ['Zamknij {item}', 'Zasłoń {item}'])
     async_register(hass, INTENT_STOP, ['Stop', 'Zatrzymaj', 'Koniec', 'Pauza', 'Zaniechaj', 'Stój'])
@@ -1852,8 +1859,29 @@ def _process_command_from_frame(hass, service):
 def _post_message(message, hosts):
     """Post the message to TTS service."""
     message = message.replace("°C", "stopni Celsjusza")
+    # replace emoticons
+    emoji_pattern = re.compile("["
+                               u"\U0001F600-\U0001F64F"  # emoticons
+                               u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                               u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                               u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                               u"\U0001F1F2-\U0001F1F4"  # Macau flag
+                               u"\U0001F1E6-\U0001F1FF"  # flags
+                               u"\U0001F600-\U0001F64F"
+                               u"\U00002702-\U000027B0"
+                               u"\U000024C2-\U0001F251"
+                               u"\U0001f926-\U0001f937"
+                               u"\U0001F1F2"
+                               u"\U0001F1F4"
+                               u"\U0001F620"
+                               u"\u200d"
+                               u"\u2640-\u2642"
+                               "]+", flags=re.UNICODE)
+
+    text = emoji_pattern.sub(r'', message)
+    _LOGGER.debug("tekst wysłany do przeczytania: " + text)
     j_data = {
-            "text": message,
+            "text": text,
             "pitch": ais_global.GLOBAL_TTS_PITCH,
             "rate": ais_global.GLOBAL_TTS_RATE,
             "voice": ais_global.GLOBAL_TTS_VOICE
@@ -1882,7 +1910,7 @@ def _beep_it(hass, tone):
     )
 
 
-def _say_it(hass, message, caller_ip=None):
+def _say_it(hass, message, caller_ip=None, img=None):
     # sent the tts message to the panel via http api
     global GLOBAL_TTS_TEXT
     l_hosts = ['localhost']
@@ -1907,10 +1935,12 @@ def _say_it(hass, message, caller_ip=None):
 
     _post_message(message, l_hosts)
 
-    if len(message) > 199:
-        GLOBAL_TTS_TEXT = message[0: 199] + '...'
+    if len(message) > 1999:
+        GLOBAL_TTS_TEXT = message[0: 1999] + '...'
     else:
-        GLOBAL_TTS_TEXT = message
+        GLOBAL_TTS_TEXT = message + ' '
+    if img is not None:
+        GLOBAL_TTS_TEXT = GLOBAL_TTS_TEXT + ' \n\n' + '![Zdjęcie](' + img + ')'
     hass.states.async_set(
         'sensor.ais_knowledge_answer', 'ok', {
             'text': GLOBAL_TTS_TEXT
@@ -2206,7 +2236,8 @@ def _process(hass, text, callback):
                 m = 'Nie rozumiem ' + text
             # asking without the suffix
             ws_resp = aisCloudWS.ask(text, m)
-            m = ws_resp.text
+            _LOGGER.debug('ws_resp: ' + ws_resp.text)
+            m = ws_resp.text.split('---')[0]
 
     except Exception as e:
         _LOGGER.warning('_process: ' + str(e))
@@ -2511,6 +2542,29 @@ class AskQuestionIntent(intent.IntentHandler):
             yield from hass.services.async_call(
                  'ais_knowledge_service',
                  'ask', {"text": question, "say_it": True}, blocking=True)
+        return 'DO_NOT_SAY', True
+
+
+class AskWikiQuestionIntent(intent.IntentHandler):
+    """Handle AskWikiQuestion intents."""
+    intent_type = INTENT_ASKWIKI_QUESTION
+    slot_schema = {
+        'item': cv.string
+    }
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        item = slots['item']['value']
+        question = item
+        if not question:
+            message = 'Nie wiem o co zapytać, ' + question
+            return message, False
+        else:
+            yield from hass.services.async_call(
+                 'ais_knowledge_service',
+                 'ask_wiki', {"text": question, "say_it": True}, blocking=True)
         return 'DO_NOT_SAY', True
 
 
