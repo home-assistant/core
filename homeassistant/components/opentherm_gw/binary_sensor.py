@@ -20,78 +20,79 @@ async def async_setup_platform(
     """Set up the OpenTherm Gateway binary sensors."""
     if discovery_info is None:
         return
-    gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
+    gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
     sensor_info = {
         # [device_class, friendly_name format]
-        gw.vars.DATA_MASTER_CH_ENABLED: [
+        gw_dev.vars.DATA_MASTER_CH_ENABLED: [
             None, "Thermostat Central Heating Enabled {}"],
-        gw.vars.DATA_MASTER_DHW_ENABLED: [
+        gw_dev.vars.DATA_MASTER_DHW_ENABLED: [
             None, "Thermostat Hot Water Enabled {}"],
-        gw.vars.DATA_MASTER_COOLING_ENABLED: [
+        gw_dev.vars.DATA_MASTER_COOLING_ENABLED: [
             None, "Thermostat Cooling Enabled {}"],
-        gw.vars.DATA_MASTER_OTC_ENABLED: [
+        gw_dev.vars.DATA_MASTER_OTC_ENABLED: [
             None, "Thermostat Outside Temperature Correction Enabled {}"],
-        gw.vars.DATA_MASTER_CH2_ENABLED: [
+        gw_dev.vars.DATA_MASTER_CH2_ENABLED: [
             None, "Thermostat Central Heating 2 Enabled {}"],
-        gw.vars.DATA_SLAVE_FAULT_IND: [
+        gw_dev.vars.DATA_SLAVE_FAULT_IND: [
             DEVICE_CLASS_PROBLEM, "Boiler Fault Indication {}"],
-        gw.vars.DATA_SLAVE_CH_ACTIVE: [
+        gw_dev.vars.DATA_SLAVE_CH_ACTIVE: [
             DEVICE_CLASS_HEAT, "Boiler Central Heating Status {}"],
-        gw.vars.DATA_SLAVE_DHW_ACTIVE: [
+        gw_dev.vars.DATA_SLAVE_DHW_ACTIVE: [
             DEVICE_CLASS_HEAT, "Boiler Hot Water Status {}"],
-        gw.vars.DATA_SLAVE_FLAME_ON: [
+        gw_dev.vars.DATA_SLAVE_FLAME_ON: [
             DEVICE_CLASS_HEAT, "Boiler Flame Status {}"],
-        gw.vars.DATA_SLAVE_COOLING_ACTIVE: [
+        gw_dev.vars.DATA_SLAVE_COOLING_ACTIVE: [
             DEVICE_CLASS_COLD, "Boiler Cooling Status {}"],
-        gw.vars.DATA_SLAVE_CH2_ACTIVE: [
+        gw_dev.vars.DATA_SLAVE_CH2_ACTIVE: [
             DEVICE_CLASS_HEAT, "Boiler Central Heating 2 Status {}"],
-        gw.vars.DATA_SLAVE_DIAG_IND: [
+        gw_dev.vars.DATA_SLAVE_DIAG_IND: [
             DEVICE_CLASS_PROBLEM, "Boiler Diagnostics Indication {}"],
-        gw.vars.DATA_SLAVE_DHW_PRESENT: [None, "Boiler Hot Water Present {}"],
-        gw.vars.DATA_SLAVE_CONTROL_TYPE: [None, "Boiler Control Type {}"],
-        gw.vars.DATA_SLAVE_COOLING_SUPPORTED: [
+        gw_dev.vars.DATA_SLAVE_DHW_PRESENT: [
+            None, "Boiler Hot Water Present {}"],
+        gw_dev.vars.DATA_SLAVE_CONTROL_TYPE: [None, "Boiler Control Type {}"],
+        gw_dev.vars.DATA_SLAVE_COOLING_SUPPORTED: [
             None, "Boiler Cooling Support {}"],
-        gw.vars.DATA_SLAVE_DHW_CONFIG: [
+        gw_dev.vars.DATA_SLAVE_DHW_CONFIG: [
             None, "Boiler Hot Water Configuration {}"],
-        gw.vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP: [
+        gw_dev.vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP: [
             None, "Boiler Pump Commands Support {}"],
-        gw.vars.DATA_SLAVE_CH2_PRESENT: [
+        gw_dev.vars.DATA_SLAVE_CH2_PRESENT: [
             None, "Boiler Central Heating 2 Present {}"],
-        gw.vars.DATA_SLAVE_SERVICE_REQ: [
+        gw_dev.vars.DATA_SLAVE_SERVICE_REQ: [
             DEVICE_CLASS_PROBLEM, "Boiler Service Required {}"],
-        gw.vars.DATA_SLAVE_REMOTE_RESET: [
+        gw_dev.vars.DATA_SLAVE_REMOTE_RESET: [
             None, "Boiler Remote Reset Support {}"],
-        gw.vars.DATA_SLAVE_LOW_WATER_PRESS: [
+        gw_dev.vars.DATA_SLAVE_LOW_WATER_PRESS: [
             DEVICE_CLASS_PROBLEM, "Boiler Low Water Pressure {}"],
-        gw.vars.DATA_SLAVE_GAS_FAULT: [
+        gw_dev.vars.DATA_SLAVE_GAS_FAULT: [
             DEVICE_CLASS_PROBLEM, "Boiler Gas Fault {}"],
-        gw.vars.DATA_SLAVE_AIR_PRESS_FAULT: [
+        gw_dev.vars.DATA_SLAVE_AIR_PRESS_FAULT: [
             DEVICE_CLASS_PROBLEM, "Boiler Air Pressure Fault {}"],
-        gw.vars.DATA_SLAVE_WATER_OVERTEMP: [
+        gw_dev.vars.DATA_SLAVE_WATER_OVERTEMP: [
             DEVICE_CLASS_PROBLEM, "Boiler Water Overtemperature {}"],
-        gw.vars.DATA_REMOTE_TRANSFER_DHW: [
+        gw_dev.vars.DATA_REMOTE_TRANSFER_DHW: [
             None, "Remote Hot Water Setpoint Transfer Support {}"],
-        gw.vars.DATA_REMOTE_TRANSFER_MAX_CH: [
+        gw_dev.vars.DATA_REMOTE_TRANSFER_MAX_CH: [
             None, "Remote Maximum Central Heating Setpoint Write Support {}"],
-        gw.vars.DATA_REMOTE_RW_DHW: [
+        gw_dev.vars.DATA_REMOTE_RW_DHW: [
             None, "Remote Hot Water Setpoint Write Support {}"],
-        gw.vars.DATA_REMOTE_RW_MAX_CH: [
+        gw_dev.vars.DATA_REMOTE_RW_MAX_CH: [
             None, "Remote Central Heating Setpoint Write Support {}"],
-        gw.vars.DATA_ROVRD_MAN_PRIO: [
+        gw_dev.vars.DATA_ROVRD_MAN_PRIO: [
             None, "Remote Override Manual Change Priority {}"],
-        gw.vars.DATA_ROVRD_AUTO_PRIO: [
+        gw_dev.vars.DATA_ROVRD_AUTO_PRIO: [
             None, "Remote Override Program Change Priority {}"],
-        gw.vars.OTGW_GPIO_A_STATE: [None, "Gateway GPIO A State {}"],
-        gw.vars.OTGW_GPIO_B_STATE: [None, "Gateway GPIO B State {}"],
-        gw.vars.OTGW_IGNORE_TRANSITIONS: [
+        gw_dev.vars.OTGW_GPIO_A_STATE: [None, "Gateway GPIO A State {}"],
+        gw_dev.vars.OTGW_GPIO_B_STATE: [None, "Gateway GPIO B State {}"],
+        gw_dev.vars.OTGW_IGNORE_TRANSITIONS: [
             None, "Gateway Ignore Transitions {}"],
-        gw.vars.OTGW_OVRD_HB: [None, "Gateway Override High Byte {}"],
+        gw_dev.vars.OTGW_OVRD_HB: [None, "Gateway Override High Byte {}"],
     }
     sensors = []
-    for var in gw.binary_sensors:
+    for var in gw_dev.binary_sensors:
         device_class = sensor_info[var][0]
         friendly_name_format = sensor_info[var][1]
-        sensors.append(OpenThermBinarySensor(gw, var, device_class,
+        sensors.append(OpenThermBinarySensor(gw_dev, var, device_class,
                                              friendly_name_format))
     async_add_entities(sensors)
 
@@ -99,15 +100,16 @@ async def async_setup_platform(
 class OpenThermBinarySensor(BinarySensorDevice):
     """Represent an OpenTherm Gateway binary sensor."""
 
-    def __init__(self, gw, var, device_class, friendly_name_format):
+    def __init__(self, gw_dev, var, device_class, friendly_name_format):
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, '{}_{}'.format(var, gw.gw_id), hass=gw.hass)
-        self._gateway = gw
+            ENTITY_ID_FORMAT, '{}_{}'.format(var, gw_dev.gw_id),
+            hass=gw_dev.hass)
+        self._gateway = gw_dev
         self._var = var
         self._state = None
         self._device_class = device_class
-        self._friendly_name = friendly_name_format.format(gw.name)
+        self._friendly_name = friendly_name_format.format(gw_dev.name)
 
     async def async_added_to_hass(self):
         """Subscribe to updates from the component."""

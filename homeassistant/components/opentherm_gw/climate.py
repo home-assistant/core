@@ -20,23 +20,23 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the opentherm_gw device."""
-    gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
-    gateway = OpenThermClimate(gw)
+    gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
+    gateway = OpenThermClimate(gw_dev)
     async_add_entities([gateway])
 
 
 class OpenThermClimate(ClimateDevice):
     """Representation of a climate device."""
 
-    def __init__(self, gw):
+    def __init__(self, gw_dev):
         """Initialize the device."""
-        self._gateway = gw
-        self._gw_vars = gw.vars
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, gw.gw_id,
-                                                  hass=gw.hass)
-        self.friendly_name = gw.name
-        self.floor_temp = gw.climate_config[CONF_FLOOR_TEMP]
-        self.temp_precision = gw.climate_config.get(CONF_PRECISION)
+        self._gateway = gw_dev
+        self._gw_vars = gw_dev.vars
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, gw_dev.gw_id, hass=gw_dev.hass)
+        self.friendly_name = gw_dev.name
+        self.floor_temp = gw_dev.climate_config[CONF_FLOOR_TEMP]
+        self.temp_precision = gw_dev.climate_config.get(CONF_PRECISION)
         self._current_operation = STATE_IDLE
         self._current_temperature = None
         self._new_target_temperature = None

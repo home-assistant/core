@@ -134,90 +134,100 @@ async def register_services(hass):
 
     async def reset_gateway(call):
         """Reset the OpenTherm Gateway."""
-        gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_dev = (
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]])
         mode_rst = gw_vars.OTGW_MODE_RESET
-        status = await gw.gateway.set_mode(mode_rst)
-        gw.status = status
-        async_dispatcher_send(hass, gw.update_signal, gw.status)
+        status = await gw_dev.gateway.set_mode(mode_rst)
+        gw_dev.status = status
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
     hass.services.async_register(DOMAIN, SERVICE_RESET_GATEWAY, reset_gateway,
                                  service_reset_schema)
 
     async def set_control_setpoint(call):
         """Set the control setpoint on the OpenTherm Gateway."""
-        gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_dev = (
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]])
         gw_var = gw_vars.DATA_CONTROL_SETPOINT
-        value = await gw.gateway.set_control_setpoint(
+        value = await gw_dev.gateway.set_control_setpoint(
             call.data[ATTR_TEMPERATURE])
-        gw.status.update({gw_var: value})
-        async_dispatcher_send(hass, gw.update_signal, gw.status)
+        gw_dev.status.update({gw_var: value})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
     hass.services.async_register(DOMAIN, SERVICE_SET_CONTROL_SETPOINT,
                                  set_control_setpoint,
                                  service_set_control_setpoint_schema)
 
     async def set_device_clock(call):
         """Set the clock on the OpenTherm Gateway."""
-        gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_dev = (
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]])
         attr_date = call.data[ATTR_DATE]
         attr_time = call.data[ATTR_TIME]
-        await gw.gateway.set_clock(datetime.combine(attr_date, attr_time))
+        await gw_dev.gateway.set_clock(datetime.combine(attr_date, attr_time))
     hass.services.async_register(DOMAIN, SERVICE_SET_CLOCK, set_device_clock,
                                  service_set_clock_schema)
 
     async def set_gpio_mode(call):
         """Set the OpenTherm Gateway GPIO modes."""
-        gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_dev = (
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]])
         gpio_id = call.data[ATTR_ID]
         gpio_mode = call.data[ATTR_MODE]
-        mode = await gw.gateway.set_gpio_mode(gpio_id, gpio_mode)
+        mode = await gw_dev.gateway.set_gpio_mode(gpio_id, gpio_mode)
         gpio_var = getattr(gw_vars, 'OTGW_GPIO_{}'.format(gpio_id))
-        gw.status.update({gpio_var: mode})
-        async_dispatcher_send(hass, gw.update_signal, gw.status)
+        gw_dev.status.update({gpio_var: mode})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
     hass.services.async_register(DOMAIN, SERVICE_SET_GPIO_MODE, set_gpio_mode,
                                  service_set_gpio_mode_schema)
 
     async def set_led_mode(call):
         """Set the OpenTherm Gateway LED modes."""
-        gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_dev = (
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]])
         led_id = call.data[ATTR_ID]
         led_mode = call.data[ATTR_MODE]
-        mode = await gw.gateway.set_led_mode(led_id, led_mode)
+        mode = await gw_dev.gateway.set_led_mode(led_id, led_mode)
         led_var = getattr(gw_vars, 'OTGW_LED_{}'.format(led_id))
-        gw.status.update({led_var: mode})
-        async_dispatcher_send(hass, gw.update_signal, gw.status)
+        gw_dev.status.update({led_var: mode})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
     hass.services.async_register(DOMAIN, SERVICE_SET_LED_MODE, set_led_mode,
                                  service_set_led_mode_schema)
 
     async def set_max_mod(call):
         """Set the max modulation level."""
-        gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_dev = (
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]])
         gw_var = gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD
         level = call.data[ATTR_LEVEL]
         if level == -1:
             # Backend only clears setting on non-numeric values.
             level = '-'
-        value = await gw.gateway.set_max_relative_mod(level)
-        gw.status.update({gw_var: value})
-        async_dispatcher_send(hass, gw.update_signal, gw.status)
+        value = await gw_dev.gateway.set_max_relative_mod(level)
+        gw_dev.status.update({gw_var: value})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
     hass.services.async_register(DOMAIN, SERVICE_SET_MAX_MOD, set_max_mod,
                                  service_set_max_mod_schema)
 
     async def set_outside_temp(call):
         """Provide the outside temperature to the OpenTherm Gateway."""
-        gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_dev = (
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]])
         gw_var = gw_vars.DATA_OUTSIDE_TEMP
-        value = await gw.gateway.set_outside_temp(call.data[ATTR_TEMPERATURE])
-        gw.status.update({gw_var: value})
-        async_dispatcher_send(hass, gw.update_signal, gw.status)
+        value = await gw_dev.gateway.set_outside_temp(
+            call.data[ATTR_TEMPERATURE])
+        gw_dev.status.update({gw_var: value})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
     hass.services.async_register(DOMAIN, SERVICE_SET_OAT, set_outside_temp,
                                  service_set_oat_schema)
 
     async def set_setback_temp(call):
         """Set the OpenTherm Gateway SetBack temperature."""
-        gw = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_dev = (
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]])
         gw_var = gw_vars.OTGW_SB_TEMP
-        value = await gw.gateway.set_setback_temp(call.data[ATTR_TEMPERATURE])
-        gw.status.update({gw_var: value})
-        async_dispatcher_send(hass, gw.update_signal, gw.status)
+        value = await gw_dev.gateway.set_setback_temp(
+            call.data[ATTR_TEMPERATURE])
+        gw_dev.status.update({gw_var: value})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
     hass.services.async_register(DOMAIN, SERVICE_SET_SB_TEMP, set_setback_temp,
                                  service_set_sb_temp_schema)
 
