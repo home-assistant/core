@@ -552,19 +552,6 @@ def uuid4_hex(value):
     return result.hex
 
 
-def zwave_network_key(value):
-    """Validate a 16 byte value for zwave network keys."""
-    regex = re.compile(r'(0x\w\w,\s?){15}0x\w\w')
-    try:
-        if not regex.match(value):
-            raise vol.Invalid('Invalid Z-Wave network key')
-    except (ValueError, AttributeError, TypeError) as error:
-        raise vol.Invalid('Invalid zwave network keys',
-                          error_message=str(error))
-
-    return str(value).lower()
-
-
 def ensure_list_csv(value: Any) -> Sequence:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):

@@ -159,7 +159,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
-        vol.Optional(CONF_NETWORK_KEY): cv.zwave_network_key,
+        vol.Optional(CONF_NETWORK_KEY): vol.All(cv.string, zwave_network_key),
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
@@ -184,6 +184,19 @@ def _obj_to_dict(obj):
 def _value_name(value):
     """Return the name of the value."""
     return '{} {}'.format(node_name(value.node), value.label).strip()
+
+
+def zwave_network_key(value):
+    """Validate a 16 byte value for zwave network keys."""
+    regex = re.compile(r'(0x\w\w,\s?){15}0x\w\w')
+    try:
+        if not regex.match(value):
+            raise vol.Invalid('Invalid Z-Wave network key')
+    except (ValueError, AttributeError, TypeError) as error:
+        raise vol.Invalid('Invalid zwave network keys',
+                          error_message=str(error))
+
+    return str(value).lower()
 
 
 def nice_print_node(node):
