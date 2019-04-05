@@ -41,7 +41,7 @@ async def test_config_with_host_passed_to_config_entry(hass):
             }
         }) is True
     # Import flow started
-    assert len(mock_config_flow.mock_calls) == 2
+    assert len(mock_config_flow.mock_calls) == 1
 
 
 async def test_config_without_host_not_passed_to_config_entry(hass):

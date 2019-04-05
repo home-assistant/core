@@ -4,7 +4,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
@@ -51,7 +50,7 @@ async def async_setup(hass, config):
     """
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
         deconz_config = config[DOMAIN]
-        hass.async_add_job(hass.config_entries.flow.async_init(
+        hass.async_create_task(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data=deconz_config
         ))
@@ -175,7 +174,6 @@ async def async_unload_entry(hass, config_entry):
     return await gateway.async_reset()
 
 
-@callback
 async def async_populate_options(hass, config_entry):
     """Populate default options for gateway.
 
