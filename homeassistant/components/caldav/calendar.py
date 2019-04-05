@@ -19,6 +19,7 @@ CONF_CALENDARS = 'calendars'
 CONF_CUSTOM_CALENDARS = 'custom_calendars'
 CONF_CALENDAR = 'calendar'
 CONF_SEARCH = 'search'
+CONF_INCLUDE_ALL_DAY = 'include_all_day'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     # pylint: disable=no-value-for-parameter
@@ -29,12 +30,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         ])),
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
+    vol.Optional(CONF_INCLUDE_ALL_DAY, default=False): cv.boolean,
     vol.Optional(CONF_CUSTOM_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             vol.Schema({
                 vol.Required(CONF_CALENDAR): cv.string,
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_SEARCH): cv.string,
+                vol.Optional(CONF_INCLUDE_ALL_DAY, default=True): cv.boolean,
             })
         ])),
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean
@@ -78,9 +81,11 @@ def setup_platform(hass, config, add_entities, disc_info=None):
                     cust_calendar.get(CONF_NAME)),
             }
 
+            include_all_day = cust_calendar.get(CONF_INCLUDE_ALL_DAY)
+
             calendar_devices.append(
                 WebDavCalendarEventDevice(
-                    hass, device_data, calendar, True,
+                    hass, device_data, calendar, include_all_day,
                     cust_calendar.get(CONF_SEARCH)))
 
         # Create a default calendar if there was no custom one
@@ -89,8 +94,12 @@ def setup_platform(hass, config, add_entities, disc_info=None):
                 CONF_NAME: calendar.name,
                 CONF_DEVICE_ID: calendar.name,
             }
+
+            include_all_day = config.get(CONF_INCLUDE_ALL_DAY)
+
             calendar_devices.append(
-                WebDavCalendarEventDevice(hass, device_data, calendar)
+                WebDavCalendarEventDevice(hass, device_data, calendar,
+                                          include_all_day)
             )
 
     add_entities(calendar_devices)
@@ -256,6 +265,6 @@ class WebDavCalendarData:
             enddate = obj.dtstart.value + obj.duration.value
 
         else:
-            enddate = obj.dtstart.value + timedelta(days=1)
+            enddate = obj.dtstart.value + timedelta(days=2)
 
         return enddate
