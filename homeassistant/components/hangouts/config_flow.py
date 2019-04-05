@@ -46,10 +46,8 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
                                         GoogleAuthError, Google2FAError)
             user_email = user_input[CONF_EMAIL]
             user_password = user_input[CONF_PASSWORD]
-            if CONF_AUTH_CODE in user_input:
-                user_auth_code = user_input[CONF_AUTH_CODE]
-            else:
-                user_auth_code = None
+            user_auth_code = user_input.get(CONF_AUTH_CODE)
+            manual_login = user_auth_code is not None
 
             user_pin = None
             self._credentials = HangoutsCredentials(user_email,
@@ -58,11 +56,6 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
                                                     user_auth_code)
             self._refresh_token = HangoutsRefreshToken(None)
             try:
-                if user_auth_code is None:
-                    manual_login = False
-                else:
-                    manual_login = True
-
                 await self.hass.async_add_executor_job(
                     functools.partial(get_auth,
                                       self._credentials,
