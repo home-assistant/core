@@ -228,6 +228,22 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
     return platform
 
 
+async def _async_process_deps(
+        hass: core.HomeAssistant,
+        config: Dict,
+        name: str,
+        dependencies: list
+) -> None:
+    """Process all dependencies provided; throws error if fails."""
+    if not await _async_process_dependencies(
+            hass,
+            config,
+            name,
+            dependencies
+    ):
+        raise HomeAssistantError("Could not set up all dependencies.")
+
+
 async def async_process_deps_reqs(
         hass: core.HomeAssistant, config: Dict, name: str,
         module: ModuleType) -> None:
@@ -244,22 +260,25 @@ async def async_process_deps_reqs(
 
     manifest = await hass.async_add_executor_job(
         json_util.load_json,
-        os.path.join(os.path.dirname(module.__file__), 'manifest.json')
+        os.path.join(os.path.dirname(module.__file__), 'manifest.json'),
+        None
     )
 
-    if manifest.get('dependencies'):  # type: ignore
-        dep_success = await _async_process_dependencies(
-            hass, config, name, manifest['dependencies'])  # type: ignore
-
-        if not dep_success:
-            raise HomeAssistantError("Could not set up all dependencies.")
+    if manifest:
+        await _async_process_deps(
+            hass,
+            config,
+            name,
+            manifest['dependencies']  # type: ignore
+        )
 
     elif hasattr(module, 'DEPENDENCIES'):
-        dep_success = await _async_process_dependencies(
-            hass, config, name, module.DEPENDENCIES)  # type: ignore
-
-        if not dep_success:
-            raise HomeAssistantError("Could not set up all dependencies.")
+        await _async_process_deps(
+            hass,
+            config,
+            name,
+            module.DEPENDENCIES  # type: ignore
+        )
 
     if not hass.config.skip_pip and hasattr(module, 'REQUIREMENTS'):
         req_success = await requirements.async_process_requirements(
