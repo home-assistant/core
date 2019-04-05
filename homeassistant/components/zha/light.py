@@ -172,6 +172,7 @@ class Light(ZhaEntity, light.Light):
         duration = transition * 10 if transition else DEFAULT_DURATION
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
 
+        t_log = {}
         if (brightness is not None or transition) and \
                 self._supported_features & light.SUPPORT_BRIGHTNESS:
             if brightness is not None:
@@ -182,7 +183,9 @@ class Light(ZhaEntity, light.Light):
                 level,
                 duration
             )
+            t_log['move_to_level_with_on_off'] = success
             if not success:
+                self.debug("turned on: %s", t_log)
                 return
             self._state = bool(level)
             if level:
@@ -190,7 +193,9 @@ class Light(ZhaEntity, light.Light):
 
         if brightness is None or brightness:
             success = await self._on_off_channel.on()
+            t_log['on_off'] = success
             if not success:
+                self.debug("turned on: %s", t_log)
                 return
             self._state = True
 
@@ -199,7 +204,9 @@ class Light(ZhaEntity, light.Light):
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             success = await self._color_channel.move_to_color_temp(
                 temperature, duration)
+            t_log['move_to_color_temp'] = success
             if not success:
+                self.debug("turned on: %s", t_log)
                 return
             self._color_temp = temperature
 
@@ -212,10 +219,13 @@ class Light(ZhaEntity, light.Light):
                 int(xy_color[1] * 65535),
                 duration,
             )
+            t_log['move_to_color'] = success
             if not success:
+                self.debug("turned on: %s", t_log)
                 return
             self._hs_color = hs_color
 
+        self.debug("turned on: %s", t_log)
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
@@ -229,7 +239,7 @@ class Light(ZhaEntity, light.Light):
             )
         else:
             success = await self._on_off_channel.off()
-        _LOGGER.debug("%s was turned off: %s", self.entity_id, success)
+        self.debug("turned off: %s", success)
         if not success:
             return
         self._state = False
