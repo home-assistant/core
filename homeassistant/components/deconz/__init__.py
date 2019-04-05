@@ -51,7 +51,7 @@ async def async_setup(hass, config):
     """
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
         deconz_config = config[DOMAIN]
-        hass.async_add_job(hass.config_entries.flow.async_init(
+        hass.async_create_task(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data=deconz_config
         ))
@@ -175,7 +175,6 @@ async def async_unload_entry(hass, config_entry):
     return await gateway.async_reset()
 
 
-@callback
 async def async_populate_options(hass, config_entry):
     """Populate default options for gateway.
 
