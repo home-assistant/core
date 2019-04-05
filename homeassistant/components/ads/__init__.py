@@ -193,7 +193,7 @@ class AdsHub:
                     "Added device notification %d for variable %s",
                     hnotify, name)
             except pyads.ADSError as err:
-                _LOGGER.error("Error reading %s: %s", name, err)
+                _LOGGER.error("Error subscribing to %s: %s", name, err)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
