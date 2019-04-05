@@ -4,8 +4,8 @@ from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from pysmartthings import (
-    CLASSIFICATION_AUTOMATION, AppEntity, AppSettings, DeviceEntity,
-    InstalledApp, Location)
+    CLASSIFICATION_AUTOMATION, AppEntity, AppOAuthClient, AppSettings,
+    DeviceEntity, InstalledApp, Location, SceneEntity, Subscription)
 from pysmartthings.api import Api
 import pytest
 
@@ -13,8 +13,9 @@ from homeassistant.components import webhook
 from homeassistant.components.smartthings import DeviceBroker
 from homeassistant.components.smartthings.const import (
     APP_NAME_PREFIX, CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_INSTANCE_ID,
-    CONF_LOCATION_ID, DATA_BROKERS, DOMAIN, SETTINGS_INSTANCE_ID, STORAGE_KEY,
-    STORAGE_VERSION)
+    CONF_LOCATION_ID, CONF_OAUTH_CLIENT_ID, CONF_OAUTH_CLIENT_SECRET,
+    CONF_REFRESH_TOKEN, DATA_BROKERS, DOMAIN, SETTINGS_INSTANCE_ID,
+    STORAGE_KEY, STORAGE_VERSION)
 from homeassistant.config_entries import (
     CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID
@@ -23,12 +24,16 @@ from homeassistant.setup import async_setup_component
 from tests.common import mock_coro
 
 
-async def setup_platform(hass, platform: str, *devices):
+async def setup_platform(hass, platform: str, *,
+                         devices=None, scenes=None):
     """Set up the SmartThings platform and prerequisites."""
     hass.config.components.add(DOMAIN)
-    broker = DeviceBroker(hass, devices, '')
-    config_entry = ConfigEntry("1", DOMAIN, "Test", {},
+    config_entry = ConfigEntry(2, DOMAIN, "Test",
+                               {CONF_INSTALLED_APP_ID:  str(uuid4())},
                                SOURCE_USER, CONN_CLASS_CLOUD_PUSH)
+    broker = DeviceBroker(hass, config_entry, Mock(), Mock(),
+                          devices or [], scenes or [])
+
     hass.data[DOMAIN] = {
         DATA_BROKERS: {
             config_entry.entry_id: broker
@@ -80,7 +85,8 @@ def app_fixture(hass, config_file):
         'appType': 'WEBHOOK_SMART_APP',
         'classifications': [CLASSIFICATION_AUTOMATION],
         'displayName': 'Home Assistant',
-        'description': "Home Assistant at " + hass.config.api.base_url,
+        'description':
+            hass.config.location_name + " at " + hass.config.api.base_url,
         'singleInstance': True,
         'webhookSmartApp': {
             'targetUrl': webhook.async_generate_url(
@@ -96,6 +102,15 @@ def app_fixture(hass, config_file):
     app.settings = Mock()
     app.settings.return_value = mock_coro(return_value=settings)
     return app
+
+
+@pytest.fixture(name="app_oauth_client")
+def app_oauth_client_fixture():
+    """Fixture for a single app's oauth."""
+    return AppOAuthClient({
+        'oauthClientId': str(uuid4()),
+        'oauthClientSecret': str(uuid4())
+    })
 
 
 @pytest.fixture(name='app_settings')
@@ -225,10 +240,23 @@ def config_entry_fixture(hass, installed_app, location):
         CONF_ACCESS_TOKEN: str(uuid4()),
         CONF_INSTALLED_APP_ID: installed_app.installed_app_id,
         CONF_APP_ID: installed_app.app_id,
-        CONF_LOCATION_ID: location.location_id
+        CONF_LOCATION_ID: location.location_id,
+        CONF_REFRESH_TOKEN: str(uuid4()),
+        CONF_OAUTH_CLIENT_ID: str(uuid4()),
+        CONF_OAUTH_CLIENT_SECRET: str(uuid4())
     }
-    return ConfigEntry("1", DOMAIN, location.name, data, SOURCE_USER,
+    return ConfigEntry(2, DOMAIN, location.name, data, SOURCE_USER,
                        CONN_CLASS_CLOUD_PUSH)
+
+
+@pytest.fixture(name="subscription_factory")
+def subscription_factory_fixture():
+    """Fixture for creating mock subscriptions."""
+    def _factory(capability):
+        sub = Subscription()
+        sub.capability = capability
+        return sub
+    return _factory
 
 
 @pytest.fixture(name="device_factory")
@@ -270,11 +298,36 @@ def device_factory_fixture():
     return _factory
 
 
+@pytest.fixture(name="scene_factory")
+def scene_factory_fixture(location):
+    """Fixture for creating mock devices."""
+    api = Mock(spec=Api)
+    api.execute_scene.side_effect = \
+        lambda *args, **kwargs: mock_coro(return_value={})
+
+    def _factory(name):
+        scene_data = {
+            'sceneId': str(uuid4()),
+            'sceneName': name,
+            'sceneIcon': '',
+            'sceneColor': '',
+            'locationId': location.location_id
+        }
+        return SceneEntity(api, scene_data)
+    return _factory
+
+
+@pytest.fixture(name="scene")
+def scene_fixture(scene_factory):
+    """Fixture for an individual scene."""
+    return scene_factory('Test Scene')
+
+
 @pytest.fixture(name="event_factory")
 def event_factory_fixture():
     """Fixture for creating mock devices."""
     def _factory(device_id, event_type="DEVICE_EVENT", capability='',
-                 attribute='Updated', value='Value'):
+                 attribute='Updated', value='Value', data=None):
         event = Mock()
         event.event_type = event_type
         event.device_id = device_id
@@ -282,6 +335,7 @@ def event_factory_fixture():
         event.capability = capability
         event.attribute = attribute
         event.value = value
+        event.data = data
         event.location_id = str(uuid4())
         return event
     return _factory

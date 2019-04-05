@@ -1,15 +1,13 @@
 """Support for KNX/IP sensors."""
 import voluptuous as vol
 
-from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-CONF_ADDRESS = 'address'
-CONF_TYPE = 'type'
+from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
 DEFAULT_NAME = 'KNX Sensor'
 DEPENDENCIES = ['knx']

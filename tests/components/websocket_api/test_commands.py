@@ -6,7 +6,8 @@ from homeassistant.components.websocket_api.const import URL
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED
 )
-from homeassistant.components.websocket_api import const, commands
+from homeassistant.components.websocket_api import const
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -26,7 +27,7 @@ async def test_call_service(hass, websocket_client):
 
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_CALL_SERVICE,
+        'type': 'call_service',
         'domain': 'domain_test',
         'service': 'test_service',
         'service_data': {
@@ -51,7 +52,7 @@ async def test_call_service_not_found(hass, websocket_client):
     """Test call service command."""
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_CALL_SERVICE,
+        'type': 'call_service',
         'domain': 'domain_test',
         'service': 'test_service',
         'service_data': {
@@ -66,13 +67,58 @@ async def test_call_service_not_found(hass, websocket_client):
     assert msg['error']['code'] == const.ERR_NOT_FOUND
 
 
+async def test_call_service_error(hass, websocket_client):
+    """Test call service command with error."""
+    @callback
+    def ha_error_call(_):
+        raise HomeAssistantError('error_message')
+
+    hass.services.async_register('domain_test', 'ha_error', ha_error_call)
+
+    async def unknown_error_call(_):
+        raise ValueError('value_error')
+
+    hass.services.async_register(
+        'domain_test', 'unknown_error', unknown_error_call)
+
+    await websocket_client.send_json({
+        'id': 5,
+        'type': 'call_service',
+        'domain': 'domain_test',
+        'service': 'ha_error',
+    })
+
+    msg = await websocket_client.receive_json()
+    print(msg)
+    assert msg['id'] == 5
+    assert msg['type'] == const.TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'home_assistant_error'
+    assert msg['error']['message'] == 'error_message'
+
+    await websocket_client.send_json({
+        'id': 6,
+        'type': 'call_service',
+        'domain': 'domain_test',
+        'service': 'unknown_error',
+    })
+
+    msg = await websocket_client.receive_json()
+    print(msg)
+    assert msg['id'] == 6
+    assert msg['type'] == const.TYPE_RESULT
+    assert msg['success'] is False
+    assert msg['error']['code'] == 'unknown_error'
+    assert msg['error']['message'] == 'value_error'
+
+
 async def test_subscribe_unsubscribe_events(hass, websocket_client):
     """Test subscribe/unsubscribe events command."""
     init_count = sum(hass.bus.async_listeners().values())
 
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_SUBSCRIBE_EVENTS,
+        'type': 'subscribe_events',
         'event_type': 'test_event'
     })
 
@@ -92,7 +138,7 @@ async def test_subscribe_unsubscribe_events(hass, websocket_client):
         msg = await websocket_client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == commands.TYPE_EVENT
+    assert msg['type'] == 'event'
     event = msg['event']
 
     assert event['event_type'] == 'test_event'
@@ -101,7 +147,7 @@ async def test_subscribe_unsubscribe_events(hass, websocket_client):
 
     await websocket_client.send_json({
         'id': 6,
-        'type': commands.TYPE_UNSUBSCRIBE_EVENTS,
+        'type': 'unsubscribe_events',
         'subscription': 5
     })
 
@@ -121,7 +167,7 @@ async def test_get_states(hass, websocket_client):
 
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_GET_STATES,
+        'type': 'get_states',
     })
 
     msg = await websocket_client.receive_json()
@@ -143,7 +189,7 @@ async def test_get_services(hass, websocket_client):
     """Test get_services command."""
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_GET_SERVICES,
+        'type': 'get_services',
     })
 
     msg = await websocket_client.receive_json()
@@ -157,7 +203,7 @@ async def test_get_config(hass, websocket_client):
     """Test get_config command."""
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_GET_CONFIG,
+        'type': 'get_config',
     })
 
     msg = await websocket_client.receive_json()
@@ -178,12 +224,12 @@ async def test_ping(websocket_client):
     """Test get_panels command."""
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_PING,
+        'type': 'ping',
     })
 
     msg = await websocket_client.receive_json()
     assert msg['id'] == 5
-    assert msg['type'] == commands.TYPE_PONG
+    assert msg['type'] == 'pong'
 
 
 async def test_call_service_context_with_user(hass, aiohttp_client,
@@ -212,7 +258,7 @@ async def test_call_service_context_with_user(hass, aiohttp_client,
 
         await ws.send_json({
             'id': 5,
-            'type': commands.TYPE_CALL_SERVICE,
+            'type': 'call_service',
             'domain': 'domain_test',
             'service': 'test_service',
             'service_data': {
@@ -239,7 +285,7 @@ async def test_subscribe_requires_admin(websocket_client, hass_admin_user):
     hass_admin_user.groups = []
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_SUBSCRIBE_EVENTS,
+        'type': 'subscribe_events',
         'event_type': 'test_event'
     })
 
@@ -261,7 +307,7 @@ async def test_states_filters_visible(hass, hass_admin_user, websocket_client):
     hass.states.async_set('test.not_visible_entity', 'invisible')
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_GET_STATES,
+        'type': 'get_states',
     })
 
     msg = await websocket_client.receive_json()
@@ -281,9 +327,82 @@ async def test_get_states_not_allows_nan(hass, websocket_client):
 
     await websocket_client.send_json({
         'id': 5,
-        'type': commands.TYPE_GET_STATES,
+        'type': 'get_states',
     })
 
     msg = await websocket_client.receive_json()
     assert not msg['success']
     assert msg['error']['code'] == const.ERR_UNKNOWN_ERROR
+
+
+async def test_subscribe_unsubscribe_events_whitelist(
+        hass, websocket_client, hass_admin_user):
+    """Test subscribe/unsubscribe events on whitelist."""
+    hass_admin_user.groups = []
+
+    await websocket_client.send_json({
+        'id': 5,
+        'type': 'subscribe_events',
+        'event_type': 'not-in-whitelist'
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == const.TYPE_RESULT
+    assert not msg['success']
+    assert msg['error']['code'] == 'unauthorized'
+
+    await websocket_client.send_json({
+        'id': 6,
+        'type': 'subscribe_events',
+        'event_type': 'themes_updated'
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 6
+    assert msg['type'] == const.TYPE_RESULT
+    assert msg['success']
+
+    hass.bus.async_fire('themes_updated')
+
+    with timeout(3, loop=hass.loop):
+        msg = await websocket_client.receive_json()
+
+    assert msg['id'] == 6
+    assert msg['type'] == 'event'
+    event = msg['event']
+    assert event['event_type'] == 'themes_updated'
+    assert event['origin'] == 'LOCAL'
+
+
+async def test_subscribe_unsubscribe_events_state_changed(
+        hass, websocket_client, hass_admin_user):
+    """Test subscribe/unsubscribe state_changed events."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({
+        'entities': {
+            'entity_ids': {
+                'light.permitted': True
+            }
+        }
+    })
+
+    await websocket_client.send_json({
+        'id': 7,
+        'type': 'subscribe_events',
+        'event_type': 'state_changed'
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 7
+    assert msg['type'] == const.TYPE_RESULT
+    assert msg['success']
+
+    hass.states.async_set('light.not_permitted', 'on')
+    hass.states.async_set('light.permitted', 'on')
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 7
+    assert msg['type'] == 'event'
+    assert msg['event']['event_type'] == 'state_changed'
+    assert msg['event']['data']['entity_id'] == 'light.permitted'

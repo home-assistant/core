@@ -62,7 +62,7 @@ def component_translation_file(hass: HomeAssistantType, component: str,
     # It's a platform
     parts = component.split('.', 1)
     module = get_platform(hass, *parts)
-    assert module is not None
+    assert module is not None, component
 
     # Either within HA or custom_components
     # Either light/hue.py or hue/light.py

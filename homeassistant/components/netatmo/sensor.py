@@ -189,6 +189,13 @@ class NetAtmoSensor(Entity):
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
         self.netatmo_data.update()
+        if self.netatmo_data.data is None:
+            if self._state is None:
+                return
+            _LOGGER.warning("No data found for %s", self.module_name)
+            self._state = None
+            return
+
         data = self.netatmo_data.data.get(self.module_name)
 
         if data is None:

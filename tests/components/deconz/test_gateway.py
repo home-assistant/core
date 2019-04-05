@@ -4,9 +4,12 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components.deconz import gateway
+from homeassistant.components.deconz import errors, gateway
 
 from tests.common import mock_coro
+
+import pydeconz
+
 
 ENTRY_CONFIG = {
     "host": "1.2.3.4",
@@ -35,18 +38,20 @@ async def test_gateway_setup():
         assert await deconz_gateway.async_setup() is True
 
     assert deconz_gateway.api is api
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 6
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 7
     assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == \
         (entry, 'binary_sensor')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == \
-        (entry, 'cover')
+        (entry, 'climate')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[2][1] == \
-        (entry, 'light')
+        (entry, 'cover')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[3][1] == \
-        (entry, 'scene')
+        (entry, 'light')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[4][1] == \
-        (entry, 'sensor')
+        (entry, 'scene')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[5][1] == \
+        (entry, 'sensor')
+    assert hass.config_entries.async_forward_entry_setup.mock_calls[6][1] == \
         (entry, 'switch')
     assert len(api.start.mock_calls) == 1
 
@@ -60,9 +65,23 @@ async def test_gateway_retry():
     deconz_gateway = gateway.DeconzGateway(hass, entry)
 
     with patch.object(
-            gateway, 'get_gateway', return_value=mock_coro(False)
-    ), pytest.raises(ConfigEntryNotReady):
+            gateway, 'get_gateway', side_effect=errors.CannotConnect), \
+            pytest.raises(ConfigEntryNotReady):
         await deconz_gateway.async_setup()
+
+
+async def test_gateway_setup_fails():
+    """Retry setup."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+
+    deconz_gateway = gateway.DeconzGateway(hass, entry)
+
+    with patch.object(gateway, 'get_gateway', side_effect=Exception):
+        result = await deconz_gateway.async_setup()
+
+    assert not result
 
 
 async def test_connection_status(hass):
@@ -150,7 +169,7 @@ async def test_reset_after_successful_setup():
         mock_coro(True)
     assert await deconz_gateway.async_reset() is True
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 6
+    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 7
 
     assert len(listener.mock_calls) == 1
     assert len(deconz_gateway.listeners) == 0
@@ -168,10 +187,20 @@ async def test_get_gateway(hass):
         assert await gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())
 
 
-async def test_get_gateway_fails(hass):
+async def test_get_gateway_fails_unauthorized(hass):
     """Failed call."""
     with patch('pydeconz.DeconzSession.async_load_parameters',
-               return_value=mock_coro(False)):
+               side_effect=pydeconz.errors.Unauthorized), \
+            pytest.raises(errors.AuthenticationRequired):
+        assert await gateway.get_gateway(
+            hass, ENTRY_CONFIG, Mock(), Mock()) is False
+
+
+async def test_get_gateway_fails_cannot_connect(hass):
+    """Failed call."""
+    with patch('pydeconz.DeconzSession.async_load_parameters',
+               side_effect=pydeconz.errors.RequestError), \
+            pytest.raises(errors.CannotConnect):
         assert await gateway.get_gateway(
             hass, ENTRY_CONFIG, Mock(), Mock()) is False
 

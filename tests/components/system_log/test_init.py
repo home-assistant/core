@@ -152,6 +152,11 @@ async def test_dedup_logs(hass, hass_client):
     assert log[1]["count"] == 2
     assert_log(log[1], '', 'error message 2', 'ERROR')
 
+    _LOGGER.error('error message 2')
+    log = await get_error_log(hass, hass_client, 2)
+    assert_log(log[0], '', 'error message 2', 'ERROR')
+    assert log[0]["timestamp"] > log[0]["first_occured"]
+
 
 async def test_clear_logs(hass, hass_client):
     """Test that the log can be cleared via a service call."""

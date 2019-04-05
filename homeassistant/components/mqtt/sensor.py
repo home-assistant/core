@@ -12,12 +12,6 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components import mqtt, sensor
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, CONF_UNIQUE_ID,
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE, CONF_DEVICE_CLASS, CONF_FORCE_UPDATE, CONF_ICON, CONF_NAME,
@@ -29,6 +23,12 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import dt as dt_util
+
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC, CONF_UNIQUE_ID,
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo, subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -133,8 +133,9 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             template.hass = self.hass
 
         @callback
-        def message_received(topic, payload, qos):
+        def message_received(msg):
             """Handle new MQTT messages."""
+            payload = msg.payload
             # auto-expire enabled?
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
             if expire_after is not None and expire_after > 0:
@@ -169,7 +170,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 payload = template.async_render_with_possible_json_value(
                     payload, self._state)
             self._state = payload
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
@@ -189,7 +190,7 @@ class MqttSensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """Triggered when value is expired."""
         self._expiration_trigger = None
         self._state = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def should_poll(self):

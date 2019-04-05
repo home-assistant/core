@@ -4,52 +4,52 @@ import struct
 
 import voluptuous as vol
 
-from homeassistant.components.modbus import (
-    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
-from homeassistant.const import (
-    CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE,
-    CONF_STRUCTURE)
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, CONF_OFFSET, CONF_SLAVE, CONF_STRUCTURE,
+    CONF_UNIT_OF_MEASUREMENT)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
+
+from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['modbus']
-
 CONF_COUNT = 'count'
-CONF_REVERSE_ORDER = 'reverse_order'
+CONF_DATA_TYPE = 'data_type'
 CONF_PRECISION = 'precision'
 CONF_REGISTER = 'register'
-CONF_REGISTERS = 'registers'
-CONF_SCALE = 'scale'
-CONF_DATA_TYPE = 'data_type'
 CONF_REGISTER_TYPE = 'register_type'
+CONF_REGISTERS = 'registers'
+CONF_REVERSE_ORDER = 'reverse_order'
+CONF_SCALE = 'scale'
+
+DATA_TYPE_CUSTOM = 'custom'
+DATA_TYPE_FLOAT = 'float'
+DATA_TYPE_INT = 'int'
+DATA_TYPE_UINT = 'uint'
+
+DEPENDENCIES = ['modbus']
 
 REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
 
-DATA_TYPE_INT = 'int'
-DATA_TYPE_UINT = 'uint'
-DATA_TYPE_FLOAT = 'float'
-DATA_TYPE_CUSTOM = 'custom'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_REGISTERS): [{
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_REGISTER): cv.positive_int,
-        vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):
-            vol.In([REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]),
         vol.Optional(CONF_COUNT, default=1): cv.positive_int,
-        vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
-        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
-        vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
-        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
-        vol.Optional(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT):
             vol.In([DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT,
                     DATA_TYPE_CUSTOM]),
+        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
+        vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
+        vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):
+            vol.In([REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]),
+        vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
+        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
+        vol.Optional(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }]
@@ -93,17 +93,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hub_name = register.get(CONF_HUB)
         hub = hass.data[MODBUS_DOMAIN][hub_name]
         sensors.append(ModbusRegisterSensor(
-            hub,
-            register.get(CONF_NAME),
-            register.get(CONF_SLAVE),
-            register.get(CONF_REGISTER),
-            register.get(CONF_REGISTER_TYPE),
-            register.get(CONF_UNIT_OF_MEASUREMENT),
-            register.get(CONF_COUNT),
-            register.get(CONF_REVERSE_ORDER),
-            register.get(CONF_SCALE),
-            register.get(CONF_OFFSET),
-            structure,
+            hub, register.get(CONF_NAME), register.get(CONF_SLAVE),
+            register.get(CONF_REGISTER), register.get(CONF_REGISTER_TYPE),
+            register.get(CONF_UNIT_OF_MEASUREMENT), register.get(CONF_COUNT),
+            register.get(CONF_REVERSE_ORDER), register.get(CONF_SCALE),
+            register.get(CONF_OFFSET), structure,
             register.get(CONF_PRECISION)))
 
     if not sensors:
@@ -158,14 +152,10 @@ class ModbusRegisterSensor(RestoreEntity):
         """Update the state of the sensor."""
         if self._register_type == REGISTER_TYPE_INPUT:
             result = self._hub.read_input_registers(
-                self._slave,
-                self._register,
-                self._count)
+                self._slave, self._register, self._count)
         else:
             result = self._hub.read_holding_registers(
-                self._slave,
-                self._register,
-                self._count)
+                self._slave, self._register, self._count)
         val = 0
 
         try:

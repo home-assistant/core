@@ -11,8 +11,8 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "H\u00e1zigazda (Host)",
-                    "port": "Port (alap\u00e9rtelmezett \u00e9rt\u00e9k: '80')"
+                    "host": "Hoszt",
+                    "port": "Port"
                 },
                 "title": "deCONZ \u00e1tj\u00e1r\u00f3 megad\u00e1sa"
             },

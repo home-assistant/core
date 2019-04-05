@@ -7,7 +7,8 @@
             "token_already_setup": "\u5bc6\u9470\u5df2\u8a2d\u5b9a\u904e\u3002",
             "token_forbidden": "\u5bc6\u9470\u4e0d\u5177\u6240\u9700\u7684 OAuth \u7bc4\u570d\u3002",
             "token_invalid_format": "\u5bc6\u9470\u5fc5\u9808\u70ba UID/GUID \u683c\u5f0f",
-            "token_unauthorized": "\u5bc6\u9470\u7121\u6548\u6216\u4e0d\u518d\u5177\u6709\u6388\u6b0a\u3002"
+            "token_unauthorized": "\u5bc6\u9470\u7121\u6548\u6216\u4e0d\u518d\u5177\u6709\u6388\u6b0a\u3002",
+            "webhook_error": "SmartThings \u7121\u6cd5\u8a8d\u8b49\u300cbase_url\u300d\u4e2d\u8a2d\u5b9a\u4e4b\u7aef\u9ede\u3002\u8acb\u518d\u6b21\u78ba\u8a8d\u5143\u4ef6\u9700\u6c42\u3002"
         },
         "step": {
             "user": {

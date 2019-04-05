@@ -8,6 +8,7 @@ from datetime import (timedelta, datetime as datetime_sys,
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
 from urllib.parse import urlparse
+from uuid import UUID
 
 import voluptuous as vol
 from pkg_resources import parse_version
@@ -293,7 +294,7 @@ def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
     if isinstance(value, int):
         raise vol.Invalid('Make sure you wrap time values in quotes')
-    elif not isinstance(value, str):
+    if not isinstance(value, str):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     negative_offset = False
@@ -440,7 +441,7 @@ def template(value):
     """Validate a jinja2 template."""
     if value is None:
         raise vol.Invalid('template value is None')
-    elif isinstance(value, (list, dict, template_helper.Template)):
+    if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid('template value should be a string')
 
     value = template_helper.Template(str(value))
@@ -530,6 +531,20 @@ def x10_address(value):
     if not regex.match(value):
         raise vol.Invalid('Invalid X10 Address')
     return str(value).lower()
+
+
+def uuid4_hex(value):
+    """Validate a v4 UUID in hex format."""
+    try:
+        result = UUID(value, version=4)
+    except (ValueError, AttributeError, TypeError) as error:
+        raise vol.Invalid('Invalid Version4 UUID', error_message=str(error))
+
+    if result.hex != value.lower():
+        # UUID() will create a uuid4 if input is invalid
+        raise vol.Invalid('Invalid Version4 UUID')
+
+    return result.hex
 
 
 def ensure_list_csv(value: Any) -> Sequence:
