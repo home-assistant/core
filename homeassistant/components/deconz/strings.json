@@ -35,6 +35,7 @@
         "abort": {
             "already_configured": "Bridge is already configured",
             "no_bridges": "No deCONZ bridges discovered",
+            "updated_instance": "Updated deCONZ instance with new host address",
             "one_instance_only": "Component only supports one deCONZ instance"
         }
     }
