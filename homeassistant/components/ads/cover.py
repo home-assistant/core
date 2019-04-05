@@ -1,12 +1,14 @@
-"""Support for ADS light sources."""
+"""Support for ADS covers."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.cover import (
     PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
-    SUPPORT_SET_POSITION, ATTR_POSITION, CoverDevice)
-from homeassistant.const import CONF_NAME, STATE_OPEN, STATE_CLOSED
+    SUPPORT_SET_POSITION, ATTR_POSITION, DEVICE_CLASSES_SCHEMA,
+    CoverDevice)
+from homeassistant.const import (
+    CONF_NAME, STATE_OPEN, STATE_CLOSED, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_ADS_VAR, CONF_ADS_VAR_POSITION, DATA_ADS, \
@@ -28,7 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADS_VAR_CLOSE): cv.string,
     vol.Optional(CONF_ADS_VAR_OPEN): cv.string,
     vol.Optional(CONF_ADS_VAR_STOP): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA
 })
 
 
@@ -43,6 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ads_var_close = config.get(CONF_ADS_VAR_CLOSE)
     ads_var_stop = config.get(CONF_ADS_VAR_STOP)
     name = config.get(CONF_NAME)
+    device_class = config.get(CONF_DEVICE_CLASS)
 
     add_entities([AdsCover(ads_hub,
                            ads_var_is_closed,
@@ -51,17 +55,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                            ads_var_open,
                            ads_var_close,
                            ads_var_stop,
-                           name)])
+                           name,
+                           device_class)])
 
 
 class AdsCover(AdsEntity, CoverDevice):
-    """Representation of ADS light."""
+    """Representation of ADS cover."""
 
     def __init__(self, ads_hub,
                  ads_var_is_closed, ads_var_position,
                  ads_var_pos_set, ads_var_open,
-                 ads_var_close, ads_var_stop, name):
-        """Initialize AdsLight entity."""
+                 ads_var_close, ads_var_stop, name, device_class):
+        """Initialize AdsCover entity."""
         super().__init__(ads_hub, name, ads_var_is_closed)
         if self._ads_var is None:
             if ads_var_position is not None:
@@ -77,6 +82,7 @@ class AdsCover(AdsEntity, CoverDevice):
         self._ads_var_open = ads_var_open
         self._ads_var_close = ads_var_close
         self._ads_var_stop = ads_var_stop
+        self._device_class = device_class
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -98,6 +104,11 @@ class AdsCover(AdsEntity, CoverDevice):
             return None
 
         return STATE_CLOSED if closed else STATE_OPEN
+
+    @property
+    def device_class(self):
+        """Return the class of this cover."""
+        return self._device_class
 
     @property
     def is_closed(self):
