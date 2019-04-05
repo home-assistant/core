@@ -7,7 +7,7 @@ from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired)
-from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID
+from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
@@ -19,8 +19,8 @@ from homeassistant.components.yeelight import (
     CONF_TRANSITION, DATA_YEELIGHT, CONF_MODE_MUSIC,
     CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED,
     YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
-    YEELIGHT_FLOW_TRANSITION_SCHEMA, _transitions_config_parser,
-    ACTION_RECOVER)
+    YEELIGHT_FLOW_TRANSITION_SCHEMA, ACTION_RECOVER, CONF_FLOW_PARAMS,
+    ATTR_ACTION, ATTR_COUNT)
 
 DEPENDENCIES = ['yeelight']
 
@@ -81,6 +81,37 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_STOP]
 
 
+def _transitions_config_parser(transitions):
+    """Parse transitions config into initialized objects."""
+    import yeelight
+
+    transition_objects = []
+    for transition_config in transitions:
+        transition, params = list(transition_config.items())[0]
+        transition_objects.append(getattr(yeelight, transition)(*params))
+
+    return transition_objects
+
+
+def _parse_custom_effects(effects_config):
+    import yeelight
+
+    effects = {}
+    for config in effects_config:
+        params = config[CONF_FLOW_PARAMS]
+        action = yeelight.Flow.actions[params[ATTR_ACTION]]
+        transitions = _transitions_config_parser(
+            params[ATTR_TRANSITIONS])
+
+        effects[config[CONF_NAME]] = {
+            ATTR_COUNT: params[ATTR_COUNT],
+            ATTR_ACTION: action,
+            ATTR_TRANSITIONS: transitions
+        }
+
+    return effects
+
+
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
@@ -109,7 +140,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device = hass.data[DATA_YEELIGHT][discovery_info[CONF_HOST]]
     _LOGGER.debug("Adding %s", device.name)
 
-    custom_effects = discovery_info[CONF_CUSTOM_EFFECTS]
+    custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
 
     lights = [YeelightLight(device, custom_effects=custom_effects)]
 
