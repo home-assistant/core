@@ -1,0 +1,12 @@
+{
+  "domain": "camect",
+  "name": "Camect",
+  "documentation": "https://www.home-assistant.io/components/camect",
+  "requirements": [
+    "camect-py==0.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@camect"
+  ]
+}
