@@ -247,7 +247,10 @@ async def async_process_deps_reqs(
         os.path.join(os.path.dirname(module.__file__), 'manifest.json')
     )
 
-    deps = (manifest['dependencies'] if manifest else getattr(module, 'DEPENDENCIES', []))  # type: ignore # noqa: line-to-long # pylint: disable=line-too-long
+    if manifest:
+        deps = manifest['dependencies']  # type: ignore
+    else:
+        deps = getattr(module, 'DEPENDENCIES', [])
 
     if deps and not await _async_process_dependencies(
             hass,
