@@ -38,14 +38,16 @@ class TestDemoPlatform(unittest.TestCase):
         with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
             with assert_setup_component(1, geo_location.DOMAIN):
                 assert setup_component(self.hass, geo_location.DOMAIN, CONFIG)
+            self.hass.block_till_done()
 
-            # In this test, only entities of the geolocation domain have been
+            # In this test, one zone and geolocation entities have been
             # generated.
             all_states = self.hass.states.all()
-            assert len(all_states) == NUMBER_OF_DEMO_DEVICES
+            print(all_states)
+            assert len(all_states) == NUMBER_OF_DEMO_DEVICES + 1
 
             # Check a single device's attributes.
-            state_first_entry = all_states[0]
+            state_first_entry = all_states[1]  # 0 is zone
             assert abs(
                 state_first_entry.attributes['latitude'] -
                 self.hass.config.latitude
@@ -62,5 +64,5 @@ class TestDemoPlatform(unittest.TestCase):
             # Get all states again, ensure that the number of states is still
             # the same, but the lists are different.
             all_states_updated = self.hass.states.all()
-            assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES
+            assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES + 1
             assert all_states != all_states_updated
