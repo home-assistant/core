@@ -29,11 +29,7 @@ def create_stream_buffer(stream_output, video_stream, audio_frame):
     segment = io.BytesIO()
     output = av.open(
         segment, mode='w', format=stream_output.format)
-    vstream = output.add_stream(
-        stream_output.video_codec, video_stream.rate)
-    # Fix format
-    vstream.codec_context.format = \
-        video_stream.codec_context.format
+    vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
     astream = None
     if stream_output.audio_codec:
