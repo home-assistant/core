@@ -228,22 +228,6 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
     return platform
 
 
-async def _async_process_deps(
-        hass: core.HomeAssistant,
-        config: Dict,
-        name: str,
-        dependencies: list
-) -> None:
-    """Process all dependencies provided; throws error if fails."""
-    if not await _async_process_dependencies(
-            hass,
-            config,
-            name,
-            dependencies
-    ):
-        raise HomeAssistantError("Could not set up all dependencies.")
-
-
 async def async_process_deps_reqs(
         hass: core.HomeAssistant, config: Dict, name: str,
         module: ModuleType) -> None:
@@ -263,21 +247,15 @@ async def async_process_deps_reqs(
         os.path.join(os.path.dirname(module.__file__), 'manifest.json')
     )
 
-    if manifest and manifest['dependencies']:
-        await _async_process_deps(
-            hass,
-            config,
-            name,
-            manifest['dependencies']  # type: ignore
-        )
+    deps = (manifest['dependencies'] if manifest else getattr(module, 'DEPENDENCIES', []))  # type: ignore # noqa: line-to-long # pylint: disable=line-too-long
 
-    elif hasattr(module, 'DEPENDENCIES'):
-        await _async_process_deps(
+    if deps and not await _async_process_dependencies(
             hass,
             config,
             name,
-            module.DEPENDENCIES  # type: ignore
-        )
+            deps
+    ):
+        raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip and hasattr(module, 'REQUIREMENTS'):
         req_success = await requirements.async_process_requirements(
