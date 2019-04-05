@@ -38,9 +38,12 @@ class FlowHandler(config_entries.ConfigFlow):
         """Create device."""
         from pydaikin.appliance import Appliance
         try:
+            device = Appliance(
+                host,
+                self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            )
             with async_timeout.timeout(10):
-                device = await self.hass.async_add_executor_job(
-                    Appliance, host)
+                await device.init()
         except asyncio.TimeoutError:
             return self.async_abort(reason='device_timeout')
         except Exception:  # pylint: disable=broad-except
