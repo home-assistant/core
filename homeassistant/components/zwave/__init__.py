@@ -189,12 +189,8 @@ def _value_name(value):
 def zwave_network_key(value):
     """Validate a 16 byte value for zwave network keys."""
     regex = re.compile(r'(0x\w\w,\s?){15}0x\w\w')
-    try:
-        if not regex.match(value):
-            raise vol.Invalid('Invalid Z-Wave network key')
-    except (ValueError, AttributeError, TypeError) as error:
-        raise vol.Invalid('Invalid zwave network keys',
-                          error_message=str(error))
+    if not regex.match(value):
+        raise vol.Invalid('Invalid Z-Wave network key')
 
     return str(value).lower()
 
