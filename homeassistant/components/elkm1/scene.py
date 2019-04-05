@@ -10,11 +10,12 @@ async def async_setup_platform(
     if discovery_info is None:
         return
     elk_datas = hass.data[ELK_DOMAIN]
+    entities = []
     for _, elk_data in elk_datas.items():
         elk = elk_data['elk']
         entities = create_elk_entities(elk_data, elk.tasks,
-                                       'task', ElkTask, [])
-        async_add_entities(entities, True)
+                                       'task', ElkTask, entities)
+    async_add_entities(entities, True)
 
 
 class ElkTask(ElkEntity, Scene):
