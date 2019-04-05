@@ -260,11 +260,10 @@ async def async_process_deps_reqs(
 
     manifest = await hass.async_add_executor_job(
         json_util.load_json,
-        os.path.join(os.path.dirname(module.__file__), 'manifest.json'),
-        None
+        os.path.join(os.path.dirname(module.__file__), 'manifest.json')
     )
 
-    if manifest:
+    if manifest and manifest['dependencies']:
         await _async_process_deps(
             hass,
             config,
