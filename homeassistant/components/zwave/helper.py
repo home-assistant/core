@@ -8,4 +8,4 @@ def zwave_network_key(value):
     if not regex.match(value):
         raise vol.Invalid('Invalid Z-Wave network key')
 
-    return str(value).lower()
+    return value
