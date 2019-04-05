@@ -238,13 +238,21 @@ class Light(ZhaEntity, light.Light):
     async def async_update(self):
         """Attempt to retrieve on off state from the light."""
         await super().async_update()
+        await self.async_get_state()
+
+    async def async_get_state(self, from_cache=True):
+        """Attempt to retrieve on off state from the light."""
         if self._on_off_channel:
             self._state = await self._on_off_channel.get_attribute_value(
-                'on_off')
+                'on_off', from_cache=from_cache)
         if self._level_channel:
             self._brightness = await self._level_channel.get_attribute_value(
-                'current_level')
+                'current_level', from_cache=from_cache)
 
     async def refresh(self, time):
-        """Call async_update at an interval."""
-        await self.async_update()
+        """Call async_get_state at an interval."""
+        await self.async_get_state(from_cache=False)
+
+    def debug(self, msg, *args):
+        """Log debug message."""
+        _LOGGER.debug('%s: ' + msg, self.entity_id, *args)
