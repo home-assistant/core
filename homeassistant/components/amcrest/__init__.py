@@ -121,7 +121,7 @@ def setup(hass, config):
             camera.current_time
 
         except AmcrestError as ex:
-            _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
+            _LOGGER.error("Unable to connect to %s camera: %s", name, str(ex))
             hass.components.persistent_notification.create(
                 'Error: {}<br />'
                 'You will need to restart hass after fixing.'

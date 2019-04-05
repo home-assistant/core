@@ -1,9 +1,9 @@
 """Suppoort for Amcrest IP camera binary sensors."""
-import asyncio
 from datetime import timedelta
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, DEVICE_CLASS_MOTION)
 from homeassistant.const import CONF_NAME, CONF_BINARY_SENSORS
 from . import DATA_AMCREST, BINARY_SENSORS
 
@@ -14,8 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up a binary sensor for an Amcrest IP Camera."""
     if discovery_info is None:
         return
@@ -56,7 +56,7 @@ class AmcrestBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return device class."""
-        return 'motion'
+        return DEVICE_CLASS_MOTION
 
     def update(self):
         """Update entity."""
