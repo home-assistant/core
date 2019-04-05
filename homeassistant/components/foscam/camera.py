@@ -56,10 +56,8 @@ class FoscamCam(Camera):
         self._rtsp_port = None
         result, response = self._foscam_session.get_port_info()
         if result == 0:
-            if 'rtspPort' in response.keys():
-                self._rtsp_port = response['rtspPort']
-            elif 'mediaPort' in response.keys():
-                self._rtsp_port = response['mediaPort']
+            self._rtsp_port = response.get('rtspPort') or \
+                              response.get('mediaPort')
 
     def camera_image(self):
         """Return a still image response from the camera."""
