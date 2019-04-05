@@ -108,11 +108,6 @@ class OASATelematicsSensor(Entity):
         return {k: v for k, v in params.items() if v}
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return 'ISO8601'
-
-    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
@@ -178,8 +173,9 @@ class OASATelematicsData():
         current_time = dt_util.utcnow()
 
         for result in results:
-            arrival_min = int(result.get('btime2'))
-            if arrival_min is not None:
+            btime2 = result.get('btime2')
+            if btime2 is not None:
+                arrival_min = int(btime2)
                 timestamp = current_time + timedelta(minutes=arrival_min)
                 arrival_data = {ATTR_NEXT_ARRIVAL: timestamp,
                                 ATTR_ROUTE_ID: self.route_id}
