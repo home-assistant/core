@@ -76,12 +76,16 @@ class DdWrtDeviceScanner(DeviceScanner):
         return self.last_results
 
     def get_device_name(self, device):
-        """Scan the devices to get a name if it isn't set already."""
+        """Return the name of the given device or None if we don't know."""
         if device not in self.mac2name:
-            return self.scan_table(device)
+            # This update the mac2name object with the name of the specified
+            # device.
+            self.scan_table(device)
+
+        return self.mac2name.get(device)
 
     def scan_table(self, device, table='dhcp_leases'):
-        """Return the name of the given device or None if we don't know."""
+        """Scan the router's ARP table to find the device's name."""
         # If not initialised and not already scanned and not found.
         url = '{}://{}/Status_Lan.live.asp'.format(
             self.protocol, self.host)
@@ -95,13 +99,6 @@ class DdWrtDeviceScanner(DeviceScanner):
         if not dhcp_leases:
             return None
 
-        # Remove leading and trailing quotes and spaces
-        cleaned_str = dhcp_leases.replace(
-            "\"", "").replace("\'", "").replace(" ", "")
-        elements = cleaned_str.split(',')
-        num_clients = int(len(elements) / 5)
-        self.mac2name = {}
-
         # The data is a single array
         # For 'dhcp_leases', every 5 elements represents one host,
         # the MAC is the third element and the name is the first.
@@ -113,22 +110,31 @@ class DdWrtDeviceScanner(DeviceScanner):
         else:
             set_columns = 4
 
+        # Remove leading and trailing quotes and spaces
+        cleaned_str = dhcp_leases.replace(
+            "\"", "").replace("\'", "").replace(" ", "")
+        elements = cleaned_str.split(',')
+        num_clients = int(len(elements) / set_columns)
+
+        self.mac2name = {}
+
         for idx in range(0, num_clients):
             mac_index = (idx * set_columns) + 2
             # Make sure the index is not out of scope.
-            if _verify_out_of_scope(mac_index, elements):
+            if mac_index < len(elements):
                 mac = elements[mac_index]
-                if mac in self.mac2name:
-                    # Make sure the index is not out of scope.
-                    if _verify_out_of_scope(idx * set_columns, elements):
-                        name = elements[idx * set_columns]
-                        self.mac2name[mac] = name
-                        # If the name is a *, it means the name wasn't found in
-                        # the dhcp_lease table. Check on the arp_table instead.
-                        if name == '*' and table != 'arp_table':
-                            self.scan_table(device, 'arp_table')
 
-        return self.mac2name.get(device)
+                # Make sure the index is not out of scope.
+                if idx * set_columns < len(elements):
+                    name = elements[idx * set_columns]
+                    self.mac2name[mac] = name
+
+                    # If the name is a *, it means the name wasn't found in
+                    # the dhcp_lease table. Check on the arp_table instead.
+                    if name == '*' and table != 'arp_table':
+                        self.scan_table(device, 'arp_table')
+
+        return
 
     def _update_info(self):
         """Ensure the information from the DD-WRT router is up to date.
@@ -250,11 +256,3 @@ def _parse_ddwrt_response(data_str):
     """Parse the DD-WRT data format."""
     return {
         key: val for key, val in _DDWRT_DATA_REGEX.findall(data_str)}
-
-
-def _verify_out_of_scope(index, elements):
-    """Check if an index is out of scope.
-
-    Return boolean reflecting the result.
-    """
-    return bool(index < len(elements))
