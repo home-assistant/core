@@ -37,11 +37,12 @@ async def async_setup_platform(hass, config, async_add_entities,
         return
 
     elk_datas = hass.data[ELK_DOMAIN]
+    entities = []
     for _, elk_data in elk_datas.items():
         elk = elk_data['elk']
         entities = create_elk_entities(elk_data, elk.areas,
-                                       'area', ElkArea, [])
-        async_add_entities(entities, True)
+                                       'area', ElkArea, entities)
+    async_add_entities(entities, True)
 
     def _dispatch(signal, entity_ids, *args):
         for entity_id in entity_ids:
