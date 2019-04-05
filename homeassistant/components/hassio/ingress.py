@@ -106,7 +106,7 @@ class HassIOIngress(HomeAssistantView):
 
         async with self._websession.request(
                 request.method, url, headers=source_header,
-                params=request.query, data=data, cookies=request.cookies
+                params=request.query, data=data
         ) as result:
             headers = _response_header(result)
 
@@ -145,7 +145,8 @@ def _init_header(
 
     # filter flags
     for name, value in request.headers.items():
-        if name in (hdrs.CONTENT_LENGTH, hdrs.CONTENT_TYPE):
+        if name in (hdrs.CONTENT_LENGTH, hdrs.CONTENT_TYPE,
+                    hdrs.CONTENT_ENCODING):
             continue
         headers[name] = value
 
