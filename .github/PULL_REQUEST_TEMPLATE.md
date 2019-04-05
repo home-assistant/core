@@ -32,6 +32,6 @@ If the code communicates with devices, web services, or third-party tools:
 If the code does not interact with devices:
   - [ ] Tests have been added to verify that the new code works.
 
-[ex-manifest]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard/manifest.json
-[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard/manifest.json#L6
+[ex-manifest]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/mobile_app/manifest.json
+[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/mobile_app/manifest.json#L5
 [ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard/__init__.py#L23
