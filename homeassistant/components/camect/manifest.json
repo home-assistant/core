@@ -3,7 +3,7 @@
   "name": "Camect",
   "documentation": "https://www.home-assistant.io/components/camect",
   "requirements": [
-    "camect-py==0.1.2"
+    "camect-py==0.1.3"
   ],
   "dependencies": [],
   "codeowners": [

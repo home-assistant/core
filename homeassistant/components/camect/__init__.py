@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv, discovery
 
-REQUIREMENTS = ['camect-py==0.1.2']
+REQUIREMENTS = ['camect-py==0.1.3']
 
 ATTR_MODE = 'mode'
 CONF_CAMERA_IDS = 'camera_ids'
@@ -63,7 +63,7 @@ def setup(hass, config):
     # Register service.
     def handle_change_op_mode_service(call):
         mode = call.data.get(ATTR_MODE).upper()
-        if mode == 'HOME' or mode == 'DEFAULT':
+        if mode in ('HOME', 'DEFAULT'):
             home.set_mode(mode)
         elif mode == 'AWAY':
             home.set_mode('DEFAULT')
