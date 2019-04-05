@@ -484,7 +484,7 @@ class MockPlatform:
     """Provide a fake platform."""
 
     __name__ = 'homeassistant.components.light.bla'
-    __file__ = 'homeassistant/components/light/bla'
+    __file__ = 'homeassistant/components/blah/light'
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
