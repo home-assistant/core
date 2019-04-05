@@ -146,6 +146,16 @@ class Entity:
         return None
 
     @property
+    def provided_last_changed(self):
+        """Return the provided_last_changed datetime to use for state management, if any."""
+        return None
+
+    @property
+    def provided_last_updated(self):
+        """Return the provided_last_updated datetime to use for state management, if any."""
+        return None
+
+    @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return None
@@ -323,7 +333,8 @@ class Entity:
             self._context_set = None
 
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update, self._context)
+            self.entity_id, state, attr, self.force_update,
+            self.provided_last_changed, self.provided_last_updated, self._context)
 
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
