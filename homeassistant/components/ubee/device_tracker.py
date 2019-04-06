@@ -43,12 +43,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_scanner(hass, config):
     """Validate the configuration and return a Ubee scanner."""
     info = config[DOMAIN]
-    host = info.get(CONF_HOST)
-    username = info.get(CONF_USERNAME)
-    password = info.get(CONF_PASSWORD)
-    model = info.get(CONF_MODEL)
+    host = info[CONF_HOST]
+    username = info[CONF_USERNAME]
+    password = info[CONF_PASSWORD]
+    model = info[CONF_MODEL]
 
     scanner = UbeeDeviceScanner(host, username, password, model)
+
+    if not scanner.login():
+        return None
 
     return scanner if scanner.success_init else None
 
@@ -62,12 +65,6 @@ class UbeeDeviceScanner(DeviceScanner):
 
         self.last_results = {}
         self.mac2name = {}
-
-        self.ubee = Ubee(host, username, password, model)
-        self.success_init = self.ubee.login()
-
-        if not self.success_init:
-            _LOGGER.error("Login failed")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
