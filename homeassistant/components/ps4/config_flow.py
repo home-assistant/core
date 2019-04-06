@@ -50,9 +50,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if failed in ports:
             reason = PORT_MSG[failed]
             return self.async_abort(reason=reason)
-        # Skip Creds Step if a device is configured.
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return await self.async_step_mode()
         return await self.async_step_creds()
 
     async def async_step_creds(self, user_input=None):
