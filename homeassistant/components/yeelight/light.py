@@ -115,7 +115,6 @@ def _parse_custom_effects(effects_config):
 
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
-
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:
@@ -650,16 +649,15 @@ class YeelightWithAmbientLightSupport(YeelightGenericLight):
 
 class YeelightWithAmbientWithoutNightlight(YeelightWithAmbientLightSupport,
                                            YeelightWhiteTempLight):
-    """
-    Representation of a Yeelight which has ambilight support but no
+    """Representation of a Yeelight which has ambilight support but no
     nightlight support. Its used when nightlight switch type is none.
+
     """
 
 
 class YeelightWithAmbientAndNightlight(YeelightWithAmbientLightSupport,
                                        YeelightWithNightLight):
-    """
-    Representation of a Yeelight which has ambilight support and nightlight
+    """Representation of a Yeelight which has ambilight support and nightlight
     switch type is set to light.
     """
 
