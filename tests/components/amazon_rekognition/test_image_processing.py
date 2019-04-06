@@ -53,10 +53,17 @@ def test_parse_labels():
 def test_get_label_instances():
     assert ar.get_label_instances(MOCK_RESPONSE, MOCK_TARGET) == 2
 
+@pytest.fixture
+def mock_boto3():
+    def mock_boto3_client_detect_labels(Image):
+        return MOCK_RESPONSE
 
-@MockDependency('boto3')
-@patch('boto3.client.detect_labels', return_value=MOCK_RESPONSE)
-async def test_setup_platform(hass):
+    with MockDependency('boto3') as mock_boto3:
+        mock_boto3.client().values.get.return_value = None
+        mock_boto3.client().detect_labels = mock_boto3_client_detect_labels 
+        yield mock_boto3
+
+async def test_setup_platform(hass, mock_boto3):
     """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
