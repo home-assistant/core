@@ -50,7 +50,6 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         self._partition_id = partition_id
         self._satel = None
 
-
     async def async_added_to_hass(self):
         """Update alarm status and register callbacks for future updates."""
         _LOGGER.debug("Starts listening for panel messages")

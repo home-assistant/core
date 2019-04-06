@@ -53,7 +53,6 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
         self._react_to_signal = react_to_signal
         self._satel = None
 
-
     async def async_added_to_hass(self):
         """Register callbacks."""
         self._satel = self.hass.data[DATA_SATEL]
