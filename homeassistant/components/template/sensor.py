@@ -9,7 +9,7 @@ from homeassistant.components.sensor import ENTITY_ID_FORMAT, \
     PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-    CONF_PROVIDED_LAST_CHANGED_TEMPLATE, CONF_PROVIDED_LAST_UPDATED_TEMPLATE,
+    CONF_MANUAL_LAST_CHANGED_TEMPLATE, CONF_MANUAL_LAST_UPDATED_TEMPLATE,
     CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE, ATTR_ENTITY_ID,
     CONF_SENSORS, EVENT_HOMEASSISTANT_START, CONF_FRIENDLY_NAME_TEMPLATE,
     MATCH_ALL, CONF_DEVICE_CLASS)
@@ -23,8 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_PROVIDED_LAST_CHANGED_TEMPLATE): cv.template,
-    vol.Optional(CONF_PROVIDED_LAST_UPDATED_TEMPLATE): cv.template,
+    vol.Optional(CONF_MANUAL_LAST_CHANGED_TEMPLATE): cv.template,
+    vol.Optional(CONF_MANUAL_LAST_UPDATED_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
@@ -46,8 +46,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     for device, device_config in config[CONF_SENSORS].items():
         state_template = device_config[CONF_VALUE_TEMPLATE]
-        provided_last_changed_template = device_config.get(CONF_PROVIDED_LAST_CHANGED_TEMPLATE)
-        provided_last_updated_template = device_config.get(CONF_PROVIDED_LAST_UPDATED_TEMPLATE)
+        manual_last_changed_template = device_config.get(CONF_MANUAL_LAST_CHANGED_TEMPLATE)
+        manual_last_updated_template = device_config.get(CONF_MANUAL_LAST_UPDATED_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
@@ -62,8 +62,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
         for tpl_name, template in (
                 (CONF_VALUE_TEMPLATE, state_template),
-                (CONF_PROVIDED_LAST_CHANGED_TEMPLATE, provided_last_changed_template),
-                (CONF_PROVIDED_LAST_UPDATED_TEMPLATE, provided_last_updated_template),
+                (CONF_MANUAL_LAST_CHANGED_TEMPLATE, manual_last_changed_template),
+                (CONF_MANUAL_LAST_UPDATED_TEMPLATE, manual_last_updated_template),
                 (CONF_ICON_TEMPLATE, icon_template),
                 (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
                 (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
@@ -103,8 +103,8 @@ async def async_setup_platform(hass, config, async_add_entities,
                 friendly_name_template,
                 unit_of_measurement,
                 state_template,
-                provided_last_changed_template,
-                provided_last_updated_template,
+                manual_last_changed_template,
+                manual_last_updated_template,
                 icon_template,
                 entity_picture_template,
                 entity_ids,
@@ -123,8 +123,8 @@ class SensorTemplate(Entity):
 
     def __init__(self, hass, device_id, friendly_name, friendly_name_template,
                  unit_of_measurement, state_template,
-                 provided_last_changed_template,
-                 provided_last_updated_template,
+                 manual_last_changed_template,
+                 manual_last_updated_template,
                  icon_template, entity_picture_template,
                  entity_ids, device_class):
         """Initialize the sensor."""
@@ -136,10 +136,10 @@ class SensorTemplate(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
         self._state = None
-        self._provided_last_changed_template = provided_last_changed_template
-        self._provided_last_changed = None
-        self._provided_last_updated_template = provided_last_updated_template
-        self._provided_last_updated = None
+        self._manual_last_changed_template = manual_last_changed_template
+        self._manual_last_changed = None
+        self._manual_last_updated_template = manual_last_updated_template
+        self._manual_last_updated = None
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
         self._icon = None
@@ -178,14 +178,16 @@ class SensorTemplate(Entity):
         return self._state
 
     @property
-    def provided_last_changed(self):
-        """Return the provided_last_changed datetime to use for state management, if any."""
-        return self._provided_last_changed
+    def manual_last_changed(self):
+        """Return the manual_last_changed datetime to manually update a state's
+         last_changed property, if any."""
+        return self._manual_last_changed
 
     @property
-    def provided_last_updated(self):
-        """Return the provided_last_updated datetime to use for state management, if any."""
-        return self._provided_last_updated
+    def manual_last_updated(self):
+        """Return the manual_last_updated datetime to manually update a state's
+         last_updated property, if any."""
+        return self._manual_last_updated
 
     @property
     def icon(self):
@@ -227,23 +229,23 @@ class SensorTemplate(Entity):
                 _LOGGER.error('Could not render template %s: %s', self._name,
                               ex)
 
-        if self._provided_last_changed_template is not None:
-            provided_last_changed = self._provided_last_changed_template\
+        if self._manual_last_changed_template is not None:
+            manual_last_changed = self._manual_last_changed_template\
                 .async_render()
-            if provided_last_changed:
-                if isinstance(provided_last_changed, str):
-                    provided_last_changed = dt_util\
-                        .parse_datetime(provided_last_changed)
-                setattr(self, '_provided_last_changed', provided_last_changed)
+            if manual_last_changed:
+                if isinstance(manual_last_changed, str):
+                    manual_last_changed = dt_util\
+                        .parse_datetime(manual_last_changed)
+                setattr(self, '_manual_last_changed', manual_last_changed)
 
-        if self._provided_last_updated_template is not None:
-            provided_last_updated = self._provided_last_updated_template\
+        if self._manual_last_updated_template is not None:
+            manual_last_updated = self._manual_last_updated_template\
                 .async_render()
-            if provided_last_updated:
-                if isinstance(provided_last_updated, str):
-                    provided_last_updated = dt_util\
-                        .parse_datetime(provided_last_updated)
-                setattr(self, '_provided_last_updated', provided_last_updated)
+            if manual_last_updated:
+                if isinstance(manual_last_updated, str):
+                    manual_last_updated = dt_util\
+                        .parse_datetime(manual_last_updated)
+                setattr(self, '_manual_last_updated', manual_last_updated)
 
         for property_name, template in (
                 ('_icon', self._icon_template),

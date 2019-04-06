@@ -659,20 +659,22 @@ class State:
     attributes: extra information on entity and state
     last_changed: last time the state was changed, not the attributes.
     last_updated: last time this object was updated.
+    is_last_changed_manual: if last_changed was manually set this will be true
+    is_last_updated_manual: if last_updated was manually set this will be true
     context: Context in which it was created
     """
 
     __slots__ = ['entity_id', 'state', 'attributes',
                  'last_changed', 'last_updated',
-                 'provided_last_changed', 'provided_last_updated',
+                 'is_last_changed_manual', 'is_last_updated_manual',
                  'context']
 
     def __init__(self, entity_id: str, state: Any,
                  attributes: Optional[Dict] = None,
                  last_changed: Optional[datetime.datetime] = None,
                  last_updated: Optional[datetime.datetime] = None,
-                 provided_last_changed: Optional[datetime.datetime] = None,
-                 provided_last_updated: Optional[datetime.datetime] = None,
+                 is_last_changed_manual: Optional[bool] = False,
+                 is_last_updated_manual: Optional[bool] = False,
                  context: Optional[Context] = None,
                  # Temp, because database can still store invalid entity IDs
                  # Remove with 1.0 or in 2020.
@@ -695,8 +697,8 @@ class State:
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
-        self.provided_last_changed = provided_last_changed
-        self.provided_last_updated = provided_last_updated
+        self.is_last_changed_manual = is_last_changed_manual
+        self.is_last_updated_manual = is_last_updated_manual
         self.context = context or Context()
 
     @property
@@ -729,8 +731,8 @@ class State:
                 'attributes': dict(self.attributes),
                 'last_changed': self.last_changed,
                 'last_updated': self.last_updated,
-                'provided_last_changed': self.provided_last_changed,
-                'provided_last_updated': self.provided_last_updated,
+                'is_last_changed_manual': self.is_last_changed_manual,
+                'is_last_updated_manual': self.is_last_updated_manual,
                 'context': self.context.as_dict()}
 
     @classmethod
@@ -745,7 +747,6 @@ class State:
                 'state' in json_dict):
             return None
 
-        # System managed datetimes
         last_changed = json_dict.get('last_changed')
 
         if isinstance(last_changed, str):
@@ -756,16 +757,8 @@ class State:
         if isinstance(last_updated, str):
             last_updated = dt_util.parse_datetime(last_updated)
 
-        # Provided datetimes
-        provided_last_changed = json_dict.get('last_changed')
-
-        if isinstance(provided_last_changed, str):
-            provided_last_changed = dt_util.parse_datetime(provided_last_changed)
-
-        provided_last_updated = json_dict.get('provided_last_updated')
-
-        if isinstance(provided_last_updated, str):
-            provided_last_updated = dt_util.parse_datetime(provided_last_updated)
+        is_last_changed_manual = json_dict.get('is_last_changed_manual')
+        is_last_updated_manual = json_dict.get('is_last_updated_manual')
 
         context = json_dict.get('context')
         if context:
@@ -776,7 +769,7 @@ class State:
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated,
-                   provided_last_changed, provided_last_updated,
+                   is_last_changed_manual, is_last_updated_manual,
                    context)
 
     def __eq__(self, other: Any) -> bool:
@@ -785,6 +778,8 @@ class State:
                 self.entity_id == other.entity_id and
                 self.state == other.state and
                 self.attributes == other.attributes and
+                self.is_last_changed_manual == other.is_last_changed_manual and
+                self.is_last_updated_manual == other.is_last_updated_manual and
                 self.context == other.context)
 
     def __repr__(self) -> str:
@@ -889,8 +884,8 @@ class StateMachine:
     def set(self, entity_id: str, new_state: Any,
             attributes: Optional[Dict] = None,
             force_update: bool = False,
-            provided_last_changed: Optional[datetime.datetime] = None,
-            provided_last_updated: Optional[datetime.datetime] = None,
+            manual_last_changed: Optional[datetime.datetime] = None,
+            manual_last_updated: Optional[datetime.datetime] = None,
             context: Optional[Context] = None) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -902,15 +897,15 @@ class StateMachine:
         run_callback_threadsafe(
             self._loop,
             self.async_set, entity_id, new_state, attributes, force_update,
-            provided_last_changed, provided_last_updated, context,
+            manual_last_changed, manual_last_updated, context,
         ).result()
 
     @callback
     def async_set(self, entity_id: str, new_state: Any,
                   attributes: Optional[Dict] = None,
                   force_update: bool = False,
-                  provided_last_changed: Optional[datetime.datetime] = None,
-                  provided_last_updated: Optional[datetime.datetime] = None,
+                  manual_last_changed: Optional[datetime.datetime] = None,
+                  manual_last_updated: Optional[datetime.datetime] = None,
                   context: Optional[Context] = None) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
@@ -929,20 +924,27 @@ class StateMachine:
             same_state = False
             same_attr = False
             last_changed = None
+            last_updated = None
         else:
             same_state = (old_state.state == new_state and
                           not force_update)
             same_attr = old_state.attributes == attributes
-            last_changed = old_state.last_changed if same_state else None
+            last_changed = old_state.last_changed if same_state\
+                else manual_last_changed
+            last_updated = manual_last_updated
 
         if same_state and same_attr:
             return
 
+        is_last_changed_manual = manual_last_changed is not None
+        is_last_updated_manual = manual_last_updated is not None
+
         if context is None:
             context = Context()
 
-        state = State(entity_id, new_state, attributes, last_changed, None,
-                      provided_last_changed, provided_last_updated, context)
+        state = State(entity_id, new_state, attributes,
+                      last_changed, last_updated,
+                      is_last_changed_manual, is_last_updated_manual, context)
         self._states[entity_id] = state
         self._bus.async_fire(EVENT_STATE_CHANGED, {
             'entity_id': entity_id,

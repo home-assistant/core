@@ -187,13 +187,18 @@ def setup(hass, config):
                 else:
                     include_uom = False
 
+        if state.is_last_updated_manual:
+            event_time = state.last_updated
+        else:
+            event_time = event.time_fired
+
         json = {
             'measurement': measurement,
             'tags': {
                 'domain': state.domain,
                 'entity_id': state.object_id,
             },
-            'time': state.provided_last_updated or event.time_fired,
+            'time': event_time,
             'fields': {}
         }
         if _include_state:

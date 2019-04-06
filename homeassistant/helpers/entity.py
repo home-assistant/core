@@ -146,13 +146,15 @@ class Entity:
         return None
 
     @property
-    def provided_last_changed(self):
-        """Return the provided_last_changed datetime to use for state management, if any."""
+    def manual_last_changed(self):
+        """Return the manual_last_changed datetime to manually update a state's
+         last_changed property, if any."""
         return None
 
     @property
-    def provided_last_updated(self):
-        """Return the provided_last_updated datetime to use for state management, if any."""
+    def manual_last_updated(self):
+        """Return the manual_last_updated datetime to manually update a state's
+         last_updated property, if any."""
         return None
 
     @property
@@ -334,7 +336,7 @@ class Entity:
 
         self.hass.states.async_set(
             self.entity_id, state, attr, self.force_update,
-            self.provided_last_changed, self.provided_last_updated, self._context)
+            self.manual_last_changed, self.manual_last_updated, self._context)
 
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
