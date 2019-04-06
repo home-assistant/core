@@ -35,6 +35,7 @@ CONF_SAVE_ON_CHANGE = 'save_on_change'
 CONF_MODE_MUSIC = 'use_music_mode'
 CONF_FLOW_PARAMS = 'flow_params'
 CONF_CUSTOM_EFFECTS = 'custom_effects'
+CONF_NIGHTLIGHT_SWITCH_TYPE = 'nightlight_switch_type'
 
 ATTR_COUNT = 'count'
 ATTR_ACTION = 'action'
@@ -43,6 +44,8 @@ ATTR_TRANSITIONS = 'transitions'
 ACTION_RECOVER = 'recover'
 ACTION_STAY = 'stay'
 ACTION_OFF = 'off'
+
+NIGHTLIGHT_SWITCH_TYPE_LIGHT = 'light'
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -78,6 +81,8 @@ DEVICE_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+        vol.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE):
+            vol.Any(NIGHTLIGHT_SWITCH_TYPE_LIGHT),
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
             cv.time_period,
         vol.Optional(CONF_CUSTOM_EFFECTS): [{
@@ -146,6 +151,8 @@ def setup(hass, config):
     def load_platforms(ipaddr):
         platform_config = hass.data[DATA_YEELIGHT][ipaddr].config.copy()
         platform_config[CONF_HOST] = ipaddr
+        platform_config[CONF_NIGHTLIGHT_SWITCH_TYPE] = \
+            config.get(DOMAIN, {}).get(CONF_NIGHTLIGHT_SWITCH_TYPE, None)
         platform_config[CONF_CUSTOM_EFFECTS] = \
             config.get(DOMAIN, {}).get(CONF_CUSTOM_EFFECTS, {})
         load_platform(hass, LIGHT_DOMAIN, DOMAIN, platform_config, config)
