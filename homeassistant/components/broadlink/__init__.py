@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, SERVICE_LEARN, SERVICE_SEND
+from .const import CONF_PACKET, DOMAIN, SERVICE_LEARN, SERVICE_SEND
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def data_packet(value):
 
 SERVICE_SEND_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): ipv4_address,
-    vol.Required('packet'): vol.All(cv.ensure_list, [data_packet])
+    vol.Required(CONF_PACKET): vol.All(cv.ensure_list, [data_packet])
 })
 
 SERVICE_LEARN_SCHEMA = vol.Schema({
@@ -48,12 +48,12 @@ def async_setup_service(hass, host, device):
         async def _learn_command(call):
             """Learn a packet from remote."""
             device = hass.data[DOMAIN][call.data[CONF_HOST]]
-            await hass.async_add_job(device.enter_learning)
+            await hass.async_add_executor_job(device.enter_learning)
 
             _LOGGER.info("Press the key you want Home Assistant to learn")
             start_time = utcnow()
             while (utcnow() - start_time) < timedelta(seconds=20):
-                packet = await hass.async_add_job(
+                packet = await hass.async_add_executor_job(
                     device.check_data)
                 if packet:
                     data = b64encode(packet).decode('utf8')
@@ -63,10 +63,10 @@ def async_setup_service(hass, host, device):
                     hass.components.persistent_notification.async_create(
                         log_msg, title='Broadlink switch')
                     return
-                await asyncio.sleep(1, loop=hass.loop)
-            _LOGGER.error("Did not received any signal")
+                await asyncio.sleep(1)
+            _LOGGER.error("No signal was received")
             hass.components.persistent_notification.async_create(
-                "Did not received any signal", title='Broadlink switch')
+                "No signal was received", title='Broadlink switch')
 
         hass.services.async_register(
             DOMAIN, SERVICE_LEARN, _learn_command,
@@ -77,9 +77,9 @@ def async_setup_service(hass, host, device):
         async def _send_packet(call):
             """Send a packet."""
             device = hass.data[DOMAIN][call.data[CONF_HOST]]
-            packets = call.data.get('packet', [])
+            packets = call.data.get(CONF_PACKET, [])
             for packet in packets:
-                await hass.async_add_job(
+                await hass.async_add_executor_job(
                     device.send_data, packet)
         hass.services.async_register(
             DOMAIN, SERVICE_SEND, _send_packet,

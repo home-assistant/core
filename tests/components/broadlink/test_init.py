@@ -1,7 +1,7 @@
 """The tests for the broadlink component."""
 from datetime import timedelta
 from base64 import b64decode
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 import pytest
 import voluptuous as vol
@@ -40,7 +40,9 @@ async def test_send(hass):
     })
     await hass.async_block_till_done()
 
-    mock_device.send_data.assert_called_with(b64decode(DUMMY_IR_PACKET))
+    assert mock_device.send_data.call_count == 1
+    assert mock_device.send_data.call_args == call(
+        b64decode(DUMMY_IR_PACKET))
 
 
 async def test_learn(hass):
@@ -60,8 +62,11 @@ async def test_learn(hass):
         })
         await hass.async_block_till_done()
 
-        mock_device.enter_learning.assert_called_with()
-        mock_create.assert_called_with(
+        assert mock_device.enter_learning.call_count == 1
+        assert mock_device.enter_learning.call_args == call()
+
+        assert mock_create.call_count == 1
+        assert mock_create.call_args == call(
             "Received packet is: {}".format(DUMMY_IR_PACKET),
             title='Broadlink switch')
 
@@ -88,9 +93,12 @@ async def test_learn_timeout(hass):
         })
         await hass.async_block_till_done()
 
-        mock_device.enter_learning.assert_called_with()
-        mock_create.assert_called_with(
-            "Did not received any signal",
+        assert mock_device.enter_learning.call_count == 1
+        assert mock_device.enter_learning.call_args == call()
+
+        assert mock_create.call_count == 1
+        assert mock_create.call_args == call(
+            "No signal was received",
             title='Broadlink switch')
 
 
