@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_RTSP_PORT, default=None): vol.Any(None, cv.port)
+    vol.Optional(CONF_RTSP_PORT): vol.Any(None, cv.port)
 })
 
 
@@ -55,7 +55,7 @@ class FoscamCam(Camera):
         self._foscam_session = FoscamCamera(
             ip_address, port, self._username, self._password, verbose=False)
 
-        self._rtsp_port = device_info[CONF_RTSP_PORT]
+        self._rtsp_port = device_info.get(CONF_RTSP_PORT)
         if not self._rtsp_port:
             result, response = self._foscam_session.get_port_info()
             if result == 0:
