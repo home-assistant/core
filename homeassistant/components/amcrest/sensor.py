@@ -30,7 +30,6 @@ async def async_setup_platform(
             AmcrestSensor(amcrest.name, amcrest.device, sensor_type))
 
     async_add_entities(amcrest_sensors, True)
-    return True
 
 
 class AmcrestSensor(Entity):

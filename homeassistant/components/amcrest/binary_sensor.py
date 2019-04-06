@@ -30,7 +30,6 @@ async def async_setup_platform(hass, config, async_add_devices,
             AmcrestBinarySensor(amcrest.name, amcrest.device, sensor_type))
 
     async_add_devices(amcrest_binary_sensors, True)
-    return True
 
 
 class AmcrestBinarySensor(BinarySensorDevice):

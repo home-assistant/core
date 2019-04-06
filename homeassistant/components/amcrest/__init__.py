@@ -57,8 +57,9 @@ BINARY_SENSORS = {
 }
 
 # Sensor types are defined like: Name, units, icon
+SENSOR_MOTION_DETECTOR = 'motion_detector'
 SENSORS = {
-    'motion_detector': ['Motion Detected', None, 'mdi:run'],
+    SENSOR_MOTION_DETECTOR: ['Motion Detected', None, 'mdi:run'],
     'sdcard': ['SD Used', '%', 'mdi:sd'],
     'ptz_preset': ['PTZ Preset', None, 'mdi:camera-iris'],
 }
@@ -69,30 +70,49 @@ SWITCHES = {
     'motion_recording': ['Motion Recording', 'mdi:record-rec']
 }
 
+
+def _deprecated_sensors(value):
+    if SENSOR_MOTION_DETECTOR in value:
+        _LOGGER.warning(
+            'sensors option %s is deprecated. '
+            'Please remove from your configuration and '
+            'use binary_sensors option motion_detected instead.',
+            SENSOR_MOTION_DETECTOR)
+    return value
+
+
+def _has_unique_names(value):
+    names = [camera[CONF_NAME] for camera in value]
+    vol.Schema(vol.Unique())(names)
+    return value
+
+
+AMCREST_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
+        vol.All(vol.In(AUTHENTICATION_LIST)),
+    vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
+        vol.All(vol.In(RESOLUTION_LIST)),
+    vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
+        vol.All(vol.In(STREAM_SOURCE_LIST)),
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS):
+        cv.string,
+    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+        cv.time_period,
+    vol.Optional(CONF_BINARY_SENSORS):
+        vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
+    vol.Optional(CONF_SENSORS):
+        vol.All(cv.ensure_list, [vol.In(SENSORS)], _deprecated_sensors),
+    vol.Optional(CONF_SWITCHES):
+        vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-            vol.All(vol.In(AUTHENTICATION_LIST)),
-        vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
-            vol.All(vol.In(RESOLUTION_LIST)),
-        vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
-            vol.All(vol.In(STREAM_SOURCE_LIST)),
-        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS):
-            cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-            cv.time_period,
-        vol.Optional(CONF_BINARY_SENSORS):
-            vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
-        vol.Optional(CONF_SENSORS):
-            vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-        vol.Optional(CONF_SWITCHES):
-            vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-    })])
+    DOMAIN: vol.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -105,10 +125,6 @@ def setup(hass, config):
 
     for device in amcrest_cams:
         name = device[CONF_NAME]
-        if name in hass.data[DATA_AMCREST]:
-            _LOGGER.error('Name %s already used: skipping', name)
-            continue
-
         username = device[CONF_USERNAME]
         password = device[CONF_PASSWORD]
 
@@ -161,11 +177,6 @@ def setup(hass, config):
                 }, config)
 
         if sensors:
-            if 'motion_detector' in sensors:
-                _LOGGER.warning(
-                    'sensors option motion_detector is deprecated. '
-                    'Please remove from your configuration and '
-                    'use binary_sensors option motion_detected instead.')
             discovery.load_platform(
                 hass, 'sensor', DOMAIN, {
                     CONF_NAME: name,
