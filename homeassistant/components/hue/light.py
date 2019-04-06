@@ -378,7 +378,7 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        elif self.is_philips:
+        else:
             command['effect'] = 'none'
 
         if self.is_group:
