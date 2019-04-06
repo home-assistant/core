@@ -17,6 +17,8 @@ ATTR_INVERT_LOGIC = 'invert_logic'
 
 CONF_PORTS = 'ports'
 
+CONF_BOARDS = 'boards'
+
 DEFAULT_INVERT_LOGIC = False
 
 PORT_SCHEMA = vol.Schema({
@@ -24,9 +26,15 @@ PORT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
 })
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+BOARD_SCHEMA = vol.Schema({
     vol.Optional(CONF_PORTS, default={}): vol.Schema({
         cv.positive_int: PORT_SCHEMA,
+    })
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_BOARDS, default={}): vol.Schema({
+        cv.positive_int: BOARD_SCHEMA,
     })
 })
 
@@ -34,25 +42,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PiFace Digital Output devices."""
     switches = []
-    ports = config.get(CONF_PORTS)
-    for port, port_entity in ports.items():
-        name = port_entity.get(ATTR_NAME)
-        invert_logic = port_entity[ATTR_INVERT_LOGIC]
-
-        switches.append(RPiPFIOSwitch(port, name, invert_logic))
-    add_entities(switches)
+    boards = config.get(CONF_BOARDS)
+    for board, board_entity in boards.items():
+        ports = board_entity.get(CONF_PORTS)
+        for port, port_entity in ports.items():
+            name = port_entity.get(ATTR_NAME)
+            invert_logic = port_entity[ATTR_INVERT_LOGIC]
+            switches.append(RPiPFIOSwitch(port, name, invert_logic, board))
+        add_entities(switches)
 
 
 class RPiPFIOSwitch(ToggleEntity):
     """Representation of a PiFace Digital Output."""
 
-    def __init__(self, port, name, invert_logic):
+    def __init__(self, port, name, invert_logic, hardware_addr=0):
         """Initialize the pin."""
         self._port = port
         self._name = name or DEVICE_DEFAULT_NAME
         self._invert_logic = invert_logic
+        self._hardware_addr = hardware_addr
         self._state = False
-        rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0)
+        rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0, self._hardware_addr)
 
     @property
     def name(self):
@@ -69,14 +79,19 @@ class RPiPFIOSwitch(ToggleEntity):
         """Return true if device is on."""
         return self._state
 
+    @property
+    def hardware_addr(self):
+        """Return the hardware address."""
+        return self._hardware_addr
+
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        rpi_pfio.write_output(self._port, 0 if self._invert_logic else 1)
+        rpi_pfio.write_output(self._port, 0 if self._invert_logic else 1, self._hardware_addr)
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0)
+        rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0, self._hardware_addr)
         self._state = False
         self.schedule_update_ha_state()
