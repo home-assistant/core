@@ -105,6 +105,8 @@ class TestMqttEventStream:
             "entity_id": e_id,
             "attributes": {},
             "last_changed": now.isoformat(),
+            "provided_last_changed": None,
+            "provided_last_updated": None,
         }
         event['event_data'] = {"new_state": new_state, "entity_id": e_id}
 
