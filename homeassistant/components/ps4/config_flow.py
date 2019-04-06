@@ -109,7 +109,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
             self.device_list = [device['host-ip'] for device in devices]
 
-            # If entry exists check that devices found aren't configured per account.
+            # Check that devices found aren't configured per account.
             if self.hass.config_entries.async_entries(DOMAIN):
                 for entry in self.hass.config_entries.async_entries(DOMAIN):
                     # Retrieve creds from entry
