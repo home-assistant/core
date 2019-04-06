@@ -3,6 +3,7 @@ import asyncio
 from collections import OrderedDict
 from datetime import datetime
 from pytz import utc
+import voluptuous as vol
 
 import unittest
 from unittest.mock import patch, MagicMock
@@ -83,16 +84,27 @@ async def test_network_options(hass, mock_openzwave):
     assert network.options.config_path == 'mock_config_path'
 
 
-async def test_erronous_network_key(hass, mock_openzwave):
-    """Test erronous network key."""
-    result = await async_setup_component(hass, 'zwave', {
-        'zwave': {
-            'network_key': ('0x 01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, '
-                            '0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10'),
-        }})
-    await hass.async_block_till_done()
+async def test_network_key_validation(hass, mock_openzwave):
+    """Test network key validation."""
+    test_values = [
+        ('0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, '
+         '0x0C, 0x0D, 0x0E, 0x0F, 0x10'),
+        ('0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0x0B,0x0C,0x0D,'
+         '0x0E,0x0F,0x10'),
+    ]
+    for value in test_values:
+        result = zwave.CONFIG_SCHEMA({'zwave': {'network_key': value}})
+        print(result['zwave']['network_key'])
+        assert result['zwave']['network_key'] == value
 
-    assert not result
+
+async def test_erronous_network_key_fails_validation(hass, mock_openzwave):
+    """Test failing erronous network key validation."""
+    value = ('0x 01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, '
+             '0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10')
+    with pytest.raises(vol.Invalid):
+        result = zwave.CONFIG_SCHEMA({'zwave': {'network_key': value}})
+        assert not result
 
 
 async def test_auto_heal_midnight(hass, mock_openzwave):
