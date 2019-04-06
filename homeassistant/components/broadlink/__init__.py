@@ -77,7 +77,7 @@ def async_setup_service(hass, host, device):
         async def _send_packet(call):
             """Send a packet."""
             device = hass.data[DOMAIN][call.data[CONF_HOST]]
-            packets = call.data.get(CONF_PACKET, [])
+            packets = call.data[CONF_PACKET]
             for packet in packets:
                 await hass.async_add_executor_job(
                     device.send_data, packet)
