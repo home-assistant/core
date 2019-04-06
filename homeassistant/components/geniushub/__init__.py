@@ -19,8 +19,8 @@ DOMAIN = 'geniushub'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
         vol.Required(CONF_HOST): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -43,13 +43,15 @@ async def async_setup(hass, hass_config):
         )
 
         await client.populate()
-        hub = client.hub
 
-        zones = await hub.zones
-        discovered = [z for z in zones if z['type'] == 'radiator']
+        # hub = client.hub
+        # zones = await hub.zones
+        # discovered = [z for z in zones if z['type'] == 'radiator']
+        # hass.async_create_task(async_load_platform(
+        #     hass, 'climate', DOMAIN, discovered, hass_config))
 
         hass.async_create_task(async_load_platform(
-            hass, 'climate', DOMAIN, discovered, hass_config))
+            hass, 'climate', DOMAIN, {}, hass_config))
 
     except AssertionError:  # assert response.status == HTTP_OK, response.text
         _LOGGER.warn(

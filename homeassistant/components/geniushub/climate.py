@@ -63,8 +63,11 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     client = hass.data[DOMAIN]['client']
 
     zones = []
-    for zone in discovery_info:
-        zones.append(GeniusClimate(client, zone))
+    #for zone in discovery_info:
+    #    zones.append(GeniusClimate(client, zone))
+    for zone in client.hub.zone_objs:
+        if hasattr(zone, 'temperature'):
+            zones.append(GeniusClimate(client, zone))
 
     async_add_entities(zones, update_before_add=False)
 
@@ -74,25 +77,33 @@ class GeniusClimate(ClimateDevice):
 
     def __init__(self, client, zone):
         """Initialize the climate device."""
+        from geniushubclient.const import (
+            ITYPE_TO_TYPE as ZONE_TYPE,
+            zone_types as ZONE_TYPES,
+        )
+
+        _LOGGER.warn("GeniusClimate(): Found Zone, id = %s [%s]", zone.id, zone.name)
+
         self._client = client
-        self._id = zone['id']
-        self._name = zone['name']
+        self._objref = zone
+        self._id = zone.id
+        self._name = zone.name
 
-        _LOGGER.warn(
-            "GeniusClimate(): zone = %s",
-            zone)
+        tmp = list(HA_OPMODE_TO_GENIUSHUB)
+        if self._objref.type != ZONE_TYPE[ZONE_TYPES.ControlSP]:                 # TODO: actually, if no PIR
+            tmp.remove(STATE_ECO)
+        self._operation_list = tmp
 
-        self._`obj_ref =
+        self._current_temperature = None
+        self._target_temperature = None
+        self._mode = None
 
-        self._current_temperature = zone['temperature']
-        self._target_temperature = zone['setpoint']
-        self._mode = zone['mode']
-        self._status = zone
+        self._status = None # ????
 
     @property
     def name(self):
         """Return the name of the climate device."""
-        return self._name
+        return self._objref.name
 
     @property
     def device_state_attributes(self):
@@ -101,17 +112,21 @@ class GeniusClimate(ClimateDevice):
         This is state data that is not available otherwise, due to the
         restrictions placed upon ClimateDevice properties, etc. by HA.
         """
-        return {'status': self._status}
+        tmp = self._objref.__dict__.items()
+        state = {k: v for k, v in tmp if k[:1] != '_'}
+
+        _LOGGER.warn("device_state_attributes(%s [%s]) = %s", self._id, self._name, {'status': state})
+        return {'status': state}
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._current_temperature
+        return self._objref.temperature
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._target_temperature
+        return self._objref.setpoint
 
     @property
     def min_temp(self):
@@ -136,24 +151,22 @@ class GeniusClimate(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        if True:
-            return list(HA_OPMODE_TO_GENIUSHUB)
-        else:
-            return list(HA_OPMODE_TO_GENIUSHUB).remove(STATE_ECO)
+        _LOGGER.warn("operation_list(%s [%s]) = %s", self._id, self._name, self._operation_list)
+        return self._operation_list
 
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return GENIUSHUB_STATE_TO_HA.get(self._mode)
+        return GENIUSHUB_STATE_TO_HA.get(self._objref.mode)
 
     @property
     def is_on(self):
         """Return true if the device is on."""
         from geniushubclient.const import (
             IMODE_TO_MODE as ZONE_MODE,
-            zone_modes as ZONE_IMODES,
+            zone_modes as ZONE_MODES,
         )
-        return self._mode != ZONE_MODE[ZONE_IMODES.Off]
+        return self._objref.mode != ZONE_MODE[ZONE_MODES.Off]
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
@@ -187,4 +200,5 @@ class GeniusClimate(ClimateDevice):
 
     async def async_update(self):
         """Get the latest data from the hub."""
-        self_status = self.obj_ref.detail
+        pass
+        # self._obj_ref.refresh()
