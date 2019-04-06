@@ -75,7 +75,6 @@ ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
 EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
-EFFECT_NONE = "none"
 
 COLOR_GROUP = "Color descriptors"
 
