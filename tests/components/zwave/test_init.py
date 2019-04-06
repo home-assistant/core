@@ -83,6 +83,17 @@ async def test_network_options(hass, mock_openzwave):
     assert network.options.config_path == 'mock_config_path'
 
 
+async def test_erronous_network_key(hass, mock_openzwave):
+    """Test erronous network key."""
+    result = await async_setup_component(hass, 'zwave', {
+        'zwave': {
+            'network_key': '0x 01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10',
+        }})
+    await hass.async_block_till_done()
+
+    assert not result
+
+
 async def test_auto_heal_midnight(hass, mock_openzwave):
     """Test network auto-heal at midnight."""
     await async_setup_component(hass, 'zwave', {
