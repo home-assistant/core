@@ -26,7 +26,7 @@ DEFAULT_INITIAL_STATE = False
 PORT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME): cv.string,
     vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-    vol.Optional(ATTR_INITIAL_STATE, default=DEFAULT_INITIAL_STATE): 
+    vol.Optional(ATTR_INITIAL_STATE, default=DEFAULT_INITIAL_STATE):
         cv.boolean,
 })
 
@@ -53,8 +53,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = port_entity.get(ATTR_NAME)
             invert_logic = port_entity[ATTR_INVERT_LOGIC]
             initial_state = port_entity[ATTR_INITIAL_STATE]
-            switches.append(RPiPFIOSwitch(port, name, invert_logic, 
-                initial_state, board))
+            switches.append(RPiPFIOSwitch(port, name, invert_logic,
+                            initial_state, board))
         add_entities(switches)
 
 
@@ -62,7 +62,7 @@ class RPiPFIOSwitch(ToggleEntity):
     """Representation of a PiFace Digital Output."""
 
     def __init__(self, port, name, invert_logic, initial_state,
-            hardware_addr=0):
+                 hardware_addr=0):
         """Initialize the pin."""
         self._port = port
         self._name = name or DEVICE_DEFAULT_NAME
@@ -99,13 +99,13 @@ class RPiPFIOSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         rpi_pfio.write_output(self._port, 0 if self._invert_logic else 1,
-                self._hardware_addr)
+                              self._hardware_addr)
         self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0,
-                self._hardware_addr)
+                              self._hardware_addr)
         self._state = False
         self.schedule_update_ha_state()
