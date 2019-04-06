@@ -5,8 +5,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ID, CONF_NAME
+from homeassistant.components.bomradarcam.locations import LOCATIONS
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['bomradarloop==0.1.2']
