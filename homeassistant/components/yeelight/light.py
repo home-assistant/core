@@ -115,6 +115,7 @@ def _parse_custom_effects(effects_config):
 
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
+
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:
@@ -142,6 +143,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Adding %s", device.name)
 
     custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
+    nl_switch_light = discovery_info[CONF_NIGHTLIGHT_SWITCH_TYPE] == \
+        NIGHTLIGHT_SWITCH_TYPE_LIGHT
 
     lights = []
 
@@ -153,15 +156,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     elif device.type == BulbType.Color:
         _lights_setup_helper(YeelightColorLight)
     elif device.type == BulbType.WhiteTemp:
-        if discovery_info[CONF_NIGHTLIGHT_SWITCH_TYPE] == \
-                NIGHTLIGHT_SWITCH_TYPE_LIGHT and device.is_nightlight_supported:
+        if nl_switch_light and device.is_nightlight_supported:
             _lights_setup_helper(YeelightWithNightLight)
             _lights_setup_helper(YeelightNightLightMode)
         else:
             _lights_setup_helper(YeelightWhiteTempLight)
     elif device.type == BulbType.WhiteTempMood:
-        if discovery_info[CONF_NIGHTLIGHT_SWITCH_TYPE] == \
-                NIGHTLIGHT_SWITCH_TYPE_LIGHT:
+        if nl_switch_light:
             _lights_setup_helper(YeelightNightLightMode)
             _lights_setup_helper(YeelightWithAmbientAndNightlight)
         else:
@@ -651,7 +652,7 @@ class YeelightWithAmbientWithoutNightlight(YeelightWithAmbientLightSupport,
                                            YeelightWhiteTempLight):
     """
     Representation of a Yeelight which has ambilight support but no
-    nightlight support. Its used when nightlight switch type is none
+    nightlight support. Its used when nightlight switch type is none.
     """
 
 
