@@ -93,6 +93,7 @@ class TableHolder:
         self._session = session
         self._host = host
         self._name = name
+        self._table = None
         self._table_task = None
 
     @property
