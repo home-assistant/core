@@ -3,12 +3,15 @@ Support for Fibaro thermostats.
 """
 import logging
 
-from homeassistant.components.climate import (
-    ClimateDevice, STATE_AUTO, STATE_COOL,
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_COOL,
     STATE_DRY, STATE_FAN_ONLY, STATE_HEAT,
-    ENTITY_ID_FORMAT,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
+
+from homeassistant.components.climate import (
+    ClimateDevice)
+
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_OFF,
@@ -105,7 +108,7 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         self._op_mode_device = None
         self._fan_mode_device = None
         self._support_flags = 0
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = 'climate.{}'.format(self.ha_id)
         self._fan_mode_to_state = {}
         self._fan_state_to_mode = {}
         self._op_mode_to_state = {}
@@ -170,7 +173,7 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
                       if self._op_mode_device else "None")
         _LOGGER.debug("- _fan_mode_device %s", self._fan_mode_device.ha_id
                       if self._fan_mode_device else "None")
-        self.super().async_added_to_hass()
+        await super().async_added_to_hass()
 
         # Register update callback for child devices
         siblings = self.fibaro_device.fibaro_controller.get_siblings(
