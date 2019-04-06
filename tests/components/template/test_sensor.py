@@ -1,4 +1,6 @@
 """The test for the Template sensor platform."""
+from datetime import timedelta
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNKNOWN
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.util.dt import now
@@ -46,8 +48,8 @@ class TestTemplateSensor:
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == 'It Works.'
 
-    def test_provided_last_changed_template(self):
-        """Test provided_last_changed template."""
+    def test_manual_last_changed_template(self):
+        """Test manual_last_changed template."""
         with assert_setup_component(1):
             assert setup_component(self.hass, 'sensor', {
                 'sensor': {
@@ -59,7 +61,7 @@ class TestTemplateSensor:
                                     .attributes.get("temp")
                                 }}
                             ''',
-                            'provided_last_changed_template': '''
+                            'manual_last_changed_template': '''
                                 {{ states.sensor.field_data
                                     .attributes.get("client_dt_changed")
                                 }}
@@ -74,11 +76,9 @@ class TestTemplateSensor:
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == STATE_UNKNOWN
-        assert state.provided_last_changed is None
-        assert state.provided_last_updated is None
 
         attr_temp = 1
-        attr_client_dt_changed = now()
+        attr_client_dt_changed = now() - timedelta(hours=1)
         self.hass.states.set('sensor.field_data', "OK",
                              {'temp': attr_temp,
                               'client_dt_changed': attr_client_dt_changed})
@@ -86,11 +86,10 @@ class TestTemplateSensor:
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == str(attr_temp)
-        assert state.provided_last_changed == attr_client_dt_changed
-        assert state.provided_last_updated is None
+        assert state.last_changed == attr_client_dt_changed
 
-    def test_provided_last_updated_template(self):
-        """Test provided_last_updated template."""
+    def test_manual_last_updated_template(self):
+        """Test manual_last_updated template."""
         with assert_setup_component(1):
             assert setup_component(self.hass, 'sensor', {
                 'sensor': {
@@ -102,7 +101,7 @@ class TestTemplateSensor:
                                     .attributes.get("temp")
                                 }}
                             ''',
-                            'provided_last_updated_template': '''
+                            'manual_last_updated_template': '''
                                 {{ states.sensor.field_data
                                     .attributes.get("client_dt_updated")
                                 }}
@@ -117,11 +116,9 @@ class TestTemplateSensor:
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == STATE_UNKNOWN
-        assert state.provided_last_changed is None
-        assert state.provided_last_updated is None
 
         attr_temp = 1
-        attr_client_dt_updated = now()
+        attr_client_dt_updated = now() - timedelta(hours=1)
         self.hass.states.set('sensor.field_data', "OK",
                              {'temp': attr_temp,
                               'client_dt_updated': attr_client_dt_updated})
@@ -129,11 +126,10 @@ class TestTemplateSensor:
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == str(attr_temp)
-        assert state.provided_last_changed is None
-        assert state.provided_last_updated == attr_client_dt_updated
+        assert state.last_updated == attr_client_dt_updated
 
-    def test_both_provided_datetimes_template(self):
-        """Test provided_last_changed and provided_last_updated templates
+    def test_both_manual_datetimes_template(self):
+        """Test manual_last_changed and manual_last_updated templates
         working together."""
         with assert_setup_component(1):
             assert setup_component(self.hass, 'sensor', {
@@ -146,12 +142,12 @@ class TestTemplateSensor:
                                     .attributes.get("temp")
                                 }}
                             ''',
-                            'provided_last_changed_template': '''
+                            'manual_last_changed_template': '''
                                 {{ states.sensor.field_data
                                     .attributes.get("client_dt_changed")
                                 }}
                             ''',
-                            'provided_last_updated_template': '''
+                            'manual_last_updated_template': '''
                                 {{ states.sensor.field_data
                                     .attributes.get("client_dt_updated")
                                 }}
@@ -166,12 +162,10 @@ class TestTemplateSensor:
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == STATE_UNKNOWN
-        assert state.provided_last_changed is None
-        assert state.provided_last_updated is None
 
         attr_temp = 1
-        attr_client_dt_changed = now().replace(hour=0)
-        attr_client_dt_updated = now().replace(hour=1)
+        attr_client_dt_changed = now().replace(hour=0) - timedelta(minutes=15)
+        attr_client_dt_updated = now().replace(hour=1) - timedelta(minutes=45)
         self.hass.states.set('sensor.field_data', "OK",
                              {'temp': attr_temp,
                               'client_dt_changed': attr_client_dt_changed,
@@ -180,8 +174,8 @@ class TestTemplateSensor:
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == str(attr_temp)
-        assert state.provided_last_changed == attr_client_dt_changed
-        assert state.provided_last_updated == attr_client_dt_updated
+        assert state.last_changed == attr_client_dt_changed
+        assert state.last_updated == attr_client_dt_updated
 
     def test_icon_template(self):
         """Test icon template."""

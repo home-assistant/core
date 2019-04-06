@@ -29,6 +29,24 @@ class TestInfluxDB(unittest.TestCase):
         """Clear data."""
         self.hass.stop()
 
+    def _setup(self, mock_client, **kwargs):
+        """Set up the client."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'exclude': {
+                    'entities': ['fake.blacklisted'],
+                    'domains': ['another_fake']
+                }
+            }
+        }
+        config['influxdb'].update(kwargs)
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+        mock_client.return_value.write_points.reset_mock()
+
     def test_setup_config_full(self, mock_client):
         """Test the setup with full configuration."""
         config = {
@@ -81,24 +99,6 @@ class TestInfluxDB(unittest.TestCase):
 
         assert not setup_component(self.hass, influxdb.DOMAIN, config)
 
-    def _setup(self, mock_client, **kwargs):
-        """Set up the client."""
-        config = {
-            'influxdb': {
-                'host': 'host',
-                'username': 'user',
-                'password': 'pass',
-                'exclude': {
-                    'entities': ['fake.blacklisted'],
-                    'domains': ['another_fake']
-                }
-            }
-        }
-        config['influxdb'].update(kwargs)
-        assert setup_component(self.hass, influxdb.DOMAIN, config)
-        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
-        mock_client.return_value.write_points.reset_mock()
-
     def test_event_listener(self, mock_client):
         """Test the event listener."""
         self._setup(mock_client)
@@ -127,7 +127,7 @@ class TestInfluxDB(unittest.TestCase):
             }
             state = mock.MagicMock(
                 state=in_, domain='fake', entity_id='fake.entity-id',
-                provided_last_updated=None,
+                is_last_updated_manual=False,
                 object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=time_fired)
             body = [{
@@ -164,11 +164,11 @@ class TestInfluxDB(unittest.TestCase):
                 mock.call(body)
             mock_client.return_value.write_points.reset_mock()
 
-    def test_event_listener_with_provided_last_updated(self, mock_client):
-        """Test the event listener."""
+    def test_event_listener_with_manual_last_updated(self, mock_client):
+        """Test the event listener with a state's last_updated manually set."""
         self._setup(mock_client)
 
-        provided_last_updated = now()
+        manual_last_updated = now()
 
         # map of HA State to valid influxdb [state, value] fields
         valid = {
@@ -192,7 +192,8 @@ class TestInfluxDB(unittest.TestCase):
             }
             state = mock.MagicMock(
                 state=in_, domain='fake', entity_id='fake.entity-id',
-                provided_last_updated=provided_last_updated,
+                last_updated=manual_last_updated,
+                is_last_updated_manual=True,
                 object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
@@ -201,7 +202,7 @@ class TestInfluxDB(unittest.TestCase):
                     'domain': 'fake',
                     'entity_id': 'entity',
                 },
-                'time': provided_last_updated,
+                'time': manual_last_updated,
                 'fields': {
                     'longitude': 1.1,
                     'latitude': 2.2,
@@ -240,7 +241,7 @@ class TestInfluxDB(unittest.TestCase):
                 attrs = {}
             state = mock.MagicMock(
                 state=1, domain='fake', entity_id='fake.entity-id',
-                provided_last_updated=None,
+                is_last_updated_manual=False,
                 object_id='entity', attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
@@ -268,7 +269,7 @@ class TestInfluxDB(unittest.TestCase):
         attrs = {'bignumstring':  '9' * 999, 'nonumstring': 'nan'}
         state = mock.MagicMock(
             state=8, domain='fake', entity_id='fake.entity-id',
-            provided_last_updated=None, object_id='entity', attributes=attrs)
+            is_last_updated_manual=False, object_id='entity', attributes=attrs)
         event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
         body = [{
             'measurement': 'fake.entity-id',
@@ -295,7 +296,7 @@ class TestInfluxDB(unittest.TestCase):
         for state_state in (1, 'unknown', '', 'unavailable'):
             state = mock.MagicMock(
                 state=state_state, domain='fake', entity_id='fake.entity-id',
-                provided_last_updated=None, object_id='entity', attributes={})
+                is_last_updated_manual=False, object_id='entity', attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
                 'measurement': 'fake.entity-id',
@@ -325,7 +326,8 @@ class TestInfluxDB(unittest.TestCase):
         for entity_id in ('ok', 'blacklisted'):
             state = mock.MagicMock(
                 state=1, domain='fake', entity_id='fake.{}'.format(entity_id),
-                provided_last_updated=None, object_id=entity_id, attributes={})
+                is_last_updated_manual=False,
+                object_id=entity_id, attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
                 'measurement': 'fake.{}'.format(entity_id),
@@ -356,7 +358,7 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1, domain=domain,
                 entity_id='{}.something'.format(domain),
-                provided_last_updated=None, object_id='something',
+                is_last_updated_manual=False, object_id='something',
                 attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
@@ -399,7 +401,7 @@ class TestInfluxDB(unittest.TestCase):
         for entity_id in ('included', 'default'):
             state = mock.MagicMock(
                 state=1, domain='fake', entity_id='fake.{}'.format(entity_id),
-                provided_last_updated=None, object_id=entity_id, attributes={})
+                is_last_updated_manual=False, object_id=entity_id, attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
                 'measurement': 'fake.{}'.format(entity_id),
@@ -442,7 +444,7 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1, domain=domain,
                 entity_id='{}.something'.format(domain),
-                provided_last_updated=None, object_id='something',
+                is_last_updated_manual=False, object_id='something',
                 attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
@@ -487,7 +489,7 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1, domain=domain,
                 entity_id='{}.something'.format(domain),
-                provided_last_updated=None, object_id='something',
+                is_last_updated_manual=False, object_id='something',
                 attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
@@ -515,7 +517,7 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1, domain='other',
                 entity_id='other.{}'.format(entity_id),
-                provided_last_updated=None, object_id=entity_id, attributes={})
+                is_last_updated_manual=False, object_id=entity_id, attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
                 'measurement': 'other.{}'.format(entity_id),
@@ -560,7 +562,7 @@ class TestInfluxDB(unittest.TestCase):
             }
             state = mock.MagicMock(
                 state=in_, domain='fake', entity_id='fake.entity-id',
-                provided_last_updated=None, object_id='entity',
+                is_last_updated_manual=False, object_id='entity',
                 attributes=attrs)
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
@@ -608,7 +610,7 @@ class TestInfluxDB(unittest.TestCase):
         for entity_id in ('ok', 'blacklisted'):
             state = mock.MagicMock(
                 state=1, domain='fake', entity_id='fake.{}'.format(entity_id),
-                provided_last_updated=None, object_id=entity_id, attributes={})
+                is_last_updated_manual=False, object_id=entity_id, attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
                 'measurement': 'state',
@@ -650,7 +652,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         state = mock.MagicMock(
             state='foo', domain='fake', entity_id='fake.entity-id',
-            provided_last_updated=None, object_id='entity', attributes=attrs)
+            is_last_updated_manual=False, object_id='entity', attributes=attrs)
         event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
         body = [{
             'measurement': 'state',
@@ -691,7 +693,7 @@ class TestInfluxDB(unittest.TestCase):
         }
         state = mock.MagicMock(
             state=1, domain='fake', entity_id='fake.something',
-            provided_last_updated=None, object_id='something',
+            is_last_updated_manual=False, object_id='something',
             attributes=attrs)
         event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
         body = [{
@@ -752,7 +754,7 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1, domain=comp['domain'],
                 entity_id=comp['domain'] + '.' + comp['id'],
-                provided_last_updated=None, object_id=comp['id'],
+                is_last_updated_manual=False, object_id=comp['id'],
                 attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
@@ -789,7 +791,7 @@ class TestInfluxDB(unittest.TestCase):
 
         state = mock.MagicMock(
             state=1, domain='fake', entity_id='entity.id',
-            provided_last_updated=None, object_id='entity', attributes={})
+            is_last_updated_manual=False, object_id='entity', attributes={})
         event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
         mock_client.return_value.write_points.side_effect = \
             IOError('foo')
@@ -817,7 +819,7 @@ class TestInfluxDB(unittest.TestCase):
 
         state = mock.MagicMock(
             state=1, domain='fake', entity_id='entity.id',
-            provided_last_updated=None, object_id='entity', attributes={})
+            is_last_updated_manual=False, object_id='entity', attributes={})
         event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
 
         monotonic_time = 0

@@ -627,6 +627,46 @@ class TestStateMachine(unittest.TestCase):
         assert state2 is not None
         assert state.last_changed == state2.last_changed
 
+    def test_manually_setting_last_changed_sets_respective_boolean(self):
+        """Test to validate when last_changed is manually set, that
+        is_last_changed_manual is set to True"""
+        self.states.set('light.Bowl', 'on')
+        state = self.states.get('light.Bowl')
+        assert state is not None
+        assert not state.is_last_changed_manual
+        assert not state.is_last_updated_manual
+
+        new_last_changed = state.last_changed - timedelta(minutes=45)
+        self.states.set('light.Bowl', 'off',
+                        manual_last_changed=new_last_changed)
+        self.hass.block_till_done()
+
+        state = self.states.get('light.Bowl')
+        assert state is not None
+        assert state.last_changed == new_last_changed
+        assert state.is_last_changed_manual
+        assert not state.is_last_updated_manual
+
+    def test_manually_setting_last_updated_sets_respective_boolean(self):
+        """Test to validate when last_updated is manually set, that
+        is_last_updated_manual is set to True"""
+        self.states.set('light.Bowl', 'on')
+        state = self.states.get('light.Bowl')
+        assert state is not None
+        assert not state.is_last_changed_manual
+        assert not state.is_last_updated_manual
+
+        new_last_updated = state.last_changed - timedelta(minutes=45)
+        self.states.set('light.Bowl', 'off',
+                        manual_last_updated=new_last_updated)
+        self.hass.block_till_done()
+
+        state = self.states.get('light.Bowl')
+        assert state is not None
+        assert state.last_updated == new_last_updated
+        assert not state.is_last_changed_manual
+        assert state.is_last_updated_manual
+
     def test_force_update(self):
         """Test force update option."""
         events = []
