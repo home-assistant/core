@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         entities = create_elk_entities(elk_data, elk.thermostats,
                                        'thermostat', ElkThermostat,
                                        entities)
-    async_add_entities(entities, True);
+    async_add_entities(entities, True)
 
 
 class ElkThermostat(ElkEntity, ClimateDevice):
