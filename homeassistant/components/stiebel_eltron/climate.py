@@ -1,9 +1,9 @@
-"""Support for stiebel_eltron climat platform."""
+"""Support for stiebel_eltron climate platform."""
 import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_CURRENT_HUMIDITY, STATE_AUTO, STATE_IDLE, STATE_MANUAL,
+    STATE_AUTO, STATE_IDLE, STATE_MANUAL,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.stiebel_eltron import DOMAIN as STE_DOMAIN
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -20,7 +20,7 @@ STATE_SETBACK = 'setback_mode'
 STATE_DHW = 'dhw'
 STATE_EMERGENCY = 'emergency'
 
-"""Mapping STIEBEL ELTRON states to homeassistant states."""
+# Mapping STIEBEL ELTRON states to homeassistant states.
 STE_TO_HA_STATE = {'AUTOMATIC': STATE_AUTO,
                    'MANUAL MODE': STATE_MANUAL,
                    'STANDBY': STATE_IDLE,
@@ -29,17 +29,16 @@ STE_TO_HA_STATE = {'AUTOMATIC': STATE_AUTO,
                    'DHW': STATE_DHW,
                    'EMERGENCY OPERATION': STATE_EMERGENCY}
 
-"""Mapping homeassistant states to STIEBEL ELTRON states."""
+# Mapping homeassistant states to STIEBEL ELTRON states.
 HA_TO_STE_STATE = {value: key for key, value in STE_TO_HA_STATE.items()}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the StiebelEltron platform."""
     name = hass.data[STE_DOMAIN]['name']
     ste_data = hass.data[STE_DOMAIN]['ste_data']
 
-    add_devices([StiebelEltron(name, ste_data)], True)
-    return True
+    add_entities([StiebelEltron(name, ste_data)], True)
 
 
 class StiebelEltron(ClimateDevice):
@@ -48,7 +47,6 @@ class StiebelEltron(ClimateDevice):
     def __init__(self, name, ste_data):
         """Initialize the unit."""
         self._name = name
-
         self._target_temperature = None
         self._current_temperature = None
         self._current_humidity = None
@@ -56,8 +54,6 @@ class StiebelEltron(ClimateDevice):
         self._current_operation = None
         self._filter_alarm = None
         self._ste_data = ste_data
-
-        _LOGGER.debug("Initialized climate platform")
 
     @property
     def supported_features(self):
@@ -81,14 +77,8 @@ class StiebelEltron(ClimateDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         return {
-            ATTR_CURRENT_HUMIDITY: self._current_humidity,
             'filter_alarm': self._filter_alarm
         }
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def name(self):
@@ -128,10 +118,15 @@ class StiebelEltron(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        _LOGGER.debug("set_temperature: %s", self._target_temperature)
-        self._ste_data.api.set_target_temp(self._target_temperature)
+        target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        if target_temperature is not None:
+            _LOGGER.debug("set_temperature: %s", target_temperature)
+            self._ste_data.api.set_target_temp(target_temperature)
+
+    @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return float("{0:.1f}".format(self._current_humidity))
 
     # Handle SUPPORT_OPERATION_MODE
     @property
@@ -149,5 +144,4 @@ class StiebelEltron(ClimateDevice):
         new_mode = HA_TO_STE_STATE.get(operation_mode)
         _LOGGER.debug("set_operation_mode: %s -> %s", self._current_operation,
                       new_mode)
-        self._current_operation = new_mode
         self._ste_data.api.set_operation(new_mode)
