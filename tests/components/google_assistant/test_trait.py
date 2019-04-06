@@ -83,33 +83,6 @@ async def test_brightness_light(hass):
     }
 
 
-async def test_brightness_cover(hass):
-    """Test brightness trait support for cover domain."""
-    assert trait.BrightnessTrait.supported(cover.DOMAIN,
-                                           cover.SUPPORT_SET_POSITION)
-
-    trt = trait.BrightnessTrait(hass, State('cover.bla', cover.STATE_OPEN, {
-        cover.ATTR_CURRENT_POSITION: 75
-    }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    assert trt.query_attributes() == {
-        'brightness': 75
-    }
-
-    calls = async_mock_service(
-        hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
-    await trt.execute(
-        trait.COMMAND_BRIGHTNESS_ABSOLUTE, BASIC_DATA,
-        {'brightness': 50})
-    assert len(calls) == 1
-    assert calls[0].data == {
-        ATTR_ENTITY_ID: 'cover.bla',
-        cover.ATTR_POSITION: 50
-    }
-
-
 async def test_brightness_media_player(hass):
     """Test brightness trait support for media player domain."""
     assert trait.BrightnessTrait.supported(media_player.DOMAIN,
@@ -355,46 +328,6 @@ async def test_onoff_light(hass):
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
-    }
-
-
-async def test_onoff_cover(hass):
-    """Test OnOff trait support for cover domain."""
-    assert trait.OnOffTrait.supported(cover.DOMAIN, 0)
-
-    trt_on = trait.OnOffTrait(hass, State('cover.bla', cover.STATE_OPEN),
-                              BASIC_CONFIG)
-
-    assert trt_on.sync_attributes() == {}
-
-    assert trt_on.query_attributes() == {
-        'on': True
-    }
-
-    trt_off = trait.OnOffTrait(hass, State('cover.bla', cover.STATE_CLOSED),
-                               BASIC_CONFIG)
-
-    assert trt_off.query_attributes() == {
-        'on': False
-    }
-
-    on_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
-    await trt_on.execute(
-        trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': True})
-    assert len(on_calls) == 1
-    assert on_calls[0].data == {
-        ATTR_ENTITY_ID: 'cover.bla',
-    }
-
-    off_calls = async_mock_service(hass, cover.DOMAIN,
-                                   cover.SERVICE_CLOSE_COVER)
-    await trt_on.execute(
-        trait.COMMAND_ONOFF, BASIC_DATA,
-        {'on': False})
-    assert len(off_calls) == 1
-    assert off_calls[0].data == {
-        ATTR_ENTITY_ID: 'cover.bla',
     }
 
 
@@ -1118,4 +1051,31 @@ async def test_modes(hass):
     assert calls[0].data == {
         'entity_id': 'media_player.living_room',
         'source': 'media'
+    }
+
+
+async def test_openclose_cover(hass):
+    """Test cover trait."""
+    assert trait.OpenCloseTrait.supported(cover.DOMAIN,
+                                          cover.SUPPORT_SET_POSITION)
+
+    trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
+        cover.ATTR_CURRENT_POSITION: 75
+    }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'openPercent': 75
+    }
+
+    calls = async_mock_service(
+        hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    await trt.execute(
+        trait.COMMAND_OPENCLOSE, BASIC_DATA,
+        {'openPercent': 50})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'cover.bla',
+        cover.ATTR_POSITION: 50
     }

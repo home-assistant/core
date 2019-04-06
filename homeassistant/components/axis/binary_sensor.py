@@ -24,8 +24,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add binary sensor from Axis device."""
         async_add_entities([AxisBinarySensor(event, device)], True)
 
-    device.listeners.append(
-        async_dispatcher_connect(hass, 'axis_add_sensor', async_add_sensor))
+    device.listeners.append(async_dispatcher_connect(
+        hass, device.event_new_sensor, async_add_sensor))
 
 
 class AxisBinarySensor(BinarySensorDevice):
@@ -35,23 +35,29 @@ class AxisBinarySensor(BinarySensorDevice):
         """Initialize the Axis binary sensor."""
         self.event = event
         self.device = device
-        self.delay = device.config_entry.options[CONF_TRIGGER_TIME]
         self.remove_timer = None
+        self.unsub_dispatcher = None
 
     async def async_added_to_hass(self):
         """Subscribe sensors events."""
         self.event.register_callback(self.update_callback)
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, self.device.event_reachable, self.update_callback)
 
-    def update_callback(self):
-        """Update the sensor's state, if needed."""
+    @callback
+    def update_callback(self, no_delay=False):
+        """Update the sensor's state, if needed.
+
+        Parameter no_delay is True when device_event_reachable is sent.
+        """
         delay = self.device.config_entry.options[CONF_TRIGGER_TIME]
 
         if self.remove_timer is not None:
             self.remove_timer()
             self.remove_timer = None
 
-        if delay == 0 or self.is_on:
-            self.schedule_update_ha_state()
+        if self.is_on or delay == 0 or no_delay:
+            self.async_schedule_update_ha_state()
             return
 
         @callback
@@ -82,6 +88,23 @@ class AxisBinarySensor(BinarySensorDevice):
         return self.event.event_class
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return '{}-{}-{}'.format(
+            self.device.serial, self.event.topic, self.event.id)
+
+    def available(self):
+        """Return True if device is available."""
+        return self.device.available
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        return {
+            'identifiers': {(AXIS_DOMAIN, self.device.serial)}
+        }

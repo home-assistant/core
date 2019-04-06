@@ -163,11 +163,7 @@ async def async_get_all_descriptions(hass):
 
     def domain_yaml_file(domain):
         """Return the services.yaml location for a domain."""
-        if domain == ha.DOMAIN:
-            from homeassistant import components
-            component_path = path.dirname(components.__file__)
-        else:
-            component_path = path.dirname(get_component(hass, domain).__file__)
+        component_path = path.dirname(get_component(hass, domain).__file__)
         return path.join(component_path, 'services.yaml')
 
     def load_services_files(yaml_files):
@@ -195,7 +191,6 @@ async def async_get_all_descriptions(hass):
         loaded = await hass.async_add_job(load_services_files, missing)
 
     # Build response
-    catch_all_yaml_file = domain_yaml_file(ha.DOMAIN)
     descriptions = {}
     for domain in services:
         descriptions[domain] = {}
@@ -207,10 +202,7 @@ async def async_get_all_descriptions(hass):
 
             # Cache missing descriptions
             if description is None:
-                if yaml_file == catch_all_yaml_file:
-                    yaml_services = loaded[yaml_file].get(domain, {})
-                else:
-                    yaml_services = loaded[yaml_file]
+                yaml_services = loaded[yaml_file]
                 yaml_description = yaml_services.get(service, {})
 
                 description = description_cache[cache_key] = {

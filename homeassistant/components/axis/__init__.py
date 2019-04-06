@@ -12,7 +12,7 @@ from .config_flow import configured_devices, DEVICE_SCHEMA
 from .const import CONF_CAMERA, CONF_EVENTS, DEFAULT_TRIGGER_TIME, DOMAIN
 from .device import AxisNetworkDevice, get_device
 
-REQUIREMENTS = ['axis==17']
+REQUIREMENTS = ['axis==19']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.schema_with_slug_keys(DEVICE_SCHEMA),
@@ -51,6 +51,8 @@ async def async_setup_entry(hass, config_entry):
         return False
 
     hass.data[DOMAIN][device.serial] = device
+
+    await device.async_update_device_registry()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
 

@@ -27,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTRIBUTION = "Powered by Dark Sky"
 
 CONF_FORECAST = 'forecast'
+CONF_HOURLY_FORECAST = 'hourly_forecast'
 CONF_LANGUAGE = 'language'
 CONF_UNITS = 'units'
 
@@ -193,6 +194,8 @@ PLATFORM_SCHEMA = vol.All(
             vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_FORECAST):
             vol.All(cv.ensure_list, [vol.Range(min=0, max=7)]),
+        vol.Optional(CONF_HOURLY_FORECAST):
+            vol.All(cv.ensure_list, [vol.Range(min=0, max=48)]),
     }),
     cv.deprecated(
         CONF_UPDATE_INTERVAL,
@@ -230,6 +233,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     forecast = config.get(CONF_FORECAST)
+    forecast_hour = config.get(CONF_HOURLY_FORECAST)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in DEPRECATED_SENSOR_TYPES:
@@ -240,7 +244,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
                 sensors.append(DarkSkySensor(
-                    forecast_data, variable, name, forecast_day))
+                    forecast_data, variable, name, forecast_day=forecast_day))
+        if forecast_hour is not None and 'hourly' in SENSOR_TYPES[variable][7]:
+            for forecast_h in forecast_hour:
+                sensors.append(DarkSkySensor(
+                    forecast_data, variable, name, forecast_hour=forecast_h))
 
     add_entities(sensors, True)
 
@@ -248,13 +256,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DarkSkySensor(Entity):
     """Implementation of a Dark Sky sensor."""
 
-    def __init__(self, forecast_data, sensor_type, name, forecast_day=None):
+    def __init__(self, forecast_data, sensor_type, name,
+                 forecast_day=None, forecast_hour=None):
         """Initialize the sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.forecast_data = forecast_data
         self.type = sensor_type
         self.forecast_day = forecast_day
+        self.forecast_hour = forecast_hour
         self._state = None
         self._icon = None
         self._unit_of_measurement = None
@@ -262,11 +272,14 @@ class DarkSkySensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self.forecast_day is None:
-            return '{} {}'.format(self.client_name, self._name)
-
-        return '{} {} {}'.format(
-            self.client_name, self._name, self.forecast_day)
+        if self.forecast_day is not None:
+            return '{} {} {}d'.format(
+                self.client_name, self._name, self.forecast_day)
+        if self.forecast_hour is not None:
+            return '{} {} {}h'.format(
+                self.client_name, self._name, self.forecast_hour)
+        return '{} {}'.format(
+            self.client_name, self._name)
 
     @property
     def state(self):
@@ -339,6 +352,13 @@ class DarkSkySensor(Entity):
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
             self._icon = getattr(hourly, 'icon', '')
+        elif self.forecast_hour is not None:
+            self.forecast_data.update_hourly()
+            hourly = self.forecast_data.data_hourly
+            if hasattr(hourly, 'data'):
+                self._state = self.get_state(hourly.data[self.forecast_hour])
+            else:
+                self._state = 0
         elif self.type == 'daily_summary':
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily
