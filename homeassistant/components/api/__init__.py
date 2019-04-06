@@ -236,7 +236,7 @@ class APIEntityStateView(HomeAssistantView):
 
         # Write state
         hass.states.async_set(entity_id, new_state, attributes, force_update,
-                              self.context(request))
+                              context=self.context(request))
 
         # Read the state back for our response
         status_code = HTTP_CREATED if is_new_state else 200
