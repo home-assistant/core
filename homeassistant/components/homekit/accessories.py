@@ -9,7 +9,8 @@ from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.const import (
-    ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_SERVICE,
+    CONF_BATTERY, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_SERVICE, DEVICE_CLASS_BATTERY,
     __version__)
 from homeassistant.core import callback as ha_callback, split_entity_id
 from homeassistant.helpers.event import (
@@ -75,6 +76,15 @@ class HomeAccessory(Accessory):
         """Add battery service if available"""
         battery_level = self.hass.states.get(self.entity_id).attributes \
             .get(ATTR_BATTERY_LEVEL)
+
+        if CONF_BATTERY in self.config:
+            battery_id = self.config[CONF_BATTERY]
+            battery_device_class = self.hass.states.get(battery_id)\
+                .attributes.get(ATTR_DEVICE_CLASS)
+            if battery_device_class == DEVICE_CLASS_BATTERY:
+                battery_level = convert_to_float(
+                    self.hass.states.get(battery_id).state)
+
         if battery_level is None:
             return
         _LOGGER.debug('%s: Found battery level attribute', self.entity_id)
@@ -120,8 +130,16 @@ class HomeAccessory(Accessory):
 
         Only call this function if self._support_battery_level is True.
         """
-        battery_level = convert_to_float(
-            new_state.attributes.get(ATTR_BATTERY_LEVEL))
+
+        battery_level = None
+        if CONF_BATTERY in self.config:
+            battery_id = self.config[CONF_BATTERY]
+            battery_level = convert_to_float(
+                self.hass.states.get(battery_id).state)
+        else:
+            battery_level = convert_to_float(
+                new_state.attributes.get(ATTR_BATTERY_LEVEL))
+
         if battery_level is None:
             return
         self._char_battery.set_value(battery_level)
