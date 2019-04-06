@@ -1,5 +1,5 @@
 """The test for the Template sensor platform."""
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNKNOWN
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.util.dt import now
 
@@ -54,12 +54,15 @@ class TestTemplateSensor:
                     'platform': 'template',
                     'sensors': {
                         'test_template_sensor': {
-                            'value_template':
-                                '{{ states.sensor.test_state.state }}',
+                            'value_template': '''
+                                {{ states.sensor.field_data
+                                    .attributes.get("temp")
+                                }}
+                            ''',
                             'provided_last_changed_template': '''
-                                {% if states.sensor.test_state.state %}
-                                    {{ now().replace(hour=0).replace(minute=0).replace(second=0).replace(microsecond=states.sensor.test_state.state | int) }}
-                                {% endif %}
+                                {{ states.sensor.field_data
+                                    .attributes.get("client_dt_changed")
+                                }}
                             '''
                         }
                     }
@@ -70,50 +73,115 @@ class TestTemplateSensor:
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == ''
+        assert state.state == STATE_UNKNOWN
         assert state.provided_last_changed is None
         assert state.provided_last_updated is None
 
-        test_state_seconds = 1
-        self.hass.states.set('sensor.test_state', test_state_seconds)
+        attr_temp = 1
+        attr_client_dt_changed = now()
+        self.hass.states.set('sensor.field_data', "OK",
+                             {'temp': attr_temp,
+                              'client_dt_changed': attr_client_dt_changed})
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == str(test_state_seconds)
-        assert state.provided_last_changed == now().replace(hour=0).replace(minute=0).replace(second=0).replace(microsecond=test_state_seconds)
+        assert state.state == str(attr_temp)
+        assert state.provided_last_changed == attr_client_dt_changed
         assert state.provided_last_updated is None
 
-    # def test_provided_last_updated_template(self):
-    #     """Test provided_last_changed template."""
-    #     with assert_setup_component(1):
-    #         assert setup_component(self.hass, 'sensor', {
-    #             'sensor': {
-    #                 'platform': 'template',
-    #                 'sensors': {
-    #                     'test_template_sensor': {
-    #                         'value_template':
-    #                             "It {{ states.sensor.test_state.state }}.",
-    #                         'provided_last_updated_template':
-    #                             "{{ utcnow() }}"
-    #                     }
-    #                 }
-    #             }
-    #         })
-    #
-    #     self.hass.start()
-    #     self.hass.block_till_done()
-    #
-    #     state = self.hass.states.get('sensor.test_template_sensor')
-    #     assert state.state == 'It .'
-    #     assert state.provided_last_changed is None
-    #     assert state.provided_last_updated == utcnow()
-    #
-    #     self.hass.states.set('sensor.test_state', 'Works')
-    #     self.hass.block_till_done()
-    #     state = self.hass.states.get('sensor.test_template_sensor')
-    #     assert state.state == 'It Works.'
-    #     assert state.provided_last_changed is None
-    #     assert state.provided_last_updated == utcnow()
+    def test_provided_last_updated_template(self):
+        """Test provided_last_updated template."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': '''
+                                {{ states.sensor.field_data
+                                    .attributes.get("temp")
+                                }}
+                            ''',
+                            'provided_last_updated_template': '''
+                                {{ states.sensor.field_data
+                                    .attributes.get("client_dt_updated")
+                                }}
+                            '''
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.state == STATE_UNKNOWN
+        assert state.provided_last_changed is None
+        assert state.provided_last_updated is None
+
+        attr_temp = 1
+        attr_client_dt_updated = now()
+        self.hass.states.set('sensor.field_data', "OK",
+                             {'temp': attr_temp,
+                              'client_dt_updated': attr_client_dt_updated})
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.state == str(attr_temp)
+        assert state.provided_last_changed is None
+        assert state.provided_last_updated == attr_client_dt_updated
+
+    def test_both_provided_datetimes_template(self):
+        """Test provided_last_changed and provided_last_updated templates
+        working together."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': '''
+                                {{ states.sensor.field_data
+                                    .attributes.get("temp")
+                                }}
+                            ''',
+                            'provided_last_changed_template': '''
+                                {{ states.sensor.field_data
+                                    .attributes.get("client_dt_changed")
+                                }}
+                            ''',
+                            'provided_last_updated_template': '''
+                                {{ states.sensor.field_data
+                                    .attributes.get("client_dt_updated")
+                                }}
+                            '''
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.state == STATE_UNKNOWN
+        assert state.provided_last_changed is None
+        assert state.provided_last_updated is None
+
+        attr_temp = 1
+        attr_client_dt_changed = now().replace(hour=0)
+        attr_client_dt_updated = now().replace(hour=1)
+        self.hass.states.set('sensor.field_data', "OK",
+                             {'temp': attr_temp,
+                              'client_dt_changed': attr_client_dt_changed,
+                              'client_dt_updated': attr_client_dt_updated})
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.state == str(attr_temp)
+        assert state.provided_last_changed == attr_client_dt_changed
+        assert state.provided_last_updated == attr_client_dt_updated
 
     def test_icon_template(self):
         """Test icon template."""
