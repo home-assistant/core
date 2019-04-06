@@ -24,7 +24,7 @@ def setup(hass, config):
         try:
             pifacedigital[address] = PFIO.PiFaceDigital(address)
             hass.data[DATA_PFIO_LISTENER][address] = PFIO.InputEventListener(
-                    chip=pifacedigital[address])
+                chip=pifacedigital[address])
         except PFIO.core.NoPiFaceDigitalDetectedError:
             pass
 
