@@ -14,6 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['libpyfoscam==1.0']
 
 CONF_IP = 'ip'
+CONF_RTSP_PORT = 'rtsp_port'
 
 DEFAULT_NAME = 'Foscam Camera'
 DEFAULT_PORT = 88
@@ -26,6 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_RTSP_PORT): cv.port
 })
 
 
@@ -53,11 +55,12 @@ class FoscamCam(Camera):
         self._foscam_session = FoscamCamera(
             ip_address, port, self._username, self._password, verbose=False)
 
-        self._rtsp_port = None
-        result, response = self._foscam_session.get_port_info()
-        if result == 0:
-            self._rtsp_port = response.get('rtspPort') or \
-                              response.get('mediaPort')
+        self._rtsp_port = device_info.get(CONF_RTSP_PORT)
+        if not self._rtsp_port:
+            result, response = self._foscam_session.get_port_info()
+            if result == 0:
+                self._rtsp_port = response.get('rtspPort') or \
+                                  response.get('mediaPort')
 
     def camera_image(self):
         """Return a still image response from the camera."""
