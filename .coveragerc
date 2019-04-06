@@ -349,6 +349,7 @@ omit =
     homeassistant/components/met/weather.py
     homeassistant/components/meteo_france/*
 <<<<<<< HEAD
+<<<<<<< HEAD
     homeassistant/components/meteoalarm/*
 =======
 <<<<<<< HEAD
@@ -528,6 +529,8 @@ omit =
     homeassistant/components/magicseaweed/sensor.py
 >>>>>>> Updated requirements
 >>>>>>> Updated requirements
+=======
+>>>>>>> Rebased to latest dev
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
@@ -665,6 +668,8 @@ omit =
     homeassistant/components/reddit/*
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
+    homeassistant/components/repetier/__init__.py
+    homeassistant/components/repetier/sensor.py
     homeassistant/components/rest/binary_sensor.py
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
