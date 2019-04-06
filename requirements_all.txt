@@ -63,9 +63,6 @@ PyRMVtransport==0.1.3
 # homeassistant.components.switchbot
 # PySwitchbot==0.5
 
-# homeassistant.components.switcher_kis
-aioswitcher==2019.3.21
-
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
 
@@ -144,6 +141,9 @@ aiolifx_effects==0.2.1
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
+
+# homeassistant.components.switcher_kis
+aioswitcher==2019.3.21
 
 # homeassistant.components.unifi
 aiounifi==4
