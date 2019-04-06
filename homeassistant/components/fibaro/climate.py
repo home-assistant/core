@@ -1,6 +1,4 @@
-"""
-Support for Fibaro thermostats.
-"""
+"""Support for Fibaro thermostats."""
 import logging
 
 from homeassistant.components.climate.const import (
@@ -236,11 +234,11 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         if self._op_mode_device is None:
             return
         if "setOperatingMode" in self._op_mode_device.fibaro_device.actions:
-            self._op_mode_device.action("setOperatingMode",
-                                       self._op_state_to_mode[operation_mode])
+            self._op_mode_device.action(
+                "setOperatingMode", self._op_state_to_mode[operation_mode])
         elif "setMode" in self._op_mode_device.fibaro_device.actions:
-            self._op_mode_device.action("setMode",
-                                       self._op_state_to_mode[operation_mode])
+            self._op_mode_device.action(
+                "setMode", self._op_state_to_mode[operation_mode])
 
     @property
     def temperature_unit(self):
@@ -267,7 +265,7 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         """Set new target temperatures."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is not None:
-            self._targettemp_device.action(
+            self._target_temp_device.action(
                 "setTargetLevel", temperature)
 
     @property
