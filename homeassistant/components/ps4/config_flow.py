@@ -98,7 +98,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         regions = sorted(COUNTRIES.keys())
         errors = {}
 
-        if user_input is None:
+        if user_input is None:  # noqa: pylint: disable=too-many-nested-blocks
             # Search for device.
             devices = await self.hass.async_add_executor_job(
                 self.helper.has_devices, self.m_device)
