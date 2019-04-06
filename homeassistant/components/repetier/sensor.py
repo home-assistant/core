@@ -1,4 +1,4 @@
-"""Support for monitoring Repetier Server Sensors"""
+"""Support for monitoring Repetier Server Sensors."""
 import logging
 from datetime import timedelta, datetime
 
@@ -13,6 +13,7 @@ DEPENDENCIES = ['repetier']
 
 SCAN_INTERVAL = timedelta(seconds=5)
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Repetier Server sensors."""
@@ -291,4 +292,3 @@ class RepetierSensor(Entity):
                 self._secs = int(round(printtime, 0))
                 self._state = time.strftime('%H:%M:%S',
                                             time.gmtime(self._secs))
-
