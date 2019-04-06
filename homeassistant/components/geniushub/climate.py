@@ -3,9 +3,8 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_ECO, STATE_HEAT, STATE_AUTO, STATE_IDLE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
-    SUPPORT_ON_OFF, SUPPORT_AWAY_MODE)
+    STATE_AUTO, STATE_ECO, STATE_HEAT, STATE_IDLE,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS)
 
@@ -13,11 +12,17 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE \
-    | SUPPORT_ON_OFF | SUPPORT_AWAY_MODE
-# Genius supports the operation modes: Off, Override, Footprint and Timer
+GENIUSHUB_SUPPORT_FLAGS = \
+    SUPPORT_TARGET_TEMPERATURE | \
+    SUPPORT_ON_OFF | \
+    SUPPORT_OPERATION_MODE
+
+GENIUSHUB_MAX_TEMP = 28.0
+GENIUSHUB_MIN_TEMP = 4.0
+
+# Genius supports the operation modes: Off, Override/Boost, Footprint & Timer
+
 # To work with Alexa these MUST BE
-#
 #   climate.STATE_HEAT: 'HEAT',
 #   climate.STATE_COOL: 'COOL',
 #   climate.STATE_AUTO: 'AUTO',
@@ -28,33 +33,39 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE \
 
 # These needed to be mapped into HA modes:
 # Off       => OFF      => STATE_IDLE   # Mode_Off: 1,
-# Override  => HEAT     => STATE_HEAT # Mode_Boost: 16,
+# Override  => HEAT     => STATE_HEAT   # Mode_Boost: 16,
 # Footprint => ECO      => STATE_ECO    # Mode_Footprint: 4,
 # Timer     => AUTO     => STATE_AUTO   # Mode_Timer: 2,
-# Away                      # Mode_Away: 8,
-#
-OPERATION_LIST = [STATE_IDLE, STATE_HEAT, STATE_ECO, STATE_AUTO]
 
 """Map between GeniusHub and Home Assistant"""
-MODE_MAP = {
-    'override': STATE_HEAT,
-    'footprint': STATE_ECO,
+GENIUSHUB_STATE_TO_HA = {
+    'off': STATE_IDLE,
     'timer': STATE_AUTO,
+    'footprint': STATE_ECO,
+    'away': None,
+    'boost': STATE_HEAT,
+    'early': STATE_HEAT,
+    'test': None,
+    'linked': None,
+    'other': None,
+}
+HA_OPMODE_TO_GENIUSHUB = {
+    STATE_AUTO: 'timer',
+    STATE_ECO: 'footprint',
+    STATE_HEAT: 'override',
+    STATE_IDLE: 'off',
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
+async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Set up the Genius hub climate devices."""
-    if discovery_info is None:
-        return
-
     client = hass.data[DOMAIN]['client']
-    await client.getjson('/zones')
 
     zones = []
-    for zone in client.getClimateList():
+    for zone in discovery_info:
         zones.append(GeniusClimate(client, zone))
+
     async_add_entities(zones, update_before_add=False)
 
 
@@ -64,17 +75,33 @@ class GeniusClimate(ClimateDevice):
     def __init__(self, client, zone):
         """Initialize the climate device."""
         self._client = client
+        self._id = zone['id']
         self._name = zone['name']
-        self._device_id = zone['iID']
-        self._current_temperature = zone['current_temperature']
-        self._target_temperature = zone['target_temperature']
+
+        _LOGGER.warn(
+            "GeniusClimate(): zone = %s",
+            zone)
+
+        self._`obj_ref =
+
+        self._current_temperature = zone['temperature']
+        self._target_temperature = zone['setpoint']
         self._mode = zone['mode']
-        self._is_active = zone['is_active']
+        self._status = zone
 
     @property
     def name(self):
         """Return the name of the climate device."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes of the evohome Climate device.
+
+        This is state data that is not available otherwise, due to the
+        restrictions placed upon ClimateDevice properties, etc. by HA.
+        """
+        return {'status': self._status}
 
     @property
     def current_temperature(self):
@@ -89,12 +116,12 @@ class GeniusClimate(ClimateDevice):
     @property
     def min_temp(self):
         """Return max valid temperature that can be set."""
-        return 4.0
+        return GENIUSHUB_MIN_TEMP
 
     @property
     def max_temp(self):
         """Return max valid temperature that can be set."""
-        return 28.0
+        return GENIUSHUB_MAX_TEMP
 
     @property
     def temperature_unit(self):
@@ -104,89 +131,60 @@ class GeniusClimate(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return GENIUSHUB_SUPPORT_FLAGS
 
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return OPERATION_LIST
-
-    @property
-    def is_on(self):
-        """Return true if the device is on."""
-        return self._mode != "off"
-
-    @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
-        return self._mode == "away"
+        if True:
+            return list(HA_OPMODE_TO_GENIUSHUB)
+        else:
+            return list(HA_OPMODE_TO_GENIUSHUB).remove(STATE_ECO)
 
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return self.get_current_operation_mode(self._mode)
+        return GENIUSHUB_STATE_TO_HA.get(self._mode)
 
-    @staticmethod
-    def get_current_operation_mode(mode):
-        """Return the current operational mode."""
-        return MODE_MAP.get(mode, STATE_IDLE)
-
-    def get_operation_mode(self, operation_mode):
-        """Coverts operation mode from Home Assistant to Genius Hub."""
-        # These needed to be mapped into HA modes:
-        # Off       => OFF      => STATE_IDLE   # Mode_Off: 1,
-        # Override  => HEAT     => STATE_HEAT # Mode_Boost: 16,
-        # Footprint => ECO      => STATE_ECO    # Mode_Footprint: 4,
-        # Timer     => AUTO     => STATE_AUTO   # Mode_Timer: 2,
-        # Away                      # Mode_Away: 8,
-        #
-        # OPERATION_LIST = [STATE_IDLE, STATE_HEAT, STATE_ECO, STATE_AUTO]
-        operation_mode_map = {
-            STATE_IDLE: {'mode': 'off', 'data': {'iMode': 1}},
-            STATE_HEAT: {'mode': 'override', 'data':
-                         {'iBoostTimeRemaining': 3600,
-                          'iMode': 16,
-                          'fBoostSP': self._target_temperature}},
-            STATE_ECO: {'mode': 'footprint', 'data': {'iMode': 4}},
-            STATE_AUTO: {'mode': 'timer', 'data': {'iMode': 2}}, }
-        return operation_mode_map.get(operation_mode,
-                                      {'mode': 'off', 'data': None})
+    @property
+    def is_on(self):
+        """Return true if the device is on."""
+        from geniushubclient.const import (
+            IMODE_TO_MODE as ZONE_MODE,
+            zone_modes as ZONE_IMODES,
+        )
+        return self._mode != ZONE_MODE[ZONE_IMODES.Off]
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        data = self.get_operation_mode(operation_mode)
-        self._mode = data['mode']
-        if data['data'] is None:
-            _LOGGER.error("Unknown mode %s", operation_mode)
-            return
+        from geniushubclient.const import zone_modes
+        op_mode = {
+            STATE_AUTO: {'iMode': zone_modes.Timer},
+            STATE_ECO:  {'iMode': zone_modes.Footprint},
+            STATE_HEAT: {'iMode': zone_modes.Boost,
+                         'iBoostTimeRemaining': 3600,
+                         'fBoostSP': self._target_temperature},
+            STATE_IDLE: {'iMode': zone_modes.Off},
+        }.get(operation_mode)
 
-        await self._client.putjson(self._device_id, data['data'])
+#       await self._client.putjson(self._id, op_mode)
+
+        self._mode = HA_OPMODE_TO_GENIUSHUB[operation_mode]
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
-
         self._target_temperature = temperature
         await self.async_set_operation_mode(STATE_HEAT)
-
-    async def async_update(self):
-        """Get the latest data from the hub."""
-        what_zone = self._client.getZone(self._device_id)
-        if what_zone:
-            zone = self._client.GET_CLIMATE(what_zone)
-            self._current_temperature = zone['current_temperature']
-            self._target_temperature = zone['target_temperature']
-            self._mode = zone['mode']
-            self._is_active = zone['is_active']
 
     async def async_turn_on(self):
         """Turn on."""
         await self.async_set_operation_mode(STATE_AUTO)
-        self._mode = "on"
 
     async def async_turn_off(self):
         """Turn off."""
         await self.async_set_operation_mode(STATE_IDLE)
-        self._mode = "off"
+
+    async def async_update(self):
+        """Get the latest data from the hub."""
+        self_status = self.obj_ref.detail

@@ -1,9 +1,4 @@
-"""
-Monitors home energy use for the ELIQ Online service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.eliqonline/
-"""
+"""Monitors home energy use for the ELIQ Online service."""
 from datetime import timedelta
 import logging
 

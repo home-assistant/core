@@ -1,9 +1,4 @@
-"""
-Support for Template fans.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/fan.template/
-"""
+"""Support for Template fans."""
 import logging
 
 import voluptuous as vol

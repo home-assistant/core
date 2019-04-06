@@ -1,9 +1,4 @@
-"""
-Demo platform that has two fake switches.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that has two fake switches."""
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 

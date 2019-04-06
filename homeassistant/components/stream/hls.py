@@ -1,9 +1,4 @@
-"""
-Provide functionality to stream HLS.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/stream/hls
-"""
+"""Provide functionality to stream HLS."""
 from aiohttp import web
 
 from homeassistant.core import callback

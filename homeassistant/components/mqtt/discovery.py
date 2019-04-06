@@ -1,9 +1,4 @@
-"""
-Support for MQTT discovery.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/#discovery
-"""
+"""Support for MQTT discovery."""
 import asyncio
 import json
 import logging

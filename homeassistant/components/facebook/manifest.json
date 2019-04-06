@@ -1,0 +1,8 @@
+{
+  "domain": "facebook",
+  "name": "Facebook",
+  "documentation": "https://www.home-assistant.io/components/facebook",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

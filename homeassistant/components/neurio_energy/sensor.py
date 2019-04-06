@@ -1,9 +1,4 @@
-"""
-Support for monitoring a Neurio energy sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.neurio_energy/
-"""
+"""Support for monitoring a Neurio energy sensor."""
 import logging
 from datetime import timedelta
 

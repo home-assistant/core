@@ -1,9 +1,4 @@
-"""
-Support for the Microsoft Cognitive Services text-to-speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.microsoft/
-"""
+"""Support for the Microsoft Cognitive Services text-to-speech service."""
 from http.client import HTTPException
 import logging
 

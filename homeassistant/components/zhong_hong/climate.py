@@ -1,9 +1,4 @@
-"""
-Support for ZhongHong HVAC Controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.zhong_hong/
-"""
+"""Support for ZhongHong HVAC Controller."""
 import logging
 
 import voluptuous as vol

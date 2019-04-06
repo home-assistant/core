@@ -1,9 +1,4 @@
-"""
-Group platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.group/
-"""
+"""Group platform for notify component."""
 import asyncio
 from collections.abc import Mapping
 from copy import deepcopy

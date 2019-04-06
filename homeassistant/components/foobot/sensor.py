@@ -1,9 +1,4 @@
-"""
-Support for the Foobot indoor air quality monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.foobot/
-"""
+"""Support for the Foobot indoor air quality monitor."""
 import asyncio
 import logging
 from datetime import timedelta

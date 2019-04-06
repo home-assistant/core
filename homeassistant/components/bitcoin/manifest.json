@@ -1,0 +1,12 @@
+{
+  "domain": "bitcoin",
+  "name": "Bitcoin",
+  "documentation": "https://www.home-assistant.io/components/bitcoin",
+  "requirements": [
+    "blockchain==1.4.4"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

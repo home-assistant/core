@@ -1,9 +1,4 @@
-"""
-CoolMasterNet platform that offers control of CoolMasteNet Climate Devices.
-
-For more details about this platform, please refer to the documentation
-https://www.home-assistant.io/components/climate.coolmaster/
-"""
+"""CoolMasterNet platform to control of CoolMasteNet Climate Devices."""
 
 import logging
 

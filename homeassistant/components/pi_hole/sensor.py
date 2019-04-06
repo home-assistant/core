@@ -1,9 +1,4 @@
-"""
-Support for getting statistical data from a Pi-hole system.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.pi_hole/
-"""
+"""Support for getting statistical data from a Pi-hole system."""
 from datetime import timedelta
 import logging
 

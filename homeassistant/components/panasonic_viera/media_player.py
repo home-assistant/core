@@ -1,9 +1,4 @@
-"""
-Support for interface with a Panasonic Viera TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.panasonic_viera/
-"""
+"""Support for interface with a Panasonic Viera TV."""
 import logging
 
 import voluptuous as vol

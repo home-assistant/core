@@ -1,9 +1,4 @@
-"""
-Component that will help set the OpenALPR local for ALPR processing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.openalpr_local/
-"""
+"""Component that will help set the OpenALPR local for ALPR processing."""
 import asyncio
 import io
 import logging

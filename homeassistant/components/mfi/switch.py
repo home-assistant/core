@@ -1,9 +1,4 @@
-"""
-Support for Ubiquiti mFi switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.mfi/
-"""
+"""Support for Ubiquiti mFi switches."""
 import logging
 
 import requests

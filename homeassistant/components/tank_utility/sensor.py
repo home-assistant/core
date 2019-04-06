@@ -1,9 +1,4 @@
-"""
-Support for the Tank Utility propane monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tank_utility/
-"""
+"""Support for the Tank Utility propane monitor."""
 
 import datetime
 import logging

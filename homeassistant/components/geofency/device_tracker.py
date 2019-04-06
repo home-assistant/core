@@ -1,9 +1,4 @@
-"""
-Support for the Geofency device tracker platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.geofency/
-"""
+"""Support for the Geofency device tracker platform."""
 import logging
 
 from homeassistant.components.device_tracker import (

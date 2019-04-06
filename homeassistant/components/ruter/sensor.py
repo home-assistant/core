@@ -1,9 +1,4 @@
-"""
-A sensor platform that give you information about next departures from Ruter.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.ruter/
-"""
+"""A sensor to provide information about next departures from Ruter."""
 import logging
 
 import voluptuous as vol
