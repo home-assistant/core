@@ -14,16 +14,19 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['rpi_pfio']
 
 ATTR_INVERT_LOGIC = 'invert_logic'
+ATTR_INITIAL_STATE = "initial_state"
 
 CONF_PORTS = 'ports'
 
 CONF_BOARDS = 'boards'
 
 DEFAULT_INVERT_LOGIC = False
+DEFAULT_INITIAL_STATE = False
 
 PORT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME): cv.string,
     vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    vol.Optional(ATTR_INITIAL_STATE, default=DEFAULT_INITIAL_STATE): cv.boolean,
 })
 
 BOARD_SCHEMA = vol.Schema({
@@ -48,21 +51,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for port, port_entity in ports.items():
             name = port_entity.get(ATTR_NAME)
             invert_logic = port_entity[ATTR_INVERT_LOGIC]
-            switches.append(RPiPFIOSwitch(port, name, invert_logic, board))
+            initial_state = port_entity[ATTR_INITIAL_STATE]
+            switches.append(RPiPFIOSwitch(port, name, invert_logic, initial_state, board))
         add_entities(switches)
 
 
 class RPiPFIOSwitch(ToggleEntity):
     """Representation of a PiFace Digital Output."""
 
-    def __init__(self, port, name, invert_logic, hardware_addr=0):
+    def __init__(self, port, name, invert_logic, initial_state, hardware_addr=0):
         """Initialize the pin."""
         self._port = port
         self._name = name or DEVICE_DEFAULT_NAME
         self._invert_logic = invert_logic
+        self._initial_state = initial_state
         self._hardware_addr = hardware_addr
-        self._state = False
-        rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0, self._hardware_addr)
+        self._state = initial_state
+        if self._invert_logic == self._initial_state:
+            state_to_set = 0
+        else:
+            state_to_set = 1
+        rpi_pfio.write_output(self._port, state_to_set , self._hardware_addr)
 
     @property
     def name(self):
