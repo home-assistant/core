@@ -754,7 +754,7 @@ nuheat==0.3.0
 # homeassistant.components.trend
 numpy==1.16.2
 
-# homeassistant.components.oasa_telematics.sensor
+# homeassistant.components.oasa_telematics
 oasatelematics==0.3
 
 # homeassistant.components.google
