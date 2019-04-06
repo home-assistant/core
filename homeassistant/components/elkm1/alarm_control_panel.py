@@ -38,7 +38,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     elk_datas = hass.data[ELK_DOMAIN]
     entities = []
-    for _, elk_data in elk_datas.items():
+    for elk_data in elk_datas.values():
         elk = elk_data['elk']
         entities = create_elk_entities(elk_data, elk.areas,
                                        'area', ElkArea, entities)
