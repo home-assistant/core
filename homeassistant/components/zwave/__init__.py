@@ -31,7 +31,6 @@ from .const import (
     DEFAULT_CONF_AUTOHEAL, DEFAULT_CONF_USB_STICK_PATH,
     DEFAULT_POLLING_INTERVAL, DEFAULT_DEBUG, DOMAIN,
     DATA_DEVICES, DATA_NETWORK, DATA_ENTITY_VALUES)
-from . import helper
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
@@ -160,7 +159,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
-        vol.Optional(CONF_NETWORK_KEY): vol.All(cv.string, helper.zwave_network_key),
+        vol.Optional(CONF_NETWORK_KEY):
+            vol.All(cv.string, vol.Match(r'(0x\w\w,\s?){15}0x\w\w')),
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
