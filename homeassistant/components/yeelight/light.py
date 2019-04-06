@@ -20,7 +20,8 @@ from homeassistant.components.yeelight import (
     CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED,
     YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
     YEELIGHT_FLOW_TRANSITION_SCHEMA, ACTION_RECOVER, CONF_FLOW_PARAMS,
-    ATTR_ACTION, ATTR_COUNT)
+    ATTR_ACTION, ATTR_COUNT, CONF_NIGHTLIGHT_SWITCH_TYPE,
+    NIGHTLIGHT_SWITCH_TYPE_LIGHT)
 
 DEPENDENCIES = ['yeelight']
 
@@ -152,14 +153,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     elif device.type == BulbType.Color:
         _lights_setup_helper(YeelightColorLight)
     elif device.type == BulbType.WhiteTemp:
-        if device.is_nightlight_supported:
+        if discovery_info[CONF_NIGHTLIGHT_SWITCH_TYPE] == \
+                NIGHTLIGHT_SWITCH_TYPE_LIGHT and device.is_nightlight_supported:
             _lights_setup_helper(YeelightWithNightLight)
             _lights_setup_helper(YeelightNightLightMode)
         else:
             _lights_setup_helper(YeelightWhiteTempLight)
     elif device.type == BulbType.WhiteTempMood:
-        _lights_setup_helper(YeelightWithAmbientLight)
-        _lights_setup_helper(YeelightNightLightMode)
+        if discovery_info[CONF_NIGHTLIGHT_SWITCH_TYPE] == \
+                NIGHTLIGHT_SWITCH_TYPE_LIGHT:
+            _lights_setup_helper(YeelightNightLightMode)
+            _lights_setup_helper(YeelightWithAmbientAndNightlight)
+        else:
+            _lights_setup_helper(YeelightWithAmbientWithoutNightlight)
         _lights_setup_helper(YeelightAmbientLight)
     else:
         _LOGGER.error("Cannot determinate device type for %s, %s",
@@ -340,6 +346,7 @@ class YeelightGenericLight(Light):
         return self._device
 
     def update(self):
+        """Update light properties."""
         self._hs = self._get_hs_from_properties()
 
     def _get_hs_from_properties(self):
@@ -365,34 +372,6 @@ class YeelightGenericLight(Light):
         red = (rgb >> 16) & 0xff
 
         return color_util.color_RGB_to_hs(red, green, blue)
-
-    @property
-    def hs_color(self) -> tuple:
-        """Return the color property."""
-        return self._hs
-
-    @property
-    def _properties(self) -> dict:
-        if self._bulb is None:
-            return {}
-        return self._bulb.last_properties
-
-    def _get_property(self, prop, default=None):
-        return self._properties.get(prop, default)
-
-    @property
-    def device(self):
-        """Return yeelight device."""
-        return self._device
-
-    @property
-    def _is_nightlight_enabled(self):
-        return self.device.is_nightlight_enabled
-
-    # F821: https://github.com/PyCQA/pyflakes/issues/373
-    @property
-    def _bulb(self) -> 'yeelight.Bulb':  # noqa: F821
-        return self.device.bulb
 
     def set_music_mode(self, mode) -> None:
         """Set the music mode on or off."""
@@ -528,7 +507,8 @@ class YeelightGenericLight(Light):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self.device.turn_on(duration=duration, light_type=self.light_type, power_mode=self._turn_on_power_mode)
+        self.device.turn_on(duration=duration, light_type=self.light_type,
+                            power_mode=self._turn_on_power_mode)
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
@@ -658,13 +638,29 @@ class YeelightNightLightMode(YeelightGenericLight):
         return PowerMode.MOONLIGHT
 
 
-class YeelightWithAmbientLight(YeelightWithNightLight):
+class YeelightWithAmbientLightSupport(YeelightGenericLight):
     """Representation of a Yeelight which has ambilight support."""
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._get_property('main_power') == 'on'
+
+
+class YeelightWithAmbientWithoutNightlight(YeelightWithAmbientLightSupport,
+                                           YeelightWhiteTempLight):
+    """
+    Representation of a Yeelight which has ambilight support but no
+    nightlight support. Its used when nightlight switch type is none
+    """
+
+
+class YeelightWithAmbientAndNightlight(YeelightWithAmbientLightSupport,
+                                       YeelightWithNightLight):
+    """
+    Representation of a Yeelight which has ambilight support and nightlight
+    switch type is set to light.
+    """
 
 
 class YeelightAmbientLight(YeelightColorLight):
@@ -697,4 +693,4 @@ class YeelightAmbientLight(YeelightColorLight):
         if not bg_prop:
             bg_prop = "bg_" + prop
 
-        return super()._properties.get(bg_prop, default)
+        return super()._get_property(bg_prop, default)
