@@ -1,9 +1,4 @@
-"""
-Support for the Automatic platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.automatic/
-"""
+"""Support for the Automatic platform."""
 import asyncio
 from datetime import timedelta
 import json

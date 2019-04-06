@@ -1,9 +1,4 @@
-"""
-Support for Linksys Access Points.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.linksys_ap/
-"""
+"""Support for Linksys Access Points."""
 import base64
 import logging
 

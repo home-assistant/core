@@ -1,9 +1,4 @@
-"""
-A sensor to monitor incoming and outgoing phone calls on a Fritz!Box router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fritzbox_callmonitor/
-"""
+"""Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 import logging
 import socket
 import threading

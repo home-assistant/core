@@ -1,0 +1,10 @@
+{
+  "domain": "alexa",
+  "name": "Alexa",
+  "documentation": "https://www.home-assistant.io/components/alexa",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

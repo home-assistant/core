@@ -9,6 +9,7 @@
         },
         "error": {
             "login_failed": "Klarte ikke \u00e5 koble til PlayStation 4. Bekreft at PIN koden er riktig.",
+            "no_ipaddress": "Angi IP adressen til din PlayStation 4 som du \u00f8nsker konfigurere.",
             "not_ready": "PlayStation 4 er ikke p\u00e5sl\u00e5tt eller koblet til nettverk."
         },
         "step": {
@@ -24,6 +25,14 @@
                     "region": "Region"
                 },
                 "description": "Skriv inn PlayStation 4 informasjonen din. For 'PIN', naviger til 'Innstillinger' p\u00e5 PlayStation 4 konsollen, deretter navigerer du til 'Innstillinger for mobilapp forbindelse' og velger 'Legg til enhet'. Skriv inn PIN-koden som vises.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP- adresse (Ikke fyll ut hvis du bruker Auto Discovery).",
+                    "mode": "Konfigureringsmodus"
+                },
+                "description": "Velg modus for konfigurasjon. Feltet IP-adresse kan st\u00e5 tomt dersom du velger Auto Discovery, da enheter vil bli oppdaget automatisk.",
                 "title": "PlayStation 4"
             }
         },

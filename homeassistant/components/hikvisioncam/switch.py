@@ -1,9 +1,4 @@
-"""
-Support turning on/off motion detection on Hikvision cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hikvision/
-"""
+"""Support turning on/off motion detection on Hikvision cameras."""
 import logging
 
 import voluptuous as vol

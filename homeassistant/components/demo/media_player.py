@@ -1,9 +1,4 @@
-"""
-Demo implementation of the media player.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo implementation of the media player."""
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 import homeassistant.util.dt as dt_util
 

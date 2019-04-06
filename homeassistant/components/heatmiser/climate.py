@@ -1,9 +1,4 @@
-"""
-Support for the PRT Heatmiser themostats using the V3 protocol.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.heatmiser/
-"""
+"""Support for the PRT Heatmiser themostats using the V3 protocol."""
 import logging
 
 import voluptuous as vol

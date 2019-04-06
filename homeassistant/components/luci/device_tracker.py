@@ -1,9 +1,4 @@
-"""
-Support for OpenWRT (luci) routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.luci/
-"""
+"""Support for OpenWRT (luci) routers."""
 import logging
 import voluptuous as vol
 

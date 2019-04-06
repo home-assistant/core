@@ -1,4 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
+import asyncio
 import logging
 import logging.handlers
 import os
@@ -156,6 +157,12 @@ async def async_from_config_dict(config: Dict[str, Any],
                 async_setup_component(hass, component, config))
 
     await hass.async_block_till_done()
+
+    # Kick off loading the registries. They don't need to be awaited.
+    asyncio.gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry(),
+        hass.helpers.area_registry.async_get_registry())
 
     # stage 1
     for component in components:

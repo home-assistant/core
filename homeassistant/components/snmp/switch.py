@@ -1,9 +1,4 @@
-"""
-Support for SNMP enabled switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.snmp/
-"""
+"""Support for SNMP enabled switch."""
 import logging
 
 import voluptuous as vol

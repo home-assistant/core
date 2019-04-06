@@ -1,9 +1,4 @@
-"""
-Support for KWB Easyfire.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.kwb/
-"""
+"""Support for KWB Easyfire."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for functionality to interact with Android TV and Fire TV devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.androidtv/
-"""
+"""Support for functionality to interact with Android TV / Fire TV devices."""
 import functools
 import logging
 import voluptuous as vol
@@ -18,11 +13,12 @@ from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME,
     CONF_PORT, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_STANDBY)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 ANDROIDTV_DOMAIN = 'androidtv'
 
-REQUIREMENTS = ['androidtv==0.0.13']
+REQUIREMENTS = ['androidtv==0.0.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,21 +57,13 @@ SERVICE_ADB_COMMAND_SCHEMA = vol.Schema({
 })
 
 
-def has_adb_files(value):
-    """Check that ADB key files exist."""
-    priv_key = value
-    pub_key = '{}.pub'.format(value)
-    cv.isfile(pub_key)
-    return cv.isfile(priv_key)
-
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS):
         vol.In(DEVICE_CLASSES),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ADBKEY): has_adb_files,
+    vol.Optional(CONF_ADBKEY): cv.isfile,
     vol.Optional(CONF_ADB_SERVER_IP): cv.string,
     vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT):
         cv.port,
@@ -133,7 +121,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         _LOGGER.warning("Could not connect to %s at %s%s",
                         device_name, host, adb_log)
-        return
+        raise PlatformNotReady
 
     if host in hass.data[ANDROIDTV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", host)

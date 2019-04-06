@@ -1,9 +1,4 @@
-"""
-Support for TekSavvy Bandwidth Monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.teksavvy/
-"""
+"""Support for TekSavvy Bandwidth Monitor."""
 from datetime import timedelta
 import logging
 import async_timeout

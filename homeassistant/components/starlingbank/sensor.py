@@ -1,9 +1,4 @@
-"""
-Support for balance data via the Starling Bank API.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.starlingbank/
-"""
+"""Support for balance data via the Starling Bank API."""
 import logging
 
 import requests

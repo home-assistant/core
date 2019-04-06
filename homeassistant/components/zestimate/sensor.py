@@ -1,9 +1,4 @@
-"""
-Support for zestimate data from zillow.com.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.zestimate/
-"""
+"""Support for zestimate data from zillow.com."""
 from datetime import timedelta
 import logging
 

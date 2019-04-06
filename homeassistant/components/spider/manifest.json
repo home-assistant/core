@@ -1,0 +1,12 @@
+{
+  "domain": "spider",
+  "name": "Spider",
+  "documentation": "https://www.home-assistant.io/components/spider",
+  "requirements": [
+    "spiderpy==1.3.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@peternijssen"
+  ]
+}

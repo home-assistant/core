@@ -1,9 +1,4 @@
-"""
-Sensor for Steam account status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.steam_online/
-"""
+"""Sensor for Steam account status."""
 import logging
 
 import voluptuous as vol

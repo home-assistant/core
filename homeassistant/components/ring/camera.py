@@ -1,9 +1,4 @@
-"""
-This component provides support to the Ring Door Bell camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.ring/
-"""
+"""This component provides support to the Ring Door Bell camera."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -115,7 +110,7 @@ class RingCam(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg import ImageFrame, IMAGE_JPEG
+        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
 
         if self._video_url is None:
@@ -128,7 +123,7 @@ class RingCam(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg import CameraMjpeg
+        from haffmpeg.camera import CameraMjpeg
 
         if self._video_url is None:
             return
@@ -138,8 +133,9 @@ class RingCam(Camera):
             self._video_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
+            stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
+                self.hass, request, stream_reader,
                 self._ffmpeg.ffmpeg_stream_content_type)
         finally:
             await stream.close()
@@ -156,14 +152,23 @@ class RingCam(Camera):
         self._camera.update()
         self._utcnow = dt_util.utcnow()
 
-        last_recording_id = self._camera.last_recording_id
+        try:
+            last_event = self._camera.history(limit=1)[0]
+        except (IndexError, TypeError):
+            return
 
-        if self._last_video_id != last_recording_id or \
-           self._utcnow >= self._expires_at:
+        last_recording_id = last_event['id']
+        video_status = last_event['recording']['status']
 
-            _LOGGER.info("Ring DoorBell properties refreshed")
+        if video_status == 'ready' and \
+            (self._last_video_id != last_recording_id or
+             self._utcnow >= self._expires_at):
 
-            # update attributes if new video or if URL has expired
-            self._last_video_id = self._camera.last_recording_id
-            self._video_url = self._camera.recording_url(self._last_video_id)
-            self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow
+            video_url = self._camera.recording_url(last_recording_id)
+            if video_url:
+                _LOGGER.info("Ring DoorBell properties refreshed")
+
+                # update attributes if new video or if URL has expired
+                self._last_video_id = last_recording_id
+                self._video_url = video_url
+                self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow

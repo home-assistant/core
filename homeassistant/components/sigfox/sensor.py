@@ -1,9 +1,4 @@
-"""
-Sensor for SigFox devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sigfox/
-"""
+"""Sensor for SigFox devices."""
 import logging
 import datetime
 import json

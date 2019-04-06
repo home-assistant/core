@@ -1,9 +1,4 @@
-"""
-Support for the NOAA Tides and Currents API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.noaa_tides/
-"""
+"""Support for the NOAA Tides and Currents API."""
 from datetime import datetime, timedelta
 import logging
 

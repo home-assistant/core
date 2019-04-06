@@ -1,16 +1,10 @@
-"""
-Support for the Amazon Polly text to speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.amazon_polly/
-"""
+"""Support for the Amazon Polly text to speech service."""
 import logging
 
 import voluptuous as vol
 
+from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
-
-from . import PLATFORM_SCHEMA, Provider
 
 REQUIREMENTS = ['boto3==1.9.16']
 

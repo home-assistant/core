@@ -1,9 +1,4 @@
-"""
-Support for interface with an Orange Livebox Play TV appliance.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.liveboxplaytv/
-"""
+"""Support for interface with an Orange Livebox Play TV appliance."""
 from datetime import timedelta
 import logging
 

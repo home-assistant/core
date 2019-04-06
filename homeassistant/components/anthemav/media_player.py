@@ -1,9 +1,4 @@
-"""
-Support for Anthem Network Receivers and Processors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.anthemav/
-"""
+"""Support for Anthem Network Receivers and Processors."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Provides a binary sensor which is a collection of ffmpeg tools.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.ffmpeg_noise/
-"""
+"""Provides a binary sensor which is a collection of ffmpeg tools."""
 import logging
 
 import voluptuous as vol
@@ -55,7 +50,7 @@ class FFmpegNoise(FFmpegBinarySensor):
 
     def __init__(self, hass, manager, config):
         """Initialize FFmpeg noise binary sensor."""
-        from haffmpeg import SensorNoise
+        from haffmpeg.sensor import SensorNoise
 
         super().__init__(config)
         self.ffmpeg = SensorNoise(
