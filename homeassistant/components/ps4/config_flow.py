@@ -115,7 +115,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                     # Retrieve creds from entry
                     creds = entry.data[CONF_TOKEN]
                     # Retrieve device data from entry if creds match.
-                    if self.creds = creds:
+                    if self.creds == creds:
                         conf_devices = entry.data['devices']
                         for c_device in conf_devices:
                             if c_device['host'] in self.device_list:
