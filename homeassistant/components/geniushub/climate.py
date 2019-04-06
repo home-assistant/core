@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_HEAT, STATE_IDLE,
+    STATE_AUTO, STATE_ECO, STATE_HEAT, STATE_IDLE, STATE_MANUAL,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
 from homeassistant.const import (
     ATTR_TEMPERATURE, TEMP_CELSIUS)
@@ -20,7 +20,7 @@ GENIUSHUB_SUPPORT_FLAGS = \
 GENIUSHUB_MAX_TEMP = 28.0
 GENIUSHUB_MIN_TEMP = 4.0
 
-# Genius supports the operation modes: Off, Override/Boost, Footprint & Timer
+# Genius supports onlys: Off, Override/Boost, Footprint & Timer
 """Map between GeniusHub and Home Assistant"""
 GH_STATE_TO_HA = {
     'off': None,
