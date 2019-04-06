@@ -121,6 +121,7 @@ class OASATelematicsSensor(Entity):
         if ATTR_NEXT_ARRIVAL in next_arrival_data:
             self._state = next_arrival_data[ATTR_NEXT_ARRIVAL].isoformat()
 
+
 class OASATelematicsData():
     """The class for handling data retrieval."""
 
