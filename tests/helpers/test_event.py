@@ -29,6 +29,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.template import Template
 from homeassistant.components import sun
 import homeassistant.util.dt as dt_util
+from homeassistant.exceptions import TemplateError
 
 from tests.common import get_test_home_assistant, fire_time_changed
 from unittest.mock import patch
@@ -236,6 +237,46 @@ class TestEventHelpers(unittest.TestCase):
         assert 2 == len(wildcard_runs)
         assert 2 == len(wildercard_runs)
 
+    def test_track_template_errors(self):
+        """Test tracking template with errors in the template."""
+        template_syntax_error = Template(
+            "{{states.switch",
+            self.hass
+        )
+
+        template_not_exist = Template(
+            "{{states.switch.not_exist.state}}",
+            self.hass
+        )
+
+        syntax_error_runs = []
+        not_exist_runs = []
+
+        track_template(
+            self.hass, template_syntax_error,
+            lambda *_: syntax_error_runs.append(1))
+
+        track_template(
+            self.hass, template_not_exist,
+            lambda *_: not_exist_runs.append(1))
+
+        self.hass.block_till_done()
+
+        assert 0 == len(syntax_error_runs)
+        assert 0 == len(not_exist_runs)
+
+        self.hass.states.set('switch.not_exist', 'off')
+        self.hass.block_till_done()
+
+        assert 0 == len(syntax_error_runs)
+        assert 0 == len(not_exist_runs)
+
+        self.hass.states.set('switch.not_exist', 'on')
+        self.hass.block_till_done()
+
+        assert 0 == len(syntax_error_runs)
+        assert 1 == len(not_exist_runs)
+
     def test_track_template_result(self):
         """Test tracking template."""
         specific_runs = []
@@ -309,6 +350,57 @@ class TestEventHelpers(unittest.TestCase):
         assert len(specific_runs) == 3
         assert len(wildcard_runs) == 3
         assert len(wildercard_runs) == 3
+
+    def test_track_template_result_errors(self):
+        """Test tracking template with errors in the template."""
+        template_syntax_error = Template(
+            "{{states.switch",
+            self.hass
+        )
+
+        template_not_exist = Template(
+            "{{states.switch.not_exist.state}}",
+            self.hass
+        )
+
+        syntax_error_runs = []
+        not_exist_runs = []
+
+        def syntax_error_listener(event, template, last_result, result):
+            syntax_error_runs.append(
+                (event, template, last_result, result))     
+        (_, result) = track_template_result(
+            self.hass, template_syntax_error,
+            syntax_error_listener)
+        assert isinstance(result, TemplateError)
+
+        (_, result) = track_template_result(
+            self.hass, template_not_exist,
+            lambda event, template, last_result, result: (
+                not_exist_runs.append(
+                    (event, template, last_result, result))))
+        assert result == ''
+
+        self.hass.block_till_done()
+
+        assert 0 == len(syntax_error_runs)
+        assert 0 == len(not_exist_runs)
+
+        self.hass.states.set('switch.not_exist', 'off')
+        self.hass.block_till_done()
+
+        assert 0 == len(syntax_error_runs)
+        assert 1 == len(not_exist_runs)
+        assert not_exist_runs[0][1] == template_not_exist
+        assert not_exist_runs[0][3] == 'off'
+
+        self.hass.states.set('switch.not_exist', 'on')
+        self.hass.block_till_done()
+
+        assert 0 == len(syntax_error_runs)
+        assert 2 == len(not_exist_runs)
+        assert not_exist_runs[1][1] == template_not_exist
+        assert not_exist_runs[1][3] == 'on'
 
     def test_track_same_state_simple_trigger(self):
         """Test track_same_change with trigger simple."""

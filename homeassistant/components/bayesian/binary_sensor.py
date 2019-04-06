@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_ABOVE, CONF_BELOW, CONF_DEVICE_CLASS, CONF_ENTITY_ID, CONF_NAME,
     CONF_PLATFORM, CONF_STATE, CONF_VALUE_TEMPLATE, STATE_UNKNOWN)
 from homeassistant.core import callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -158,7 +159,10 @@ class BayesianBinarySensor(BinarySensorDevice):
         def async_template_result_changed(
                 event, template, old_result, new_result):
             template_obs_list = self.template_obs[template]
-            result = str_to_bool(new_result)
+            if isinstance(new_result, TemplateError):
+                result = False
+            else:
+                result = str_to_bool(new_result)
 
             for obs in template_obs_list:
                 self._update_current_obs(obs, result)
@@ -167,12 +171,9 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         for template in self.template_obs:
             template.hass = self.hass
-
-            # result = condition.async_template(self.hass, template)
-            # async_template_result_changed(template, None, result)
-
-            async_track_template_result(
+            (_, result) = async_track_template_result(
                 self.hass, template, async_template_result_changed)
+            async_template_result_changed(None, template, None, result)
 
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""

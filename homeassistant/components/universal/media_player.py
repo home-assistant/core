@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.event import async_track_template_result
 from homeassistant.exceptions import TemplateError
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,14 +123,13 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             self.async_schedule_update_ha_state(True)
 
         if self._state_template is not None:
-            try:
-                self._state_template_result = \
-                    self._state_template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
+            (_, result) = async_track_template_result(
+                self.hass, self._state_template, async_on_template_change)
+            if isinstance(result, TemplateError):
+                _LOGGER.exception(result)
                 self._state_template_result = None
-            self.hass.helpers.event.async_track_template_result(
-                self._state_template, async_on_template_change)
+            else:
+                self._state_template_result = result
 
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
