@@ -28,6 +28,7 @@ DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
 DISCOVER_COVER = 'homematic.cover'
 DISCOVER_CLIMATE = 'homematic.climate'
 DISCOVER_LOCKS = 'homematic.locks'
+DISCOVER_BATTERY_DEVICES = 'homematic.battery_sensor'
 
 ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_PARAM = 'param'
@@ -87,6 +88,20 @@ HM_DEVICE_TYPES = {
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
     DISCOVER_LOCKS: ['KeyMatic']
 }
+
+PUSH_BUTTON_DEVICES = ['HmIP-WRC6', 'HmIP-RC8']
+
+
+def _add_battery_devices():
+    battery_devices = []
+    for values in HM_DEVICE_TYPES.values():
+        battery_devices.extend(values)
+    battery_devices.extend(PUSH_BUTTON_DEVICES)
+
+    HM_DEVICE_TYPES[DISCOVER_BATTERY_DEVICES] = battery_devices
+
+
+_add_battery_devices()
 
 HM_IGNORE_DISCOVERY_NODE = [
     'ACTUAL_TEMPERATURE',
@@ -471,6 +486,16 @@ def _system_callback_handler(hass, config, src, *args):
                     discovery.load_platform(hass, component_name, DOMAIN, {
                         ATTR_DISCOVER_DEVICES: found_devices
                     }, config)
+            # check all devices whether they're battery operated
+            battery_addresses = _get_battery_devices(
+                hass, addresses, interface)
+            battery_devices = _get_devices(
+                hass, DISCOVER_BATTERY_DEVICES, battery_addresses, interface)
+
+            if battery_devices:
+                discovery.load_platform(
+                    hass, 'binary_sensor', DOMAIN,
+                    {ATTR_DISCOVER_DEVICES: found_devices}, config)
 
     # Homegear error message
     elif src == 'error':
@@ -480,6 +505,19 @@ def _system_callback_handler(hass, config, src, *args):
             ATTR_ERRORCODE: errorcode,
             ATTR_MESSAGE: message
         })
+
+
+def _get_battery_devices(hass, keys, interface):
+    battery_devices = []
+
+    for key in keys:
+        device = hass.data[DATA_HOMEMATIC].devices[interface][key]
+
+        low_bat = device.low_batt()
+        if low_bat is not None:
+            battery_devices.append(key)
+
+    return battery_devices
 
 
 def _get_devices(hass, discovery_type, keys, interface):
