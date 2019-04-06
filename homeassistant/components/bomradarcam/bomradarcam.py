@@ -1,11 +1,8 @@
 """
 Provide animated GIF loops of BOM radar imagery.
 """
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.bomradarcam.locations import LOCATIONS
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.helpers import config_validation as cv
@@ -16,30 +13,39 @@ CONF_DELTA = 'delta'
 CONF_FRAMES = 'frames'
 CONF_LOCATION = 'location'
 CONF_OUTFILE = 'filename'
-LOGGER = logging.getLogger(__name__)
 
+LOCATIONS = [
+    'Adelaide', 'Albany', 'AliceSprings', 'Bairnsdale', 'Bowen', 'Brisbane',
+    'Broome', 'Cairns', 'Canberra', 'Carnarvon', 'Ceduna', 'Dampier','Darwin',
+    'Emerald', 'Esperance', 'Geraldton', 'Giles', 'Gladstone', 'Gove',
+    'Grafton', 'Gympie', 'HallsCreek', 'Hobart', 'Kalgoorlie', 'Katherine',
+    'Learmonth', 'Longreach', 'Mackay', 'Marburg', 'Melbourne', 'Mildura',
+    'Moree', 'MorningtonIs', 'MountIsa', 'MtGambier', 'Namoi', 'Newcastle',
+    'Newdegate', 'NorfolkIs', 'NWTasmania', 'Perth', 'PortHedland',
+    'SellicksHill', 'SouthDoodlakine', 'Sydney', 'Townsville', 'WaggaWagga',
+    'Warrego', 'Warruwi', 'Watheroo', 'Weipa', 'WillisIs', 'Wollongong',
+    'Woomera', 'Wyndham', 'Yarrawonga',
+]
 
 def _validate_schema(config):
     if config.get(CONF_LOCATION) is None:
-        if not all((config.get(CONF_ID), config.get(CONF_DELTA),
-                    config.get(CONF_FRAMES))):
+        if not all(config.get(x) for x in (CONF_ID, CONF_DELTA, CONF_FRAMES)):
             raise vol.Invalid(
                 "Specify '{}', '{}' and '{}' when '{}' is unspecified".format(
                     CONF_ID, CONF_DELTA, CONF_FRAMES, CONF_LOCATION))
     return config
 
+XOR_MSG = "Specify exactly one of '{}' or '{}'".format(CONF_ID, CONF_LOCATION)
 
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DELTA): cv.positive_int,
-    vol.Optional(CONF_OUTFILE): cv.string,
-    vol.Optional(CONF_FRAMES): cv.positive_int,
-    vol.Optional(CONF_ID): cv.string,
-    vol.Optional(CONF_LOCATION): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Exclusive(CONF_ID, CONF_LOCATION,
-                  msg="Specify either '{}' or '{}', not both".format(
-                      CONF_ID, CONF_LOCATION))
-}), _validate_schema)
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend({
+        vol.Exclusive(CONF_ID, 'xor', msg=XOR_MSG): cv.string,
+        vol.Exclusive(CONF_LOCATION, 'xor', msg=XOR_MSG): vol.In(LOCATIONS),
+        vol.Optional(CONF_DELTA): cv.positive_int,
+        vol.Optional(CONF_FRAMES): cv.positive_int,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_OUTFILE): cv.string,
+    }), _validate_schema)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
