@@ -21,39 +21,22 @@ GENIUSHUB_MAX_TEMP = 28.0
 GENIUSHUB_MIN_TEMP = 4.0
 
 # Genius supports the operation modes: Off, Override/Boost, Footprint & Timer
-
-# To work with Alexa these MUST BE
-#   climate.STATE_HEAT: 'HEAT',
-#   climate.STATE_COOL: 'COOL',
-#   climate.STATE_AUTO: 'AUTO',
-#   climate.STATE_ECO: 'ECO',
-#   climate.STATE_IDLE: 'OFF',
-#   climate.STATE_FAN_ONLY: 'OFF',
-#   climate.STATE_DRY: 'OFF',
-
-# These needed to be mapped into HA modes:
-# Off       => OFF      => STATE_IDLE   # Mode_Off: 1,
-# Override  => HEAT     => STATE_HEAT   # Mode_Boost: 16,
-# Footprint => ECO      => STATE_ECO    # Mode_Footprint: 4,
-# Timer     => AUTO     => STATE_AUTO   # Mode_Timer: 2,
-
 """Map between GeniusHub and Home Assistant"""
-GENIUSHUB_STATE_TO_HA = {
-    'off': STATE_IDLE,
+GH_STATE_TO_HA = {
+    'off': None,
     'timer': STATE_AUTO,
     'footprint': STATE_ECO,
     'away': None,
-    'boost': STATE_HEAT,
+    'override': STATE_MANUAL,
     'early': STATE_HEAT,
     'test': None,
     'linked': None,
     'other': None,
 }
-HA_OPMODE_TO_GENIUSHUB = {
+HA_OPMODE_TO_GH = {
     STATE_AUTO: 'timer',
     STATE_ECO: 'footprint',
-    STATE_HEAT: 'override',
-    STATE_IDLE: 'off',
+    STATE_MANUAL: 'override',
 }
 
 
@@ -63,8 +46,6 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     client = hass.data[DOMAIN]['client']
 
     zones = []
-    #for zone in discovery_info:
-    #    zones.append(GeniusClimate(client, zone))
     for zone in client.hub.zone_objs:
         if hasattr(zone, 'temperature'):
             zones.append(GeniusClimate(client, zone))
@@ -89,8 +70,8 @@ class GeniusClimate(ClimateDevice):
         self._id = zone.id
         self._name = zone.name
 
-        tmp = list(HA_OPMODE_TO_GENIUSHUB)
-        if self._objref.type != ZONE_TYPE[ZONE_TYPES.ControlSP]:                 # TODO: actually, if no PIR
+        tmp = list(HA_OPMODE_TO_GH)
+        if self._objref.type != ZONE_TYPE[ZONE_TYPES.ControlSP]:                 # TODO: should be: if no PIR
             tmp.remove(STATE_ECO)
         self._operation_list = tmp
 
@@ -114,8 +95,12 @@ class GeniusClimate(ClimateDevice):
         """
         tmp = self._objref.__dict__.items()
         state = {k: v for k, v in tmp if k[:1] != '_'}
+        state.pop('device_objs')
+        state.pop('device_by_id')
+        state.pop('schedule')                                                    # TODO: remove this
 
-        _LOGGER.warn("device_state_attributes(%s [%s]) = %s", self._id, self._name, {'status': state})
+        _LOGGER.warn("device_state_attributes(%s [%s]) = %s",
+                     self._id, self._name, {'status': state})                    # TODO: remove this
         return {'status': state}
 
     @property
@@ -151,13 +136,12 @@ class GeniusClimate(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        _LOGGER.warn("operation_list(%s [%s]) = %s", self._id, self._name, self._operation_list)
         return self._operation_list
 
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return GENIUSHUB_STATE_TO_HA.get(self._objref.mode)
+        return GH_STATE_TO_HA.get(self._objref.mode)
 
     @property
     def is_on(self):
@@ -170,35 +154,42 @@ class GeniusClimate(ClimateDevice):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        from geniushubclient.const import zone_modes
-        op_mode = {
-            STATE_AUTO: {'iMode': zone_modes.Timer},
-            STATE_ECO:  {'iMode': zone_modes.Footprint},
-            STATE_HEAT: {'iMode': zone_modes.Boost,
-                         'iBoostTimeRemaining': 3600,
-                         'fBoostSP': self._target_temperature},
-            STATE_IDLE: {'iMode': zone_modes.Off},
-        }.get(operation_mode)
+        _LOGGER.warn("self(%s [%s]).async_set_operation_mode(operation_mode=%s",
+                     self._id, self._name, operation_mode)                       # TODO: remove this
 
-#       await self._client.putjson(self._id, op_mode)
+        if operation_mode == STATE_HEAT:
+            temperature = self._objref.override['setpoint']
+            await self._objref.set_override(3600, temperature)  # 1 hour
+        else:
+            await self._objref.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
+            # self._target_temperature = temperature
 
-        self._mode = HA_OPMODE_TO_GENIUSHUB[operation_mode]
+        # self._current_operation = operation_mode
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        self._target_temperature = temperature
-        await self.async_set_operation_mode(STATE_HEAT)
+        _LOGGER.warn("self(%s [%s]).async_set_temperature(temperature=%s",
+                     self._id, self._name, temperature)                          # TODO: remove this
+
+        await self._objref.set_override(3600, temperature)  # 1 hour
+        # self._target_temperature = temperature
 
     async def async_turn_on(self):
         """Turn on."""
-        await self.async_set_operation_mode(STATE_AUTO)
+        _LOGGER.warn("self(%s [%s]).async_turn_on()",
+                     self._id, self._name)                                       # TODO: remove this
+        await self._objref.set_mode(HA_OPMODE_TO_GH.get(STATE_AUTO))
+        # self._current_operation = STATE_AUTO
 
     async def async_turn_off(self):
         """Turn off."""
-        await self.async_set_operation_mode(STATE_IDLE)
+        _LOGGER.warn("self(%s [%s]).async_turn_off()",
+                     self._id, self._name)                                       # TODO: remove this
+        await self._objref.set_mode(HA_OPMODE_TO_GH.get(STATE_IDLE))
+        # self._current_operation = STATE_IDLE
 
     async def async_update(self):
         """Get the latest data from the hub."""
-        pass
-        # self._obj_ref.refresh()
+        _LOGGER.warn("self(%s [%s]).async_update()", self._id, self._name)       # TODO: remove this
+        await self._objref.update()

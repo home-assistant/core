@@ -11,7 +11,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['geniushub-client==0.2.5']
+URL = "https://github.com/zxdavb/geniushub-client/archive/master.zip"
+REQUIREMENTS = [URL + '#geniushub-client==0.2.6']                                # TODO: delete me
+# REQUIREMENTS = ['geniushub-client==0.2.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +49,7 @@ async def async_setup(hass, hass_config):
         # hub = client.hub
         # zones = await hub.zones
         # discovered = [z for z in zones if z['type'] == 'radiator']
+
         # hass.async_create_task(async_load_platform(
         #     hass, 'climate', DOMAIN, discovered, hass_config))
 
