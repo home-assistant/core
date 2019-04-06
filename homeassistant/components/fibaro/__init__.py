@@ -171,11 +171,9 @@ class FibaroController():
 
     def get_children(self, device_id):
         """Get a list of child devices."""
-        result = []
-        for device in self._device_map.values():
-            if device.parentId == device_id:
-                result.append(device)
-        return result
+        return [
+            device for device in self._device_map.values()
+            if device.parentId == device_id]
 
     def get_siblings(self, device_id):
         """Get the siblings of a device."""
