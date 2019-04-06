@@ -35,7 +35,8 @@ SUPPORTED_DOMAINS = ['alarm_control_panel', 'climate', 'light', 'scene',
 
 SPEAK_SERVICE_SCHEMA = vol.Schema({
     vol.Required('number'):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=999))
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
+    vol.Optional('prefix', default=''): cv.string
 })
 
 
@@ -140,11 +141,11 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                 return False
 
         prefix = conf.get(CONF_PREFIX, "")
-        device = devices.get(prefix, None)
+        device = devices.get(prefix)
         if device is not None:
-            if prefix != "":
-                _LOGGER.error("Need to use a prefix configuration command " +
-                              "on second and later elk m1s")
+            if prefix == "":
+                _LOGGER.error("At most one elk m1 configuration may skip " +
+                              "the prefix; more than one did.")
             else:
                 _LOGGER.error("Duplicate prefix on elk m1, prefix: %s", prefix)
         else:
@@ -172,16 +173,22 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
 def _create_elk_services(hass, elks):
     def _speak_word_service(service):
-        elk = elks.get('', None)
-        elk.panel.speak_word(service.data.get('number'))
+        prefix = service.data.get('prefix', "")
+        elk = elks.get(prefix)
+        if elk is None:
+            _LOGGER.error("No elk m1 with prefix for speak_word: '%s'",
+                          prefix)
+        else:
+            elk.panel.speak_word(service.data['number'])
 
     def _speak_phrase_service(service):
         prefix = service.data.get('prefix', "")
-        elk = elks.get(prefix, None)
+        elk = elks.get(prefix)
         if elk is None:
-            _LOGGER.error("no elk m1 with prefix: '%s'", prefix)
+            _LOGGER.error("No elk m1 with prefix for speak_phrase: '%s'",
+                          prefix)
         else:
-            elk.panel.speak_phrase(service.data.get('number'))
+            elk.panel.speak_phrase(service.data['number'])
 
     hass.services.async_register(
         DOMAIN, 'speak_word', _speak_word_service, SPEAK_SERVICE_SCHEMA)
