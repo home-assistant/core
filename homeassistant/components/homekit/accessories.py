@@ -141,12 +141,12 @@ class HomeAccessory(Accessory):
 
         Only call this function if self._support_battery_level is True.
         """
+        battery_level = convert_to_float(
+            new_state.attributes.get(ATTR_BATTERY_LEVEL))
+
         if self._linked_battery_sensor:
             battery_level = convert_to_float(
                 new_state.state)
-        else:
-            battery_level = convert_to_float(
-                new_state.attributes.get(ATTR_BATTERY_LEVEL))
 
         if battery_level is None:
             return
