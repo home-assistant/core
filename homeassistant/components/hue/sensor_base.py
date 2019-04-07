@@ -167,9 +167,7 @@ class GenericHueSensor:
 
     @property
     def primary_sensor(self):
-        """Return the entity which represents the primary sensor of
-        this device.
-        """
+        """Return the primary sensor entity of the physical device."""
         return self._primary_sensor or self.sensor
 
     @property
