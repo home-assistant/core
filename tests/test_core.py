@@ -628,8 +628,11 @@ class TestStateMachine(unittest.TestCase):
         assert state.last_changed == state2.last_changed
 
     def test_manually_setting_last_changed_sets_respective_boolean(self):
-        """Test to validate when last_changed is manually set, that
-        is_last_changed_manual is set to True"""
+        """Test manually setting last_changed => is_last_changed_manual = true.
+
+        Test to validate when last_changed is manually set, that
+        is_last_changed_manual is set to True.
+        """
         self.states.set('light.Bowl', 'on')
         state = self.states.get('light.Bowl')
         assert state is not None
@@ -648,8 +651,11 @@ class TestStateMachine(unittest.TestCase):
         assert not state.is_last_updated_manual
 
     def test_manually_setting_last_updated_sets_respective_boolean(self):
-        """Test to validate when last_updated is manually set, that
-        is_last_updated_manual is set to True"""
+        """Test manually setting last_updated => is_last_updated_manual = true.
+
+        Test to validate when last_updated is manually set, that
+        is_last_updated_manual is set to True.
+        """
         self.states.set('light.Bowl', 'on')
         state = self.states.get('light.Bowl')
         assert state is not None

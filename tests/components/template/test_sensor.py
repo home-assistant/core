@@ -129,8 +129,11 @@ class TestTemplateSensor:
         assert state.last_updated == attr_client_dt_updated
 
     def test_both_manual_datetimes_template(self):
-        """Test manual_last_changed and manual_last_updated templates
-        working together."""
+        """Test both manual datetime templates.
+
+        Test manual_last_changed and manual_last_updated templates
+        working together.
+        """
         with assert_setup_component(1):
             assert setup_component(self.hass, 'sensor', {
                 'sensor': {
