@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
     SUPPORT_EFFECT, Light)
 import homeassistant.util.color as color_util
-from homeassistant.components.yeelight import (
+from . import (
     CONF_TRANSITION, DATA_YEELIGHT, CONF_MODE_MUSIC,
     CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED,
     YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
