@@ -1,6 +1,4 @@
-"""
-Provide animated GIF loops of BOM radar imagery.
-"""
+"""Provide animated GIF loops of BOM radar imagery."""
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -16,7 +14,7 @@ CONF_OUTFILE = 'filename'
 
 LOCATIONS = [
     'Adelaide', 'Albany', 'AliceSprings', 'Bairnsdale', 'Bowen', 'Brisbane',
-    'Broome', 'Cairns', 'Canberra', 'Carnarvon', 'Ceduna', 'Dampier','Darwin',
+    'Broome', 'Cairns', 'Canberra', 'Carnarvon', 'Ceduna', 'Dampier', 'Darwin',
     'Emerald', 'Esperance', 'Geraldton', 'Giles', 'Gladstone', 'Gove',
     'Grafton', 'Gympie', 'HallsCreek', 'Hobart', 'Kalgoorlie', 'Katherine',
     'Learmonth', 'Longreach', 'Mackay', 'Marburg', 'Melbourne', 'Mildura',
@@ -57,8 +55,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up BOM radar-loop camera component."""
     location = config.get(CONF_LOCATION) or "ID {}".format(config.get(CONF_ID))
     name = config.get(CONF_NAME) or "BOM Radar Loop - {}".format(location)
-    args = [config.get(x) for x in (CONF_LOCATION, CONF_ID, CONF_DELTA, CONF_FRAMES,
-                                    CONF_OUTFILE)]
+    args = [config.get(x) for x in (CONF_LOCATION, CONF_ID, CONF_DELTA,
+                                    CONF_FRAMES, CONF_OUTFILE)]
     add_entities([BOMRadarCam(name, *args)])
 
 

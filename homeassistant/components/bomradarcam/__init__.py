@@ -1,1 +1,1 @@
-"""The bomradarcam component"""
+"""The bomradarcam component."""
