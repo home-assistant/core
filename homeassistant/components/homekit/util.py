@@ -29,7 +29,6 @@ FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list,
 })
 
-
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(ATTR_CODE, default=None): vol.Any(None, cv.string),
 })
