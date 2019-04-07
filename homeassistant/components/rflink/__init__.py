@@ -41,6 +41,7 @@ CONF_IGNORE_DEVICES = 'ignore_devices'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
+CONF_INVERT_UP_DOWN_COMMAND = 'invert_up_down_command'
 
 DATA_DEVICE_REGISTER = 'rflink_device_register'
 DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
@@ -265,6 +266,7 @@ class RflinkDevice(Entity):
     def __init__(self, device_id, initial_event=None, name=None, aliases=None,
                  group=True, group_aliases=None, nogroup_aliases=None,
                  fire_event=False,
+                 invert_up_down_command=False,
                  signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
         """Initialize the device."""
         # Rflink specific attributes for every component type
@@ -280,6 +282,7 @@ class RflinkDevice(Entity):
         self._group_aliases = group_aliases
         self._nogroup_aliases = nogroup_aliases
         self._should_fire_event = fire_event
+        self._invert_up_down_command = invert_up_down_command
         self._signal_repetitions = signal_repetitions
 
     @callback
@@ -441,11 +444,17 @@ class RflinkCommand(RflinkDevice):
 
         # Cover options for RFlink
         elif command == 'close_cover':
-            cmd = 'DOWN'
+            if self._invert_up_down_command:
+                cmd = 'UP'
+            else:
+                cmd = 'DOWN'
             self._state = False
 
         elif command == 'open_cover':
-            cmd = 'UP'
+            if self._invert_up_down_command:
+                cmd = 'DOWN'
+            else:
+                cmd = 'UP'
             self._state = True
 
         elif command == 'stop_cover':
