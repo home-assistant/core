@@ -132,7 +132,6 @@ async def async_update_items(hass, bridge, async_add_entities, binary=False):
     for item_id in api:
         existing = current.get(api[item_id].uniqueid)
         if existing is not None:
-            existing.sensor = api[item_id]
             existing.async_schedule_update_ha_state()
             continue
 
