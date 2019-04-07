@@ -24,7 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['webdavclient3==0.10']
+REQUIREMENTS = ['webdavclient3==0.11']
 
 CONF_CERTIFICATE_PATH = "ssl_client_certificate"
 CONF_IMAGE_INTERVAL = "image_interval"
