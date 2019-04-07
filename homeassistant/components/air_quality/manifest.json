@@ -1,0 +1,8 @@
+{
+  "domain": "air_quality",
+  "name": "Air quality",
+  "documentation": "https://www.home-assistant.io/components/air_quality",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

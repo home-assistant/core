@@ -1,9 +1,4 @@
-"""
-Support for non-delivered packages recorded in AfterShip.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.aftership/
-"""
+"""Support for non-delivered packages recorded in AfterShip."""
 from datetime import timedelta
 import logging
 

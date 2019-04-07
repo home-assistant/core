@@ -1,9 +1,4 @@
-"""
-Bitcoin information service that uses blockchain.info.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bitcoin/
-"""
+"""Bitcoin information service that uses blockchain.info."""
 import logging
 from datetime import timedelta
 

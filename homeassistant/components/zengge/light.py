@@ -1,9 +1,4 @@
-"""
-Support for Zengge lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.zengge/
-"""
+"""Support for Zengge lights."""
 import logging
 
 import voluptuous as vol
@@ -157,6 +152,6 @@ class ZenggeLight(Light):
         rgb = self._bulb.get_colour()
         hsv = color_util.color_RGB_to_hsv(*rgb)
         self._hs_color = hsv[:2]
-        self._brightness = hsv[2]
+        self._brightness = (hsv[2] / 100) * 255
         self._white = self._bulb.get_white()
         self._state = self._bulb.get_on()

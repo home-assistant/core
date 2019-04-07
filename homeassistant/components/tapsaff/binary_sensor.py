@@ -1,9 +1,4 @@
-"""
-Support for Taps Affs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.tapsaff/
-"""
+"""Support for Taps Affs."""
 from datetime import timedelta
 import logging
 

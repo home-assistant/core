@@ -1,9 +1,4 @@
-"""
-Support for the Opple light.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.opple/
-"""
+"""Support for the Opple light."""
 
 import logging
 

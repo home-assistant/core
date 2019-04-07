@@ -12,8 +12,8 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET)
+    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     CONF_HOST, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
@@ -36,9 +36,9 @@ CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 
 DEFAULT_PORT = 8009
 
-SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY
+SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA | \
+               SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
+               SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
 
 # Stores a threading.Lock that is held by the internal pychromecast discovery.
 INTERNAL_DISCOVERY_RUNNING_KEY = 'cast_discovery_running'
@@ -406,13 +406,10 @@ class CastStatusListener:
         """Handle the cast removed from a group."""
         if self._valid:
             self._cast_device.multizone_new_media_status(group_uuid, None)
-            self._cast_device.multizone_new_cast_status(group_uuid, None)
 
     def multizone_new_cast_status(self, group_uuid, cast_status):
-        """Handle reception of a new MediaStatus for a group."""
-        if self._valid:
-            self._cast_device.multizone_new_cast_status(
-                group_uuid, cast_status)
+        """Handle reception of a new CastStatus for a group."""
+        pass
 
     def multizone_new_media_status(self, group_uuid, media_status):
         """Handle reception of a new MediaStatus for a group."""
@@ -456,8 +453,7 @@ class DynamicGroupCastStatusListener:
 
     def new_cast_status(self, cast_status):
         """Handle reception of a new CastStatus."""
-        if self._valid:
-            self._cast_device.new_dynamic_group_cast_status(cast_status)
+        pass
 
     def new_media_status(self, media_status):
         """Handle reception of a new MediaStatus."""
@@ -502,10 +498,8 @@ class CastDevice(MediaPlayerDevice):
         self._dynamic_group_cast_info = None  # type: ChromecastInfo
         self._dynamic_group_cast = None \
             # type: Optional[pychromecast.Chromecast]
-        self.dynamic_group_cast_status = None
         self.dynamic_group_media_status = None
         self.dynamic_group_media_status_received = None
-        self.mz_cast_status = {}
         self.mz_media_status = {}
         self.mz_media_status_received = {}
         self.mz_mgr = None
@@ -685,7 +679,6 @@ class CastDevice(MediaPlayerDevice):
         self._dynamic_group_status_listener = DynamicGroupCastStatusListener(
             self, chromecast, mz_mgr)
         self._dynamic_group_available = False
-        self.dynamic_group_cast_status = chromecast.status
         self.dynamic_group_media_status = chromecast.media_controller.status
         self._dynamic_group_cast.start()
         self.async_schedule_update_ha_state()
@@ -734,7 +727,6 @@ class CastDevice(MediaPlayerDevice):
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
-        self.mz_cast_status = {}
         self.mz_media_status = {}
         self.mz_media_status_received = {}
         self.mz_mgr = None
@@ -745,7 +737,6 @@ class CastDevice(MediaPlayerDevice):
     def _dynamic_group_invalidate(self):
         """Invalidate some attributes."""
         self._dynamic_group_cast = None
-        self.dynamic_group_cast_status = None
         self.dynamic_group_media_status = None
         self.dynamic_group_media_status_received = None
         if self._dynamic_group_status_listener is not None:
@@ -797,11 +788,6 @@ class CastDevice(MediaPlayerDevice):
             self._available = new_available
             self.schedule_update_ha_state()
 
-    def new_dynamic_group_cast_status(self, cast_status):
-        """Handle updates of the cast status."""
-        self.dynamic_group_cast_status = cast_status
-        self.schedule_update_ha_state()
-
     def new_dynamic_group_media_status(self, media_status):
         """Handle updates of the media status."""
         self.dynamic_group_media_status = media_status
@@ -846,16 +832,6 @@ class CastDevice(MediaPlayerDevice):
             group_uuid, media_status)
         self.mz_media_status[group_uuid] = media_status
         self.mz_media_status_received[group_uuid] = dt_util.utcnow()
-        self.schedule_update_ha_state()
-
-    def multizone_new_cast_status(self, group_uuid, cast_status):
-        """Handle updates of audio group status."""
-        _LOGGER.debug(
-            "[%s %s (%s:%s)] Multizone %s cast status: %s",
-            self.entity_id, self._cast_info.friendly_name,
-            self._cast_info.host, self._cast_info.port,
-            group_uuid, cast_status)
-        self.mz_cast_status[group_uuid] = cast_status
         self.schedule_update_ha_state()
 
     # ========== Service Calls ==========
@@ -931,12 +907,12 @@ class CastDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send previous track command."""
         media_controller = self._media_controller()
-        media_controller.rewind()
+        media_controller.queue_prev()
 
     def media_next_track(self):
         """Send next track command."""
         media_controller = self._media_controller()
-        media_controller.skip()
+        media_controller.queue_next()
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
@@ -986,7 +962,8 @@ class CastDevice(MediaPlayerDevice):
         media_status = self.media_status
         media_status_received = self.media_status_received
 
-        if media_status is None or media_status.player_state == "UNKNOWN":
+        if ((media_status is None or media_status.player_state == "UNKNOWN")
+                and self._dynamic_group_cast is not None):
             media_status = self.dynamic_group_media_status
             media_status_received = self.dynamic_group_media_status_received
 
@@ -1130,7 +1107,18 @@ class CastDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_CAST
+        support = SUPPORT_CAST
+        media_status, _ = self._media_status()
+
+        if media_status:
+            if media_status.supports_queue_next:
+                support |= SUPPORT_PREVIOUS_TRACK
+            if media_status.supports_queue_next:
+                support |= SUPPORT_NEXT_TRACK
+            if media_status.supports_seek:
+                support |= SUPPORT_SEEK
+
+        return support
 
     @property
     def media_position(self):

@@ -1,9 +1,4 @@
-"""
-Support for wake on lan.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.wake_on_lan/
-"""
+"""Support for wake on lan."""
 import logging
 import platform
 import subprocess as sp

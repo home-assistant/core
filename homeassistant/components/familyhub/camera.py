@@ -1,9 +1,4 @@
-"""
-Family Hub camera for Samsung Refrigerators.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/camera.familyhub/
-"""
+"""Family Hub camera for Samsung Refrigerators."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Parse prices of an item from gearbest.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gearbest/
-"""
+"""Parse prices of an item from gearbest."""
 import logging
 from datetime import timedelta
 

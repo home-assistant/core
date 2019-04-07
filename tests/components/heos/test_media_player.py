@@ -1,16 +1,19 @@
 """Tests for the Heos Media Player platform."""
+import asyncio
+
 from pyheos import const
 
 from homeassistant.components.heos import media_player
-from homeassistant.components.heos.const import DOMAIN
+from homeassistant.components.heos.const import (
+    DATA_SOURCE_MANAGER, DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
 from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_ALBUM_NAME, ATTR_MEDIA_ARTIST, ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_DURATION, ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_POSITION_UPDATED_AT, ATTR_MEDIA_SHUFFLE, ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED,
-    DOMAIN as MEDIA_PLAYER_DOMAIN, MEDIA_TYPE_MUSIC, SERVICE_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP)
+    ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST, ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ARTIST, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION, ATTR_MEDIA_POSITION, ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_SHUFFLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED, DOMAIN as MEDIA_PLAYER_DOMAIN, MEDIA_TYPE_MUSIC,
+    SERVICE_CLEAR_PLAYLIST, SERVICE_SELECT_SOURCE, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
@@ -56,10 +59,13 @@ async def test_state_attributes(hass, config_entry, config, controller):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == \
         SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
         SUPPORT_PREVIOUS_TRACK | media_player.BASE_SUPPORTED_FEATURES
+    assert ATTR_INPUT_SOURCE not in state.attributes
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == \
+        hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
 
 
 async def test_updates_start_from_signals(
-        hass, config_entry, config, controller):
+        hass, config_entry, config, controller, favorites):
     """Tests dispatched signals update player."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -109,6 +115,23 @@ async def test_updates_start_from_signals(
     await hass.async_block_till_done()
     state = hass.states.get('media_player.test_player')
     assert state.state == STATE_PLAYING
+
+    # Test sources event update
+    event = asyncio.Event()
+
+    async def set_signal():
+        event.set()
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        SIGNAL_HEOS_SOURCES_UPDATED, set_signal)
+
+    favorites.clear()
+    player.heos.dispatcher.send(
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED)
+    await event.wait()
+    source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+    assert len(source_list) == 1
+    state = hass.states.get('media_player.test_player')
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
 
 
 async def test_services(hass, config_entry, config, controller):
@@ -171,6 +194,85 @@ async def test_services(hass, config_entry, config, controller):
         {ATTR_ENTITY_ID: 'media_player.test_player',
          ATTR_MEDIA_VOLUME_LEVEL: 1}, blocking=True)
     player.set_volume.assert_called_once_with(100)
+
+
+async def test_select_favorite(
+        hass, config_entry, config, controller, favorites):
+    """Tests selecting a music service favorite and state."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # Test set music service preset
+    favorite = favorites[1]
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_INPUT_SOURCE: favorite.name}, blocking=True)
+    player.play_favorite.assert_called_once_with(1)
+    # Test state is matched by station name
+    player.now_playing_media.station = favorite.name
+    player.heos.dispatcher.send(
+        const.SIGNAL_PLAYER_EVENT, player.player_id,
+        const.EVENT_PLAYER_STATE_CHANGED)
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.test_player')
+    assert state.attributes[ATTR_INPUT_SOURCE] == favorite.name
+
+
+async def test_select_radio_favorite(
+        hass, config_entry, config, controller, favorites):
+    """Tests selecting a radio favorite and state."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # Test set radio preset
+    favorite = favorites[2]
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_INPUT_SOURCE: favorite.name}, blocking=True)
+    player.play_favorite.assert_called_once_with(2)
+    # Test state is matched by album id
+    player.now_playing_media.station = "Classical"
+    player.now_playing_media.album_id = favorite.media_id
+    player.heos.dispatcher.send(
+        const.SIGNAL_PLAYER_EVENT, player.player_id,
+        const.EVENT_PLAYER_STATE_CHANGED)
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.test_player')
+    assert state.attributes[ATTR_INPUT_SOURCE] == favorite.name
+
+
+async def test_select_input_source(
+        hass, config_entry, config, controller, input_sources):
+    """Tests selecting input source and state."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # Test proper service called
+    input_source = input_sources[0]
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_INPUT_SOURCE: input_source.name}, blocking=True)
+    player.play_input_source.assert_called_once_with(input_source)
+    # Test state is matched by media id
+    player.now_playing_media.source_id = const.MUSIC_SOURCE_AUX_INPUT
+    player.now_playing_media.media_id = const.INPUT_AUX_IN_1
+    player.heos.dispatcher.send(
+        const.SIGNAL_PLAYER_EVENT, player.player_id,
+        const.EVENT_PLAYER_STATE_CHANGED)
+    await hass.async_block_till_done()
+    state = hass.states.get('media_player.test_player')
+    assert state.attributes[ATTR_INPUT_SOURCE] == input_source.name
+
+
+async def test_select_input_unknown(
+        hass, config_entry, config, controller, caplog):
+    """Tests selecting an unknown input."""
+    await setup_platform(hass, config_entry, config)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_INPUT_SOURCE: "Unknown"}, blocking=True)
+    assert "Unknown source: Unknown" in caplog.text
 
 
 async def test_unload_config_entry(hass, config_entry, config, controller):

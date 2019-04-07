@@ -1,9 +1,4 @@
-"""
-Support for CO2 sensor connected to a serial port.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mhz19/
-"""
+"""Support for CO2 sensor connected to a serial port."""
 import logging
 from datetime import timedelta
 

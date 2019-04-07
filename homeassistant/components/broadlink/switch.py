@@ -1,9 +1,4 @@
-"""
-Support for Broadlink RM devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.broadlink/
-"""
+"""Support for Broadlink RM devices."""
 import asyncio
 from base64 import b64decode, b64encode
 import binascii

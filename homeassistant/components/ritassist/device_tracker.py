@@ -1,9 +1,4 @@
-"""
-Support for RitAssist Platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.ritassist/
-"""
+"""Support for RitAssist Platform."""
 import logging
 
 import requests

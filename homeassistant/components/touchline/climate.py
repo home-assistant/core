@@ -1,9 +1,4 @@
-"""
-Platform for Roth Touchline heat pump controller.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.touchline/
-"""
+"""Platform for Roth Touchline heat pump controller."""
 import logging
 
 import voluptuous as vol
