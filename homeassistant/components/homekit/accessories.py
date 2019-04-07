@@ -111,6 +111,13 @@ class HomeAccessory(Accessory):
         async_track_state_change(
             self.hass, self.entity_id, self.update_state_callback)
 
+        if self.linked_battery_sensor:
+            self.hass.async_add_job(self.update_linked_battery, None, None,
+                                    state)
+            async_track_state_change(
+                self.hass, self.linked_battery_sensor,
+                self.update_linked_battery)
+
     @ha_callback
     def update_state_callback(self, entity_id=None, old_state=None,
                               new_state=None):
@@ -118,21 +125,24 @@ class HomeAccessory(Accessory):
         _LOGGER.debug('New_state: %s', new_state)
         if new_state is None:
             return
-        if self._support_battery_level:
+        if self._support_battery_level and not self.linked_battery_sensor:
             self.hass.async_add_executor_job(self.update_battery, new_state)
         self.hass.async_add_executor_job(self.update_state, new_state)
+
+    @ha_callback
+    def update_linked_battery(self, entity_id=None, old_state=None,
+                              new_state=None):
+        """Handle linked battery sensor state change listener callback."""
+        self.update_battery(new_state)
 
     def update_battery(self, new_state):
         """Update battery service if available.
 
         Only call this function if self._support_battery_level is True.
         """
-
-        battery_level = None
-        if CONF_BATTERY in self.config:
-            battery_id = self.config[CONF_BATTERY]
+        if self.linked_battery_sensor:
             battery_level = convert_to_float(
-                self.hass.states.get(battery_id).state)
+                new_state.state)
         else:
             battery_level = convert_to_float(
                 new_state.attributes.get(ATTR_BATTERY_LEVEL))
