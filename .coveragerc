@@ -262,7 +262,6 @@ omit =
     homeassistant/components/huawei_lte/*
     homeassistant/components/huawei_router/device_tracker.py
     homeassistant/components/hue/light.py
-    homeassistant/components/hue/sensor.py
     homeassistant/components/hunterdouglas_powerview/scene.py
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py

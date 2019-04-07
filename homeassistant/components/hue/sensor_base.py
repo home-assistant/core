@@ -11,22 +11,55 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 
-DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
+CURRENT_SENSORS = 'current_sensors'
 
 PRESENCE_NAME_FORMAT = "{} presence"
 LIGHT_LEVEL_NAME_FORMAT = "{} light level"
-IS_DARK_NAME_FORMAT = "{} is not dark"
 TEMPERATURE_NAME_FORMAT = "{} temperature"
 
+
+_HUE_SENSOR_TYPE_CONFIG_MAP = {}
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def _device_id(aiohue_sensor):
+    # Work out the shared device ID, as described below
+    device_id = aiohue_sensor.uniqueid
+    if device_id and len(device_id) > 23:
+        device_id = device_id[:23]
+    return device_id
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities,
                             binary=False):
     """Set up the Hue sensors from a config entry."""
+    import aiohue
+    from homeassistant.components.hue.binary_sensor import HuePresence
+    from homeassistant.components.hue.sensor import (
+        HueLightLevel, HueTemperature)
+
+    _HUE_SENSOR_TYPE_CONFIG_MAP.update({
+        aiohue.sensors.TYPE_ZLL_LIGHTLEVEL: {
+            "binary": False,
+            "name_format": LIGHT_LEVEL_NAME_FORMAT,
+            "class": HueLightLevel,
+        },
+        aiohue.sensors.TYPE_ZLL_TEMPERATURE: {
+            "binary": False,
+            "name_format": TEMPERATURE_NAME_FORMAT,
+            "class": HueTemperature,
+        },
+        aiohue.sensors.TYPE_ZLL_PRESENCE: {
+            "binary": True,
+            "name_format": PRESENCE_NAME_FORMAT,
+            "class": HuePresence,
+        },
+    })
+
     bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
-    cur_sensors = {}
+    cur_sensors = hass.data[hue.DOMAIN][CURRENT_SENSORS] = {}
 
     async def async_update_bridge(now):
         """Update the values of the bridge.
@@ -35,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities,
         """
 
         await async_update_items(
-            hass, bridge, async_add_entities, cur_sensors, binary=binary)
+            hass, bridge, async_add_entities, binary=binary)
 
         async_track_point_in_utc_time(
             hass, async_update_bridge, utcnow() + SCAN_INTERVAL)
@@ -43,14 +76,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities,
     await async_update_bridge(None)
 
 
-async def async_update_items(hass, bridge, async_add_entities, current,
-                             binary=False):
+async def async_update_items(hass, bridge, async_add_entities, binary=False):
     """Update sensors from the bridge."""
     import aiohue
-    from homeassistant.components.hue.binary_sensor import (
-        HueNotDarkness, HuePresence)
-    from homeassistant.components.hue.sensor import (
-        HueLightLevel, HueTemperature)
 
     api = bridge.api.sensors
 
@@ -78,7 +106,8 @@ async def async_update_items(hass, bridge, async_add_entities, current,
         bridge.available = True
 
     new_sensors = []
-    sensor_device_names = {}
+    primary_sensor_devices = {}
+    current = hass.data[hue.DOMAIN][CURRENT_SENSORS]
 
     # Physical Hue motion sensors present as three sensors in the API: a
     # presence sensor, a temperature sensor, and a light level sensor. Of
@@ -93,56 +122,37 @@ async def async_update_items(hass, bridge, async_add_entities, current,
     # then iterate over all the remaining sensors - finding the remaining ones
     # that may or may not be related to the presence sensors.
     for item_id in api:
-        if item_id in current:
+        if api[item_id].type != aiohue.sensors.TYPE_ZLL_PRESENCE:
             continue
 
-        name = PRESENCE_NAME_FORMAT.format(api[item_id].name)
-        if api[item_id].type == aiohue.sensors.TYPE_ZLL_PRESENCE:
-            sensor = HuePresence(api[item_id], name, bridge)
-            sensor_device_names[sensor.device_id] = api[item_id]
-            current[item_id] = sensor
-            if binary:
-                new_sensors.append(sensor)
+        primary_sensor_devices[_device_id(api[item_id])] = api[item_id]
 
     # Iterate again now we have all the presence sensors, and add the related
-    # sensors with nice names.
+    # sensors with nice names where appropriate.
     for item_id in api:
-        if item_id in current:
+        existing = current.get(api[item_id].uniqueid)
+        if existing is not None:
+            existing.sensor = api[item_id]
+            existing.async_schedule_update_ha_state()
             continue
 
-        # Work out the shared device ID, as described above
-        device_id = api[item_id].uniqueid
-        if device_id and len(device_id) > 23:
-            device_id = device_id[:23]
-        name = api[item_id].name
         primary_sensor = None
-        if api[item_id].type == aiohue.sensors.TYPE_ZLL_LIGHTLEVEL:
-            darkness_name = name + ' is not dark'
-            if device_id in sensor_device_names:
-                primary_sensor = sensor_device_names[device_id]
-                name = LIGHT_LEVEL_NAME_FORMAT.format(
-                    primary_sensor.name)
-                darkness_name = IS_DARK_NAME_FORMAT.format(
-                    primary_sensor.name)
-            current[item_id] = HueLightLevel(
-                api[item_id], name, bridge, primary_sensor=primary_sensor)
-            if binary:
-                darkness = HueNotDarkness(
-                    api[item_id], darkness_name, bridge,
-                    primary_sensor=primary_sensor)
-                new_sensors.append(darkness)
-        elif api[item_id].type == aiohue.sensors.TYPE_ZLL_TEMPERATURE:
-            if device_id in sensor_device_names:
-                primary_sensor = sensor_device_names[device_id]
-                name = TEMPERATURE_NAME_FORMAT.format(
-                    primary_sensor.name)
-            current[item_id] = HueTemperature(
-                api[item_id], name, bridge, primary_sensor=primary_sensor)
-        else:
+        sensor_config = _HUE_SENSOR_TYPE_CONFIG_MAP.get(api[item_id].type)
+        if sensor_config is None:
             continue
 
-        if not binary:
-            new_sensors.append(current[item_id])
+        if binary != sensor_config["binary"]:
+            continue
+
+        base_name = api[item_id].name
+        primary_sensor = primary_sensor_devices.get(_device_id(api[item_id]))
+        if primary_sensor is not None:
+            base_name = primary_sensor.name
+        name = sensor_config["name_format"].format(base_name)
+
+        current[api[item_id].uniqueid] = sensor_config["class"](
+                api[item_id], name, bridge, primary_sensor=primary_sensor)
+        new_sensors.append(current[api[item_id].uniqueid])
 
     if new_sensors:
         async_add_entities(new_sensors)
@@ -159,13 +169,6 @@ class GenericHueSensor:
         self._name = name
         self._primary_sensor = primary_sensor
         self.bridge = bridge
-
-        if self.swupdatestate == "readytoinstall":
-            err = (
-                "Please check for software updates of the %s "
-                "sensor in the Philips Hue App."
-            )
-            _LOGGER.warning(err, self.name)
 
     @property
     def primary_sensor(self):
@@ -230,8 +233,5 @@ class GenericZLLSensor(GenericHueSensor):
     def device_state_attributes(self):
         """Return the device state attributes."""
         return {
-            "battery": self.sensor.battery,
-            "last_updated": self.sensor.lastupdated,
-            "on": self.sensor.on,
-            "reachable": self.sensor.reachable,
+            "battery_level": self.sensor.battery
         }
