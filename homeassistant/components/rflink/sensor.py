@@ -103,7 +103,7 @@ class RflinkSensor(RflinkDevice):
     """Representation of a Rflink sensor."""
 
     def __init__(self, device_id, sensor_type, unit_of_measurement,
-                 expire_after=0, force_update=None, initial_event=None,
+                 expire_after=0, force_update=False, initial_event=None,
                  **kwargs):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
