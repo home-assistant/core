@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_COOL,
     STATE_DRY, STATE_FAN_ONLY, STATE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
+    STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
 
 from homeassistant.components.climate import (
@@ -22,15 +22,19 @@ from . import (
 SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
-STATE_AUXILIARY = 'auxiliary'
-STATE_RESUME = 'resume'
-STATE_MOIST = 'moist'
-STATE_AUTO_CHANGEOVER = 'auto changeover'
-STATE_ENERGY_HEAT = 'energy heat'
-STATE_ENERGY_COOL = 'energy cool'
-STATE_FULL_POWER = 'full power'
-STATE_FORCE_OPEN = 'force open'
-STATE_AWAY = 'away'
+
+# State definitions missing from HA, but defined by Z-Wave standard.
+# We map them to states known supported by HA here:
+STATE_AUXILIARY = STATE_HEAT
+STATE_RESUME = STATE_HEAT
+STATE_MOIST = STATE_DRY
+STATE_AUTO_CHANGEOVER = STATE_AUTO
+STATE_ENERGY_HEAT = STATE_HEAT
+STATE_ENERGY_COOL = STATE_COOL
+STATE_FULL_POWER = STATE_AUTO
+STATE_FORCE_OPEN = STATE_MANUAL
+STATE_AWAY = STATE_AUTO
+
 FAN_AUTO_HIGH = 'auto_high'
 FAN_AUTO_MEDIUM = 'auto_medium'
 FAN_CIRCULATION = 'circulation'
