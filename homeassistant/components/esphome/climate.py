@@ -1,15 +1,17 @@
 """Support for ESPHome climate devices."""
 import logging
 import math
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, List, Optional
 
 from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import STATE_AUTO, STATE_COOL, STATE_HEAT, \
-    ATTR_OPERATION_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE_LOW, \
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, \
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH
-from homeassistant.const import PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS, TEMP_CELSIUS, \
-    STATE_OFF, ATTR_TEMPERATURE
+from homeassistant.components.climate.const import (
+    ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    STATE_AUTO, STATE_COOL, STATE_HEAT, SUPPORT_AWAY_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
+    STATE_OFF, TEMP_CELSIUS)
 
 from . import EsphomeEntity, platform_async_setup_entry
 
@@ -70,8 +72,8 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     @property
     def precision(self) -> float:
         """Return the precision of the climate device."""
-        PRECISIONS = [PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS]
-        for prec in PRECISIONS:
+        precicions = [PRECISION_WHOLE, PRECISION_HALVES, PRECISION_TENTHS]
+        for prec in precicions:
             if self._static_info.visual_temperature_step >= prec:
                 return prec
         # Fall back to highest precision, tenths
@@ -111,7 +113,8 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         """Return the list of supported features."""
         features = SUPPORT_OPERATION_MODE
         if self._static_info.supports_two_point_target_temperature:
-            features |= SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_TARGET_TEMPERATURE_HIGH
+            features |= (SUPPORT_TARGET_TEMPERATURE_LOW |
+                         SUPPORT_TARGET_TEMPERATURE_HIGH)
         else:
             features |= SUPPORT_TARGET_TEMPERATURE
         if self._static_info.supports_away:
@@ -172,7 +175,8 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         """Set new target temperature (and operation mode if set)."""
         data = {'key': self._static_info.key}
         if ATTR_OPERATION_MODE in kwargs:
-            data['mode'] = _ha_climate_mode_to_esphome(kwargs[ATTR_OPERATION_MODE])
+            data['mode'] = _ha_climate_mode_to_esphome(
+                kwargs[ATTR_OPERATION_MODE])
         if ATTR_TEMPERATURE in kwargs:
             data['target_temperature'] = kwargs[ATTR_TEMPERATURE]
         if ATTR_TARGET_TEMP_LOW in kwargs:
@@ -190,8 +194,10 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
 
     async def async_turn_away_mode_on(self):
         """Turn away mode on."""
-        await self._client.climate_command(key=self._static_info.key, away=True)
+        await self._client.climate_command(key=self._static_info.key,
+                                           away=True)
 
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
-        await self._client.climate_command(key=self._static_info.key, away=False)
+        await self._client.climate_command(key=self._static_info.key,
+                                           away=False)
