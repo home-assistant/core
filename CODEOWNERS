@@ -45,13 +45,13 @@ homeassistant/components/configurator/* @home-assistant/core
 homeassistant/components/conversation/* @home-assistant/core
 homeassistant/components/coolmaster/* @OnFreund
 homeassistant/components/counter/* @fabaff
-homeassistant/components/cover/* @cdce8p
+homeassistant/components/cover/* @home-assistant/core
 homeassistant/components/cpuspeed/* @fabaff
 homeassistant/components/cups/* @fabaff
 homeassistant/components/daikin/* @fredrike @rofrantz
 homeassistant/components/darksky/* @fabaff
 homeassistant/components/deconz/* @kane610
-homeassistant/components/demo/* @fabaff
+homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
@@ -243,3 +243,7 @@ homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zone/* @home-assistant/core
 homeassistant/components/zoneminder/* @rohankapoorcom
 homeassistant/components/zwave/* @home-assistant/z-wave
+
+# Individual files
+homeassistant/components/group/cover @cdce8p
+homeassistant/components/demo/weather @fabaff
