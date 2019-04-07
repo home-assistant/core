@@ -3,10 +3,11 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_IDLE, STATE_MANUAL,
+    STATE_AUTO, STATE_ECO, STATE_MANUAL,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.components.stiebel_eltron import DOMAIN as STE_DOMAIN
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE, TEMP_CELSIUS, STATE_OFF, STATE_ON)
 
 DEPENDENCIES = ['stiebel_eltron']
 
@@ -15,19 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
-STATE_DAYMODE = 'day_mode'
-STATE_SETBACK = 'setback_mode'
-STATE_DHW = 'dhw'
-STATE_EMERGENCY = 'emergency'
-
 # Mapping STIEBEL ELTRON states to homeassistant states.
 STE_TO_HA_STATE = {'AUTOMATIC': STATE_AUTO,
                    'MANUAL MODE': STATE_MANUAL,
-                   'STANDBY': STATE_IDLE,
-                   'DAY MODE': STATE_DAYMODE,
-                   'SETBACK MODE': STATE_SETBACK,
-                   'DHW': STATE_DHW,
-                   'EMERGENCY OPERATION': STATE_EMERGENCY}
+                   'STANDBY': STATE_ECO,
+                   'DAY MODE': STATE_ON,
+                   'SETBACK MODE': STATE_ON,
+                   'DHW': STATE_OFF,
+                   'EMERGENCY OPERATION': STATE_ON}
 
 # Mapping homeassistant states to STIEBEL ELTRON states.
 HA_TO_STE_STATE = {value: key for key, value in STE_TO_HA_STATE.items()}
@@ -50,7 +46,8 @@ class StiebelEltron(ClimateDevice):
         self._target_temperature = None
         self._current_temperature = None
         self._current_humidity = None
-        self._operation_modes = [STATE_AUTO, STATE_IDLE, STATE_DHW]
+        self._operation_modes = [STATE_AUTO, STATE_MANUAL, STATE_ECO,
+                                 STATE_OFF]
         self._current_operation = None
         self._filter_alarm = None
         self._ste_data = ste_data
