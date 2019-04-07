@@ -201,7 +201,6 @@ class YeelightGenericLight(Light):
 
         self._brightness = None
         self._color_temp = None
-        self._is_on = None
         self._hs = None
 
         model_specs = self._bulb.get_model_specs()
