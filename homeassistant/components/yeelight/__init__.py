@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
-DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
+DATA_UPDATED = 'yeelight_{}_data_updated'
 
 DEFAULT_NAME = 'Yeelight'
 DEFAULT_TRANSITION = 350
@@ -274,4 +274,4 @@ class YeelightDevice:
                 _LOGGER.error("Unable to update bulb status: %s", ex)
             self._available = False
 
-        dispatcher_send(self._hass, DATA_UPDATED, self._ipaddr)
+        dispatcher_send(self._hass, DATA_UPDATED.format(self._ipaddr))
