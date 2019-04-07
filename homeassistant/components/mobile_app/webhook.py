@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
                                                      ATTR_DEV_ID,
                                                      DOMAIN as DT_DOMAIN,
                                                      SERVICE_SEE as DT_SEE)
-
+from homeassistant.components.frontend import MANIFEST_JSON
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
@@ -36,9 +36,9 @@ from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     ERR_SENSOR_DUPLICATE_UNIQUE_ID, ERR_SENSOR_NOT_REGISTERED,
                     SIGNAL_SENSOR_UPDATE, WEBHOOK_PAYLOAD_SCHEMA,
                     WEBHOOK_SCHEMAS, WEBHOOK_TYPES, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_GET_ZONES,
-                    WEBHOOK_TYPE_REGISTER_SENSOR, WEBHOOK_TYPE_RENDER_TEMPLATE,
-                    WEBHOOK_TYPE_UPDATE_LOCATION,
+                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_GET_CONFIG,
+                    WEBHOOK_TYPE_GET_ZONES, WEBHOOK_TYPE_REGISTER_SENSOR,
+                    WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION,
                     WEBHOOK_TYPE_UPDATE_SENSOR_STATES)
 
@@ -273,3 +273,19 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
                  in sorted(hass.states.async_entity_ids(ZONE_DOMAIN)))
         return webhook_response(list(zones), registration=registration,
                                 headers=headers)
+
+    if webhook_type == WEBHOOK_TYPE_GET_CONFIG:
+
+        hass_config = hass.config.as_dict()
+
+        return webhook_response({
+            'latitude': hass_config['latitude'],
+            'longitude': hass_config['longitude'],
+            'elevation': hass_config['elevation'],
+            'unit_system': hass_config['unit_system'],
+            'location_name': hass_config['location_name'],
+            'time_zone': hass_config['time_zone'],
+            'components': hass_config['components'],
+            'version': hass_config['version'],
+            'theme_color': MANIFEST_JSON['theme_color'],
+        }, registration=registration, headers=headers)
