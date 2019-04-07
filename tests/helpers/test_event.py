@@ -368,7 +368,7 @@ class TestEventHelpers(unittest.TestCase):
 
         def syntax_error_listener(event, template, last_result, result):
             syntax_error_runs.append(
-                (event, template, last_result, result))     
+                (event, template, last_result, result))
         (_, result) = track_template_result(
             self.hass, template_syntax_error,
             syntax_error_listener)

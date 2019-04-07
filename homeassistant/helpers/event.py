@@ -302,7 +302,7 @@ def track_template_result(
     """Add a listener that fires whenever a template changes."""
     (async_remove, result) = run_callback_threadsafe(
         hass.loop, ft.partial(
-            async_track_template_result, hass, template, 
+            async_track_template_result, hass, template,
             action, variables)).result()
 
     def remove():
@@ -310,6 +310,7 @@ def track_template_result(
         run_callback_threadsafe(hass.loop, async_remove).result()
 
     return (remove, result)
+
 
 @callback
 @bind_hass
