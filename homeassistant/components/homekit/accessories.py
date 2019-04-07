@@ -134,7 +134,7 @@ class HomeAccessory(Accessory):
     def update_linked_battery(self, entity_id=None, old_state=None,
                               new_state=None):
         """Handle linked battery sensor state change listener callback."""
-        self.update_battery(new_state)
+        self.hass.async_add_executor_job(self.update_battery, new_state)
 
     def update_battery(self, new_state):
         """Update battery service if available.
