@@ -75,11 +75,9 @@ class HomeAccessory(Accessory):
         if self.config and CONF_LINKED_BATTERY_SENSOR in self.config:
             self._linked_battery_sensor = \
                 self.config.get(CONF_LINKED_BATTERY_SENSOR)
-
         """Add battery service if available"""
         battery_level = self.hass.states.get(self.entity_id).attributes \
             .get(ATTR_BATTERY_LEVEL)
-
         if self._linked_battery_sensor:
             battery_level = convert_to_float(
                 self.hass.states.get(self._linked_battery_sensor).state)
