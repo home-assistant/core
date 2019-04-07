@@ -27,6 +27,7 @@ LOCATIONS = [
     'Woomera', 'Wyndham', 'Yarrawonga',
 ]
 
+
 def _validate_schema(config):
     if config.get(CONF_LOCATION) is None:
         if not all(config.get(x) for x in (CONF_ID, CONF_DELTA, CONF_FRAMES)):
@@ -34,6 +35,7 @@ def _validate_schema(config):
                 "Specify '{}', '{}' and '{}' when '{}' is unspecified".format(
                     CONF_ID, CONF_DELTA, CONF_FRAMES, CONF_LOCATION))
     return config
+
 
 XOR_MSG = "Specify exactly one of '{}' or '{}'".format(CONF_ID, CONF_LOCATION)
 

@@ -1,3 +1,1 @@
-"""
-Provide animated GIF loops of BOM radar imagery.
-"""
+"""The bomradarcam component"""
