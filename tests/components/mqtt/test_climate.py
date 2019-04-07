@@ -35,6 +35,8 @@ DEFAULT_CONFIG = {
         'name': 'test',
         'mode_command_topic': 'mode-topic',
         'temperature_command_topic': 'temperature-topic',
+        'temperature_low_command_topic': 'temperature-low-topic',
+        'temperature_high_command_topic': 'temperature-high-topic',
         'fan_mode_command_topic': 'fan-mode-topic',
         'swing_mode_command_topic': 'swing-mode-topic',
         'away_mode_command_topic': 'away-mode-topic',
@@ -340,6 +342,66 @@ class TestMQTTClimate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         assert 1701 == state.attributes.get('temperature')
+
+    def test_set_target_temperature_low_high(self):
+        """Test setting the low/high target temperature."""
+        assert setup_component(self.hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+
+        common.set_temperature(self.hass, target_temp_low=20,
+                               target_temp_high=23,
+                               entity_id=ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        print(state.attributes)
+        assert 20 == state.attributes.get('target_temp_low')
+        assert 23 == state.attributes.get('target_temp_high')
+        self.mock_publish.async_publish.assert_any_call(
+            'temperature-low-topic', 20, 0, False)
+        self.mock_publish.async_publish.assert_any_call(
+            'temperature-high-topic', 23, 0, False)
+
+    def test_set_target_temperature_low_highpessimistic(self):
+        """Test setting the low/high target temperature."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['temperature_low_state_topic'] = \
+            'temperature-low-state'
+        config['climate']['temperature_high_state_topic'] = \
+            'temperature-high-state'
+        assert setup_component(self.hass, CLIMATE_DOMAIN, config)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert state.attributes.get('target_temp_low') is None
+        assert state.attributes.get('target_temp_high') is None
+        self.hass.block_till_done()
+        common.set_temperature(self.hass, target_temp_low=20,
+                               target_temp_high=23,
+                               entity_id=ENTITY_CLIMATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert state.attributes.get('target_temp_low') is None
+        assert state.attributes.get('target_temp_high') is None
+
+        fire_mqtt_message(self.hass, 'temperature-low-state', '1701')
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert 1701 == state.attributes.get('target_temp_low')
+        assert state.attributes.get('target_temp_high') is None
+
+        fire_mqtt_message(self.hass, 'temperature-high-state', '1703')
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert 1701 == state.attributes.get('target_temp_low')
+        assert 1703 == state.attributes.get('target_temp_high')
+
+        fire_mqtt_message(self.hass, 'temperature-low-state', 'not a number')
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert 1701 == state.attributes.get('target_temp_low')
+
+        fire_mqtt_message(self.hass, 'temperature-high-state', 'not a number')
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        assert 1703 == state.attributes.get('target_temp_high')
 
     def test_receive_mqtt_temperature(self):
         """Test getting the current temperature via MQTT."""
