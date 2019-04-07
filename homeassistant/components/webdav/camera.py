@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +95,6 @@ class WebDavCamera(Camera):
     def __init__(self, name, client, session, image_interval):
         """Initialize the webdav camera."""
         super().__init__()
-        self._advance_task = None
         self._available = True
         self._has_images = True
         self._client = client
@@ -105,8 +105,8 @@ class WebDavCamera(Camera):
         self._image = None
         self._image_lock = None
         self._name = name
-        self._on = False
         self._session = session
+        self._stop_advancing = None
 
     async def async_added_to_hass(self):
         """Set up periodic image advancement."""
@@ -185,19 +185,21 @@ class WebDavCamera(Camera):
     @property
     def is_on(self):
         """Return True if the camera is playing through files in the share."""
-        return self._on
+        return self._stop_advancing is not None
 
     def turn_on(self):
         """Start playing through files in the share."""
-        if not self._on:
-            self._on = True
-            self._schedule_advance()
+        if not self._stop_advancing:
+            self._stop_advancing = \
+                async_track_time_interval(self.hass,
+                                          self._advance,
+                                          self._image_interval)
 
     def turn_off(self):
         """Stop playing through files in the share."""
-        if self._on:
-            self._on = False
-            self._advance_task.cancel()
+        if self._stop_advancing:
+            self._stop_advancing()
+            self._stop_advancing = None
 
     @property
     def _image_filename(self):
@@ -207,7 +209,7 @@ class WebDavCamera(Camera):
     def _image_url(self):
         return self._client.get_url(self._directory + self._image_filename)
 
-    async def _advance(self):
+    async def _advance(self, _=None):
         images_checked = 0
         while images_checked < len(self._files):
             self._image_number += 1
@@ -221,8 +223,6 @@ class WebDavCamera(Camera):
             with await self._image_lock:
                 self._image = None
             self.async_schedule_update_ha_state()
-            if self._on:
-                self._schedule_advance()
             if not self._has_images:
                 _LOGGER.info("Image files have appeared on %s",
                              self._client.get_url(''))
@@ -232,11 +232,3 @@ class WebDavCamera(Camera):
             _LOGGER.warning("Found no image files on %s",
                             self._client.get_url(''))
             self._has_images = False
-
-    def _schedule_advance(self):
-        self._advance_task = self.hass.loop.create_task(
-            self._wait_and_advance())
-
-    async def _wait_and_advance(self):
-        await asyncio.sleep(self._image_interval.total_seconds())
-        await self._advance()
