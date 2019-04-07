@@ -236,6 +236,7 @@ async def test_duplicate_abort(hass):
     MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA).add_to_hass(hass)
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
+    flow.creds = MOCK_CREDS
 
     with patch('pyps4_homeassistant.Helper.has_devices',
                return_value=[{'host-ip': MOCK_HOST}]):
