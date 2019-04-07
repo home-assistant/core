@@ -371,7 +371,7 @@ async def async_subscribe(hass: HomeAssistantType, topic: str,
     wrapped_msg_callback = msg_callback
     # If we have 3 paramaters with no default value, wrap the callback
     if non_default == 3:
-        _LOGGER.info(
+        _LOGGER.warning(
             "Signature of MQTT msg_callback '%s.%s' is deprecated",
             inspect.getmodule(msg_callback).__name__, msg_callback.__name__)
         wrapped_msg_callback = wrap_msg_callback(msg_callback)
