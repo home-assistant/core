@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-_ENTITY_COLLECT = None
+_COLLECT_KEY = 'template.collect'
 
 
 @bind_hass
@@ -120,17 +120,15 @@ class Template:
             **kwargs) -> (Union[str, TemplateError],
                           EntityFilter):
         """Render the template and collect an entity filter."""
-        global _ENTITY_COLLECT
-
-        assert _ENTITY_COLLECT is None
-        _ENTITY_COLLECT = EntityFilter()
+        assert self.hass and _COLLECT_KEY not in self.hass.data
+        entity_collect = self.hass.data[_COLLECT_KEY] = EntityFilter()
         try:
             result = self.async_render(variables, **kwargs)
-            return (result, _ENTITY_COLLECT)
+            return (result, entity_collect)
         except TemplateError as ex:
-            return (ex, _ENTITY_COLLECT)
+            return (ex, entity_collect)
         finally:
-            _ENTITY_COLLECT = None
+            del self.hass.data[_COLLECT_KEY]
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
         """Render template with value exposed.
@@ -217,10 +215,11 @@ class AllStates:
 
     def __iter__(self):
         """Return all states."""
-        if _ENTITY_COLLECT is not None:
-            _ENTITY_COLLECT.include_all = True
+        entity_collect = self._hass.data.get(_COLLECT_KEY)
+        if entity_collect is not None:
+            entity_collect.include_all = True
         return iter(
-            _wrap_state(state) for state in
+            _wrap_state(self._hass, state) for state in
             sorted(self._hass.states.async_all(),
                    key=lambda state: state.entity_id))
 
@@ -249,10 +248,12 @@ class DomainStates:
 
     def __iter__(self):
         """Return the iteration over all the states."""
-        if _ENTITY_COLLECT is not None:
-            _ENTITY_COLLECT.include_domains.add(self._domain)
+        entity_collect = self._hass.data.get(_COLLECT_KEY)
+        if entity_collect is not None:
+            entity_collect.include_domains.add(self._domain)
         return iter(sorted(
-            (_wrap_state(state) for state in self._hass.states.async_all()
+            (_wrap_state(self._hass, state)
+             for state in self._hass.states.async_all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
 
@@ -266,14 +267,17 @@ class TemplateState(State):
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, state):
+    def __init__(self, hass, state):
         """Initialize template state."""
+        self._hass = hass
         self._state = state
 
     def _access_state(self):
         state = object.__getattribute__(self, '_state')
-        if _ENTITY_COLLECT is not None:
-            _ENTITY_COLLECT.include_entities.add(state.entity_id)
+        hass = object.__getattribute__(self, '_hass')
+        entity_collect = hass.data.get(_COLLECT_KEY)
+        if entity_collect is not None:
+            entity_collect.include_entities.add(state.entity_id)
         return state
 
     @property
@@ -305,16 +309,17 @@ class TemplateState(State):
         return '<template ' + rep[1:]
 
 
-def _wrap_state(state):
+def _wrap_state(hass, state):
     """Wrap a state."""
-    return None if state is None else TemplateState(state)
+    return None if state is None else TemplateState(hass, state)
 
 
 def _get_state(hass, entity_id):
     state = hass.states.get(entity_id)
-    if _ENTITY_COLLECT is not None:
-        _ENTITY_COLLECT.include_entities.add(entity_id)
-    return _wrap_state(state)
+    entity_collect = hass.data.get(_COLLECT_KEY)
+    if entity_collect is not None:
+        entity_collect.include_entities.add(entity_id)
+    return _wrap_state(hass, state)
 
 
 class TemplateMethods:
@@ -385,7 +390,8 @@ class TemplateMethods:
             states = [_get_state(self._hass, entity_id) for entity_id
                       in group.expand_entity_ids([gr_entity_id])]
 
-        return _wrap_state(loc_helper.closest(latitude, longitude, states))
+        # state will already be wrapped here
+        return loc_helper.closest(latitude, longitude, states)
 
     def distance(self, *args):
         """Calculate distance.
