@@ -59,14 +59,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities,
     })
 
     bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
-    cur_sensors = hass.data[hue.DOMAIN][CURRENT_SENSORS] = {}
+    hass.data[hue.DOMAIN][CURRENT_SENSORS] = {}
 
     async def async_update_bridge(now):
-        """Update the values of the bridge.
-
-        Will update sensors from the bridge.
-        """
-
+        """Will update sensors from the bridge."""
         await async_update_items(
             hass, bridge, async_add_entities, binary=binary)
 
@@ -174,14 +170,11 @@ class GenericHueSensor:
         """Return the entity which represents the primary sensor of
         this device.
         """
-
         return self._primary_sensor or self.sensor
 
     @property
     def device_id(self):
-        """Return the ID that represents the physical device this
-        sensor is part of.
-        """
+        """Return the ID of the physical device this sensor is part of."""
         return self.unique_id[:23]
 
     @property
@@ -202,15 +195,15 @@ class GenericHueSensor:
 
     @property
     def swupdatestate(self):
-        """The state of available software updates for this device."""
+        """Return detail of available software updates for this device."""
         return self.primary_sensor.raw.get('swupdate', {}).get('state')
 
     @property
     def device_info(self):
-        """Return the device info to link individual entities together
-        in the hass device registry.
-        """
+        """Return the device info.
 
+        Links individual entities together in the hass device registry.
+        """
         return {
             'identifiers': {
                 (hue.DOMAIN, self.device_id)

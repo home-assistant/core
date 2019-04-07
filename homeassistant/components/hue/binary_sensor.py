@@ -1,3 +1,4 @@
+"""Hue binary sensor entities."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.hue.sensor_base import (
     GenericZLLSensor, async_setup_entry as shared_async_setup_entry)

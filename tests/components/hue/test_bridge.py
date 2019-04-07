@@ -27,7 +27,7 @@ async def test_bridge_setup():
         hass.config_entries.async_forward_entry_setup.mock_calls
         )
     assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 3
-    assert forward_entries == set(['light', 'binary_sensor', 'sensor']
+    assert forward_entries == set(['light', 'binary_sensor', 'sensor'])
 
 
 async def test_bridge_setup_invalid_username():
