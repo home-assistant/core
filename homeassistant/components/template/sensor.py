@@ -51,8 +51,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     for device, device_config in config[CONF_SENSORS].items():
         state_template = device_config[CONF_VALUE_TEMPLATE]
-        manual_last_changed_template = device_config.get(CONF_MANUAL_LAST_CHANGED_TEMPLATE)
-        manual_last_updated_template = device_config.get(CONF_MANUAL_LAST_UPDATED_TEMPLATE)
+        manual_last_changed_template = device_config\
+            .get(CONF_MANUAL_LAST_CHANGED_TEMPLATE)
+        manual_last_updated_template = device_config\
+            .get(CONF_MANUAL_LAST_UPDATED_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
@@ -67,8 +69,10 @@ async def async_setup_platform(hass, config, async_add_entities,
 
         for tpl_name, template in (
                 (CONF_VALUE_TEMPLATE, state_template),
-                (CONF_MANUAL_LAST_CHANGED_TEMPLATE, manual_last_changed_template),
-                (CONF_MANUAL_LAST_UPDATED_TEMPLATE, manual_last_updated_template),
+                (CONF_MANUAL_LAST_CHANGED_TEMPLATE,
+                 manual_last_changed_template),
+                (CONF_MANUAL_LAST_UPDATED_TEMPLATE,
+                 manual_last_updated_template),
                 (CONF_ICON_TEMPLATE, icon_template),
                 (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
                 (CONF_FRIENDLY_NAME_TEMPLATE, friendly_name_template),
@@ -184,14 +188,12 @@ class SensorTemplate(Entity):
 
     @property
     def manual_last_changed(self):
-        """Return the manual_last_changed datetime to manually update a state's
-         last_changed property, if any."""
+        """Return the manual_last_changed property, if any."""
         return self._manual_last_changed
 
     @property
     def manual_last_updated(self):
-        """Return the manual_last_updated datetime to manually update a state's
-         last_updated property, if any."""
+        """Return the manual_last_updated property, if any."""
         return self._manual_last_updated
 
     @property

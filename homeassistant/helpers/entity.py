@@ -147,14 +147,12 @@ class Entity:
 
     @property
     def manual_last_changed(self):
-        """Return the manual_last_changed datetime to manually update a state's
-         last_changed property, if any."""
+        """Return the manual_last_changed property, if any."""
         return None
 
     @property
     def manual_last_updated(self):
-        """Return the manual_last_updated datetime to manually update a state's
-         last_updated property, if any."""
+        """Return the manual_last_updated property, if any."""
         return None
 
     @property

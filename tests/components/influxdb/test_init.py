@@ -129,7 +129,8 @@ class TestInfluxDB(unittest.TestCase):
                 state=in_, domain='fake', entity_id='fake.entity-id',
                 is_last_updated_manual=False,
                 object_id='entity', attributes=attrs)
-            event = mock.MagicMock(data={'new_state': state}, time_fired=time_fired)
+            event = mock.MagicMock(data={'new_state': state},
+                                   time_fired=time_fired)
             body = [{
                 'measurement': 'foobars',
                 'tags': {
@@ -296,7 +297,8 @@ class TestInfluxDB(unittest.TestCase):
         for state_state in (1, 'unknown', '', 'unavailable'):
             state = mock.MagicMock(
                 state=state_state, domain='fake', entity_id='fake.entity-id',
-                is_last_updated_manual=False, object_id='entity', attributes={})
+                is_last_updated_manual=False, object_id='entity',
+                attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
                 'measurement': 'fake.entity-id',
@@ -401,7 +403,8 @@ class TestInfluxDB(unittest.TestCase):
         for entity_id in ('included', 'default'):
             state = mock.MagicMock(
                 state=1, domain='fake', entity_id='fake.{}'.format(entity_id),
-                is_last_updated_manual=False, object_id=entity_id, attributes={})
+                is_last_updated_manual=False, object_id=entity_id,
+                attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
                 'measurement': 'fake.{}'.format(entity_id),
@@ -517,7 +520,8 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1, domain='other',
                 entity_id='other.{}'.format(entity_id),
-                is_last_updated_manual=False, object_id=entity_id, attributes={})
+                is_last_updated_manual=False, object_id=entity_id,
+                attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
                 'measurement': 'other.{}'.format(entity_id),
@@ -610,7 +614,8 @@ class TestInfluxDB(unittest.TestCase):
         for entity_id in ('ok', 'blacklisted'):
             state = mock.MagicMock(
                 state=1, domain='fake', entity_id='fake.{}'.format(entity_id),
-                is_last_updated_manual=False, object_id=entity_id, attributes={})
+                is_last_updated_manual=False, object_id=entity_id,
+                attributes={})
             event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
             body = [{
                 'measurement': 'state',
