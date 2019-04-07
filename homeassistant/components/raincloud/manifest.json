@@ -6,5 +6,5 @@
     "raincloudy==0.0.6"
   ],
   "dependencies": [],
-  "codeowners": ["@tchellomello", "@vanstinator"]
+  "codeowners": ["@vanstinator"]
 }
