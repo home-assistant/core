@@ -261,18 +261,13 @@ async def async_process_deps_reqs(
         raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip:
-        if manifest.get('requirements'):
-            req_success = await requirements.async_process_requirements(
-                hass, name, manifest['requirements'])  # type: ignore
+        if manifest:
+            reqs = manifest['requirements']  # type: ignore
+        else:
+            reqs = getattr(module, 'REQUIREMENTS', [])
 
-            if not req_success:
-                raise HomeAssistantError("Could not install all requirements.")
-
-        elif hasattr(module, 'REQUIREMENTS'):
-            req_success = await requirements.async_process_requirements(
-                hass, name, module.REQUIREMENTS)  # type: ignore
-
-            if not req_success:
+        if reqs and not await requirements.async_process_requirements(
+                hass, name, reqs):
                 raise HomeAssistantError("Could not install all requirements.")
 
     processed.add(name)
