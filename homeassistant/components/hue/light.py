@@ -312,7 +312,9 @@ class HueLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return [EFFECT_COLORLOOP, EFFECT_RANDOM]
+        if self.is_philips:
+            return [EFFECT_COLORLOOP, EFFECT_RANDOM]
+        return [EFFECT_RANDOM]
 
     @property
     def device_info(self):
@@ -378,7 +380,7 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        else:
+        elif self.is_philips or effect == '':
             command['effect'] = 'none'
 
         if self.is_group:
