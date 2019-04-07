@@ -71,16 +71,18 @@ class HomeAccessory(Accessory):
         self.debounce = {}
         self._support_battery_level = False
         self._support_battery_charging = True
-        self.linked_battery_sensor = \
-            self.config.get(CONF_LINKED_BATTERY_SENSOR)
+        self._linked_battery_sensor = None
+        if self.config and CONF_LINKED_BATTERY_SENSOR in self.config:
+            self._linked_battery_sensor = \
+                self.config.get(CONF_LINKED_BATTERY_SENSOR)
 
         """Add battery service if available"""
         battery_level = self.hass.states.get(self.entity_id).attributes \
             .get(ATTR_BATTERY_LEVEL)
 
-        if self.linked_battery_sensor:
+        if self._linked_battery_sensor:
             battery_level = convert_to_float(
-                self.hass.states.get(self.linked_battery_sensor).state)
+                self.hass.states.get(self._linked_battery_sensor).state)
 
         if battery_level is None:
             return
@@ -111,11 +113,11 @@ class HomeAccessory(Accessory):
         async_track_state_change(
             self.hass, self.entity_id, self.update_state_callback)
 
-        if self.linked_battery_sensor:
+        if self._linked_battery_sensor:
             self.hass.async_add_job(self.update_linked_battery, None, None,
                                     state)
             async_track_state_change(
-                self.hass, self.linked_battery_sensor,
+                self.hass, self._linked_battery_sensor,
                 self.update_linked_battery)
 
     @ha_callback
@@ -125,7 +127,7 @@ class HomeAccessory(Accessory):
         _LOGGER.debug('New_state: %s', new_state)
         if new_state is None:
             return
-        if self._support_battery_level and not self.linked_battery_sensor:
+        if self._support_battery_level and not self._linked_battery_sensor:
             self.hass.async_add_executor_job(self.update_battery, new_state)
         self.hass.async_add_executor_job(self.update_state, new_state)
 
@@ -140,7 +142,7 @@ class HomeAccessory(Accessory):
 
         Only call this function if self._support_battery_level is True.
         """
-        if self.linked_battery_sensor:
+        if self._linked_battery_sensor:
             battery_level = convert_to_float(
                 new_state.state)
         else:
