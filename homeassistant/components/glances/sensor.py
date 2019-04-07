@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_SSL,
-    CONF_VERIFY_SSL, CONF_RESOURCES, TEMP_CELSIUS)
+    CONF_VERIFY_SSL, CONF_RESOURCES, STATE_UNAVAILABLE, TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -200,7 +200,7 @@ class GlancesSensor(Entity):
                             cpu_use += container['cpu']['total']
                         self._state = round(cpu_use, 1)
                 except KeyError:
-                    self._state = 'unavailable'
+                    self._state = STATE_UNAVAILABLE
             elif self.type == 'docker_memory_use':
                 mem_use = 0.0
                 try:
@@ -210,7 +210,7 @@ class GlancesSensor(Entity):
                             mem_use += container['memory']['usage']
                         self._state = round(mem_use / 1024**2, 1)
                 except KeyError:
-                    self._state = 'unavailable'
+                    self._state = STATE_UNAVAILABLE
 
 
 class GlancesData:
