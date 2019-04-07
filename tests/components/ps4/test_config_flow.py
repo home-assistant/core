@@ -165,6 +165,13 @@ async def test_multiple_flow_implementation(hass):
                                 {'host-ip': MOCK_HOST_ADDITIONAL}]):
         result = await flow.async_step_user()
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'creds'
+
+    # Step Creds results with form in Step Mode.
+    with patch('pyps4_homeassistant.Helper.get_creds',
+               return_value=MOCK_CREDS):
+        result = await flow.async_step_creds({})
+    assert result['type'] == RESULT_TYPE_FORM
     assert result['step_id'] == 'mode'
 
     # Step Mode with User Input which is not manual, results in Step Link.
