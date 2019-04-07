@@ -162,6 +162,7 @@ homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/qnap/* @colinodell
 homeassistant/components/quantum_gateway/* @cisasteelersfan
 homeassistant/components/qwikswitch/* @kellerza
+homeassistant/components/raincloud/* @vanstinator
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/rfxtrx/* @danielhiversen
