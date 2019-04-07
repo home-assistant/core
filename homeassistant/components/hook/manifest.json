@@ -1,0 +1,8 @@
+{
+  "domain": "hook",
+  "name": "Hook",
+  "documentation": "https://www.home-assistant.io/components/hook",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

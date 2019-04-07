@@ -1,9 +1,4 @@
-"""
-Twitter platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.twitter/
-"""
+"""Twitter platform for notify component."""
 from datetime import datetime, timedelta
 from functools import partial
 import json

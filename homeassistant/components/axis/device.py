@@ -101,7 +101,25 @@ class AxisNetworkDevice:
             self.api.enable_events(event_callback=self.async_event_callback)
             self.api.start()
 
+        self.config_entry.add_update_listener(self.async_new_address_callback)
+
         return True
+
+    @property
+    def event_new_address(self):
+        """Device specific event to signal new device address."""
+        return 'axis_new_address_{}'.format(self.serial)
+
+    @staticmethod
+    async def async_new_address_callback(hass, entry):
+        """Handle signals of device getting new address.
+
+        This is a static method because a class method (bound method),
+        can not be used with weak references.
+        """
+        device = hass.data[DOMAIN][entry.data[CONF_MAC]]
+        device.api.config.host = device.host
+        async_dispatcher_send(hass, device.event_new_address)
 
     @property
     def event_reachable(self):
@@ -110,7 +128,7 @@ class AxisNetworkDevice:
 
     @callback
     def async_connection_status_callback(self, status):
-        """Handle signals of gateway connection status.
+        """Handle signals of device connection status.
 
         This is called on every RTSP keep-alive message.
         Only signal state change if state change is true.

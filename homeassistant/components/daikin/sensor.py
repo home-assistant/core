@@ -13,7 +13,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up the Daikin sensors.
 
     Can only be called when a user accidentally mentions the platform in their

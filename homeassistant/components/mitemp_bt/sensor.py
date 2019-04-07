@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Mi Temp BLE environmental sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mitemp_bt/
-"""
+"""Support for Xiaomi Mi Temp BLE environmental sensor."""
 import logging
 
 import voluptuous as vol

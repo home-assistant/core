@@ -1,9 +1,4 @@
-"""
-Provide functionality to interact with vlc devices on the network.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.vlc/
-"""
+"""Provide functionality to interact with vlc devices on the network."""
 import logging
 
 import voluptuous as vol

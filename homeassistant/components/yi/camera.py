@@ -1,9 +1,4 @@
-"""
-This component provides support for Xiaomi Cameras (HiSilicon Hi3518e V200).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.yi/
-"""
+"""Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
 import asyncio
 import logging
 
@@ -26,6 +21,7 @@ DEFAULT_PASSWORD = ''
 DEFAULT_PATH = '/tmp/sd/record'
 DEFAULT_PORT = 21
 DEFAULT_USERNAME = 'root'
+DEFAULT_ARGUMENTS = '-pred 1'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
@@ -36,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string
 })
 
 

@@ -1,9 +1,4 @@
-"""
-Support for FutureNow Ethernet unit outputs as Lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.futurenow/
-"""
+"""Support for FutureNow Ethernet unit outputs as Lights."""
 
 import logging
 

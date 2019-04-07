@@ -1,9 +1,4 @@
-"""
-Sensor for checking the air quality around Norway.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_quality.nilu/
-"""
+"""Sensor for checking the air quality around Norway."""
 from datetime import timedelta
 import logging
 

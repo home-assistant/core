@@ -1,9 +1,4 @@
-"""
-Support for Vanderbilt (formerly Siemens) SPC alarm systems.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.spc/
-"""
+"""Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm

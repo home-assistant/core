@@ -1,0 +1,10 @@
+{
+  "domain": "utility_meter",
+  "name": "Utility meter",
+  "documentation": "https://www.home-assistant.io/components/utility_meter",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@dgomes"
+  ]
+}

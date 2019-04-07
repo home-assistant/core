@@ -1,9 +1,4 @@
-"""
-Support for SolarEdge Monitoring API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.solaredge/
-"""
+"""Support for SolarEdge Monitoring API."""
 
 from datetime import timedelta
 import logging

@@ -1,9 +1,4 @@
-"""
-Support gathering system information of hosts which are running glances.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.glances/
-"""
+"""Support gathering system information of hosts which are running glances."""
 from datetime import timedelta
 import logging
 

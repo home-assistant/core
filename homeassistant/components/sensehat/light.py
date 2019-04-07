@@ -1,9 +1,4 @@
-"""
-Support for Sense Hat LEDs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.sensehat/
-"""
+"""Support for Sense Hat LEDs."""
 import logging
 
 import voluptuous as vol

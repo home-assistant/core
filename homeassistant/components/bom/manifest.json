@@ -1,0 +1,8 @@
+{
+  "domain": "bom",
+  "name": "Bom",
+  "documentation": "https://www.home-assistant.io/components/bom",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

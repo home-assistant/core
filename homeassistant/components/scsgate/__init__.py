@@ -1,9 +1,4 @@
-"""
-Support for SCSGate components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/scsgate/
-"""
+"""Support for SCSGate components."""
 import logging
 from threading import Lock
 

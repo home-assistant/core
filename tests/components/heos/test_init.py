@@ -2,12 +2,17 @@
 import asyncio
 
 from asynctest import patch
+from pyheos import CommandError, const
+import pytest
 
-from homeassistant.components.heos import async_setup_entry, async_unload_entry
-from homeassistant.components.heos.const import DATA_CONTROLLER, DOMAIN
+from homeassistant.components.heos import (
+    SourceManager, async_setup_entry, async_unload_entry)
+from homeassistant.components.heos.const import (
+    DATA_CONTROLLER, DATA_SOURCE_MANAGER, DOMAIN)
 from homeassistant.components.media_player.const import (
     DOMAIN as MEDIA_PLAYER_DOMAIN)
 from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 
@@ -36,7 +41,7 @@ async def test_async_setup_updates_entry(hass, config_entry, config):
 
 
 async def test_async_setup_returns_true(hass, config_entry, config):
-    """Test component setup updates entry from config."""
+    """Test component setup from config."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
@@ -46,7 +51,7 @@ async def test_async_setup_returns_true(hass, config_entry, config):
 
 
 async def test_async_setup_no_config_returns_true(hass, config_entry):
-    """Test component setup updates entry from entry only."""
+    """Test component setup from entry only."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -67,21 +72,21 @@ async def test_async_setup_entry_loads_platforms(
         assert forward_mock.call_count == 1
         assert controller.connect.call_count == 1
         controller.disconnect.assert_not_called()
-    assert hass.data[DOMAIN] == {
-        DATA_CONTROLLER: controller,
-        MEDIA_PLAYER_DOMAIN: controller.players
-    }
+    assert hass.data[DOMAIN][DATA_CONTROLLER] == controller
+    assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
+    assert isinstance(hass.data[DOMAIN][DATA_SOURCE_MANAGER], SourceManager)
 
 
 async def test_async_setup_entry_connect_failure(
         hass, config_entry, controller):
-    """Test failure to connect does not load entry."""
+    """Connection failure raises ConfigEntryNotReady."""
     config_entry.add_to_hass(hass)
     errors = [ConnectionError, asyncio.TimeoutError]
     for error in errors:
         controller.connect.side_effect = error
-        assert not await async_setup_entry(hass, config_entry)
-        await hass.async_block_till_done()
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(hass, config_entry)
+            await hass.async_block_till_done()
         assert controller.connect.call_count == 1
         assert controller.disconnect.call_count == 1
         controller.connect.reset_mock()
@@ -90,13 +95,14 @@ async def test_async_setup_entry_connect_failure(
 
 async def test_async_setup_entry_player_failure(
         hass, config_entry, controller):
-    """Test failure to retrieve players does not load entry."""
+    """Failure to retrieve players/sources raises ConfigEntryNotReady."""
     config_entry.add_to_hass(hass)
     errors = [ConnectionError, asyncio.TimeoutError]
     for error in errors:
         controller.get_players.side_effect = error
-        assert not await async_setup_entry(hass, config_entry)
-        await hass.async_block_till_done()
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(hass, config_entry)
+            await hass.async_block_till_done()
         assert controller.connect.call_count == 1
         assert controller.disconnect.call_count == 1
         controller.connect.reset_mock()
@@ -112,3 +118,24 @@ async def test_unload_entry(hass, config_entry, controller):
         await hass.async_block_till_done()
         assert controller.disconnect.call_count == 1
         assert unload.call_count == 1
+    assert DOMAIN not in hass.data
+
+
+async def test_update_sources_retry(hass, config_entry, config, controller,
+                                    caplog):
+    """Test update sources retries on failures to max attempts."""
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, config)
+    controller.get_favorites.reset_mock()
+    controller.get_input_sources.reset_mock()
+    source_manager = hass.data[DOMAIN][DATA_SOURCE_MANAGER]
+    source_manager.retry_delay = 0
+    source_manager.max_retry_attempts = 1
+    controller.get_favorites.side_effect = CommandError("Test", "test", 0)
+    controller.dispatcher.send(
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED)
+    # Wait until it's finished
+    while "Unable to update sources" not in caplog.text:
+        await asyncio.sleep(0.1)
+    assert controller.get_favorites.call_count == 2
+    assert controller.get_input_sources.call_count == 2

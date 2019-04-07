@@ -1,9 +1,4 @@
-"""
-This platform provides support for sensor data from RainMachine.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rainmachine/
-"""
+"""This platform provides support for sensor data from RainMachine."""
 import logging
 
 from homeassistant.core import callback

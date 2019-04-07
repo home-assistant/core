@@ -1,9 +1,4 @@
-"""
-Support for Sytadin Traffic, French Traffic Supervision.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sytadin/
-"""
+"""Support for Sytadin Traffic, French Traffic Supervision."""
 import logging
 import re
 from datetime import timedelta

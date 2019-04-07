@@ -1,9 +1,4 @@
-"""
-SendGrid notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.sendgrid/
-"""
+"""SendGrid notification service."""
 import logging
 
 import voluptuous as vol

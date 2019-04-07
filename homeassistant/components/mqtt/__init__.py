@@ -1,9 +1,4 @@
-"""
-Support for MQTT message handling.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/
-"""
+"""Support for MQTT message handling."""
 import asyncio
 from functools import partial, wraps
 import inspect
@@ -28,7 +23,8 @@ from homeassistant.const import (
     CONF_PROTOCOL, CONF_USERNAME, CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import Event, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError, Unauthorized, ConfigEntryNotReady)
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
@@ -109,6 +105,10 @@ ATTR_DISCOVERY_HASH = 'discovery_hash'
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
+CONNECTION_SUCCESS = 'connection_success'
+CONNECTION_FAILED = 'connection_failed'
+CONNECTION_FAILED_RECOVERABLE = 'connection_failed_recoverable'
+
 
 def valid_topic(value: Any) -> str:
     """Validate that this is a valid topic name/filter."""
@@ -179,6 +179,16 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema({
     vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }, required=True)
 
+
+def embedded_broker_deprecated(value):
+    """Warn user that embedded MQTT broker is deprecated."""
+    _LOGGER.warning(
+        "The embedded MQTT broker has been deprecated and will stop working"
+        "after June 5th, 2019. Use an external broker instead. For"
+        "instructions, see https://www.home-assistant.io/docs/mqtt/broker")
+    return value
+
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_CLIENT_ID): cv.string,
@@ -198,7 +208,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Any('auto', '1.0', '1.1', '1.2'),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
-        vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
+        vol.Optional(CONF_EMBEDDED):
+            vol.All(HBMQTT_CONFIG_SCHEMA, embedded_broker_deprecated),
         vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
         vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
@@ -574,10 +585,13 @@ async def async_setup_entry(hass, entry):
         tls_version=tls_version,
     )
 
-    success = await hass.data[DATA_MQTT].async_connect()  # type: bool
+    result = await hass.data[DATA_MQTT].async_connect()  # type: str
 
-    if not success:
+    if result == CONNECTION_FAILED:
         return False
+
+    if result == CONNECTION_FAILED_RECOVERABLE:
+        raise ConfigEntryNotReady
 
     async def async_stop_mqtt(event: Event):
         """Stop MQTT component."""
@@ -690,7 +704,7 @@ class MQTT:
             await self.hass.async_add_job(
                 self._mqttc.publish, topic, payload, qos, retain)
 
-    async def async_connect(self) -> bool:
+    async def async_connect(self) -> str:
         """Connect to the host. Does process messages yet.
 
         This method is a coroutine.
@@ -701,15 +715,15 @@ class MQTT:
                 self._mqttc.connect, self.broker, self.port, self.keepalive)
         except OSError as err:
             _LOGGER.error("Failed to connect due to exception: %s", err)
-            return False
+            return CONNECTION_FAILED_RECOVERABLE
 
         if result != 0:
             import paho.mqtt.client as mqtt
             _LOGGER.error("Failed to connect: %s", mqtt.error_string(result))
-            return False
+            return CONNECTION_FAILED
 
         self._mqttc.loop_start()
-        return True
+        return CONNECTION_SUCCESS
 
     @callback
     def async_disconnect(self):

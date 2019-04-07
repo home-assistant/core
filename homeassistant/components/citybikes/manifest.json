@@ -1,0 +1,8 @@
+{
+  "domain": "citybikes",
+  "name": "Citybikes",
+  "documentation": "https://www.home-assistant.io/components/citybikes",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

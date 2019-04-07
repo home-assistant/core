@@ -1,9 +1,4 @@
-"""
-Support for the PrezziBenzina.it service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.prezzibenzina/
-"""
+"""Support for the PrezziBenzina.it service."""
 import datetime as dt
 from datetime import timedelta
 import logging

@@ -1,9 +1,4 @@
-"""
-Support for Google Play Music Desktop Player.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.gpmdp/
-"""
+"""Support for Google Play Music Desktop Player."""
 import json
 import logging
 import socket

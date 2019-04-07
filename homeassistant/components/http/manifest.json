@@ -1,0 +1,12 @@
+{
+  "domain": "http",
+  "name": "HTTP",
+  "documentation": "https://www.home-assistant.io/components/http",
+  "requirements": [
+    "aiohttp_cors==0.7.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

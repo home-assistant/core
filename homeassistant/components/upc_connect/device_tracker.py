@@ -1,9 +1,4 @@
-"""
-Support for UPC ConnectBox router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.upc_connect/
-"""
+"""Support for UPC ConnectBox router."""
 import asyncio
 import logging
 

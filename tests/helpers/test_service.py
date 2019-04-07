@@ -406,7 +406,11 @@ async def test_register_admin_service(hass, hass_read_only_user,
         calls.append(call)
 
     hass.helpers.service.async_register_admin_service(
-        'test', 'test', mock_service, vol.Schema({})
+        'test', 'test', mock_service
+    )
+    hass.helpers.service.async_register_admin_service(
+        'test', 'test2', mock_service,
+        vol.Schema({vol.Required('required'): cv.boolean})
     )
 
     with pytest.raises(exceptions.UnknownUser):
@@ -423,8 +427,21 @@ async def test_register_admin_service(hass, hass_read_only_user,
             ))
     assert len(calls) == 0
 
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            'test', 'test', {'invalid': True}, blocking=True,
+            context=ha.Context(user_id=hass_admin_user.id))
+    assert len(calls) == 0
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            'test', 'test2', {}, blocking=True, context=ha.Context(
+                user_id=hass_admin_user.id
+            ))
+    assert len(calls) == 0
+
     await hass.services.async_call(
-        'test', 'test', {}, blocking=True, context=ha.Context(
+        'test', 'test2', {'required': True}, blocking=True, context=ha.Context(
             user_id=hass_admin_user.id
         ))
     assert len(calls) == 1
