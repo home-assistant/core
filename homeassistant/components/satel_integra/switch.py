@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
     CONF_DEVICE_CODE, CONF_SWITCHABLE_OUTPUTS, CONF_ZONE_NAME,
-    DATA_SATEL, SIGNAL_OUTPUTS_UPDATED)
+    SIGNAL_OUTPUTS_UPDATED, CONTROLLER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ async def async_setup_platform(
         return
 
     configured_zones = discovery_info[CONF_SWITCHABLE_OUTPUTS]
+    controller = discovery_info[CONTROLLER]
 
     devices = []
 
@@ -29,7 +30,7 @@ async def async_setup_platform(
         zone_name = device_config_data[CONF_ZONE_NAME]
 
         device = SatelIntegraSwitch(
-            zone_num, zone_name, discovery_info[CONF_DEVICE_CODE])
+            controller, zone_num, zone_name, discovery_info[CONF_DEVICE_CODE])
         devices.append(device)
 
     async_add_entities(devices)
@@ -38,17 +39,16 @@ async def async_setup_platform(
 class SatelIntegraSwitch(SwitchDevice):
     """Representation of an Satel switch."""
 
-    def __init__(self, device_number, device_name, code):
+    def __init__(self, controller, device_number, device_name, code):
         """Initialize the binary_sensor."""
         self._device_number = device_number
         self._name = device_name
         self._state = False
         self._code = code
-        self._satel = None
+        self._satel = controller
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._satel = self.hass.data[DATA_SATEL]
         async_dispatcher_connect(
             self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated)
 

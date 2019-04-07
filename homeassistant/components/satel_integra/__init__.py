@@ -34,6 +34,7 @@ CONF_OUTPUTS = 'outputs'
 CONF_SWITCHABLE_OUTPUTS = 'switchable_outputs'
 
 ZONES = 'zones'
+CONTROLLER = 'controller'
 
 SIGNAL_PANEL_MESSAGE = 'satel_integra.panel_message'
 SIGNAL_PANEL_ARM_AWAY = 'satel_integra.panel_arm_away'
@@ -111,6 +112,8 @@ async def async_setup(hass, config):
     if not result:
         return False
 
+    conf[CONTROLLER] = controller
+
     async def _close():
         controller.close()
 
@@ -131,7 +134,8 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         async_load_platform(hass, 'switch', DOMAIN,
-                            {CONF_SWITCHABLE_OUTPUTS: switchable_outputs,
+                            {CONTROLLER: controller,
+                             CONF_SWITCHABLE_OUTPUTS: switchable_outputs,
                              CONF_DEVICE_CODE: conf.get(CONF_DEVICE_CODE)},
                             config)
         )

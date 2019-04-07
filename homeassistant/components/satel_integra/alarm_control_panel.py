@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_ARM_HOME_MODE, CONF_DEVICE_PARTITIONS, DATA_SATEL, CONF_ZONE_NAME,
+    CONF_ARM_HOME_MODE, CONF_DEVICE_PARTITIONS, CONTROLLER, CONF_ZONE_NAME,
     SIGNAL_PANEL_MESSAGE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ async def async_setup_platform(
         return
 
     configured_partitions = discovery_info[CONF_DEVICE_PARTITIONS]
+    controller = discovery_info[CONTROLLER]
 
     devices = []
 
@@ -31,6 +32,7 @@ async def async_setup_platform(
         zone_name = device_config_data[CONF_ZONE_NAME]
         arm_home_mode = device_config_data.get(CONF_ARM_HOME_MODE)
         device = SatelIntegraAlarmPanel(
+            controller,
             zone_name,
             arm_home_mode,
             partition_num)
@@ -42,18 +44,17 @@ async def async_setup_platform(
 class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, name, arm_home_mode, partition_id):
+    def __init__(self, controller, name, arm_home_mode, partition_id):
         """Initialize the alarm panel."""
         self._name = name
         self._state = None
         self._arm_home_mode = arm_home_mode
         self._partition_id = partition_id
-        self._satel = None
+        self._satel = controller
 
     async def async_added_to_hass(self):
         """Update alarm status and register callbacks for future updates."""
         _LOGGER.debug("Starts listening for panel messages")
-        self._satel = self.hass.data[DATA_SATEL]
         self._update_alarm_status()
         async_dispatcher_connect(
             self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status)
