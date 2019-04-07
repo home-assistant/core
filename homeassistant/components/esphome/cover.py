@@ -3,8 +3,9 @@ import logging
 from typing import TYPE_CHECKING, Optional
 
 from homeassistant.components.cover import (
-    SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP, CoverDevice, SUPPORT_SET_POSITION, SUPPORT_OPEN_TILT,
-    SUPPORT_CLOSE_TILT, SUPPORT_SET_TILT_POSITION, ATTR_POSITION, ATTR_TILT_POSITION)
+    ATTR_POSITION, ATTR_TILT_POSITION, SUPPORT_CLOSE, SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN, SUPPORT_OPEN_TILT, SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION, SUPPORT_STOP, CoverDevice)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -46,7 +47,8 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
         if self._static_info.supports_position:
             flags |= SUPPORT_SET_POSITION
         if self._static_info.supports_tilt:
-            flags |= SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_SET_TILT_POSITION
+            flags |= (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT |
+                      SUPPORT_SET_TILT_POSITION)
         return flags
 
     @property
@@ -103,11 +105,13 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
 
     async def async_open_cover(self, **kwargs) -> None:
         """Open the cover."""
-        await self._client.cover_command(key=self._static_info.key, position=1.0)
+        await self._client.cover_command(key=self._static_info.key,
+                                         position=1.0)
 
     async def async_close_cover(self, **kwargs) -> None:
         """Close cover."""
-        await self._client.cover_command(key=self._static_info.key, position=0.0)
+        await self._client.cover_command(key=self._static_info.key,
+                                         position=0.0)
 
     async def async_stop_cover(self, **kwargs) -> None:
         """Stop the cover."""
@@ -116,7 +120,7 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
     async def async_set_cover_position(self, **kwargs) -> None:
         """Move the cover to a specific position."""
         await self._client.cover_command(key=self._static_info.key,
-                                         position=kwargs[ATTR_POSITION] / 100.0)
+                                         position=kwargs[ATTR_POSITION] / 100)
 
     async def async_open_cover_tilt(self, **kwargs) -> None:
         """Open the cover tilt."""
@@ -129,4 +133,4 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
     async def async_set_cover_tilt_position(self, **kwargs) -> None:
         """Move the cover tilt to a specific position."""
         await self._client.cover_command(key=self._static_info.key,
-                                         tilt=kwargs[ATTR_TILT_POSITION] / 100.0)
+                                         tilt=kwargs[ATTR_TILT_POSITION] / 100)
