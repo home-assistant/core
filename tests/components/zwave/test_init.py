@@ -112,7 +112,6 @@ async def test_erronous_network_key_fails_validation(hass, mock_openzwave):
     for value in test_values:
         with pytest.raises(vol.Invalid):
             result = zwave.CONFIG_SCHEMA({'zwave': {'network_key': value}})
-            assert not result
 
 
 async def test_auto_heal_midnight(hass, mock_openzwave):
