@@ -6,8 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import fan, media_player, sensor
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_BATTERY, CONF_NAME, CONF_TYPE,
-    TEMP_CELSIUS)
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, TEMP_CELSIUS)
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
