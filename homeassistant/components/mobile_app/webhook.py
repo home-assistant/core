@@ -145,8 +145,8 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         see_payload = {
             ATTR_DEV_ID: registration[ATTR_DEVICE_ID],
-            ATTR_GPS: data.get(ATTR_GPS),
-            ATTR_GPS_ACCURACY: data.get(ATTR_GPS_ACCURACY),
+            ATTR_GPS: data[ATTR_GPS],
+            ATTR_GPS_ACCURACY: data[ATTR_GPS_ACCURACY],
         }
 
         for key in (ATTR_LOCATION_NAME, ATTR_BATTERY):
