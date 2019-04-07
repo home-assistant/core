@@ -938,6 +938,47 @@ class TestHelpersTemplate(unittest.TestCase):
 {% endfor %}
             """) == EntityFilter(include_domains=['sensor'])
 
+    def test_generate_filter_iterators(self):
+        """Test extract entities function with none entities stuff."""
+        self.hass.states.set('sensor.test_sensor', 'off', {
+            'attr': 'value'})
+
+        # Don't need the entity because the state is not accessed
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_domains=['sensor'])
+
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}={{ state.state }},d
+{% endfor %}
+            """) == EntityFilter(
+                include_domains=['sensor'],
+                include_entities=['sensor.test_sensor'])
+
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}={{ state.attributes.attr }},d
+{% endfor %}
+            """) == EntityFilter(
+                include_domains=['sensor'],
+                include_entities=['sensor.test_sensor'])
+
+        # Don't need the entity because the state is not accessed
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_domains=['sensor'])
+
+        assert self.generate_filter("""
+{% for state in states %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_all=True)
+
     def test_extract_entities_match_entities(self):
         """Test extract entities function with entities stuff."""
         self.hass.states.set('device_tracker.phone_1', 'home')

@@ -283,7 +283,7 @@ class TemplateState(State):
     @property
     def state_with_unit(self):
         """Return the state concatenated with the unit if available."""
-        state = self._access_state()
+        state = object.__getattribute__(self, '_access_state')()
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if unit is None:
             return state.state
@@ -294,17 +294,17 @@ class TemplateState(State):
         # This one doesn't count as an access of the state
         # since we either found it by looking direct for the ID
         # or got it off an iterator.
-        if name == 'entity_id':
+        if name == 'entity_id' or name in object.__dict__:
             state = object.__getattribute__(self, '_state')
             return getattr(state, name)
         if name in TemplateState.__dict__:
             return object.__getattribute__(self, name)
-        state = self._access_state()
+        state = object.__getattribute__(self, '_access_state')()
         return getattr(state, name)
 
     def __repr__(self):
         """Representation of Template State."""
-        state = self._access_state()
+        state = object.__getattribute__(self, '_access_state')()
         rep = state.__repr__()
         return '<template ' + rep[1:]
 
