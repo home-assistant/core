@@ -1,23 +1,17 @@
-"""
-Support for Vera sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.vera/
-"""
-import logging
+"""Support for Vera sensors."""
 from datetime import timedelta
+import logging
 
-from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
-DEPENDENCIES = ['vera']
+from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['vera']
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

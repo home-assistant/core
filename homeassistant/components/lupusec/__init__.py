@@ -1,10 +1,4 @@
-"""
-This component provides basic support for Lupusec Home Security system.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/lupusec
-"""
-
+"""Support for Lupusec Home Security system."""
 import logging
 
 import voluptuous as vol
@@ -14,6 +8,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_NAME, CONF_IP_ADDRESS)
 from homeassistant.helpers.entity import Entity
+
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['lupupy==0.0.17']
@@ -28,7 +23,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME): cv.string
+        vol.Optional(CONF_NAME): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 

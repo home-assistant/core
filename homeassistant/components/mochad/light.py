@@ -1,10 +1,4 @@
-"""
-Contains functionality to use a X10 dimmer over Mochad.
-
-For more details about this platform, please refer to the documentation at
-https://home.assistant.io/components/light.mochad/
-"""
-
+"""Support for X10 dimmer over Mochad."""
 import logging
 
 import voluptuous as vol
@@ -16,11 +10,11 @@ from homeassistant.const import (
     CONF_NAME, CONF_PLATFORM, CONF_DEVICES, CONF_ADDRESS)
 from homeassistant.helpers import config_validation as cv
 
-DEPENDENCIES = ['mochad']
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BRIGHTNESS_LEVELS = 'brightness_levels'
+DEPENDENCIES = ['mochad']
 
+CONF_BRIGHTNESS_LEVELS = 'brightness_levels'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): mochad.DOMAIN,
@@ -51,11 +45,11 @@ class MochadLight(Light):
 
         self._controller = ctrl
         self._address = dev[CONF_ADDRESS]
-        self._name = dev.get(CONF_NAME,
-                             'x10_light_dev_{}'.format(self._address))
+        self._name = dev.get(
+            CONF_NAME, 'x10_light_dev_{}'.format(self._address))
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
-        self.light = device.Device(ctrl, self._address,
-                                   comm_type=self._comm_type)
+        self.light = device.Device(
+            ctrl, self._address, comm_type=self._comm_type)
         self._brightness = 0
         self._state = self._get_device_status()
         self._brightness_levels = dev.get(CONF_BRIGHTNESS_LEVELS) - 1

@@ -1,9 +1,4 @@
-"""
-Support for EnOcean switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.enocean/
-"""
+"""Support for EnOcean switches."""
 import logging
 
 import voluptuous as vol

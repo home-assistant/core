@@ -1,9 +1,4 @@
-"""
-Component that will help set the FFmpeg component.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ffmpeg/
-"""
+"""Support for FFmpeg."""
 import logging
 import re
 
@@ -17,7 +12,7 @@ from homeassistant.helpers.dispatcher import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['ha-ffmpeg==1.11']
+REQUIREMENTS = ['ha-ffmpeg==2.0']
 
 DOMAIN = 'ffmpeg'
 

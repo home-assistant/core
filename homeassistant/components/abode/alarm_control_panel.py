@@ -1,17 +1,12 @@
-"""
-This component provides HA alarm_control_panel support for Abode System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.abode/
-"""
+"""Support for Abode Security System alarm control panels."""
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.abode import CONF_ATTRIBUTION, AbodeDevice
-from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN
 from homeassistant.const import (
     ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED)
+
+from . import ATTRIBUTION, DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 DEPENDENCIES = ['abode']
 
@@ -78,7 +73,7 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             'device_id': self._device.device_id,
             'battery_backup': self._device.battery,
             'cellular_backup': self._device.is_cellular,

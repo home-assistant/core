@@ -1051,6 +1051,34 @@ class TestCoverMQTT(unittest.TestCase):
         state = self.hass.states.get('cover.test')
         assert STATE_UNAVAILABLE == state.state
 
+    def test_valid_device_class(self):
+        """Test the setting of a valid sensor class."""
+        assert setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'device_class': 'garage',
+                'state_topic': 'test-topic',
+            }
+        })
+
+        state = self.hass.states.get('cover.test')
+        assert 'garage' == state.attributes.get('device_class')
+
+    def test_invalid_device_class(self):
+        """Test the setting of an invalid sensor class."""
+        assert setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'device_class': 'abc123',
+                'state_topic': 'test-topic',
+            }
+        })
+
+        state = self.hass.states.get('cover.test')
+        assert state is None
+
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""

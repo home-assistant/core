@@ -1,13 +1,9 @@
-"""
-Support for Freebox devices (Freebox v6 and Freebox mini 4K).
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.freebox/
-"""
+"""Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 
-from homeassistant.components.freebox import DATA_FREEBOX
 from homeassistant.helpers.entity import Entity
+
+from . import DATA_FREEBOX
 
 DEPENDENCIES = ['freebox']
 
@@ -18,10 +14,7 @@ async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the sensors."""
     fbx = hass.data[DATA_FREEBOX]
-    async_add_entities([
-        FbxRXSensor(fbx),
-        FbxTXSensor(fbx)
-    ], True)
+    async_add_entities([FbxRXSensor(fbx), FbxTXSensor(fbx)], True)
 
 
 class FbxSensor(Entity):

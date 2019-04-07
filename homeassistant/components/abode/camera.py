@@ -1,18 +1,13 @@
-"""
-This component provides HA camera support for Abode Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.abode/
-"""
+"""Support for Abode Security System cameras."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
 import requests
 
-from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle
 
+from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 DEPENDENCIES = ['abode']
 

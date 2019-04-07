@@ -1,19 +1,12 @@
-"""
-This component provides HA alarm_control_panel support for Lupusec System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.lupusec/
-"""
-
+"""Support for Lupusec System alarm control panels."""
 from datetime import timedelta
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.lupusec import DOMAIN as LUPUSEC_DOMAIN
-from homeassistant.components.lupusec import LupusecDevice
-from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
-                                 STATE_ALARM_ARMED_HOME,
-                                 STATE_ALARM_DISARMED,
-                                 STATE_ALARM_TRIGGERED)
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED)
+
+from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
 DEPENDENCIES = ['lupusec']
 

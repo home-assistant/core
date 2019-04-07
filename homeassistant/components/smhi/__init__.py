@@ -1,9 +1,4 @@
-"""
-Component for the Swedish weather institute weather service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/smhi/
-"""
+"""Support for the Swedish weather institute weather service."""
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 
@@ -11,7 +6,7 @@ from homeassistant.core import Config, HomeAssistant
 from .config_flow import smhi_locations  # noqa: F401
 from .const import DOMAIN  # noqa: F401
 
-REQUIREMENTS = ['smhi-pkg==1.0.8']
+REQUIREMENTS = ['smhi-pkg==1.0.10']
 
 DEFAULT_NAME = 'smhi'
 

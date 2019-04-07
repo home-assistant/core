@@ -13,8 +13,12 @@
                 "data": {
                     "password": "Passord"
                 },
-                "description": "Vennligst skriv inn passordet du har angitt i din konfigurasjon.",
+                "description": "Vennligst skriv inn passordet du har angitt i din konfigurasjon for {name}.",
                 "title": "Skriv Inn Passord"
+            },
+            "discovery_confirm": {
+                "description": "\u00d8nsker du \u00e5 legge ESPHome noden `{name}` til Home Assistant?",
+                "title": "Oppdaget ESPHome node"
             },
             "user": {
                 "data": {

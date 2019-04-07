@@ -1,9 +1,4 @@
-"""
-Component to create an interface to a Pilight daemon.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/pilight/
-"""
+"""Component to create an interface to a Pilight daemon."""
 import logging
 import functools
 import socket

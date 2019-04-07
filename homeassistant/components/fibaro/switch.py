@@ -1,15 +1,10 @@
-"""
-Support for Fibaro switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.fibaro/
-"""
+"""Support for Fibaro switches."""
 import logging
 
-from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.fibaro import (
-    FIBARO_DEVICES, FibaroDevice)
+from homeassistant.util import convert
+
+from . import FIBARO_DEVICES, FibaroDevice
 
 DEPENDENCIES = ['fibaro']
 _LOGGER = logging.getLogger(__name__)

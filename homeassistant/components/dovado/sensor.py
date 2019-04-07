@@ -1,20 +1,16 @@
-"""
-Support for sensors from the Dovado router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dovado/
-"""
+"""Support for sensors from the Dovado router."""
+from datetime import timedelta
 import logging
 import re
-from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.dovado import DOMAIN as DOVADO_DOMAIN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_SENSORS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN as DOVADO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,20 +27,16 @@ SENSOR_SMS_UNREAD = 'sms'
 SENSORS = {
     SENSOR_NETWORK: ('signal strength', 'Network', None,
                      'mdi:access-point-network'),
-    SENSOR_SIGNAL: ('signal strength', 'Signal Strength', '%',
-                    'mdi:signal'),
+    SENSOR_SIGNAL: ('signal strength', 'Signal Strength', '%', 'mdi:signal'),
     SENSOR_SMS_UNREAD: ('sms unread', 'SMS unread', '',
                         'mdi:message-text-outline'),
-    SENSOR_UPLOAD: ('traffic modem tx', 'Sent', 'GB',
-                    'mdi:cloud-upload'),
+    SENSOR_UPLOAD: ('traffic modem tx', 'Sent', 'GB', 'mdi:cloud-upload'),
     SENSOR_DOWNLOAD: ('traffic modem rx', 'Received', 'GB',
                       'mdi:cloud-download'),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.All(
-        cv.ensure_list, [vol.In(SENSORS)]
-    ),
+    vol.Required(CONF_SENSORS): vol.All(cv.ensure_list, [vol.In(SENSORS)]),
 })
 
 
@@ -69,6 +61,7 @@ class DovadoSensor(Entity):
         self._state = self._compute_state()
 
     def _compute_state(self):
+        """Compute the state of the sensor."""
         state = self._data.state.get(SENSORS[self._sensor][0])
         if self._sensor == SENSOR_NETWORK:
             match = re.search(r"\((.+)\)", state)

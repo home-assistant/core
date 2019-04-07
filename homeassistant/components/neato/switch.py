@@ -1,15 +1,13 @@
-"""
-Support for Neato Connected Vacuums switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.neato/
-"""
-import logging
+"""Support for Neato Connected Vacuums switches."""
 from datetime import timedelta
+import logging
+
 import requests
+
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
+
+from . import NEATO_LOGIN, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 

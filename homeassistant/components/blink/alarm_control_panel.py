@@ -1,16 +1,11 @@
-"""
-Support for Blink Alarm Control Panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.blink/
-"""
+"""Support for Blink Alarm Control Panel."""
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.blink import (
-    BLINK_DATA, DEFAULT_ATTRIBUTION)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY)
+    ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED)
+
+from . import BLINK_DATA, DEFAULT_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 

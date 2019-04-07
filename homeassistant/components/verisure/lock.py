@@ -1,24 +1,17 @@
-"""
-Interfaces with Verisure locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/verisure/
-"""
+"""Support for Verisure locks."""
 import logging
-from time import sleep
-from time import time
-from homeassistant.components.verisure import HUB as hub
-from homeassistant.components.verisure import (
-    CONF_LOCKS, CONF_DEFAULT_LOCK_CODE, CONF_CODE_DIGITS)
+from time import sleep, time
+
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import (
-    ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
+
+from . import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, HUB as hub
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Verisure platform."""
+    """Set up the Verisure lock platform."""
     locks = []
     if int(hub.config.get(CONF_LOCKS, 1)):
         hub.update_overview()
@@ -80,7 +73,7 @@ class VerisureDoorlock(LockDevice):
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].lockedState",
             self._device_label)
         if status == 'UNLOCKED':
-            self._state = None
+            self._state = STATE_UNLOCKED
         elif status == 'LOCKED':
             self._state = STATE_LOCKED
         elif status != 'PENDING':

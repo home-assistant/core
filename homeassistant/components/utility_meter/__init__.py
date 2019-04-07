@@ -1,11 +1,6 @@
-"""
-Component to track utility consumption over given periods of time.
-
-For more details about this component, please refer to the documentation
-at https://www.home-assistant.io/components/utility_meter/
-"""
-
+"""Support for tracking consumption over given periods of time."""
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -18,16 +13,18 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from .const import (
     DOMAIN, SIGNAL_RESET_METER, METER_TYPES, CONF_SOURCE_SENSOR,
-    CONF_METER_TYPE, CONF_METER_OFFSET, CONF_TARIFF_ENTITY, CONF_TARIFF,
-    CONF_TARIFFS, CONF_METER, DATA_UTILITY, SERVICE_RESET,
-    SERVICE_SELECT_TARIFF, SERVICE_SELECT_NEXT_TARIFF,
+    CONF_METER_TYPE, CONF_METER_OFFSET, CONF_METER_NET_CONSUMPTION,
+    CONF_TARIFF_ENTITY, CONF_TARIFF, CONF_TARIFFS, CONF_METER, DATA_UTILITY,
+    SERVICE_RESET, SERVICE_SELECT_TARIFF, SERVICE_SELECT_NEXT_TARIFF,
     ATTR_TARIFF)
 
 _LOGGER = logging.getLogger(__name__)
 
-TARIFF_ICON = "mdi:clock-outline"
+TARIFF_ICON = 'mdi:clock-outline'
 
 ATTR_TARIFFS = 'tariffs'
+
+DEFAULT_OFFSET = timedelta(hours=0)
 
 SERVICE_METER_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -41,7 +38,9 @@ METER_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
-    vol.Optional(CONF_METER_OFFSET, default=0): cv.positive_int,
+    vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET):
+        vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
     vol.Optional(CONF_TARIFFS, default=[]): vol.All(
         cv.ensure_list, [cv.string]),
 })
@@ -57,6 +56,7 @@ async def async_setup(hass, config):
     """Set up an Utility Meter."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     hass.data[DATA_UTILITY] = {}
+    register_services = False
 
     for meter, conf in config.get(DOMAIN).items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, meter)
@@ -86,21 +86,23 @@ async def async_setup(hass, config):
                     })
             hass.async_create_task(discovery.async_load_platform(
                 hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config))
+            register_services = True
 
-    component.async_register_entity_service(
-        SERVICE_RESET, SERVICE_METER_SCHEMA,
-        'async_reset_meters'
-    )
+    if register_services:
+        component.async_register_entity_service(
+            SERVICE_RESET, SERVICE_METER_SCHEMA,
+            'async_reset_meters'
+        )
 
-    component.async_register_entity_service(
-        SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA,
-        'async_select_tariff'
-    )
+        component.async_register_entity_service(
+            SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA,
+            'async_select_tariff'
+        )
 
-    component.async_register_entity_service(
-        SERVICE_SELECT_NEXT_TARIFF, SERVICE_METER_SCHEMA,
-        'async_next_tariff'
-    )
+        component.async_register_entity_service(
+            SERVICE_SELECT_NEXT_TARIFF, SERVICE_METER_SCHEMA,
+            'async_next_tariff'
+        )
 
     return True
 
@@ -156,6 +158,7 @@ class TariffSelect(RestoreEntity):
 
     async def async_reset_meters(self):
         """Reset all sensors of this meter."""
+        _LOGGER.debug("reset meter %s", self.entity_id)
         async_dispatcher_send(self.hass, SIGNAL_RESET_METER,
                               self.entity_id)
 

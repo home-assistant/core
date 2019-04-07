@@ -1,9 +1,4 @@
-"""
-Support for Apple TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/apple_tv/
-"""
+"""Support for Apple TV."""
 import asyncio
 import logging
 from typing import Sequence, TypeVar, Union

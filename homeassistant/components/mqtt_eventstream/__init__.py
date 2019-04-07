@@ -1,9 +1,4 @@
-"""
-Connect two Home Assistant instances via MQTT.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt_eventstream/
-"""
+"""Connect two Home Assistant instances via MQTT."""
 import asyncio
 import json
 
@@ -33,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False):
             cv.boolean,
-        vol.Optional(CONF_IGNORE_EVENT, default=[]): cv.ensure_list
+        vol.Optional(CONF_IGNORE_EVENT, default=[]): cv.ensure_list,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -79,9 +74,9 @@ def async_setup(hass, config):
 
     # Process events from a remote server that are received on a queue.
     @callback
-    def _event_receiver(topic, payload, qos):
+    def _event_receiver(msg):
         """Receive events published by and fire them on this hass instance."""
-        event = json.loads(payload)
+        event = json.loads(msg.payload)
         event_type = event.get('event_type')
         event_data = event.get('event_data')
 

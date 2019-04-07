@@ -1,22 +1,16 @@
-"""
-Support for XS1 sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.xs1/
-"""
-
+"""Support for XS1 sensors."""
 import logging
 
-from homeassistant.components.xs1 import (
-    ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity)
 from homeassistant.helpers.entity import Entity
+
+from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
 
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the XS1 sensor platform."""
     from xs1_api_client.api_constants import ActuatorType
 

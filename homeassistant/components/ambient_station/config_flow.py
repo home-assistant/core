@@ -1,5 +1,4 @@
 """Config flow to configure the Ambient PWS component."""
-
 import voluptuous as vol
 
 from homeassistant import config_entries

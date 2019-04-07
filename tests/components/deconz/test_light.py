@@ -41,14 +41,15 @@ GROUP = {
         "lights": [
             "1",
             "2"
-        ]
+        ],
     },
     "2": {
         "id": "Group 2 id",
         "name": "Group 2 name",
         "state": {},
         "action": {},
-        "scenes": []
+        "scenes": [],
+        "lights": [],
     },
 }
 
@@ -86,7 +87,7 @@ async def setup_gateway(hass, data, allow_deconz_groups=True):
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(loop, session, **config_entry.data)
     gateway.api.config = Mock()
-    hass.data[deconz.DOMAIN] = gateway
+    hass.data[deconz.DOMAIN] = {gateway.bridgeid: gateway}
 
     with patch('pydeconz.DeconzSession.async_get_state',
                return_value=mock_coro(data)):
@@ -95,6 +96,7 @@ async def setup_gateway(hass, data, allow_deconz_groups=True):
     await hass.config_entries.async_forward_entry_setup(config_entry, 'light')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
+    return gateway
 
 
 async def test_platform_manually_configured(hass):
@@ -109,8 +111,8 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_lights_or_groups(hass):
     """Test that no lights or groups entities are created."""
-    await setup_gateway(hass, {})
-    assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
+    gateway = await setup_gateway(hass, {})
+    assert not hass.data[deconz.DOMAIN][gateway.bridgeid].deconz_ids
     assert len(hass.states.async_all()) == 0
 
 
@@ -118,11 +120,12 @@ async def test_lights_and_groups(hass):
     """Test that lights or groups entities are created."""
     with patch('pydeconz.DeconzSession.async_put_state',
                return_value=mock_coro(True)):
-        await setup_gateway(hass, {"lights": LIGHT, "groups": GROUP})
-    assert "light.light_1_name" in hass.data[deconz.DOMAIN].deconz_ids
-    assert "light.light_2_name" in hass.data[deconz.DOMAIN].deconz_ids
-    assert "light.group_1_name" in hass.data[deconz.DOMAIN].deconz_ids
-    assert "light.group_2_name" not in hass.data[deconz.DOMAIN].deconz_ids
+        gateway = await setup_gateway(
+            hass, {"lights": LIGHT, "groups": GROUP})
+    assert "light.light_1_name" in gateway.deconz_ids
+    assert "light.light_2_name" in gateway.deconz_ids
+    assert "light.group_1_name" in gateway.deconz_ids
+    assert "light.group_2_name" not in gateway.deconz_ids
     assert len(hass.states.async_all()) == 4
 
     lamp_1 = hass.states.get('light.light_1_name')
@@ -136,7 +139,7 @@ async def test_lights_and_groups(hass):
     assert light_2.state == 'on'
     assert light_2.attributes['color_temp'] == 2500
 
-    hass.data[deconz.DOMAIN].api.lights['1'].async_update({})
+    gateway.api.lights['1'].async_update({})
 
     await hass.services.async_call('light', 'turn_on', {
         'entity_id': 'light.light_1_name',
@@ -165,49 +168,52 @@ async def test_lights_and_groups(hass):
 
 async def test_add_new_light(hass):
     """Test successful creation of light entities."""
-    await setup_gateway(hass, {})
+    gateway = await setup_gateway(hass, {})
     light = Mock()
     light.name = 'name'
     light.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_light', [light])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('light'), [light])
     await hass.async_block_till_done()
-    assert "light.name" in hass.data[deconz.DOMAIN].deconz_ids
+    assert "light.name" in gateway.deconz_ids
 
 
 async def test_add_new_group(hass):
     """Test successful creation of group entities."""
-    await setup_gateway(hass, {})
+    gateway = await setup_gateway(hass, {})
     group = Mock()
     group.name = 'name'
     group.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_group', [group])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('group'), [group])
     await hass.async_block_till_done()
-    assert "light.name" in hass.data[deconz.DOMAIN].deconz_ids
+    assert "light.name" in gateway.deconz_ids
 
 
 async def test_do_not_add_deconz_groups(hass):
     """Test that clip sensors can be ignored."""
-    await setup_gateway(hass, {}, allow_deconz_groups=False)
+    gateway = await setup_gateway(hass, {}, allow_deconz_groups=False)
     group = Mock()
     group.name = 'name'
     group.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_group', [group])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('group'), [group])
     await hass.async_block_till_done()
-    assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
+    assert len(gateway.deconz_ids) == 0
 
 
 async def test_no_switch(hass):
     """Test that a switch doesn't get created as a light entity."""
-    await setup_gateway(hass, {"lights": SWITCH})
-    assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
+    gateway = await setup_gateway(hass, {"lights": SWITCH})
+    assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
 
 async def test_unload_light(hass):
     """Test that it works to unload switch entities."""
-    await setup_gateway(hass, {"lights": LIGHT, "groups": GROUP})
+    gateway = await setup_gateway(hass, {"lights": LIGHT, "groups": GROUP})
 
-    await hass.data[deconz.DOMAIN].async_reset()
+    await gateway.async_reset()
 
     # Group.all_lights will not be removed
     assert len(hass.states.async_all()) == 1

@@ -42,6 +42,10 @@ send_command:
     delay_secs:
       description: An optional value that specifies that number of seconds you want to wait in between repeated commands. If not specified, the default of 0.4 seconds will be used.
       example: '0.75'
+    hold_secs:
+      description: An optional value that specifies that number of seconds you want to have it held before the release is send. If not specified, the release will be send immediately after the press.
+      example: '2.5'
+
 
 harmony_sync:
   description: Syncs the remote's configuration.

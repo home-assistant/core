@@ -1,46 +1,27 @@
-"""Support for Climate devices of (EMEA/EU-based) Honeywell evohome systems.
-
-Support for a temperature control system (TCS, controller) with 0+ heating
-zones (e.g. TRVs, relays).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.evohome/
-"""
-
+"""Support for Climate devices of (EMEA/EU-based) Honeywell evohome systems."""
 from datetime import datetime, timedelta
 import logging
 
-from requests.exceptions import HTTPError
+import requests.exceptions
 
-from homeassistant.components.climate import (
-    STATE_AUTO, STATE_ECO, STATE_MANUAL, STATE_OFF,
-    SUPPORT_AWAY_MODE,
-    SUPPORT_ON_OFF,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    ClimateDevice
-)
-from homeassistant.components.evohome import (
-    DATA_EVOHOME, DISPATCHER_EVOHOME,
-    CONF_LOCATION_IDX, SCAN_INTERVAL_DEFAULT,
-    EVO_PARENT, EVO_CHILD,
-    GWS, TCS,
-)
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import (
+    STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    HTTP_TOO_MANY_REQUESTS,
-    PRECISION_HALVES,
-    TEMP_CELSIUS
-)
+    CONF_SCAN_INTERVAL, HTTP_SERVICE_UNAVAILABLE, HTTP_TOO_MANY_REQUESTS,
+    PRECISION_HALVES, STATE_OFF, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    dispatcher_send,
-    async_dispatcher_connect
-)
+    async_dispatcher_connect, dispatcher_send)
+
+from . import (
+    CONF_LOCATION_IDX, DATA_EVOHOME, DISPATCHER_EVOHOME, EVO_CHILD, EVO_PARENT,
+    GWS, TCS)
 
 _LOGGER = logging.getLogger(__name__)
 
-# the Controller's opmode/state and the zone's (inherited) state
+# The Controller's opmode/state and the zone's (inherited) state
 EVO_RESET = 'AutoWithReset'
 EVO_AUTO = 'Auto'
 EVO_AUTOECO = 'AutoWithEco'
@@ -49,12 +30,12 @@ EVO_DAYOFF = 'DayOff'
 EVO_CUSTOM = 'Custom'
 EVO_HEATOFF = 'HeatingOff'
 
-# these are for Zones' opmode, and state
+# These are for Zones' opmode, and state
 EVO_FOLLOW = 'FollowSchedule'
 EVO_TEMPOVER = 'TemporaryOverride'
 EVO_PERMOVER = 'PermanentOverride'
 
-# for the Controller. NB: evohome treats Away mode as a mode in/of itself,
+# For the Controller. NB: evohome treats Away mode as a mode in/of itself,
 # where HA considers it to 'override' the exising operating mode
 TCS_STATE_TO_HA = {
     EVO_RESET: STATE_AUTO,
@@ -100,16 +81,12 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
 
     # evohomeclient has exposed no means of accessing non-default location
     # (i.e. loc_idx > 0) other than using a protected member, such as below
-    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
+    tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]  # noqa: E501; pylint: disable=protected-access
 
     _LOGGER.debug(
-        "setup_platform(): Found Controller, id=%s [%s], "
-        "name=%s (location_idx=%s)",
-        tcs_obj_ref.systemId,
-        tcs_obj_ref.modelType,
-        tcs_obj_ref.location.name,
-        loc_idx
-    )
+        "Found Controller, id=%s [%s], name=%s (location_idx=%s)",
+        tcs_obj_ref.systemId, tcs_obj_ref.modelType, tcs_obj_ref.location.name,
+        loc_idx)
 
     controller = EvoController(evo_data, client, tcs_obj_ref)
     zones = []
@@ -117,12 +94,8 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     for zone_idx in tcs_obj_ref.zones:
         zone_obj_ref = tcs_obj_ref.zones[zone_idx]
         _LOGGER.debug(
-            "setup_platform(): Found Zone, id=%s [%s], "
-            "name=%s",
-            zone_obj_ref.zoneId,
-            zone_obj_ref.zone_type,
-            zone_obj_ref.name
-        )
+            "Found Zone, id=%s [%s], name=%s",
+            zone_obj_ref.zoneId, zone_obj_ref.zone_type, zone_obj_ref.name)
         zones.append(EvoZone(evo_data, client, zone_obj_ref))
 
     entities = [controller] + zones
@@ -155,26 +128,43 @@ class EvoClimateDevice(ClimateDevice):
         if packet['to'] & self._type and packet['signal'] == 'refresh':
             self.async_schedule_update_ha_state(force_refresh=True)
 
-    def _handle_requests_exceptions(self, err):
-        if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
-            # execute a backoff: pause, and also reduce rate
-            old_interval = self._params[CONF_SCAN_INTERVAL]
-            new_interval = min(old_interval, SCAN_INTERVAL_DEFAULT) * 2
-            self._params[CONF_SCAN_INTERVAL] = new_interval
+    def _handle_exception(self, err):
+        try:
+            import evohomeclient2
+            raise err
 
-            _LOGGER.warning(
-                "API rate limit has been exceeded. Suspending polling for %s "
-                "seconds, and increasing '%s' from %s to %s seconds.",
-                new_interval * 3,
-                CONF_SCAN_INTERVAL,
-                old_interval,
-                new_interval,
+        except evohomeclient2.AuthenticationError:
+            _LOGGER.error(
+                "Failed to (re)authenticate with the vendor's server. "
+                "This may be a temporary error. Message is: %s",
+                err
             )
 
-            self._timers['statusUpdated'] = datetime.now() + new_interval * 3
+        except requests.exceptions.ConnectionError:
+            # this appears to be common with Honeywell's servers
+            _LOGGER.warning(
+                "Unable to connect with the vendor's server. "
+                "Check your network and the vendor's status page."
+            )
 
-        else:
-            raise err  # we dont handle any other HTTPErrors
+        except requests.exceptions.HTTPError:
+            if err.response.status_code == HTTP_SERVICE_UNAVAILABLE:
+                _LOGGER.warning(
+                    "Vendor says their server is currently unavailable. "
+                    "This may be temporary; check the vendor's status page."
+                )
+
+            elif err.response.status_code == HTTP_TOO_MANY_REQUESTS:
+                _LOGGER.warning(
+                    "The vendor's API rate limit has been exceeded. "
+                    "So will cease polling, and will resume after %s seconds.",
+                    (self._params[CONF_SCAN_INTERVAL] * 3).total_seconds()
+                )
+                self._timers['statusUpdated'] = datetime.now() + \
+                    self._params[CONF_SCAN_INTERVAL] * 3
+
+            else:
+                raise  # we don't expect/handle any other HTTPErrors
 
     @property
     def name(self) -> str:
@@ -269,7 +259,8 @@ class EvoZone(EvoClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature of the evohome Zone."""
-        return self._status['temperatureStatus']['temperature']
+        return (self._status['temperatureStatus']['temperature']
+                if self._status['temperatureStatus']['isAvailable'] else None)
 
     @property
     def current_operation(self):
@@ -314,9 +305,11 @@ class EvoZone(EvoClimateDevice):
           - None for PermanentOverride (i.e. indefinitely)
         """
         try:
+            import evohomeclient2
             self._obj.set_temperature(temperature, until)
-        except HTTPError as err:
-            self._handle_exception("HTTPError", str(err))                       # noqa: E501; pylint: disable=no-member
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            self._handle_exception(err)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature, indefinitely."""
@@ -364,9 +357,11 @@ class EvoZone(EvoClimateDevice):
     def _set_operation_mode(self, operation_mode):
         if operation_mode == EVO_FOLLOW:
             try:
-                self._obj.cancel_temp_override(self._obj)
-            except HTTPError as err:
-                self._handle_exception("HTTPError", str(err))                   # noqa: E501; pylint: disable=no-member
+                import evohomeclient2
+                self._obj.cancel_temp_override()
+            except (requests.exceptions.RequestException,
+                    evohomeclient2.AuthenticationError) as err:
+                self._handle_exception(err)
 
         elif operation_mode == EVO_TEMPOVER:
             _LOGGER.error(
@@ -526,9 +521,11 @@ class EvoController(EvoClimateDevice):
 
     def _set_operation_mode(self, operation_mode):
         try:
-            self._obj._set_status(operation_mode)                               # noqa: E501; pylint: disable=protected-access
-        except HTTPError as err:
-            self._handle_requests_exceptions(err)
+            import evohomeclient2
+            self._obj._set_status(operation_mode)  # noqa: E501; pylint: disable=protected-access
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            self._handle_exception(err)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode for the TCS.
@@ -558,22 +555,21 @@ class EvoController(EvoClimateDevice):
         if not expired:
             return
 
-        # Retreive the latest state data via the client api
+        # Retrieve the latest state data via the client API
         loc_idx = self._params[CONF_LOCATION_IDX]
 
         try:
+            import evohomeclient2
             self._status.update(
                 self._client.locations[loc_idx].status()[GWS][0][TCS][0])
-        except HTTPError as err:  # check if we've exceeded the api rate limit
-            self._handle_requests_exceptions(err)
+        except (requests.exceptions.RequestException,
+                evohomeclient2.AuthenticationError) as err:
+            self._handle_exception(err)
         else:
             self._timers['statusUpdated'] = datetime.now()
             self._available = True
 
-        _LOGGER.debug(
-            "_update_state_data(): self._status = %s",
-            self._status
-        )
+        _LOGGER.debug("Status = %s", self._status)
 
         # inform the child devices that state data has been updated
         pkt = {'sender': 'controller', 'signal': 'refresh', 'to': EVO_CHILD}

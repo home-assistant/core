@@ -1,9 +1,4 @@
-"""
-A component which allows you to send data to Dweet.io.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/dweet/
-"""
+"""Support for sending data to Dweet.io."""
 import logging
 from datetime import timedelta
 

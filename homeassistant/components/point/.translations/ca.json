@@ -5,7 +5,7 @@
             "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
             "authorize_url_timeout": "S'ha acabat el temps d'espera mentre \u00e9s generava l'URL d'autoritzaci\u00f3.",
             "external_setup": "Point s'ha configurat correctament des d'un altre lloc.",
-            "no_flows": "Necessites configurar Point abans de poder autenticar-t'hi. [Llegiu les instruccions](https://www.home-assistant.io/components/point/)."
+            "no_flows": "Necessites configurar Point abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/point/)."
         },
         "create_entry": {
             "default": "Autenticaci\u00f3 exitosa amb Minut per als teus dispositiu/s Point."

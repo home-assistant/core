@@ -1,19 +1,13 @@
-"""
-Support for EDP re:dy.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/edp_redy/
-"""
-
-import logging
+"""Support for EDP re:dy."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 EVENT_HOMEASSISTANT_START)
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
-from homeassistant.helpers import discovery, dispatcher, aiohttp_client
+from homeassistant.helpers import aiohttp_client, discovery, dispatcher
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_time

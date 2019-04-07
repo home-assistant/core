@@ -1,9 +1,4 @@
-"""
-Support for viewing the camera feed from a DoorBird video doorbell.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.doorbird/
-"""
+"""Support for viewing the camera feed from a DoorBird video doorbell."""
 import asyncio
 import datetime
 import logging
@@ -12,8 +7,9 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.camera import Camera
-from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from . import DOMAIN as DOORBIRD_DOMAIN
 
 DEPENDENCIES = ['doorbird']
 

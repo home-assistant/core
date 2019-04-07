@@ -1,5 +1,5 @@
 """Collection of useful functions for the HomeKit component."""
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 import logging
 
 import voluptuous as vol
@@ -63,7 +63,7 @@ def validate_entity_config(values):
         if domain in ('alarm_control_panel', 'lock'):
             config = CODE_SCHEMA(config)
 
-        elif domain == media_player.DOMAIN:
+        elif domain == media_player.const.DOMAIN:
             config = FEATURE_SCHEMA(config)
             feature_list = {}
             for feature in config[CONF_FEATURE_LIST]:
@@ -90,14 +90,16 @@ def validate_media_player_features(state, feature_list):
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     supported_modes = []
-    if features & (media_player.SUPPORT_TURN_ON |
-                   media_player.SUPPORT_TURN_OFF):
+    if features & (media_player.const.SUPPORT_TURN_ON |
+                   media_player.const.SUPPORT_TURN_OFF):
         supported_modes.append(FEATURE_ON_OFF)
-    if features & (media_player.SUPPORT_PLAY | media_player.SUPPORT_PAUSE):
+    if features & (media_player.const.SUPPORT_PLAY |
+                   media_player.const.SUPPORT_PAUSE):
         supported_modes.append(FEATURE_PLAY_PAUSE)
-    if features & (media_player.SUPPORT_PLAY | media_player.SUPPORT_STOP):
+    if features & (media_player.const.SUPPORT_PLAY |
+                   media_player.const.SUPPORT_STOP):
         supported_modes.append(FEATURE_PLAY_STOP)
-    if features & media_player.SUPPORT_VOLUME_MUTE:
+    if features & media_player.const.SUPPORT_VOLUME_MUTE:
         supported_modes.append(FEATURE_TOGGLE_MUTE)
 
     error_list = []

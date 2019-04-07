@@ -1,9 +1,4 @@
-"""
-Support for WeMo switches.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.wemo/
-"""
+"""Support for WeMo switches."""
 import asyncio
 import logging
 from datetime import datetime, timedelta
@@ -47,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device = discovery.device_from_description(location, mac)
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as err:
-            _LOGGER.error('Unable to access %s (%s)', location, err)
+            _LOGGER.error("Unable to access %s (%s)", location, err)
             raise PlatformNotReady
 
         if device:

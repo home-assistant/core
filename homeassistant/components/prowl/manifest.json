@@ -1,0 +1,8 @@
+{
+  "domain": "prowl",
+  "name": "Prowl",
+  "documentation": "https://www.home-assistant.io/components/prowl",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

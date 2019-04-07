@@ -1,9 +1,4 @@
-"""
-Support for tracking MySensors devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.mysensors/
-"""
+"""Support for tracking MySensors devices."""
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

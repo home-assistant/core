@@ -1,17 +1,13 @@
-"""
-Support for Speedtest.net internet speed testing sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.speedtestdotnet/
-"""
+"""Support for Speedtest.net internet speed testing sensor."""
 import logging
 
-from homeassistant.components.speedtestdotnet.const import \
-    DOMAIN as SPEEDTESTDOTNET_DOMAIN, DATA_UPDATED, SENSOR_TYPES
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from .const import (
+    DATA_UPDATED, DOMAIN as SPEEDTESTDOTNET_DOMAIN, SENSOR_TYPES)
 
 DEPENDENCIES = ['speedtestdotnet']
 
@@ -30,8 +26,8 @@ ATTRIBUTION = 'Data retrieved from Speedtest.net by Ookla'
 ICON = 'mdi:speedometer'
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info):
     """Set up the Speedtest.net sensor."""
     data = hass.data[SPEEDTESTDOTNET_DOMAIN]
     async_add_entities(

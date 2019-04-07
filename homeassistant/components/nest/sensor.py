@@ -1,18 +1,12 @@
-"""
-Support for Nest Thermostat Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nest/
-"""
+"""Support for Nest Thermostat sensors."""
 import logging
 
-from homeassistant.components.climate import (
-    STATE_COOL, STATE_HEAT)
-from homeassistant.components.nest import (
-    DATA_NEST, DATA_NEST_CONFIG, CONF_SENSORS, NestSensorDevice)
+from homeassistant.components.climate.const import STATE_COOL, STATE_HEAT
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_MONITORED_CONDITIONS,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY, STATE_OFF)
+    CONF_MONITORED_CONDITIONS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
+    STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+
+from . import CONF_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
 
 DEPENDENCIES = ['nest']
 

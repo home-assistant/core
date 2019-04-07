@@ -1,9 +1,4 @@
-"""
-Support for ThinkingCleaner.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.thinkingcleaner/
-"""
+"""Support for ThinkingCleaner switches."""
 import time
 import logging
 from datetime import timedelta
@@ -45,8 +40,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     for device in devices:
         for type_name in SWITCH_TYPES:
-            dev.append(ThinkingCleanerSwitch(device, type_name,
-                                             update_devices))
+            dev.append(ThinkingCleanerSwitch(
+                device, type_name, update_devices))
 
     add_entities(dev)
 

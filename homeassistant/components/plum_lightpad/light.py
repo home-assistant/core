@@ -1,19 +1,15 @@
-"""
-Support for Plum Lightpad switches.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.plum_lightpad/
-"""
+"""Support for Plum Lightpad lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
-from homeassistant.components.plum_lightpad import PLUM_DATA
 import homeassistant.util.color as color_util
+
+from . import PLUM_DATA
 
 DEPENDENCIES = ['plum_lightpad']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Initialize the Plum Lightpad Light and GlowRing."""
     if discovery_info is None:
         return
@@ -35,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class PlumLight(Light):
-    """Represenation of a Plum Lightpad dimmer."""
+    """Representation of a Plum Lightpad dimmer."""
 
     def __init__(self, load):
         """Initialize the light."""
@@ -91,7 +87,7 @@ class PlumLight(Light):
 
 
 class GlowRing(Light):
-    """Represenation of a Plum Lightpad dimmer glow ring."""
+    """Representation of a Plum Lightpad dimmer glow ring."""
 
     def __init__(self, lightpad):
         """Initialize the light."""
@@ -107,8 +103,8 @@ class GlowRing(Light):
 
     async def async_added_to_hass(self):
         """Subscribe to configchange events."""
-        self._lightpad.add_event_listener('configchange',
-                                          self.configchange_event)
+        self._lightpad.add_event_listener(
+            'configchange', self.configchange_event)
 
     def configchange_event(self, event):
         """Handle Configuration change event."""
@@ -155,7 +151,7 @@ class GlowRing(Light):
 
     @property
     def icon(self):
-        """Return the crop-portait icon representing the glow ring."""
+        """Return the crop-portrait icon representing the glow ring."""
         return 'mdi:crop-portrait'
 
     @property
@@ -181,5 +177,4 @@ class GlowRing(Light):
             await self._lightpad.set_config(
                 {"glowIntensity": kwargs[ATTR_BRIGHTNESS]})
         else:
-            await self._lightpad.set_config(
-                {"glowEnabled": False})
+            await self._lightpad.set_config({"glowEnabled": False})

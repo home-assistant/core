@@ -1,16 +1,12 @@
-"""
-Support for the Roku media player.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.roku/
-"""
+"""Support for the Roku media player."""
 import logging
 import requests.exceptions
 
-from homeassistant.components.media_player import (
+from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (CONF_HOST, STATE_HOME, STATE_IDLE,
                                  STATE_PLAYING)
 

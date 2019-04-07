@@ -1,9 +1,4 @@
-"""
-Component to control ecoal/esterownik.pl coal/wood boiler controller.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ecoal_boiler/
-"""
+"""Support to control ecoal/esterownik.pl coal/wood boiler controller."""
 import logging
 
 import voluptuous as vol
@@ -61,12 +56,10 @@ SENSOR_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_USERNAME,
-                     default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD,
-                     default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
         vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+        vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 

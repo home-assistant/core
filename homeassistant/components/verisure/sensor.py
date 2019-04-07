@@ -1,16 +1,10 @@
-"""
-Interfaces with Verisure sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.verisure/
-"""
+"""Support for Verisure sensors."""
 import logging
 
-from homeassistant.components.verisure import HUB as hub
-from homeassistant.components.verisure import (
-    CONF_THERMOMETERS, CONF_HYDROMETERS, CONF_MOUSE)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+from . import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS, HUB as hub
 
 _LOGGER = logging.getLogger(__name__)
 

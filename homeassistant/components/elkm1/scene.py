@@ -1,20 +1,13 @@
-"""
-Support for control of ElkM1 tasks ("macros").
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.elkm1/
-"""
-
-
-from homeassistant.components.elkm1 import (
-    DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities)
+"""Support for control of ElkM1 tasks ("macros")."""
 from homeassistant.components.scene import Scene
+
+from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 DEPENDENCIES = [ELK_DOMAIN]
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Create the Elk-M1 scene platform."""
     if discovery_info is None:
         return

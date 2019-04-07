@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with image processing services.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/image_processing/
-"""
+"""Provides functionality to interact with image processing services."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -75,7 +70,7 @@ async def async_setup(hass, config):
 
     async def async_scan_service(service):
         """Service handler for scan."""
-        image_entities = component.async_extract_from_service(service)
+        image_entities = await component.async_extract_from_service(service)
 
         update_tasks = []
         for entity in image_entities:

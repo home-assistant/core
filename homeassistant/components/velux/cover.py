@@ -1,21 +1,16 @@
-"""
-Support for Velux covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.velux/
-"""
-
+"""Support for Velux covers."""
 from homeassistant.components.cover import (
     ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
     SUPPORT_STOP, CoverDevice)
-from homeassistant.components.velux import DATA_VELUX
 from homeassistant.core import callback
+
+from . import DATA_VELUX
 
 DEPENDENCIES = ['velux']
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up cover(s) for Velux platform."""
     entities = []
     for node in hass.data[DATA_VELUX].pyvlx.nodes:
@@ -77,11 +72,11 @@ class VeluxCover(CoverDevice):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        await self.node.close()
+        await self.node.close(wait_for_completion=False)
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self.node.open()
+        await self.node.open(wait_for_completion=False)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -89,8 +84,9 @@ class VeluxCover(CoverDevice):
             position_percent = 100 - kwargs[ATTR_POSITION]
             from pyvlx import Position
             await self.node.set_position(
-                Position(position_percent=position_percent))
+                Position(position_percent=position_percent),
+                wait_for_completion=False)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await self.node.stop()
+        await self.node.stop(wait_for_completion=False)

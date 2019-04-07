@@ -1,18 +1,13 @@
-"""
-Support for AVM Fritz!Box smarthome temperature sensor only devices.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/sensor.fritzbox/
-"""
+"""Support for AVM Fritz!Box smarthome temperature sensor only devices."""
 import logging
 
 import requests
 
-from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
-from homeassistant.components.fritzbox import (
-    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED)
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.entity import Entity
+
+from . import (
+    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED, DOMAIN as FRITZBOX_DOMAIN)
 
 DEPENDENCIES = ['fritzbox']
 

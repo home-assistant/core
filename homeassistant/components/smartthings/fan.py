@@ -1,9 +1,5 @@
-"""
-Support for fans through the SmartThings cloud API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.fan/
-"""
+"""Support for fans through the SmartThings cloud API."""
+from typing import Optional, Sequence
 
 from homeassistant.components.fan import (
     SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
@@ -35,15 +31,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
         [SmartThingsFan(device) for device in broker.devices.values()
-         if is_fan(device)])
+         if broker.any_assigned(device.device_id, 'fan')])
 
 
-def is_fan(device):
-    """Determine if the device should be represented as a fan."""
+def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+    """Return all capabilities supported if minimum required are present."""
     from pysmartthings import Capability
+
+    supported = [Capability.switch, Capability.fan_speed]
     # Must have switch and fan_speed
-    return all(capability in device.capabilities
-               for capability in [Capability.switch, Capability.fan_speed])
+    if all(capability in capabilities for capability in supported):
+        return supported
 
 
 class SmartThingsFan(SmartThingsEntity, FanEntity):

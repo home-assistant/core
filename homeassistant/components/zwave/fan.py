@@ -1,9 +1,4 @@
-"""
-Z-Wave platform that handles fans.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/fan.zwave/
-"""
+"""Support for Z-Wave fans."""
 import logging
 import math
 
@@ -11,8 +6,8 @@ from homeassistant.core import callback
 from homeassistant.components.fan import (
     DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED)
-from homeassistant.components import zwave
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from . import ZWaveDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,8 +31,8 @@ SPEED_TO_VALUE = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old method of setting up Z-Wave fans."""
     pass
 
@@ -57,12 +52,12 @@ def get_device(values, **kwargs):
     return ZwaveFan(values)
 
 
-class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
+class ZwaveFan(ZWaveDeviceEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
     def __init__(self, values):
         """Initialize the Z-Wave fan device."""
-        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self.update_properties()
 
     def update_properties(self):

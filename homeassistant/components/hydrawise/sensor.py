@@ -1,18 +1,14 @@
-"""
-Support for Hydrawise sprinkler.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.hydrawise/
-"""
+"""Support for Hydrawise sprinkler sensors."""
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.hydrawise import (
-    DATA_HYDRAWISE, HydrawiseEntity, DEVICE_MAP, DEVICE_MAP_INDEX, SENSORS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+import homeassistant.helpers.config_validation as cv
+
+from . import (
+    DATA_HYDRAWISE, DEVICE_MAP, DEVICE_MAP_INDEX, SENSORS, HydrawiseEntity)
 
 DEPENDENCIES = ['hydrawise']
 

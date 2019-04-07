@@ -1,13 +1,9 @@
-"""
-Support for Tellstick switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.tellstick/
-"""
-from homeassistant.components.tellstick import (
-    DEFAULT_SIGNAL_REPETITIONS, ATTR_DISCOVER_DEVICES,
-    ATTR_DISCOVER_CONFIG, DATA_TELLSTICK, TellstickDevice)
+"""Support for Tellstick switches."""
 from homeassistant.helpers.entity import ToggleEntity
+
+from . import (
+    ATTR_DISCOVER_CONFIG, ATTR_DISCOVER_DEVICES, DATA_TELLSTICK,
+    DEFAULT_SIGNAL_REPETITIONS, TellstickDevice)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

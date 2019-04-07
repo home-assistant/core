@@ -1,25 +1,20 @@
-"""
-Support for Nest thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.nest/
-"""
+"""Support for Nest thermostats."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.nest import (
-    DATA_NEST, SIGNAL_NEST_UPDATE, DOMAIN as NEST_DOMAIN)
-from homeassistant.components.climate import (
-    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO, ClimateDevice,
-    PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
-    SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE)
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate.const import (
+    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, STATE_AUTO, STATE_COOL,
+    STATE_ECO, STATE_HEAT, SUPPORT_AWAY_MODE, SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF)
+    ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, STATE_OFF, STATE_ON, TEMP_CELSIUS,
+    TEMP_FAHRENHEIT)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DATA_NEST, DOMAIN as NEST_DOMAIN, SIGNAL_NEST_UPDATE
 
 DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)

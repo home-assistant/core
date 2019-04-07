@@ -1,9 +1,4 @@
-"""
-Provide functionality to keep track of devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/device_tracker/
-"""
+"""Provide functionality to keep track of devices."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -291,7 +286,7 @@ class DeviceTracker:
         """
         if mac is None and dev_id is None:
             raise HomeAssistantError('Neither mac or device id passed in')
-        elif mac is not None:
+        if mac is not None:
             mac = str(mac).upper()
             device = self.mac_to_dev.get(mac)
             if not device:
@@ -580,6 +575,7 @@ class Device(RestoreEntity):
             return
         self._state = state.state
         self.last_update_home = (state.state == STATE_HOME)
+        self.last_seen = dt_util.utcnow()
 
         for attr, var in (
                 (ATTR_SOURCE_TYPE, 'source_type'),

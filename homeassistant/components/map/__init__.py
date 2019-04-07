@@ -1,9 +1,4 @@
-"""
-Provides a map panel for showing device locations.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/map/
-"""
+"""Support for showing device locations."""
 DOMAIN = 'map'
 
 

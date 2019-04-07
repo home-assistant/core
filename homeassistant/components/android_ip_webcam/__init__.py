@@ -1,9 +1,4 @@
-"""
-Support for IP Webcam, an Android app that acts as a full-featured webcam.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/android_ip_webcam/
-"""
+"""Support for Android IP Webcam."""
 import asyncio
 import logging
 from datetime import timedelta
@@ -23,7 +18,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
-from homeassistant.components.camera.mjpeg import (
+from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL)
 
 REQUIREMENTS = ['pydroid-ipcam==0.8']

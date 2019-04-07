@@ -1,8 +1,4 @@
-"""Allows the LiteJet lighting system to be controlled by Home Assistant.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/litejet/
-"""
+"""Support for the LiteJet lighting system."""
 import logging
 
 import voluptuous as vol
@@ -24,7 +20,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_EXCLUDE_NAMES): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_INCLUDE_SWITCHES, default=False): cv.boolean
+        vol.Optional(CONF_INCLUDE_SWITCHES, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 

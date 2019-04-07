@@ -1,14 +1,9 @@
-"""
-Support for Lutron switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.lutron/
-"""
+"""Support for Lutron switches."""
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.lutron import (
-    LutronDevice, LUTRON_DEVICES, LUTRON_CONTROLLER)
+
+from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 

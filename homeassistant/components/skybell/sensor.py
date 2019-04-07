@@ -1,20 +1,15 @@
-"""
-Sensor support for Skybell Doorbells.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.skybell/
-"""
+"""Sensor support for Skybell Doorbells."""
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.skybell import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
+
+from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 DEPENDENCIES = ['skybell']
 

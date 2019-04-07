@@ -1,20 +1,20 @@
-"""
-Interfaces with Egardia/Woonveilig alarm control panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.egardia/
-"""
+"""Interfaces with Egardia/Woonveilig alarm control panel."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.egardia import (
-    EGARDIA_DEVICE, ATTR_DISCOVER_DEVICES)
+from homeassistant.const import STATE_OFF, STATE_ON
+
+from . import ATTR_DISCOVER_DEVICES, EGARDIA_DEVICE
+
 _LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['egardia']
-EGARDIA_TYPE_TO_DEVICE_CLASS = {'IR Sensor': 'motion',
-                                'Door Contact': 'opening',
-                                'IR': 'motion'}
+
+EGARDIA_TYPE_TO_DEVICE_CLASS = {
+    'IR Sensor': 'motion',
+    'Door Contact': 'opening',
+    'IR': 'motion',
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -25,7 +25,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         return
 
     disc_info = discovery_info[ATTR_DISCOVER_DEVICES]
-    # multiple devices here!
+
     async_add_entities(
         (
             EgardiaBinarySensor(

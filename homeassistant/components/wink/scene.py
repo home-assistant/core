@@ -1,13 +1,9 @@
-"""
-Support for Wink scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.wink/
-"""
+"""Support for Wink scenes."""
 import logging
 
 from homeassistant.components.scene import Scene
-from homeassistant.components.wink import DOMAIN, WinkDevice
+
+from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 

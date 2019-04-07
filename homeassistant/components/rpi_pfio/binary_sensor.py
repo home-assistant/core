@@ -1,9 +1,4 @@
-"""
-Support for binary sensor using the PiFace Digital I/O module on a RPi.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.rpi_pfio/
-"""
+"""Support for binary sensor using the PiFace Digital I/O module on a RPi."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for Freebox devices (Freebox v6 and Freebox mini 4K).
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/freebox/
-"""
+"""Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 import socket
 
@@ -14,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aiofreepybox==0.0.6']
+REQUIREMENTS = ['aiofreepybox==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +21,7 @@ FREEBOX_CONFIG_FILE = 'freebox.conf'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port
+        vol.Required(CONF_PORT): cv.port,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -65,7 +60,7 @@ async def async_setup_freebox(hass, config, host, port):
         }
 
     token_file = hass.config.path(FREEBOX_CONFIG_FILE)
-    api_version = 'v1'
+    api_version = 'v4'
 
     fbx = Freepybox(
         app_desc=app_desc,
@@ -83,6 +78,8 @@ async def async_setup_freebox(hass, config, host, port):
             hass, 'sensor', DOMAIN, {}, config))
         hass.async_create_task(async_load_platform(
             hass, 'device_tracker', DOMAIN, {}, config))
+        hass.async_create_task(async_load_platform(
+            hass, 'switch', DOMAIN, {}, config))
 
         async def close_fbx(event):
             """Close Freebox connection on HA Stop."""

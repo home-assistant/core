@@ -1,17 +1,13 @@
-"""
-Sensor for USPS packages.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.usps/
-"""
+"""Sensor for USPS packages."""
 from collections import defaultdict
 import logging
 
-from homeassistant.components.usps import DATA_USPS
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DATE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.util.dt import now
+
+from . import DATA_USPS
 
 _LOGGER = logging.getLogger(__name__)
 

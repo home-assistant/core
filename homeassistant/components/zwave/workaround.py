@@ -1,4 +1,4 @@
-"""Zwave workarounds."""
+"""Z-Wave workarounds."""
 from . import const
 
 # Manufacturers

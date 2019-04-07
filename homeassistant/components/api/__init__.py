@@ -1,9 +1,4 @@
-"""
-Rest API for Home Assistant.
-
-For more details about the RESTful API, please refer to the documentation at
-https://developers.home-assistant.io/docs/en/external_api_rest.html
-"""
+"""Rest API for Home Assistant."""
 import asyncio
 import json
 import logging
@@ -173,11 +168,11 @@ class APIDiscoveryView(HomeAssistantView):
     def get(self, request):
         """Get discovery information."""
         hass = request.app['hass']
-        needs_auth = hass.config.api.api_password is not None
         return self.json({
             ATTR_BASE_URL: hass.config.api.base_url,
             ATTR_LOCATION_NAME: hass.config.location_name,
-            ATTR_REQUIRES_API_PASSWORD: needs_auth,
+            # always needs authentication
+            ATTR_REQUIRES_API_PASSWORD: True,
             ATTR_VERSION: __version__,
         })
 

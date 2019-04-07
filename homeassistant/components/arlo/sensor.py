@@ -1,25 +1,19 @@
-"""
-This component provides HA sensor for Netgear Arlo IP cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.arlo/
-"""
+"""Sensor support for Netgear Arlo IP cameras."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.arlo import (
-    CONF_ATTRIBUTION, DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY)
-
+    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+
+from . import ATTRIBUTION, DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,7 +176,7 @@ class ArloSensor(Entity):
         """Return the device state attributes."""
         attrs = {}
 
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         attrs['brand'] = DEFAULT_BRAND
 
         if self._sensor_type != 'total_cameras':

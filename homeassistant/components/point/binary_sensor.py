@@ -1,18 +1,12 @@
-"""
-Support for Minut Point.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.point/
-"""
-
+"""Support for Minut Point binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
-from homeassistant.components.point import MinutPointEntity
-from homeassistant.components.point.const import (
-    DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import MinutPointEntity
+from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +50,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, device_id, device_class):
-        """Initialize the entity."""
+        """Initialize the binary sensor."""
         super().__init__(point_client, device_id, device_class)
 
         self._async_unsub_hook_dispatcher_connect = None
@@ -64,7 +58,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
         self._is_on = None
 
     async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
+        """Call when entity is added to HOme Assistant."""
         await super().async_added_to_hass()
         self._async_unsub_hook_dispatcher_connect = async_dispatcher_connect(
             self.hass, SIGNAL_WEBHOOK, self._webhook_event)
@@ -75,8 +69,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
         if self._async_unsub_hook_dispatcher_connect:
             self._async_unsub_hook_dispatcher_connect()
 
-    @callback
-    def _update_callback(self):
+    async def _update_callback(self):
         """Update the value of the sensor."""
         if not self.is_updated:
             return
@@ -92,7 +85,8 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
         if self.device.webhook != webhook:
             return
         _type = data.get('event', {}).get('type')
-        if _type not in self._events:
+        _device_id = data.get('event', {}).get('device_id')
+        if _type not in self._events or _device_id != self.device.device_id:
             return
         _LOGGER.debug("Recieved webhook: %s", _type)
         if _type == self._events[0]:

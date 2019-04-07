@@ -1,22 +1,17 @@
-"""
-Support for Prometheus metrics export.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/prometheus/
-"""
+"""Support for Prometheus metrics export."""
 import logging
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
+from homeassistant import core as hacore
+from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN,
-    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT)
-from homeassistant import core as hacore
-import homeassistant.helpers.config_validation as cv
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONTENT_TYPE_TEXT_PLAIN,
+    EVENT_STATE_CHANGED, TEMP_FAHRENHEIT)
 from homeassistant.helpers import entityfilter, state as state_helper
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
 REQUIREMENTS = ['prometheus_client==0.2.0']
@@ -109,6 +104,16 @@ class PrometheusMetrics:
             return self._metrics[metric]
 
     @staticmethod
+    def state_as_number(state):
+        """Return a state casted to a float."""
+        try:
+            value = state_helper.state_as_number(state)
+        except ValueError:
+            _LOGGER.warning("Could not convert %s to float", state)
+            value = 0
+        return value
+
+    @staticmethod
     def _labels(state):
         return {
             'entity': state.entity_id,
@@ -135,7 +140,7 @@ class PrometheusMetrics:
             self.prometheus_client.Gauge,
             'State of the binary sensor (0/1)',
         )
-        value = state_helper.state_as_number(state)
+        value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_input_boolean(self, state):
@@ -144,7 +149,7 @@ class PrometheusMetrics:
             self.prometheus_client.Gauge,
             'State of the input boolean (0/1)',
         )
-        value = state_helper.state_as_number(state)
+        value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_device_tracker(self, state):
@@ -153,7 +158,16 @@ class PrometheusMetrics:
             self.prometheus_client.Gauge,
             'State of the device tracker (0/1)',
         )
-        value = state_helper.state_as_number(state)
+        value = self.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
+    def _handle_person(self, state):
+        metric = self._metric(
+            'person_state',
+            self.prometheus_client.Gauge,
+            'State of the person (0/1)',
+        )
+        value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_light(self, state):
@@ -167,7 +181,7 @@ class PrometheusMetrics:
             if 'brightness' in state.attributes:
                 value = state.attributes['brightness'] / 255.0
             else:
-                value = state_helper.state_as_number(state)
+                value = self.state_as_number(state)
             value = value * 100
             metric.labels(**self._labels(state)).set(value)
         except ValueError:
@@ -179,7 +193,7 @@ class PrometheusMetrics:
             self.prometheus_client.Gauge,
             'State of the lock (0/1)',
         )
-        value = state_helper.state_as_number(state)
+        value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_climate(self, state):
@@ -205,7 +219,7 @@ class PrometheusMetrics:
             'climate_state', self.prometheus_client.Gauge,
             'State of the thermostat (0/1)')
         try:
-            value = state_helper.state_as_number(state)
+            value = self.state_as_number(state)
             metric.labels(**self._labels(state)).set(value)
         except ValueError:
             pass
@@ -228,7 +242,7 @@ class PrometheusMetrics:
                                state.entity_id)
 
         try:
-            value = state_helper.state_as_number(state)
+            value = self.state_as_number(state)
             if unit == TEMP_FAHRENHEIT:
                 value = fahrenheit_to_celsius(value)
             _metric.labels(**self._labels(state)).set(value)
@@ -245,7 +259,7 @@ class PrometheusMetrics:
         )
 
         try:
-            value = state_helper.state_as_number(state)
+            value = self.state_as_number(state)
             metric.labels(**self._labels(state)).set(value)
         except ValueError:
             pass

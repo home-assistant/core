@@ -1,9 +1,4 @@
-"""
-Integrate with Google Domains.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/google_domains/
-"""
+"""Support for Google Domains."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -62,8 +57,8 @@ async def async_setup(hass, config):
     return True
 
 
-async def _update_google_domains(hass, session, domain, user, password,
-                                 timeout):
+async def _update_google_domains(
+        hass, session, domain, user, password, timeout):
     """Update Google Domains."""
     url = UPDATE_URL.format(user, password)
 

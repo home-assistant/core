@@ -1,21 +1,16 @@
-"""
-Support for ISY994 binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.isy994/
-"""
-import logging
+"""Support for ISY994 binary sensors."""
 from datetime import timedelta
+import logging
 from typing import Callable
 
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
-from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
-from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
-                                             ISYDevice)
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+
+from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 

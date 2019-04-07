@@ -1,16 +1,12 @@
-"""
-This platform provides support for sensor data from RainMachine.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rainmachine/
-"""
+"""This platform provides support for sensor data from RainMachine."""
 import logging
 
-from homeassistant.components.rainmachine import (
-    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, SENSOR_UPDATE_TOPIC, SENSORS,
-    RainMachineEntity)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
+    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, SENSOR_UPDATE_TOPIC, SENSORS,
+    RainMachineEntity)
 
 DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)

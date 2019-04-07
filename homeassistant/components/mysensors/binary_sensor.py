@@ -1,9 +1,4 @@
-"""
-Support for MySensors binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.mysensors/
-"""
+"""Support for MySensors binary sensors."""
 from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES, DOMAIN, BinarySensorDevice)

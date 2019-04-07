@@ -1,9 +1,4 @@
-"""
-Support for WeMo sensors.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.wemo/
-"""
+"""Support for WeMo binary sensors."""
 import asyncio
 import logging
 

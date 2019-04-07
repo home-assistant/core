@@ -1,12 +1,8 @@
-"""
-Support for MySensors sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mysensors/
-"""
+"""Support for MySensors sensors."""
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, POWER_WATT,
+                                 ENERGY_KILO_WATT_HOUR)
 
 SENSORS = {
     'V_TEMP': [None, 'mdi:thermometer'],
@@ -17,8 +13,8 @@ SENSORS = {
     'V_WEIGHT': ['kg', 'mdi:weight-kilogram'],
     'V_DISTANCE': ['m', 'mdi:ruler'],
     'V_IMPEDANCE': ['ohm', None],
-    'V_WATT': ['W', None],
-    'V_KWH': ['kWh', None],
+    'V_WATT': [POWER_WATT, None],
+    'V_KWH': [ENERGY_KILO_WATT_HOUR, None],
     'V_FLOW': ['m', None],
     'V_VOLUME': ['m³', None],
     'V_VOLTAGE': ['V', 'mdi:flash'],

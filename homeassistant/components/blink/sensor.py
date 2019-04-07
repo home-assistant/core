@@ -1,14 +1,10 @@
-"""
-Support for Blink system camera sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.blink/
-"""
+"""Support for Blink system camera sensors."""
 import logging
 
-from homeassistant.components.blink import BLINK_DATA, SENSORS
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.helpers.entity import Entity
+
+from . import BLINK_DATA, SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 

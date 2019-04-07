@@ -1,9 +1,4 @@
-"""
-Support for Canary.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/canary/
-"""
+"""Support for Canary devices."""
 import logging
 from datetime import timedelta
 

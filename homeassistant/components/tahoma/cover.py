@@ -1,16 +1,11 @@
-"""
-Support for Tahoma cover - shutters etc.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.tahoma/
-"""
+"""Support for Tahoma cover - shutters etc."""
 from datetime import timedelta
 import logging
 
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.util.dt import utcnow
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
-from homeassistant.components.tahoma import (
-    DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
+
+from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
 DEPENDENCIES = ['tahoma']
 

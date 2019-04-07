@@ -1,9 +1,4 @@
-"""
-Support for AquaLogic component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/aqualogic/
-"""
+"""Support for AquaLogic devices."""
 from datetime import timedelta
 import logging
 import time
@@ -20,15 +15,15 @@ REQUIREMENTS = ["aqualogic==1.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "aqualogic"
-UPDATE_TOPIC = DOMAIN + "_update"
-CONF_UNIT = "unit"
+DOMAIN = 'aqualogic'
+UPDATE_TOPIC = DOMAIN + '_update'
+CONF_UNIT = 'unit'
 RECONNECT_INTERVAL = timedelta(seconds=10)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port
+        vol.Required(CONF_PORT): cv.port,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -39,10 +34,8 @@ def setup(hass, config):
     port = config[DOMAIN][CONF_PORT]
     processor = AquaLogicProcessor(hass, host, port)
     hass.data[DOMAIN] = processor
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
-                         processor.start_listen)
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                         processor.shutdown)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, processor.start_listen)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, processor.shutdown)
     _LOGGER.debug("AquaLogicProcessor %s:%i initialized", host, port)
     return True
 
@@ -85,8 +78,7 @@ class AquaLogicProcessor(threading.Thread):
             if self._shutdown:
                 return
 
-            _LOGGER.error("Connection to %s:%d lost",
-                          self._host, self._port)
+            _LOGGER.error("Connection to %s:%d lost", self._host, self._port)
             time.sleep(RECONNECT_INTERVAL.seconds)
 
     @property

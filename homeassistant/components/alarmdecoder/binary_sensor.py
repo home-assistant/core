@@ -1,17 +1,12 @@
-"""
-Support for AlarmDecoder zone states- represented as binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.alarmdecoder/
-"""
+"""Support for AlarmDecoder zone states- represented as binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.alarmdecoder import (
-    ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE,
-    CONF_ZONE_RFID, CONF_ZONE_LOOP, SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE,
-    SIGNAL_RFX_MESSAGE, SIGNAL_REL_MESSAGE, CONF_RELAY_ADDR,
-    CONF_RELAY_CHAN)
+
+from . import (
+    CONF_RELAY_ADDR, CONF_RELAY_CHAN, CONF_ZONE_LOOP, CONF_ZONE_NAME,
+    CONF_ZONE_RFID, CONF_ZONE_TYPE, CONF_ZONES, SIGNAL_REL_MESSAGE,
+    SIGNAL_RFX_MESSAGE, SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE, ZONE_SCHEMA)
 
 DEPENDENCIES = ['alarmdecoder']
 

@@ -1,9 +1,4 @@
-"""
-Support for IOTA wallets.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/iota/
-"""
+"""Support for IOTA wallets."""
 import logging
 from datetime import timedelta
 

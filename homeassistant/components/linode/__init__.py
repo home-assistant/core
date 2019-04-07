@@ -1,17 +1,12 @@
-"""
-Support for Linode.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/linode/
-"""
-import logging
+"""Support for Linode."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['linode-api==4.1.9b1']
 

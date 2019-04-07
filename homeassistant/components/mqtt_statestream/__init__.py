@@ -1,9 +1,4 @@
-"""
-Publish simple item state changes via MQTT.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt_statestream/
-"""
+"""Publish simple item state changes via MQTT."""
 import json
 
 import voluptuous as vol
@@ -20,6 +15,7 @@ import homeassistant.helpers.config_validation as cv
 CONF_BASE_TOPIC = 'base_topic'
 CONF_PUBLISH_ATTRIBUTES = 'publish_attributes'
 CONF_PUBLISH_TIMESTAMPS = 'publish_timestamps'
+
 DEPENDENCIES = ['mqtt']
 DOMAIN = 'mqtt_statestream'
 
@@ -28,16 +24,16 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
             vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
+                vol.All(cv.ensure_list, [cv.string]),
         }),
         vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
             vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
+                vol.All(cv.ensure_list, [cv.string]),
         }),
         vol.Required(CONF_BASE_TOPIC): valid_publish_topic,
         vol.Optional(CONF_PUBLISH_ATTRIBUTES, default=False): cv.boolean,
-        vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean
+        vol.Optional(CONF_PUBLISH_TIMESTAMPS, default=False): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 

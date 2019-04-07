@@ -1,18 +1,14 @@
-"""
-Support for AquaLogic switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.aqualogic/
-"""
+"""Support for AquaLogic switches."""
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
-import homeassistant.components.aqualogic as aq
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import (CONF_MONITORED_CONDITIONS)
+import homeassistant.helpers.config_validation as cv
+
+from . import DOMAIN, UPDATE_TOPIC
 
 DEPENDENCIES = ['aqualogic']
 
@@ -37,12 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the switch platform."""
     switches = []
 
-    processor = hass.data[aq.DOMAIN]
+    processor = hass.data[DOMAIN]
     for switch_type in config.get(CONF_MONITORED_CONDITIONS):
         switches.append(AquaLogicSwitch(processor, switch_type))
 
@@ -106,7 +102,7 @@ class AquaLogicSwitch(SwitchDevice):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            aq.UPDATE_TOPIC, self.async_update_callback)
+            UPDATE_TOPIC, self.async_update_callback)
 
     @callback
     def async_update_callback(self):

@@ -1,9 +1,4 @@
-"""
-Support for Keene Electronics IR-IP devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/remote.kira/
-"""
+"""Support for Keene Electronics IR-IP devices."""
 import functools as ft
 import logging
 
@@ -15,7 +10,7 @@ DOMAIN = 'kira'
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_REMOTE = "remote"
+CONF_REMOTE = 'remote'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

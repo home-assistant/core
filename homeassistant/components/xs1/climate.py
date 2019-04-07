@@ -1,16 +1,12 @@
-"""
-Support for XS1 climate devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.xs1/
-"""
+"""Support for XS1 climate devices."""
 from functools import partial
 import logging
 
-from homeassistant.components.climate import (
-    ATTR_TEMPERATURE, ClimateDevice, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.xs1 import (
-    ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity)
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE
+
+from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
 
 DEPENDENCIES = ['xs1']
 _LOGGER = logging.getLogger(__name__)
@@ -19,8 +15,8 @@ MIN_TEMP = 8
 MAX_TEMP = 25
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the XS1 thermostat platform."""
     from xs1_api_client.api_constants import ActuatorType
 
@@ -37,7 +33,6 @@ async def async_setup_platform(hass, config, async_add_entities,
             for sensor in sensors:
                 if actuator_name in sensor.name():
                     matching_sensor = sensor
-
                     break
 
             thermostat_entities.append(

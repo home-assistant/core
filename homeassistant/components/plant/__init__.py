@@ -1,24 +1,21 @@
-"""Component to monitor plants.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/plant/
-"""
-import logging
-from datetime import datetime, timedelta
+"""Support for monitoring plants."""
 from collections import deque
+from datetime import datetime, timedelta
+import logging
+
 import voluptuous as vol
 
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.const import (
-    STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
-    CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.components import group
+from homeassistant.components.recorder.util import execute, session_scope
+from homeassistant.const import (
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, CONF_SENSORS, STATE_OK,
+    STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS)
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.components.recorder.util import session_scope, execute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,8 +108,8 @@ ENABLE_LOAD_HISTORY = False
 
 async def async_setup(hass, config):
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass,
-                                group_name=GROUP_NAME_ALL_PLANTS)
+    component = EntityComponent(
+        _LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_PLANTS)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
@@ -204,8 +201,8 @@ class Plant(Entity):
             self._conductivity = int(float(value))
         elif reading == READING_BRIGHTNESS:
             self._brightness = int(float(value))
-            self._brightness_history.add_measurement(self._brightness,
-                                                     new_state.last_updated)
+            self._brightness_history.add_measurement(
+                self._brightness, new_state.last_updated)
         else:
             raise HomeAssistantError(
                 "Unknown reading from sensor {}: {}".format(entity_id, value))
@@ -260,8 +257,8 @@ class Plant(Entity):
             # only use the database if it's configured
             self.hass.async_add_job(self._load_history_from_db)
 
-        async_track_state_change(self.hass, list(self._sensormap),
-                                 self.state_changed)
+        async_track_state_change(
+            self.hass, list(self._sensormap), self.state_changed)
 
         for entity_id in self._sensormap:
             state = self.hass.states.get(entity_id)
@@ -277,11 +274,11 @@ class Plant(Entity):
         start_date = datetime.now() - timedelta(days=self._conf_check_days)
         entity_id = self._readingmap.get(READING_BRIGHTNESS)
         if entity_id is None:
-            _LOGGER.debug("not reading the history from the database as "
-                          "there is no brightness sensor configured.")
+            _LOGGER.debug("Not reading the history from the database as "
+                          "there is no brightness sensor configured")
             return
 
-        _LOGGER.debug("initializing values for %s from the database",
+        _LOGGER.debug("Initializing values for %s from the database",
                       self._name)
         with session_scope(hass=self.hass) as session:
             query = session.query(States).filter(
@@ -298,7 +295,7 @@ class Plant(Entity):
                         int(state.state), state.last_updated)
                 except ValueError:
                     pass
-        _LOGGER.debug("initializing from database completed")
+        _LOGGER.debug("Initializing from database completed")
         self.async_schedule_update_ha_state()
 
     @property
@@ -366,7 +363,7 @@ class DailyHistory:
             elif day > current_day:
                 self._add_day(day, value)
             else:
-                _LOGGER.warning('received old measurement, not storing it!')
+                _LOGGER.warning("Received old measurement, not storing it")
 
         self.max = max(self._max_dict.values())
 

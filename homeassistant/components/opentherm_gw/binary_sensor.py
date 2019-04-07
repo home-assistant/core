@@ -1,17 +1,14 @@
-"""
-Support for OpenTherm Gateway binary sensors.
-
-For more details about this platform, please refer to the documentation at
-http://home-assistant.io/components/binary_sensor.opentherm_gw/
-"""
+"""Support for OpenTherm Gateway binary sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, ENTITY_ID_FORMAT)
-from homeassistant.components.opentherm_gw import (
-    DATA_GW_VARS, DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE)
+    ENTITY_ID_FORMAT, BinarySensorDevice)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
+
+from . import DATA_GW_VARS, DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE
+
+_LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_COLD = 'cold'
 DEVICE_CLASS_HEAT = 'heat'
@@ -19,11 +16,9 @@ DEVICE_CLASS_PROBLEM = 'problem'
 
 DEPENDENCIES = ['opentherm_gw']
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenTherm Gateway binary sensors."""
     if discovery_info is None:
         return

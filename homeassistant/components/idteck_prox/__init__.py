@@ -1,8 +1,4 @@
-"""Component for interfacing RFK101 proximity card readers.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/idteck_prox/
-"""
+"""Component for interfacing RFK101 proximity card readers."""
 import logging
 
 import voluptuous as vol
@@ -41,7 +37,7 @@ def setup(hass, config):
             reader.connect()
             hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, reader.stop)
         except OSError as error:
-            _LOGGER.error('Error creating "%s". %s', name, error)
+            _LOGGER.error("Error creating %s. %s", name, error)
             return False
 
     return True

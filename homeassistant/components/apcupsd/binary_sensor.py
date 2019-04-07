@@ -1,9 +1,4 @@
-"""
-Support for tracking the online status of a UPS.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.apcupsd/
-"""
+"""Support for tracking the online status of a UPS."""
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (

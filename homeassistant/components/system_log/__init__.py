@@ -1,9 +1,4 @@
-"""
-Support for system log.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/system_log/
-"""
+"""Support for system log."""
 from collections import OrderedDict
 import logging
 import re
@@ -93,18 +88,18 @@ class LogEntry:
 
     def __init__(self, record, stack, source):
         """Initialize a log entry."""
-        self.timestamp = record.created
+        self.first_occured = self.timestamp = record.created
         self.level = record.levelname
         self.message = record.getMessage()
+        self.exception = ''
+        self.root_cause = None
         if record.exc_info:
             self.exception = ''.join(
                 traceback.format_exception(*record.exc_info))
             _, _, tb = record.exc_info  # pylint: disable=invalid-name
             # Last line of traceback contains the root cause of the exception
-            self.root_cause = str(traceback.extract_tb(tb)[-1])
-        else:
-            self.exception = ''
-            self.root_cause = None
+            if traceback.extract_tb(tb):
+                self.root_cause = str(traceback.extract_tb(tb)[-1])
         self.source = source
         self.count = 1
 
@@ -130,9 +125,13 @@ class DedupStore(OrderedDict):
         key = str(entry.hash())
 
         if key in self:
-            entry.count = self[key].count + 1
+            # Update stored entry
+            self[key].count += 1
+            self[key].timestamp = entry.timestamp
 
-        self[key] = entry
+            self.move_to_end(key)
+        else:
+            self[key] = entry
 
         if len(self) > self.maxlen:
             # Removes the first record which should also be the oldest

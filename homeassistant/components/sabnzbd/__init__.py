@@ -1,9 +1,4 @@
-"""
-Support for monitoring an SABnzbd NZB client.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sabnzbd/
-"""
+"""Support for monitoring an SABnzbd NZB client."""
 import logging
 from datetime import timedelta
 

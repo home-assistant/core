@@ -1,9 +1,4 @@
-"""
-Support for status output of APCUPSd via its Network Information Server (NIS).
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/apcupsd/
-"""
+"""Support for APCUPSd via its Network Information Server (NIS)."""
 import logging
 from datetime import timedelta
 

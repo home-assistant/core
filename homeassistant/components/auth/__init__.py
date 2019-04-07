@@ -127,6 +127,7 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User, Credentials, \
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+from homeassistant.loader import bind_hass
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.auth import async_sign_path
@@ -184,9 +185,17 @@ RESULT_TYPE_USER = 'user'
 _LOGGER = logging.getLogger(__name__)
 
 
+@bind_hass
+def create_auth_code(hass, client_id: str, user: User) -> str:
+    """Create an authorization code to fetch tokens."""
+    return hass.data[DOMAIN](client_id, user)
+
+
 async def async_setup(hass, config):
     """Component to allow users to login."""
     store_result, retrieve_result = _create_auth_code_store()
+
+    hass.data[DOMAIN] = store_result
 
     hass.http.register_view(TokenView(retrieve_result))
     hass.http.register_view(LinkUserView(retrieve_result))
@@ -450,6 +459,7 @@ async def websocket_current_user(
             'id': user.id,
             'name': user.name,
             'is_owner': user.is_owner,
+            'is_admin': user.is_admin,
             'credentials': [{'auth_provider_type': c.auth_provider_type,
                              'auth_provider_id': c.auth_provider_id}
                             for c in user.credentials],

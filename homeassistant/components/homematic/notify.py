@@ -1,20 +1,16 @@
-"""
-Notification support for Homematic.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.homematic/
-"""
+"""Notification support for Homematic."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    BaseNotificationService, PLATFORM_SCHEMA, ATTR_DATA)
+    ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.homematic import (
-    DOMAIN, SERVICE_SET_DEVICE_VALUE, ATTR_ADDRESS, ATTR_CHANNEL, ATTR_PARAM,
-    ATTR_VALUE, ATTR_INTERFACE)
 import homeassistant.helpers.template as template_helper
+
+from . import (
+    ATTR_ADDRESS, ATTR_CHANNEL, ATTR_INTERFACE, ATTR_PARAM, ATTR_VALUE, DOMAIN,
+    SERVICE_SET_DEVICE_VALUE)
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ["homematic"]
