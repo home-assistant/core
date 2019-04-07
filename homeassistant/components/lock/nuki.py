@@ -10,7 +10,8 @@ import requests
 
 import voluptuous as vol
 
-from homeassistant.components.lock import DOMAIN, PLATFORM_SCHEMA, LockDevice
+from homeassistant.components.lock import (
+    DOMAIN, PLATFORM_SCHEMA, LockDevice, SUPPORT_OPEN)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
@@ -35,7 +36,6 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 NUKI_DATA = 'nuki'
 
 SERVICE_LOCK_N_GO = 'nuki_lock_n_go'
-SERVICE_UNLATCH = 'nuki_unlatch'
 SERVICE_CHECK_CONNECTION = "nuki_check_connection"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -51,10 +51,6 @@ LOCK_N_GO_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_UNLATCH, default=False): cv.boolean
 })
 
-UNLATCH_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
-})
-
 CHECK_CONNECTION_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
@@ -65,9 +61,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     from pynuki import NukiBridge
     bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN),
-        config.get(CONF_PORT), config.get(CONF_TIMEOUT))
+                        config.get(CONF_PORT), config.get(CONF_TIMEOUT))
     add_entities([NukiLock(lock, config.get(CONF_UNLATCH_TO_UNLOCK))
-        for lock in bridge.locks])
+                  for lock in bridge.locks])
 
     def service_handler(service):
         """Service handler for nuki services."""
@@ -84,17 +80,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if service.service == SERVICE_LOCK_N_GO:
                 unlatch = service.data[ATTR_UNLATCH]
                 lock.lock_n_go(unlatch=unlatch)
-            elif service.service == SERVICE_UNLATCH:
-                lock.unlatch()
             elif service.service == SERVICE_CHECK_CONNECTION:
                 lock.check_connection()
 
     hass.services.register(
         DOMAIN, SERVICE_LOCK_N_GO, service_handler,
         schema=LOCK_N_GO_SERVICE_SCHEMA)
-    hass.services.register(
-        DOMAIN, SERVICE_UNLATCH, service_handler,
-        schema=UNLATCH_SERVICE_SCHEMA)
     hass.services.register(
         DOMAIN, SERVICE_CHECK_CONNECTION, service_handler,
         schema=CHECK_CONNECTION_SERVICE_SCHEMA)
@@ -138,6 +129,11 @@ class NukiLock(LockDevice):
             ATTR_LOCK_REACHABLE: self._lock_reachable}
         return data
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN
+
     def update(self):
         """Update the nuki lock properties."""
         try:
@@ -160,6 +156,10 @@ class NukiLock(LockDevice):
         else:
             self._nuki_lock.unlock()
 
+    def open(self, **kwargs):
+        """Open the door latch."""
+        self._nuki_lock.unlatch()
+
     def lock_n_go(self, unlatch=False, **kwargs):
         """Lock and go.
 
@@ -167,10 +167,6 @@ class NukiLock(LockDevice):
         amount of time depending on the lock settings) and relock.
         """
         self._nuki_lock.lock_n_go(unlatch, kwargs)
-
-    def unlatch(self, **kwargs):
-        """Unlatch door."""
-        self._nuki_lock.unlatch()
 
     def check_connection(self, **kwargs):
         """Update the nuki lock properties."""
