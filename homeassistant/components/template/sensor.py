@@ -232,20 +232,26 @@ class SensorTemplate(Entity):
         if self._manual_last_changed_template is not None:
             manual_last_changed = self._manual_last_changed_template\
                 .async_render()
+            # Checks for None and empty Strings
             if manual_last_changed:
                 if isinstance(manual_last_changed, str):
                     manual_last_changed = dt_util\
                         .parse_datetime(manual_last_changed)
                 setattr(self, '_manual_last_changed', manual_last_changed)
+            else:
+                setattr(self, '_manual_last_changed', None)
 
         if self._manual_last_updated_template is not None:
             manual_last_updated = self._manual_last_updated_template\
                 .async_render()
+            # Checks for None and empty Strings
             if manual_last_updated:
                 if isinstance(manual_last_updated, str):
                     manual_last_updated = dt_util\
                         .parse_datetime(manual_last_updated)
                 setattr(self, '_manual_last_updated', manual_last_updated)
+            else:
+                setattr(self, '_manual_last_updated', None)
 
         for property_name, template in (
                 ('_icon', self._icon_template),
