@@ -66,6 +66,7 @@ omit =
     homeassistant/components/bmw_connected_drive/*
     homeassistant/components/bom/sensor.py
     homeassistant/components/bom/weather.py
+    homeassistant/components/bomradarcam/bomradarcam.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/broadlink/sensor.py
     homeassistant/components/broadlink/switch.py
