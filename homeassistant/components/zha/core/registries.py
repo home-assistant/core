@@ -34,9 +34,9 @@ CUSTOM_CLUSTER_MAPPINGS = {}
 EVENT_RELAY_CLUSTERS = []
 NO_SENSOR_CLUSTERS = []
 BINDABLE_CLUSTERS = []
-BINARY_SENSOR_CLUSTERS = []
-LIGHT_CLUSTERS = []
-SWITCH_CLUSTERS = []
+BINARY_SENSOR_CLUSTERS = set()
+LIGHT_CLUSTERS = set()
+SWITCH_CLUSTERS = set()
 COMPONENT_CLUSTERS = {
     BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
     LIGHT: LIGHT_CLUSTERS,
@@ -282,15 +282,15 @@ def establish_device_mappings():
         }],
     })
 
-    BINARY_SENSOR_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
-    BINARY_SENSOR_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
-    BINARY_SENSOR_CLUSTERS.append(zcl.clusters.security.IasZone.cluster_id)
-    BINARY_SENSOR_CLUSTERS.append(
+    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
+    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
+    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.security.IasZone.cluster_id)
+    BINARY_SENSOR_CLUSTERS.add(
         zcl.clusters.measurement.OccupancySensing.cluster_id)
-    BINARY_SENSOR_CLUSTERS.append(SMARTTHINGS_ACCELERATION_CLUSTER)
+    BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
 
-    LIGHT_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
-    LIGHT_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
-    LIGHT_CLUSTERS.append(zcl.clusters.lighting.Color.cluster_id)
+    LIGHT_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
+    LIGHT_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
+    LIGHT_CLUSTERS.add(zcl.clusters.lighting.Color.cluster_id)
 
-    SWITCH_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
+    SWITCH_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
