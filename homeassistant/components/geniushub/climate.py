@@ -154,11 +154,16 @@ class GeniusClimate(ClimateDevice):
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
+        from geniushubclient.const import (
+            IMODE_TO_MODE as ZONE_MODE,
+            zone_modes as ZONE_MODES,
+        )
         _LOGGER.warn("self(%s [%s]).async_set_operation_mode(operation_mode=%s",
                      self._id, self._name, operation_mode)                       # TODO: remove this
 
-        if operation_mode == STATE_HEAT:
-            temperature = self._objref.override['setpoint']
+        override_mode = GH_STATE_TO_HA.get(ZONE_MODE[ZONE_MODES.Boost])
+        if operation_mode == override_mode:  # STATE_MANUAL
+            temperature = self._objref.temperature
             await self._objref.set_override(3600, temperature)  # 1 hour
         else:
             await self._objref.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
