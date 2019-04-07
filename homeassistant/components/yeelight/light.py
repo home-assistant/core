@@ -135,6 +135,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device = hass.data[DATA_YEELIGHT][discovery_info[CONF_HOST]]
     _LOGGER.debug("Adding %s", device.name)
 
+    model = device.model
     custom_effects = _parse_custom_effects(discovery_info[CONF_CUSTOM_EFFECTS])
 
     lights = []
@@ -142,13 +143,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def _lights_setup_helper(klass):
         lights.append(klass(device, custom_effects=custom_effects))
 
-    if device.type == BulbType.White:
+    if model in ('mono', 'mono1') or device.type == BulbType.White:
         _lights_setup_helper(YeelightGenericLight)
-    elif device.type == BulbType.Color:
+    elif model in ('color', 'color1', 'color2', 'strip1', 'bslamp1') or \
+            device.type == BulbType.Color:
         _lights_setup_helper(YeelightColorLight)
-    elif device.type == BulbType.WhiteTemp:
+    elif model in ('ceiling1', 'ceiling2', 'ceiling3') or \
+            device.type == BulbType.WhiteTemp:
         _lights_setup_helper(YeelightWhiteTempLight)
-    elif device.type == BulbType.WhiteTempMood:
+    elif model == 'ceiling4' or device.type == BulbType.WhiteTempMood:
         _lights_setup_helper(YeelightWithAmbientLight)
         _lights_setup_helper(YeelightAmbientLight)
     else:
