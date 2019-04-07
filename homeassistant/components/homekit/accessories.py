@@ -112,8 +112,9 @@ class HomeAccessory(Accessory):
             self.hass, self.entity_id, self.update_state_callback)
 
         if self._linked_battery_sensor:
+            battery_state = self.hass.states.get(self.linked_battery_sensor)
             self.hass.async_add_job(self.update_linked_battery, None, None,
-                                    state)
+                                    battery_state)
             async_track_state_change(
                 self.hass, self._linked_battery_sensor,
                 self.update_linked_battery)
