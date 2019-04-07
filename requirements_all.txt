@@ -235,7 +235,7 @@ blockchain==1.4.4
 # homeassistant.components.bme680
 # bme680==1.0.5
 
-# homeassistant.components.bomradarcam
+# homeassistant.components.bom
 bomradarloop==0.1.2
 
 # homeassistant.components.amazon_polly
