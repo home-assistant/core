@@ -1,12 +1,11 @@
 """Support for esphome sensors."""
 import logging
-import math
 from typing import TYPE_CHECKING, Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeEntity, platform_async_setup_entry, esphome_state_property
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
@@ -54,13 +53,9 @@ class EsphomeSensor(EsphomeEntity):
         """Return the icon."""
         return self._static_info.icon
 
-    @property
+    @esphome_state_property
     def state(self) -> Optional[str]:
         """Return the state of the entity."""
-        if self._state is None:
-            return None
-        if math.isnan(self._state.state):
-            return None
         return '{:.{prec}f}'.format(
             self._state.state, prec=self._static_info.accuracy_decimals)
 
@@ -86,9 +81,7 @@ class EsphomeTextSensor(EsphomeEntity):
         """Return the icon."""
         return self._static_info.icon
 
-    @property
+    @esphome_state_property
     def state(self) -> Optional[str]:
         """Return the state of the entity."""
-        if self._state is None:
-            return None
         return self._state.state
