@@ -143,8 +143,19 @@ async def test_webhook_handle_get_config(hass, create_registrations,  # noqa: F4
         json['whitelist_external_dirs'] = \
             set(json['whitelist_external_dirs'])
 
-    expected_dict = hass.config.as_dict()
-    expected_dict['theme_color'] = '#03A9F4'  # Default frontend theme color
+    hass_config = hass.config.as_dict()
+
+    expected_dict = {
+        'latitude': hass_config['latitude'],
+        'longitude': hass_config['longitude'],
+        'elevation': hass_config['elevation'],
+        'unit_system': hass_config['unit_system'],
+        'location_name': hass_config['location_name'],
+        'time_zone': hass_config['time_zone'],
+        'components': hass_config['components'],
+        'version': hass_config['version'],
+        'theme_color': '#03A9F4',  # Default frontend theme color
+    }
 
     assert expected_dict == json
 

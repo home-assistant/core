@@ -278,7 +278,14 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
         hass_config = hass.config.as_dict()
 
-        hass_config['theme_color'] = MANIFEST_JSON['theme_color']
-
-        return webhook_response(hass_config, registration=registration,
-                                headers=headers)
+        return webhook_response({
+            'latitude': hass_config['latitude'],
+            'longitude': hass_config['longitude'],
+            'elevation': hass_config['elevation'],
+            'unit_system': hass_config['unit_system'],
+            'location_name': hass_config['location_name'],
+            'time_zone': hass_config['time_zone'],
+            'components': hass_config['components'],
+            'version': hass_config['version'],
+            'theme_color': MANIFEST_JSON['theme_color'],
+        }, registration=registration, headers=headers)
