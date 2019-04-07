@@ -90,7 +90,7 @@ class HomeAccessory(Accessory):
         self._support_battery_level = True
         serv_battery = self.add_preload_service(SERV_BATTERY_SERVICE)
         self._char_battery = serv_battery.configure_char(
-            CHAR_BATTERY_LEVEL, value=battery_level)
+            CHAR_BATTERY_LEVEL, value=0)
         self._char_charging = serv_battery.configure_char(
             CHAR_CHARGING_STATE, value=2)
         self._char_low_battery = serv_battery.configure_char(
