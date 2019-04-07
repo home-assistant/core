@@ -1,0 +1,10 @@
+{
+  "domain": "bomradarcam",
+  "name": "BOM Radar Camera",
+  "documentation": "https://www.home-assistant.io/components/bomradaram",
+  "requirements": [
+    "bomradarloop==0.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
