@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.yeelight import DATA_YEELIGHT, DATA_UPDATED
+from . import DATA_YEELIGHT, DATA_UPDATED
 
 DEPENDENCIES = ['yeelight']
 
