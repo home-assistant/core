@@ -251,7 +251,7 @@ python-forecastio==1.4.0
 python-nest==4.1.0
 
 # homeassistant.components.awair
-python_awair==0.0.3
+python_awair==0.0.4
 
 # homeassistant.components.tradfri
 pytradfri[async]==6.0.1
