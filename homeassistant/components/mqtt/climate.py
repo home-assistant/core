@@ -137,14 +137,14 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
     vol.Optional(CONF_TEMP_STEP, default=1.0): vol.Coerce(float),
     vol.Optional(CONF_TEMPERATURE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_TEMPERATURE_STATE_TEMPLATE): cv.template,
-    vol.Optional(CONF_TEMPERATURE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_TEMPERATURE_LOW_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_TEMPERATURE_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TEMPERATURE_HIGH_COMMAND_TOPIC):
         mqtt.valid_publish_topic,
     vol.Optional(CONF_TEMPERATURE_HIGH_STATE_TOPIC):
         mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_TEMPERATURE_LOW_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_TEMPERATURE_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_TEMPERATURE_STATE_TEMPLATE): cv.template,
+    vol.Optional(CONF_TEMPERATURE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
