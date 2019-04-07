@@ -37,12 +37,15 @@ def _validate_schema(config):
     return config
 
 
+LOCATIONS_MSG = "Set '{}' to one of: {}".format(
+    CONF_LOCATION, ', '.join(sorted(LOCATIONS)))
 XOR_MSG = "Specify exactly one of '{}' or '{}'".format(CONF_ID, CONF_LOCATION)
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({
         vol.Exclusive(CONF_ID, 'xor', msg=XOR_MSG): cv.string,
-        vol.Exclusive(CONF_LOCATION, 'xor', msg=XOR_MSG): vol.In(LOCATIONS),
+        vol.Exclusive(CONF_LOCATION, 'xor', msg=XOR_MSG): vol.In(
+            LOCATIONS, msg=LOCATIONS_MSG),
         vol.Optional(CONF_DELTA): cv.positive_int,
         vol.Optional(CONF_FRAMES): cv.positive_int,
         vol.Optional(CONF_NAME): cv.string,
