@@ -171,7 +171,7 @@ def _setup_device(hass, _, ipaddr, device_config):
     device = YeelightDevice(hass, ipaddr, device_config)
 
     devices[ipaddr] = device
-    hass.add_job(device.update)
+    hass.add_job(device.setup)
 
 
 class YeelightDevice:
@@ -187,6 +187,7 @@ class YeelightDevice:
         self._name = config.get(CONF_NAME)
         self._model = config.get(CONF_MODEL)
         self._bulb_device = yeelight.Bulb(self.ipaddr, model=self._model)
+        self._device_type = None
         self._available = False
         self._initialized = False
 
@@ -216,6 +217,11 @@ class YeelightDevice:
         return self._available
 
     @property
+    def model(self):
+        """Return configured device model."""
+        return self._model
+
+    @property
     def is_nightlight_enabled(self) -> bool:
         """Return true / false if nightlight is currently enabled."""
         if self.bulb is None:
@@ -226,7 +232,10 @@ class YeelightDevice:
     @property
     def is_nightlight_supported(self) -> bool:
         """Return true / false if nightlight is supported."""
-        return self._active_mode is not None
+        if self.model:
+            return self.bulb.get_model_specs().get('night_light', False)
+        else:
+            return self._active_mode is not None
 
     @property
     def _active_mode(self):
@@ -235,7 +244,10 @@ class YeelightDevice:
     @property
     def type(self):
         """Return bulb type."""
-        return self.bulb.bulb_type
+        if not self._device_type:
+            self._device_type = self.bulb.bulb_type
+
+        return self._device_type
 
     def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn on device."""
@@ -256,8 +268,9 @@ class YeelightDevice:
             _LOGGER.error("Unable to turn the bulb off: %s, %s: %s",
                           self.ipaddr, self.name, ex)
 
-    def update(self):
+    def _update_properties(self):
         """Read new properties from the device."""
+
         from yeelight import BulbException
 
         if not self.bulb:
@@ -266,13 +279,30 @@ class YeelightDevice:
         try:
             self.bulb.get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
-            if not self._initialized:
-                self._initialized = True
-                dispatcher_send(self._hass, DEVICE_INITIALIZED, self.ipaddr)
         except BulbException as ex:
             if self._available:  # just inform once
                 _LOGGER.error("Unable to update device %s, %s: %s",
                               self.ipaddr, self.name, ex)
             self._available = False
 
+        return self._available
+
+    def _initialize_if_not_already(self):
+        if self._initialized:
+            return
+
+        self._initialized = True
+        dispatcher_send(self._hass, DEVICE_INITIALIZED, self.ipaddr)
+
+    def update(self):
+        """Update device properties and send data updated signal."""
+        if self._update_properties():
+            self._initialize_if_not_already()
+
         dispatcher_send(self._hass, DATA_UPDATED.format(self._ipaddr))
+
+    def setup(self):
+        """Initialize device and send initialized signal."""
+
+        if self._update_properties() or self.model:
+            self._initialize_if_not_already()
