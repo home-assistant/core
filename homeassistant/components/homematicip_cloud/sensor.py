@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         AsyncHeatingThermostat, AsyncHeatingThermostatCompact,
         AsyncTemperatureHumiditySensorWithoutDisplay,
         AsyncTemperatureHumiditySensorDisplay, AsyncMotionDetectorIndoor,
-        AsyncTemperatureHumiditySensorOutdoor,
+        AsyncMotionDetectorOutdoor, AsyncTemperatureHumiditySensorOutdoor,
         AsyncMotionDetectorPushButton, AsyncLightSensor,
         AsyncPlugableSwitchMeasuring, AsyncBrandSwitchMeasuring,
         AsyncFullFlushSwitchMeasuring, AsyncWeatherSensor,
@@ -49,6 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
         if isinstance(device, (AsyncMotionDetectorIndoor,
+                               AsyncMotionDetectorOutdoor,
                                AsyncMotionDetectorPushButton,
                                AsyncWeatherSensor,
                                AsyncWeatherSensorPlus,
