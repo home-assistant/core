@@ -1,5 +1,6 @@
 """Support for esphome sensors."""
 import logging
+import math
 from typing import TYPE_CHECKING, Optional
 
 from homeassistant.config_entries import ConfigEntry
@@ -56,6 +57,8 @@ class EsphomeSensor(EsphomeEntity):
     @esphome_state_property
     def state(self) -> Optional[str]:
         """Return the state of the entity."""
+        if math.isnan(self._state.state):
+            return None
         return '{:.{prec}f}'.format(
             self._state.state, prec=self._static_info.accuracy_decimals)
 
