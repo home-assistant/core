@@ -145,17 +145,25 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         see_payload = {
             ATTR_DEV_ID: registration[ATTR_DEVICE_ID],
-            ATTR_LOCATION_NAME: data.get(ATTR_LOCATION_NAME),
-            ATTR_GPS: data.get(ATTR_GPS),
-            ATTR_GPS_ACCURACY: data.get(ATTR_GPS_ACCURACY),
-            ATTR_BATTERY: data.get(ATTR_BATTERY),
-            ATTR_ATTRIBUTES: {
-                ATTR_SPEED: data.get(ATTR_SPEED),
-                ATTR_ALTITUDE: data.get(ATTR_ALTITUDE),
-                ATTR_COURSE: data.get(ATTR_COURSE),
-                ATTR_VERTICAL_ACCURACY: data.get(ATTR_VERTICAL_ACCURACY),
-            }
+            ATTR_GPS: data[ATTR_GPS],
+            ATTR_GPS_ACCURACY: data[ATTR_GPS_ACCURACY],
         }
+
+        for key in (ATTR_LOCATION_NAME, ATTR_BATTERY):
+            value = data.get(key)
+            if value is not None:
+                see_payload[key] = value
+
+        attrs = {}
+
+        for key in (ATTR_ALTITUDE, ATTR_COURSE,
+                    ATTR_SPEED, ATTR_VERTICAL_ACCURACY):
+            value = data.get(key)
+            if value is not None:
+                attrs[key] = value
+
+        if attrs:
+            see_payload[ATTR_ATTRIBUTES] = attrs
 
         try:
             await hass.services.async_call(DT_DOMAIN,
