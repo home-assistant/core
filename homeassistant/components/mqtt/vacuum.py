@@ -102,45 +102,44 @@ DEFAULT_PAYLOAD_LOCATE = 'locate'
 DEFAULT_PAYLOAD_START_PAUSE = 'start_pause'
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
+    vol.Optional(CONF_BATTERY_LEVEL_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_CHARGING_TEMPLATE): cv.template,
+    vol.Optional(CONF_CHARGING_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_CLEANING_TEMPLATE): cv.template,
+    vol.Optional(CONF_CLEANING_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    vol.Optional(CONF_DOCKED_TEMPLATE): cv.template,
+    vol.Optional(CONF_DOCKED_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_ERROR_TEMPLATE): cv.template,
+    vol.Optional(CONF_ERROR_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_FAN_SPEED_LIST, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
+    vol.Optional(CONF_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS):
-        vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-    vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    vol.Optional(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_PAYLOAD_TURN_ON,
-                 default=DEFAULT_PAYLOAD_TURN_ON): cv.string,
-    vol.Optional(CONF_PAYLOAD_TURN_OFF,
-                 default=DEFAULT_PAYLOAD_TURN_OFF): cv.string,
-    vol.Optional(CONF_PAYLOAD_RETURN_TO_BASE,
-                 default=DEFAULT_PAYLOAD_RETURN_TO_BASE): cv.string,
-    vol.Optional(CONF_PAYLOAD_STOP,
-                 default=DEFAULT_PAYLOAD_STOP): cv.string,
     vol.Optional(CONF_PAYLOAD_CLEAN_SPOT,
                  default=DEFAULT_PAYLOAD_CLEAN_SPOT): cv.string,
     vol.Optional(CONF_PAYLOAD_LOCATE,
                  default=DEFAULT_PAYLOAD_LOCATE): cv.string,
+    vol.Optional(CONF_PAYLOAD_RETURN_TO_BASE,
+                 default=DEFAULT_PAYLOAD_RETURN_TO_BASE): cv.string,
     vol.Optional(CONF_PAYLOAD_START_PAUSE,
                  default=DEFAULT_PAYLOAD_START_PAUSE): cv.string,
-    vol.Optional(CONF_BATTERY_LEVEL_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
-    vol.Optional(CONF_CHARGING_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_CHARGING_TEMPLATE): cv.template,
-    vol.Optional(CONF_CLEANING_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_CLEANING_TEMPLATE): cv.template,
-    vol.Optional(CONF_DOCKED_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_DOCKED_TEMPLATE): cv.template,
-    vol.Optional(CONF_ERROR_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_ERROR_TEMPLATE): cv.template,
-    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-    vol.Optional(CONF_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
-    vol.Optional(CONF_SET_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_FAN_SPEED_LIST, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
+    vol.Optional(CONF_PAYLOAD_TURN_OFF,
+                 default=DEFAULT_PAYLOAD_TURN_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_TURN_ON,
+                 default=DEFAULT_PAYLOAD_TURN_ON): cv.string,
     vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_SET_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS):
+        vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    vol.Optional(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
@@ -206,14 +205,14 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     def _setup_from_config(self, config):
-        self._name = config.get(CONF_NAME)
-        supported_feature_strings = config.get(CONF_SUPPORTED_FEATURES)
+        self._name = config[CONF_NAME]
+        supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
         self._supported_features = strings_to_services(
             supported_feature_strings
         )
-        self._fan_speed_list = config.get(CONF_FAN_SPEED_LIST)
-        self._qos = config.get(mqtt.CONF_QOS)
-        self._retain = config.get(mqtt.CONF_RETAIN)
+        self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
+        self._qos = config[mqtt.CONF_QOS]
+        self._retain = config[mqtt.CONF_RETAIN]
 
         self._command_topic = config.get(mqtt.CONF_COMMAND_TOPIC)
         self._set_fan_speed_topic = config.get(CONF_SET_FAN_SPEED_TOPIC)
