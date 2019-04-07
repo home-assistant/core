@@ -1,9 +1,4 @@
-"""
-Support for real-time departure information for Rhein-Main public transport.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rmvtransport/
-"""
+"""Support for departure information for Rhein-Main public transport."""
 import asyncio
 import logging
 from datetime import timedelta

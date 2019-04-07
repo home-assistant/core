@@ -1,9 +1,4 @@
-"""
-Support for Nederlandse Spoorwegen public transport.
-
-For more details on this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nederlandse_spoorwegen/
-"""
+"""Support for Nederlandse Spoorwegen public transport."""
 from datetime import datetime, timedelta
 import logging
 

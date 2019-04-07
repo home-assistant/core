@@ -1,10 +1,4 @@
-"""
-Support for Baidu speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.baidu/
-"""
-
+"""Support for Baidu speech service."""
 import logging
 
 import voluptuous as vol

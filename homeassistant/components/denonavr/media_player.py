@@ -1,9 +1,4 @@
-"""
-Support for Denon AVR receivers using their HTTP interface.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.denon/
-"""
+"""Support for Denon AVR receivers using their HTTP interface."""
 
 from collections import namedtuple
 import logging

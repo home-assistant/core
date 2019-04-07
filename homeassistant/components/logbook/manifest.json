@@ -1,0 +1,11 @@
+{
+  "domain": "logbook",
+  "name": "Logbook",
+  "documentation": "https://www.home-assistant.io/components/logbook",
+  "requirements": [],
+  "dependencies": [
+    "frontend",
+    "recorder"
+  ],
+  "codeowners": []
+}

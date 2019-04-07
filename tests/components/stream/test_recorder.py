@@ -41,7 +41,7 @@ async def test_record_stream(hass, hass_client):
 
         stream.stop()
 
-        assert segments == 3
+        assert segments > 1
 
 
 async def test_recorder_timeout(hass, hass_client):

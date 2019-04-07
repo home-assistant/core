@@ -1,9 +1,4 @@
-"""
-Currency exchange rate support that comes from fixer.io.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fixer/
-"""
+"""Currency exchange rate support that comes from fixer.io."""
 from datetime import timedelta
 import logging
 

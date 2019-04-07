@@ -1,9 +1,4 @@
-"""
-Support for Lagute LW-12 WiFi LED Controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lw12wifi/
-"""
+"""Support for Lagute LW-12 WiFi LED Controller."""
 
 import logging
 

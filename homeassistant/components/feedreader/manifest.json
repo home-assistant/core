@@ -1,0 +1,10 @@
+{
+  "domain": "feedreader",
+  "name": "Feedreader",
+  "documentation": "https://www.home-assistant.io/components/feedreader",
+  "requirements": [
+    "feedparser-homeassistant==5.2.2.dev1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

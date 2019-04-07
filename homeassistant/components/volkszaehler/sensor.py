@@ -1,9 +1,4 @@
-"""
-Support for consuming values for the Volkszaehler API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.volkszaehler/
-"""
+"""Support for consuming values for the Volkszaehler API."""
 from datetime import timedelta
 import logging
 

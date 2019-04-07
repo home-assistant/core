@@ -1,9 +1,4 @@
-"""
-Interfaces with iAlarm control panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.ialarm/
-"""
+"""Interfaces with iAlarm control panels."""
 import logging
 import re
 

@@ -1,9 +1,4 @@
-"""
-Details about crypto currencies from CoinMarketCap.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.coinmarketcap/
-"""
+"""Details about crypto currencies from CoinMarketCap."""
 import logging
 from datetime import timedelta
 from urllib.error import HTTPError

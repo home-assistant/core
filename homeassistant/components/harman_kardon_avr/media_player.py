@@ -1,9 +1,4 @@
-"""
-Support for interface with an Harman/Kardon or JBL AVR.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.harman_kardon_avr/
-"""
+"""Support for interface with an Harman/Kardon or JBL AVR."""
 import logging
 
 import voluptuous as vol

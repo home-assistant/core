@@ -1,9 +1,4 @@
-"""
-Support for switches using GC100.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.gc100/
-"""
+"""Support for switches using GC100."""
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA

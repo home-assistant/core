@@ -1,9 +1,4 @@
-"""
-Support for the World Air Quality Index service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.waqi/
-"""
+"""Support for the World Air Quality Index service."""
 import asyncio
 import logging
 from datetime import timedelta

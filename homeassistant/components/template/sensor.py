@@ -1,9 +1,4 @@
-"""
-Allows the creation of a sensor that breaks out state_attributes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.template/
-"""
+"""Allows the creation of a sensor that breaks out state_attributes."""
 import logging
 from typing import Optional
 

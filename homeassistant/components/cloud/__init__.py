@@ -187,9 +187,9 @@ async def async_setup(hass, config):
             await cloud.remote.disconnect()
             await prefs.async_update(remote_enabled=False)
 
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler)
 
     await http_api.async_setup(hass)

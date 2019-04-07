@@ -10,8 +10,6 @@ from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_BOOST = 'Boost'
-
 HA_STATE_TO_HMIP = {
     STATE_AUTO: 'AUTOMATIC',
     STATE_MANUAL: 'MANUAL',

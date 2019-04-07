@@ -1,9 +1,4 @@
-"""
-Component that will help set the Dlib face detect processing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.dlib_face_detect/
-"""
+"""Component that will help set the Dlib face detect processing."""
 import logging
 import io
 

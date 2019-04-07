@@ -1,9 +1,4 @@
-"""
-Support for TPLink lights.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.tplink/
-"""
+"""Support for TPLink lights."""
 import logging
 import time
 

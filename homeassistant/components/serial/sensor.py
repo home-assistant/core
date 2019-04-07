@@ -1,9 +1,4 @@
-"""
-Support for reading data from a serial port.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.serial/
-"""
+"""Support for reading data from a serial port."""
 import logging
 import json
 

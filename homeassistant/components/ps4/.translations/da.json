@@ -25,6 +25,9 @@
                 },
                 "description": "Indtast dine PlayStation 4 oplysninger. For 'PIN' skal du navigere til 'Indstillinger' p\u00e5 din PlayStation 4 konsol. G\u00e5 derefter til 'Indstillinger for mobilapp-forbindelse' og v\u00e6lg 'Tilf\u00f8j enhed'. Indtast den PIN der vises.",
                 "title": "PlayStation 4"
+            },
+            "mode": {
+                "title": "PlayStation 4"
             }
         },
         "title": "PlayStation 4"

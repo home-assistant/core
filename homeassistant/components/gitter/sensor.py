@@ -1,9 +1,4 @@
-"""
-Support for displaying details about a Gitter.im chat room.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gitter/
-"""
+"""Support for displaying details about a Gitter.im chat room."""
 import logging
 
 import voluptuous as vol

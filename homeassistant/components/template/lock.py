@@ -1,9 +1,4 @@
-"""
-Support for locks which integrates with other components.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.template/
-"""
+"""Support for locks which integrates with other components."""
 import logging
 
 import voluptuous as vol
