@@ -134,7 +134,7 @@ def setup(hass, config):
     discovery.listen(hass, SERVICE_YEELIGHT, device_discovered)
 
     def update(event):
-        for device in yeelight_data.values():
+        for device in list(yeelight_data.values()):
             device.update()
 
     track_time_interval(
