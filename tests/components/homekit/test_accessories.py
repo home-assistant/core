@@ -108,7 +108,7 @@ async def test_battery_service(hass, hk_driver, caplog):
 
     acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2, None)
     acc.update_state = lambda x: None
-    assert acc._char_battery.value == 0
+    assert acc._char_battery.value == 50
     assert acc._char_low_battery.value == 0
     assert acc._char_charging.value == 2
 
@@ -138,7 +138,7 @@ async def test_battery_service(hass, hk_driver, caplog):
 
     acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2, None)
     acc.update_state = lambda x: None
-    assert acc._char_battery.value == 0
+    assert acc._char_battery.value == 10
     assert acc._char_low_battery.value == 0
     assert acc._char_charging.value == 2
 
