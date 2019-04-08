@@ -415,7 +415,7 @@ class MqttLightJson(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if ATTR_TRANSITION in kwargs:
             message['transition'] = int(kwargs[ATTR_TRANSITION])
 
-        if ATTR_BRIGHTNESS in kwargs:
+        if ATTR_BRIGHTNESS in kwargs and self._brightness is not None:
             message['brightness'] = int(
                 kwargs[ATTR_BRIGHTNESS] / float(DEFAULT_BRIGHTNESS_SCALE) *
                 self._config[CONF_BRIGHTNESS_SCALE])
