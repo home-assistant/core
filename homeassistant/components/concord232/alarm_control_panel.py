@@ -57,7 +57,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
         self._state = None
         self._name = name
-        self._code = code or None
+        self._code = code
         self._mode = mode
         self._url = url
         self._alarm = concord232_client.Client(self._url)
