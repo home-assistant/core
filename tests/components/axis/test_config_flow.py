@@ -26,9 +26,6 @@ async def test_configured_devices(hass):
 
 async def test_flow_works(hass):
     """Test that config flow works."""
-    flow = config_flow.AxisFlowHandler()
-    flow.hass = hass
-
     with patch('axis.AxisDevice') as mock_device:
         def mock_constructor(
                 loop, host, username, password, port, web_proto):
@@ -48,12 +45,23 @@ async def test_flow_works(hass):
         mock_device.vapix.load_params.return_value = Mock()
         mock_device.vapix.get_param.side_effect = mock_get_param
 
-        result = await flow.async_step_user(user_input={
-            config_flow.CONF_HOST: '1.2.3.4',
-            config_flow.CONF_USERNAME: 'user',
-            config_flow.CONF_PASSWORD: 'pass',
-            config_flow.CONF_PORT: 81
-        })
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={'source': 'user'}
+        )
+
+        assert result['type'] == 'form'
+        assert result['step_id'] == 'user'
+
+        result = await hass.config_entries.flow.async_configure(
+            result['flow_id'],
+            user_input={
+                config_flow.CONF_HOST: '1.2.3.4',
+                config_flow.CONF_USERNAME: 'user',
+                config_flow.CONF_PASSWORD: 'pass',
+                config_flow.CONF_PORT: 81
+            }
+        )
 
     assert result['type'] == 'create_entry'
     assert result['title'] == '{} - {}'.format(
@@ -162,15 +170,16 @@ async def test_flow_create_entry_more_entries(hass):
 
 async def test_discovery_flow(hass):
     """Test that discovery for new devices work."""
-    flow = config_flow.AxisFlowHandler()
-    flow.hass = hass
-
     with patch.object(axis, 'get_device', return_value=mock_coro(Mock())):
-        result = await flow.async_step_discovery(discovery_info={
-            config_flow.CONF_HOST: '1.2.3.4',
-            config_flow.CONF_PORT: 80,
-            'properties': {'macaddress': '1234'}
-        })
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            data={
+                config_flow.CONF_HOST: '1.2.3.4',
+                config_flow.CONF_PORT: 80,
+                'properties': {'macaddress': '1234'}
+            },
+            context={'source': 'discovery'}
+        )
 
     assert result['type'] == 'form'
     assert result['step_id'] == 'user'
@@ -181,9 +190,6 @@ async def test_discovery_flow_known_device(hass):
 
     This is legacy support from devices registered with configurator.
     """
-    flow = config_flow.AxisFlowHandler()
-    flow.hass = hass
-
     with patch('homeassistant.components.axis.config_flow.load_json',
                return_value={'1234ABCD': {
                    config_flow.CONF_HOST: '2.3.4.5',
@@ -209,21 +215,22 @@ async def test_discovery_flow_known_device(hass):
         mock_device.vapix.load_params.return_value = Mock()
         mock_device.vapix.get_param.side_effect = mock_get_param
 
-        result = await flow.async_step_discovery(discovery_info={
-            config_flow.CONF_HOST: '1.2.3.4',
-            config_flow.CONF_PORT: 80,
-            'hostname': 'name',
-            'properties': {'macaddress': '1234ABCD'}
-        })
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            data={
+                config_flow.CONF_HOST: '1.2.3.4',
+                config_flow.CONF_PORT: 80,
+                'hostname': 'name',
+                'properties': {'macaddress': '1234ABCD'}
+            },
+            context={'source': 'discovery'}
+        )
 
     assert result['type'] == 'create_entry'
 
 
 async def test_discovery_flow_already_configured(hass):
     """Test that discovery doesn't setup already configured devices."""
-    flow = config_flow.AxisFlowHandler()
-    flow.hass = hass
-
     entry = MockConfigEntry(
         domain=axis.DOMAIN,
         data={axis.CONF_DEVICE: {axis.config_flow.CONF_HOST: '1.2.3.4'},
@@ -231,34 +238,37 @@ async def test_discovery_flow_already_configured(hass):
     )
     entry.add_to_hass(hass)
 
-    result = await flow.async_step_discovery(discovery_info={
-        config_flow.CONF_HOST: '1.2.3.4',
-        config_flow.CONF_USERNAME: 'user',
-        config_flow.CONF_PASSWORD: 'pass',
-        config_flow.CONF_PORT: 81,
-        'properties': {'macaddress': '1234ABCD'}
-    })
-    print(result)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        data={
+            config_flow.CONF_HOST: '1.2.3.4',
+            config_flow.CONF_USERNAME: 'user',
+            config_flow.CONF_PASSWORD: 'pass',
+            config_flow.CONF_PORT: 80,
+            'hostname': 'name',
+            'properties': {'macaddress': '1234ABCD'}
+        },
+        context={'source': 'discovery'}
+    )
+
     assert result['type'] == 'abort'
+    assert result['reason'] == 'already_configured'
 
 
-async def test_discovery_flow_link_local_address(hass):
+async def test_discovery_flow_ignore_link_local_address(hass):
     """Test that discovery doesn't setup devices with link local addresses."""
-    flow = config_flow.AxisFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_discovery(discovery_info={
-        config_flow.CONF_HOST: '169.254.3.4'
-    })
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        data={config_flow.CONF_HOST: '169.254.3.4'},
+        context={'source': 'discovery'}
+    )
 
     assert result['type'] == 'abort'
+    assert result['reason'] == 'link_local_address'
 
 
 async def test_discovery_flow_bad_config_file(hass):
     """Test that discovery with bad config files abort."""
-    flow = config_flow.AxisFlowHandler()
-    flow.hass = hass
-
     with patch('homeassistant.components.axis.config_flow.load_json',
                return_value={'1234ABCD': {
                    config_flow.CONF_HOST: '2.3.4.5',
@@ -267,19 +277,21 @@ async def test_discovery_flow_bad_config_file(hass):
                    config_flow.CONF_PORT: 80}}), \
             patch('homeassistant.components.axis.config_flow.DEVICE_SCHEMA',
                   side_effect=config_flow.vol.Invalid('')):
-        result = await flow.async_step_discovery(discovery_info={
-            config_flow.CONF_HOST: '1.2.3.4',
-            'properties': {'macaddress': '1234ABCD'}
-        })
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            data={
+                config_flow.CONF_HOST: '1.2.3.4',
+                'properties': {'macaddress': '1234ABCD'}
+            },
+            context={'source': 'discovery'}
+        )
 
     assert result['type'] == 'abort'
+    assert result['reason'] == 'bad_config_file'
 
 
 async def test_import_flow_works(hass):
     """Test that import flow works."""
-    flow = config_flow.AxisFlowHandler()
-    flow.hass = hass
-
     with patch('axis.AxisDevice') as mock_device:
         def mock_constructor(
                 loop, host, username, password, port, web_proto):
@@ -299,13 +311,17 @@ async def test_import_flow_works(hass):
         mock_device.vapix.load_params.return_value = Mock()
         mock_device.vapix.get_param.side_effect = mock_get_param
 
-        result = await flow.async_step_import(import_config={
-            config_flow.CONF_HOST: '1.2.3.4',
-            config_flow.CONF_USERNAME: 'user',
-            config_flow.CONF_PASSWORD: 'pass',
-            config_flow.CONF_PORT: 81,
-            config_flow.CONF_NAME: 'name'
-        })
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            data={
+                config_flow.CONF_HOST: '1.2.3.4',
+                config_flow.CONF_USERNAME: 'user',
+                config_flow.CONF_PASSWORD: 'pass',
+                config_flow.CONF_PORT: 80,
+                config_flow.CONF_NAME: 'name'
+            },
+            context={'source': 'import'}
+        )
 
     assert result['type'] == 'create_entry'
     assert result['title'] == '{} - {}'.format(
@@ -315,7 +331,7 @@ async def test_import_flow_works(hass):
             config_flow.CONF_HOST: '1.2.3.4',
             config_flow.CONF_USERNAME: 'user',
             config_flow.CONF_PASSWORD: 'pass',
-            config_flow.CONF_PORT: 81
+            config_flow.CONF_PORT: 80
         },
         config_flow.CONF_MAC: axis_lib.vapix.VAPIX_SERIAL_NUMBER,
         config_flow.CONF_MODEL: axis_lib.vapix.VAPIX_MODEL_ID,
