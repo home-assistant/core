@@ -368,6 +368,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert 80 == state.attributes['white_value']
     assert (0.611, 0.375) == state.attributes['xy_color']
 
+
 async def test_sending_hs_color(hass, mqtt_mock):
     """Test light.turn_on with hs color sends hs color parameters."""
     assert await async_setup_component(hass, light.DOMAIN, {
@@ -478,15 +479,18 @@ async def test_sending_rgb_color_with_brightness(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls([
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 0, "g": 123, "b": 255}, "brightness": 50}',
+            '{"state": "ON", "color": {"r": 0, "g": 123, "b": 255},'
+            ' "brightness": 50}',
             0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 255, "g": 56, "b": 59}, "brightness": 50}',
+            '{"state": "ON", "color": {"r": 255, "g": 56, "b": 59},'
+            ' "brightness": 50}',
             0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 255, "g": 128, "b": 0}, "white_value": 80}',
+            '{"state": "ON", "color": {"r": 255, "g": 128, "b": 0},'
+            ' "white_value": 80}',
             0, False),
     ], any_order=True)
 
