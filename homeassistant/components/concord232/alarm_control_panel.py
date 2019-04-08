@@ -132,4 +132,3 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
         return check
-        
