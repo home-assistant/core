@@ -93,13 +93,13 @@ async def daikin_api_setup(hass, host):
             device = Appliance(host, session)
             await device.init()
     except asyncio.TimeoutError:
-        _LOGGER.error("Connection to Daikin timeout")
+        _LOGGER.debug("Connection to %s timed out", host)
         raise ConfigEntryNotReady
     except ClientConnectionError:
-        _LOGGER.error("ServerDisconected")
+        _LOGGER.debug("ClientConnectionError to %s", host)
         raise ConfigEntryNotReady
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unexpected error creating device")
+        _LOGGER.error("Unexpected error creating device %s", host)
         return None
 
     api = DaikinApi(device)
