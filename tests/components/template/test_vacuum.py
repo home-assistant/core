@@ -96,7 +96,7 @@ async def test_invalid_config(hass, calls):
 
 # Template tests #
 async def test_templates_with_entities(hass, calls):
-    """Test tempalates with values from other entities."""
+    """Test templates with values from other entities."""
     with assert_setup_component(1, 'vacuum'):
         assert await setup.async_setup_component(hass, 'vacuum', {
             'vacuum': {

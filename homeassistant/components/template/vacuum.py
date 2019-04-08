@@ -1,17 +1,16 @@
-"""
-Support for Template vacuums.
-"""
+"""Support for Template vacuums."""
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED, DOMAIN, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
-    SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
-    SUPPORT_STOP, SUPPORT_STATE, SUPPORT_START, StateVacuumDevice,
-    STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE, STATE_RETURNING,
-    STATE_ERROR)
+    ATTR_FAN_SPEED, DOMAIN, SERVICE_CLEAN_SPOT, SERVICE_LOCATE, SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE, SERVICE_SET_FAN_SPEED, SERVICE_START,
+    SERVICE_STOP, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
+    SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_STOP,
+    SUPPORT_STATE, SUPPORT_START, StateVacuumDevice, STATE_CLEANING,
+    STATE_DOCKED, STATE_PAUSED, STATE_IDLE, STATE_RETURNING, STATE_ERROR)
 from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, CONF_ENTITY_ID,
     MATCH_ALL, EVENT_HOMEASSISTANT_START, STATE_UNKNOWN)
@@ -26,13 +25,6 @@ CONF_VACUUMS = 'vacuums'
 CONF_BATTERY_LEVEL_TEMPLATE = 'battery_level_template'
 CONF_FAN_SPEED_LIST = 'fan_speeds'
 CONF_FAN_SPEED_TEMPLATE = 'fan_speed_template'
-CONF_START_ACTION = 'start'
-CONF_PAUSE_ACTION = 'pause'
-CONF_STOP_ACTION = 'stop'
-CONF_RETURN_TO_BASE_ACTION = 'return_to_base'
-CONF_CLEAN_SPOT_ACTION = 'clean_spot'
-CONF_LOCATE_ACTION = 'locate'
-CONF_SET_FAN_SPEED_ACTION = 'set_fan_speed'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _VALID_STATES = [STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE,
@@ -44,13 +36,13 @@ VACUUM_SCHEMA = vol.Schema({
     vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
     vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
 
-    vol.Required(CONF_START_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_PAUSE_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_STOP_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_RETURN_TO_BASE_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_CLEAN_SPOT_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_LOCATE_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_SET_FAN_SPEED_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+    vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
+    vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+    vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
+    vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
+    vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
+    vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
 
     vol.Optional(
         CONF_FAN_SPEED_LIST,
@@ -78,13 +70,13 @@ async def async_setup_platform(
         battery_level_template = device_config.get(CONF_BATTERY_LEVEL_TEMPLATE)
         fan_speed_template = device_config.get(CONF_FAN_SPEED_TEMPLATE)
 
-        start_action = device_config[CONF_START_ACTION]
-        pause_action = device_config.get(CONF_PAUSE_ACTION)
-        stop_action = device_config.get(CONF_STOP_ACTION)
-        return_to_base_action = device_config.get(CONF_RETURN_TO_BASE_ACTION)
-        clean_spot_action = device_config.get(CONF_CLEAN_SPOT_ACTION)
-        locate_action = device_config.get(CONF_LOCATE_ACTION)
-        set_fan_speed_action = device_config.get(CONF_SET_FAN_SPEED_ACTION)
+        start_action = device_config[SERVICE_START]
+        pause_action = device_config.get(SERVICE_PAUSE)
+        stop_action = device_config.get(SERVICE_STOP)
+        return_to_base_action = device_config.get(SERVICE_RETURN_TO_BASE)
+        clean_spot_action = device_config.get(SERVICE_CLEAN_SPOT)
+        locate_action = device_config.get(SERVICE_LOCATE)
+        set_fan_speed_action = device_config.get(SERVICE_SET_FAN_SPEED)
 
         fan_speed_list = device_config[CONF_FAN_SPEED_LIST]
 
