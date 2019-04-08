@@ -107,14 +107,14 @@ class LcnClimate(LcnDevice, ClimateDevice):
         """Turn on."""
         self._is_on = True
         self.address_connection.lock_regulator(self.regulator_id, False)
-        self.schedule_update_ha_state()
+        await self.async_update_ha_state()
 
     async def async_turn_off(self):
         """Turn off."""
         self._is_on = False
         self.address_connection.lock_regulator(self.regulator_id, True)
         self._target_temperature = None
-        self.schedule_update_ha_state()
+        await self.async_update_ha_state()
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
