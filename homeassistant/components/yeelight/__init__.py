@@ -295,6 +295,5 @@ class YeelightDevice:
 
     def setup(self):
         """Initialize device and send initialized signal."""
-
         if self._update_properties() or self.model:
             self._initialize_if_not_already()
