@@ -24,18 +24,20 @@ async def async_setup_platform(hass,
     somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
     config_options = discovery_info
     cover_list = []
-    mylink_status = await somfy_mylink.status_info()
+    try:
+        mylink_status = await somfy_mylink.status_info()
+    except TimeoutError:
+        _LOGGER.error("Unable to connect to the Somfy MyLink device, "
+                      "please check your settings")
+        return False
     for cover in mylink_status['result']:
+        entity_id = ENTITY_ID_FORMAT.format(slugify(cover['name']))
+        entity_config = discovery_info.get(entity_id, {})
+        default_reverse = discovery_info[CONF_DEFAULT_REVERSE]
         cover_config = {}
         cover_config['target_id'] = cover['targetID']
-        if config_options.get(CONF_DEFAULT_REVERSE):
-            cover_config['reverse'] = True
-        for config_entity, config_opt in config_options.items():
-            entity_id = ENTITY_ID_FORMAT.format(slugify(cover['name']))
-            if config_entity == entity_id:
-                for key, val in config_opt.items():
-                    cover_config[key] = val
         cover_config['name'] = cover['name']
+        cover_config['reverse'] = entity_config.get('reverse', default_reverse)
         cover_list.append(SomfyShade(somfy_mylink, **cover_config))
         _LOGGER.info('Adding Somfy Cover: %s with targetID %s',
                      cover_config['name'], cover_config['target_id'])
