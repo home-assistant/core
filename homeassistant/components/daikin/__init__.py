@@ -2,13 +2,13 @@
 import asyncio
 from datetime import timedelta
 import logging
-from socket import timeout
 
-import async_timeout
+from aiohttp import ClientConnectionError
+from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOSTS, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_HOSTS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
-REQUIREMENTS = ['pydaikin==1.3.1']
+REQUIREMENTS = ['pydaikin==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,11 +88,14 @@ async def daikin_api_setup(hass, host):
     from pydaikin.appliance import Appliance
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        with async_timeout.timeout(10):
+        with timeout(10, loop=hass.loop):
             device = Appliance(host, session)
             await device.init()
     except asyncio.TimeoutError:
-        _LOGGER.error("Connection to Daikin could not be established")
+        _LOGGER.error("Connection to Daikin timeout")
+        return None
+    except ClientConnectionError:
+        _LOGGER.error("ServerDisconected")
         return None
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Unexpected error creating device")
@@ -119,7 +122,7 @@ class DaikinApi:
         try:
             await self.device.update_status()
             self._available = True
-        except timeout:
+        except ClientConnectionError:
             _LOGGER.warning(
                 "Connection failed for %s", self.ip_address
             )
