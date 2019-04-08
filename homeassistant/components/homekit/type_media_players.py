@@ -86,7 +86,7 @@ class MediaPlayer(HomeAccessory):
                                       value=self.display_name)
             television.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
             self.chars[FEATURE_ON_OFF] = television.configure_char(
-                CHAR_ACTIVE, value=False, setter_callback=self.set_on_off)
+                CHAR_ACTIVE, setter_callback=self.set_on_off)
 
             if FEATURE_PLAY_PAUSE in feature_list:
                 self.chars[FEATURE_PLAY_PAUSE] \
@@ -129,27 +129,36 @@ class MediaPlayer(HomeAccessory):
                         CHAR_ACTIVE_IDENTIFIER,
                         setter_callback=self.set_input_source)
 
-                self.sources = self.hass.states.get(self.entity_id).attributes.get('source_list')
-                for index, source in enumerate(self.sources):
-                    input_service = self.add_preload_service(
-                                    SERV_INPUT_SOURCE,
-                                    [
-                                        CHAR_IDENTIFIER,
-                                        CHAR_NAME
-                                    ])
+                self.sources = self.hass.states.get(
+                    self.entity_id).attributes.get('source_list')
+                if self.sources:
+                    for index, source in enumerate(self.sources):
+                        input_service = self.add_preload_service(
+                                        SERV_INPUT_SOURCE,
+                                        [
+                                            CHAR_IDENTIFIER,
+                                            CHAR_NAME
+                                        ])
 
-                    input_service.configure_char(CHAR_CONFIGURED_NAME,
-                                                 value=source)
-                    input_service.configure_char(CHAR_NAME, value=source)
-                    input_service.configure_char(CHAR_IDENTIFIER, value=index)
-                    input_service.configure_char(CHAR_IS_CONFIGURED,
-                                                 value=True)
-                    input_type = 3 if "hdmi" in source.lower() else 0
-                    input_service.configure_char(CHAR_INPUT_SOURCE_TYPE,
-                                                 value=input_type)
-                    input_service.configure_char(CHAR_CURRENT_VISIBILITY_STATE,
-                                                 value=False)
-                    television.add_linked_service(input_service)
+                        input_service.configure_char(
+                            CHAR_CONFIGURED_NAME, value=source)
+                        input_service.configure_char(CHAR_NAME, value=source)
+                        input_service.configure_char(
+                            CHAR_IDENTIFIER, value=index)
+                        input_service.configure_char(
+                            CHAR_IS_CONFIGURED, value=True)
+                        input_type = 3 if "hdmi" in source.lower() else 0
+                        input_service.configure_char(CHAR_INPUT_SOURCE_TYPE,
+                                                     value=input_type)
+                        input_service.configure_char(
+                            CHAR_CURRENT_VISIBILITY_STATE, value=False)
+                        television.add_linked_service(input_service)
+                        _LOGGER.debug('%s: Added source %s.', self.entity_id,
+                                      source)
+                else:
+                    _LOGGER.warn('%s: Source list empty when setting up sources. Please check \
+                    to make sure your media_player is turned on.',
+                                 self.entity_id)
 
             self.set_primary_service(television)
             return
@@ -290,7 +299,7 @@ class MediaPlayer(HomeAccessory):
 
         if self.chars[FEATURE_SELECT_SOURCE]:
             sourceName = new_state.attributes.get(ATTR_INPUT_SOURCE)
-            if not self._flag[FEATURE_SELECT_SOURCE]:
+            if self.sources and not self._flag[FEATURE_SELECT_SOURCE]:
                 _LOGGER.debug(
                             '%s: Set current state for "select_source" to %s',
                             self.entity_id, sourceName)
