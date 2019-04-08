@@ -3,8 +3,7 @@ Cover Platform for the Somfy MyLink device supporting the Synergy JsonRPC API.
 """
 import logging
 
-from homeassistant.components.cover import (
-    SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_STOP, CoverDevice)
+from homeassistant.components.cover import CoverDevice
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
@@ -12,7 +11,6 @@ from . import CONF_DEFAULT_REVERSE, DATA_SOMFY_MYLINK
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['somfy_mylink']
-DEFAULT_SUPPORTED_FEATURES = (SUPPORT_OPEN | SUPPORT_STOP | SUPPORT_CLOSE)
 ENTITY_ID_FORMAT = 'cover.{}'
 
 
@@ -55,20 +53,13 @@ class SomfyShade(CoverDevice, RestoreEntity):
         self._name = name
         self._reverse = reverse
         self._device_class = device_class
-        self._closed = False
         self._state = None
         self._state_ts = None
-        self._supported_features = DEFAULT_SUPPORTED_FEATURES
 
     @property
     def name(self):
         """Return the name of the cover."""
         return self._name
-
-    @property
-    def is_closed(self):
-        """Return if the cover is closed."""
-        pass
 
     @property
     def device_class(self):
