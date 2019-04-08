@@ -159,7 +159,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
-        vol.Optional(CONF_NETWORK_KEY): cv.string,
+        vol.Optional(CONF_NETWORK_KEY):
+            vol.All(cv.string, vol.Match(r'(0x\w\w,\s?){15}0x\w\w')),
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
