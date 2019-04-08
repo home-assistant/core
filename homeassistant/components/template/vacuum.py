@@ -1,8 +1,5 @@
 """
 Support for Template vacuums.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum.template/
 """
 import logging
 
