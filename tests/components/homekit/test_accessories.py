@@ -155,6 +155,7 @@ async def test_battery_service(hass, hk_driver, caplog):
     assert acc._char_low_battery.value == 0
     assert acc._char_charging.value == 0
 
+
 async def test_linked_battery_sensor(hass, hk_driver, caplog):
     """Test battery service with linked_battery_sensor."""
     entity_id = 'homekit.accessory'
@@ -164,18 +165,14 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
 
     acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2,
                         {CONF_LINKED_BATTERY_SENSOR: linked_battery_entity_id})
-    acc.update_state = lambda x: None
-    assert acc._char_battery.value == 0
-    assert acc._char_low_battery.value == 0
-    assert acc._char_charging.value == 2
-
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
-    assert acc._char_battery.value == 50
-    assert acc._char_low_battery.value == 0
-    assert acc._char_charging.value == 2
+    hass.states.get(self.linked_battery_sensor).state == 50
+    hass.states.get(self.linked_battery_sensor).attributes \
+        .get(ATTR_BATTERY_CHARGING) is None
 
     hass.states.async_set(linked_battery_entity_id, 15, None)
+    hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 50})
     await hass.async_block_till_done()
     assert acc._char_battery.value == 15
     assert acc._char_low_battery.value == 1
@@ -191,6 +188,8 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
     # Test charging
     hass.states.async_set(linked_battery_entity_id, 10, {
         ATTR_BATTERY_CHARGING: True})
+    hass.states.async_set(entity_id, 25, {
+        ATTR_BATTERY_CHARGING: False})
     await hass.async_block_till_done()
 
     acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2,
@@ -213,31 +212,6 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
     assert acc._char_low_battery.value == 0
     assert acc._char_charging.value == 0
 
-    # Test override with linked battery sensor and existing battery attribute
-    hass.states.async_set(linked_battery_entity_id, 100, {
-        ATTR_BATTERY_CHARGING: False})
-    hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 50})
-    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2,
-                        {CONF_LINKED_BATTERY_SENSOR: linked_battery_entity_id})
-    acc.update_state = lambda x: None
-    assert acc._char_battery.value == 0
-    assert acc._char_low_battery.value == 0
-    assert acc._char_charging.value == 2
-
-    await hass.async_add_job(acc.run)
-    await hass.async_block_till_done()
-    assert acc._char_battery.value == 100
-    assert acc._char_low_battery.value == 0
-    assert acc._char_charging.value == 0
-
-    hass.states.async_set(linked_battery_entity_id, 50, {
-        ATTR_BATTERY_CHARGING: True})
-    hass.states.async_set(entity_id, 25, {
-        ATTR_BATTERY_CHARGING: False})
-    await hass.async_block_till_done()
-    assert acc._char_battery.value == 50
-    assert acc._char_low_battery.value == 0
-    assert acc._char_charging.value == 1
 
 async def test_call_service(hass, hk_driver, events):
     """Test call_service method."""

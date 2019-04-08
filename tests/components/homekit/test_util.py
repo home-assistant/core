@@ -26,6 +26,8 @@ def test_validate_entity_config():
     configs = [None, [], 'string', 12345,
                {'invalid_entity_id': {}}, {'demo.test': 1},
                {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR: None}},
+               {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
+                                       'switch.demo'}},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
                {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
                {'media_player.test': {CONF_FEATURE_LIST: [
@@ -43,15 +45,15 @@ def test_validate_entity_config():
     assert vec({'demo.test': {CONF_NAME: 'Name'}}) == \
         {'demo.test': {CONF_NAME: 'Name'}}
 
-    assert vec({'alarm_control_panel.demo': {}}) == \
-        {'alarm_control_panel.demo': {ATTR_CODE: None}}
-    assert vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}) == \
-        {'alarm_control_panel.demo': {ATTR_CODE: '1234'}}
-
     assert vec({'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
                                        'sensor.demo_battery'}}) == \
         {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
                                 'sensor.demo_battery'}}
+
+    assert vec({'alarm_control_panel.demo': {}}) == \
+        {'alarm_control_panel.demo': {ATTR_CODE: None}}
+    assert vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}) == \
+        {'alarm_control_panel.demo': {ATTR_CODE: '1234'}}
 
     assert vec({'lock.demo': {}}) == {'lock.demo': {ATTR_CODE: None}}
     assert vec({'lock.demo': {ATTR_CODE: '1234'}}) == \
