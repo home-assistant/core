@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "title": ""
+            }
+        },
+        "title": ""
+    }
+}

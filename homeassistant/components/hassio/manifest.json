@@ -1,0 +1,12 @@
+{
+  "domain": "hassio",
+  "name": "Hass.io",
+  "documentation": "https://www.home-assistant.io/hassio",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@home-assistant/hass-io"
+  ]
+}

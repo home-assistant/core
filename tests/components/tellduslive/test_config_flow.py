@@ -7,8 +7,9 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tellduslive import (
-    APPLICATION_NAME, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL, SCAN_INTERVAL,
+    APPLICATION_NAME, DOMAIN, KEY_SCAN_INTERVAL, SCAN_INTERVAL,
     config_flow)
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry, MockDependency, mock_coro
 
@@ -67,6 +68,7 @@ async def test_full_flow_implementation(hass, mock_tellduslive):
     result = await flow.async_step_discovery(['localhost', 'tellstick'])
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
+    assert len(flow._hosts) == 2
 
     result = await flow.async_step_user()
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
@@ -93,7 +95,7 @@ async def test_step_import(hass, mock_tellduslive):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import({
-        KEY_HOST: DOMAIN,
+        CONF_HOST: DOMAIN,
         KEY_SCAN_INTERVAL: 0,
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
@@ -105,7 +107,7 @@ async def test_step_import_add_host(hass, mock_tellduslive):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import({
-        KEY_HOST: 'localhost',
+        CONF_HOST: 'localhost',
         KEY_SCAN_INTERVAL: 0,
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
@@ -116,7 +118,7 @@ async def test_step_import_no_config_file(hass, mock_tellduslive):
     """Test that we trigger user with no config_file configuring from import."""
     flow = init_config_flow(hass)
 
-    result = await flow.async_step_import({ KEY_HOST: 'localhost', KEY_SCAN_INTERVAL: 0, })
+    result = await flow.async_step_import({ CONF_HOST: 'localhost', KEY_SCAN_INTERVAL: 0, })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
@@ -128,7 +130,7 @@ async def test_step_import_load_json_matching_host(hass, mock_tellduslive):
     with patch('homeassistant.components.tellduslive.config_flow.load_json',
                return_value={'tellduslive': {}}), \
             patch('os.path.isfile'):
-        result = await flow.async_step_import({ KEY_HOST: 'Cloud API', KEY_SCAN_INTERVAL: 0, })
+        result = await flow.async_step_import({ CONF_HOST: 'Cloud API', KEY_SCAN_INTERVAL: 0, })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
 
@@ -140,7 +142,7 @@ async def test_step_import_load_json(hass, mock_tellduslive):
     with patch('homeassistant.components.tellduslive.config_flow.load_json',
                return_value={'localhost': {}}), \
             patch('os.path.isfile'):
-        result = await flow.async_step_import({ KEY_HOST: 'localhost', KEY_SCAN_INTERVAL: SCAN_INTERVAL, })
+        result = await flow.async_step_import({ CONF_HOST: 'localhost', KEY_SCAN_INTERVAL: SCAN_INTERVAL, })
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['title'] == 'localhost'
     assert result['data']['host'] == 'localhost'
@@ -156,12 +158,14 @@ async def test_step_disco_no_local_api(hass, mock_tellduslive):
     result = await flow.async_step_discovery(['localhost', 'tellstick'])
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
+    assert len(flow._hosts) == 1
 
 
 async def test_step_auth(hass, mock_tellduslive):
     """Test that create cloud entity from auth."""
     flow = init_config_flow(hass)
 
+    await flow.async_step_auth()
     result = await flow.async_step_auth(['localhost', 'tellstick'])
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['title'] == 'Cloud API'
@@ -178,10 +182,11 @@ async def test_wrong_auth_flow_implementation(hass, mock_tellduslive):
     """Test wrong auth."""
     flow = init_config_flow(hass)
 
-    await flow.async_step_user()
+    await flow.async_step_auth()
     result = await flow.async_step_auth('')
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
+    assert result['errors']['base'] == 'auth_error'
 
 
 async def test_not_pick_host_if_only_one(hass, mock_tellduslive):
@@ -201,6 +206,14 @@ async def test_abort_if_timeout_generating_auth_url(hass, mock_tellduslive):
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'authorize_url_timeout'
 
+async def test_abort_no_auth_url(hass, mock_tellduslive):
+    """Test abort if generating authorize url returns none."""
+    flow = init_config_flow(hass)
+    flow._get_auth_url = Mock(return_value=False)
+
+    result = await flow.async_step_user()
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'authorize_url_fail'
 
 async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):
     """Test we abort if generating authorize url blows up."""
@@ -220,4 +233,4 @@ async def test_discovery_already_configured(hass, mock_tellduslive):
 
     result = await flow.async_step_discovery(['some-host', ''])
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result['reason'] == 'already_configured'
+    assert result['reason'] == 'already_setup'

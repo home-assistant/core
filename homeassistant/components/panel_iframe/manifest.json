@@ -1,0 +1,12 @@
+{
+  "domain": "panel_iframe",
+  "name": "Panel iframe",
+  "documentation": "https://www.home-assistant.io/components/panel_iframe",
+  "requirements": [],
+  "dependencies": [
+    "frontend"
+  ],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

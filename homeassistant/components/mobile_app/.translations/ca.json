@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Obre l\u2019aplicaci\u00f3 m\u00f2bil per configurar la integraci\u00f3 amb Home Assistant. Mira [la documentaci\u00f3]({apps_url}) per veure la llista d\u2019aplicacions compatibles."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vols configurar el component d'aplicaci\u00f3 m\u00f2bil?",
+                "title": "Aplicaci\u00f3 m\u00f2bil"
+            }
+        },
+        "title": "Aplicaci\u00f3 m\u00f2bil"
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Sie k\u00f6nnen nur ein Point-Konto konfigurieren.",
+            "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "external_setup": "Pointt erfolgreich von einem anderen Flow konfiguriert.",
+            "no_flows": "Sie m\u00fcssen Point konfigurieren, bevor Sie sich damit authentifizieren k\u00f6nnen. [Bitte lesen Sie die Anweisungen] (https://www.home-assistant.io/components/point/)."
+        },
+        "create_entry": {
+            "default": "Mit Minut erfolgreich f\u00fcr Ihre Point-Ger\u00e4te authentifiziert"
+        },
+        "error": {
+            "follow_link": "Bitte folgen Sie dem Link und authentifizieren Sie sich, bevor Sie auf Senden klicken",
+            "no_token": "Nicht mit Minut authentifiziert"
+        },
+        "step": {
+            "auth": {
+                "description": "Folgen Sie dem Link unten und <b> Akzeptieren </b> Zugriff auf Ihr Minut-Konto. Kehren Sie dann zur\u00fcck und dr\u00fccken Sie unten auf <b> Senden </b> . \n\n [Link]({authorization_url})",
+                "title": "Point authentifizieren"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Anbieter"
+                },
+                "description": "W\u00e4hlen Sie \u00fcber welchen Authentifizierungsanbieter Sie sich mit Point authentifizieren m\u00f6chten.",
+                "title": "Authentifizierungsanbieter"
+            }
+        },
+        "title": "Minut Point"
+    }
+}

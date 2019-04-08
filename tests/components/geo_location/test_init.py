@@ -1,8 +1,8 @@
-"""The tests for the geo location component."""
+"""The tests for the geolocation component."""
 import pytest
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_location import GeoLocationEvent
+from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.setup import async_setup_component
 
 
@@ -13,8 +13,8 @@ async def test_setup_component(hass):
 
 
 async def test_event(hass):
-    """Simple test of the geo location event class."""
-    entity = GeoLocationEvent()
+    """Simple test of the geolocation event class."""
+    entity = GeolocationEvent()
 
     assert entity.state is None
     assert entity.distance is None

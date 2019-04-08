@@ -5,7 +5,10 @@ import unittest.mock as mock
 import os
 from io import StringIO
 
+import pytest
+
 from homeassistant import core, loader
+from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
@@ -158,6 +161,19 @@ class TestLight(unittest.TestCase):
         assert not light.is_on(self.hass, dev2.entity_id)
         assert not light.is_on(self.hass, dev3.entity_id)
 
+        # turn off all lights by setting brightness to 0
+        common.turn_on(self.hass)
+
+        self.hass.block_till_done()
+
+        common.turn_on(self.hass, brightness=0)
+
+        self.hass.block_till_done()
+
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert not light.is_on(self.hass, dev2.entity_id)
+        assert not light.is_on(self.hass, dev3.entity_id)
+
         # toggle all lights
         common.toggle(self.hass)
 
@@ -203,6 +219,32 @@ class TestLight(unittest.TestCase):
         assert {
             light.ATTR_HS_COLOR: (71.059, 100),
         } == data
+
+        # Ensure attributes are filtered when light is turned off
+        common.turn_on(self.hass, dev1.entity_id,
+                       transition=10, brightness=0, color_name='blue')
+        common.turn_on(
+            self.hass, dev2.entity_id, brightness=0, rgb_color=(255, 255, 255),
+            white_value=0)
+        common.turn_on(self.hass, dev3.entity_id, brightness=0,
+                       xy_color=(.4, .6))
+
+        self.hass.block_till_done()
+
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert not light.is_on(self.hass, dev2.entity_id)
+        assert not light.is_on(self.hass, dev3.entity_id)
+
+        _, data = dev1.last_call('turn_off')
+        assert {
+            light.ATTR_TRANSITION: 10,
+        } == data
+
+        _, data = dev2.last_call('turn_off')
+        assert {} == data
+
+        _, data = dev3.last_call('turn_off')
+        assert {} == data
 
         # One of the light profiles
         prof_name, prof_h, prof_s, prof_bri = 'relax', 35.932, 69.412, 144
@@ -289,6 +331,7 @@ class TestLight(unittest.TestCase):
         with open(user_light_file, 'w') as user_file:
             user_file.write('id,x,y,brightness\n')
             user_file.write('test,.4,.6,100\n')
+            user_file.write('test_off,0,0,0\n')
 
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
@@ -302,10 +345,20 @@ class TestLight(unittest.TestCase):
 
         _, data = dev1.last_call('turn_on')
 
+        assert light.is_on(self.hass, dev1.entity_id)
         assert {
             light.ATTR_HS_COLOR: (71.059, 100),
             light.ATTR_BRIGHTNESS: 100
         } == data
+
+        common.turn_on(self.hass, dev1.entity_id, profile='test_off')
+
+        self.hass.block_till_done()
+
+        _, data = dev1.last_call('turn_off')
+
+        assert not light.is_on(self.hass, dev1.entity_id)
+        assert {} == data
 
     def test_default_profiles_group(self):
         """Test default turn-on light profile for all lights."""
@@ -495,3 +548,22 @@ async def test_light_context(hass, hass_admin_user):
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
+
+
+async def test_light_turn_on_auth(hass, hass_admin_user):
+    """Test that light context works."""
+    assert await async_setup_component(hass, 'light', {
+        'light': {
+            'platform': 'test'
+        }
+    })
+
+    state = hass.states.get('light.ceiling')
+    assert state is not None
+
+    hass_admin_user.mock_policy({})
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call('light', 'turn_on', {
+            'entity_id': state.entity_id,
+        }, True, core.Context(user_id=hass_admin_user.id))

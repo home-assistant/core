@@ -1,0 +1,2 @@
+sync_clock:
+  description: Sync the velbus modules clock to the HASS clock, this is the same as the 'sync clock' from VelbusLink

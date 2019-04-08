@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with water heater devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/water_heater/
-"""
+"""Support for water heater devices."""
 from datetime import timedelta
 import logging
 import functools as ft
@@ -14,7 +9,8 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
@@ -57,22 +53,22 @@ CONVERTIBLE_ATTRIBUTE = [
 _LOGGER = logging.getLogger(__name__)
 
 ON_OFF_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 SET_AWAY_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_AWAY_MODE): cv.boolean,
 })
 SET_TEMPERATURE_SCHEMA = vol.Schema(vol.All(
     {
         vol.Required(ATTR_TEMPERATURE, 'temperature'): vol.Coerce(float),
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Optional(ATTR_OPERATION_MODE): cv.string,
     }
 ))
 SET_OPERATION_MODE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Required(ATTR_OPERATION_MODE): cv.string,
 })
 

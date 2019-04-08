@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akcesorium jest ju\u017c skonfigurowane z tym kontrolerem.",
+            "already_paired": "To akcesorium jest ju\u017c sparowane z innym urz\u0105dzeniem. Zresetuj akcesorium i spr\u00f3buj ponownie.",
+            "ignored_model": "Obs\u0142uga HomeKit dla tego modelu jest zablokowana, poniewa\u017c dost\u0119pna jest pe\u0142niejsza integracja natywna.",
+            "invalid_config_entry": "To urz\u0105dzenie jest wy\u015bwietlane jako gotowe do sparowania, ale istnieje ju\u017c konfliktowy wpis konfiguracyjny dla niego w Home Assistant, kt\u00f3ry musi zosta\u0107 najpierw usuni\u0119ty.",
+            "no_devices": "Nie znaleziono niesparowanych urz\u0105dze\u0144"
+        },
+        "error": {
+            "authentication_error": "Niepoprawny kod parowania HomeKit. Sprawd\u017a go i spr\u00f3buj ponownie.",
+            "unable_to_pair": "Nie mo\u017cna sparowa\u0107, spr\u00f3buj ponownie.",
+            "unknown_error": "Urz\u0105dzenie zg\u0142osi\u0142o nieznany b\u0142\u0105d. Parowanie nie powiod\u0142o si\u0119."
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Kod parowania"
+                },
+                "description": "Wprowad\u017a kod parowania HomeKit, aby u\u017cy\u0107 tego akcesorium",
+                "title": "Sparuj z akcesorium HomeKit"
+            },
+            "user": {
+                "data": {
+                    "device": "Urz\u0105dzenie"
+                },
+                "description": "Wybierz urz\u0105dzenie, kt\u00f3re chcesz sparowa\u0107",
+                "title": "Sparuj z akcesorium HomeKit"
+            }
+        },
+        "title": "Akcesorium HomeKit"
+    }
+}

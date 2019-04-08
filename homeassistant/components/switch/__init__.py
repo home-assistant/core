@@ -1,9 +1,4 @@
-"""
-Component to interface with various switches that can be controlled remotely.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/switch/
-"""
+"""Component to interface with switches that can be controlled remotely."""
 from datetime import timedelta
 import logging
 
@@ -12,7 +7,8 @@ import voluptuous as vol
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.config_validation import (  # noqa
+    PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -39,7 +35,7 @@ PROP_TO_ATTR = {
 }
 
 SWITCH_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 _LOGGER = logging.getLogger(__name__)

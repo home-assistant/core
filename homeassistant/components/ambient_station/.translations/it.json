@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "API Key e/o Application Key gi\u00e0 registrata",
+            "invalid_key": "API Key e/o Application Key non valida",
+            "no_devices": "Nessun dispositivo trovato nell'account"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "app_key": "Application Key"
+                },
+                "title": "Inserisci i tuoi dati"
+            }
+        }
+    }
+}

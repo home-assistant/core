@@ -102,7 +102,7 @@ class AiohttpClientMocker:
 
     async def match_request(self, method, url, *, data=None, auth=None,
                             params=None, headers=None, allow_redirects=None,
-                            timeout=None, json=None):
+                            timeout=None, json=None, cookies=None):
         """Match a request against pre-registered requests."""
         data = data or json
         url = URL(url)
@@ -181,6 +181,11 @@ class AiohttpClientMockResponse:
     def url(self):
         """Return yarl of URL."""
         return self._url
+
+    @property
+    def content_type(self):
+        """Return yarl of URL."""
+        return self._headers.get('content-type')
 
     @property
     def content(self):

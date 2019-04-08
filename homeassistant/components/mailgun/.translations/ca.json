@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "description": "Est\u00e0s segur que vols configurar Mailgun?",
-                "title": "Configuraci\u00f3 del Webhook de Mailgun"
+                "title": "Configuraci\u00f3 del Webhook Mailgun"
             }
         },
         "title": "Mailgun"

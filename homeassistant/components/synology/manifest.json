@@ -1,0 +1,10 @@
+{
+  "domain": "synology",
+  "name": "Synology",
+  "documentation": "https://www.home-assistant.io/components/synology",
+  "requirements": [
+    "py-synology==0.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

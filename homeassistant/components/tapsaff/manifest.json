@@ -1,0 +1,10 @@
+{
+  "domain": "tapsaff",
+  "name": "Tapsaff",
+  "documentation": "https://www.home-assistant.io/components/tapsaff",
+  "requirements": [
+    "tapsaff==0.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
