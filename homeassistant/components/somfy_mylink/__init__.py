@@ -54,9 +54,8 @@ async def async_setup(hass, config):
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
     system_id = config[DOMAIN][CONF_SYSTEM_ID]
-    entity_config = config[DOMAIN].get(CONF_ENTITY_CONFIG, {})
-    if config[DOMAIN].get(CONF_DEFAULT_REVERSE):
-        entity_config[CONF_DEFAULT_REVERSE] = True
+    entity_config = config[DOMAIN][CONF_ENTITY_CONFIG]
+    entity_config[CONF_DEFAULT_REVERSE] = config[DOMAIN][CONF_DEFAULT_REVERSE]
     somfy_mylink = SomfyMyLinkSynergy(system_id, host, port)
     hass.data[DATA_SOMFY_MYLINK] = somfy_mylink
     for component in SOMFY_MYLINK_COMPONENTS:
