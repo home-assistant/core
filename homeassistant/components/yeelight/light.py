@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
     SUPPORT_EFFECT, Light)
 import homeassistant.util.color as color_util
-from homeassistant.components.yeelight import (
+from . import (
     CONF_TRANSITION, DATA_YEELIGHT, CONF_MODE_MUSIC,
     CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED,
     YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
@@ -189,6 +189,8 @@ class YeelightLight(Light):
 
     def __init__(self, device, custom_effects=None):
         """Initialize the Yeelight light."""
+        from yeelight.enums import LightType
+
         self.config = device.config
         self._device = device
 
@@ -201,6 +203,8 @@ class YeelightLight(Light):
 
         self._min_mireds = None
         self._max_mireds = None
+
+        self._light_type = LightType.Main
 
         if custom_effects:
             self._custom_effects = custom_effects
@@ -281,8 +285,7 @@ class YeelightLight(Light):
     @property
     def light_type(self):
         """Return light type."""
-        import yeelight
-        return yeelight.enums.LightType.Main
+        return self._light_type
 
     def _get_hs_from_properties(self):
         rgb = self._get_property('rgb')
@@ -589,20 +592,18 @@ class YeelightAmbientLight(YeelightLight):
 
     def __init__(self, *args, **kwargs):
         """Initialize the Yeelight Ambient light."""
+        from yeelight.enums import LightType
+
         super().__init__(*args, **kwargs)
         self._min_mireds = kelvin_to_mired(6500)
         self._max_mireds = kelvin_to_mired(1700)
+
+        self._light_type = LightType.Ambient
 
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
         return "{} ambilight".format(self.device.name)
-
-    @property
-    def light_type(self):
-        """Return light type."""
-        import yeelight
-        return yeelight.enums.LightType.Ambient
 
     @property
     def _is_nightlight_enabled(self):

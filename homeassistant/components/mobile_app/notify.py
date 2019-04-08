@@ -8,12 +8,17 @@ import async_timeout
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT,
     BaseNotificationService)
-from homeassistant.components.mobile_app.const import (
-    ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_VERSION, ATTR_DEVICE_NAME,
-    ATTR_OS_VERSION, ATTR_PUSH_TOKEN, ATTR_PUSH_URL, DATA_CONFIG_ENTRIES,
-    DOMAIN)
+
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
+
+from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_VERSION,
+                    ATTR_DEVICE_NAME, ATTR_OS_VERSION, ATTR_PUSH_RATE_LIMITS,
+                    ATTR_PUSH_RATE_LIMITS_ERRORS,
+                    ATTR_PUSH_RATE_LIMITS_MAXIMUM,
+                    ATTR_PUSH_RATE_LIMITS_RESETS_AT,
+                    ATTR_PUSH_RATE_LIMITS_SUCCESSFUL, ATTR_PUSH_TOKEN,
+                    ATTR_PUSH_URL, DATA_CONFIG_ENTRIES, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,16 +43,21 @@ def push_registrations(hass):
 # pylint: disable=invalid-name
 def log_rate_limits(hass, device_name, resp, level=logging.INFO):
     """Output rate limit log line at given level."""
-    rate_limits = resp['rateLimits']
-    resetsAt = dt_util.parse_datetime(rate_limits['resetsAt'])
-    resetsAtTime = resetsAt - datetime.now(timezone.utc)
+    if ATTR_PUSH_RATE_LIMITS not in resp:
+        return
+
+    rate_limits = resp[ATTR_PUSH_RATE_LIMITS]
+    resetsAt = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
+    resetsAtTime = (dt_util.parse_datetime(resetsAt) -
+                    datetime.now(timezone.utc))
     rate_limit_msg = ("mobile_app push notification rate limits for %s: "
                       "%d sent, %d allowed, %d errors, "
                       "resets in %s")
     _LOGGER.log(level, rate_limit_msg,
                 device_name,
-                rate_limits['successful'],
-                rate_limits['maximum'], rate_limits['errors'],
+                rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
+                rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
+                rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
                 str(resetsAtTime).split(".")[0])
 
 

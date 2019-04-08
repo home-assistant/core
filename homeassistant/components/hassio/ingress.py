@@ -118,6 +118,7 @@ class HassIOIngress(HomeAssistantView):
                 return web.Response(
                     headers=headers,
                     status=result.status,
+                    content_type=result.content_type,
                     body=body
                 )
 
@@ -145,8 +146,7 @@ def _init_header(
 
     # filter flags
     for name, value in request.headers.items():
-        if name in (hdrs.CONTENT_LENGTH, hdrs.CONTENT_TYPE,
-                    hdrs.CONTENT_ENCODING):
+        if name in (hdrs.CONTENT_LENGTH, hdrs.CONTENT_ENCODING):
             continue
         headers[name] = value
 
