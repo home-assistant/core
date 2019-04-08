@@ -57,12 +57,7 @@ async def async_setup(hass, config):
     entity_config = config[DOMAIN].get(CONF_ENTITY_CONFIG, {})
     if config[DOMAIN].get(CONF_DEFAULT_REVERSE):
         entity_config[CONF_DEFAULT_REVERSE] = True
-    try:
-        somfy_mylink = SomfyMyLinkSynergy(system_id, host, port)
-    except TimeoutError:
-        _LOGGER.error("Unable to connect to the Somfy MyLink device, "
-                      "please check your settings")
-        return False
+    somfy_mylink = SomfyMyLinkSynergy(system_id, host, port)
     hass.data[DATA_SOMFY_MYLINK] = somfy_mylink
     for component in SOMFY_MYLINK_COMPONENTS:
         hass.async_create_task(async_load_platform(
