@@ -3,16 +3,14 @@ Cover Platform for the Somfy MyLink device supporting the Synergy JsonRPC API.
 """
 import logging
 
-from homeassistant.components.cover import CoverDevice
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.components.cover import ENTITY_ID_FORMAT, CoverDevice
 from homeassistant.util import slugify
 
 from . import CONF_DEFAULT_REVERSE, DATA_SOMFY_MYLINK
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['somfy_mylink']
-ENTITY_ID_FORMAT = 'cover.{}'
-
 
 async def async_setup_platform(hass,
                                config,
