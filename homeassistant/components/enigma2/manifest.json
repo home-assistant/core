@@ -6,5 +6,5 @@
     "openwebifpy==3.1.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@fbradyirl"]
 }

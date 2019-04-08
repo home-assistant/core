@@ -38,6 +38,10 @@ homeassistant/components/braviatv/* @robbiet480
 homeassistant/components/broadlink/* @danielhiversen
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bt_smarthub/* @jxwolstenholme
+homeassistant/components/cisco_ios/* @fbradyirl
+homeassistant/components/cisco_mobility_express/* @fbradyirl
+homeassistant/components/cisco_webex_teams/* @fbradyirl
+homeassistant/components/ciscospark/* @fbradyirl
 homeassistant/components/cloud/* @home-assistant/core
 homeassistant/components/cloudflare/* @ludeeus
 homeassistant/components/config/* @home-assistant/core
@@ -61,6 +65,7 @@ homeassistant/components/edp_redy/* @abmantis
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/emby/* @mezz64
+homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/ephember/* @ttroy50
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
@@ -86,6 +91,7 @@ homeassistant/components/harmony/* @ehendrix23
 homeassistant/components/hassio/* @home-assistant/hass-io
 homeassistant/components/heos/* @andrewsayre
 homeassistant/components/hikvision/* @mezz64
+homeassistant/components/hikvisioncam/* @fbradyirl
 homeassistant/components/history/* @home-assistant/core
 homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/hive/* @Rendili @KJonline
@@ -120,6 +126,7 @@ homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/lovelace/* @home-assistant/core
+homeassistant/components/luci/* @fbradyirl
 homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
