@@ -1,8 +1,8 @@
 """Support for Google - Calendar Event Devices."""
+from datetime import timedelta, datetime
 import logging
 import os
 import yaml
-from datetime import timedelta, datetime
 
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
