@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_CODE, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_REGION, CONF_TOKEN)
+from homeassistant.util import location
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -96,6 +97,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         """Prompt user input. Create or edit entry."""
         from pyps4_homeassistant.media_art import COUNTRIES
         regions = sorted(COUNTRIES.keys())
+        default_region = None
         errors = {}
 
         if user_input is None:  # noqa: pylint: disable=too-many-nested-blocks
@@ -154,12 +156,21 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                         'devices': [device],
                     },
                 )
+        
+        # Try to find region automatically.
+        loc = await self.hass.async_add_executor_job(
+            location.detect_location_info)
+        if loc:
+            country = loc.country_name
+            if country in COUNTRIES:
+                default_region = country
 
         # Show User Input form.
         link_schema = OrderedDict()
         link_schema[vol.Required(CONF_IP_ADDRESS)] = vol.In(
             list(self.device_list))
-        link_schema[vol.Required(CONF_REGION)] = vol.In(list(regions))
+        link_schema[vol.Required(
+            CONF_REGION, default=default_region)] = vol.In(list(regions))
         link_schema[vol.Required(CONF_CODE)] = vol.All(
             vol.Strip, vol.Length(min=8, max=8), vol.Coerce(int))
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
