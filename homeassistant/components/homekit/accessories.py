@@ -147,11 +147,9 @@ class HomeAccessory(Accessory):
         """
         battery_level = convert_to_float(
             new_state.attributes.get(ATTR_BATTERY_LEVEL))
-
         if self._linked_battery_sensor:
             battery_level = convert_to_float(
                 new_state.state)
-
         if battery_level is None:
             return
         self._char_battery.set_value(battery_level)
