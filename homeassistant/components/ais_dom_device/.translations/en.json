@@ -27,7 +27,7 @@
         }
       },
       "error": {
-        "search_failed": "Nie można znaleźć urządzenia, proszę spróbuj ponownie."
+        "search_failed": "Nie można znaleźć urządzenia, proszę spróbuj ponownie. "
       },
       "abort": {
         "single_instance_allowed": "Only a single Spotify integration is allowed. If you want to configure it again, first delete the current integration."

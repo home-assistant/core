@@ -83,13 +83,13 @@ class AisDomDeviceFlowHandler(config_entries.ConfigFlow):
                 return await self.async_step_init(user_input=None)
             else:
                 errors = {'devices': 'search_failed'}
-
+        # TODO
         user_input['devices'] = ' '
         return self.async_show_form(
             step_id='two',
             errors=errors,
             data=user_input
-        )   
+        )
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
