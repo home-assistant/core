@@ -65,7 +65,7 @@ class HomeAccessory(Accessory):
             firmware_revision=__version__, manufacturer=MANUFACTURER,
             model=model, serial_number=entity_id)
         self.category = category
-        self.config = config
+        self.config = config or {}
         self.entity_id = entity_id
         self.hass = hass
         self.debounce = {}
@@ -75,13 +75,13 @@ class HomeAccessory(Accessory):
             self.config.get(CONF_LINKED_BATTERY_SENSOR)
 
         """Add battery service if available"""
-        battery_level = convert_to_float(self.hass.states.get(self.entity_id)
-                                         .attributes).get(ATTR_BATTERY_LEVEL)
+        battery_found = self.hass.states.get(self.entity_id).attributes \
+            .get(ATTR_BATTERY_LEVEL)
         if self.linked_battery_sensor:
-            battery_level = convert_to_float(
-                self.hass.states.get(self.linked_battery_sensor).state)
+            battery_found = self.hass.states.get(
+                self.linked_battery_sensor).state
 
-        if battery_level is None:
+        if battery_found is None:
             return
         _LOGGER.debug('%s: Found battery level', self.entity_id)
         self._support_battery_level = True
