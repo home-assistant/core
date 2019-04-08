@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up ESPHome binary sensors based on a config entry."""
+    """Set up ESPHome climate devices based on a config entry."""
     # pylint: disable=redefined-outer-name
     from aioesphomeapi import ClimateInfo, ClimateState  # noqa
 
