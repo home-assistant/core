@@ -233,8 +233,8 @@ class YeelightDevice:
         """Return true / false if nightlight is supported."""
         if self.model:
             return self.bulb.get_model_specs().get('night_light', False)
-        else:
-            return self._active_mode is not None
+
+        return self._active_mode is not None
 
     @property
     def _active_mode(self):
