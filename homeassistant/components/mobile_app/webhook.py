@@ -228,7 +228,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
                                                   data[ATTR_SENSOR_TYPE])
         async_dispatcher_send(hass, register_signal, data)
 
-        return webhook_response({"status": "registered"},
+        return webhook_response({'success': True},
                                 registration=registration, status=HTTP_CREATED,
                                 headers=headers)
 
@@ -271,7 +271,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
             async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
 
-            resp[unique_id] = {"status": "okay"}
+            resp[unique_id] = {'success': True}
 
         return webhook_response(resp, registration=registration,
                                 headers=headers)
