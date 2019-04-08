@@ -278,10 +278,10 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
             if "setThermostatSetpoint" in target.fibaro_device.actions:
                 target.action("setThermostatSetpoint",
                               self._op_state_to_mode[self.current_operation],
-                              kwargs.get(ATTR_TEMPERATURE))
+                              temperature)
             else:
                 target.action("setTargetLevel",
-                              kwargs.get(ATTR_TEMPERATURE))
+                              temperature)
 
     @property
     def is_on(self):
