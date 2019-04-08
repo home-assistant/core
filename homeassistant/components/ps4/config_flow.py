@@ -156,7 +156,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                         'devices': [device],
                     },
                 )
-        
+
         # Try to find region automatically.
         loc = await self.hass.async_add_executor_job(
             location.detect_location_info)
