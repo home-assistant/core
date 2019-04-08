@@ -82,21 +82,34 @@ async def async_setup_platform(
 
         entity_ids = set()
         manual_entity_ids = device_config.get(CONF_ENTITY_ID)
+        invalid_templates = []
 
-        for template in (state_template, battery_level_template,
-                         fan_speed_template):
+        for tpl_name, template in (
+                (CONF_VALUE_TEMPLATE, state_template),
+                (CONF_BATTERY_LEVEL_TEMPLATE, battery_level_template),
+                (CONF_FAN_SPEED_TEMPLATE, fan_speed_template)
+        ):
             if template is None:
                 continue
             template.hass = hass
 
-            if entity_ids == MATCH_ALL or manual_entity_ids is not None:
+            if manual_entity_ids is not None:
                 continue
 
             template_entity_ids = template.extract_entities()
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
-            else:
+                # Cut off _template from name
+                invalid_templates.append(tpl_name[:-9])
+            elif entity_ids != MATCH_ALL:
                 entity_ids |= set(template_entity_ids)
+
+        if invalid_templates:
+            _LOGGER.warning(
+                'Template vacuum %s has no entity ids configured to track nor'
+                ' were we able to extract the entities to track from the %s '
+                'template(s). This entity will only be able to be updated '
+                'manually.', device, ', '.join(invalid_templates))
 
         if manual_entity_ids is not None:
             entity_ids = manual_entity_ids
