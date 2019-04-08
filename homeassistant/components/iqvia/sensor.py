@@ -1,4 +1,4 @@
-"""Support for Pollen.com allergen and cold/flu sensors."""
+"""Support for IQVIA sensors."""
 from datetime import timedelta
 import logging
 from statistics import mean
@@ -95,8 +95,7 @@ TREND_INCREASING = 'Increasing'
 TREND_SUBSIDING = 'Subsiding'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ZIP_CODE):
-        str,
+    vol.Required(CONF_ZIP_CODE): str,
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
         vol.All(cv.ensure_list, [vol.In(SENSORS)])
 })
@@ -105,22 +104,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from pypollencom import Client
+    from pyiqvia import Client
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    pollen = PollenComData(
+    iqvia = IQVIAData(
         Client(config[CONF_ZIP_CODE], websession),
         config[CONF_MONITORED_CONDITIONS])
 
-    await pollen.async_update()
+    await iqvia.async_update()
 
     sensors = []
     for kind in config[CONF_MONITORED_CONDITIONS]:
         sensor_class, name, icon = SENSORS[kind]
         sensors.append(
             globals()[sensor_class](
-                pollen, kind, name, icon, config[CONF_ZIP_CODE]))
+                iqvia, kind, name, icon, config[CONF_ZIP_CODE]))
 
     async_add_entities(sensors, True)
 
@@ -151,9 +150,9 @@ def calculate_trend(indices):
 
 
 class BaseSensor(Entity):
-    """Define a base Pollen.com sensor."""
+    """Define a base IQVIA sensor."""
 
-    def __init__(self, pollen, kind, name, icon, zip_code):
+    def __init__(self, iqvia, kind, name, icon, zip_code):
         """Initialize the sensor."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = icon
@@ -161,20 +160,20 @@ class BaseSensor(Entity):
         self._name = name
         self._state = None
         self._zip_code = zip_code
-        self.pollen = pollen
+        self.iqvia = iqvia
 
     @property
     def available(self):
         """Return True if entity is available."""
         if self._kind in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
                           TYPE_ALLERGY_YESTERDAY):
-            return bool(self.pollen.data[TYPE_ALLERGY_INDEX])
+            return bool(self.iqvia.data[TYPE_ALLERGY_INDEX])
 
         if self._kind in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
                           TYPE_ASTHMA_YESTERDAY):
-            return bool(self.pollen.data[TYPE_ASTHMA_INDEX])
+            return bool(self.iqvia.data[TYPE_ASTHMA_INDEX])
 
-        return bool(self.pollen.data[self._kind])
+        return bool(self.iqvia.data[self._kind])
 
     @property
     def device_state_attributes(self):
@@ -212,11 +211,11 @@ class ForecastSensor(BaseSensor):
 
     async def async_update(self):
         """Update the sensor."""
-        await self.pollen.async_update()
-        if not self.pollen.data:
+        await self.iqvia.async_update()
+        if not self.iqvia.data:
             return
 
-        data = self.pollen.data[self._kind].get('Location')
+        data = self.iqvia.data[self._kind].get('Location')
         if not data:
             return
 
@@ -236,7 +235,7 @@ class ForecastSensor(BaseSensor):
         })
 
         if self._kind == TYPE_ALLERGY_FORECAST:
-            outlook = self.pollen.data[TYPE_ALLERGY_OUTLOOK]
+            outlook = self.iqvia.data[TYPE_ALLERGY_OUTLOOK]
             self._attrs[ATTR_OUTLOOK] = outlook.get('Outlook')
             self._attrs[ATTR_SEASON] = outlook.get('Season')
 
@@ -248,11 +247,11 @@ class HistoricalSensor(BaseSensor):
 
     async def async_update(self):
         """Update the sensor."""
-        await self.pollen.async_update()
-        if not self.pollen.data:
+        await self.iqvia.async_update()
+        if not self.iqvia.data:
             return
 
-        data = self.pollen.data[self._kind].get('Location')
+        data = self.iqvia.data[self._kind].get('Location')
         if not data:
             return
 
@@ -275,17 +274,17 @@ class IndexSensor(BaseSensor):
 
     async def async_update(self):
         """Update the sensor."""
-        await self.pollen.async_update()
-        if not self.pollen.data:
+        await self.iqvia.async_update()
+        if not self.iqvia.data:
             return
 
         data = {}
         if self._kind in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
                           TYPE_ALLERGY_YESTERDAY):
-            data = self.pollen.data[TYPE_ALLERGY_INDEX].get('Location')
+            data = self.iqvia.data[TYPE_ALLERGY_INDEX].get('Location')
         elif self._kind in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
                             TYPE_ASTHMA_YESTERDAY):
-            data = self.pollen.data[TYPE_ASTHMA_INDEX].get('Location')
+            data = self.iqvia.data[TYPE_ASTHMA_INDEX].get('Location')
 
         if not data:
             return
@@ -330,8 +329,8 @@ class IndexSensor(BaseSensor):
         self._state = period['Index']
 
 
-class PollenComData:
-    """Define a data object to retrieve info from Pollen.com."""
+class IQVIAData:
+    """Define a data object to retrieve info from IQVIA."""
 
     def __init__(self, client, sensor_types):
         """Initialize."""
@@ -341,21 +340,21 @@ class PollenComData:
 
     async def _get_data(self, method, key):
         """Return API data from a specific call."""
-        from pypollencom.errors import PollenComError
+        from pyiqvia.errors import IQVIAError
 
         try:
             data = await method()
             self.data[key] = data
-        except PollenComError as err:
+        except IQVIAError as err:
             _LOGGER.error('Unable to get "%s" data: %s', key, err)
             self.data[key] = {}
 
     @Throttle(DEFAULT_SCAN_INTERVAL)
     async def async_update(self):
-        """Update Pollen.com data."""
-        from pypollencom.errors import InvalidZipError
+        """Update IQVIA data."""
+        from pyiqvia.errors import InvalidZipError
 
-        # Pollen.com requires a bit more complicated error handling, given that
+        # IQVIA sites require a bit more complicated error handling, given that
         # it sometimes has parts (but not the whole thing) go down:
         #
         # 1. If `InvalidZipError` is thrown, quit everything immediately.

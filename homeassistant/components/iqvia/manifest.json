@@ -1,10 +1,10 @@
 {
-  "domain": "pollen",
-  "name": "Pollen",
-  "documentation": "https://www.home-assistant.io/components/pollen",
+  "domain": "iqvia",
+  "name": "IQVIA",
+  "documentation": "https://www.home-assistant.io/components/iqvia",
   "requirements": [
     "numpy==1.16.2",
-    "pypollencom==2.2.3"
+    "pyiqvia==0.2.0"
   ],
   "dependencies": [],
   "codeowners": [
