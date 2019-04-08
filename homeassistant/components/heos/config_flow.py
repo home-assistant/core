@@ -23,7 +23,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_discovery(self, discovery_info):
         """Handle a discovered Heos device."""
-        # Only return the form if this is the first one
+        # Only continue if this is the only active flow
         flows = self.hass.config_entries.flow.async_progress()
         heos_flows = [flow for flow in flows if flow['handler'] == DOMAIN]
         if len(heos_flows) == 1:
