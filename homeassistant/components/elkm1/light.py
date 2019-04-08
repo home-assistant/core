@@ -12,7 +12,7 @@ async def async_setup_platform(
         return
     elk_datas = hass.data[ELK_DOMAIN]
     entities = []
-    for _, elk_data in elk_datas.items():
+    for elk_data in elk_datas.values():
         elk = elk_data['elk']
         create_elk_entities(elk_data, elk.lights,
                             'plc', ElkLight, entities)

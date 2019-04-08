@@ -140,7 +140,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
                 _LOGGER.error("Config item: %s; %s", item, err)
                 return False
 
-        prefix = conf.get(CONF_PREFIX, "")
+        prefix = conf.get[CONF_PREFIX]
         device = devices.get(prefix)
         if device is not None:
             if prefix == "":
@@ -173,22 +173,22 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
 def _create_elk_services(hass, elks):
     def _speak_word_service(service):
-        prefix = service.data.get('prefix', "")
+        prefix = service.data['prefix']
         elk = elks.get(prefix)
         if elk is None:
             _LOGGER.error("No elk m1 with prefix for speak_word: '%s'",
                           prefix)
-        else:
-            elk.panel.speak_word(service.data['number'])
+            return
+        elk.panel.speak_word(service.data['number'])
 
     def _speak_phrase_service(service):
-        prefix = service.data.get('prefix', "")
+        prefix = service.data['prefix']
         elk = elks.get(prefix)
         if elk is None:
             _LOGGER.error("No elk m1 with prefix for speak_phrase: '%s'",
                           prefix)
-        else:
-            elk.panel.speak_phrase(service.data['number'])
+            return
+        elk.panel.speak_phrase(service.data['number'])
 
     hass.services.async_register(
         DOMAIN, 'speak_word', _speak_word_service, SPEAK_SERVICE_SCHEMA)
