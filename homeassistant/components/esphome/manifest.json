@@ -1,9 +1,9 @@
 {
   "domain": "esphome",
-  "name": "Esphome",
+  "name": "ESPHome",
   "documentation": "https://www.home-assistant.io/components/esphome",
   "requirements": [
-    "aioesphomeapi==1.7.0"
+    "aioesphomeapi==2.0.0"
   ],
   "dependencies": [],
   "codeowners": [
