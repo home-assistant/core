@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Hanya satu konfigurasi Home Assistant Android yang diperlukan."
+        },
+        "step": {
+            "confirm": {
+                "description": "Apakah Anda ingin mengatur komponen Android Home Assistant?",
+                "title": "Home Asisten Android"
+            }
+        },
+        "title": "Home Asisten Android"
+    }
+}

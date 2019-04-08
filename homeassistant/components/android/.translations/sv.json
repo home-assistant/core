@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Endast en enda konfiguration av Home Assistant Android \u00e4r n\u00f6dv\u00e4ndig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vill du konfigurera Home Assistants Android komponent?",
+                "title": "Home Assistant Android"
+            }
+        },
+        "title": "Home Assistant Android"
+    }
+}

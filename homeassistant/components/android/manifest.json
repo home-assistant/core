@@ -1,0 +1,14 @@
+{
+  "domain": "android",
+  "name": "Android",
+  "documentation": "https://www.home-assistant.io/components/android",
+  "requirements": [],
+  "dependencies": [
+    "device_tracker",
+    "http",
+    "zeroconf"
+  ],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

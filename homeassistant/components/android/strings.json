@@ -1,0 +1,14 @@
+{
+  "config": {
+    "title": "Home Assistant Android",
+    "step": {
+      "confirm": {
+        "title": "Home Assistant Android",
+        "description": "Do you want to set up the Home Assistant Android component?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of Home Assistant Android is necessary."
+    }
+  }
+}
