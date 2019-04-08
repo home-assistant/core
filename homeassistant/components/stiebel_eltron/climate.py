@@ -50,6 +50,7 @@ class StiebelEltron(ClimateDevice):
                                  STATE_OFF]
         self._current_operation = None
         self._filter_alarm = None
+        self._force_update = False
         self._ste_data = ste_data
 
     @property
@@ -59,7 +60,8 @@ class StiebelEltron(ClimateDevice):
 
     def update(self):
         """Update unit attributes."""
-        self._ste_data.update()
+        self._ste_data.update(no_throttle=self._force_update)
+        self._force_update = False
 
         self._target_temperature = self._ste_data.api.get_target_temp()
         self._current_temperature = self._ste_data.api.get_current_temp()
@@ -119,6 +121,7 @@ class StiebelEltron(ClimateDevice):
         if target_temperature is not None:
             _LOGGER.debug("set_temperature: %s", target_temperature)
             self._ste_data.api.set_target_temp(target_temperature)
+            self._force_update = True
 
     @property
     def current_humidity(self):
@@ -142,3 +145,4 @@ class StiebelEltron(ClimateDevice):
         _LOGGER.debug("set_operation_mode: %s -> %s", self._current_operation,
                       new_mode)
         self._ste_data.api.set_operation(new_mode)
+        self._force_update = True
