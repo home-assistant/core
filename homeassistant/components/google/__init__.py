@@ -285,7 +285,7 @@ def setup_services(hass, hass_config, track_new_found_calendars,
         }
         service_data = {'calendarId': call.data[EVENT_CALENDAR_ID],
                         'body': event}
-        event = (service.events().insert(**service_data).execute())
+        event = service.events().insert(**service_data).execute()
 
     hass.services.register(
         DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA
