@@ -1,6 +1,4 @@
-"""
-Platform for the Somfy MyLink device supporting the Synergy JsonRPC API.
-"""
+"""Component for the Somfy MyLink device supporting the Synergy API."""
 import logging
 
 import voluptuous as vol

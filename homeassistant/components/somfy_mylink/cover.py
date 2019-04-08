@@ -1,6 +1,4 @@
-"""
-Cover Platform for the Somfy MyLink device supporting the Synergy JsonRPC API.
-"""
+"""Cover Platform for the Somfy MyLink component."""
 import logging
 
 from homeassistant.components.cover import ENTITY_ID_FORMAT, CoverDevice
