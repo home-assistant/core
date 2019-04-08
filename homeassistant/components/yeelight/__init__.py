@@ -270,7 +270,6 @@ class YeelightDevice:
 
     def _update_properties(self):
         """Read new properties from the device."""
-
         from yeelight import BulbException
 
         if not self.bulb:
@@ -303,6 +302,5 @@ class YeelightDevice:
 
     def setup(self):
         """Initialize device and send initialized signal."""
-
         if self._update_properties() or self.model:
             self._initialize_if_not_already()
