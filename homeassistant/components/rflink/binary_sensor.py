@@ -53,7 +53,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
     """Representation of an Rflink binary sensor."""
 
     def __init__(self, device_id, device_class=None,
-                 force_update=None, off_delay=None,
+                 force_update=False, off_delay=None,
                  **kwargs):
         """Handle sensor specific args and super init."""
         self._state = None
