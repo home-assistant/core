@@ -63,10 +63,9 @@ class AmcrestBinarySensor(BinarySensorDevice):
 
         _LOGGER.debug('Pulling data from %s binary sensor', self._name)
 
-        if self._sensor_type == 'motion_detected':
-            try:
-                self._state = self._camera.is_motion_detected
-            except AmcrestError as error:
-                _LOGGER.error(
-                    'Could not update %s binary sensor due to error: %s',
-                    self.name, error)
+        try:
+            self._state = self._camera.is_motion_detected
+        except AmcrestError as error:
+            _LOGGER.error(
+                'Could not update %s binary sensor due to error: %s',
+                self.name, error)
