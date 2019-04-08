@@ -36,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-def _ha_climate_mode_to_esphome(speed: str) -> 'ClimateMode':
+def _ha_climate_mode_to_esphome(mode: str) -> 'ClimateMode':
     # pylint: disable=redefined-outer-name
     from aioesphomeapi import ClimateMode  # noqa
     return {
@@ -44,10 +44,10 @@ def _ha_climate_mode_to_esphome(speed: str) -> 'ClimateMode':
         STATE_AUTO: ClimateMode.AUTO,
         STATE_COOL: ClimateMode.COOL,
         STATE_HEAT: ClimateMode.HEAT,
-    }[speed]
+    }[mode]
 
 
-def _esphome_climate_mode_to_ha(speed: 'ClimateMode') -> str:
+def _esphome_climate_mode_to_ha(mode: 'ClimateMode') -> str:
     # pylint: disable=redefined-outer-name
     from aioesphomeapi import ClimateMode  # noqa
     return {
@@ -55,7 +55,7 @@ def _esphome_climate_mode_to_ha(speed: 'ClimateMode') -> str:
         ClimateMode.AUTO: STATE_AUTO,
         ClimateMode.COOL: STATE_COOL,
         ClimateMode.HEAT: STATE_HEAT,
-    }[speed]
+    }[mode]
 
 
 class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
