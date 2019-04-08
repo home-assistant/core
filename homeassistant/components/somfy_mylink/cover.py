@@ -42,7 +42,7 @@ async def async_setup_platform(hass,
     async_add_entities(cover_list)
 
 
-class SomfyShade(CoverDevice, RestoreEntity):
+class SomfyShade(CoverDevice):
     """Object for controlling a Somfy cover."""
 
     def __init__(self, somfy_mylink, target_id='AABBCC', name='SomfyShade',
@@ -53,8 +53,6 @@ class SomfyShade(CoverDevice, RestoreEntity):
         self._name = name
         self._reverse = reverse
         self._device_class = device_class
-        self._state = None
-        self._state_ts = None
 
     @property
     def name(self):
