@@ -55,4 +55,4 @@ class MobileAppSensor(MobileAppEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
-        return self._config[ATTR_SENSOR_UOM]
+        return self._config.get(ATTR_SENSOR_UOM)
