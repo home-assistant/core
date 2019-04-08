@@ -168,7 +168,7 @@ class MediaPlayer(HomeAccessory):
             serv_on_off = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
             serv_on_off.configure_char(CHAR_NAME, value=name)
             self.chars[FEATURE_ON_OFF] = serv_on_off.configure_char(
-                CHAR_ON, value=False, setter_callback=self.set_on_off)
+                CHAR_ON, setter_callback=self.set_on_off)
 
         if FEATURE_PLAY_PAUSE in feature_list:
             name = self.generate_service_name(FEATURE_PLAY_PAUSE)
