@@ -167,8 +167,8 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
                         {CONF_LINKED_BATTERY_SENSOR: linked_battery_entity_id})
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
-    hass.states.get(self.linked_battery_sensor).state == 50
-    hass.states.get(self.linked_battery_sensor).attributes \
+    hass.states.get(linked_battery_entity_id).state == 50
+    hass.states.get(linked_battery_entity_id).attributes \
         .get(ATTR_BATTERY_CHARGING) is None
 
     hass.states.async_set(linked_battery_entity_id, 15, None)
