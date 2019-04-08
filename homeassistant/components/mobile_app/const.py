@@ -171,7 +171,7 @@ REGISTER_SENSOR_SCHEMA = vol.Schema({
     vol.Required(ATTR_SENSOR_NAME): cv.string,
     vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
     vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-    vol.Required(ATTR_SENSOR_UOM): cv.string,
+    vol.Optional(ATTR_SENSOR_UOM): cv.string,
     vol.Required(ATTR_SENSOR_STATE): vol.Any(bool, str, int, float),
     vol.Optional(ATTR_SENSOR_ICON, default='mdi:cellphone'): cv.icon,
 })
