@@ -1278,14 +1278,10 @@ pysonos==0.0.9
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
-<<<<<<< HEAD
-# homeassistant.components.stride
-=======
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
 
-# homeassistant.components.notify.stride
->>>>>>> Prepare component for sensor platform
+# homeassistant.components.stride
 pystride==0.1.7
 
 # homeassistant.components.syncthru
