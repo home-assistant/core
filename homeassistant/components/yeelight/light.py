@@ -565,6 +565,10 @@ class YeelightWhiteTempLight(YeelightGenericLight):
         """Flag supported features."""
         return SUPPORT_YEELIGHT_WHITE_TEMP
 
+    @property
+    def _brightness_property(self):
+        return 'current_brightness'
+
 
 class YeelightWithAmbientLight(YeelightWhiteTempLight):
     """Representation of a Yeelight which has ambilight support."""
