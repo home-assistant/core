@@ -90,10 +90,10 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
             return None
         return self._state.position * 100.0
 
-    @property
+    @esphome_state_property
     def current_cover_tilt_position(self) -> Optional[float]:
         """Return current position of cover tilt. 0 is closed, 100 is open."""
-        if self._state is None or not self._static_info.supports_tilt:
+        if not self._static_info.supports_tilt:
             return None
         return self._state.tilt * 100.0
 
