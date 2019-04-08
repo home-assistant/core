@@ -11,6 +11,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PASSWORD,
     CONF_RECIPIENT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN)
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv, discovery
@@ -20,7 +22,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from . import sensor_types
 
-REQUIREMENTS = ['eternalegypt==0.0.6']
+REQUIREMENTS = ['eternalegypt==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,8 +49,15 @@ NOTIFY_SCHEMA = vol.Schema({
 })
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=sensor_types.DEFAULT):
-        vol.All(cv.ensure_list, [vol.In(sensor_types.ALL)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=sensor_types.DEFAULT_SENSORS):
+    vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_SENSORS)]),
+})
+
+BINARY_SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=sensor_types.DEFAULT_BINARY_SENSORS):
+    vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_BINARY_SENSORS)]),
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -59,6 +68,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.ensure_list, [NOTIFY_SCHEMA]),
         vol.Optional(SENSOR_DOMAIN, default={}):
             SENSOR_SCHEMA,
+        vol.Optional(BINARY_SENSOR_DOMAIN, default={}):
+            BINARY_SENSOR_SCHEMA,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -159,6 +170,15 @@ async def async_setup(hass, config):
         }
         hass.async_create_task(discovery.async_load_platform(
             hass, SENSOR_DOMAIN, DOMAIN, discovery_info, config))
+
+        # Binary Sensor
+        binary_sensor_conf = lte_conf.get(BINARY_SENSOR_DOMAIN)
+        discovery_info = {
+            CONF_HOST: lte_conf[CONF_HOST],
+            BINARY_SENSOR_DOMAIN: binary_sensor_conf,
+        }
+        hass.async_create_task(discovery.async_load_platform(
+            hass, BINARY_SENSOR_DOMAIN, DOMAIN, discovery_info, config))
 
     return True
 
