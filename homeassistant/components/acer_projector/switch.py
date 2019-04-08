@@ -1,9 +1,4 @@
-"""
-Use serial protocol of Acer projector to obtain state of the projector.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/switch.acer_projector/
-"""
+"""Use serial protocol of Acer projector to obtain state of the projector."""
 import logging
 import re
 

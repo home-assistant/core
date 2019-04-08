@@ -9,7 +9,7 @@ from homeassistant.util.decorator import Registry
 from homeassistant.core import callback
 from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES, CONF_NAME, STATE_UNAVAILABLE,
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_DEVICE_CLASS,
 )
 from homeassistant.components import (
     camera,
@@ -31,7 +31,7 @@ from homeassistant.components import (
 from . import trait
 from .const import (
     TYPE_LIGHT, TYPE_LOCK, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
-    TYPE_THERMOSTAT, TYPE_FAN, TYPE_CAMERA,
+    TYPE_THERMOSTAT, TYPE_FAN, TYPE_CAMERA, TYPE_BLINDS,
     CONF_ALIASES, CONF_ROOM_HINT,
     ERR_FUNCTION_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
     ERR_UNKNOWN_ERROR,
@@ -45,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN_TO_GOOGLE_TYPES = {
     camera.DOMAIN: TYPE_CAMERA,
     climate.DOMAIN: TYPE_THERMOSTAT,
-    cover.DOMAIN: TYPE_SWITCH,
+    cover.DOMAIN: TYPE_BLINDS,
     fan.DOMAIN: TYPE_FAN,
     group.DOMAIN: TYPE_SWITCH,
     input_boolean.DOMAIN: TYPE_SWITCH,
@@ -92,10 +92,11 @@ class _GoogleEntity:
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         self._traits = [Trait(self.hass, state, self.config)
                         for Trait in trait.TRAITS
-                        if Trait.supported(domain, features)]
+                        if Trait.supported(domain, features, device_class)]
         return self._traits
 
     async def sync_serialize(self):

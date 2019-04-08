@@ -1,9 +1,4 @@
-"""
-Sensor to get GTT's timetable for a stop.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gtt/
-"""
+"""Sensor to get GTT's timetable for a stop."""
 import logging
 from datetime import timedelta, datetime
 

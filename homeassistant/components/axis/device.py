@@ -12,6 +12,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, DOMAIN, LOGGER
+
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -72,8 +73,7 @@ class AxisNetworkDevice:
 
         try:
             self.api = await get_device(
-                hass, self.config_entry.data[CONF_DEVICE],
-                event_types='on', signal_callback=self.async_signal_callback)
+                hass, self.config_entry.data[CONF_DEVICE])
 
         except CannotConnect:
             raise ConfigEntryNotReady
@@ -95,15 +95,59 @@ class AxisNetworkDevice:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, 'binary_sensor'))
+
+            self.api.stream.connection_status_callback = \
+                self.async_connection_status_callback
+            self.api.enable_events(event_callback=self.async_event_callback)
             self.api.start()
+
+        self.config_entry.add_update_listener(self.async_new_address_callback)
 
         return True
 
+    @property
+    def event_new_address(self):
+        """Device specific event to signal new device address."""
+        return 'axis_new_address_{}'.format(self.serial)
+
+    @staticmethod
+    async def async_new_address_callback(hass, entry):
+        """Handle signals of device getting new address.
+
+        This is a static method because a class method (bound method),
+        can not be used with weak references.
+        """
+        device = hass.data[DOMAIN][entry.data[CONF_MAC]]
+        device.api.config.host = device.host
+        async_dispatcher_send(hass, device.event_new_address)
+
+    @property
+    def event_reachable(self):
+        """Device specific event to signal a change in connection status."""
+        return 'axis_reachable_{}'.format(self.serial)
+
     @callback
-    def async_signal_callback(self, action, event):
+    def async_connection_status_callback(self, status):
+        """Handle signals of device connection status.
+
+        This is called on every RTSP keep-alive message.
+        Only signal state change if state change is true.
+        """
+        from axis.streammanager import SIGNAL_PLAYING
+        if self.available != (status == SIGNAL_PLAYING):
+            self.available = not self.available
+            async_dispatcher_send(self.hass, self.event_reachable, True)
+
+    @property
+    def event_new_sensor(self):
+        """Device specific event to signal new sensor available."""
+        return 'axis_add_sensor_{}'.format(self.serial)
+
+    @callback
+    def async_event_callback(self, action, event):
         """Call to configure events when initialized on event stream."""
         if action == 'add':
-            async_dispatcher_send(self.hass, 'axis_add_sensor', event)
+            async_dispatcher_send(self.hass, self.event_new_sensor, event)
 
     @callback
     def shutdown(self, event):
@@ -111,7 +155,7 @@ class AxisNetworkDevice:
         self.api.stop()
 
 
-async def get_device(hass, config, event_types=None, signal_callback=None):
+async def get_device(hass, config):
     """Create a Axis device."""
     import axis
 
@@ -119,8 +163,7 @@ async def get_device(hass, config, event_types=None, signal_callback=None):
         loop=hass.loop, host=config[CONF_HOST],
         username=config[CONF_USERNAME],
         password=config[CONF_PASSWORD],
-        port=config[CONF_PORT], web_proto='http',
-        event_types=event_types, signal=signal_callback)
+        port=config[CONF_PORT], web_proto='http')
 
     try:
         with async_timeout.timeout(15):

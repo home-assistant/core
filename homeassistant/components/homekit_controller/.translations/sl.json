@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dodatna oprema je \u017ee konfigurirana s tem krmilnikom.",
+            "already_paired": "Ta dodatna oprema je \u017ee povezana z drugo napravo. Ponastavite dodatno opremo in poskusite znova.",
+            "ignored_model": "Podpora za HomeKit za ta model je blokirana, saj je na voljo ve\u010d funkcij popolne nativne integracije.",
+            "invalid_config_entry": "Ta naprava se prikazuje kot pripravljena za povezavo, vendar je konflikt v nastavitvah  Home Assistant, ki ga je treba najprej odstraniti.",
+            "no_devices": "Ni bilo mogo\u010de najti neuparjenih naprav"
+        },
+        "error": {
+            "authentication_error": "Nepravilna koda HomeKit. Preverite in poskusite znova.",
+            "unable_to_pair": "Ni mogo\u010de seznaniti. Poskusite znova.",
+            "unknown_error": "Naprava je sporo\u010dila neznano napako. Seznanjanje ni uspelo."
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Koda za seznanjanje"
+                },
+                "description": "Vnesi HomeKit kodo, \u010de \u017eeli\u0161 uporabiti to dodatno opremo",
+                "title": "Seznanite s HomeKit Opremo"
+            },
+            "user": {
+                "data": {
+                    "device": "Naprava"
+                },
+                "description": "Izberite napravo, s katero se \u017eelite seznaniti",
+                "title": "Seznanite s HomeKit Opremo"
+            }
+        },
+        "title": "HomeKit oprema"
+    }
+}

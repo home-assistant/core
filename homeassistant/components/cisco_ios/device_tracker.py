@@ -1,9 +1,4 @@
-"""
-Support for Cisco IOS Routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.cisco_ios/
-"""
+"""Support for Cisco IOS Routers."""
 import logging
 
 import voluptuous as vol

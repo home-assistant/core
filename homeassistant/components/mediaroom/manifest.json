@@ -1,0 +1,12 @@
+{
+  "domain": "mediaroom",
+  "name": "Mediaroom",
+  "documentation": "https://www.home-assistant.io/components/mediaroom",
+  "requirements": [
+    "pymediaroom==0.6.4"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@dgomes"
+  ]
+}

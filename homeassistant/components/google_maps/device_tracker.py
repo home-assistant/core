@@ -1,9 +1,4 @@
-"""
-Support for Google Maps location sharing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.google_maps/
-"""
+"""Support for Google Maps location sharing."""
 from datetime import timedelta
 import logging
 

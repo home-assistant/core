@@ -1,9 +1,4 @@
-"""
-Support for Australian BOM (Bureau of Meteorology) weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bom/
-"""
+"""Support for Australian BOM (Bureau of Meteorology) weather service."""
 import datetime
 import ftplib
 import gzip

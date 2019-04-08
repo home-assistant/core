@@ -1,9 +1,4 @@
-"""
-Support for real-time departure information for public transport in Munich.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mvglive/
-"""
+"""Support for departure information for public transport in Munich."""
 import logging
 from datetime import timedelta
 

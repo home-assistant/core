@@ -53,9 +53,9 @@ async def setup_device(hass):
         1, axis.DOMAIN, 'Mock Title', ENTRY_CONFIG, 'test',
         config_entries.CONN_CLASS_LOCAL_PUSH, options=ENTRY_OPTIONS)
     device = axis.AxisNetworkDevice(hass, config_entry)
-    device.api = AxisDevice(loop=loop, **config_entry.data[axis.CONF_DEVICE],
-                            signal=device.async_signal_callback)
+    device.api = AxisDevice(loop=loop, **config_entry.data[axis.CONF_DEVICE])
     hass.data[axis.DOMAIN] = {device.serial: device}
+    device.api.enable_events(event_callback=device.async_event_callback)
 
     await hass.config_entries.async_forward_entry_setup(
         config_entry, 'binary_sensor')

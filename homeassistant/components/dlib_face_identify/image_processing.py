@@ -1,9 +1,4 @@
-"""
-Component that will help set the Dlib face detect processing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.dlib_face_identify/
-"""
+"""Component that will help set the Dlib face detect processing."""
 import logging
 import io
 
@@ -15,7 +10,7 @@ from homeassistant.components.image_processing import (
     CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['face_recognition==1.0.0']
+REQUIREMENTS = ['face_recognition==1.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 

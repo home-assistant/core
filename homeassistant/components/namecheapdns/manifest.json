@@ -1,0 +1,10 @@
+{
+  "domain": "namecheapdns",
+  "name": "Namecheapdns",
+  "documentation": "https://www.home-assistant.io/components/namecheapdns",
+  "requirements": [
+    "defusedxml==0.5.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

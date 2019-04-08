@@ -1,9 +1,4 @@
-"""
-Proxy camera platform that enables image processing of camera data.
-
-For more details about this platform, please refer to the documentation
-https://www.home-assistant.io/components/camera.proxy/
-"""
+"""Proxy camera platform that enables image processing of camera data."""
 import asyncio
 import logging
 

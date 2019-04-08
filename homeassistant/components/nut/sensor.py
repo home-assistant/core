@@ -1,9 +1,4 @@
-"""
-Provides a sensor to track various status aspects of a UPS.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nut/
-"""
+"""Provides a sensor to track various status aspects of a UPS."""
 import logging
 from datetime import timedelta
 

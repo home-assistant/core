@@ -1,9 +1,4 @@
-"""
-Support for Niko Home Control.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/light.niko_home_control/
-"""
+"""Support for Niko Home Control."""
 import logging
 
 import voluptuous as vol

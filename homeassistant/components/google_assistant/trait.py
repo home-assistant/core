@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components import (
+    binary_sensor,
     camera,
     cover,
     group,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    ATTR_ASSUMED_STATE,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
@@ -48,6 +50,7 @@ TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
 TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
 TRAIT_FANSPEED = PREFIX_TRAITS + 'FanSpeed'
 TRAIT_MODES = PREFIX_TRAITS + 'Modes'
+TRAIT_OPENCLOSE = PREFIX_TRAITS + 'OpenClose'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
@@ -66,6 +69,7 @@ COMMAND_THERMOSTAT_SET_MODE = PREFIX_COMMANDS + 'ThermostatSetMode'
 COMMAND_LOCKUNLOCK = PREFIX_COMMANDS + 'LockUnlock'
 COMMAND_FANSPEED = PREFIX_COMMANDS + 'SetFanSpeed'
 COMMAND_MODES = PREFIX_COMMANDS + 'SetModes'
+COMMAND_OPENCLOSE = PREFIX_COMMANDS + 'OpenClose'
 
 TRAITS = []
 
@@ -124,12 +128,10 @@ class BrightnessTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain == light.DOMAIN:
             return features & light.SUPPORT_BRIGHTNESS
-        if domain == cover.DOMAIN:
-            return features & cover.SUPPORT_SET_POSITION
         if domain == media_player.DOMAIN:
             return features & media_player.SUPPORT_VOLUME_SET
 
@@ -149,11 +151,6 @@ class BrightnessTrait(_Trait):
             if brightness is not None:
                 response['brightness'] = int(100 * (brightness / 255))
 
-        elif domain == cover.DOMAIN:
-            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
-            if position is not None:
-                response['brightness'] = position
-
         elif domain == media_player.DOMAIN:
             level = self.state.attributes.get(
                 media_player.ATTR_MEDIA_VOLUME_LEVEL)
@@ -172,12 +169,6 @@ class BrightnessTrait(_Trait):
                 light.DOMAIN, light.SERVICE_TURN_ON, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
-                }, blocking=True, context=data.context)
-        elif domain == cover.DOMAIN:
-            await self.hass.services.async_call(
-                cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    cover.ATTR_POSITION: params['brightness']
                 }, blocking=True, context=data.context)
         elif domain == media_player.DOMAIN:
             await self.hass.services.async_call(
@@ -203,7 +194,7 @@ class CameraStreamTrait(_Trait):
     stream_info = None
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain == camera.DOMAIN:
             return features & camera.SUPPORT_STREAM
@@ -246,7 +237,7 @@ class OnOffTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain in (
             group.DOMAIN,
@@ -254,7 +245,6 @@ class OnOffTrait(_Trait):
             switch.DOMAIN,
             fan.DOMAIN,
             light.DOMAIN,
-            cover.DOMAIN,
             media_player.DOMAIN,
         )
 
@@ -264,22 +254,13 @@ class OnOffTrait(_Trait):
 
     def query_attributes(self):
         """Return OnOff query attributes."""
-        if self.state.domain == cover.DOMAIN:
-            return {'on': self.state.state != cover.STATE_CLOSED}
         return {'on': self.state.state != STATE_OFF}
 
     async def execute(self, command, data, params):
         """Execute an OnOff command."""
         domain = self.state.domain
 
-        if domain == cover.DOMAIN:
-            service_domain = domain
-            if params['on']:
-                service = cover.SERVICE_OPEN_COVER
-            else:
-                service = cover.SERVICE_CLOSE_COVER
-
-        elif domain == group.DOMAIN:
+        if domain == group.DOMAIN:
             service_domain = HA_DOMAIN
             service = SERVICE_TURN_ON if params['on'] else SERVICE_TURN_OFF
 
@@ -305,7 +286,7 @@ class ColorSpectrumTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != light.DOMAIN:
             return False
@@ -361,7 +342,7 @@ class ColorTemperatureTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != light.DOMAIN:
             return False
@@ -434,7 +415,7 @@ class SceneTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain in (scene.DOMAIN, script.DOMAIN)
 
@@ -470,7 +451,7 @@ class DockTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain == vacuum.DOMAIN
 
@@ -504,7 +485,7 @@ class StartStopTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain == vacuum.DOMAIN
 
@@ -574,7 +555,7 @@ class TemperatureSettingTrait(_Trait):
     google_to_hass = {value: key for key, value in hass_to_google.items()}
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != climate.DOMAIN:
             return False
@@ -759,7 +740,7 @@ class LockUnlockTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         return domain == lock.DOMAIN
 
@@ -810,7 +791,7 @@ class FanSpeedTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != fan.DOMAIN:
             return False
@@ -961,7 +942,7 @@ class ModesTrait(_Trait):
     }
 
     @staticmethod
-    def supported(domain, features):
+    def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain != media_player.DOMAIN:
             return False
@@ -1047,3 +1028,94 @@ class ModesTrait(_Trait):
                             ATTR_ENTITY_ID: self.state.entity_id,
                             media_player.ATTR_INPUT_SOURCE: source
                         }, blocking=True, context=data.context)
+
+
+@register_trait
+class OpenCloseTrait(_Trait):
+    """Trait to open and close a cover.
+
+    https://developers.google.com/actions/smarthome/traits/openclose
+    """
+
+    name = TRAIT_OPENCLOSE
+    commands = [
+        COMMAND_OPENCLOSE
+    ]
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        if domain == cover.DOMAIN:
+            return True
+
+        return domain == binary_sensor.DOMAIN and device_class in (
+            binary_sensor.DEVICE_CLASS_DOOR,
+            binary_sensor.DEVICE_CLASS_GARAGE_DOOR,
+            binary_sensor.DEVICE_CLASS_LOCK,
+            binary_sensor.DEVICE_CLASS_OPENING,
+            binary_sensor.DEVICE_CLASS_WINDOW,
+        )
+
+    def sync_attributes(self):
+        """Return opening direction."""
+        attrs = {}
+        if self.state.domain == binary_sensor.DOMAIN:
+            attrs['queryOnlyOpenClose'] = True
+        return attrs
+
+    def query_attributes(self):
+        """Return state query attributes."""
+        domain = self.state.domain
+        response = {}
+
+        if domain == cover.DOMAIN:
+            # When it's an assumed state, we will always report it as 50%
+            # Google will not issue an open command if the assumed state is
+            # open, even if that is currently incorrect.
+            if self.state.attributes.get(ATTR_ASSUMED_STATE):
+                response['openPercent'] = 50
+            else:
+                position = self.state.attributes.get(
+                    cover.ATTR_CURRENT_POSITION
+                )
+
+                if position is not None:
+                    response['openPercent'] = position
+                elif self.state.state != cover.STATE_CLOSED:
+                    response['openPercent'] = 100
+                else:
+                    response['openPercent'] = 0
+
+        elif domain == binary_sensor.DOMAIN:
+            if self.state.state == STATE_ON:
+                response['openPercent'] = 100
+            else:
+                response['openPercent'] = 0
+
+        return response
+
+    async def execute(self, command, data, params):
+        """Execute an Open, close, Set position command."""
+        domain = self.state.domain
+
+        if domain == cover.DOMAIN:
+            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
+            if position is not None:
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        cover.ATTR_POSITION: params['openPercent']
+                    }, blocking=True, context=data.context)
+            else:
+                if self.state.state != cover.STATE_CLOSED:
+                    if params['openPercent'] < 100:
+                        await self.hass.services.async_call(
+                            cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
+                                ATTR_ENTITY_ID: self.state.entity_id
+                            }, blocking=True, context=data.context)
+                else:
+                    if params['openPercent'] > 0:
+                        await self.hass.services.async_call(
+                            cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
+                                ATTR_ENTITY_ID: self.state.entity_id
+                            }, blocking=True, context=data.context)

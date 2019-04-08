@@ -1,0 +1,10 @@
+{
+  "domain": "totalconnect",
+  "name": "Totalconnect",
+  "documentation": "https://www.home-assistant.io/components/totalconnect",
+  "requirements": [
+    "total_connect_client==0.25"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

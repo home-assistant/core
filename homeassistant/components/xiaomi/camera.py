@@ -1,9 +1,4 @@
-"""
-This component provides support for Xiaomi Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.xiaomi/
-"""
+"""This component provides support for Xiaomi Cameras."""
 import asyncio
 import logging
 
@@ -23,6 +18,7 @@ DEFAULT_BRAND = 'Xiaomi Home Camera'
 DEFAULT_PATH = '/media/mmcblk0p1/record'
 DEFAULT_PORT = 21
 DEFAULT_USERNAME = 'root'
+DEFAULT_ARGUMENTS = '-pred 1'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 CONF_MODEL = 'model'
@@ -39,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string
 })
 
 

@@ -1,9 +1,4 @@
-"""
-Support for the Pico TTS speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.picotts/
-"""
+"""Support for the Pico TTS speech service."""
 import logging
 import os
 import shutil
@@ -12,7 +7,7 @@ import tempfile
 
 import voluptuous as vol
 
-from . import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 
 _LOGGER = logging.getLogger(__name__)
 

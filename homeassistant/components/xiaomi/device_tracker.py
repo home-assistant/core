@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Mi routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.xiaomi/
-"""
+"""Support for Xiaomi Mi routers."""
 import logging
 
 import requests

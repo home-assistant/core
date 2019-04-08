@@ -1,0 +1,10 @@
+{
+  "domain": "familyhub",
+  "name": "Familyhub",
+  "documentation": "https://www.home-assistant.io/components/familyhub",
+  "requirements": [
+    "python-family-hub-local==0.0.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

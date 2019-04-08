@@ -1,9 +1,4 @@
-"""
-Support for interfacing with the XBMC/Kodi JSON-RPC API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.kodi/
-"""
+"""Support for interfacing with the XBMC/Kodi JSON-RPC API."""
 import asyncio
 from collections import OrderedDict
 from functools import wraps

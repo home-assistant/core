@@ -1,18 +1,12 @@
-"""
-Support for the Microsoft Cognitive Services text-to-speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.microsoft/
-"""
+"""Support for the Microsoft Cognitive Services text-to-speech service."""
 from http.client import HTTPException
 import logging
 
 import voluptuous as vol
 
+from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.const import CONF_API_KEY, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
-
-from . import CONF_LANG, PLATFORM_SCHEMA, Provider
 
 CONF_GENDER = 'gender'
 CONF_OUTPUT = 'output'

@@ -1,0 +1,10 @@
+{
+  "domain": "microsoft",
+  "name": "Microsoft",
+  "documentation": "https://www.home-assistant.io/components/microsoft",
+  "requirements": [
+    "pycsspeechtts==1.0.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
