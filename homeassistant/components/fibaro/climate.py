@@ -34,6 +34,7 @@ STATE_ENERGY_COOL = STATE_COOL
 STATE_FULL_POWER = STATE_AUTO
 STATE_FORCE_OPEN = STATE_MANUAL
 STATE_AWAY = STATE_AUTO
+STATE_FURNACE = STATE_HEAT
 
 FAN_AUTO_HIGH = 'auto_high'
 FAN_AUTO_MEDIUM = 'auto_medium'
@@ -42,7 +43,6 @@ FAN_HUMIDITY_CIRCULATION = 'humidity_circulation'
 FAN_LEFT_RIGHT = 'left_right'
 FAN_UP_DOWN = 'up_down'
 FAN_QUIET = 'quiet'
-STATE_FURNACE = 'furnace'
 
 DEPENDENCIES = ['fibaro']
 
@@ -166,16 +166,19 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        _LOGGER.debug("Climate %s", self.ha_id)
-        _LOGGER.debug("- _temp_sensor_device %s",
+        _LOGGER.debug("Climate %s\n"
+                      "- _temp_sensor_device %s\n"
+                      "- _target_temp_device %s\n"
+                      "- _op_mode_device %s\n"
+                      "- _fan_mode_device %s",
+                      self.ha_id,
                       self._temp_sensor_device.ha_id
-                      if self._temp_sensor_device else "None")
-        _LOGGER.debug("- _target_temp_device %s",
+                      if self._temp_sensor_device else "None",
                       self._target_temp_device.ha_id
-                      if self._target_temp_device else "None")
-        _LOGGER.debug("- _op_mode_device %s", self._op_mode_device.ha_id
-                      if self._op_mode_device else "None")
-        _LOGGER.debug("- _fan_mode_device %s", self._fan_mode_device.ha_id
+                      if self._target_temp_device else "None",
+                      self._op_mode_device.ha_id
+                      if self._op_mode_device else "None",
+                      self._fan_mode_device.ha_id
                       if self._fan_mode_device else "None")
         await super().async_added_to_hass()
 
