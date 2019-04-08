@@ -70,7 +70,6 @@ class DoorBirdCamera(Camera):
         """Return supported features."""
         return self._supported_features
 
-
     @property
     def name(self):
         """Get the name of the camera."""
