@@ -35,7 +35,7 @@ async def test_sensor(hass, create_registrations, webhook_client):  # noqa: F401
     assert reg_resp.status == 201
 
     json = await reg_resp.json()
-    assert json == {'status': 'registered'}
+    assert json == {'success': True}
 
     entity = hass.states.get('sensor.battery_state')
     assert entity is not None
@@ -122,7 +122,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations,  # noqa: F401, F81
     assert reg_resp.status == 201
 
     reg_json = await reg_resp.json()
-    assert reg_json == {'status': 'registered'}
+    assert reg_json == {'success': True}
 
     dupe_resp = await webhook_client.post(webhook_url, json=payload)
 
