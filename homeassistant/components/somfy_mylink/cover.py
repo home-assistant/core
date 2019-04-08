@@ -62,6 +62,11 @@ class SomfyShade(CoverDevice):
         return self._name
 
     @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        pass
+
+    @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
