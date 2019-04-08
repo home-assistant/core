@@ -31,10 +31,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         async_add_entities([
             DoorBirdCamera(
                 device.live_image_url,
-                device.rtsp_live_video_url,
                 _CAMERA_LIVE.format(doorstation.name),
                 _LIVE_INTERVAL,
-                stream_url=device.rtsp_live_video_url),
+                device.rtsp_live_video_url),
             DoorBirdCamera(
                 device.history_image_url(1, 'doorbell'),
                 _CAMERA_LAST_VISITOR.format(doorstation.name),
