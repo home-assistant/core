@@ -84,7 +84,11 @@ class HomeAccessory(Accessory):
 
         if battery_level is None:
             return
-        _LOGGER.debug('%s: Found battery level attribute', self.entity_id)
+        if self._linked_battery_sensor:
+            _LOGGER.debug('%s: Found battery level sensor %s', self.entity_id
+                          self._linked_battery_sensor)
+        else:
+            _LOGGER.debug('%s: Found battery level attribute', self.entity_id)
         self._support_battery_level = True
         serv_battery = self.add_preload_service(SERV_BATTERY_SERVICE)
         self._char_battery = serv_battery.configure_char(
