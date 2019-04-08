@@ -94,7 +94,6 @@ async def test_network_key_validation(hass, mock_openzwave):
     ]
     for value in test_values:
         result = zwave.CONFIG_SCHEMA({'zwave': {'network_key': value}})
-        print(result['zwave']['network_key'])
         assert result['zwave']['network_key'] == value
 
 
