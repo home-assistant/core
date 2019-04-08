@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_COOL,
-    STATE_DRY, STATE_FAN_ONLY, STATE_HEAT,
+    STATE_AUTO, STATE_COOL, STATE_DRY,
+    STATE_ECO, STATE_FAN_ONLY, STATE_HEAT,
     STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_FAN_MODE)
 
@@ -29,7 +29,7 @@ STATE_AUXILIARY = STATE_HEAT
 STATE_RESUME = STATE_HEAT
 STATE_MOIST = STATE_DRY
 STATE_AUTO_CHANGEOVER = STATE_AUTO
-STATE_ENERGY_HEAT = STATE_HEAT
+STATE_ENERGY_HEAT = STATE_ECO
 STATE_ENERGY_COOL = STATE_COOL
 STATE_FULL_POWER = STATE_AUTO
 STATE_FORCE_OPEN = STATE_MANUAL
@@ -123,11 +123,13 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
             if device.type == 'com.fibaro.temperatureSensor':
                 self._temp_sensor_device = FibaroDevice(device)
                 tempunit = device.properties.unit
-            if 'setTargetLevel' in device.actions:
+            if 'setTargetLevel' in device.actions or \
+                    'setThermostatSetpoint' in device.actions:
                 self._target_temp_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_TARGET_TEMPERATURE
                 tempunit = device.properties.unit
-            if 'setMode' in device.actions:
+            if 'setMode' in device.actions or \
+                    'setOperatingMode' in device.actions:
                 self._op_mode_device = FibaroDevice(device)
                 self._support_flags |= SUPPORT_OPERATION_MODE
             if 'setFanMode' in device.actions:
@@ -268,9 +270,15 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
+        target = self._target_temp_device
         if temperature is not None:
-            self._target_temp_device.action(
-                "setTargetLevel", temperature)
+            if "setThermostatSetpoint" in target.fibaro_device.actions:
+                target.action("setThermostatSetpoint",
+                              self._op_state_to_mode[self.current_operation],
+                              kwargs.get(ATTR_TEMPERATURE))
+            else:
+                target.action("setTargetLevel",
+                              kwargs.get(ATTR_TEMPERATURE))
 
     @property
     def is_on(self):
