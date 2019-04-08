@@ -1,1 +1,1 @@
-"""The pollen component."""
+"""The IQVIA component."""
