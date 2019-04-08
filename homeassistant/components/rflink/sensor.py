@@ -115,7 +115,6 @@ class RflinkSensor(RflinkDevice):
 
     def _handle_event(self, event):
         """Domain specific event handler."""
-
         # auto-expire enabled?
         if self._expire_after > 0:
             # Reset old trigger
