@@ -27,6 +27,12 @@ homeassistant/scripts/check_config.py @kellerza
 # Integrations
 """
 
+INDIVIDUAL_FILES = """
+# Individual files
+homeassistant/components/group/cover @cdce8p
+homeassistant/components/demo/weather @fabaff
+"""
+
 
 def generate():
     """Generate CODEOWNERS."""
@@ -38,6 +44,8 @@ def generate():
 
         parts.append("homeassistant/components/{}/* {}".format(
             manifest['domain'], ' '.join(manifest['codeowners'])))
+
+    parts.append('\n' + INDIVIDUAL_FILES.strip())
 
     return '\n'.join(parts)
 

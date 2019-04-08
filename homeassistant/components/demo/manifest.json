@@ -9,6 +9,6 @@
     "zone"
   ],
   "codeowners": [
-    "@fabaff"
+    "@home-assistant/core"
   ]
 }
