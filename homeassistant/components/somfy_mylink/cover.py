@@ -1,8 +1,5 @@
 """
-Platform for the Somfy MyLink device supporting the Synergy JsonRPC API.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.somfy_mylink/
+Cover Platform for the Somfy MyLink device supporting the Synergy JsonRPC API.
 """
 import logging
 
