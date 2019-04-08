@@ -11,10 +11,10 @@ from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN
 )
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP,
-    STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_CLOSING,
+    STATE_OPEN, STATE_OPENING
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 REQUIREMENTS = ['pymyq==1.2.0']
 _LOGGER = logging.getLogger(__name__)
@@ -39,12 +39,14 @@ async def async_setup_platform(
     from pymyq import login
     from pymyq.errors import MyQError, UnsupportedBrandError
 
+    websession = aiohttp_client.async_get_clientsession(hass)
+
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     brand = config[CONF_TYPE]
 
     try:
-        myq = await login(username, password, brand)
+        myq = await login(username, password, brand, websession)
     except UnsupportedBrandError:
         _LOGGER.error('Unsupported brand: %s', brand)
         return
@@ -62,16 +64,6 @@ class MyQDevice(CoverDevice):
     def __init__(self, device):
         """Initialize with API object, device id."""
         self._device = device
-
-    async def async_added_to_hass(self):
-        """Register callback to stop session."""
-        async def shutdown(_):
-            """Close connection on shutdown."""
-            _LOGGER.debug("%s: Closing MyQ device", self.name)
-            await self._device.close_connection()
-
-        # Register callback with HA
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     @property
     def device_class(self):
