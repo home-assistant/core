@@ -1,6 +1,7 @@
 """Support to send and receive Telegram messages."""
 import io
 from functools import partial
+import importlib
 import logging
 
 import requests
