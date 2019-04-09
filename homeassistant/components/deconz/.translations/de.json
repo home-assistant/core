@@ -9,6 +9,13 @@
             "no_key": "Es konnte kein API-Schl\u00fcssel abgerufen werden"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Import virtueller Sensoren zulassen",
+                    "allow_deconz_groups": "Import von deCONZ-Gruppen zulassen"
+                },
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem deCONZ gateway herstellt, der vom Add-on hass.io {addon} bereitgestellt wird?"
+            },
             "init": {
                 "data": {
                     "host": "Host",

@@ -5,6 +5,11 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Nom"
+                },
                 "title": "Emplacement"
             }
         },
