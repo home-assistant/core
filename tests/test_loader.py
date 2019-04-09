@@ -4,9 +4,10 @@ import asyncio
 import pytest
 
 import homeassistant.loader as loader
-import homeassistant.components.http as http
+from homeassistant.components import http, hue
+from homeassistant.components.hue import light as hue_light
 
-from tests.common import MockModule, async_mock_service
+from tests.common import MockModule, async_mock_service, mock_integration
 
 
 def test_set_component(hass):
@@ -22,31 +23,30 @@ def test_get_component(hass):
     assert http == loader.get_component(hass, 'http')
 
 
-def test_component_dependencies(hass):
+async def test_component_dependencies(hass):
     """Test if we can get the proper load order of components."""
-    loader.set_component(hass, 'mod1', MockModule('mod1'))
-    loader.set_component(hass, 'mod2', MockModule('mod2', ['mod1']))
-    loader.set_component(hass, 'mod3', MockModule('mod3', ['mod2']))
+    mock_integration(hass, MockModule('mod1'))
+    mock_integration(hass, MockModule('mod2', ['mod1']))
+    mock_integration(hass, MockModule('mod3', ['mod2']))
 
     assert {'mod1', 'mod2', 'mod3'} == \
-        loader.component_dependencies(hass, 'mod3')
+        await loader.async_component_dependencies(hass, 'mod3')
 
     # Create circular dependency
-    loader.set_component(hass, 'mod1', MockModule('mod1', ['mod3']))
+    mock_integration(hass, MockModule('mod1', ['mod3']))
 
     with pytest.raises(loader.CircularDependency):
-        print(loader.component_dependencies(hass, 'mod3'))
+        print(await loader.async_component_dependencies(hass, 'mod3'))
 
     # Depend on non-existing component
-    loader.set_component(hass, 'mod1',
-                         MockModule('mod1', ['nonexisting']))
+    mock_integration(hass, MockModule('mod1', ['nonexisting']))
 
-    with pytest.raises(loader.ComponentNotFound):
-        print(loader.component_dependencies(hass, 'mod1'))
+    with pytest.raises(loader.IntegrationNotFound):
+        print(await loader.async_component_dependencies(hass, 'mod1'))
 
     # Try to get dependencies for non-existing component
-    with pytest.raises(loader.ComponentNotFound):
-        print(loader.component_dependencies(hass, 'nonexisting'))
+    with pytest.raises(loader.IntegrationNotFound):
+        print(await loader.async_component_dependencies(hass, 'nonexisting'))
 
 
 def test_component_loader(hass):
@@ -142,3 +142,31 @@ async def test_get_platform_enforces_component_path(hass, caplog):
     assert loader.get_platform(hass, 'comp_path_test', 'hue') is None
     assert ('Search path was limited to path of component: '
             'homeassistant.components') in caplog.text
+
+
+async def test_get_integration(hass):
+    """Test resolving integration."""
+    integration = await loader.async_get_integration(hass, 'hue')
+    assert hue == integration.get_component()
+    assert hue_light == integration.get_platform('light')
+
+
+async def test_get_integration_legacy(hass):
+    """Test resolving integration."""
+    integration = await loader.async_get_integration(hass, 'test_embedded')
+    assert integration.get_component().DOMAIN == 'test_embedded'
+    assert integration.get_platform('switch') is not None
+
+
+def test_integration_properties(hass):
+    """Test integration properties."""
+    integration = loader.Integration(hass, 'homeassistant.components.hue', {
+        'name': 'Philips Hue',
+        'domain': 'hue',
+        'dependencies': ['test-dep'],
+        'requirements': ['test-req==1.0.0'],
+    })
+    assert integration.name == "Philips Hue"
+    assert integration.domain == 'hue'
+    assert integration.dependencies == ['test-dep']
+    assert integration.requirements == ['test-req==1.0.0']

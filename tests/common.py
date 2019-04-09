@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, Mock, patch
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
 
-from homeassistant import auth, config_entries, core as ha
+from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
     models as auth_models, auth_store, providers as auth_providers,
     permissions as auth_permissions)
@@ -34,6 +34,7 @@ from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -894,3 +895,14 @@ async def flush_store(store):
 async def get_system_health_info(hass, domain):
     """Get system health info."""
     return await hass.data['system_health']['info'][domain](hass)
+
+
+def mock_integration(hass, module):
+    """Mock an integration."""
+    integration = loader.Integration(
+        hass, 'homeassisant.components.{}'.format(module.DOMAIN),
+        loader.manifest_from_legacy_module(module))
+
+    hass.data.setdefault(
+        loader.DATA_INTEGRATIONS, {}
+    )[module.DOMAIN] = integration

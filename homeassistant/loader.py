@@ -10,9 +10,12 @@ call get_component(hass, 'switch.your_platform'). In both cases the config
 directory is checked to see if it contains a user provided version. If not
 available it will check the built-in components and platforms.
 """
+import asyncio
 import functools as ft
 import importlib
+import json
 import logging
+import pathlib
 import sys
 from types import ModuleType
 from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar, List  # noqa pylint: disable=unused-import
@@ -34,17 +37,153 @@ _LOGGER = logging.getLogger(__name__)
 
 
 DATA_KEY = 'components'
+DATA_INTEGRATIONS = 'integrations'
 PACKAGE_CUSTOM_COMPONENTS = 'custom_components'
 PACKAGE_BUILTIN = 'homeassistant.components'
 LOOKUP_PATHS = [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 COMPONENTS_WITH_BAD_PLATFORMS = ['automation', 'mqtt', 'telegram_bot']
+_UNDEF = object()
+
+
+async def async_get_integration(hass, domain):
+    """Get an integration."""
+    cache = hass.data.setdefault(DATA_INTEGRATIONS, {})
+    integration = cache.get(domain, _UNDEF)
+
+    if integration is _UNDEF:
+        pass
+    elif integration is None:
+        raise IntegrationNotFound(domain)
+    else:
+        return integration
+
+    try:
+        import custom_components
+        integration = await hass.async_add_executor_job(
+            Integration.resolve_from_root, hass, custom_components, domain
+        )
+        if integration is not None:
+            cache[domain] = integration
+            return integration
+
+    except ImportError:
+        pass
+
+    from homeassistant import components
+
+    integration = Integration.resolve_from_root(hass, components, domain)
+
+    if integration is not None:
+        cache[domain] = integration
+        return integration
+
+    integration = Integration.resolve_legacy(hass, domain)
+    cache[domain] = integration
+
+    if not integration:
+        raise IntegrationNotFound(domain)
+
+    return integration
+
+
+def manifest_from_legacy_module(module):
+    """Generate a manifest from a legacy module."""
+    return {
+        'domain': module.DOMAIN,
+        'name': module.DOMAIN,
+        'documentation': None,
+        'requirements': getattr(module, 'REQUIREMENTS', []),
+        'dependencies': getattr(module, 'DEPENDENCIES', []),
+        'codeowners': [],
+    }
+
+
+class Integration:
+    """An integration in Home Assistant."""
+
+    @staticmethod
+    def resolve_from_root(hass, root_module, domain):
+        """Resolve an integration from a root module."""
+        for base in root_module.__path__:
+            manifest_path = (
+                pathlib.Path(base) / domain / 'manifest.json'
+            )
+
+            if not manifest_path.is_file():
+                continue
+
+            try:
+                manifest = json.loads(manifest_path.read_text())
+            except ValueError as err:
+                _LOGGER.error("Error parsing manifest.json file at %s: %s",
+                              manifest_path, err)
+                continue
+
+            return Integration(
+                hass, "{}.{}".format(root_module.__name__, domain), manifest
+            )
+
+        return None
+
+    @staticmethod
+    def resolve_legacy(hass, domain):
+        """Resolve legacy component.
+
+        Will create a stub manifest.
+        """
+        comp = get_component(hass, domain)
+
+        if comp is None:
+            return None
+
+        return Integration(
+            hass, comp.__name__, manifest_from_legacy_module(comp)
+        )
+
+    def __init__(self, hass, pkg_path, manifest):
+        """Initialize an integration."""
+        self.hass = hass
+        self.pkg_path = pkg_path
+        self.manifest = manifest
+        self.processed_deps = False
+        self.processed_reqs = False
+
+    @property
+    def name(self):
+        """Return name of this integration."""
+        return self.manifest['name']
+
+    @property
+    def domain(self):
+        """Return domain of this integration."""
+        return self.manifest['domain']
+
+    @property
+    def dependencies(self):
+        """Return dependencies of this integration."""
+        return self.manifest['dependencies']
+
+    @property
+    def requirements(self):
+        """Return requirements of this integration."""
+        return self.manifest['requirements']
+
+    def get_component(self):
+        """Return comoponent."""
+        return importlib.import_module(self.pkg_path)
+
+    def get_platform(self, platform_name):
+        """Return a platform for an integration."""
+        return importlib.import_module(
+            "{}.{}".format(self.pkg_path, platform_name)
+        )
 
 
 class LoaderError(Exception):
     """Loader base error."""
 
 
-class ComponentNotFound(LoaderError):
+class IntegrationNotFound(LoaderError):
     """Raised when a component is not found."""
 
     def __init__(self, domain: str) -> None:
@@ -294,46 +433,44 @@ def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
     return func
 
 
-def component_dependencies(hass,  # type: HomeAssistant
-                           comp_name: str) -> Set[str]:
+async def async_component_dependencies(hass,  # type: HomeAssistant
+                                       domain: str) -> Set[str]:
     """Return all dependencies and subdependencies of components.
 
     Raises CircularDependency if a circular dependency is found.
-
-    Async friendly.
     """
-    return _component_dependencies(hass, comp_name, set(), set())
+    return await _async_component_dependencies(hass, domain, set(), set())
 
 
-def _component_dependencies(hass,  # type: HomeAssistant
-                            comp_name: str, loaded: Set[str],
-                            loading: Set) -> Set[str]:
+async def _async_component_dependencies(hass,  # type: HomeAssistant
+                                        domain: str, loaded: Set[str],
+                                        loading: Set) -> Set[str]:
     """Recursive function to get component dependencies.
 
     Async friendly.
     """
-    component = get_component(hass, comp_name)
+    integration = await async_get_integration(hass, domain)
 
-    if component is None:
-        raise ComponentNotFound(comp_name)
+    if integration is None:
+        raise IntegrationNotFound(domain)
 
-    loading.add(comp_name)
+    loading.add(domain)
 
-    for dependency in getattr(component, 'DEPENDENCIES', []):
+    for dependency_domain in integration.dependencies:
         # Check not already loaded
-        if dependency in loaded:
+        if dependency_domain in loaded:
             continue
 
         # If we are already loading it, we have a circular dependency.
-        if dependency in loading:
-            raise CircularDependency(comp_name, dependency)
+        if dependency_domain in loading:
+            raise CircularDependency(domain, dependency_domain)
 
-        dep_loaded = _component_dependencies(
-            hass, dependency, loaded, loading)
+        dep_loaded = await _async_component_dependencies(
+            hass, dependency_domain, loaded, loading)
 
         loaded.update(dep_loaded)
 
-    loaded.add(comp_name)
-    loading.remove(comp_name)
+    loaded.add(domain)
+    loading.remove(domain)
 
     return loaded
