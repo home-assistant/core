@@ -1,7 +1,6 @@
 """All methods needed to bootstrap a Home Assistant instance."""
 import asyncio
 import logging.handlers
-import os
 from timeit import default_timer as timer
 
 from types import ModuleType
@@ -9,7 +8,7 @@ from typing import Awaitable, Callable, Optional, Dict, List
 
 from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
-from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
+from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
