@@ -38,10 +38,12 @@ class TestDemoPlatform(unittest.TestCase):
         with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
             with assert_setup_component(1, geo_location.DOMAIN):
                 assert setup_component(self.hass, geo_location.DOMAIN, CONFIG)
+            self.hass.block_till_done()
 
-            # In this test, only entities of the geolocation domain have been
+            # In this test, five geolocation entities have been
             # generated.
             all_states = self.hass.states.all()
+            print(all_states)
             assert len(all_states) == NUMBER_OF_DEMO_DEVICES
 
             # Check a single device's attributes.

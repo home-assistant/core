@@ -1601,6 +1601,9 @@ solax==0.0.3
 # homeassistant.components.honeywell
 somecomfort==0.5.2
 
+# homeassistant.components.somfy_mylink
+somfy-mylink-synergy==1.0.4
+
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.1
 
