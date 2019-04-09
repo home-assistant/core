@@ -1,9 +1,4 @@
-"""
-Component to interface with cameras.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/camera/
-"""
+"""Component to interface with cameras."""
 import asyncio
 import base64
 import collections
@@ -88,8 +83,8 @@ CAMERA_SERVICE_PLAY_STREAM = CAMERA_SERVICE_SCHEMA.extend({
 
 CAMERA_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(CONF_FILENAME): cv.template,
-    vol.Optional(CONF_DURATION, default=30): int,
-    vol.Optional(CONF_LOOKBACK, default=0): int,
+    vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
+    vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
 })
 
 WS_TYPE_CAMERA_THUMBNAIL = 'camera_thumbnail'

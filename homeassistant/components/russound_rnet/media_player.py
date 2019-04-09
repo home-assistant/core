@@ -1,9 +1,4 @@
-"""
-Support for interfacing with Russound via RNET Protocol.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.russound_rnet/
-"""
+"""Support for interfacing with Russound via RNET Protocol."""
 import logging
 
 import voluptuous as vol

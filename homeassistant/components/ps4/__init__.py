@@ -1,9 +1,4 @@
-"""
-Support for PlayStation 4 consoles.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ps4/
-"""
+"""Support for PlayStation 4 consoles."""
 import logging
 
 from homeassistant.const import CONF_REGION

@@ -1,9 +1,4 @@
-"""
-Support for the Unitymedia Horizon HD Recorder.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/media_player.horizon/
-"""
+"""Support for the Unitymedia Horizon HD Recorder."""
 from datetime import timedelta
 import logging
 

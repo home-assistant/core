@@ -1,0 +1,10 @@
+{
+  "domain": "systemmonitor",
+  "name": "Systemmonitor",
+  "documentation": "https://www.home-assistant.io/components/systemmonitor",
+  "requirements": [
+    "psutil==5.6.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

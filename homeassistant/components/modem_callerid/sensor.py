@@ -1,9 +1,4 @@
-"""
-A sensor to monitor incoming calls using a USB modem that supports caller ID.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.modem_callerid/
-"""
+"""A sensor for incoming calls using a USB modem that supports caller ID."""
 import logging
 import voluptuous as vol
 from homeassistant.const import (STATE_IDLE,

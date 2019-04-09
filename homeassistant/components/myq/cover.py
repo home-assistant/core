@@ -1,9 +1,4 @@
-"""
-Support for MyQ-Enabled Garage Doors.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.myq/
-"""
+"""Support for MyQ-Enabled Garage Doors."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for the Mediaroom Set-up-box.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.mediaroom/
-"""
+"""Support for the Mediaroom Set-up-box."""
 import logging
 
 import voluptuous as vol

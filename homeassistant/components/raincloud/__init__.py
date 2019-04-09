@@ -1,9 +1,4 @@
-"""
-Support for Melnor RainCloud sprinkler water timer.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/raincloud/
-"""
+"""Support for Melnor RainCloud sprinkler water timer."""
 from datetime import timedelta
 import logging
 
@@ -18,7 +13,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['raincloudy==0.0.5']
+REQUIREMENTS = ['raincloudy==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

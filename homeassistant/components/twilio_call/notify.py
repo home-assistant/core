@@ -1,9 +1,4 @@
-"""
-Twilio Call platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.twilio_call/
-"""
+"""Twilio Call platform for notify component."""
 import logging
 import urllib
 

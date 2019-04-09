@@ -1,9 +1,4 @@
-"""
-Details about printers which are connected to CUPS.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.cups/
-"""
+"""Details about printers which are connected to CUPS."""
 import importlib
 import logging
 from datetime import timedelta

@@ -1,9 +1,4 @@
-"""
-Support for Aruba Access Points.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.aruba/
-"""
+"""Support for Aruba Access Points."""
 import logging
 import re
 

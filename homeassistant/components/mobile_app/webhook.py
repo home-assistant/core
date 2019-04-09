@@ -8,6 +8,8 @@ from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
                                                      ATTR_DEV_ID,
                                                      DOMAIN as DT_DOMAIN,
                                                      SERVICE_SEE as DT_SEE)
+from homeassistant.components.frontend import MANIFEST_JSON
+from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
                                  CONF_WEBHOOK_ID, HTTP_BAD_REQUEST,
@@ -33,8 +35,9 @@ from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     DATA_STORE, DOMAIN, ERR_ENCRYPTION_REQUIRED,
                     ERR_SENSOR_DUPLICATE_UNIQUE_ID, ERR_SENSOR_NOT_REGISTERED,
                     SIGNAL_SENSOR_UPDATE, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_REGISTER_SENSOR,
+                    WEBHOOK_SCHEMAS, WEBHOOK_TYPES, WEBHOOK_TYPE_CALL_SERVICE,
+                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_GET_CONFIG,
+                    WEBHOOK_TYPE_GET_ZONES, WEBHOOK_TYPE_REGISTER_SENSOR,
                     WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION,
                     WEBHOOK_TYPE_UPDATE_SENSOR_STATES)
@@ -87,16 +90,19 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
         webhook_payload = _decrypt_payload(registration[CONF_SECRET], enc_data)
 
-    if webhook_type not in WEBHOOK_SCHEMAS:
+    if webhook_type not in WEBHOOK_TYPES:
         _LOGGER.error('Received invalid webhook type: %s', webhook_type)
         return empty_okay_response()
 
-    try:
-        data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
-    except vol.Invalid as ex:
-        err = vol.humanize.humanize_error(webhook_payload, ex)
-        _LOGGER.error('Received invalid webhook payload: %s', err)
-        return empty_okay_response(headers=headers)
+    data = webhook_payload
+
+    if webhook_type in WEBHOOK_SCHEMAS:
+        try:
+            data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
+        except vol.Invalid as ex:
+            err = vol.humanize.humanize_error(webhook_payload, ex)
+            _LOGGER.error('Received invalid webhook payload: %s', err)
+            return empty_okay_response(headers=headers)
 
     context = registration_context(registration)
 
@@ -139,17 +145,25 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         see_payload = {
             ATTR_DEV_ID: registration[ATTR_DEVICE_ID],
-            ATTR_LOCATION_NAME: data.get(ATTR_LOCATION_NAME),
-            ATTR_GPS: data.get(ATTR_GPS),
-            ATTR_GPS_ACCURACY: data.get(ATTR_GPS_ACCURACY),
-            ATTR_BATTERY: data.get(ATTR_BATTERY),
-            ATTR_ATTRIBUTES: {
-                ATTR_SPEED: data.get(ATTR_SPEED),
-                ATTR_ALTITUDE: data.get(ATTR_ALTITUDE),
-                ATTR_COURSE: data.get(ATTR_COURSE),
-                ATTR_VERTICAL_ACCURACY: data.get(ATTR_VERTICAL_ACCURACY),
-            }
+            ATTR_GPS: data[ATTR_GPS],
+            ATTR_GPS_ACCURACY: data[ATTR_GPS_ACCURACY],
         }
+
+        for key in (ATTR_LOCATION_NAME, ATTR_BATTERY):
+            value = data.get(key)
+            if value is not None:
+                see_payload[key] = value
+
+        attrs = {}
+
+        for key in (ATTR_ALTITUDE, ATTR_COURSE,
+                    ATTR_SPEED, ATTR_VERTICAL_ACCURACY):
+            value = data.get(key)
+            if value is not None:
+                attrs[key] = value
+
+        if attrs:
+            see_payload[ATTR_ATTRIBUTES] = attrs
 
         try:
             await hass.services.async_call(DT_DOMAIN,
@@ -214,7 +228,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
                                                   data[ATTR_SENSOR_TYPE])
         async_dispatcher_send(hass, register_signal, data)
 
-        return webhook_response({"status": "registered"},
+        return webhook_response({'success': True},
                                 registration=registration, status=HTTP_CREATED,
                                 headers=headers)
 
@@ -257,7 +271,29 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
             async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
 
-            resp[unique_id] = {"status": "okay"}
+            resp[unique_id] = {'success': True}
 
         return webhook_response(resp, registration=registration,
                                 headers=headers)
+
+    if webhook_type == WEBHOOK_TYPE_GET_ZONES:
+        zones = (hass.states.get(entity_id) for entity_id
+                 in sorted(hass.states.async_entity_ids(ZONE_DOMAIN)))
+        return webhook_response(list(zones), registration=registration,
+                                headers=headers)
+
+    if webhook_type == WEBHOOK_TYPE_GET_CONFIG:
+
+        hass_config = hass.config.as_dict()
+
+        return webhook_response({
+            'latitude': hass_config['latitude'],
+            'longitude': hass_config['longitude'],
+            'elevation': hass_config['elevation'],
+            'unit_system': hass_config['unit_system'],
+            'location_name': hass_config['location_name'],
+            'time_zone': hass_config['time_zone'],
+            'components': hass_config['components'],
+            'version': hass_config['version'],
+            'theme_color': MANIFEST_JSON['theme_color'],
+        }, registration=registration, headers=headers)

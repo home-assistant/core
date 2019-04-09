@@ -1,9 +1,4 @@
-"""
-Support for Songpal-enabled (Sony) media devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.songpal/
-"""
+"""Support for Songpal-enabled (Sony) media devices."""
 import asyncio
 import logging
 from collections import OrderedDict

@@ -1,9 +1,4 @@
-"""
-Support for Wi-Fi enabled iRobot Roombas.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum.roomba/
-"""
+"""Support for Wi-Fi enabled iRobot Roombas."""
 import asyncio
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.blackbird
-"""
+"""Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix."""
 import logging
 import socket
 

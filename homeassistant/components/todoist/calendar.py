@@ -1,9 +1,4 @@
-"""
-Support for Todoist task management (https://todoist.com).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/calendar.todoist/
-"""
+"""Support for Todoist task management (https://todoist.com)."""
 from datetime import datetime, timedelta
 import logging
 

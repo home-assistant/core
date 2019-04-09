@@ -1,9 +1,4 @@
-"""
-A platform which allows you to get information from Tautulli.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.tautulli/
-"""
+"""A platform which allows you to get information from Tautulli."""
 from datetime import timedelta
 import logging
 

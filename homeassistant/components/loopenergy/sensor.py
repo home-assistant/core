@@ -1,9 +1,4 @@
-"""
-Support for Loop Energy sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.loopenergy/
-"""
+"""Support for Loop Energy sensors."""
 import logging
 
 import voluptuous as vol

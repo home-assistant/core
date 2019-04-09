@@ -1,9 +1,4 @@
-"""
-Support for PlayStation 4 consoles.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/ps4/
-"""
+"""Support for PlayStation 4 consoles."""
 import logging
 import socket
 

@@ -1,9 +1,4 @@
-"""
-Support for command line notification services.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.command_line/
-"""
+"""Support for command line notification services."""
 import logging
 import subprocess
 

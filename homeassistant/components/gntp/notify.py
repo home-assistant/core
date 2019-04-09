@@ -1,9 +1,4 @@
-"""
-GNTP (aka Growl) notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.gntp/
-"""
+"""GNTP (aka Growl) notification service."""
 import logging
 import os
 

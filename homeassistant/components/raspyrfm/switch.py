@@ -1,9 +1,4 @@
-"""
-Support for switch devices that can be controlled using the RaspyRFM rc module.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.raspyrfm/
-"""
+"""Support for switchs that can be controlled using the RaspyRFM rc module."""
 import logging
 
 import voluptuous as vol

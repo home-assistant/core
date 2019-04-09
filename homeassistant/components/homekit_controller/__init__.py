@@ -191,8 +191,7 @@ def setup(hass, config):
             return
 
         _LOGGER.debug('Discovered unique device %s', hkid)
-        device = HKDevice(hass, host, port, model, hkid, config_num, config)
-        hass.data[KNOWN_DEVICES][hkid] = device
+        HKDevice(hass, host, port, model, hkid, config_num, config)
 
     hass.data[KNOWN_DEVICES] = {}
     discovery.listen(hass, SERVICE_HOMEKIT, discovery_dispatch)

@@ -1,9 +1,4 @@
-"""
-Support for Flux lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.flux_led/
-"""
+"""Support for Flux lights."""
 import logging
 import socket
 import random

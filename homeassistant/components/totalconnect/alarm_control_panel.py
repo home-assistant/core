@@ -1,9 +1,4 @@
-"""
-Interfaces with TotalConnect alarm control panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.totalconnect/
-"""
+"""Interfaces with TotalConnect alarm control panels."""
 import logging
 
 import voluptuous as vol

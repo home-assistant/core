@@ -1,12 +1,4 @@
-"""
-Interfaces with the myLeviton API for Decora Smart WiFi products.
-
-See:
-http://www.leviton.com/en/products/lighting-controls/decora-smart-with-wifi
-
-Uses Leviton's cloud services API for cloud-to-cloud integration.
-
-"""
+"""Interfaces with the myLeviton API for Decora Smart WiFi products."""
 
 import logging
 

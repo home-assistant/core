@@ -1,9 +1,4 @@
-"""
-Support for LG TV running on NetCast 3 or 4.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.lg_netcast/
-"""
+"""Support for LG TV running on NetCast 3 or 4."""
 from datetime import timedelta
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Support for interfacing with NAD receivers through RS-232.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.nad/
-"""
+"""Support for interfacing with NAD receivers through RS-232."""
 import logging
 
 import voluptuous as vol
