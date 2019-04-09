@@ -1,5 +1,6 @@
 """Webhook handlers for mobile_app."""
 import logging
+import json
 
 from aiohttp.web import HTTPBadRequest, Response, Request
 import voluptuous as vol
@@ -95,6 +96,9 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
         return empty_okay_response()
 
     data = webhook_payload
+
+    _LOGGER.debug("Received webhook payload for type %s: %s", webhook_type,
+                  json.dumps(data))
 
     if webhook_type in WEBHOOK_SCHEMAS:
         try:
