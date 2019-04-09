@@ -9,6 +9,7 @@
         "step": {
             "user": {
                 "data": {
+                    "radio_type": "Type de radio",
                     "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
                 },
                 "title": "ZHA"
