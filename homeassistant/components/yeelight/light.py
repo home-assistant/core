@@ -599,9 +599,7 @@ class YeelightWhiteTempLightsupport(YeelightGenericLight):
 
 
 class YeelightWhiteTempWithoutNightlightSwitch(YeelightWhiteTempLightsupport):
-    """Representation of a White temp light, when nightlight switch is not set
-    to light type
-    """
+    """White temp light, when nightlight switch is not set to light."""
 
     @property
     def _brightness_property(self):
@@ -609,8 +607,10 @@ class YeelightWhiteTempWithoutNightlightSwitch(YeelightWhiteTempLightsupport):
 
 
 class YeelightWithNightLight(YeelightWhiteTempLightsupport):
-    """Representation of a Yeelight with nightlight support, when nightlight
-    switch is set to light.
+    """Representation of a Yeelight with nightlight support.
+
+    It represents case when nightlight switch is set to light.
+
     """
 
     @property
@@ -663,18 +663,19 @@ class YeelightWithAmbientLightSupport(YeelightGenericLight):
 
 class YeelightWithAmbientWithoutNightlight(
     YeelightWithAmbientLightSupport, YeelightWhiteTempWithoutNightlightSwitch
-    ):
-    """
-    Representation of a Yeelight which has ambilight support but no
-    nightlight support. Its used when nightlight switch type is none
+):
+    """Representation of a Yeelight which has ambilight support.
+
+    And nightlight switch type is none.
     """
 
 
 class YeelightWithAmbientAndNightlight(YeelightWithAmbientLightSupport,
                                        YeelightWithNightLight):
     """
-    Representation of a Yeelight which has ambilight support and nightlight
-    switch type is set to light.
+    Representation of a Yeelight which has ambilight support.
+
+    And nightlight switch type is set to light.
     """
 
 
