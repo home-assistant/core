@@ -3,6 +3,7 @@ import asyncio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.heos.config_flow import HeosFlowHandler
+from homeassistant.components.heos.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
 
@@ -57,26 +58,41 @@ async def test_create_entry_when_host_valid(hass, controller):
     assert controller.disconnect.call_count == 1
 
 
-async def test_create_entry_with_discovery(hass, controller):
-    """Test result type is create entry when valid through discovery."""
-    flow = HeosFlowHandler()
-    flow.hass = hass
-    data = {
-        'host': '127.0.0.1',
-        'manufacturer': 'Denon',
-        'model_name': 'HEOS Drive',
-        'model_number': 'DWSA-10 4.0',
-        'name': 'Office',
-        'port': 60006,
-        'serial': None,
-        'ssdp_description':
-            'http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml',
-        'udn': 'uuid:e61de70c-2250-1c22-0080-0005cdf512be',
-        'upnp_device_type': 'urn:schemas-denon-com:device:AiosDevice:1'
-    }
-    result = await flow.async_step_discovery(data)
-    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result['title'] == 'Controller (127.0.0.1)'
-    assert result['data'] == {'host': '127.0.0.1'}
-    assert controller.connect.call_count == 1
-    assert controller.disconnect.call_count == 1
+async def test_create_entry_with_discovery(hass, controller, discovery_data):
+    """Test discovery creates entry."""
+    await hass.config_entries.flow.async_init(
+                DOMAIN, context={'source': 'discovery'},
+                data=discovery_data)
+    await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {CONF_HOST: discovery_data[CONF_HOST]}
+    assert entries[0].title == 'Controller (127.0.0.1)'
+
+
+async def test_entry_already_exists_discovery(
+        hass, controller, discovery_data, config_entry):
+    """Test discovery does not create multiple entries when already setup."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.flow.async_init(
+                DOMAIN, context={'source': 'discovery'},
+                data=discovery_data)
+    await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+
+async def test_multiple_discovery_creates_single_entry(
+        hass, controller, discovery_data):
+    """Test discovery of multiple devices creates a single entry."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': 'discovery'},
+            data={CONF_HOST: discovery_data}))
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': 'discovery'},
+            data={CONF_HOST: discovery_data}))
+    await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
