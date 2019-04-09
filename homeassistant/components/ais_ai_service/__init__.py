@@ -1557,7 +1557,6 @@ def _publish_command_to_frame(hass, key, val, ip):
             _say_it(hass, "Wybierz sieć WiFi z listy", None)
             return
 
-
         # TODO get password from file
         password = hass.states.get('input_text.ais_android_wifi_password').state
         if len(password.strip()) == 0:
@@ -1575,7 +1574,7 @@ def _publish_command_to_frame(hass, key, val, ip):
     elif key == "WifiConnectTheDevice":
         iot = val.split(';')[0]
         if iot == ais_global.G_EMPTY_OPTION:
-            _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie", None)
+            _say_it(hass, "wybierz urządzenie które mam dołączyć", None)
             return
         # check if wifi is selected
         ssid = hass.states.get('input_select.ais_android_wifi_network').state.split(';')[0]

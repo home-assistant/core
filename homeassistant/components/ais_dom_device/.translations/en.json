@@ -11,15 +11,20 @@
           "title": "Podłącz urządzenie do prądu"
         },
         "two": {
-          "description": "Krok 2\n\n ![AIS logo](/static/icons/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu. \nŻeby wymusić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.\n\n Następnie wyszukaj urządzeia naciskając **SUBMIT** poniżej",
-          "title": "Poczekaj na tryb praowania",
-          "data": {
-                    "devices": "Urządzenia"
-                }
+          "description": "Krok 2\n\n ![AIS logo](/static/icons/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu. \nŻeby wymusić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.\n\n Następnie wyszukaj urządzeie naciskając **SUBMIT** poniżej",
+          "title": "Poczekaj na tryb praowania"
         },
-        "three": {
-          "description": "Krok 3\n\n",
+        "search_iot": {
+          "description": "Szukanie urządzenia w sieci\n\n",
           "title": "Szukanie urządzenia w sieci"
+        },
+        "add_device": {
+          "description": "Krok 3\n\nDodajemy do bramki **{gate_id}** nowe urządzenie **{device_id}**",
+          "title": "Podaj nazwę dla urządzenia",
+          "data": { "name": "Nazwa dla urządzenia",
+                    "networks": "Sieć WiFi do której dołączyć urządzenie",
+                    "password": "Hasło do sieci WiFi"
+                }
         },
         "init": {
           "description": "TODO",
@@ -27,7 +32,8 @@
         }
       },
       "error": {
-        "search_failed": "Nie można znaleźć urządzenia, proszę spróbuj ponownie. "
+        "search_failed": "Nie można znaleźć urządzenia, proszę spróbuj ponownie.",
+        "add_failed": "Nie udało się dodać nowego urządzenia, proszę spróbuj ponownie."
       },
       "abort": {
         "single_instance_allowed": "Only a single Spotify integration is allowed. If you want to configure it again, first delete the current integration."
