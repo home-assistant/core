@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
     CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import entity_registry
 from homeassistant.util.json import load_json, save_json
 
 from .const import DOMAIN as PS4_DOMAIN, REGIONS as deprecated_regions
@@ -87,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         name = device[CONF_NAME]
         ps4 = pyps4.Ps4(host, creds)
         device_list.append(PS4Device(
-            name, host, region, ps4, games_file))
+            name, host, region, ps4, creds, games_file))
     add_entities(device_list, True)
 
 
@@ -102,12 +103,13 @@ class PS4Data():
 class PS4Device(MediaPlayerDevice):
     """Representation of a PS4."""
 
-    def __init__(self, name, host, region, ps4, games_file):
+    def __init__(self, name, host, region, ps4, creds, games_file):
         """Initialize the ps4 device."""
         self._ps4 = ps4
         self._host = host
         self._name = name
         self._region = region
+        self._creds = creds
         self._state = None
         self._games_filename = games_file
         self._media_content_id = None
@@ -124,6 +126,7 @@ class PS4Device(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Subscribe PS4 events."""
         self.hass.data[PS4_DATA].devices.append(self)
+        await self.async_update_entity_data()
 
     def update(self):
         """Retrieve the latest data."""
@@ -257,7 +260,7 @@ class PS4Device(MediaPlayerDevice):
             self.save_games(games)
 
     def get_device_info(self, status):
-        """Return device info for registry."""
+        """Set device info for registry."""
         _sw_version = status['system-version']
         _sw_version = _sw_version[1:4]
         sw_version = "{}.{}".format(_sw_version[0], _sw_version[1:])
@@ -270,12 +273,34 @@ class PS4Device(MediaPlayerDevice):
             'manufacturer': 'Sony Interactive Entertainment Inc.',
             'sw_version': sw_version
         }
-        self._unique_id = status['host-id']
+
+        # Use last 4 Chars of credential as suffix. Unique ID per PSN user.
+        suffix = self._creds[-4:]
+        self._unique_id = "{}_{}".format(status['host-id'], suffix)
+
+    async def async_update_entity_data(self):
+        """From 0.89. Update identifier. Prevent changing entity_id."""
+        registry = await entity_registry.async_get_registry(self.hass)
+        unique_id = self._unique_id.split('_')
+        unique_id = unique_id[0]
+        entity_id = registry.async_get_entity_id(
+            'media_player', PS4_DOMAIN, unique_id)
+
+        # Remove old entity entry. Update current entry with old entity_id.
+        if entity_id is not None:
+            registry.async_remove(entity_id)
+            old_entity_id = registry.async_get_entity_id(
+                'media_player', PS4_DOMAIN, self._unique_id)
+            registry.async_update_entity(
+                old_entity_id, new_entity_id=entity_id)
 
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
-        # Close TCP Socket
-        await self.hass.async_add_executor_job(self._ps4.close)
+        try:
+            # Close TCP Socket
+            await self.hass.async_add_executor_job(self._ps4.close)
+        except AttributeError:
+            pass
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
@@ -370,13 +395,18 @@ class PS4Device(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         for title_id, game in self._games.items():
-            if source == game:
+            if source.lower().encode(encoding='utf-8') == \
+               game.lower().encode(encoding='utf-8') \
+               or source == title_id:
                 _LOGGER.debug(
                     "Starting PS4 game %s (%s) using source %s",
                     game, title_id, source)
                 self._ps4.start_title(
                     title_id, running_id=self._media_content_id)
                 return
+        _LOGGER.warning(
+            "Could not start title. '%s' is not in source list.", source)
+        return
 
     def send_command(self, command):
         """Send Button Command."""
