@@ -59,6 +59,7 @@ def stream_worker(hass, stream, quit_event):
     first_packet = True
     sequence = 1
     audio_packets = {}
+    first_pts = 0
     last_dts = None
 
     while not quit_event.is_set():
@@ -81,6 +82,10 @@ def stream_worker(hass, stream, quit_event):
         if not first_packet and last_dts >= packet.dts:
             continue
         last_dts = packet.dts
+
+        # Reset timestamps for this stream
+        packet.dts -= first_pts
+        packet.pts -= first_pts
 
         # Reset segment on every keyframe
         if packet.is_keyframe:
@@ -112,6 +117,10 @@ def stream_worker(hass, stream, quit_event):
 
         # First video packet tends to have a weird dts/pts
         if first_packet:
+            # If we are attaching to a live stream that does not reset
+            # timestamps for us, we need to do it ourselves.
+            if (packet.pts * packet.time_base) > 1:
+                first_pts = packet.pts
             packet.dts = 0
             packet.pts = 0
             first_packet = False
