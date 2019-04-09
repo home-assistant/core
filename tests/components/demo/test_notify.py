@@ -42,7 +42,7 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.stop()
 
     def _setup_notify(self):
-        with assert_setup_component(1) as config:
+        with assert_setup_component(1, notify.DOMAIN) as config:
             assert setup_component(self.hass, notify.DOMAIN, CONFIG)
         assert config[notify.DOMAIN]
         self.hass.block_till_done()
