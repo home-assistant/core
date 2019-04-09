@@ -158,6 +158,14 @@ async def test_get_integration_legacy(hass):
     assert integration.get_platform('switch') is not None
 
 
+async def test_get_integration_custom_component(hass):
+    """Test resolving integration."""
+    integration = await loader.async_get_integration(hass, 'test_package')
+    print(integration)
+    assert integration.get_component().DOMAIN == 'test_package'
+    assert integration.name == 'Test Package'
+
+
 def test_integration_properties(hass):
     """Test integration properties."""
     integration = loader.Integration(hass, 'homeassistant.components.hue', {

@@ -17,14 +17,23 @@ import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar, List, Dict, cast  # noqa pylint: disable=unused-import
+from typing import (
+    Optional,
+    Set,
+    TYPE_CHECKING,
+    Callable,
+    Any,
+    TypeVar,
+    List,
+    Dict
+)
 
 from homeassistant.const import PLATFORM_FORMAT
 
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test,unused-import
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant  # NOQA
+    from homeassistant.core import HomeAssistant  # noqa
 
 CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)  # noqa pylint: disable=invalid-name
 
@@ -110,7 +119,7 @@ class Integration:
         self.requirements = manifest['requirements']  # type: List[str]
 
     def get_component(self) -> Any:
-        """Return comoponent."""
+        """Return the component."""
         return importlib.import_module(self.pkg_path)
 
     def get_platform(self, platform_name: str) -> Any:
@@ -123,7 +132,12 @@ class Integration:
 async def async_get_integration(hass: 'HomeAssistant', domain: str)\
          -> Integration:
     """Get an integration."""
-    cache = hass.data.setdefault(DATA_INTEGRATIONS, {})
+    cache = hass.data.get(DATA_INTEGRATIONS)
+    if cache is None:
+        if not _async_mount_config_dir(hass):
+            raise IntegrationNotFound(domain)
+        cache = hass.data[DATA_INTEGRATIONS] = {}
+
     integration = cache.get(domain, _UNDEF)  # type: Optional[Integration]
 
     if integration is _UNDEF:
@@ -147,15 +161,17 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
 
     from homeassistant import components
 
-    integration = Integration.resolve_from_root(
-        hass, components, domain)
+    integration = await hass.async_add_executor_job(
+        Integration.resolve_from_root, hass, components, domain
+    )
 
     if integration is not None:
         cache[domain] = integration
         return integration
 
-    integration = Integration.resolve_legacy(
-        hass, domain)
+    integration = await hass.async_add_executor_job(
+        Integration.resolve_legacy, hass, domain
+    )
     cache[domain] = integration
 
     if not integration:
@@ -293,12 +309,8 @@ def _load_file(hass,  # type: HomeAssistant
 
     cache = hass.data.get(DATA_KEY)
     if cache is None:
-        if hass.config.config_dir is None:
-            _LOGGER.error("Can't load components - config dir is not set")
+        if not _async_mount_config_dir(hass):
             return None
-        # Only insert if it's not there (happens during tests)
-        if sys.path[0] != hass.config.config_dir:
-            sys.path.insert(0, hass.config.config_dir)
         cache = hass.data[DATA_KEY] = {}
 
     for path in ('{}.{}'.format(base, comp_or_platform)
@@ -459,3 +471,17 @@ async def _async_component_dependencies(hass,  # type: HomeAssistant
     loading.remove(domain)
 
     return loaded
+
+
+def _async_mount_config_dir(hass,  # type: HomeAssistant
+                            ) -> bool:
+    """Mount config dir in order to load custom_component.
+
+    Async friendly but not a coroutine.
+    """
+    if hass.config.config_dir is None:
+        _LOGGER.error("Can't load components - config dir is not set")
+        return False
+    if hass.config.config_dir not in sys.path:
+        sys.path.insert(0, hass.config.config_dir)
+    return True
