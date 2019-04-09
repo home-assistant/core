@@ -311,7 +311,6 @@ async def async_setup(hass, config):
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)
 
-
     async def async_handle_light_off_service(service):
         """Handle a turn light off service call."""
         # Get the validated data
@@ -359,7 +358,6 @@ async def async_setup(hass, config):
 
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)
-
 
     # Listen for light on and light off service calls.
     hass.services.async_register(
