@@ -402,7 +402,7 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
     domains = set(key.split(' ')[0] for key in config.keys()
-                     if key != core.DOMAIN)
+                  if key != core.DOMAIN)
 
     # Add config entry domains
     domains.update(hass.config_entries.async_domains())  # type: ignore
