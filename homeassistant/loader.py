@@ -87,7 +87,7 @@ class Integration:
                               manifest_path, err)
                 continue
 
-            return Integration(
+            return cls(
                 hass, "{}.{}".format(root_module.__name__, domain), manifest
             )
 
@@ -105,7 +105,7 @@ class Integration:
         if comp is None:
             return None
 
-        return Integration(
+        return cls(
             hass, comp.__name__, manifest_from_legacy_module(comp)
         )
 
