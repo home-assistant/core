@@ -1,4 +1,4 @@
-"""Support for Netgear LTE sensors."""
+"""Support for Netgear LTE binary sensors."""
 import logging
 
 from homeassistant.const import STATE_ON, STATE_OFF
@@ -38,11 +38,9 @@ class LTEBinarySensor(LTEEntity, BinarySensorDevice):
     """Netgear LTE binary sensor entity."""
 
     @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if getattr(self.modem_data.data, self.sensor_type):
-            return STATE_ON
-        return STATE_OFF
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return getattr(self.modem_data.data, self.sensor_type)
 
     @property
     def device_class(self):
