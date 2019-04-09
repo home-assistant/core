@@ -296,24 +296,6 @@ async def test_if_fails_setup_bad_for(hass, calls):
             }})
 
 
-async def test_if_fails_setup_for_without_to(hass, calls):
-    """Test for setup failures for missing to."""
-    with assert_setup_component(0):
-        assert await async_setup_component(hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'state',
-                    'entity_id': 'test.entity',
-                    'for': {
-                        'seconds': 5
-                    },
-                },
-                'action': {
-                    'service': 'homeassistant.turn_on',
-                }
-            }})
-
-
 async def test_if_not_fires_on_entity_change_with_for(hass, calls):
     """Test for not firing on entity change with for."""
     assert await async_setup_component(hass, automation.DOMAIN, {

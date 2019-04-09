@@ -11,14 +11,14 @@ CONF_ENTITY_ID = 'entity_id'
 CONF_FROM = 'from'
 CONF_TO = 'to'
 
-TRIGGER_SCHEMA = vol.All(vol.Schema({
+TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'state',
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     # These are str on purpose. Want to catch YAML conversions
     vol.Optional(CONF_FROM): str,
     vol.Optional(CONF_TO): str,
     vol.Optional(CONF_FOR): vol.All(cv.time_period, cv.positive_timedelta),
-}), cv.key_dependency(CONF_FOR, CONF_TO))
+})
 
 
 async def async_trigger(hass, config, action, automation_info):
