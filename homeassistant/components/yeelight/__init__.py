@@ -256,12 +256,14 @@ class YeelightDevice:
 
         return self._device_type
 
-    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
+    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None,
+                power_mode=None):
         """Turn on device."""
         from yeelight import BulbException
 
         try:
-            self.bulb.turn_on(duration=duration, light_type=light_type)
+            self.bulb.turn_on(duration=duration, light_type=light_type,
+                              power_mode=power_mode)
         except BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
 
