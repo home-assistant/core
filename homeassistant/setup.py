@@ -108,8 +108,8 @@ async def _async_setup_component(hass: core.HomeAssistant,
 
     # Validate all dependencies exist and there are no circular dependencies
     try:
-        loader.component_dependencies(hass, domain)
-    except loader.ComponentNotFound as err:
+        await loader.async_component_dependencies(hass, domain)
+    except loader.IntegrationNotFound as err:
         _LOGGER.error(
             "Not setting up %s because we are unable to resolve "
             "(sub)dependency %s", domain, err.domain)
