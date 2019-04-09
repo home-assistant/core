@@ -1617,6 +1617,9 @@ slixmpp==1.4.2
 # homeassistant.components.smappee
 smappy==0.2.16
 
+# homeassistant.components.smarthab
+smarthab==0.19
+
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
 # homeassistant.components.bme680
