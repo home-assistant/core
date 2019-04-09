@@ -55,16 +55,20 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_creds(self, user_input=None):
         """Return PS4 credentials from 2nd Screen App."""
+        errors = {}
         if user_input is not None:
-            self.creds = await self.hass.async_add_executor_job(
-                self.helper.get_creds)
-
-            if self.creds is not None:
-                return await self.async_step_mode()
-            return self.async_abort(reason='credential_error')
+            try:
+                self.creds = await self.hass.async_add_executor_job(
+                    self.helper.get_creds)
+                if self.creds is not None:
+                    return await self.async_step_mode()
+                return self.async_abort(reason='credential_error')
+            except UnboundLocalError:
+                errors['base'] = 'credential_timeout'
 
         return self.async_show_form(
-            step_id='creds')
+            step_id='creds',
+            errors=errors)
 
     async def async_step_mode(self, user_input=None):
         """Prompt for mode."""
