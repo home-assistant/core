@@ -3,7 +3,7 @@
   "name": "Push",
   "documentation": "https://www.home-assistant.io/components/push",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": ["webhook"],
   "codeowners": [
     "@dgomes"
   ]
