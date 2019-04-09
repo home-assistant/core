@@ -204,7 +204,7 @@ pydeconz==54
 pydispatcher==2.0.5
 
 # homeassistant.components.heos
-pyheos==0.3.0
+pyheos==0.3.1
 
 # homeassistant.components.homematic
 pyhomematic==0.1.58
@@ -239,7 +239,7 @@ pysmartapp==0.3.2
 pysmartthings==0.6.7
 
 # homeassistant.components.sonos
-pysonos==0.0.8
+pysonos==0.0.9
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0

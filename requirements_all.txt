@@ -235,6 +235,9 @@ blockchain==1.4.4
 # homeassistant.components.bme680
 # bme680==1.0.5
 
+# homeassistant.components.bom
+bomradarloop==0.1.2
+
 # homeassistant.components.amazon_polly
 # homeassistant.components.aws_lambda
 # homeassistant.components.aws_sns
@@ -650,7 +653,7 @@ lmnotify==0.0.4
 locationsharinglib==3.0.11
 
 # homeassistant.components.logi_circle
-logi_circle==0.1.7
+logi_circle==0.2.2
 
 # homeassistant.components.london_underground
 london-tube-status==0.2
@@ -1064,7 +1067,7 @@ pygtt==1.1.2
 pyhaversion==2.0.3
 
 # homeassistant.components.heos
-pyheos==0.3.0
+pyheos==0.3.1
 
 # homeassistant.components.hikvision
 pyhik==0.2.2
@@ -1270,7 +1273,7 @@ pysmartthings==0.6.7
 pysnmp==4.4.8
 
 # homeassistant.components.sonos
-pysonos==0.0.8
+pysonos==0.0.9
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1597,6 +1600,9 @@ solaredge==0.0.2
 
 # homeassistant.components.honeywell
 somecomfort==0.5.2
+
+# homeassistant.components.somfy_mylink
+somfy-mylink-synergy==1.0.4
 
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.1

@@ -374,10 +374,10 @@ class TestLight(unittest.TestCase):
                 return True
             return real_isfile(path)
 
-        def _mock_open(path):
+        def _mock_open(path, *args, **kwargs):
             if path == user_light_file:
                 return StringIO(profile_data)
-            return real_open(path)
+            return real_open(path, *args, **kwargs)
 
         profile_data = "id,x,y,brightness\n" +\
                        "group.all_lights.default,.4,.6,99\n"
@@ -412,10 +412,10 @@ class TestLight(unittest.TestCase):
                 return True
             return real_isfile(path)
 
-        def _mock_open(path):
+        def _mock_open(path, *args, **kwargs):
             if path == user_light_file:
                 return StringIO(profile_data)
-            return real_open(path)
+            return real_open(path, *args, **kwargs)
 
         profile_data = "id,x,y,brightness\n" +\
                        "group.all_lights.default,.3,.5,200\n" +\
