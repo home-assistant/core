@@ -10,7 +10,7 @@ from .const import (ATTR_SENSOR_STATE,
                     ATTR_SENSOR_UNIQUE_ID, ATTR_SENSOR_UOM, DATA_DEVICES,
                     DOMAIN)
 
-from .entity import MobileAppEntity
+from .entity import MobileAppEntity, sensor_id
 
 DEPENDENCIES = ['mobile_app']
 
@@ -36,8 +36,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if data[CONF_WEBHOOK_ID] != webhook_id:
             return
 
-        unique_id = "{}_{}".format(data[CONF_WEBHOOK_ID],
-                                   data[ATTR_SENSOR_UNIQUE_ID])
+        unique_id = sensor_id(data[CONF_WEBHOOK_ID],
+                              data[ATTR_SENSOR_UNIQUE_ID])
 
         entity = hass.data[DOMAIN][ENTITY_TYPE][unique_id]
 
