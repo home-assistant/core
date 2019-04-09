@@ -24,7 +24,7 @@ async def async_setup_platform(hass,
     except TimeoutError:
         _LOGGER.error("Unable to connect to the Somfy MyLink device, "
                       "please check your settings")
-        return False
+        return
     for cover in mylink_status['result']:
         entity_id = ENTITY_ID_FORMAT.format(slugify(cover['name']))
         entity_config = discovery_info.get(entity_id, {})
