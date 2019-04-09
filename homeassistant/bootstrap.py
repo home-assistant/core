@@ -35,7 +35,6 @@ FIRST_INIT_COMPONENT = {
     'recorder',
     'mqtt',
     'mqtt_eventstream',
-    'introduction',
     'frontend',
     'history',
 }

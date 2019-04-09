@@ -5,7 +5,6 @@
   "requirements": [],
   "dependencies": [
     "conversation",
-    "introduction",
     "zone"
   ],
   "codeowners": [
