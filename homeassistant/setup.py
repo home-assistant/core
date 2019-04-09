@@ -8,7 +8,7 @@ from typing import Awaitable, Callable, Optional, Dict, List
 
 from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
-from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
@@ -202,7 +202,8 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
 
     This method is a coroutine.
     """
-    platform_path = "{}.{}".format(domain, platform_name)
+    platform_path = PLATFORM_FORMAT.format(domain=domain,
+                                           platform=platform_name)
 
     def log_error(msg: str) -> None:
         """Log helper."""
