@@ -59,7 +59,7 @@ class SomfyShade(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        pass
+        return None
 
     @property
     def device_class(self):
