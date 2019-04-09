@@ -1282,7 +1282,7 @@ pyspcwebgw==0.4.0
 pystride==0.1.7
 
 # homeassistant.components.supla
-pysupla==0.0.2
+pysupla==0.0.3
 
 # homeassistant.components.syncthru
 pysyncthru==0.3.1
