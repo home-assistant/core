@@ -132,7 +132,8 @@ async def async_from_config_dict(config: Dict[str, Any],
 
     # Resolve all dependencies of all components.
     for dep_domains in await asyncio.gather(*[
-        loader.async_component_dependencies(hass, domain) for domain in domains
+            loader.async_component_dependencies(hass, domain)
+            for domain in domains
     ], return_exceptions=True):
         # Result is either a set or an exception. We ignore exceptions
         # It will be properly handled during setup of the domain.
