@@ -3,15 +3,15 @@
       "title": "Urządzenie AIS dom",
       "step": {
         "confirm": {
-          "description": "Czy chcosz dodać nowe urządzenie AIS dom? \n\n ![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)",
+          "description": "Czy chcesz dodać nowe urządzenie? \n\n ![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)",
           "title": "Dodawanie urządzenia AIS dom"
         },
         "one": {
-          "description": "Krok 1\n\n ![AIS logo](/static/icons/ais_s20_1.jpg)\n\n podłącz urządzenie do zasilania blisko Twojego routera WiFi (tego do którego sieci będziesz dołączał urządzenie).",
+          "description": "Krok 1\n\n ![AIS logo](/static/icons/ais_s20_1.jpg)\n\nPodłącz urządzenie do zasilania.\nUpewnij się, że urządzenie znajduje się w zasięgu routera WiFi, do którego sieci zostanie dołączone.",
           "title": "Podłącz urządzenie do prądu"
         },
         "two": {
-          "description": "Krok 2\n\n ![AIS logo](/static/icons/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu. \nŻeby wymusić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.\n\n Następnie wyszukaj urządzeie naciskając **SUBMIT** poniżej",
+          "description": "Krok 2\n\n ![AIS logo](/static/icons/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu. \nŻeby wymusić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.\n\n Następnie włącz wyszukiwanie urządzeia przez bramkę, naciskając **SUBMIT** poniżej",
           "title": "Poczekaj na tryb praowania"
         },
         "search_iot": {
@@ -36,7 +36,7 @@
         "add_failed": "Nie udało się dodać nowego urządzenia, proszę spróbuj ponownie."
       },
       "abort": {
-        "single_instance_allowed": "Only a single Spotify integration is allowed. If you want to configure it again, first delete the current integration."
+        "add_failed": "Nie udało się dodać nowego urządzenia, proszę sprawdz podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}"
       }
     }
 }

@@ -132,7 +132,7 @@ class AisDomDeviceFlowHandler(config_entries.ConfigFlow):
         wifi_network = self.hass.states.get('input_select.ais_android_wifi_network')
         networks = wifi_network.attributes['options']
         # TODO ask for current network connection
-        # /command_sync currWifiSsid
+        # /command_sync currWifiSsid  currWifiSsidAndPass
         curr_network = ["xxx (Twoje aktualne połączenie WiFi)"]
         networks = curr_network + networks
 
@@ -157,8 +157,11 @@ class AisDomDeviceFlowHandler(config_entries.ConfigFlow):
                 _LOGGER.info(str(result))
                 if result == 'ok':
                     return await self.async_step_init(user_input=None)
-                else:
-                    errors = {'base': 'add_failed'}
+            # abort
+            return self.async_abort(reason='add_failed', description_placeholders={
+                'error_info': "Timeout 344",
+            })
+
             #
         return self.async_show_form(
             step_id='add_device',
