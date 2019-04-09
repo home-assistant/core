@@ -18,10 +18,16 @@ MANIFEST_SCHEMA = vol.Schema({
 })
 
 
-components_path = pathlib.Path('homeassistant/components')
+COMPONENTS_PATH = pathlib.Path('homeassistant/components')
 
 
-def validate_integration(path):
+def validate_dependency(path, dependency, loaded, loading):
+    """Validate dependency is exist and no circular dependency."""
+    dep_path = path.parent / dependency
+    return validate_integration(dep_path, loaded, loading)
+
+
+def validate_integration(path, loaded, loading):
     """Validate that an integrations has a valid manifest."""
     errors = []
     path = pathlib.Path(path)
@@ -29,7 +35,7 @@ def validate_integration(path):
     manifest_path = path / 'manifest.json'
 
     if not manifest_path.is_file():
-        errors.append('File manifest.json not found')
+        errors.append('Manifest file {} not found'.format(manifest_path))
         return errors  # Fatal error
 
     try:
@@ -47,10 +53,18 @@ def validate_integration(path):
         errors.append('Domain does not match dir name')
 
     for dep in manifest['dependencies']:
-        dep_manifest = path.parent / dep / 'manifest.json'
-        if not dep_manifest.is_file():
-            errors.append("Unable to find dependency {}".format(dep))
+        if dep in loaded:
+            continue
+        if dep in loading:
+            errors.append("Found circular dependency {} in {}".format(
+                dep, path
+            ))
+            continue
+        loading.add(dep)
 
+        errors.extend(validate_dependency(path, dep, loaded, loading))
+
+    loaded.add(path.name)
     return errors
 
 
@@ -58,11 +72,11 @@ def validate_all():
     """Validate all integrations."""
     invalid = []
 
-    for fil in components_path.iterdir():
+    for fil in COMPONENTS_PATH.iterdir():
         if fil.is_file() or fil.name == '__pycache__':
             continue
 
-        errors = validate_integration(fil)
+        errors = validate_integration(fil, set(), set())
 
         if errors:
             invalid.append((fil, errors))
