@@ -105,6 +105,18 @@ from tests.common import (
 from tests.components.light import common
 
 
+class JsonValidator(object):
+    """Helper to compare JSON."""
+
+    def __init__(self, jsondata):
+        """Constructor."""
+        self.jsondata = jsondata
+
+    def __eq__(self, other):
+        """Compare JSON data."""
+        return json.loads(self.jsondata) == json.loads(other)
+
+
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
     """Test if setup fails with no command topic."""
     assert await async_setup_component(hass, light.DOMAIN, {
@@ -345,18 +357,24 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls([
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 0, "g": 123, "b": 255, "x": 0.14,'
-            ' "y": 0.131, "h": 210.824, "s": 100.0}, "brightness": 50}',
+            JsonValidator(
+                '{"state": "ON", "color": {"r": 0, "g": 123, "b": 255,'
+                ' "x": 0.14, "y": 0.131, "h": 210.824, "s": 100.0},'
+                ' "brightness": 50}'),
             2, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 255, "g": 56, "b": 59, "x": 0.654,'
-            ' "y": 0.301, "h": 359.0, "s": 78.0}, "brightness": 50}',
+            JsonValidator(
+                '{"state": "ON", "color": {"r": 255, "g": 56, "b": 59,'
+                ' "x": 0.654, "y": 0.301, "h": 359.0, "s": 78.0},'
+                ' "brightness": 50}'),
             2, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 255, "g": 128, "b": 0, "x": 0.611,'
-            ' "y": 0.375, "h": 30.118, "s": 100.0}, "white_value": 80}',
+            JsonValidator(
+                '{"state": "ON", "color": {"r": 255, "g": 128, "b": 0,'
+                ' "x": 0.611, "y": 0.375, "h": 30.118, "s": 100.0},'
+                ' "white_value": 80}'),
             2, False),
     ], any_order=True)
 
@@ -397,18 +415,21 @@ async def test_sending_hs_color(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls([
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"h": 210.824, "s": 100.0},'
-            ' "brightness": 50}',
+            JsonValidator(
+                '{"state": "ON", "color": {"h": 210.824, "s": 100.0},'
+                ' "brightness": 50}'),
             0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"h": 359.0, "s": 78.0},'
-            ' "brightness": 50}',
+            JsonValidator(
+                '{"state": "ON", "color": {"h": 359.0, "s": 78.0},'
+                ' "brightness": 50}'),
             0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"h": 30.118, "s": 100.0},'
-            ' "white_value": 80}',
+            JsonValidator(
+                '{"state": "ON", "color": {"h": 30.118, "s": 100.0},'
+                ' "white_value": 80}'),
             0, False),
     ], any_order=True)
 
@@ -439,15 +460,18 @@ async def test_sending_rgb_color_no_brightness(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls([
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 0, "g": 24, "b": 50}}',
+            JsonValidator(
+                '{"state": "ON", "color": {"r": 0, "g": 24, "b": 50}}'),
             0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 50, "g": 11, "b": 11}}',
+            JsonValidator(
+                '{"state": "ON", "color": {"r": 50, "g": 11, "b": 11}}'),
             0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 255, "g": 128, "b": 0}}',
+            JsonValidator(
+                '{"state": "ON", "color": {"r": 255, "g": 128, "b": 0}}'),
             0, False),
     ], any_order=True)
 
@@ -479,18 +503,21 @@ async def test_sending_rgb_color_with_brightness(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls([
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 0, "g": 123, "b": 255},'
-            ' "brightness": 50}',
+            JsonValidator(
+                '{"state": "ON", "color": {"r": 0, "g": 123, "b": 255},'
+                ' "brightness": 50}'),
             0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 255, "g": 56, "b": 59},'
-            ' "brightness": 50}',
+            JsonValidator(
+                '{"state": "ON", "color": {"r": 255, "g": 56, "b": 59},'
+                ' "brightness": 50}'),
             0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"r": 255, "g": 128, "b": 0},'
-            ' "white_value": 80}',
+            JsonValidator(
+                '{"state": "ON", "color": {"r": 255, "g": 128, "b": 0},'
+                ' "white_value": 80}'),
             0, False),
     ], any_order=True)
 
@@ -522,19 +549,22 @@ async def test_sending_xy_color(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls([
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"x": 0.14, "y": 0.131},'
-            ' "brightness": 50}',
-            2, False),
+            JsonValidator(
+                '{"state": "ON", "color": {"x": 0.14, "y": 0.131},'
+                ' "brightness": 50}'),
+            0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"x": 0.654, "y": 0.301},'
-            ' "brightness": 50}',
-            2, False),
+            JsonValidator(
+                '{"state": "ON", "color": {"x": 0.654, "y": 0.301},'
+                ' "brightness": 50}'),
+            0, False),
         mock.call(
             'test_light_rgb/set',
-            '{"state": "ON", "color": {"x": 0.611, "y": 0.375},'
-            ' "white_value": 80}',
-            2, False),
+            JsonValidator(
+                '{"state": "ON", "color": {"x": 0.611, "y": 0.375},'
+                ' "white_value": 80}'),
+            0, False),
     ], any_order=True)
 
 
@@ -545,7 +575,6 @@ async def test_flash_short_and_long(hass, mqtt_mock):
             'platform': 'mqtt',
             'schema': 'json',
             'name': 'test',
-            'state_topic': 'test_light_rgb',
             'command_topic': 'test_light_rgb/set',
             'flash_time_short': 5,
             'flash_time_long': 15,
@@ -557,6 +586,26 @@ async def test_flash_short_and_long(hass, mqtt_mock):
     assert STATE_OFF == state.state
     assert 40 == state.attributes.get(ATTR_SUPPORTED_FEATURES)
 
+    common.async_turn_on(hass, 'light.test', flash='short')
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'test_light_rgb/set', JsonValidator(
+                '{"state": "ON", "flash": 5}'), 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('light.test')
+    assert STATE_ON == state.state
+
+    common.async_turn_on(hass, 'light.test', flash='long')
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'test_light_rgb/set', JsonValidator(
+                '{"state": "ON", "flash": 15}'), 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('light.test')
+    assert STATE_ON == state.state
+
 
 async def test_transition(hass, mqtt_mock):
     """Test for transition time being sent when included."""
@@ -565,7 +614,6 @@ async def test_transition(hass, mqtt_mock):
             'platform': 'mqtt',
             'schema': 'json',
             'name': 'test',
-            'state_topic': 'test_light_rgb',
             'command_topic': 'test_light_rgb/set',
             'qos': 0
         }
@@ -574,6 +622,26 @@ async def test_transition(hass, mqtt_mock):
     state = hass.states.get('light.test')
     assert STATE_OFF == state.state
     assert 40 == state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+    common.async_turn_on(hass, 'light.test', transition=15)
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'test_light_rgb/set', JsonValidator(
+                '{"state": "ON", "transition": 15}'), 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('light.test')
+    assert STATE_ON == state.state
+
+    common.async_turn_off(hass, 'light.test', transition=30)
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'test_light_rgb/set', JsonValidator(
+                '{"state": "OFF", "transition": 30}'), 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('light.test')
+    assert STATE_OFF == state.state
 
 
 async def test_brightness_scale(hass, mqtt_mock):
