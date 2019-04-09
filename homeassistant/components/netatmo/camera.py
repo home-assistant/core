@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
-    quality = config.get(CONF_QUALITY)
+    quality = config.get(CONF_QUALITY, DEFAULT_QUALITY)
     import pyatmo
     try:
         data = CameraData(hass, netatmo.NETATMO_AUTH, home)
