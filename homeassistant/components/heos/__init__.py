@@ -75,12 +75,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         await controller.disconnect()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
 
+    # Get players and sources
     try:
-        players, favorites, inputs = await asyncio.gather(
-            controller.get_players(),
-            controller.get_favorites(),
-            controller.get_input_sources()
-        )
+        players = await controller.get_players()
+        favorites = {}
+        if controller.is_signed_in:
+            favorites = await controller.get_favorites()
+        else:
+            _LOGGER.warning("%s is not logged in to your HEOS account and will"
+                            " be unable to retrieve your favorites", host)
+        inputs = await controller.get_input_sources()
     except (asyncio.TimeoutError, ConnectionError, CommandError) as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to retrieve players and sources: %s", error,
@@ -175,9 +179,11 @@ class SourceManager:
             retry_attempts = 0
             while True:
                 try:
-                    return await asyncio.gather(
-                        controller.get_favorites(),
-                        controller.get_input_sources())
+                    favorites = {}
+                    if controller.is_signed_in:
+                        favorites = await controller.get_favorites()
+                    inputs = await controller.get_input_sources()
+                    return favorites, inputs
                 except (asyncio.TimeoutError, ConnectionError, CommandError) \
                         as error:
                     if retry_attempts < self.max_retry_attempts:
@@ -192,7 +198,8 @@ class SourceManager:
                         return
 
         async def update_sources(event):
-            if event in const.EVENT_SOURCES_CHANGED:
+            if event in (const.EVENT_SOURCES_CHANGED,
+                         const.EVENT_USER_CHANGED):
                 sources = await get_sources()
                 # If throttled, it will return None
                 if sources:

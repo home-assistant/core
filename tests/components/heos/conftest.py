@@ -28,6 +28,8 @@ def controller_fixture(players, favorites, input_sources, dispatcher):
         mock_heos.players = players
         mock_heos.get_favorites.return_value = favorites
         mock_heos.get_input_sources.return_value = input_sources
+        mock_heos.is_signed_in = True
+        mock_heos.signed_in_username = "user@user.com"
         yield mock_heos
 
 
