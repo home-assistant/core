@@ -2,17 +2,52 @@
 import asyncio
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.camera import (
-    Camera, SUPPORT_ON_OFF, SUPPORT_STREAM)
+    Camera, CAMERA_SERVICE_SCHEMA, DOMAIN, SUPPORT_ON_OFF, SUPPORT_STREAM)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_NAME, ENTITY_MATCH_ALL, STATE_ON, STATE_OFF)
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream, async_aiohttp_proxy_web,
     async_get_clientsession)
+from homeassistant.helpers.service import async_extract_entity_ids
 
 from . import DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_AMCREST_CAMS = 'amcrest_cams'
+
+_BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
+
+SERVICE_ENABLE_RECORDING = 'amcrest_enable_recording'
+SERVICE_DISABLE_RECORDING = 'amcrest_disable_recording'
+SERVICE_ENABLE_AUDIO = 'amcrest_enable_audio'
+SERVICE_DISABLE_AUDIO = 'amcrest_disable_audio'
+SERVICE_ENABLE_MOTION_RECORDING = 'amcrest_enable_motion_recording'
+SERVICE_DISABLE_MOTION_RECORDING = 'amcrest_disable_motion_recording'
+SERVICE_GOTO_PRESET = 'amcrest_goto_preset'
+SERVICE_SET_COLOR_BW = 'amcrest_set_color_bw'
+SERVICE_START_TOUR = 'amcrest_start_tour'
+SERVICE_STOP_TOUR = 'amcrest_stop_tour'
+
+ATTR_PRESET = 'preset'
+ATTR_COLOR_BW = 'color_bw'
+
+CBW_COLOR = 'color'
+CBW_AUTO = 'auto'
+CBW_BW = 'bw'
+CBW = [CBW_COLOR, CBW_AUTO, CBW_BW]
+
+SERVICE_GOTO_PRESET_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_PRESET): vol.All(vol.Coerce(int), vol.Range(min=1)),
+})
+SERVICE_SET_COLOR_BW_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_COLOR_BW): vol.In(CBW),
+})
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -25,6 +60,51 @@ async def async_setup_platform(hass, config, async_add_entities,
     amcrest = hass.data[DATA_AMCREST][device_name]
 
     async_add_entities([AmcrestCam(hass, amcrest)], True)
+
+    async def async_extract_from_service(service):
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        if entity_ids == ENTITY_MATCH_ALL:
+            return [entity for entity in hass.data.get(DATA_AMCREST_CAMS, [])
+                    if entity.available]
+        entity_ids = await async_extract_entity_ids(hass, service)
+        return [entity for entity in hass.data.get(DATA_AMCREST_CAMS, [])
+                if entity.available and entity.entity_id in entity_ids]
+
+    async def async_service_handler(service):
+        for camera in await async_extract_from_service(service):
+            await getattr(camera, handler_services[service.service])()
+
+    async def async_goto_preset(service):
+        preset = service.data.get(ATTR_PRESET)
+        for camera in await async_extract_from_service(service):
+            await camera.async_goto_preset(preset)
+
+    async def async_set_color_bw(service):
+        cbw = service.data.get(ATTR_COLOR_BW)
+        for camera in await async_extract_from_service(service):
+            await camera.async_set_color_bw(cbw)
+
+    handler_services = {
+        SERVICE_ENABLE_RECORDING: 'async_enable_recording',
+        SERVICE_DISABLE_RECORDING: 'async_disable_recording',
+        SERVICE_ENABLE_AUDIO: 'async_enable_audio',
+        SERVICE_DISABLE_AUDIO: 'async_disable_audio',
+        SERVICE_ENABLE_MOTION_RECORDING: 'async_enable_motion_recording',
+        SERVICE_DISABLE_MOTION_RECORDING: 'async_disable_motion_recording',
+        SERVICE_START_TOUR: 'async_start_tour',
+        SERVICE_STOP_TOUR: 'async_stop_tour',
+    }
+
+    if not hass.services.has_service(DOMAIN, SERVICE_ENABLE_RECORDING):
+        for service in handler_services:
+            hass.services.async_register(
+                DOMAIN, service, async_service_handler, CAMERA_SERVICE_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, SERVICE_GOTO_PRESET, async_goto_preset,
+            SERVICE_GOTO_PRESET_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, SERVICE_SET_COLOR_BW, async_set_color_bw,
+            SERVICE_SET_COLOR_BW_SCHEMA)
 
 
 class AmcrestCam(Camera):
@@ -41,7 +121,11 @@ class AmcrestCam(Camera):
         self._resolution = amcrest.resolution
         self._token = self._auth = amcrest.authentication
         self._is_recording = False
+        self._motion_detection_enabled = None
         self._model = None
+        self._audio_enabled = None
+        self._motion_recording_enabled = None
+        self._color_bw = None
         self._snapshot_lock = asyncio.Lock()
 
     async def async_camera_image(self):
@@ -104,6 +188,22 @@ class AmcrestCam(Camera):
         return self._name
 
     @property
+    def device_state_attributes(self):
+        """Return the Amcrest-spectific camera state attributes."""
+        attr = {}
+        if self.motion_detection_enabled is not None:
+            attr['motion_detection'] = _BOOL_TO_STATE.get(
+                self.motion_detection_enabled)
+        if self._audio_enabled is not None:
+            attr['audio'] = _BOOL_TO_STATE.get(self._audio_enabled)
+        if self._motion_recording_enabled is not None:
+            attr['motion_recording'] = _BOOL_TO_STATE.get(
+                self._motion_recording_enabled)
+        if self._color_bw is not None:
+            attr[ATTR_COLOR_BW] = self._color_bw
+        return attr
+
+    @property
     def supported_features(self):
         """Return supported features."""
         return SUPPORT_ON_OFF | SUPPORT_STREAM
@@ -119,6 +219,11 @@ class AmcrestCam(Camera):
     def brand(self):
         """Return the camera brand."""
         return 'Amcrest'
+
+    @property
+    def motion_detection_enabled(self):
+        """Return the camera motion detection status."""
+        return self._motion_detection_enabled
 
     @property
     def model(self):
@@ -137,6 +242,10 @@ class AmcrestCam(Camera):
 
     # Other Entity method overrides
 
+    async def async_added_to_hass(self):
+        """Add camera to list."""
+        self.hass.data.setdefault(DATA_AMCREST_CAMS, []).append(self)
+
     def update(self):
         """Update entity status."""
         from amcrest import AmcrestError
@@ -153,6 +262,12 @@ class AmcrestCam(Camera):
         try:
             self.is_streaming = self._camera.video_enabled
             self._is_recording = self._camera.record_mode == 'Manual'
+            self._motion_detection_enabled = (
+                self._camera.is_motion_detector_on())
+            self._audio_enabled = self._camera.audio_enabled
+            self._motion_recording_enabled = (
+                self._camera.is_record_on_motion_detection())
+            self._color_bw = CBW[self._camera.day_night_color]
         except AmcrestError as error:
             _LOGGER.error(
                 'Could not get %s camera attributes due to error: %s',
@@ -168,12 +283,77 @@ class AmcrestCam(Camera):
         """Turn on camera."""
         self._enable_video_stream(True)
 
-    # Utility methods
+    def enable_motion_detection(self):
+        """Enable motion detection in the camera."""
+        self._enable_motion_detection(True)
+
+    def disable_motion_detection(self):
+        """Disable motion detection in camera."""
+        self._enable_motion_detection(False)
+
+    # Additional Amcrest Camera service methods
+
+    @callback
+    def async_enable_recording(self):
+        """Call the job and enable recording."""
+        return self.hass.async_add_job(self._enable_recording, True)
+
+    @callback
+    def async_disable_recording(self):
+        """Call the job and disable recording."""
+        return self.hass.async_add_job(self._enable_recording, False)
+
+    @callback
+    def async_enable_audio(self):
+        """Call the job and enable audio."""
+        return self.hass.async_add_job(self._enable_audio, True)
+
+    @callback
+    def async_disable_audio(self):
+        """Call the job and disable audio."""
+        return self.hass.async_add_job(self._enable_audio, False)
+
+    @callback
+    def async_enable_motion_recording(self):
+        """Call the job and enable motion recording."""
+        return self.hass.async_add_job(self._enable_motion_recording, True)
+
+    @callback
+    def async_disable_motion_recording(self):
+        """Call the job and disable motion recording."""
+        return self.hass.async_add_job(self._enable_motion_recording, False)
+
+    @callback
+    def async_goto_preset(self, preset):
+        """Call the job and move camera to preset position."""
+        return self.hass.async_add_job(self._goto_preset, preset)
+
+    @callback
+    def async_set_color_bw(self, cbw):
+        """Call the job and set camera color mode."""
+        return self.hass.async_add_job(self._set_color_bw, cbw)
+
+    @callback
+    def async_start_tour(self):
+        """Call the job and start camera tour."""
+        return self.hass.async_add_job(self._start_tour, True)
+
+    @callback
+    def async_stop_tour(self):
+        """Call the job and stop camera tour."""
+        return self.hass.async_add_job(self._start_tour, False)
+
+    # Methods to send commands to Amcrest camera and handle errors
 
     def _enable_video_stream(self, enable):
         """Enable or disable camera video stream."""
         from amcrest import AmcrestError
 
+        # Given the way the camera's state is determined by
+        # is_streaming and is_recording, we can't leave
+        # recording on if video stream is being turned off.
+        if self.is_recording and not enable:
+            self._enable_recording(False)
         try:
             self._camera.video_enabled = enable
         except AmcrestError as error:
@@ -183,3 +363,103 @@ class AmcrestCam(Camera):
         else:
             self.is_streaming = enable
             self.schedule_update_ha_state()
+
+    def _enable_recording(self, enable):
+        """Turn recording on or off."""
+        from amcrest import AmcrestError
+
+        # Given the way the camera's state is determined by
+        # is_streaming and is_recording, we can't leave
+        # video stream off if recording is being turned on.
+        if not self.is_streaming and enable:
+            self._enable_video_stream(True)
+        rec_mode = {'Automatic': 0, 'Manual': 1}
+        try:
+            self._camera.record_mode = rec_mode[
+                'Manual' if enable else 'Automatic']
+        except AmcrestError as error:
+            _LOGGER.error(
+                'Could not %s %s camera recording due to error: %s',
+                'enable' if enable else 'disable', self.name, error)
+        else:
+            self._is_recording = enable
+            self.schedule_update_ha_state()
+
+    def _enable_motion_detection(self, enable):
+        """Enable or disable motion detection."""
+        from amcrest import AmcrestError
+
+        try:
+            self._camera.motion_detection = str(enable).lower()
+        except AmcrestError as error:
+            _LOGGER.error(
+                'Could not %s %s camera motion detection due to error: %s',
+                'enable' if enable else 'disable', self.name, error)
+        else:
+            self._motion_detection_enabled = enable
+            self.schedule_update_ha_state()
+
+    def _enable_audio(self, enable):
+        """Enable or disable audio stream."""
+        from amcrest import AmcrestError
+
+        try:
+            self._camera.audio_enabled = enable
+        except AmcrestError as error:
+            _LOGGER.error(
+                'Could not %s %s camera audio stream due to error: %s',
+                'enable' if enable else 'disable', self.name, error)
+        else:
+            self._audio_enabled = enable
+            self.schedule_update_ha_state()
+
+    def _enable_motion_recording(self, enable):
+        """Enable or disable motion recording."""
+        from amcrest import AmcrestError
+
+        try:
+            self._camera.motion_recording = str(enable).lower()
+        except AmcrestError as error:
+            _LOGGER.error(
+                'Could not %s %s camera motion recording due to error: %s',
+                'enable' if enable else 'disable', self.name, error)
+        else:
+            self._motion_recording_enabled = enable
+            self.schedule_update_ha_state()
+
+    def _goto_preset(self, preset):
+        """Move camera position and zoom to preset."""
+        from amcrest import AmcrestError
+
+        try:
+            self._camera.go_to_preset(
+                action='start', preset_point_number=preset)
+        except AmcrestError as error:
+            _LOGGER.error(
+                'Could not move %s camera to preset %i due to error: %s',
+                self.name, preset, error)
+
+    def _set_color_bw(self, cbw):
+        """Set camera color mode."""
+        from amcrest import AmcrestError
+
+        try:
+            self._camera.day_night_color = CBW.index(cbw)
+        except AmcrestError as error:
+            _LOGGER.error(
+                'Could not set %s camera color mode to %s due to error: %s',
+                self.name, cbw, error)
+        else:
+            self._color_bw = cbw
+            self.schedule_update_ha_state()
+
+    def _start_tour(self, start):
+        """Start camera tour."""
+        from amcrest import AmcrestError
+
+        try:
+            self._camera.tour(start=start)
+        except AmcrestError as error:
+            _LOGGER.error(
+                'Could not %s %s camera tour due to error: %s',
+                'start' if start else 'stop', self.name, error)

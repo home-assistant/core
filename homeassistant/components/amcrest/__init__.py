@@ -68,45 +68,59 @@ SWITCHES = {
 }
 
 
-def _deprecated_sensors(value):
-    if SENSOR_MOTION_DETECTOR in value:
+def _deprecated_sensor_values(sensors):
+    if SENSOR_MOTION_DETECTOR in sensors:
         _LOGGER.warning(
-            'sensors option %s is deprecated. '
-            'Please remove from your configuration and '
-            'use binary_sensors option motion_detected instead.',
-            SENSOR_MOTION_DETECTOR)
-    return value
+            "The 'sensors' option value '%s' is deprecated, "
+            "please remove it from your configuration and use "
+            "the 'binary_sensors' option with value 'motion_detected' "
+            "instead.", SENSOR_MOTION_DETECTOR)
+    return sensors
 
 
-def _has_unique_names(value):
-    names = [camera[CONF_NAME] for camera in value]
+def _deprecated_switches(config):
+    if CONF_SWITCHES in config:
+        _LOGGER.warning(
+            "The 'switches' option (with value %s) is deprecated, "
+            "please remove it from your configuration and use "
+            "camera services and attributes instead.",
+            config[CONF_SWITCHES])
+    return config
+
+
+def _has_unique_names(cameras):
+    names = [camera[CONF_NAME] for camera in cameras]
     vol.Schema(vol.Unique())(names)
-    return value
+    return cameras
 
 
-AMCREST_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-        vol.All(vol.In(AUTHENTICATION_LIST)),
-    vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
-        vol.All(vol.In(RESOLUTION_LIST)),
-    vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
-        vol.All(vol.In(STREAM_SOURCE_LIST)),
-    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS):
-        cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-        cv.time_period,
-    vol.Optional(CONF_BINARY_SENSORS):
-        vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
-    vol.Optional(CONF_SENSORS):
-        vol.All(cv.ensure_list, [vol.In(SENSORS)], _deprecated_sensors),
-    vol.Optional(CONF_SWITCHES):
-        vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-})
+AMCREST_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
+            vol.All(vol.In(AUTHENTICATION_LIST)),
+        vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
+            vol.All(vol.In(RESOLUTION_LIST)),
+        vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
+            vol.All(vol.In(STREAM_SOURCE_LIST)),
+        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS):
+            cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+            cv.time_period,
+        vol.Optional(CONF_BINARY_SENSORS):
+            vol.All(cv.ensure_list_csv, [vol.In(BINARY_SENSORS)]),
+        vol.Optional(CONF_SENSORS):
+            vol.All(cv.ensure_list_csv, [vol.In(SENSORS)],
+                    _deprecated_sensor_values),
+        vol.Optional(CONF_SWITCHES):
+            vol.All(cv.ensure_list_csv, [vol.In(SWITCHES)]),
+    }),
+    _deprecated_switches
+)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)
