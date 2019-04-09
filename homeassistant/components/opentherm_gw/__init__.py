@@ -28,10 +28,7 @@ CONF_CLIMATE = 'climate'
 CONF_FLOOR_TEMP = 'floor_temperature'
 CONF_PRECISION = 'precision'
 
-DATA_DEVICE = 'device'
 DATA_GATEWAYS = 'gateways'
-DATA_GW_VARS = 'gw_vars'
-DATA_LATEST_STATUS = 'latest_status'
 DATA_OPENTHERM_GW = 'opentherm_gw'
 
 SERVICE_RESET_GATEWAY = 'reset_gateway'
