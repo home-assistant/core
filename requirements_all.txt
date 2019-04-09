@@ -1064,7 +1064,7 @@ pygtt==1.1.2
 pyhaversion==2.0.3
 
 # homeassistant.components.heos
-pyheos==0.3.0
+pyheos==0.3.1
 
 # homeassistant.components.hikvision
 pyhik==0.2.2
