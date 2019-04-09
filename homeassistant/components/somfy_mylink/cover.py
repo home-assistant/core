@@ -62,6 +62,11 @@ class SomfyShade(CoverDevice):
         return None
 
     @property
+    def assumed_state(self):
+        """Let HA know the integration is assumed state"""
+        return True
+
+    @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
