@@ -1,11 +1,6 @@
-"""
-Demo platform that has two fake alarm control panels.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that has two fake alarm control panels."""
 import datetime
-from homeassistant.components.alarm_control_panel import manual
+from homeassistant.components.manual.alarm_control_panel import ManualAlarm
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
@@ -17,7 +12,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Demo alarm control panel platform."""
     async_add_entities([
-        manual.ManualAlarm(hass, 'Alarm', '1234', None, False, {
+        ManualAlarm(hass, 'Alarm', '1234', None, False, {
             STATE_ALARM_ARMED_AWAY: {
                 CONF_DELAY_TIME: datetime.timedelta(seconds=0),
                 CONF_PENDING_TIME: datetime.timedelta(seconds=5),

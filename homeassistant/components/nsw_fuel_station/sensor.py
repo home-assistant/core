@@ -1,9 +1,4 @@
-"""
-Sensor platform to display the current fuel prices at a NSW fuel station.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nsw_fuel_station/
-"""
+"""Sensor platform to display the current fuel prices at a NSW fuel station."""
 import datetime
 import logging
 from typing import Optional

@@ -1,22 +1,16 @@
-"""
-Support for Dark Sky weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.darksky/
-"""
-from datetime import timedelta
+"""Support for Dark Sky weather service."""
 import logging
+from datetime import timedelta
 
+import voluptuous as vol
 from requests.exceptions import (
     ConnectionError as ConnectError, HTTPError, Timeout)
-import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX, CONF_UPDATE_INTERVAL,
-    CONF_SCAN_INTERVAL, CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
-import homeassistant.helpers.config_validation as cv
+    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -27,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTRIBUTION = "Powered by Dark Sky"
 
 CONF_FORECAST = 'forecast'
+CONF_HOURLY_FORECAST = 'hourly_forecast'
 CONF_LANGUAGE = 'language'
 CONF_UNITS = 'units'
 
@@ -162,45 +157,38 @@ CONDITION_PICTURES = {
 
 # Language Supported Codes
 LANGUAGE_CODES = [
-    'ar', 'az', 'be', 'bg', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
-    'et', 'fi', 'fr', 'he', 'hr', 'hu', 'id', 'is', 'it', 'ja', 'ka', 'ko',
-    'kw', 'lv', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv',
-    'tet', 'tr', 'uk', 'x-pig-latin', 'zh', 'zh-tw',
+    'ar', 'az', 'be', 'bg', 'bn', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en',
+    'ja', 'ka', 'kn', 'ko', 'eo', 'es', 'et', 'fi', 'fr', 'he', 'hi', 'hr',
+    'hu', 'id', 'is', 'it', 'kw', 'lv', 'ml', 'mr', 'nb', 'nl', 'pa', 'pl',
+    'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv', 'ta', 'te', 'tet', 'tr', 'uk',
+    'ur', 'x-pig-latin', 'zh', 'zh-tw',
 ]
 
 ALLOWED_UNITS = ['auto', 'si', 'us', 'ca', 'uk', 'uk2']
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_MONITORED_CONDITIONS):
-            vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNITS): vol.In(ALLOWED_UNITS),
-        vol.Optional(CONF_LANGUAGE,
-                     default=DEFAULT_LANGUAGE): vol.In(LANGUAGE_CODES),
-        vol.Inclusive(
-            CONF_LATITUDE,
-            'coordinates',
-            'Latitude and longitude must exist together'
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE,
-            'coordinates',
-            'Latitude and longitude must exist together'
-        ): cv.longitude,
-        vol.Optional(CONF_UPDATE_INTERVAL):
-            vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_FORECAST):
-            vol.All(cv.ensure_list, [vol.Range(min=0, max=7)]),
-    }),
-    cv.deprecated(
-        CONF_UPDATE_INTERVAL,
-        replacement_key=CONF_SCAN_INTERVAL,
-        invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-        default=SCAN_INTERVAL
-    )
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNITS): vol.In(ALLOWED_UNITS),
+    vol.Optional(CONF_LANGUAGE,
+                 default=DEFAULT_LANGUAGE): vol.In(LANGUAGE_CODES),
+    vol.Inclusive(
+        CONF_LATITUDE,
+        'coordinates',
+        'Latitude and longitude must exist together'
+    ): cv.latitude,
+    vol.Inclusive(
+        CONF_LONGITUDE,
+        'coordinates',
+        'Latitude and longitude must exist together'
+    ): cv.longitude,
+    vol.Optional(CONF_FORECAST):
+        vol.All(cv.ensure_list, [vol.Range(min=0, max=7)]),
+    vol.Optional(CONF_HOURLY_FORECAST):
+        vol.All(cv.ensure_list, [vol.Range(min=0, max=48)]),
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -230,6 +218,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     forecast = config.get(CONF_FORECAST)
+    forecast_hour = config.get(CONF_HOURLY_FORECAST)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in DEPRECATED_SENSOR_TYPES:
@@ -240,7 +229,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
                 sensors.append(DarkSkySensor(
-                    forecast_data, variable, name, forecast_day))
+                    forecast_data, variable, name, forecast_day=forecast_day))
+        if forecast_hour is not None and 'hourly' in SENSOR_TYPES[variable][7]:
+            for forecast_h in forecast_hour:
+                sensors.append(DarkSkySensor(
+                    forecast_data, variable, name, forecast_hour=forecast_h))
 
     add_entities(sensors, True)
 
@@ -248,13 +241,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DarkSkySensor(Entity):
     """Implementation of a Dark Sky sensor."""
 
-    def __init__(self, forecast_data, sensor_type, name, forecast_day=None):
+    def __init__(self, forecast_data, sensor_type, name,
+                 forecast_day=None, forecast_hour=None):
         """Initialize the sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.forecast_data = forecast_data
         self.type = sensor_type
         self.forecast_day = forecast_day
+        self.forecast_hour = forecast_hour
         self._state = None
         self._icon = None
         self._unit_of_measurement = None
@@ -262,11 +257,14 @@ class DarkSkySensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self.forecast_day is None:
-            return '{} {}'.format(self.client_name, self._name)
-
-        return '{} {} {}'.format(
-            self.client_name, self._name, self.forecast_day)
+        if self.forecast_day is not None:
+            return '{} {} {}d'.format(
+                self.client_name, self._name, self.forecast_day)
+        if self.forecast_hour is not None:
+            return '{} {} {}h'.format(
+                self.client_name, self._name, self.forecast_hour)
+        return '{} {}'.format(
+            self.client_name, self._name)
 
     @property
     def state(self):
@@ -339,6 +337,13 @@ class DarkSkySensor(Entity):
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
             self._icon = getattr(hourly, 'icon', '')
+        elif self.forecast_hour is not None:
+            self.forecast_data.update_hourly()
+            hourly = self.forecast_data.data_hourly
+            if hasattr(hourly, 'data'):
+                self._state = self.get_state(hourly.data[self.forecast_hour])
+            else:
+                self._state = 0
         elif self.type == 'daily_summary':
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily

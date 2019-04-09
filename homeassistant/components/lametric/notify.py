@@ -5,11 +5,11 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ICON
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.lametric import DOMAIN as LAMETRIC_DOMAIN
+from . import DOMAIN as LAMETRIC_DOMAIN
 
 REQUIREMENTS = ['lmnotify==0.0.4']
 

@@ -1,9 +1,4 @@
-"""
-Support for Xeoma Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.xeoma/
-"""
+"""Support for Xeoma Cameras."""
 import logging
 
 import voluptuous as vol

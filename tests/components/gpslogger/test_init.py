@@ -26,31 +26,34 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-def gpslogger_client(loop, hass, aiohttp_client):
+async def gpslogger_client(loop, hass, aiohttp_client):
     """Mock client for GPSLogger (unauthenticated)."""
-    assert loop.run_until_complete(async_setup_component(
-        hass, 'persistent_notification', {}))
+    assert await async_setup_component(
+        hass, 'persistent_notification', {})
 
-    assert loop.run_until_complete(async_setup_component(
+    assert await async_setup_component(
         hass, DOMAIN, {
             DOMAIN: {}
-        }))
+        })
+
+    await hass.async_block_till_done()
 
     with patch('homeassistant.components.device_tracker.update_config'):
-        yield loop.run_until_complete(aiohttp_client(hass.http.app))
+        return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture(autouse=True)
-def setup_zones(loop, hass):
+async def setup_zones(loop, hass):
     """Set up Zone config in HA."""
-    assert loop.run_until_complete(async_setup_component(
+    assert await async_setup_component(
         hass, zone.DOMAIN, {
             'zone': {
                 'name': 'Home',
                 'latitude': HOME_LATITUDE,
                 'longitude': HOME_LONGITUDE,
                 'radius': 100,
-            }}))
+            }})
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -66,6 +69,7 @@ async def webhook_id(hass, gpslogger_client):
         result['flow_id'], {})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
+    await hass.async_block_till_done()
     return result['result'].data['webhook_id']
 
 

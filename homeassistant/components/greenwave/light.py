@@ -1,9 +1,4 @@
-"""
-Support for Greenwave Reality (TCP Connected) lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.greenwave/
-"""
+"""Support for Greenwave Reality (TCP Connected) lights."""
 import logging
 from datetime import timedelta
 

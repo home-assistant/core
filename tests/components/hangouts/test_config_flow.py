@@ -19,6 +19,20 @@ async def test_flow_works(hass, aioclient_mock):
         assert result['title'] == 'test@test.com'
 
 
+async def test_flow_works_with_authcode(hass, aioclient_mock):
+    """Test config flow without 2fa."""
+    flow = config_flow.HangoutsFlowHandler()
+
+    flow.hass = hass
+
+    with patch('hangups.get_auth'):
+        result = await flow.async_step_user(
+            {'email': 'test@test.com', 'password': '1232456',
+             'authorization_code': 'c29tZXJhbmRvbXN0cmluZw=='})
+        assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result['title'] == 'test@test.com'
+
+
 async def test_flow_works_with_2fa(hass, aioclient_mock):
     """Test config flow with 2fa."""
     from homeassistant.components.hangouts.hangups_utils import Google2FAError

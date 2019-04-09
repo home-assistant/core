@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El accesorio ya est\u00e1 configurado con este controlador.",
+            "already_paired": "Este accesorio ya est\u00e1 emparejado con otro dispositivo. Por favor, reinicie el accesorio y vuelva a intentarlo."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Dispositivo"
+                }
+            }
+        }
+    }
+}

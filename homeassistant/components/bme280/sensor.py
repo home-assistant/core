@@ -1,9 +1,4 @@
-"""
-Support for BME280 temperature, humidity and pressure sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bme280/
-"""
+"""Support for BME280 temperature, humidity and pressure sensor."""
 from datetime import timedelta
 from functools import partial
 import logging

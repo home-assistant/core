@@ -1,9 +1,4 @@
-"""
-Support for D-Link W215 smart switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.dlink/
-"""
+"""Support for D-Link W215 smart switch."""
 from datetime import timedelta
 import logging
 import urllib

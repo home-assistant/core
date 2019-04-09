@@ -20,7 +20,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.5.0']
+REQUIREMENTS = ['netdisco==2.6.0']
 
 DOMAIN = 'discovery'
 
@@ -35,6 +35,7 @@ SERVICE_FREEBOX = 'freebox'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
 SERVICE_HOMEKIT = 'homekit'
+SERVICE_HEOS = 'heos'
 SERVICE_HUE = 'philips_hue'
 SERVICE_IGD = 'igd'
 SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
@@ -46,15 +47,18 @@ SERVICE_ROKU = 'roku'
 SERVICE_SABNZBD = 'sabnzbd'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_TELLDUSLIVE = 'tellstick'
+SERVICE_YEELIGHT = 'yeelight'
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
 
 CONFIG_ENTRY_HANDLERS = {
+    SERVICE_AXIS: 'axis',
     SERVICE_DAIKIN: 'daikin',
     SERVICE_DECONZ: 'deconz',
     'esphome': 'esphome',
     'google_cast': 'cast',
+    SERVICE_HEOS: 'heos',
     SERVICE_HUE: 'hue',
     SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',
@@ -68,7 +72,6 @@ SERVICE_HANDLERS = {
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
     SERVICE_HASSIO: ('hassio', None),
-    SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
     SERVICE_ENIGMA2: ('media_player', 'enigma2'),
     SERVICE_ROKU: ('roku', None),
@@ -79,6 +82,7 @@ SERVICE_HANDLERS = {
     SERVICE_KONNECTED: ('konnected', None),
     SERVICE_OCTOPRINT: ('octoprint', None),
     SERVICE_FREEBOX: ('freebox', None),
+    SERVICE_YEELIGHT: ('yeelight', None),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'yamaha': ('media_player', 'yamaha'),
@@ -86,7 +90,6 @@ SERVICE_HANDLERS = {
     'directv': ('media_player', 'directv'),
     'denonavr': ('media_player', 'denonavr'),
     'samsung_tv': ('media_player', 'samsungtv'),
-    'yeelight': ('light', 'yeelight'),
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
     'harmony': ('remote', 'harmony'),

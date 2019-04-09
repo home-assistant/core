@@ -1,9 +1,4 @@
-"""
-Support for Enphase Envoy solar energy monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.enphase_envoy/
-"""
+"""Support for Enphase Envoy solar energy monitor."""
 import logging
 
 import voluptuous as vol

@@ -8,6 +8,7 @@ from datetime import (timedelta, datetime as datetime_sys,
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
 from urllib.parse import urlparse
+from uuid import UUID
 
 import voluptuous as vol
 from pkg_resources import parse_version
@@ -348,6 +349,11 @@ def positive_timedelta(value: timedelta) -> timedelta:
     return value
 
 
+def remove_falsy(value: Sequence[T]) -> Sequence[T]:
+    """Remove falsy values from a list."""
+    return [v for v in value if v]
+
+
 def service(value):
     """Validate service."""
     # Services use same format as entities so we can use same helper.
@@ -530,6 +536,20 @@ def x10_address(value):
     if not regex.match(value):
         raise vol.Invalid('Invalid X10 Address')
     return str(value).lower()
+
+
+def uuid4_hex(value):
+    """Validate a v4 UUID in hex format."""
+    try:
+        result = UUID(value, version=4)
+    except (ValueError, AttributeError, TypeError) as error:
+        raise vol.Invalid('Invalid Version4 UUID', error_message=str(error))
+
+    if result.hex != value.lower():
+        # UUID() will create a uuid4 if input is invalid
+        raise vol.Invalid('Invalid Version4 UUID')
+
+    return result.hex
 
 
 def ensure_list_csv(value: Any) -> Sequence:

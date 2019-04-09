@@ -1,9 +1,4 @@
-"""
-Support for ONVIF Cameras with FFmpeg as decoder.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.onvif/
-"""
+"""Support for ONVIF Cameras with FFmpeg as decoder."""
 import asyncio
 import logging
 import os
@@ -13,7 +8,9 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
     ATTR_ENTITY_ID)
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, DOMAIN
+from homeassistant.components.camera import (
+    Camera, PLATFORM_SCHEMA, SUPPORT_STREAM)
+from homeassistant.components.camera.const import DOMAIN
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG, CONF_EXTRA_ARGUMENTS)
 import homeassistant.helpers.config_validation as cv
@@ -31,7 +28,7 @@ DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
-DEFAULT_ARGUMENTS = '-q:v 2'
+DEFAULT_ARGUMENTS = '-pred 1'
 DEFAULT_PROFILE = 0
 
 CONF_PROFILE = "profile"
@@ -186,13 +183,14 @@ class ONVIFHassCamera(Camera):
             self.hass.data[ONVIF_DATA] = {}
             self.hass.data[ONVIF_DATA][ENTITIES] = []
         self.hass.data[ONVIF_DATA][ENTITIES].append(self)
+        await self.hass.async_add_executor_job(self.obtain_input_uri)
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg import ImageFrame, IMAGE_JPEG
+        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
 
         if not self._input:
-            await self.hass.async_add_job(self.obtain_input_uri)
+            await self.hass.async_add_executor_job(self.obtain_input_uri)
             if not self._input:
                 return None
 
@@ -206,10 +204,10 @@ class ONVIFHassCamera(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg import CameraMjpeg
+        from haffmpeg.camera import CameraMjpeg
 
         if not self._input:
-            await self.hass.async_add_job(self.obtain_input_uri)
+            await self.hass.async_add_executor_job(self.obtain_input_uri)
             if not self._input:
                 return None
 
@@ -220,11 +218,24 @@ class ONVIFHassCamera(Camera):
             self._input, extra_cmd=self._ffmpeg_arguments)
 
         try:
+            stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
+                self.hass, request, stream_reader,
                 ffmpeg_manager.ffmpeg_stream_content_type)
         finally:
             await stream.close()
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        if self._input:
+            return SUPPORT_STREAM
+        return 0
+
+    @property
+    def stream_source(self):
+        """Return the stream source."""
+        return self._input
 
     @property
     def name(self):

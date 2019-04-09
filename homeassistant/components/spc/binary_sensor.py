@@ -1,15 +1,11 @@
-"""
-Support for Vanderbilt (formerly Siemens) SPC alarm systems.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.spc/
-"""
+"""Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
-from homeassistant.components.spc import (DATA_API, SIGNAL_UPDATE_SENSOR)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DATA_API, SIGNAL_UPDATE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -4,10 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.netatmo import CameraData
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
+
+from . import CameraData
 
 _LOGGER = logging.getLogger(__name__)
 

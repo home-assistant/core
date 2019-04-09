@@ -1,0 +1,10 @@
+{
+  "domain": "whois",
+  "name": "Whois",
+  "documentation": "https://www.home-assistant.io/components/whois",
+  "requirements": [
+    "python-whois==0.7.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

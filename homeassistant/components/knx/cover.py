@@ -5,11 +5,12 @@ from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_TILT_POSITION, PLATFORM_SCHEMA, SUPPORT_CLOSE,
     SUPPORT_OPEN, SUPPORT_SET_POSITION, SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP, CoverDevice)
-from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_utc_time_change
+
+from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
 CONF_MOVE_LONG_ADDRESS = 'move_long_address'
 CONF_MOVE_SHORT_ADDRESS = 'move_short_address'

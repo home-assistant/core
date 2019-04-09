@@ -1,9 +1,4 @@
-"""
-Support for the sensors in a GreenEye Monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensors.greeneye_monitor_temperature/
-"""
+"""Support for the sensors in a GreenEye Monitor."""
 import logging
 
 from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, POWER_WATT

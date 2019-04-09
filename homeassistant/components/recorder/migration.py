@@ -19,6 +19,11 @@ def migrate_schema(instance):
             SchemaChanges.change_id.desc()).first()
         current_version = getattr(res, 'schema_version', None)
 
+        if current_version is None:
+            current_version = _inspect_schema_version(instance.engine, session)
+            _LOGGER.debug("No schema version found. Inspected version: %s",
+                          current_version)
+
         if current_version == SCHEMA_VERSION:
             # Clean up if old migration left file
             if os.path.isfile(progress_path):
@@ -31,11 +36,6 @@ def migrate_schema(instance):
 
         _LOGGER.warning("Database is about to upgrade. Schema version: %s",
                         current_version)
-
-        if current_version is None:
-            current_version = _inspect_schema_version(instance.engine, session)
-            _LOGGER.debug("No schema version found. Inspected version: %s",
-                          current_version)
 
         try:
             for version in range(current_version, SCHEMA_VERSION):

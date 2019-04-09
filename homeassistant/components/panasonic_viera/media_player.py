@@ -1,9 +1,4 @@
-"""
-Support for interface with a Panasonic Viera TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.panasonic_viera/
-"""
+"""Support for interface with a Panasonic Viera TV."""
 import logging
 
 import voluptuous as vol
@@ -19,12 +14,15 @@ from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['panasonic_viera==0.3.1', 'wakeonlan==1.1.6']
+REQUIREMENTS = ['panasonic_viera==0.3.2', 'wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_APP_POWER = 'app_power'
+
 DEFAULT_NAME = 'Panasonic Viera TV'
 DEFAULT_PORT = 55000
+DEFAULT_APP_POWER = False
 
 SUPPORT_VIERATV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -37,6 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAC): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_APP_POWER, default=DEFAULT_APP_POWER): cv.boolean,
 })
 
 
@@ -47,6 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mac = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
+    app_power = config.get(CONF_APP_POWER)
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
@@ -59,20 +59,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             uuid = None
         remote = RemoteControl(host, port)
-        add_entities([PanasonicVieraTVDevice(mac, name, remote, host, uuid)])
+        add_entities([PanasonicVieraTVDevice(
+            mac, name, remote, host, app_power, uuid)])
         return True
 
     host = config.get(CONF_HOST)
     remote = RemoteControl(host, port)
 
-    add_entities([PanasonicVieraTVDevice(mac, name, remote, host)])
+    add_entities([PanasonicVieraTVDevice(mac, name, remote, host, app_power)])
     return True
 
 
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, mac, name, remote, host, uuid=None):
+    def __init__(self, mac, name, remote, host, app_power, uuid=None):
         """Initialize the Panasonic device."""
         import wakeonlan
         # Save a reference to the imported class
@@ -86,6 +87,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self._remote = remote
         self._host = host
         self._volume = 0
+        self._app_power = app_power
 
     @property
     def unique_id(self) -> str:
@@ -134,7 +136,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._mac:
+        if self._mac or self._app_power:
             return SUPPORT_VIERATV | SUPPORT_TURN_ON
         return SUPPORT_VIERATV
 
@@ -142,6 +144,9 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         """Turn on the media player."""
         if self._mac:
             self._wol.send_magic_packet(self._mac, ip_address=self._host)
+            self._state = STATE_ON
+        elif self._app_power:
+            self._remote.turn_on()
             self._state = STATE_ON
 
     def turn_off(self):

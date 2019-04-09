@@ -1,9 +1,4 @@
-"""
-Support for interacting with and controlling the cmus music player.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.cmus/
-"""
+"""Support for interacting with and controlling the cmus music player."""
 import logging
 
 import voluptuous as vol

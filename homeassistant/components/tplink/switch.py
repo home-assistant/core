@@ -1,18 +1,13 @@
-"""
-Support for TPLink HS100/HS110/HS200 smart switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.tplink/
-"""
+"""Support for TPLink HS100/HS110/HS200 smart switch."""
 import logging
 import time
 
 from homeassistant.components.switch import (
-    SwitchDevice, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
-from homeassistant.components.tplink import (DOMAIN as TPLINK_DOMAIN,
-                                             CONF_SWITCH)
+    ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH, SwitchDevice)
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
+
+from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
 
 DEPENDENCIES = ['tplink']
 

@@ -71,6 +71,10 @@ class TestTimeDateSensor(unittest.TestCase):
         device._update_internal_state(now)
         assert device.state == "@079"
 
+        device = time_date.TimeDateSensor(self.hass, 'date_time_iso')
+        device._update_internal_state(now)
+        assert device.state == "2017-05-18T00:54:00"
+
     # pylint: disable=no-member
     def test_timezone_intervals(self):
         """Test date sensor behavior in a timezone besides UTC."""
@@ -113,4 +117,6 @@ class TestTimeDateSensor(unittest.TestCase):
         device = time_date.TimeDateSensor(self.hass, 'date')
         assert device.icon == "mdi:calendar"
         device = time_date.TimeDateSensor(self.hass, 'date_time')
+        assert device.icon == "mdi:calendar-clock"
+        device = time_date.TimeDateSensor(self.hass, 'date_time_iso')
         assert device.icon == "mdi:calendar-clock"

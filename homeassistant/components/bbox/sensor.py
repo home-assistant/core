@@ -1,9 +1,4 @@
-"""
-Support for Bbox Bouygues Modem Router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bbox/
-"""
+"""Support for Bbox Bouygues Modem Router."""
 import logging
 from datetime import timedelta
 

@@ -1,9 +1,4 @@
-"""
-Support for BH1750 light sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bh1750/
-"""
+"""Support for BH1750 light sensor."""
 from functools import partial
 import logging
 

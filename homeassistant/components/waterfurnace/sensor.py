@@ -1,18 +1,12 @@
-"""
-Support for Waterfurnace.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.waterfurnace/
-"""
+"""Support for Waterfurnace."""
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.waterfurnace import (
-    DOMAIN as WF_DOMAIN, UPDATE_TOPIC
-)
 from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
+
+from . import DOMAIN as WF_DOMAIN, UPDATE_TOPIC
 
 
 class WFSensorConfig:

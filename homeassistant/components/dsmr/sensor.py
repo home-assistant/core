@@ -1,9 +1,4 @@
-"""
-Support for Dutch Smart Meter (also known as Smartmeter or P1 port).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dsmr/
-"""
+"""Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
 from datetime import timedelta
 from functools import partial

@@ -1,9 +1,4 @@
-"""
-Support for interface with a Ziggo Mediabox XL.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.ziggo_mediabox_xl/
-"""
+"""Support for interface with a Ziggo Mediabox XL."""
 import logging
 import socket
 

@@ -1,9 +1,4 @@
-"""
-Component for handling Air Quality data for your location.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/air_quality/
-"""
+"""Component for handling Air Quality data for your location."""
 from datetime import timedelta
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.yeelightsunflower/
-"""
+"""Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi)."""
 import logging
 
 import voluptuous as vol

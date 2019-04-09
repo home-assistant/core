@@ -1,0 +1,10 @@
+{
+  "domain": "bom",
+  "name": "Bom",
+  "documentation": "https://www.home-assistant.io/components/bom",
+  "requirements": [
+    "bomradarloop==0.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
