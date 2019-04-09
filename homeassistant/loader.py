@@ -17,7 +17,7 @@ import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar, List  # noqa pylint: disable=unused-import
+from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar, List, Dict, cast  # noqa pylint: disable=unused-import
 
 from homeassistant.const import PLATFORM_FORMAT
 
@@ -44,48 +44,7 @@ COMPONENTS_WITH_BAD_PLATFORMS = ['automation', 'mqtt', 'telegram_bot']
 _UNDEF = object()
 
 
-async def async_get_integration(hass, domain):
-    """Get an integration."""
-    cache = hass.data.setdefault(DATA_INTEGRATIONS, {})
-    integration = cache.get(domain, _UNDEF)
-
-    if integration is _UNDEF:
-        pass
-    elif integration is None:
-        raise IntegrationNotFound(domain)
-    else:
-        return integration
-
-    try:
-        import custom_components
-        integration = await hass.async_add_executor_job(
-            Integration.resolve_from_root, hass, custom_components, domain
-        )
-        if integration is not None:
-            cache[domain] = integration
-            return integration
-
-    except ImportError:
-        pass
-
-    from homeassistant import components
-
-    integration = Integration.resolve_from_root(hass, components, domain)
-
-    if integration is not None:
-        cache[domain] = integration
-        return integration
-
-    integration = Integration.resolve_legacy(hass, domain)
-    cache[domain] = integration
-
-    if not integration:
-        raise IntegrationNotFound(domain)
-
-    return integration
-
-
-def manifest_from_legacy_module(module):
+def manifest_from_legacy_module(module: Any) -> Dict:
     """Generate a manifest from a legacy module."""
     return {
         'domain': module.DOMAIN,
@@ -101,7 +60,8 @@ class Integration:
     """An integration in Home Assistant."""
 
     @staticmethod
-    def resolve_from_root(hass, root_module, domain):
+    def resolve_from_root(hass: 'HomeAssistant', root_module: Any,
+                          domain: str) -> 'Optional[Integration]':
         """Resolve an integration from a root module."""
         for base in root_module.__path__:
             manifest_path = (
@@ -125,7 +85,8 @@ class Integration:
         return None
 
     @staticmethod
-    def resolve_legacy(hass, domain):
+    def resolve_legacy(hass: 'HomeAssistant', domain: str) \
+            -> 'Optional[Integration]':
         """Resolve legacy component.
 
         Will create a stub manifest.
@@ -139,43 +100,68 @@ class Integration:
             hass, comp.__name__, manifest_from_legacy_module(comp)
         )
 
-    def __init__(self, hass, pkg_path, manifest):
+    def __init__(self, hass: 'HomeAssistant', pkg_path: str, manifest: Dict):
         """Initialize an integration."""
         self.hass = hass
         self.pkg_path = pkg_path
-        self.manifest = manifest
-        self.processed_deps = False
-        self.processed_reqs = False
+        self.name = manifest['name']  # type: str
+        self.domain = manifest['domain']  # type: str
+        self.dependencies = manifest['dependencies']  # type: List[str]
+        self.requirements = manifest['requirements']  # type: List[str]
 
-    @property
-    def name(self):
-        """Return name of this integration."""
-        return self.manifest['name']
-
-    @property
-    def domain(self):
-        """Return domain of this integration."""
-        return self.manifest['domain']
-
-    @property
-    def dependencies(self):
-        """Return dependencies of this integration."""
-        return self.manifest['dependencies']
-
-    @property
-    def requirements(self):
-        """Return requirements of this integration."""
-        return self.manifest['requirements']
-
-    def get_component(self):
+    def get_component(self) -> Any:
         """Return comoponent."""
         return importlib.import_module(self.pkg_path)
 
-    def get_platform(self, platform_name):
+    def get_platform(self, platform_name: str) -> Any:
         """Return a platform for an integration."""
         return importlib.import_module(
             "{}.{}".format(self.pkg_path, platform_name)
         )
+
+
+async def async_get_integration(hass: 'HomeAssistant', domain: str)\
+         -> Integration:
+    """Get an integration."""
+    cache = hass.data.setdefault(DATA_INTEGRATIONS, {})
+    integration = cache.get(domain, _UNDEF)  # type: Optional[Integration]
+
+    if integration is _UNDEF:
+        pass
+    elif integration is None:
+        raise IntegrationNotFound(domain)
+    else:
+        return integration
+
+    try:
+        import custom_components
+        integration = await hass.async_add_executor_job(
+            Integration.resolve_from_root, hass, custom_components, domain
+        )
+        if integration is not None:
+            cache[domain] = integration
+            return integration
+
+    except ImportError:
+        pass
+
+    from homeassistant import components
+
+    integration = Integration.resolve_from_root(
+        hass, components, domain)
+
+    if integration is not None:
+        cache[domain] = integration
+        return integration
+
+    integration = Integration.resolve_legacy(
+        hass, domain)
+    cache[domain] = integration
+
+    if not integration:
+        raise IntegrationNotFound(domain)
+
+    return integration
 
 
 class LoaderError(Exception):
