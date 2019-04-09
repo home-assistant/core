@@ -1272,6 +1272,9 @@ pyrainbird==0.1.6
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
 
+# homeassistant.components.repetier
+pyrepetier==2.0.1
+
 # homeassistant.components.ruter
 pyruter==1.1.0
 
