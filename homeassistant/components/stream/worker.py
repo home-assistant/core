@@ -29,11 +29,7 @@ def create_stream_buffer(stream_output, video_stream, audio_frame):
     segment = io.BytesIO()
     output = av.open(
         segment, mode='w', format=stream_output.format)
-    vstream = output.add_stream(
-        stream_output.video_codec, video_stream.rate)
-    # Fix format
-    vstream.codec_context.format = \
-        video_stream.codec_context.format
+    vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
     astream = None
     if stream_output.audio_codec:
@@ -59,10 +55,16 @@ def stream_worker(hass, stream, quit_event):
 
     audio_frame = generate_audio_frame()
 
-    outputs = {}
     first_packet = True
+    # Holds the buffers for each stream provider
+    outputs = {}
+    # Keep track of the number of segments we've processed
     sequence = 1
+    # Holds the generated silence that needs to be muxed into the output
     audio_packets = {}
+    # The presentation timestamp of the first video packet we recieve
+    first_pts = 0
+    # The decoder timestamp of the latest packet we processed
     last_dts = None
 
     while not quit_event.is_set():
@@ -86,10 +88,18 @@ def stream_worker(hass, stream, quit_event):
             continue
         last_dts = packet.dts
 
+        # Reset timestamps from a 0 time base for this stream
+        packet.dts -= first_pts
+        packet.pts -= first_pts
+
         # Reset segment on every keyframe
         if packet.is_keyframe:
-            # Save segment to outputs
+            # Calculate the segment duration by multiplying the presentation
+            # timestamp by the time base, which gets us total seconds.
+            # By then dividing by the seqence, we can calculate how long
+            # each segment is, assuming the stream starts from 0.
             segment_duration = (packet.pts * packet.time_base) / sequence
+            # Save segment to outputs
             for fmt, buffer in outputs.items():
                 buffer.output.close()
                 del audio_packets[buffer.astream]
@@ -116,6 +126,12 @@ def stream_worker(hass, stream, quit_event):
 
         # First video packet tends to have a weird dts/pts
         if first_packet:
+            # If we are attaching to a live stream that does not reset
+            # timestamps for us, we need to do it ourselves by recording
+            # the first presentation timestamp and subtracting it from
+            # subsequent packets we recieve.
+            if (packet.pts * packet.time_base) > 1:
+                first_pts = packet.pts
             packet.dts = 0
             packet.pts = 0
             first_packet = False

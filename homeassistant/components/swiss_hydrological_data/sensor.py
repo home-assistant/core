@@ -1,9 +1,4 @@
-"""
-Support for hydrological data from the Federal Office for the Environment FOEN.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.swiss_hydrological_data/
-"""
+"""Support for hydrological data from the Fed. Office for the Environment."""
 from datetime import timedelta
 import logging
 

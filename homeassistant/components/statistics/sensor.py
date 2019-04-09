@@ -1,9 +1,4 @@
-"""
-Support for statistics for sensor values.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.statistics/
-"""
+"""Support for statistics for sensor values."""
 import logging
 import statistics
 from collections import deque

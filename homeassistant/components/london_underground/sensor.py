@@ -1,9 +1,4 @@
-"""
-Sensor for checking the status of London Underground tube lines.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.london_underground/
-"""
+"""Sensor for checking the status of London Underground tube lines."""
 import logging
 from datetime import timedelta
 

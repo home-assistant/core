@@ -1,9 +1,4 @@
-"""
-Support for the yandex speechkit tts  service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/yandextts/
-"""
+"""Support for the yandex speechkit tts  service."""
 import asyncio
 import logging
 
@@ -11,11 +6,10 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 
 _LOGGER = logging.getLogger(__name__)
 

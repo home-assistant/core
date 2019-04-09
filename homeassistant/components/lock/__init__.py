@@ -1,9 +1,4 @@
-"""
-Component to interface with various locks that can be controlled remotely.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/lock/
-"""
+"""Component to interface with locks that can be controlled remotely."""
 from datetime import timedelta
 import functools as ft
 import logging

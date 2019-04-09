@@ -1,9 +1,4 @@
-"""
-Support for Rflink binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.rflink/
-"""
+"""Support for Rflink binary sensors."""
 import logging
 
 import voluptuous as vol
@@ -58,7 +53,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
     """Representation of an Rflink binary sensor."""
 
     def __init__(self, device_id, device_class=None,
-                 force_update=None, off_delay=None,
+                 force_update=False, off_delay=None,
                  **kwargs):
         """Handle sensor specific args and super init."""
         self._state = None

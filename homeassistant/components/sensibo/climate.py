@@ -1,9 +1,4 @@
-"""
-Support for Sensibo wifi-enabled home thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.sensibo/
-"""
+"""Support for Sensibo wifi-enabled home thermostats."""
 
 import asyncio
 import logging

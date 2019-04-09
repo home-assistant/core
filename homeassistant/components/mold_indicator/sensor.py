@@ -1,9 +1,4 @@
-"""
-Calculates mold growth indication from temperature and humidity.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mold_indicator/
-"""
+"""Calculates mold growth indication from temperature and humidity."""
 import logging
 import math
 

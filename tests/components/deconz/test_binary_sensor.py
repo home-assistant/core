@@ -54,7 +54,7 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
     gateway = deconz.DeconzGateway(hass, config_entry)
     gateway.api = DeconzSession(loop, session, **config_entry.data)
     gateway.api.config = Mock()
-    hass.data[deconz.DOMAIN] = gateway
+    hass.data[deconz.DOMAIN] = {gateway.bridgeid: gateway}
 
     with patch('pydeconz.DeconzSession.async_get_state',
                return_value=mock_coro(data)):
@@ -64,6 +64,7 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
         config_entry, 'binary_sensor')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
+    return gateway
 
 
 async def test_platform_manually_configured(hass):
@@ -79,56 +80,56 @@ async def test_platform_manually_configured(hass):
 async def test_no_binary_sensors(hass):
     """Test that no sensors in deconz results in no sensor entities."""
     data = {}
-    await setup_gateway(hass, data)
-    assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
+    gateway = await setup_gateway(hass, data)
+    assert len(hass.data[deconz.DOMAIN][gateway.bridgeid].deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
 
 async def test_binary_sensors(hass):
     """Test successful creation of binary sensor entities."""
     data = {"sensors": SENSOR}
-    await setup_gateway(hass, data)
-    assert "binary_sensor.sensor_1_name" in \
-        hass.data[deconz.DOMAIN].deconz_ids
-    assert "binary_sensor.sensor_2_name" not in \
-        hass.data[deconz.DOMAIN].deconz_ids
+    gateway = await setup_gateway(hass, data)
+    assert "binary_sensor.sensor_1_name" in gateway.deconz_ids
+    assert "binary_sensor.sensor_2_name" not in gateway.deconz_ids
     assert len(hass.states.async_all()) == 1
 
-    hass.data[deconz.DOMAIN].api.sensors['1'].async_update(
+    hass.data[deconz.DOMAIN][gateway.bridgeid].api.sensors['1'].async_update(
         {'state': {'on': False}})
 
 
 async def test_add_new_sensor(hass):
     """Test successful creation of sensor entities."""
     data = {}
-    await setup_gateway(hass, data)
+    gateway = await setup_gateway(hass, data)
     sensor = Mock()
     sensor.name = 'name'
     sensor.type = 'ZHAPresence'
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_sensor', [sensor])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('sensor'), [sensor])
     await hass.async_block_till_done()
-    assert "binary_sensor.name" in hass.data[deconz.DOMAIN].deconz_ids
+    assert "binary_sensor.name" in gateway.deconz_ids
 
 
 async def test_do_not_allow_clip_sensor(hass):
     """Test that clip sensors can be ignored."""
     data = {}
-    await setup_gateway(hass, data, allow_clip_sensor=False)
+    gateway = await setup_gateway(hass, data, allow_clip_sensor=False)
     sensor = Mock()
     sensor.name = 'name'
     sensor.type = 'CLIPPresence'
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_sensor', [sensor])
+    async_dispatcher_send(
+        hass, gateway.async_event_new_device('sensor'), [sensor])
     await hass.async_block_till_done()
-    assert len(hass.data[deconz.DOMAIN].deconz_ids) == 0
+    assert len(gateway.deconz_ids) == 0
 
 
 async def test_unload_switch(hass):
     """Test that it works to unload switch entities."""
     data = {"sensors": SENSOR}
-    await setup_gateway(hass, data)
+    gateway = await setup_gateway(hass, data)
 
-    await hass.data[deconz.DOMAIN].async_reset()
+    await gateway.async_reset()
 
     assert len(hass.states.async_all()) == 0

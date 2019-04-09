@@ -1,9 +1,4 @@
-"""
-Platform for retrieving energy data from SRP.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/sensor.srp_energy/
-"""
+"""Platform for retrieving energy data from SRP."""
 from datetime import datetime, timedelta
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Adds support for generic thermostat units.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.generic_thermostat/
-"""
+"""Adds support for generic thermostat units."""
 import asyncio
 import logging
 

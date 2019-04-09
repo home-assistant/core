@@ -1,9 +1,4 @@
-"""
-Support for Samsung Printers with SyncThru web interface.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.syncthru/
-"""
+"""Support for Samsung Printers with SyncThru web interface."""
 
 import logging
 import voluptuous as vol

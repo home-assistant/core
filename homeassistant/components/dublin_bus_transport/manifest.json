@@ -1,0 +1,8 @@
+{
+  "domain": "dublin_bus_transport",
+  "name": "Dublin bus transport",
+  "documentation": "https://www.home-assistant.io/components/dublin_bus_transport",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

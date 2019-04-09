@@ -263,8 +263,6 @@ class TradfriLight(Light):
             brightness = kwargs[ATTR_BRIGHTNESS]
             if brightness > 254:
                 brightness = 254
-            elif brightness < 0:
-                brightness = 0
             dimmer_data = {ATTR_DIMMER: brightness, ATTR_TRANSITION_TIME:
                            transition_time}
             dimmer_command = self._light_control.set_dimmer(**dimmer_data)

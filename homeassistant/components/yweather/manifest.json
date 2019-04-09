@@ -1,0 +1,10 @@
+{
+  "domain": "yweather",
+  "name": "Yweather",
+  "documentation": "https://www.home-assistant.io/components/yweather",
+  "requirements": [
+    "yahooweather==0.10"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

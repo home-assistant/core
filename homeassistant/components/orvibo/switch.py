@@ -1,9 +1,4 @@
-"""
-Support for Orvibo S20 Wifi Smart Switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.orvibo/
-"""
+"""Support for Orvibo S20 Wifi Smart Switches."""
 import logging
 
 import voluptuous as vol

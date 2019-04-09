@@ -1,9 +1,4 @@
-"""
-Support for Blinkt! lights on Raspberry Pi.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.blinkt/
-"""
+"""Support for Blinkt! lights on Raspberry Pi."""
 import importlib
 import logging
 

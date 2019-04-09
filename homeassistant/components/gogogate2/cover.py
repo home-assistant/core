@@ -1,9 +1,4 @@
-"""
-Support for Gogogate2 garage Doors.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.gogogate2/
-"""
+"""Support for Gogogate2 garage Doors."""
 import logging
 
 import voluptuous as vol

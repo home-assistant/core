@@ -1,9 +1,4 @@
-"""
-Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.bt_smarthub/
-"""
+"""Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
 import logging
 
 import voluptuous as vol

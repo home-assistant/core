@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, Mock, patch
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
 
-from homeassistant import auth, config_entries, core as ha
+from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
     models as auth_models, auth_store, providers as auth_providers,
     permissions as auth_permissions)
@@ -34,6 +34,7 @@ from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -244,7 +245,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
     msg = mqtt.Message(topic, payload, qos, retain)
-    hass.async_run_job(hass.data['mqtt']._mqtt_on_message, None, None, msg)
+    hass.data['mqtt']._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -287,8 +288,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
-@asyncio.coroutine
-def async_mock_mqtt_component(hass, config=None):
+async def async_mock_mqtt_component(hass, config=None):
     """Mock the MQTT component."""
     if config is None:
         config = {mqtt.CONF_BROKER: 'mock-broker'}
@@ -299,10 +299,11 @@ def async_mock_mqtt_component(hass, config=None):
         mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
 
-        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
+        result = await async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: config
         })
         assert result
+        await hass.async_block_till_done()
 
         hass.data['mqtt'] = MagicMock(spec_set=hass.data['mqtt'],
                                       wraps=hass.data['mqtt'])
@@ -443,6 +444,7 @@ class MockModule:
                  async_migrate_entry=None, async_remove_entry=None):
         """Initialize the mock module."""
         self.__name__ = 'homeassistant.components.{}'.format(domain)
+        self.__file__ = 'homeassistant/components/{}'.format(domain)
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
@@ -482,7 +484,8 @@ class MockModule:
 class MockPlatform:
     """Provide a fake platform."""
 
-    __name__ = "homeassistant.components.light.bla"
+    __name__ = 'homeassistant.components.light.bla'
+    __file__ = 'homeassistant/components/blah/light'
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
@@ -693,13 +696,15 @@ def assert_setup_component(count, domain=None):
     config = {}
 
     @ha.callback
-    def mock_psc(hass, config_input, domain):
+    def mock_psc(hass, config_input, domain_input):
         """Mock the prepare_setup_component to capture config."""
         res = async_process_component_config(
-            hass, config_input, domain)
-        config[domain] = None if res is None else res.get(domain)
+            hass, config_input, domain_input)
+        config[domain_input] = None if res is None else res.get(domain_input)
         _LOGGER.debug("Configuration for %s, Validated: %s, Original %s",
-                      domain, config[domain], config_input.get(domain))
+                      domain_input,
+                      config[domain_input],
+                      config_input.get(domain_input))
         return res
 
     assert isinstance(config, dict)
@@ -894,3 +899,18 @@ async def flush_store(store):
 async def get_system_health_info(hass, domain):
     """Get system health info."""
     return await hass.data['system_health']['info'][domain](hass)
+
+
+def mock_integration(hass, module):
+    """Mock an integration."""
+    integration = loader.Integration(
+        hass, 'homeassisant.components.{}'.format(module.DOMAIN),
+        loader.manifest_from_legacy_module(module))
+    integration.get_component = lambda: module
+
+    # Backwards compat
+    loader.set_component(hass, module.DOMAIN, module)
+
+    hass.data.setdefault(
+        loader.DATA_INTEGRATIONS, {}
+    )[module.DOMAIN] = integration

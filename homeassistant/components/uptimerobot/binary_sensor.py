@@ -1,9 +1,4 @@
-"""
-A platform that to monitor Uptime Robot monitors.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/binary_sensor.uptimerobot/
-"""
+"""A platform that to monitor Uptime Robot monitors."""
 import logging
 
 import voluptuous as vol

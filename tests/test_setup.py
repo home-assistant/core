@@ -20,7 +20,7 @@ from homeassistant.helpers import discovery
 
 from tests.common import \
     get_test_home_assistant, MockModule, MockPlatform, \
-    assert_setup_component, get_test_config_dir
+    assert_setup_component, get_test_config_dir, mock_integration
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
@@ -378,18 +378,18 @@ class TestSetup:
 
     def test_component_not_setup_missing_dependencies(self):
         """Test we do not set up a component if not all dependencies loaded."""
-        deps = ['non_existing']
-        loader.set_component(
-            self.hass, 'comp', MockModule('comp', dependencies=deps))
+        deps = ['maybe_existing']
+        mock_integration(self.hass, MockModule('comp', dependencies=deps))
 
         assert not setup.setup_component(self.hass, 'comp', {})
         assert 'comp' not in self.hass.config.components
 
         self.hass.data.pop(setup.DATA_SETUP)
 
-        loader.set_component(
-            self.hass, 'non_existing', MockModule('non_existing'))
-        assert setup.setup_component(self.hass, 'comp', {})
+        mock_integration(self.hass, MockModule('comp2', dependencies=deps))
+        mock_integration(self.hass, MockModule('maybe_existing'))
+
+        assert setup.setup_component(self.hass, 'comp2', {})
 
     def test_component_failing_setup(self):
         """Test component that fails setup."""

@@ -1,0 +1,8 @@
+{
+  "domain": "synology_chat",
+  "name": "Synology chat",
+  "documentation": "https://www.home-assistant.io/components/synology_chat",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

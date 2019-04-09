@@ -1,9 +1,4 @@
-"""
-Sensor for checking the air quality forecast around Norway.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_quality.norway_air/
-"""
+"""Sensor for checking the air quality forecast around Norway."""
 import logging
 
 from datetime import timedelta

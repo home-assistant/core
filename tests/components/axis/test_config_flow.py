@@ -16,7 +16,7 @@ async def test_configured_devices(hass):
     assert not result
 
     entry = MockConfigEntry(domain=axis.DOMAIN,
-                            data={axis.CONF_DEVICE: {axis.CONF_HOST: ''}})
+                            data={axis.config_flow.CONF_MAC: '1234'})
     entry.add_to_hass(hass)
 
     result = config_flow.configured_devices(hass)
@@ -31,8 +31,7 @@ async def test_flow_works(hass):
 
     with patch('axis.AxisDevice') as mock_device:
         def mock_constructor(
-                loop, host, username, password, port, web_proto, event_types,
-                signal):
+                loop, host, username, password, port, web_proto):
             """Fake the controller constructor."""
             mock_device.loop = loop
             mock_device.host = host
@@ -77,17 +76,21 @@ async def test_flow_fails_already_configured(hass):
     flow = config_flow.AxisFlowHandler()
     flow.hass = hass
 
-    entry = MockConfigEntry(domain=axis.DOMAIN, data={axis.CONF_DEVICE: {
-        axis.CONF_HOST: '1.2.3.4'
-    }})
+    entry = MockConfigEntry(domain=axis.DOMAIN,
+                            data={axis.config_flow.CONF_MAC: '1234'})
     entry.add_to_hass(hass)
 
-    result = await flow.async_step_user(user_input={
-        config_flow.CONF_HOST: '1.2.3.4',
-        config_flow.CONF_USERNAME: 'user',
-        config_flow.CONF_PASSWORD: 'pass',
-        config_flow.CONF_PORT: 81
-    })
+    mock_device = Mock()
+    mock_device.vapix.get_param.return_value = '1234'
+
+    with patch('homeassistant.components.axis.config_flow.get_device',
+               return_value=mock_coro(mock_device)):
+        result = await flow.async_step_user(user_input={
+            config_flow.CONF_HOST: '1.2.3.4',
+            config_flow.CONF_USERNAME: 'user',
+            config_flow.CONF_PASSWORD: 'pass',
+            config_flow.CONF_PORT: 81
+        })
 
     assert result['errors'] == {'base': 'already_configured'}
 
@@ -189,8 +192,7 @@ async def test_discovery_flow_known_device(hass):
                    config_flow.CONF_PORT: 80}}), \
             patch('axis.AxisDevice') as mock_device:
         def mock_constructor(
-                loop, host, username, password, port, web_proto, event_types,
-                signal):
+                loop, host, username, password, port, web_proto):
             """Fake the controller constructor."""
             mock_device.loop = loop
             mock_device.host = host
@@ -222,16 +224,19 @@ async def test_discovery_flow_already_configured(hass):
     flow = config_flow.AxisFlowHandler()
     flow.hass = hass
 
-    entry = MockConfigEntry(domain=axis.DOMAIN, data={axis.CONF_DEVICE: {
-        axis.CONF_HOST: '1.2.3.4'
-    }})
+    entry = MockConfigEntry(
+        domain=axis.DOMAIN,
+        data={axis.CONF_DEVICE: {axis.config_flow.CONF_HOST: '1.2.3.4'},
+              axis.config_flow.CONF_MAC: '1234ABCD'}
+    )
     entry.add_to_hass(hass)
 
     result = await flow.async_step_discovery(discovery_info={
         config_flow.CONF_HOST: '1.2.3.4',
         config_flow.CONF_USERNAME: 'user',
         config_flow.CONF_PASSWORD: 'pass',
-        config_flow.CONF_PORT: 81
+        config_flow.CONF_PORT: 81,
+        'properties': {'macaddress': '1234ABCD'}
     })
     print(result)
     assert result['type'] == 'abort'
@@ -277,8 +282,7 @@ async def test_import_flow_works(hass):
 
     with patch('axis.AxisDevice') as mock_device:
         def mock_constructor(
-                loop, host, username, password, port, web_proto, event_types,
-                signal):
+                loop, host, username, password, port, web_proto):
             """Fake the controller constructor."""
             mock_device.loop = loop
             mock_device.host = host

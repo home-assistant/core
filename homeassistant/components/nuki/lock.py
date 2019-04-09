@@ -1,9 +1,4 @@
-"""
-Nuki.io lock platform.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/lock.nuki/
-"""
+"""Nuki.io lock platform."""
 from datetime import timedelta
 import logging
 

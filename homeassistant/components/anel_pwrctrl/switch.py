@@ -1,9 +1,4 @@
-"""
-Support for ANEL PwrCtrl switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.pwrctrl/
-"""
+"""Support for ANEL PwrCtrl switches."""
 import logging
 import socket
 from datetime import timedelta

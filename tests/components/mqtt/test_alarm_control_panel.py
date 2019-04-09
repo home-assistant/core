@@ -288,15 +288,64 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/command', 'DISARM', 0, False)
 
-    def test_disarm_not_publishes_mqtt_with_invalid_code(self):
-        """Test not publishing of MQTT messages with invalid code."""
+    def test_disarm_publishes_mqtt_with_template(self):
+        """Test publishing of MQTT messages while disarmed.
+
+        When command_template set to output json
+        """
         assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
             alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
-                'code': '1234'
+                'code': '1234',
+                'command_template': '{\"action\":\"{{ action }}\",'
+                                    '\"code\":\"{{ code }}\"}',
+            }
+        })
+
+        common.alarm_disarm(self.hass, 1234)
+        self.hass.block_till_done()
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', '{\"action\":\"DISARM\",\"code\":\"1234\"}',
+            0,
+            False)
+
+    def test_disarm_publishes_mqtt_when_code_not_req(self):
+        """Test publishing of MQTT messages while disarmed.
+
+        When code_disarm_required = False
+        """
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'code': '1234',
+                'code_disarm_required': False
+            }
+        })
+
+        common.alarm_disarm(self.hass)
+        self.hass.block_till_done()
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', 'DISARM', 0, False)
+
+    def test_disarm_not_publishes_mqtt_with_invalid_code_when_req(self):
+        """Test not publishing of MQTT messages with invalid code.
+
+        When code_disarm_required = True
+        """
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'code': '1234',
+                'code_disarm_required': True
             }
         })
 
@@ -371,6 +420,33 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     state = hass.states.get('alarm_control_panel.test')
 
     assert '100' == state.attributes.get('val')
+
+
+async def test_update_state_via_state_topic_template(hass, mqtt_mock):
+    """Test updating with template_value via state topic."""
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, {
+        alarm_control_panel.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'command_topic': 'test-topic',
+            'state_topic': 'test-topic',
+            'value_template': '\
+                {% if (value | int)  == 100 %}\
+                  armed_away\
+                {% else %}\
+                   disarmed\
+                {% endif %}'
+            }
+    })
+
+    state = hass.states.get('alarm_control_panel.test')
+    assert STATE_UNKNOWN == state.state
+
+    async_fire_mqtt_message(hass, 'test-topic', '100')
+    await hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.test')
+    assert STATE_ALARM_ARMED_AWAY == state.state
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):

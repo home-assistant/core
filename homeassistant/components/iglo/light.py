@@ -1,9 +1,4 @@
-"""
-Support for lights under the iGlo brand.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.iglo/
-"""
+"""Support for lights under the iGlo brand."""
 import logging
 import math
 

@@ -19,7 +19,7 @@ from .const import (
     MESSAGE_SCHEMA, SERVICE_RECONNECT, SERVICE_SEND_MESSAGE, SERVICE_UPDATE,
     TARGETS_SCHEMA)
 
-REQUIREMENTS = ['hangups==0.4.6']
+REQUIREMENTS = ['hangups==0.4.9']
 
 _LOGGER = logging.getLogger(__name__)
 

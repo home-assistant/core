@@ -1,9 +1,4 @@
-"""
-Support for Rflink lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.rflink/
-"""
+"""Support for Rflink lights."""
 import logging
 
 import voluptuous as vol
