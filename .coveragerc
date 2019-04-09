@@ -321,7 +321,10 @@ omit =
     homeassistant/components/liveboxplaytv/media_player.py
     homeassistant/components/llamalab_automate/notify.py
     homeassistant/components/lockitron/lock.py
-    homeassistant/components/logi_circle/*
+    homeassistant/components/logi_circle/__init__.py
+    homeassistant/components/logi_circle/camera.py
+    homeassistant/components/logi_circle/const.py
+    homeassistant/components/logi_circle/sensor.py
     homeassistant/components/london_underground/sensor.py
     homeassistant/components/loopenergy/sensor.py
     homeassistant/components/luci/device_tracker.py

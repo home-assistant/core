@@ -161,6 +161,7 @@ FLOWS = [
     'ipma',
     'lifx',
     'locative',
+    'logi_circle',
     'luftdaten',
     'mailgun',
     'mobile_app',
