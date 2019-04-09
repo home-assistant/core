@@ -3,6 +3,6 @@
   "name": "Ffmpeg motion",
   "documentation": "https://www.home-assistant.io/components/ffmpeg_motion",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": ["ffmpeg"],
   "codeowners": []
 }

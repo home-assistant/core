@@ -21,6 +21,7 @@ async def test_config_yaml_host_not_imported(hass):
                 'host': 'mock-host'
             }
         })
+        await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0
 
@@ -34,6 +35,7 @@ async def test_config_yaml_host_imported(hass):
                 'host': 'mock-host'
             }
         })
+        await hass.async_block_till_done()
 
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1
@@ -54,6 +56,7 @@ async def test_config_json_host_not_imported(hass):
         assert await async_setup_component(hass, 'tradfri', {
             'tradfri': {}
         })
+        await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0
 
@@ -65,6 +68,7 @@ async def test_config_json_host_imported(hass, mock_gateway_info):
         assert await async_setup_component(hass, 'tradfri', {
             'tradfri': {}
         })
+        await hass.async_block_till_done()
 
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1

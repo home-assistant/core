@@ -45,6 +45,7 @@ class TestNotifyDemo(unittest.TestCase):
         with assert_setup_component(1) as config:
             assert setup_component(self.hass, notify.DOMAIN, CONFIG)
         assert config[notify.DOMAIN]
+        self.hass.block_till_done()
 
     def test_setup(self):
         """Test setup."""
