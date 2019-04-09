@@ -5,8 +5,7 @@ from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.exceptions import PlatformNotReady
 
-from . import CONF_MONITORED_CONDITIONS, DATA_KEY
-from .lte_entity import LTEEntity
+from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
 from .sensor_types import BINARY_SENSOR_CLASSES
 
 DEPENDENCIES = ['netgear_lte']
