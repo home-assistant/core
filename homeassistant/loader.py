@@ -68,8 +68,8 @@ def manifest_from_legacy_module(module: Any) -> Dict:
 class Integration:
     """An integration in Home Assistant."""
 
-    @staticmethod
-    def resolve_from_root(hass: 'HomeAssistant', root_module: Any,
+    @classmethod
+    def resolve_from_root(cls, hass: 'HomeAssistant', root_module: Any,
                           domain: str) -> 'Optional[Integration]':
         """Resolve an integration from a root module."""
         for base in root_module.__path__:
@@ -93,8 +93,8 @@ class Integration:
 
         return None
 
-    @staticmethod
-    def resolve_legacy(hass: 'HomeAssistant', domain: str) \
+    @classmethod
+    def resolve_legacy(cls, hass: 'HomeAssistant', domain: str) \
             -> 'Optional[Integration]':
         """Resolve legacy component.
 
