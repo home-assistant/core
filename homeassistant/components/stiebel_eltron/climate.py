@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-CONF_OPERATION_MODES = [STATE_AUTO, STATE_MANUAL, STATE_ECO, STATE_OFF]
+OPERATION_MODES = [STATE_AUTO, STATE_MANUAL, STATE_ECO, STATE_OFF]
 
 # Mapping STIEBEL ELTRON states to homeassistant states.
 STE_TO_HA_STATE = {'AUTOMATIC': STATE_AUTO,
@@ -47,7 +47,7 @@ class StiebelEltron(ClimateDevice):
         self._target_temperature = None
         self._current_temperature = None
         self._current_humidity = None
-        self._operation_modes = CONF_OPERATION_MODES
+        self._operation_modes = OPERATION_MODES
         self._current_operation = None
         self._filter_alarm = None
         self._force_update = False
