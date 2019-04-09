@@ -36,6 +36,48 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+def setup(hass, base_config):
+    """Set up the Supla component."""
+    from pysupla import SuplaAPI
+
+    server_confs = base_config[DOMAIN][CONF_SERVERS]
+
+    hass.data[SUPLA_SERVERS] = {}
+    hass.data[SUPLA_CHANNELS] = {}
+
+    for server_conf in server_confs:
+
+        server_address = server_conf[CONF_SERVER]
+
+        server = SuplaAPI(
+            server_address,
+            server_conf[CONF_ACCESS_TOKEN]
+        )
+
+        # Test connection
+        try:
+            srv_info = server.get_server_info()
+            if srv_info.get('authenticated'):
+                hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
+            else:
+                _LOGGER.error(
+                    'Server: %s not configured. API call returned: %s',
+                    server_address,
+                    srv_info
+                )
+                return False
+        except IOError:
+            _LOGGER.exception(
+                'Server: %s not configured. Error on Supla API access: ',
+                server_address
+            )
+            return False
+
+    discover_devices(hass, base_config)
+
+    return True
+
+
 def discover_devices(hass, hass_config):
     """
     Run periodically to discover new devices.
@@ -69,46 +111,6 @@ def discover_devices(hass, hass_config):
             channel,
             hass_config
         )
-
-
-def setup(hass, base_config):
-    """Set up the Supla component."""
-    from pysupla import SuplaAPI
-
-    server_confs = base_config[DOMAIN][CONF_SERVERS]
-
-    hass.data[SUPLA_SERVERS] = {}
-    hass.data[SUPLA_CHANNELS] = {}
-
-    for server_conf in server_confs:
-
-        server_address = server_conf[CONF_SERVER]
-
-        server = SuplaAPI(
-            server_address,
-            server_conf[CONF_ACCESS_TOKEN]
-        )
-
-        # Test connection
-        try:
-            srv_info = server.get_server_info()
-            if srv_info.get('authenticated'):
-                hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
-            else:
-                _LOGGER.error(
-                    'Server: %s not configured. API call returned: %s',
-                    server_address,
-                    srv_info
-                )
-        except IOError:
-            _LOGGER.exception(
-                'Server: %s not configured. Error on Supla API access: ',
-                server_address
-            )
-
-    discover_devices(hass, base_config)
-
-    return True
 
 
 class SuplaChannel(Entity):
