@@ -1,5 +1,5 @@
 """Define tests for the PlayStation 4 config flow."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ps4
@@ -7,6 +7,7 @@ from homeassistant.components.ps4.const import (
     DEFAULT_NAME, DEFAULT_REGION)
 from homeassistant.const import (
     CONF_CODE, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_REGION, CONF_TOKEN)
+from homeassistant.util import location
 
 from tests.common import MockConfigEntry
 
@@ -46,6 +47,8 @@ MOCK_TCP_PORT = int(997)
 
 MOCK_AUTO = {"Config Mode": 'Auto Discover'}
 MOCK_MANUAL = {"Config Mode": 'Manual Entry', CONF_IP_ADDRESS: MOCK_HOST}
+
+location.detect_location_info = Mock()
 
 
 async def test_full_flow_implementation(hass):
