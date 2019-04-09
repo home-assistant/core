@@ -703,7 +703,7 @@ async def test_if_action(hass, calls):
 
 async def test_if_fails_setup_bad_for(hass, calls):
     """Test for setup failure for bad for."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
@@ -723,7 +723,7 @@ async def test_if_fails_setup_bad_for(hass, calls):
 
 async def test_if_fails_setup_for_without_above_below(hass, calls):
     """Test for setup failures for missing above or below."""
-    with assert_setup_component(0):
+    with assert_setup_component(0, automation.DOMAIN):
         assert await async_setup_component(hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
