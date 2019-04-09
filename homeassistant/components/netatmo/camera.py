@@ -125,7 +125,7 @@ class NetatmoCamera(Camera):
     @property
     def stream_source(self):
         """Return the stream source."""
-        url = '{0}live/files/{1}/index.m3u8'
+        url = '{0}/live/files/{1}/index.m3u8'
         if self._localurl:
             return url.format(self._localurl, self._quality)
         return url.format(self._vpnurl, self._quality)
