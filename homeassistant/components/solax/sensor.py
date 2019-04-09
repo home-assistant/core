@@ -1,6 +1,5 @@
 """Support for Solax inverter via local API."""
 import asyncio
-import json
 
 from datetime import timedelta
 import logging
@@ -12,7 +11,6 @@ from homeassistant.const import (
         CONF_IP_ADDRESS
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.exceptions import PlatformNotReady
@@ -25,6 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SCAN_INTERVAL = timedelta(seconds=30)
+
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -44,6 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     endpoint.sensors = devices
     async_add_entities(devices)
 
+
 class RealTimeDataEndpoint:
     """Representation of a Sensor."""
 
@@ -60,6 +60,8 @@ class RealTimeDataEndpoint:
 
         This is the only method that should fetch new data for Home Assistant.
         """
+        from solax import SolaxRequestError
+
         try:
             self.data = await self.api.get_data()
             self.ready.set()
