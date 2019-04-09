@@ -902,6 +902,10 @@ def mock_integration(hass, module):
     integration = loader.Integration(
         hass, 'homeassisant.components.{}'.format(module.DOMAIN),
         loader.manifest_from_legacy_module(module))
+    integration.get_component = lambda: module
+
+    # Backwards compat
+    loader.set_component(hass, module.DOMAIN, module)
 
     hass.data.setdefault(
         loader.DATA_INTEGRATIONS, {}
