@@ -79,7 +79,7 @@ class HMLight(HMDevice, Light):
         """Turn the light on and/or change color or color effect settings."""
         if ATTR_TRANSITION in kwargs:
             self._hmdevice.setValue('RAMP_TIME', kwargs[ATTR_TRANSITION])
-
+        
         if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
