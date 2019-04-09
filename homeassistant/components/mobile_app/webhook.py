@@ -96,6 +96,9 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
     data = webhook_payload
 
+    _LOGGER.debug("Received webhook payload for type %s: %s", webhook_type,
+                  data)
+
     if webhook_type in WEBHOOK_SCHEMAS:
         try:
             data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
