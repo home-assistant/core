@@ -26,11 +26,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SuplaCover(SuplaChannel, CoverDevice):
     """Representation of a Supla Cover."""
 
-    def __init__(self, channel_data):
-        """Initialize the Supla device."""
-        super().__init__(channel_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
-
     @property
     def current_cover_position(self):
         """Return current position of cover. 0 is closed, 100 is open."""

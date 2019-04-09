@@ -1,5 +1,4 @@
 """Support for the Supla devices."""
-
 import logging
 from typing import Optional
 
@@ -12,7 +11,6 @@ from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pysupla==0.0.2']
 
-
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'supla'
 
@@ -24,7 +22,6 @@ SUPLA_FUNCTION_HA_CMP_MAP = {
 }
 SUPLA_CHANNELS = 'supla_channels'
 SUPLA_SERVERS = 'supla_servers'
-
 
 SERVER_CONFIG = vol.Schema({
     vol.Required(CONF_SERVER): cv.string,
@@ -84,11 +81,30 @@ def setup(hass, base_config):
     hass.data[SUPLA_CHANNELS] = {}
 
     for server_conf in server_confs:
+
+        server_address = server_conf[CONF_SERVER]
+
         server = SuplaAPI(
-            server_conf[CONF_SERVER],
+            server_address,
             server_conf[CONF_ACCESS_TOKEN]
         )
-        hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
+
+        # Test connection
+        try:
+            si = server.get_server_info()
+            if si.get('authenticated'):
+                hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
+            else:
+                _LOGGER.error(
+                    'Server: %s not configured. API call returned: %s',
+                    server_address,
+                    si
+                )
+        except Exception:
+            _LOGGER.exception(
+                'Server: %s not configured. Error on Supla API access: ',
+                server_address
+            )
 
     discover_devices(hass, base_config)
 
@@ -99,7 +115,7 @@ class SuplaChannel(Entity):
     """Base class of a Supla Channel (an equivalent of HA's Entity)."""
 
     def __init__(self, channel_data):
-        """Channel data -- raw channel infor from PySupla."""
+        """Channel data -- raw channel information from PySupla."""
         self.server_name = channel_data['server_name']
         self.channel_data = channel_data
 
@@ -107,11 +123,6 @@ class SuplaChannel(Entity):
     def server(self):
         """Return PySupla's server component associated with entity."""
         return self.hass.data[SUPLA_SERVERS][self.server_name]
-
-    @property
-    def hidden(self) -> bool:
-        """Return True if the entity should be hidden from UIs."""
-        return self.channel_data['hidden']
 
     @property
     def unique_id(self) -> str:
@@ -123,16 +134,11 @@ class SuplaChannel(Entity):
         """Return the name of the device."""
         return self.channel_data['caption']
 
-    @property
-    def should_poll(self):
-        """Supla's web API requires polling."""
-        return True
-
     def action(self, action, **add_pars):
         """
         Run server action.
 
-        Actions are currently hardoced in components.
+        Actions are currently hardcoded in components.
         Supla's API enables autodiscovery
         """
         _LOGGER.debug(
@@ -142,7 +148,6 @@ class SuplaChannel(Entity):
             add_pars
         )
         self.server.execute_action(self.channel_data['id'], action, **add_pars)
-        self.update()
 
     def update(self):
         """Call to update state."""
@@ -150,9 +155,3 @@ class SuplaChannel(Entity):
             self.channel_data['id'],
             include=['connected', 'state']
         )
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-        return attr
