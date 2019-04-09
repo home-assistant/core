@@ -3,6 +3,6 @@
   "name": "Bizkaibus",
   "documentation": "https://www.home-assistant.io/components/bizkaibus",
   "dependencies": [],
-  "codeowners": [@UgaitzEtxebarria],
+  "codeowners": ["@UgaitzEtxebarria"],
   "requirements": []
 }
