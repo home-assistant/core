@@ -91,16 +91,16 @@ def setup(hass, base_config):
 
         # Test connection
         try:
-            si = server.get_server_info()
-            if si.get('authenticated'):
+            srv_info = server.get_server_info()
+            if srv_info.get('authenticated'):
                 hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
             else:
                 _LOGGER.error(
                     'Server: %s not configured. API call returned: %s',
                     server_address,
-                    si
+                    srv_info
                 )
-        except Exception:
+        except IOError:
             _LOGGER.exception(
                 'Server: %s not configured. Error on Supla API access: ',
                 server_address

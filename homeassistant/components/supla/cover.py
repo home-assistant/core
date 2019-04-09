@@ -2,8 +2,7 @@
 import logging
 from pprint import pformat
 
-from homeassistant.components.cover import (
-    ATTR_POSITION, ENTITY_ID_FORMAT, CoverDevice)
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.components.supla import SuplaChannel
 
 DEPENDENCIES = ['supla']
