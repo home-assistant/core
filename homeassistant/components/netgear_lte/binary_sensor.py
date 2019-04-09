@@ -1,7 +1,6 @@
 """Support for Netgear LTE binary sensors."""
 import logging
 
-from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.exceptions import PlatformNotReady
 
