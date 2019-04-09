@@ -129,7 +129,10 @@ class SuplaChannel(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return 'supla_{}_{}'.format(self.server_name, self.channel_data['id'])
+        return 'supla-{}-{}'.format(
+            self.channel_data['iodevice']['gUIDString'].lower(),
+            self.channel_data['channelNumber']
+        )
 
     @property
     def name(self) -> Optional[str]:

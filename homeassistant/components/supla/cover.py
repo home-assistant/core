@@ -31,6 +31,7 @@ class SuplaCover(SuplaChannel, CoverDevice):
         state = self.channel_data.get('state')
         if state:
             return 100 - state['shut']
+        return None
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
