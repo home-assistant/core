@@ -1,7 +1,6 @@
 """All methods needed to bootstrap a Home Assistant instance."""
 import asyncio
 import logging.handlers
-import os
 from timeit import default_timer as timer
 
 from types import ModuleType
@@ -12,7 +11,6 @@ from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async_ import run_coroutine_threadsafe
-from homeassistant.util import json as json_util
 
 
 _LOGGER = logging.getLogger(__name__)
