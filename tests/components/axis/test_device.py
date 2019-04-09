@@ -82,6 +82,28 @@ async def test_device_signal_new_address(hass):
     assert len(new_address_mock.mock_calls) == 1
 
 
+async def test_device_unavailable(hass):
+    """Successful setup."""
+    entry = MockConfigEntry(
+        domain=device.DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
+
+    api = Mock()
+    api.vapix.get_param.return_value = '1234'
+
+    axis_device = device.AxisNetworkDevice(hass, entry)
+    hass.data[device.DOMAIN] = {axis_device.serial: axis_device}
+
+    with patch.object(device, 'get_device', return_value=mock_coro(api)), \
+            patch.object(device, 'async_dispatcher_send') as mock_dispatcher:
+        await axis_device.async_setup()
+        await hass.async_block_till_done()
+
+        axis_device.async_connection_status_callback(status=False)
+
+    assert not axis_device.available
+    assert len(mock_dispatcher.mock_calls) == 1
+
+
 async def test_device_reset(hass):
     """Successfully reset device."""
     entry = MockConfigEntry(
