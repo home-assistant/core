@@ -280,6 +280,7 @@ async def async_setup(hass, config):
         preprocess_turn_on_alternatives(params)
         turn_lights_off, off_params = preprocess_turn_off(params)
 
+        light_calls = []
         update_tasks = []
         for light in target_lights:
             light.async_set_context(service.context)
@@ -292,10 +293,11 @@ async def async_setup(hass, config):
                 pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
                 preprocess_turn_on_alternatives(pars)
                 turn_light_off, off_pars = preprocess_turn_off(pars)
+
             if turn_light_off:
-                await light.async_turn_off(**off_pars)
+                light_calls.append(light.async_turn_off(**off_pars))
             else:
-                await light.async_turn_on(**pars)
+                light_calls.append(light.async_turn_on(**pars))
 
             if not light.should_poll:
                 continue
@@ -303,18 +305,70 @@ async def async_setup(hass, config):
             update_tasks.append(
                 light.async_update_ha_state(True))
 
+        if light_calls:
+            await asyncio.gather(*light_calls, loop=hass.loop)
+
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)
+
+
+    async def async_handle_light_off_service(service):
+        """Handle a turn light off service call."""
+        # Get the validated data
+        params = service.data.copy()
+
+        # Convert the entity ids to valid light ids
+        target_lights = await component.async_extract_from_service(service)
+        params.pop(ATTR_ENTITY_ID, None)
+
+        if service.context.user_id:
+            user = await hass.auth.async_get_user(service.context.user_id)
+            if user is None:
+                raise UnknownUser(context=service.context)
+
+            entity_perms = user.permissions.check_entity
+
+            for light in target_lights:
+                if not entity_perms(light, POLICY_CONTROL):
+                    raise Unauthorized(
+                        context=service.context,
+                        entity_id=light,
+                        permission=POLICY_CONTROL
+                    )
+
+        light_calls = []
+        update_tasks = []
+        for light in target_lights:
+            light.async_set_context(service.context)
+
+            pars = params
+            if not pars:
+                pars = params.copy()
+                pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
+
+            light_calls.append(light.async_turn_off(**pars))
+
+            if not light.should_poll:
+                continue
+
+            update_tasks.append(
+                light.async_update_ha_state(True))
+
+        if light_calls:
+            await asyncio.gather(*light_calls, loop=hass.loop)
+
+        if update_tasks:
+            await asyncio.wait(update_tasks, loop=hass.loop)
+
 
     # Listen for light on and light off service calls.
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_light_on_service,
         schema=LIGHT_TURN_ON_SCHEMA)
 
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, LIGHT_TURN_OFF_SCHEMA,
-        'async_turn_off'
-    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_OFF, async_handle_light_off_service,
+        schema=LIGHT_TURN_OFF_SCHEMA)
 
     component.async_register_entity_service(
         SERVICE_TOGGLE, LIGHT_TOGGLE_SCHEMA,
