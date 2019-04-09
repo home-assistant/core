@@ -1,6 +1,15 @@
 """The tests for the webhook automation trigger."""
+import pytest
+
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
+
+
+@pytest.fixture(autouse=True)
+async def setup_http(hass):
+    """Set up http."""
+    assert await async_setup_component(hass, 'http', {})
+    assert await async_setup_component(hass, 'webhook', {})
 
 
 async def test_webhook_json(hass, aiohttp_client):
