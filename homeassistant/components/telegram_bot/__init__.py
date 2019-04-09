@@ -1,6 +1,7 @@
 """Support to send and receive Telegram messages."""
 import io
 from functools import partial
+import importlib
 import logging
 
 import requests
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
-from homeassistant.setup import async_prepare_setup_platform
 
 REQUIREMENTS = ['python-telegram-bot==11.1.0']
 
@@ -76,7 +76,7 @@ PARSER_HTML = 'html'
 PARSER_MD = 'markdown'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM): cv.string,
+    vol.Required(CONF_PLATFORM): vol.In(('broadcast', 'polling', 'webhooks')),
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_ALLOWED_CHAT_IDS):
         vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -219,11 +219,8 @@ async def async_setup(hass, config):
 
     p_type = p_config.get(CONF_PLATFORM)
 
-    platform = await async_prepare_setup_platform(
-        hass, config, DOMAIN, p_type)
-
-    if platform is None:
-        return
+    platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
+                                       __name__)
 
     _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
     try:
