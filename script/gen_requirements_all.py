@@ -124,6 +124,7 @@ TEST_REQUIREMENTS = (
     'simplisafe-python',
     'sleepyq',
     'smhi-pkg',
+    'solax'
     'somecomfort',
     'sqlalchemy',
     'srpenergy',
