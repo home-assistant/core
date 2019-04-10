@@ -83,8 +83,8 @@ class MockSwitcherV2Device:
         return self._last_state_change
 
 
-@fixture
-def mock_bridge_fixture(scope='module') -> Generator[None, Any, None]:
+@fixture()
+def mock_bridge_fixture() -> Generator[None, Any, None]:
     """Fixture for mocking aioswitcher.bridge.SwitcherV2Bridge."""
     queue = Queue()  # type: Queue
 
@@ -103,6 +103,8 @@ def mock_bridge_fixture(scope='module') -> Generator[None, Any, None]:
 
     for patcher in patchers:
         patcher.start()
+
     yield
+
     for patcher in patchers:
         patcher.stop()

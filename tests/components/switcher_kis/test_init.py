@@ -21,7 +21,6 @@ async def test_failed_config(hass: HomeAssistant) -> None:
         hass, DOMAIN, MANDATORY_CONFIGURATION) is False
 
 
-# pylint: disable=redefined-outer-name
 async def test_minimal_config(hass: HomeAssistant,
                               mock_bridge_fixture: Generator[None, Any, None]
                               ) -> None:
@@ -58,4 +57,3 @@ async def test_discovery_data_bucket(
     assert device.power_consumption == DUMMY_POWER_CONSUMPTION
     assert device.electric_current == DUMMY_ELECTRIC_CURRENT
     assert device.phone_id == DUMMY_PHONE_ID
-# pylint: enable=redefined-outer-name
