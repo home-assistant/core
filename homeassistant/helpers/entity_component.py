@@ -179,13 +179,15 @@ class EntityComponent:
                 if entity.available and entity.entity_id in entity_ids]
 
     @callback
-    def async_register_entity_service(self, name, schema, func):
+    def async_register_entity_service(self, name, schema, func,
+                                      required_features=None):
         """Register an entity service."""
         async def handle_service(call):
             """Handle the service."""
             service_name = "{}.{}".format(self.domain, name)
             await self.hass.helpers.service.entity_service_call(
-                self._platforms.values(), func, call, service_name
+                self._platforms.values(), func, call, service_name,
+                required_features
             )
 
         self.hass.services.async_register(
