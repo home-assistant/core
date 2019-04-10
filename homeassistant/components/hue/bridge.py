@@ -98,8 +98,13 @@ class HueBridge:
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
-        return await self.hass.config_entries.async_forward_entry_unload(
-            self.config_entry, 'light')
+        light = (await self.hass.config_entries.async_forward_entry_unload(
+            self.config_entry, 'light')) is not False
+        binary = (await self.hass.config_entries.async_forward_entry_unload(
+            self.config_entry, 'binary_sensor')) is not False
+        sensor = (await self.hass.config_entries.async_forward_entry_unload(
+            self.config_entry, 'sensor')) is not False
+        return light and binary and sensor
 
     async def hue_activate_scene(self, call, updated=False):
         """Service to call directly into bridge to set scenes."""
