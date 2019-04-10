@@ -74,9 +74,8 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a ONVIF camera."""
-
     _LOGGER.debug("Setting up the ONVIF camera platform")
-    
+
     def handle_ptz(service):
         """Handle PTZ service call."""
         pan = service.data.get(ATTR_PAN, None)
@@ -104,11 +103,11 @@ class ONVIFHassCamera(Camera):
     def __init__(self, hass, config):
         """Initialize a ONVIF camera."""
         super().__init__()
-        
+
         import onvif
         import zeep
 
-        # Note: important imports foor zeep and onvif-zeep, see https://github.com/FalkTannhaeuser/python-onvif-zeep/issues/4#issuecomment-370173336
+        # Note: important imports foor zeep and onvif-zeep
         def zeep_pythonvalue(self, xmlvalue):
             return xmlvalue
         zeep.xsd.simple.AnySimpleType.pythonvalue = zeep_pythonvalue
