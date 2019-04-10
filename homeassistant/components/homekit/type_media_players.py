@@ -67,7 +67,7 @@ class MediaPlayer(HomeAccessory):
                       FEATURE_SELECT_SOURCE: False}
         self.chars = {FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
                       FEATURE_PLAY_STOP: None, FEATURE_TOGGLE_MUTE: None,
-                      FEATURE_SELECT_SOURCE: None}
+                      FEATURE_SELECT_SOURCE: None, FEATURE_VOLUME_STEP: None}
         feature_list = self.config[CONF_FEATURE_LIST]
 
         self.sources = []
@@ -118,7 +118,8 @@ class MediaPlayer(HomeAccessory):
                 if FEATURE_VOLUME_STEP in feature_list:
                     television_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE,
                                                       value=1)
-                    television_speaker.configure_char(
+                    self.chars[FEATURE_VOLUME_STEP] = television_speaker.\
+                        configure_char(
                         CHAR_VOLUME_SELECTOR,
                         setter_callback=self.set_volume_step)
 
