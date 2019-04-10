@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.sense import SENSE_DATA
+
+from . import SENSE_DATA
 
 DEPENDENCIES = ['sense']
 

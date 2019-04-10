@@ -1,0 +1,8 @@
+{
+  "domain": "hitron_coda",
+  "name": "Hitron coda",
+  "documentation": "https://www.home-assistant.io/components/hitron_coda",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

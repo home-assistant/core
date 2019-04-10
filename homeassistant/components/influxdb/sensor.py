@@ -1,15 +1,9 @@
-"""
-InfluxDB component which allows you to get data from an Influx database.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.influxdb/
-"""
+"""InfluxDB component which allows you to get data from an Influx database."""
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.influxdb import CONF_DB_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
@@ -19,6 +13,8 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+
+from . import CONF_DB_NAME
 
 _LOGGER = logging.getLogger(__name__)
 

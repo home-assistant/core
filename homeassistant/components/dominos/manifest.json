@@ -1,0 +1,12 @@
+{
+  "domain": "dominos",
+  "name": "Dominos",
+  "documentation": "https://www.home-assistant.io/components/dominos",
+  "requirements": [
+    "pizzapi==0.0.3"
+  ],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

@@ -1,9 +1,4 @@
-"""
-Support for vacuum cleaner robots (botvacs).
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum/
-"""
+"""Support for vacuum cleaner robots (botvacs)."""
 from datetime import timedelta
 from functools import partial
 import logging

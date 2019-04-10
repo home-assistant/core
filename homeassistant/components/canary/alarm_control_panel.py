@@ -1,15 +1,12 @@
-"""
-Support for Canary alarm.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.canary/
-"""
+"""Support for Canary alarm."""
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.canary import DATA_CANARY
-from homeassistant.const import STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY, \
-    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_HOME
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED)
+
+from . import DATA_CANARY
 
 DEPENDENCIES = ['canary']
 

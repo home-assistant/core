@@ -1,8 +1,9 @@
 """Support for Spider switches."""
 import logging
 
-from homeassistant.components.spider import DOMAIN as SPIDER_DOMAIN
 from homeassistant.components.switch import SwitchDevice
+
+from . import DOMAIN as SPIDER_DOMAIN
 
 DEPENDENCIES = ['spider']
 

@@ -1,14 +1,10 @@
-"""
-Support for Canary sensors.
+"""Support for Canary sensors."""
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.canary/
-"""
-
-from homeassistant.components.canary import DATA_CANARY
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+
+from . import DATA_CANARY
 
 DEPENDENCIES = ['canary']
 

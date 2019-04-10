@@ -1,9 +1,4 @@
-"""
-Support for BT Home Hub 5.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.bt_home_hub_5/
-"""
+"""Support for BT Home Hub 5."""
 import logging
 
 import voluptuous as vol

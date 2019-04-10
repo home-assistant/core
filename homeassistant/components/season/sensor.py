@@ -1,9 +1,4 @@
-"""
-Support for tracking which astronomical or meteorological season it is.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor/season/
-"""
+"""Support for tracking which astronomical or meteorological season it is."""
 import logging
 from datetime import datetime
 
@@ -130,5 +125,5 @@ class Season(Entity):
 
     def update(self):
         """Update season."""
-        self.datetime = datetime.now()
+        self.datetime = datetime.utcnow()
         self.season = get_season(self.datetime, self.hemisphere, self.type)

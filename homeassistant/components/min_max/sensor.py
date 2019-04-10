@@ -1,9 +1,4 @@
-"""
-Support for displaying the minimal and the maximal value.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.min_max/
-"""
+"""Support for displaying the minimal and the maximal value."""
 import logging
 
 import voluptuous as vol

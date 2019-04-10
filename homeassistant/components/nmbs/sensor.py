@@ -1,9 +1,4 @@
-"""
-Get ride details and liveboard details for NMBS (Belgian railway).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nmbs/
-"""
+"""Get ride details and liveboard details for NMBS (Belgian railway)."""
 import logging
 
 import voluptuous as vol
@@ -124,7 +119,6 @@ class NMBSLiveBoard(Entity):
         attrs = {
             'departure': "In {} minutes".format(departure),
             'extra_train': int(self._attrs['isExtra']) > 0,
-            'occupancy': self._attrs['occupancy']['name'],
             'vehicle_id': self._attrs['vehicle'],
             'monitored_station': self._station,
             ATTR_ATTRIBUTION: "https://api.irail.be/",

@@ -1,9 +1,4 @@
-"""
-Support for interfacing with Monoprice 6 zone home audio controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.monoprice/
-"""
+"""Support for interfacing with Monoprice 6 zone home audio controller."""
 import logging
 
 import voluptuous as vol

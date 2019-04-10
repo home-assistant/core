@@ -1,0 +1,10 @@
+{
+  "domain": "london_underground",
+  "name": "London underground",
+  "documentation": "https://www.home-assistant.io/components/london_underground",
+  "requirements": [
+    "london-tube-status==0.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

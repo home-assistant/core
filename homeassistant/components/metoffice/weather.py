@@ -3,12 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.metoffice.sensor import (
-    CONDITION_CLASSES, ATTRIBUTION, MetOfficeCurrentData)
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
 from homeassistant.const import (
     CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
+
+from .sensor import ATTRIBUTION, CONDITION_CLASSES, MetOfficeCurrentData
 
 REQUIREMENTS = ['datapoint==0.4.3']
 

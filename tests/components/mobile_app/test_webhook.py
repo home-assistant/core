@@ -4,8 +4,10 @@ import logging
 import pytest
 
 from homeassistant.components.mobile_app.const import CONF_SECRET
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
@@ -98,6 +100,64 @@ async def test_webhook_update_registration(webhook_client, hass_client):  # noqa
     assert update_json['app_version'] == '2.0.0'
     assert CONF_WEBHOOK_ID not in update_json
     assert CONF_SECRET not in update_json
+
+
+async def test_webhook_handle_get_zones(hass, create_registrations,  # noqa: F401, F811, E501
+                                        webhook_client):  # noqa: F811
+    """Test that we can get zones properly."""
+    await async_setup_component(hass, ZONE_DOMAIN, {
+        ZONE_DOMAIN: {
+            'name': 'test',
+            'latitude': 32.880837,
+            'longitude': -117.237561,
+            'radius': 250,
+        }
+    })
+
+    resp = await webhook_client.post(
+        '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
+        json={'type': 'get_zones'}
+    )
+
+    assert resp.status == 200
+
+    json = await resp.json()
+    assert len(json) == 1
+    assert json[0]['entity_id'] == 'zone.home'
+
+
+async def test_webhook_handle_get_config(hass, create_registrations,  # noqa: F401, F811, E501
+                                         webhook_client):  # noqa: F811
+    """Test that we can get config properly."""
+    resp = await webhook_client.post(
+        '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
+        json={'type': 'get_config'}
+    )
+
+    assert resp.status == 200
+
+    json = await resp.json()
+    if 'components' in json:
+        json['components'] = set(json['components'])
+    if 'whitelist_external_dirs' in json:
+        json['whitelist_external_dirs'] = \
+            set(json['whitelist_external_dirs'])
+
+    hass_config = hass.config.as_dict()
+
+    expected_dict = {
+        'latitude': hass_config['latitude'],
+        'longitude': hass_config['longitude'],
+        'elevation': hass_config['elevation'],
+        'unit_system': hass_config['unit_system'],
+        'location_name': hass_config['location_name'],
+        'time_zone': hass_config['time_zone'],
+        'components': hass_config['components'],
+        'version': hass_config['version'],
+        'theme_color': '#03A9F4',  # Default frontend theme color
+    }
+
+    assert expected_dict == json
 
 
 async def test_webhook_returns_error_incorrect_json(webhook_client,  # noqa: F401, F811, E501

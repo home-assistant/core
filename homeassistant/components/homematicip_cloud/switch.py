@@ -1,19 +1,14 @@
 """Support for HomematicIP Cloud switches."""
 import logging
 
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
-from homeassistant.components.homematicip_cloud.device import (
-    ATTR_GROUP_MEMBER_UNREACHABLE)
 from homeassistant.components.switch import SwitchDevice
+
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
 DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_POWER_CONSUMPTION = 'power_consumption'
-ATTR_ENERGIE_COUNTER = 'energie_counter'
-ATTR_PROFILE_MODE = 'profile_mode'
 
 
 async def async_setup_platform(

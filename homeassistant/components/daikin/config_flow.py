@@ -2,12 +2,14 @@
 import asyncio
 import logging
 
-import async_timeout
+from aiohttp import ClientError
+from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 
-from .const import KEY_HOST, KEY_IP, KEY_MAC
+from .const import KEY_IP, KEY_MAC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ class FlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(
             title=host,
             data={
-                KEY_HOST: host,
+                CONF_HOST: host,
                 KEY_MAC: mac
             })
 
@@ -37,11 +39,17 @@ class FlowHandler(config_entries.ConfigFlow):
         """Create device."""
         from pydaikin.appliance import Appliance
         try:
-            with async_timeout.timeout(10):
-                device = await self.hass.async_add_executor_job(
-                    Appliance, host)
+            device = Appliance(
+                host,
+                self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            )
+            with timeout(10):
+                await device.init()
         except asyncio.TimeoutError:
             return self.async_abort(reason='device_timeout')
+        except ClientError:
+            _LOGGER.exception("ClientError")
+            return self.async_abort(reason='device_fail')
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
             return self.async_abort(reason='device_fail')
@@ -55,14 +63,14 @@ class FlowHandler(config_entries.ConfigFlow):
             return self.async_show_form(
                 step_id='user',
                 data_schema=vol.Schema({
-                    vol.Required(KEY_HOST): str
+                    vol.Required(CONF_HOST): str
                 })
             )
-        return await self._create_device(user_input[KEY_HOST])
+        return await self._create_device(user_input[CONF_HOST])
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        host = user_input.get(KEY_HOST)
+        host = user_input.get(CONF_HOST)
         if not host:
             return await self.async_step_user()
         return await self._create_device(host)

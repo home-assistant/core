@@ -1,9 +1,4 @@
-"""
-Support for Venstar WiFi Thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.venstar/
-"""
+"""Support for Venstar WiFi Thermostats."""
 import logging
 
 import voluptuous as vol

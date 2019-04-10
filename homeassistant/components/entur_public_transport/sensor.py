@@ -1,9 +1,4 @@
-"""
-Real-time information about public transport departures in Norway.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.entur_public_transport/
-"""
+"""Real-time information about public transport departures in Norway."""
 from datetime import datetime, timedelta
 import logging
 
@@ -13,16 +8,15 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
     CONF_SHOW_ON_MAP)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['enturclient==0.1.3']
+REQUIREMENTS = ['enturclient==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_NEXT_UP_IN = 'next_due_in'
 
 API_CLIENT_NAME = 'homeassistant-homeassistant'
 
@@ -31,6 +25,8 @@ ATTRIBUTION = "Data provided by entur.org under NLOD"
 CONF_STOP_IDS = 'stop_ids'
 CONF_EXPAND_PLATFORMS = 'expand_platforms'
 CONF_WHITELIST_LINES = 'line_whitelist'
+CONF_OMIT_NON_BOARDING = 'omit_non_boarding'
+CONF_NUMBER_OF_DEPARTURES = 'number_of_departures'
 
 DEFAULT_NAME = 'Entur'
 DEFAULT_ICON_KEY = 'bus'
@@ -44,7 +40,7 @@ ICONS = {
     'water': 'mdi:ferry',
 }
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(seconds=45)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
@@ -52,58 +48,80 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
     vol.Optional(CONF_WHITELIST_LINES, default=[]): cv.ensure_list,
+    vol.Optional(CONF_OMIT_NON_BOARDING, default=True): cv.boolean,
+    vol.Optional(CONF_NUMBER_OF_DEPARTURES, default=2):
+        vol.All(cv.positive_int, vol.Range(min=2, max=10))
 })
 
 
-def due_in_minutes(timestamp: str) -> str:
-    """Get the time in minutes from a timestamp.
+ATTR_STOP_ID = 'stop_id'
 
-    The timestamp should be in the format
-    year-month-yearThour:minute:second+timezone
-    """
+ATTR_ROUTE = 'route'
+ATTR_ROUTE_ID = 'route_id'
+ATTR_EXPECTED_AT = 'due_at'
+ATTR_DELAY = 'delay'
+ATTR_REALTIME = 'real_time'
+
+ATTR_NEXT_UP_IN = 'next_due_in'
+ATTR_NEXT_UP_ROUTE = 'next_route'
+ATTR_NEXT_UP_ROUTE_ID = 'next_route_id'
+ATTR_NEXT_UP_AT = 'next_due_at'
+ATTR_NEXT_UP_DELAY = 'next_delay'
+ATTR_NEXT_UP_REALTIME = 'next_real_time'
+
+ATTR_TRANSPORT_MODE = 'transport_mode'
+
+
+def due_in_minutes(timestamp: datetime) -> int:
+    """Get the time in minutes from a timestamp."""
     if timestamp is None:
         return None
-    diff = datetime.strptime(
-        timestamp, "%Y-%m-%dT%H:%M:%S%z") - dt_util.now()
-
-    return str(int(diff.total_seconds() / 60))
+    diff = timestamp - dt_util.now()
+    return int(diff.total_seconds() / 60)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Entur public transport sensor."""
     from enturclient import EnturPublicTransportData
-    from enturclient.consts import CONF_NAME as API_NAME
 
     expand = config.get(CONF_EXPAND_PLATFORMS)
     line_whitelist = config.get(CONF_WHITELIST_LINES)
     name = config.get(CONF_NAME)
     show_on_map = config.get(CONF_SHOW_ON_MAP)
     stop_ids = config.get(CONF_STOP_IDS)
+    omit_non_boarding = config.get(CONF_OMIT_NON_BOARDING)
+    number_of_departures = config.get(CONF_NUMBER_OF_DEPARTURES)
 
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]
 
     data = EnturPublicTransportData(API_CLIENT_NAME,
-                                    stops,
-                                    quays,
-                                    expand,
-                                    line_whitelist)
-    data.update()
+                                    stops=stops,
+                                    quays=quays,
+                                    line_whitelist=line_whitelist,
+                                    omit_non_boarding=omit_non_boarding,
+                                    number_of_departures=number_of_departures,
+                                    web_session=async_get_clientsession(hass))
+
+    if expand:
+        await data.expand_all_quays()
+    await data.update()
 
     proxy = EnturProxy(data)
 
     entities = []
-    for item in data.all_stop_places_quays():
+    for place in data.all_stop_places_quays():
         try:
             given_name = "{} {}".format(
-                name, data.get_stop_info(item)[API_NAME])
+                name, data.get_stop_info(place).name)
         except KeyError:
-            given_name = "{} {}".format(name, item)
+            given_name = "{} {}".format(name, place)
 
         entities.append(
-            EnturPublicTransportSensor(proxy, given_name, item, show_on_map))
+            EnturPublicTransportSensor(proxy, given_name, place, show_on_map))
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class EnturProxy:
@@ -116,10 +134,10 @@ class EnturProxy:
         """Initialize the proxy."""
         self._api = api
 
-    @Throttle(SCAN_INTERVAL)
-    def update(self) -> None:
+    @Throttle(timedelta(seconds=15))
+    async def async_update(self) -> None:
         """Update data in client."""
-        self._api.update()
+        await self._api.update()
 
     def get_stop_info(self, stop_id: str) -> dict:
         """Get info about specific stop place."""
@@ -132,18 +150,13 @@ class EnturPublicTransportSensor(Entity):
     def __init__(
             self, api: EnturProxy, name: str, stop: str, show_on_map: bool):
         """Initialize the sensor."""
-        from enturclient.consts import ATTR_STOP_ID
-
         self.api = api
         self._stop = stop
         self._show_on_map = show_on_map
         self._name = name
         self._state = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_STOP_ID: self._stop,
-        }
+        self._attributes = {}
 
     @property
     def name(self) -> str:
@@ -158,6 +171,8 @@ class EnturPublicTransportSensor(Entity):
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
+        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
+        self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
 
     @property
@@ -170,33 +185,56 @@ class EnturPublicTransportSensor(Entity):
         """Icon to use in the frontend."""
         return self._icon
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data and update the states."""
-        from enturclient.consts import (
-            ATTR, ATTR_EXPECTED_AT, ATTR_NEXT_UP_AT, CONF_LOCATION,
-            CONF_LATITUDE as LAT, CONF_LONGITUDE as LONG, CONF_TRANSPORT_MODE)
+        await self.api.async_update()
 
-        self.api.update()
+        self._attributes = {}
 
         data = self.api.get_stop_info(self._stop)
-        if data is not None and ATTR in data:
-            attrs = data[ATTR]
-            self._attributes.update(attrs)
-
-            if ATTR_NEXT_UP_AT in attrs:
-                self._attributes[ATTR_NEXT_UP_IN] = \
-                    due_in_minutes(attrs[ATTR_NEXT_UP_AT])
-
-            if CONF_LOCATION in data and self._show_on_map:
-                self._attributes[CONF_LATITUDE] = data[CONF_LOCATION][LAT]
-                self._attributes[CONF_LONGITUDE] = data[CONF_LOCATION][LONG]
-
-            if ATTR_EXPECTED_AT in attrs:
-                self._state = due_in_minutes(attrs[ATTR_EXPECTED_AT])
-            else:
-                self._state = None
-
-            self._icon = ICONS.get(
-                data[CONF_TRANSPORT_MODE], ICONS[DEFAULT_ICON_KEY])
-        else:
+        if data is None:
             self._state = None
+            return
+
+        if self._show_on_map and data.latitude and data.longitude:
+            self._attributes[CONF_LATITUDE] = data.latitude
+            self._attributes[CONF_LONGITUDE] = data.longitude
+
+        calls = data.estimated_calls
+        if not calls:
+            self._state = None
+            return
+
+        self._state = due_in_minutes(calls[0].expected_departure_time)
+        self._icon = ICONS.get(
+            calls[0].transport_mode, ICONS[DEFAULT_ICON_KEY])
+
+        self._attributes[ATTR_ROUTE] = calls[0].front_display
+        self._attributes[ATTR_ROUTE_ID] = calls[0].line_id
+        self._attributes[ATTR_EXPECTED_AT] = calls[0]\
+            .expected_departure_time.strftime("%H:%M")
+        self._attributes[ATTR_REALTIME] = calls[0].is_realtime
+        self._attributes[ATTR_DELAY] = calls[0].delay_in_min
+
+        number_of_calls = len(calls)
+        if number_of_calls < 2:
+            return
+
+        self._attributes[ATTR_NEXT_UP_ROUTE] = calls[1].front_display
+        self._attributes[ATTR_NEXT_UP_ROUTE_ID] = calls[1].line_id
+        self._attributes[ATTR_NEXT_UP_AT] = calls[1]\
+            .expected_departure_time.strftime("%H:%M")
+        self._attributes[ATTR_NEXT_UP_IN] = "{} min"\
+            .format(due_in_minutes(calls[1].expected_departure_time))
+        self._attributes[ATTR_NEXT_UP_REALTIME] = calls[1].is_realtime
+        self._attributes[ATTR_NEXT_UP_DELAY] = calls[1].delay_in_min
+
+        if number_of_calls < 3:
+            return
+
+        for i, call in enumerate(calls[2:]):
+            key_name = "departure_#" + str(i + 3)
+            self._attributes[key_name] = "{}{} {}".format(
+                "" if bool(call.is_realtime) else "ca. ",
+                call.expected_departure_time.strftime("%H:%M"),
+                call.front_display)

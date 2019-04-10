@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, Mock, patch
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
 
-from homeassistant import auth, config_entries, core as ha
+from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
     models as auth_models, auth_store, providers as auth_providers,
     permissions as auth_permissions)
@@ -34,6 +34,7 @@ from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -244,7 +245,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
     msg = mqtt.Message(topic, payload, qos, retain)
-    hass.async_run_job(hass.data['mqtt']._mqtt_on_message, None, None, msg)
+    hass.data['mqtt']._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -287,8 +288,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
-@asyncio.coroutine
-def async_mock_mqtt_component(hass, config=None):
+async def async_mock_mqtt_component(hass, config=None):
     """Mock the MQTT component."""
     if config is None:
         config = {mqtt.CONF_BROKER: 'mock-broker'}
@@ -299,10 +299,11 @@ def async_mock_mqtt_component(hass, config=None):
         mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
 
-        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
+        result = await async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: config
         })
         assert result
+        await hass.async_block_till_done()
 
         hass.data['mqtt'] = MagicMock(spec_set=hass.data['mqtt'],
                                       wraps=hass.data['mqtt'])
@@ -327,11 +328,7 @@ def mock_registry(hass, mock_entries=None):
     registry = entity_registry.EntityRegistry(hass)
     registry.entities = mock_entries or OrderedDict()
 
-    async def _get_reg():
-        return registry
-
-    hass.data[entity_registry.DATA_REGISTRY] = \
-        hass.loop.create_task(_get_reg())
+    hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
 
 
@@ -340,11 +337,7 @@ def mock_area_registry(hass, mock_entries=None):
     registry = area_registry.AreaRegistry(hass)
     registry.areas = mock_entries or OrderedDict()
 
-    async def _get_reg():
-        return registry
-
-    hass.data[area_registry.DATA_REGISTRY] = \
-        hass.loop.create_task(_get_reg())
+    hass.data[area_registry.DATA_REGISTRY] = registry
     return registry
 
 
@@ -353,11 +346,7 @@ def mock_device_registry(hass, mock_entries=None):
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = mock_entries or OrderedDict()
 
-    async def _get_reg():
-        return registry
-
-    hass.data[device_registry.DATA_REGISTRY] = \
-        hass.loop.create_task(_get_reg())
+    hass.data[device_registry.DATA_REGISTRY] = registry
     return registry
 
 
@@ -720,7 +709,7 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert len(config) == 1, ('assert_setup_component requires DOMAIN: {}'
+        assert len(config) >= 1, ('assert_setup_component requires DOMAIN: {}'
                                   .format(list(config.keys())))
         domain = list(config.keys())[0]
 
@@ -906,3 +895,18 @@ async def flush_store(store):
 async def get_system_health_info(hass, domain):
     """Get system health info."""
     return await hass.data['system_health']['info'][domain](hass)
+
+
+def mock_integration(hass, module):
+    """Mock an integration."""
+    integration = loader.Integration(
+        hass, 'homeassisant.components.{}'.format(module.DOMAIN),
+        loader.manifest_from_legacy_module(module))
+    integration.get_component = lambda: module
+
+    # Backwards compat
+    loader.set_component(hass, module.DOMAIN, module)
+
+    hass.data.setdefault(
+        loader.DATA_INTEGRATIONS, {}
+    )[module.DOMAIN] = integration

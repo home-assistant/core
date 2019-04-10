@@ -1,9 +1,4 @@
-"""
-Camera platform that receives images through HTTP POST.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/camera.push/
-"""
+"""Camera platform that receives images through HTTP POST."""
 import logging
 import asyncio
 
@@ -14,7 +9,8 @@ import aiohttp
 import async_timeout
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
-    STATE_IDLE, STATE_RECORDING, DOMAIN
+    STATE_IDLE, STATE_RECORDING
+from homeassistant.components.camera.const import DOMAIN
 from homeassistant.core import callback
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv

@@ -1,9 +1,4 @@
-"""
-Interfaces with TotalConnect alarm control panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.totalconnect/
-"""
+"""Interfaces with TotalConnect alarm control panels."""
 import logging
 
 import voluptuous as vol
@@ -18,7 +13,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
 
-REQUIREMENTS = ['total_connect_client==0.24']
+REQUIREMENTS = ['total_connect_client==0.25']
 
 _LOGGER = logging.getLogger(__name__)
 

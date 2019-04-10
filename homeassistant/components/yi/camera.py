@@ -1,9 +1,4 @@
-"""
-This component provides support for Xiaomi Cameras (HiSilicon Hi3518e V200).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.yi/
-"""
+"""Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
 import asyncio
 import logging
 
@@ -26,6 +21,7 @@ DEFAULT_PASSWORD = ''
 DEFAULT_PATH = '/tmp/sd/record'
 DEFAULT_PORT = 21
 DEFAULT_USERNAME = 'root'
+DEFAULT_ARGUMENTS = '-pred 1'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
@@ -36,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string
 })
 
 
@@ -118,7 +114,7 @@ class YiCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg import ImageFrame, IMAGE_JPEG
+        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
 
         url = await self._get_latest_video_url()
         if url and url != self._last_url:
@@ -135,7 +131,7 @@ class YiCamera(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg import CameraMjpeg
+        from haffmpeg.camera import CameraMjpeg
 
         if not self._is_on:
             return
@@ -145,8 +141,9 @@ class YiCamera(Camera):
             self._last_url, extra_cmd=self._extra_arguments)
 
         try:
+            stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
+                self.hass, request, stream_reader,
                 self._manager.ffmpeg_stream_content_type)
         finally:
             await stream.close()

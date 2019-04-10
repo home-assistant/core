@@ -3,13 +3,14 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.components.digital_ocean import (
-    CONF_DROPLETS, ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME,
-    ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
-    ATTR_REGION, ATTR_VCPUS, ATTRIBUTION, DATA_DIGITAL_OCEAN)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import ATTR_ATTRIBUTION
+import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME, ATTR_FEATURES,
+    ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY, ATTR_REGION, ATTR_VCPUS,
+    ATTRIBUTION, CONF_DROPLETS, DATA_DIGITAL_OCEAN)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,11 +1,11 @@
 """Support for HomematicIP Cloud lights."""
 import logging
 
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, Light)
+
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 DEPENDENCIES = ['homematicip_cloud']
 
@@ -13,7 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ENERGY_COUNTER = 'energy_counter_kwh'
 ATTR_POWER_CONSUMPTION = 'power_consumption'
-ATTR_PROFILE_MODE = 'profile_mode'
 
 
 async def async_setup_platform(
@@ -77,13 +76,9 @@ class HomematicipLightMeasuring(HomematicipLight):
         """Return the state attributes of the generic device."""
         attr = super().device_state_attributes
         if self._device.currentPowerConsumption > 0.05:
-            attr.update({
-                ATTR_POWER_CONSUMPTION:
-                    round(self._device.currentPowerConsumption, 2)
-            })
-        attr.update({
-            ATTR_ENERGY_COUNTER: round(self._device.energyCounter, 2)
-        })
+            attr[ATTR_POWER_CONSUMPTION] = \
+                round(self._device.currentPowerConsumption, 2)
+        attr[ATTR_ENERGY_COUNTER] = round(self._device.energyCounter, 2)
         return attr
 
 
@@ -168,10 +163,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         """Return the state attributes of the generic device."""
         attr = super().device_state_attributes
         if self.is_on:
-            attr.update({
-                ATTR_COLOR_NAME:
-                    self._channel.simpleRGBColorState
-            })
+            attr[ATTR_COLOR_NAME] = self._channel.simpleRGBColorState
         return attr
 
     @property

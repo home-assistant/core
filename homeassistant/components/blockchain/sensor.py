@@ -1,9 +1,4 @@
-"""
-Support for Blockchain.info sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.blockchain/
-"""
+"""Support for Blockchain.info sensors."""
 import logging
 from datetime import timedelta
 

@@ -1,9 +1,4 @@
-"""
-Media Player component to integrate TVs exposing the Joint Space API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.philips_js/
-"""
+"""Media Player component to integrate TVs exposing the Joint Space API."""
 from datetime import timedelta
 import logging
 

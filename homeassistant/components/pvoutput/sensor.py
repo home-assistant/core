@@ -1,9 +1,4 @@
-"""
-Support for getting collected information from PVOutput.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.pvoutput/
-"""
+"""Support for getting collected information from PVOutput."""
 import logging
 from collections import namedtuple
 from datetime import timedelta

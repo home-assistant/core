@@ -143,6 +143,7 @@ HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
     'ambient_station',
+    'axis',
     'cast',
     'daikin',
     'deconz',
@@ -152,6 +153,7 @@ FLOWS = [
     'geofency',
     'gpslogger',
     'hangouts',
+    'heos',
     'homematicip_cloud',
     'hue',
     'ifttt',
@@ -159,6 +161,7 @@ FLOWS = [
     'ipma',
     'lifx',
     'locative',
+    'logi_circle',
     'luftdaten',
     'mailgun',
     'mobile_app',

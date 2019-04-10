@@ -1,9 +1,4 @@
-"""
-Support for Recollect Waste curbside collection pickup.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.recollect_waste/
-"""
+"""Support for Recollect Waste curbside collection pickup."""
 import logging
 
 import voluptuous as vol

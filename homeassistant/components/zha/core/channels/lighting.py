@@ -6,7 +6,6 @@ https://home-assistant.io/components/zha/
 """
 import logging
 from . import ZigbeeChannel
-from ..const import COLOR_CHANNEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +20,6 @@ class ColorChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize ColorChannel."""
         super().__init__(cluster, device)
-        self.name = COLOR_CHANNEL
         self._color_capabilities = None
 
     def get_color_capabilities(self):
@@ -31,10 +29,15 @@ class ColorChannel(ZigbeeChannel):
     async def async_configure(self):
         """Configure channel."""
         await self.fetch_color_capabilities(False)
+        await super().async_configure()
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         await self.fetch_color_capabilities(True)
+        await self.get_attribute_value(
+            'color_temperature', from_cache=from_cache)
+        await self.get_attribute_value('current_x', from_cache=from_cache)
+        await self.get_attribute_value('current_y', from_cache=from_cache)
 
     async def fetch_color_capabilities(self, from_cache):
         """Get the color configuration."""

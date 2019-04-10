@@ -1,0 +1,10 @@
+{
+  "domain": "enphase_envoy",
+  "name": "Enphase envoy",
+  "documentation": "https://www.home-assistant.io/components/enphase_envoy",
+  "requirements": [
+    "envoy_reader==0.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

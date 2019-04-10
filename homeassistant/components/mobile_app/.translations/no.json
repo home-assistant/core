@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "\u00c5pne mobilappen for \u00e5 konfigurere integrasjonen med hjemmevirksomheten. Se [docs]({apps_url}) for en liste over kompatible apper."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vil du sette opp mobilapp-komponenten?",
+                "title": "Mobilapp"
+            }
+        },
+        "title": "Mobilapp"
+    }
+}
