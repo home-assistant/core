@@ -14,10 +14,6 @@ from homeassistant.util.dt import utcnow
 CURRENT_SENSORS = 'current_sensors'
 SENSOR_MANAGER = 'sensor_manager'
 
-PRESENCE_NAME_FORMAT = "{} presence"
-LIGHT_LEVEL_NAME_FORMAT = "{} light level"
-TEMPERATURE_NAME_FORMAT = "{} temperature"
-
 _LOGGER = logging.getLogger(__name__)
 
 # Used for testing
@@ -59,9 +55,11 @@ class SensorManager:
     def __init__(self, hass, bridge):
         """Initialize the sensor manager."""
         import aiohue
-        from homeassistant.components.hue.binary_sensor import HuePresence
+        from homeassistant.components.hue.binary_sensor import (
+            HuePresence, PRESENCE_NAME_FORMAT)
         from homeassistant.components.hue.sensor import (
-            HueLightLevel, HueTemperature)
+            HueLightLevel, HueTemperature, LIGHT_LEVEL_NAME_FORMAT,
+            TEMPERATURE_NAME_FORMAT)
 
         self.hass = hass
         self.bridge = bridge

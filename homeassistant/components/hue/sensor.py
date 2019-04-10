@@ -6,6 +6,10 @@ from homeassistant.components.hue.sensor_base import (
     GenericZLLSensor, async_setup_entry as shared_async_setup_entry)
 
 
+LIGHT_LEVEL_NAME_FORMAT = "{} light level"
+TEMPERATURE_NAME_FORMAT = "{} temperature"
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
     await shared_async_setup_entry(
