@@ -1,7 +1,8 @@
 """The test for the bayesian sensor platform."""
 import unittest
+from unittest import mock
 
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.bayesian import binary_sensor as bayesian
 
 from tests.common import get_test_home_assistant
@@ -269,3 +270,40 @@ class TestBayesianBinarySensor(unittest.TestCase):
             prior = bayesian.update_probability(prior, pt, pf)
 
         assert round(abs(0.9130434782608695-prior), 7) == 0
+
+
+async def test_template_non_deterministic(hass):
+    """Test non-deterministic templates."""
+    config = {
+        'binary_sensor': {
+            'name': 'test',
+            'platform': 'bayesian',
+            'observations': [{
+                'platform': 'template',
+                'value_template': (
+                    '{{ False }}'),
+                'prob_given_true': 0.9,
+                'prob_given_false': 0.4
+            }],
+            'prior': 0.2,
+            'probability_threshold': 0.32,
+        }
+    }
+    await async_setup_component(hass, 'binary_sensor', config)
+    await hass.async_start()
+
+    state = hass.states.get('binary_sensor.test')
+    assert state.state == 'off'
+
+    with mock.patch('homeassistant.helpers.template.'
+                    'Template.async_render') as async_render:
+        async_render.return_value = True
+        state = hass.states.get('binary_sensor.test')
+        assert state.state == 'off'
+
+        await hass.helpers.entity_component.\
+            async_update_entity('binary_sensor.test')
+        await hass.async_block_till_done()
+
+        state = hass.states.get('binary_sensor.test')
+        assert state.state == 'on'

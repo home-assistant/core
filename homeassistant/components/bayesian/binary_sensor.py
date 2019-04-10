@@ -107,6 +107,7 @@ class BayesianBinarySensor(BinarySensorDevice):
         self._probability_threshold = probability_threshold
         self._device_class = device_class
         self._deviation = False
+        self._callbacks = []
         self.prior = prior
         self.probability = prior
 
@@ -155,6 +156,9 @@ class BayesianBinarySensor(BinarySensorDevice):
         async_track_state_change(
             self.hass, self.entity_obs, async_threshold_sensor_state_listener)
 
+        self._register_template_callbacks()
+
+    def _register_template_callbacks(self):
         @callback
         def async_template_result_changed(
                 event, template, old_result, new_result):
@@ -171,9 +175,10 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         for template in self.template_obs:
             template.hass = self.hass
-            (_, result) = async_track_template_result(
+            (cancel, result) = async_track_template_result(
                 self.hass, template, async_template_result_changed)
             async_template_result_changed(None, template, None, result)
+            self._callbacks.append(cancel)
 
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
@@ -218,8 +223,9 @@ class BayesianBinarySensor(BinarySensorDevice):
             prior = update_probability(
                 prior, obs['prob_true'], obs['prob_false'])
         self.probability = prior
+        self._deviation = bool(self.probability >= self._probability_threshold)
 
-        self.hass.async_add_job(self.async_update_ha_state, True)
+        self.async_schedule_update_ha_state()
 
     @property
     def name(self):
@@ -252,4 +258,9 @@ class BayesianBinarySensor(BinarySensorDevice):
 
     async def async_update(self):
         """Get the latest data and update the states."""
-        self._deviation = bool(self.probability >= self._probability_threshold)
+        # Just recalculate the templates, the direct states
+        # get updated in the listeners.
+        for call in self._callbacks:
+            call()
+        self._callbacks.clear()
+        self._register_template_callbacks()

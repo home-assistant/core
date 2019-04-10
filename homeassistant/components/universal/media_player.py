@@ -98,6 +98,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self._child_state = None
         self._state_template = state_template
         self._state_template_result = None
+        self._state_template_cancel = None
         if state_template is not None:
             self._state_template.hass = hass
 
@@ -109,7 +110,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         @callback
         def async_on_dependency_update(*_):
             """Update ha state when dependencies update."""
-            self.async_schedule_update_ha_state(True)
+            self._refresh_state()
+            self.async_schedule_update_ha_state()
 
         depend = copy(self._children)
         for entity in self._attrs.values():
@@ -117,19 +119,31 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self.hass.helpers.event.async_track_state_change(
             list(set(depend)), async_on_dependency_update)
 
+        self._register_template()
+
+    def _register_template(self):
         @callback
         def async_on_template_change(event, template, last_result, result):
             self._state_template_result = result
-            self.async_schedule_update_ha_state(True)
+            self.async_schedule_update_ha_state()
 
         if self._state_template is not None:
-            (_, result) = async_track_template_result(
+            (cancel, result) = async_track_template_result(
                 self.hass, self._state_template, async_on_template_change)
             if isinstance(result, TemplateError):
                 _LOGGER.exception(result)
                 self._state_template_result = None
             else:
                 self._state_template_result = result
+            self._state_template_cancel = cancel
+
+    def _refresh_state(self):
+        for child_name in self._children:
+            child_state = self.hass.states.get(child_name)
+            if child_state and child_state.state not in OFF_STATES:
+                self._child_state = child_state
+                return
+        self._child_state = None
 
     def _entity_lkp(self, entity_id, state_attr=None):
         """Look up an entity state."""
@@ -516,10 +530,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             SERVICE_SHUFFLE_SET, data, allow_override=True)
 
     async def async_update(self):
-        """Update state in HA."""
-        for child_name in self._children:
-            child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state not in OFF_STATES:
-                self._child_state = child_state
-                return
-        self._child_state = None
+        """Force update the state."""
+        self._refresh_state()
+        if self._state_template_cancel:
+            self._state_template_cancel()
+            self._register_template()
