@@ -3,10 +3,13 @@
   "name": "Onvif",
   "documentation": "https://www.home-assistant.io/components/onvif",
   "requirements": [
-    "onvif-py3==0.1.3",
+    "onvif-zeep==0.2.12",
+    "zeep==3.0.0",
     "suds-passworddigest-homeassistant==0.1.2a0.dev0",
     "suds-py3==1.3.3.0"
   ],
-  "dependencies": [],
+  "dependencies": [
+      "ffmpeg"
+  ],
   "codeowners": []
 }
