@@ -370,6 +370,9 @@ edp_redy==0.0.3
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
 
+# homeassistant.components.efesto
+efestoclient==0.0.6
+
 # homeassistant.components.eliqonline
 eliqonline==1.2.2
 

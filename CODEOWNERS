@@ -62,6 +62,7 @@ homeassistant/components/doorbird/* @oblogic7
 homeassistant/components/dweet/* @fabaff
 homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/edp_redy/* @abmantis
+homeassistant/components/efesto/* @fredericvl
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/emby/* @mezz64
