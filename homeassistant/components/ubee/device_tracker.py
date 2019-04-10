@@ -21,22 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MODEL = 'model'
 DEFAULT_MODEL = 'detect'
 
-
-def check_model(model):
-    """Check Ubee model."""
-    from pyubee import SUPPORTED_MODELS
-    if model not in SUPPORTED_MODELS:
-        raise vol.Invalid()
-
-    return model
-
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_MODEL, default=DEFAULT_MODEL):
-        vol.All(cv.string, check_model)
+    vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): cv.string
 })
 
 
@@ -48,54 +37,34 @@ def get_scanner(hass, config):
     password = info[CONF_PASSWORD]
     model = info[CONF_MODEL]
 
-    scanner = UbeeDeviceScanner(host, username, password, model)
+    from pyubee import Ubee
+    ubee = Ubee(host, username, password, model)
+    if not ubee.login():
+        _LOGGER.error("Login failed")
 
-    if not scanner.login():
-        return None
-
-    return scanner if scanner.success_init else None
+    scanner = UbeeDeviceScanner(ubee)
+    return scanner
 
 
 class UbeeDeviceScanner(DeviceScanner):
     """This class queries a wireless Ubee router."""
 
-    def __init__(self, host, username, password, model):
+    def __init__(self, ubee):
         """Initialize the Ubee scanner."""
-        from pyubee import Ubee
-
-        self.last_results = {}
-        self.mac2name = {}
+        self._ubee = ubee
+        self._mac2name = {}
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-
-        return self.last_results
+        return self._get_connected_devices()
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        if device in self.mac2name:
-            return self.mac2name.get(device)
-
-        return None
-
-    def _update_info(self):
-        """Retrieve latest information from the Ubee router."""
-        if not self.success_init:
-            return
-
-        _LOGGER.debug("Scanning")
-        results = self._get_connected_devices()
-
-        if results is None:
-            _LOGGER.warning("Error scanning devices")
-            return
-
-        self.last_results = results or []
+        return self._mac2name.get(device)
 
     def _get_connected_devices(self):
         """List connected devices with pyubee."""
-        if not self.ubee.session_active():
-            self.ubee.login()
+        if not self._ubee.session_active():
+            self._ubee.login()
 
-        return self.ubee.get_connected_devices()
+        return self._ubee.get_connected_devices()
