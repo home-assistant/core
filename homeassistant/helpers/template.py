@@ -15,7 +15,7 @@ from jinja2.utils import Namespace
 
 from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE,
                                  ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
-from homeassistant.core import State, callback
+from homeassistant.core import State, callback, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.typing import TemplateVarsType
@@ -211,6 +211,12 @@ class AllStates:
 
     def __getattr__(self, name):
         """Return the domain state."""
+        if '.' in name:
+            if not valid_entity_id(name):
+                raise TemplateError("Invalid entity ID '{}'".format(name))
+            return _get_state(self.hass, name)
+        if not valid_entity_id(name + '.entity'):
+            raise TemplateError("Invalid domain name '{}'".format(name))
         return DomainStates(self._hass, name)
 
     def __iter__(self):
@@ -232,6 +238,10 @@ class AllStates:
         state = _get_state(self._hass, entity_id)
         return STATE_UNKNOWN if state is None else state.state
 
+    def __repr__(self):
+        """Representation of All States."""
+        return '<template AllStates>'
+
 
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
@@ -243,8 +253,10 @@ class DomainStates:
 
     def __getattr__(self, name):
         """Return the states."""
-        return _get_state(
-            self._hass, '{}.{}'.format(self._domain, name))
+        entity_id = '{}.{}'.format(self._domain, name)
+        if not valid_entity_id(entity_id):
+            raise TemplateError("Invalid entity ID '{}'".format(entity_id))
+        return _get_state(self._hass, entity_id)
 
     def __iter__(self):
         """Return the iteration over all the states."""
@@ -260,6 +272,10 @@ class DomainStates:
     def __len__(self):
         """Return number of states."""
         return len(self._hass.states.async_entity_ids(self._domain))
+
+    def __repr__(self):
+        """Representation of Domain States."""
+        return '<template DomainStates(\'{}\')>'.format(self._domain)
 
 
 class TemplateState(State):
