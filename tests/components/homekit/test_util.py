@@ -191,6 +191,7 @@ def test_homekit_speed_mapping():
 def test_speed_to_homekit():
     """Test speed conversion from HA to Homekit."""
     speed_mapping = HomeKitSpeedMapping(['off', 'low', 'high'])
+    assert speed_mapping.speed_to_homekit(None) is None
     assert speed_mapping.speed_to_homekit('off') == 0
     assert speed_mapping.speed_to_homekit('low') == 50
     assert speed_mapping.speed_to_homekit('high') == 100
@@ -199,6 +200,7 @@ def test_speed_to_homekit():
 def test_speed_to_states():
     """Test speed conversion from Homekit to HA."""
     speed_mapping = HomeKitSpeedMapping(['off', 'low', 'high'])
+    assert speed_mapping.speed_to_states(-1) == 'off'
     assert speed_mapping.speed_to_states(0) == 'off'
     assert speed_mapping.speed_to_states(33) == 'off'
     assert speed_mapping.speed_to_states(34) == 'low'
