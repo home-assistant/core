@@ -19,7 +19,7 @@ _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
-DEFAULT_TYPE = 'lan'
+DEFAULT_TYPE = 'wireless'
 
 AVAILABLE_ATTRS = [
     'interface', 'tx_rate', 'rx_rate', 'info', 'signal_db', 'signal',
