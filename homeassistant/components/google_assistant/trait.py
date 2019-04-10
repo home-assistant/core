@@ -305,12 +305,14 @@ class ColorSettingTrait(_Trait):
         if features & light.SUPPORT_COLOR_TEMP:
             # Max Kelvin is Min Mireds K = 1000000 / mireds
             # Min Kevin is Max Mireds K = 1000000 / mireds
-            response['temperatureMaxK'] = \
+            response['colorTemperatureRange'] = {
+                'temperatureMaxK':
                 color_util.color_temperature_mired_to_kelvin(
-                    attrs.get(light.ATTR_MIN_MIREDS))
-            response['temperatureMinK'] = \
+                    attrs.get(light.ATTR_MIN_MIREDS)),
+                'temperatureMinK':
                 color_util.color_temperature_mired_to_kelvin(
-                    attrs.get(light.ATTR_MAX_MIREDS))
+                    attrs.get(light.ATTR_MAX_MIREDS)),
+            }
 
         return response
 
@@ -323,14 +325,7 @@ class ColorSettingTrait(_Trait):
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
             if color_hs is not None:
-                # Backwards compatible for users. Won't be needed when users
-                # sync their devices over.
-                color['spectrumRGB'] = int(
-                    color_util.color_rgb_to_hex(
-                        *color_util.color_hs_to_RGB(*color_hs)),
-                    16
-                )
-                color['spectrumHSV'] = {
+                color['spectrumHsv'] = {
                     'hue': color_hs[0],
                     'saturation': color_hs[1]/100,
                     'value': brightness/255,
@@ -343,7 +338,7 @@ class ColorSettingTrait(_Trait):
                 _LOGGER.warning('Entity %s has incorrect color temperature %s',
                                 self.state.entity_id, temp)
             elif temp is not None:
-                color['temperature'] = \
+                color['temperatureK'] = \
                     color_util.color_temperature_mired_to_kelvin(temp)
 
         response = {}

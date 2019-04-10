@@ -470,8 +470,7 @@ async def test_color_setting_color_light(hass):
 
     assert trt.query_attributes() == {
         'color': {
-            'spectrumRGB': 16736015,
-            'spectrumHSV': {
+            'spectrumHsv': {
                 'hue': 20,
                 'saturation': 0.94,
                 'value': 200 / 255,
@@ -528,13 +527,15 @@ async def test_color_setting_temperature_light(hass):
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {
-        'temperatureMinK': 2000,
-        'temperatureMaxK': 5000,
+        'colorTemperatureRange': {
+            'temperatureMinK': 2000,
+            'temperatureMaxK': 5000,
+        }
     }
 
     assert trt.query_attributes() == {
         'color': {
-            'temperature': 3333
+            'temperatureK': 3333
         }
     }
 
