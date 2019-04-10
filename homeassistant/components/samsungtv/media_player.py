@@ -202,7 +202,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return list(SOURCES.keys())
+        return list(SOURCES)
 
     @property
     def supported_features(self):
