@@ -12,7 +12,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_STOP, SERVICE_TURN_OFF,
     SERVICE_TURN_ON, SERVICE_VOLUME_MUTE, SERVICE_VOLUME_UP,
     SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET, STATE_OFF, STATE_PLAYING,
-    STATE_UNKNOWN)
+    STATE_PAUSED, STATE_UNKNOWN)
 
 from . import TYPES
 from .accessories import HomeAccessory
@@ -273,6 +273,8 @@ class MediaPlayer(HomeAccessory):
         if self.chars[FEATURE_ON_OFF]:
             hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, 'None')
             if not self._flag[FEATURE_ON_OFF]:
+                if self.category is CATEGORY_TELEVISION:
+                    hk_state = 1 if hk_state else 0
                 _LOGGER.debug('%s: Set current state for "on_off" to %s',
                               self.entity_id, hk_state)
                 self.chars[FEATURE_ON_OFF].set_value(hk_state)
@@ -311,7 +313,7 @@ class MediaPlayer(HomeAccessory):
                             self.entity_id, sourceName)
                 if sourceName in self.sources:
                     index = self.sources.index(sourceName)
-                    self.chars[FEATURE_SELECT_SOURCE].set_value(index+1)
+                    self.chars[FEATURE_SELECT_SOURCE].set_value(index)
                 else:
                     self.chars[FEATURE_SELECT_SOURCE].set_value(0)
             self._flag[FEATURE_SELECT_SOURCE] = False
