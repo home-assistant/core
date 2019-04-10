@@ -169,8 +169,7 @@ class SensorManager:
         for item_id in api:
             existing = current.get(api[item_id].uniqueid)
             if existing is not None:
-                if existing.hass is not None:
-                    existing.async_schedule_update_ha_state()
+                self.hass.async_create_task(existing.async_update_ha_state())
                 continue
 
             primary_sensor = None
