@@ -22,7 +22,7 @@ async def test_bridge_setup():
 
     assert hue_bridge.api is api
     forward_entries = set(
-        c[1]
+        c[1][1]
         for c in
         hass.config_entries.async_forward_entry_setup.mock_calls
         )
