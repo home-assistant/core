@@ -6,6 +6,7 @@ from unittest import mock
 import threading
 import logging
 
+import pytest
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -17,6 +18,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers import discovery
+from homeassistant.loader import IntegrationNotFound
 
 from tests.common import \
     get_test_home_assistant, MockModule, MockPlatform, \
@@ -322,7 +324,8 @@ class TestSetup:
 
     def test_component_not_found(self):
         """setup_component should not crash if component doesn't exist."""
-        assert not setup.setup_component(self.hass, 'non_existing')
+        with pytest.raises(IntegrationNotFound):
+            setup.setup_component(self.hass, 'non_existing')
 
     def test_component_not_double_initialized(self):
         """Test we do not set up a component twice."""
