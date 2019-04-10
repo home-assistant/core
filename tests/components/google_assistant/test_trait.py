@@ -459,17 +459,23 @@ async def test_color_setting_color_light(hass):
                                              light.SUPPORT_COLOR, None)
 
     trt = trait.ColorSettingTrait(hass, State('light.bla', STATE_ON, {
-        light.ATTR_HS_COLOR: (0, 94),
+        light.ATTR_HS_COLOR: (20, 94),
+        light.ATTR_BRIGHTNESS: 200,
         ATTR_SUPPORTED_FEATURES: light.SUPPORT_COLOR,
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {
-        'colorModel': 'rgb'
+        'colorModel': 'hsv'
     }
 
     assert trt.query_attributes() == {
         'color': {
-            'spectrumRGB': 16715535
+            'spectrumRGB': 16736015,
+            'spectrumHSV': {
+                'hue': 20,
+                'saturation': 0.94,
+                'value': 200 / 255,
+            }
         }
     }
 
@@ -489,6 +495,22 @@ async def test_color_setting_color_light(hass):
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
         light.ATTR_HS_COLOR: (240, 93.725),
+    }
+
+    await trt.execute(trait.COMMAND_COLOR_ABSOLUTE, BASIC_DATA, {
+        'color': {
+            'spectrumHSV': {
+                'hue': 100,
+                'saturation': .50,
+                'value': .20,
+            }
+        }
+    })
+    assert len(calls) == 2
+    assert calls[1].data == {
+        ATTR_ENTITY_ID: 'light.bla',
+        light.ATTR_HS_COLOR: [100, 50],
+        light.ATTR_BRIGHTNESS: .2 * 255,
     }
 
 

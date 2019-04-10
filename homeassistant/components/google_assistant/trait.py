@@ -300,7 +300,7 @@ class ColorSettingTrait(_Trait):
         response = {}
 
         if features & light.SUPPORT_COLOR:
-            response['colorModel'] = 'rgb'
+            response['colorModel'] = 'hsv'
 
         if features & light.SUPPORT_COLOR_TEMP:
             # Max Kelvin is Min Mireds K = 1000000 / mireds
@@ -321,12 +321,20 @@ class ColorSettingTrait(_Trait):
 
         if features & light.SUPPORT_COLOR:
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
+            brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
             if color_hs is not None:
+                # Backwards compatible for users. Won't be needed when users
+                # sync their devices over.
                 color['spectrumRGB'] = int(
                     color_util.color_rgb_to_hex(
                         *color_util.color_hs_to_RGB(*color_hs)),
                     16
                 )
+                color['spectrumHSV'] = {
+                    'hue': color_hs[0],
+                    'saturation': color_hs[1]/100,
+                    'value': brightness/255,
+                }
 
         if features & light.SUPPORT_COLOR_TEMP:
             temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
@@ -375,6 +383,18 @@ class ColorSettingTrait(_Trait):
                 light.DOMAIN, SERVICE_TURN_ON, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_HS_COLOR: color
+                }, blocking=True, context=data.context)
+
+        elif 'spectrumHSV' in params['color']:
+            color = params['color']['spectrumHSV']
+            saturation = color['saturation'] * 100
+            brightness = color['value'] * 255
+
+            await self.hass.services.async_call(
+                light.DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    light.ATTR_HS_COLOR: [color['hue'], saturation],
+                    light.ATTR_BRIGHTNESS: brightness
                 }, blocking=True, context=data.context)
 
 
