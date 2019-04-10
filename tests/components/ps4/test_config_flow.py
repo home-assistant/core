@@ -50,7 +50,8 @@ MOCK_MANUAL = {"Config Mode": 'Manual Entry', CONF_IP_ADDRESS: MOCK_HOST}
 MOCK_LOCATION = {'country_name': DEFAULT_REGION}
 
 
-@patch('homeassistant.util.location.detect_location_info', MOCK_LOCATION)
+@patch('homeassistant.util.location.detect_location_info',
+       return_value=MOCK_LOCATION)
 async def test_full_flow_implementation(hass):
     """Test registering an implementation and flow works."""
     flow = ps4.PlayStation4FlowHandler()
