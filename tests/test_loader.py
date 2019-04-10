@@ -1,6 +1,4 @@
 """Test to verify that we can load components."""
-import asyncio
-
 import pytest
 
 import homeassistant.loader as loader

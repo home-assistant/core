@@ -594,7 +594,8 @@ def test_component_warn_slow_setup(hass):
 @asyncio.coroutine
 def test_platform_no_warn_slow(hass):
     """Do not warn for long entity setup time."""
-    mock_integration(hass,
+    mock_integration(
+        hass,
         MockModule('test_component1', platform_schema=PLATFORM_SCHEMA))
     with mock.patch.object(hass.loop, 'call_later', mock.MagicMock()) \
             as mock_call:
