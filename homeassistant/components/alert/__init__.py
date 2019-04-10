@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components import group
 from homeassistant.components.notify import (
     ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, DOMAIN as DOMAIN_NOTIFY)
 from homeassistant.const import (
@@ -13,11 +14,16 @@ from homeassistant.const import (
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.helpers import service, event
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'alert'
+DEPENDENCIES = ['group']
+ENTITY_ID_ALL_ALERTS = group.ENTITY_ID_FORMAT.format('all_alerts')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+GROUP_NAME_ALL_ALERTS = 'all alerts'
 
 CONF_CAN_ACK = 'can_acknowledge'
 CONF_NOTIFIERS = 'notifiers'
@@ -53,8 +59,9 @@ ALERT_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-def is_on(hass, entity_id):
+def is_on(hass, entity_id=None):
     """Return if the alert is firing and not acknowledged."""
+    entity_id = entity_id or ENTITY_ID_ALL_ALERTS
     return hass.states.is_state(entity_id, STATE_ON)
 
 
@@ -118,6 +125,20 @@ async def async_setup(hass, config):
     tasks = [alert.async_update_ha_state() for alert in entities]
     if tasks:
         await asyncio.wait(tasks, loop=hass.loop)
+
+    # Setup Group
+    group_name = GROUP_NAME_ALL_ALERTS
+    ids = [entity.entity_id for entity in
+           sorted(entities,
+                  key=lambda entity: entity.name or entity.entity_id)]
+
+    hass.async_create_task(
+        hass.services.async_call(
+            'group', 'set', dict(
+                object_id=slugify(group_name),
+                name=group_name,
+                visible=True,
+                entities=ids)))
 
     return True
 
