@@ -16,9 +16,6 @@ SENSOR_MANAGER = 'sensor_manager'
 
 _LOGGER = logging.getLogger(__name__)
 
-# Used for testing
-_ASYNC_UPDATE_BRIDGE = None
-
 
 def _device_id(aiohue_sensor):
     # Work out the shared device ID, as described below
