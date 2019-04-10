@@ -28,14 +28,13 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_TRANSITION |
-                    SUPPORT_FLASH)
+                    SUPPORT_FLASH |
+                    SUPPORT_EFFECT)
 
 SUPPORT_YEELIGHT_WHITE_TEMP = (SUPPORT_YEELIGHT |
                                SUPPORT_COLOR_TEMP)
 
-SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
-                        SUPPORT_COLOR |
-                        SUPPORT_EFFECT |
+SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT_WHITE_TEMP |
                         SUPPORT_COLOR_TEMP)
 
 ATTR_MODE = 'mode'
@@ -61,24 +60,33 @@ EFFECT_FACEBOOK = "Facebook"
 EFFECT_TWITTER = "Twitter"
 EFFECT_STOP = "Stop"
 
-YEELIGHT_EFFECT_LIST = [
-    EFFECT_DISCO,
+YEELIGHT_TEMP_ONLY_EFFECT_LIST = [
     EFFECT_TEMP,
+    EFFECT_STOP,
+]
+
+YEELIGHT_MONO_EFFECT_LIST = [
+    EFFECT_DISCO,
     EFFECT_STROBE,
-    EFFECT_STROBE_COLOR,
     EFFECT_ALARM,
-    EFFECT_POLICE,
     EFFECT_POLICE2,
+    EFFECT_WHATSAPP,
+    EFFECT_FACEBOOK,
+    EFFECT_TWITTER,
+    *YEELIGHT_TEMP_ONLY_EFFECT_LIST
+]
+
+YEELIGHT_COLOR_EFFECT_LIST = [
+    EFFECT_STROBE_COLOR,
+    EFFECT_POLICE,
     EFFECT_CHRISTMAS,
     EFFECT_RGB,
     EFFECT_RANDOM_LOOP,
     EFFECT_FAST_RANDOM_LOOP,
     EFFECT_LSD,
     EFFECT_SLOWDOWN,
-    EFFECT_WHATSAPP,
-    EFFECT_FACEBOOK,
-    EFFECT_TWITTER,
-    EFFECT_STOP]
+    *YEELIGHT_MONO_EFFECT_LIST
+]
 
 MODEL_TO_DEVICE_TYPE = {
     'mono': BulbType.White,
@@ -262,7 +270,7 @@ class YeelightGenericLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return YEELIGHT_EFFECT_LIST + self.custom_effects_names
+        return self._predefined_effects + self.custom_effects_names
 
     @property
     def color_temp(self) -> int:
@@ -341,6 +349,10 @@ class YeelightGenericLight(Light):
     @property
     def _power_property(self):
         return 'power'
+
+    @property
+    def _predefined_effects(self):
+        return YEELIGHT_MONO_EFFECT_LIST
 
     @property
     def device(self):
@@ -575,6 +587,10 @@ class YeelightColorLight(YeelightGenericLight):
         """Flag supported features."""
         return SUPPORT_YEELIGHT_RGB
 
+    @property
+    def _predefined_effects(self):
+        return YEELIGHT_COLOR_EFFECT_LIST
+
 
 class YeelightWhiteTempLight(YeelightGenericLight):
     """Representation of a Color Yeelight light."""
@@ -587,6 +603,10 @@ class YeelightWhiteTempLight(YeelightGenericLight):
     @property
     def _brightness_property(self):
         return 'current_brightness'
+
+    @property
+    def _predefined_effects(self):
+        return YEELIGHT_TEMP_ONLY_EFFECT_LIST
 
 
 class YeelightWithAmbientLight(YeelightWhiteTempLight):
