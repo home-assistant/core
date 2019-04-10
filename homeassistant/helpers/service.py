@@ -216,7 +216,8 @@ async def async_get_all_descriptions(hass):
 
 
 @bind_hass
-async def entity_service_call(hass, platforms, func, call, service_name=''):
+async def entity_service_call(hass, platforms, func, call, service_name='',
+                              required_features=None):
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -295,7 +296,8 @@ async def entity_service_call(hass, platforms, func, call, service_name=''):
             platforms_entities.append(platform_entities)
 
     tasks = [
-        _handle_service_platform_call(func, data, entities, call.context)
+        _handle_service_platform_call(func, data, entities, call.context,
+                                      required_features)
         for platform, entities in zip(platforms, platforms_entities)
     ]
 
@@ -306,12 +308,18 @@ async def entity_service_call(hass, platforms, func, call, service_name=''):
             future.result()  # pop exception if have
 
 
-async def _handle_service_platform_call(func, data, entities, context):
+async def _handle_service_platform_call(func, data, entities, context,
+                                        required_features):
     """Handle a function call."""
     tasks = []
 
     for entity in entities:
         if not entity.available:
+            continue
+
+        # Skip entities that don't have the required feature.
+        if required_features is not None \
+                and not entity.supported_features & required_features:
             continue
 
         entity.async_set_context(context)
