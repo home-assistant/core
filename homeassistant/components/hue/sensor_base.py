@@ -35,7 +35,6 @@ def _device_id(aiohue_sensor):
 async def async_setup_entry(hass, config_entry, async_add_entities,
                             binary=False):
     """Set up the Hue sensors from a config entry."""
-
     bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     hass.data[hue.DOMAIN].setdefault(CURRENT_SENSORS, {})
 
@@ -44,16 +43,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities,
         manager = SensorManager(hass, bridge)
         hass.data[hue.DOMAIN][SENSOR_MANAGER] = manager
 
-    manager._register_component(binary, async_add_entities)
+    manager.register_component(binary, async_add_entities)
     await manager.start()
 
 
 class SensorManager:
+    """Class that handles registering and updating Hue sensor entities.
+
+    Intended to be a singleton.
+    """
 
     SCAN_INTERVAL = timedelta(seconds=5)
     sensor_config_map = {}
 
     def __init__(self, hass, bridge):
+        """Initialize the sensor manager."""
         import aiohue
         from homeassistant.components.hue.binary_sensor import HuePresence
         from homeassistant.components.hue.sensor import (
@@ -82,11 +86,12 @@ class SensorManager:
             },
         })
 
-    def _register_component(self, binary, async_add_entities):
+    def register_component(self, binary, async_add_entities):
+        """Register async_add_entities methods for components."""
         self._component_add_entities[binary] = async_add_entities
 
     async def start(self):
-        """Start updating sensors from the bridge on a schedule"""
+        """Start updating sensors from the bridge on a schedule."""
         # but only if it's not already started, and when we've got both
         # async_add_entities methods
         if self._started or len(self._component_add_entities) < 2:
@@ -121,7 +126,8 @@ class SensorManager:
             if not self.bridge.available:
                 return
 
-            _LOGGER.error('Unable to reach bridge %s (%s)', self.bridge.host, err)
+            _LOGGER.error('Unable to reach bridge %s (%s)', self.bridge.host,
+                          err)
             self.bridge.available = False
 
             return
@@ -141,24 +147,25 @@ class SensorManager:
 
         # Physical Hue motion sensors present as three sensors in the API: a
         # presence sensor, a temperature sensor, and a light level sensor. Of
-        # these, only the presence sensor is assigned the user-friendly name that
-        # the user has given to the device. Each of these sensors is linked by a
-        # common device_id, which is the first twenty-three characters of the
-        # unique id (then followed by a hyphen and an ID specific to the individual
-        # sensor).
+        # these, only the presence sensor is assigned the user-friendly name
+        # that the user has given to the device. Each of these sensors is
+        # linked by a common device_id, which is the first twenty-three
+        # characters of the unique id (then followed by a hyphen and an ID
+        # specific to the individual sensor).
         #
-        # To set up neat values, and assign the sensor entities to the same device,
-        # we first, iterate over all the sensors and find the Hue presence sensors,
-        # then iterate over all the remaining sensors - finding the remaining ones
-        # that may or may not be related to the presence sensors.
+        # To set up neat values, and assign the sensor entities to the same
+        # device, we first, iterate over all the sensors and find the Hue
+        # presence sensors, then iterate over all the remaining sensors -
+        # finding the remaining ones that may or may not be related to the
+        # presence sensors.
         for item_id in api:
             if api[item_id].type != aiohue.sensors.TYPE_ZLL_PRESENCE:
                 continue
 
             primary_sensor_devices[_device_id(api[item_id])] = api[item_id]
 
-        # Iterate again now we have all the presence sensors, and add the related
-        # sensors with nice names where appropriate.
+        # Iterate again now we have all the presence sensors, and add the
+        # related sensors with nice names where appropriate.
         for item_id in api:
             existing = current.get(api[item_id].uniqueid)
             if existing is not None:
@@ -172,7 +179,8 @@ class SensorManager:
                 continue
 
             base_name = api[item_id].name
-            primary_sensor = primary_sensor_devices.get(_device_id(api[item_id]))
+            primary_sensor = primary_sensor_devices.get(
+                _device_id(api[item_id]))
             if primary_sensor is not None:
                 base_name = primary_sensor.name
             name = sensor_config["name_format"].format(base_name)

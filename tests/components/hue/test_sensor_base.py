@@ -1,12 +1,10 @@
 """Philips Hue sensors platform tests."""
-import asyncio
 from collections import deque
+import datetime
 import logging
 from unittest.mock import Mock
 
-import aiohue
-from aiohue.sensors import (
-    Sensors, ZLLLightLevelSensor, ZLLPresenceSensor, ZLLTemperatureSensor)
+from aiohue.sensors import Sensors
 import pytest
 
 from homeassistant import config_entries
@@ -16,283 +14,283 @@ from homeassistant.components.hue import sensor_base as hue_sensor_base
 _LOGGER = logging.getLogger(__name__)
 
 PRESENCE_SENSOR_1_PRESENT = {
-	"state": {
-		"presence": True,
-		"lastupdated": "2019-01-01T01:00:00"
-	},
-	"swupdate": {
-		"state": "noupdates",
-		"lastinstall": "2019-01-01T00:00:00"
-	},
-	"config": {
-		"on": True,
-		"battery": 100,
-		"reachable": True,
-		"alert": "none",
-		"ledindication": False,
-		"usertest": False,
-		"sensitivity": 2,
-		"sensitivitymax": 2,
-		"pending": []
-	},
-	"name": "Living room sensor",
-	"type": "ZLLPresence",
-	"modelid": "SML001",
-	"manufacturername": "Philips",
-	"productname": "Hue motion sensor",
-	"swversion": "6.1.1.27575",
-	"uniqueid": "00:11:22:33:44:55:66:77-02-0406",
-	"capabilities": {
-		"certified": True
-	}
+    "state": {
+        "presence": True,
+        "lastupdated": "2019-01-01T01:00:00"
+    },
+    "swupdate": {
+        "state": "noupdates",
+        "lastinstall": "2019-01-01T00:00:00"
+    },
+    "config": {
+        "on": True,
+        "battery": 100,
+        "reachable": True,
+        "alert": "none",
+        "ledindication": False,
+        "usertest": False,
+        "sensitivity": 2,
+        "sensitivitymax": 2,
+        "pending": []
+    },
+    "name": "Living room sensor",
+    "type": "ZLLPresence",
+    "modelid": "SML001",
+    "manufacturername": "Philips",
+    "productname": "Hue motion sensor",
+    "swversion": "6.1.1.27575",
+    "uniqueid": "00:11:22:33:44:55:66:77-02-0406",
+    "capabilities": {
+        "certified": True
+    }
 }
 LIGHT_LEVEL_SENSOR_1 = {
-	"state": {
-		"lightlevel": 0,
-		"dark": True,
-		"daylight": True,
-		"lastupdated": "2019-01-01T01:00:00"
-	},
-	"swupdate": {
-		"state": "noupdates",
-		"lastinstall": "2019-01-01T00:00:00"
-	},
-	"config": {
-		"on": True,
-		"battery": 100,
-		"reachable": True,
-		"alert": "none",
-		"tholddark": 12467,
-		"tholdoffset": 7000,
-		"ledindication": False,
-		"usertest": False,
-		"pending": []
-	},
-	"name": "Hue ambient light sensor 1",
-	"type": "ZLLLightLevel",
-	"modelid": "SML001",
-	"manufacturername": "Philips",
-	"productname": "Hue ambient light sensor",
-	"swversion": "6.1.1.27575",
-	"uniqueid": "00:11:22:33:44:55:66:77-02-0400",
-	"capabilities": {
-		"certified": True
-	}
+    "state": {
+        "lightlevel": 0,
+        "dark": True,
+        "daylight": True,
+        "lastupdated": "2019-01-01T01:00:00"
+    },
+    "swupdate": {
+        "state": "noupdates",
+        "lastinstall": "2019-01-01T00:00:00"
+    },
+    "config": {
+        "on": True,
+        "battery": 100,
+        "reachable": True,
+        "alert": "none",
+        "tholddark": 12467,
+        "tholdoffset": 7000,
+        "ledindication": False,
+        "usertest": False,
+        "pending": []
+    },
+    "name": "Hue ambient light sensor 1",
+    "type": "ZLLLightLevel",
+    "modelid": "SML001",
+    "manufacturername": "Philips",
+    "productname": "Hue ambient light sensor",
+    "swversion": "6.1.1.27575",
+    "uniqueid": "00:11:22:33:44:55:66:77-02-0400",
+    "capabilities": {
+        "certified": True
+    }
 }
 TEMPERATURE_SENSOR_1 = {
-	"state": {
-		"temperature": 1775,
-		"lastupdated": "2019-01-01T01:00:00"
-	},
-	"swupdate": {
-		"state": "noupdates",
-		"lastinstall": "2019-01-01T01:00:00"
-	},
-	"config": {
-		"on": True,
-		"battery": 100,
-		"reachable": True,
-		"alert": "none",
-		"ledindication": False,
-		"usertest": False,
-		"pending": []
-	},
-	"name": "Hue temperature sensor 1",
-	"type": "ZLLTemperature",
-	"modelid": "SML001",
-	"manufacturername": "Philips",
-	"productname": "Hue temperature sensor",
-	"swversion": "6.1.1.27575",
-	"uniqueid": "00:11:22:33:44:55:66:77-02-0402",
-	"capabilities": {
-		"certified": True
-	}
+    "state": {
+        "temperature": 1775,
+        "lastupdated": "2019-01-01T01:00:00"
+    },
+    "swupdate": {
+        "state": "noupdates",
+        "lastinstall": "2019-01-01T01:00:00"
+    },
+    "config": {
+        "on": True,
+        "battery": 100,
+        "reachable": True,
+        "alert": "none",
+        "ledindication": False,
+        "usertest": False,
+        "pending": []
+    },
+    "name": "Hue temperature sensor 1",
+    "type": "ZLLTemperature",
+    "modelid": "SML001",
+    "manufacturername": "Philips",
+    "productname": "Hue temperature sensor",
+    "swversion": "6.1.1.27575",
+    "uniqueid": "00:11:22:33:44:55:66:77-02-0402",
+    "capabilities": {
+        "certified": True
+    }
 }
 PRESENCE_SENSOR_2_NOT_PRESENT = {
-	"state": {
-		"presence": False,
-		"lastupdated": "2019-01-01T00:00:00"
-	},
-	"swupdate": {
-		"state": "noupdates",
-		"lastinstall": "2019-01-01T01:00:00"
-	},
-	"config": {
-		"on": True,
-		"battery": 100,
-		"reachable": True,
-		"alert": "none",
-		"ledindication": False,
-		"usertest": False,
-		"sensitivity": 2,
-		"sensitivitymax": 2,
-		"pending": []
-	},
-	"name": "Kitchen sensor",
-	"type": "ZLLPresence",
-	"modelid": "SML001",
-	"manufacturername": "Philips",
-	"productname": "Hue motion sensor",
-	"swversion": "6.1.1.27575",
-	"uniqueid": "00:11:22:33:44:55:66:88-02-0406",
-	"capabilities": {
-		"certified": True
-	}
+    "state": {
+        "presence": False,
+        "lastupdated": "2019-01-01T00:00:00"
+    },
+    "swupdate": {
+        "state": "noupdates",
+        "lastinstall": "2019-01-01T01:00:00"
+    },
+    "config": {
+        "on": True,
+        "battery": 100,
+        "reachable": True,
+        "alert": "none",
+        "ledindication": False,
+        "usertest": False,
+        "sensitivity": 2,
+        "sensitivitymax": 2,
+        "pending": []
+    },
+    "name": "Kitchen sensor",
+    "type": "ZLLPresence",
+    "modelid": "SML001",
+    "manufacturername": "Philips",
+    "productname": "Hue motion sensor",
+    "swversion": "6.1.1.27575",
+    "uniqueid": "00:11:22:33:44:55:66:88-02-0406",
+    "capabilities": {
+        "certified": True
+    }
 }
 LIGHT_LEVEL_SENSOR_2 = {
-	"state": {
-		"lightlevel": 100,
-		"dark": True,
-		"daylight": True,
-		"lastupdated": "2019-01-01T01:00:00"
-	},
-	"swupdate": {
-		"state": "noupdates",
-		"lastinstall": "2019-01-01T00:00:00"
-	},
-	"config": {
-		"on": True,
-		"battery": 100,
-		"reachable": True,
-		"alert": "none",
-		"tholddark": 12467,
-		"tholdoffset": 7000,
-		"ledindication": False,
-		"usertest": False,
-		"pending": []
-	},
-	"name": "Hue ambient light sensor 2",
-	"type": "ZLLLightLevel",
-	"modelid": "SML001",
-	"manufacturername": "Philips",
-	"productname": "Hue ambient light sensor",
-	"swversion": "6.1.1.27575",
-	"uniqueid": "00:11:22:33:44:55:66:88-02-0400",
-	"capabilities": {
-		"certified": True
-	}
+    "state": {
+        "lightlevel": 100,
+        "dark": True,
+        "daylight": True,
+        "lastupdated": "2019-01-01T01:00:00"
+    },
+    "swupdate": {
+        "state": "noupdates",
+        "lastinstall": "2019-01-01T00:00:00"
+    },
+    "config": {
+        "on": True,
+        "battery": 100,
+        "reachable": True,
+        "alert": "none",
+        "tholddark": 12467,
+        "tholdoffset": 7000,
+        "ledindication": False,
+        "usertest": False,
+        "pending": []
+    },
+    "name": "Hue ambient light sensor 2",
+    "type": "ZLLLightLevel",
+    "modelid": "SML001",
+    "manufacturername": "Philips",
+    "productname": "Hue ambient light sensor",
+    "swversion": "6.1.1.27575",
+    "uniqueid": "00:11:22:33:44:55:66:88-02-0400",
+    "capabilities": {
+        "certified": True
+    }
 }
 TEMPERATURE_SENSOR_2 = {
-	"state": {
-		"temperature": 1875,
-		"lastupdated": "2019-01-01T01:00:00"
-	},
-	"swupdate": {
-		"state": "noupdates",
-		"lastinstall": "2019-01-01T01:00:00"
-	},
-	"config": {
-		"on": True,
-		"battery": 100,
-		"reachable": True,
-		"alert": "none",
-		"ledindication": False,
-		"usertest": False,
-		"pending": []
-	},
-	"name": "Hue temperature sensor 2",
-	"type": "ZLLTemperature",
-	"modelid": "SML001",
-	"manufacturername": "Philips",
-	"productname": "Hue temperature sensor",
-	"swversion": "6.1.1.27575",
-	"uniqueid": "00:11:22:33:44:55:66:88-02-0402",
-	"capabilities": {
-		"certified": True
-	}
+    "state": {
+        "temperature": 1875,
+        "lastupdated": "2019-01-01T01:00:00"
+    },
+    "swupdate": {
+        "state": "noupdates",
+        "lastinstall": "2019-01-01T01:00:00"
+    },
+    "config": {
+        "on": True,
+        "battery": 100,
+        "reachable": True,
+        "alert": "none",
+        "ledindication": False,
+        "usertest": False,
+        "pending": []
+    },
+    "name": "Hue temperature sensor 2",
+    "type": "ZLLTemperature",
+    "modelid": "SML001",
+    "manufacturername": "Philips",
+    "productname": "Hue temperature sensor",
+    "swversion": "6.1.1.27575",
+    "uniqueid": "00:11:22:33:44:55:66:88-02-0402",
+    "capabilities": {
+        "certified": True
+    }
 }
 PRESENCE_SENSOR_3_PRESENT = {
-	"state": {
-		"presence": True,
-		"lastupdated": "2019-01-01T01:00:00"
-	},
-	"swupdate": {
-		"state": "noupdates",
-		"lastinstall": "2019-01-01T00:00:00"
-	},
-	"config": {
-		"on": True,
-		"battery": 100,
-		"reachable": True,
-		"alert": "none",
-		"ledindication": False,
-		"usertest": False,
-		"sensitivity": 2,
-		"sensitivitymax": 2,
-		"pending": []
-	},
-	"name": "Bedroom sensor",
-	"type": "ZLLPresence",
-	"modelid": "SML001",
-	"manufacturername": "Philips",
-	"productname": "Hue motion sensor",
-	"swversion": "6.1.1.27575",
-	"uniqueid": "00:11:22:33:44:55:66:99-02-0406",
-	"capabilities": {
-		"certified": True
-	}
+    "state": {
+        "presence": True,
+        "lastupdated": "2019-01-01T01:00:00"
+    },
+    "swupdate": {
+        "state": "noupdates",
+        "lastinstall": "2019-01-01T00:00:00"
+    },
+    "config": {
+        "on": True,
+        "battery": 100,
+        "reachable": True,
+        "alert": "none",
+        "ledindication": False,
+        "usertest": False,
+        "sensitivity": 2,
+        "sensitivitymax": 2,
+        "pending": []
+    },
+    "name": "Bedroom sensor",
+    "type": "ZLLPresence",
+    "modelid": "SML001",
+    "manufacturername": "Philips",
+    "productname": "Hue motion sensor",
+    "swversion": "6.1.1.27575",
+    "uniqueid": "00:11:22:33:44:55:66:99-02-0406",
+    "capabilities": {
+        "certified": True
+    }
 }
 LIGHT_LEVEL_SENSOR_3 = {
-	"state": {
-		"lightlevel": 0,
-		"dark": True,
-		"daylight": True,
-		"lastupdated": "2019-01-01T01:00:00"
-	},
-	"swupdate": {
-		"state": "noupdates",
-		"lastinstall": "2019-01-01T00:00:00"
-	},
-	"config": {
-		"on": True,
-		"battery": 100,
-		"reachable": True,
-		"alert": "none",
-		"tholddark": 12467,
-		"tholdoffset": 7000,
-		"ledindication": False,
-		"usertest": False,
-		"pending": []
-	},
-	"name": "Hue ambient light sensor 3",
-	"type": "ZLLLightLevel",
-	"modelid": "SML001",
-	"manufacturername": "Philips",
-	"productname": "Hue ambient light sensor",
-	"swversion": "6.1.1.27575",
-	"uniqueid": "00:11:22:33:44:55:66:99-02-0400",
-	"capabilities": {
-		"certified": True
-	}
+    "state": {
+        "lightlevel": 0,
+        "dark": True,
+        "daylight": True,
+        "lastupdated": "2019-01-01T01:00:00"
+    },
+    "swupdate": {
+        "state": "noupdates",
+        "lastinstall": "2019-01-01T00:00:00"
+    },
+    "config": {
+        "on": True,
+        "battery": 100,
+        "reachable": True,
+        "alert": "none",
+        "tholddark": 12467,
+        "tholdoffset": 7000,
+        "ledindication": False,
+        "usertest": False,
+        "pending": []
+    },
+    "name": "Hue ambient light sensor 3",
+    "type": "ZLLLightLevel",
+    "modelid": "SML001",
+    "manufacturername": "Philips",
+    "productname": "Hue ambient light sensor",
+    "swversion": "6.1.1.27575",
+    "uniqueid": "00:11:22:33:44:55:66:99-02-0400",
+    "capabilities": {
+        "certified": True
+    }
 }
 TEMPERATURE_SENSOR_3 = {
-	"state": {
-		"temperature": 1775,
-		"lastupdated": "2019-01-01T01:00:00"
-	},
-	"swupdate": {
-		"state": "noupdates",
-		"lastinstall": "2019-01-01T01:00:00"
-	},
-	"config": {
-		"on": True,
-		"battery": 100,
-		"reachable": True,
-		"alert": "none",
-		"ledindication": False,
-		"usertest": False,
-		"pending": []
-	},
-	"name": "Hue temperature sensor 3",
-	"type": "ZLLTemperature",
-	"modelid": "SML001",
-	"manufacturername": "Philips",
-	"productname": "Hue temperature sensor",
-	"swversion": "6.1.1.27575",
-	"uniqueid": "00:11:22:33:44:55:66:99-02-0402",
-	"capabilities": {
-		"certified": True
-	}
+    "state": {
+        "temperature": 1775,
+        "lastupdated": "2019-01-01T01:00:00"
+    },
+    "swupdate": {
+        "state": "noupdates",
+        "lastinstall": "2019-01-01T01:00:00"
+    },
+    "config": {
+        "on": True,
+        "battery": 100,
+        "reachable": True,
+        "alert": "none",
+        "ledindication": False,
+        "usertest": False,
+        "pending": []
+    },
+    "name": "Hue temperature sensor 3",
+    "type": "ZLLTemperature",
+    "modelid": "SML001",
+    "manufacturername": "Philips",
+    "productname": "Hue temperature sensor",
+    "swversion": "6.1.1.27575",
+    "uniqueid": "00:11:22:33:44:55:66:99-02-0402",
+    "capabilities": {
+        "certified": True
+    }
 }
 SENSOR_RESPONSE = {
     "1": PRESENCE_SENSOR_1_PRESENT,
@@ -348,8 +346,10 @@ async def setup_bridge(hass, mock_bridge):
     config_entry = config_entries.ConfigEntry(1, hue.DOMAIN, 'Mock Title', {
         'host': 'mock-host'
     }, 'test', config_entries.CONN_CLASS_LOCAL_POLL)
-    await hass.config_entries.async_forward_entry_setup(config_entry, 'binary_sensor')
-    await hass.config_entries.async_forward_entry_setup(config_entry, 'sensor')
+    await hass.config_entries.async_forward_entry_setup(
+        config_entry, 'binary_sensor')
+    await hass.config_entries.async_forward_entry_setup(
+        config_entry, 'sensor')
     # and make sure it completes before going further
     await hass.async_block_till_done()
 
@@ -371,9 +371,12 @@ async def test_sensors(hass, mock_bridge):
     # 2 "physical" sensors with 3 virtual sensors each
     assert len(hass.states.async_all()) == 6
 
-    presence_sensor_1 = hass.states.get('binary_sensor.living_room_sensor_presence')
-    light_level_sensor_1 = hass.states.get('sensor.living_room_sensor_light_level')
-    temperature_sensor_1 = hass.states.get('sensor.living_room_sensor_temperature')
+    presence_sensor_1 = hass.states.get(
+        'binary_sensor.living_room_sensor_presence')
+    light_level_sensor_1 = hass.states.get(
+        'sensor.living_room_sensor_light_level')
+    temperature_sensor_1 = hass.states.get(
+        'sensor.living_room_sensor_temperature')
     assert presence_sensor_1 is not None
     assert presence_sensor_1.state == 'on'
     assert light_level_sensor_1 is not None
@@ -383,9 +386,12 @@ async def test_sensors(hass, mock_bridge):
     assert temperature_sensor_1.state == '17.75'
     assert temperature_sensor_1.name == 'Living room sensor temperature'
 
-    presence_sensor_2 = hass.states.get('binary_sensor.kitchen_sensor_presence')
-    light_level_sensor_2 = hass.states.get('sensor.kitchen_sensor_light_level')
-    temperature_sensor_2 = hass.states.get('sensor.kitchen_sensor_temperature')
+    presence_sensor_2 = hass.states.get(
+        'binary_sensor.kitchen_sensor_presence')
+    light_level_sensor_2 = hass.states.get(
+        'sensor.kitchen_sensor_light_level')
+    temperature_sensor_2 = hass.states.get(
+        'sensor.kitchen_sensor_temperature')
     assert presence_sensor_2 is not None
     assert presence_sensor_2.state == 'off'
     assert light_level_sensor_2 is not None
@@ -414,7 +420,8 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await hass.data[hue.DOMAIN][hue_sensor_base.SENSOR_MANAGER].async_update_items()
+    sm = hass.data[hue.DOMAIN][hue_sensor_base.SENSOR_MANAGER]
+    await sm.async_update_items()
 
     # To flush out the service call to update the group
     await hass.async_block_till_done()
