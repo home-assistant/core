@@ -119,13 +119,20 @@ class Integration:
 
     def get_component(self) -> ModuleType:
         """Return the component."""
-        return importlib.import_module(self.pkg_path)
+        cache = self.hass.data.setdefault(DATA_KEY, {})
+        if self.domain not in cache:
+            cache[self.domain] = importlib.import_module(self.pkg_path)
+        return cache[self.domain]  # type: ignore
 
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        return importlib.import_module(
-            "{}.{}".format(self.pkg_path, platform_name)
-        )
+        cache = self.hass.data.setdefault(DATA_KEY, {})
+        full_name = "{}.{}".format(self.domain, platform_name)
+        if full_name not in cache:
+            cache[full_name] = importlib.import_module(
+                "{}.{}".format(self.pkg_path, platform_name)
+            )
+        return cache[full_name]  # type: ignore
 
 
 async def async_get_integration(hass: 'HomeAssistant', domain: str)\
