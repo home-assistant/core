@@ -1,9 +1,4 @@
-"""
-Support for interface with a Bose Soundtouch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.soundtouch/
-"""
+"""Support for interface with a Bose Soundtouch."""
 import logging
 import re
 

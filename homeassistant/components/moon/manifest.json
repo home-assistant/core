@@ -1,0 +1,10 @@
+{
+  "domain": "moon",
+  "name": "Moon",
+  "documentation": "https://www.home-assistant.io/components/moon",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

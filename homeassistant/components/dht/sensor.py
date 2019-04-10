@@ -1,9 +1,4 @@
-"""
-Support for Adafruit DHT temperature and humidity sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dht/
-"""
+"""Support for Adafruit DHT temperature and humidity sensor."""
 import logging
 from datetime import timedelta
 

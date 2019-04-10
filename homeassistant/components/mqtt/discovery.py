@@ -1,9 +1,4 @@
-"""
-Support for MQTT discovery.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt/#discovery
-"""
+"""Support for MQTT discovery."""
 import asyncio
 import json
 import logging
@@ -15,7 +10,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
+from .const import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 

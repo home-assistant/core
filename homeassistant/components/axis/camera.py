@@ -1,5 +1,6 @@
 """Support for Axis camera streaming."""
 
+from homeassistant.components.camera import SUPPORT_STREAM
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera, filter_urllib3_logging)
 from homeassistant.const import (
@@ -14,6 +15,7 @@ DEPENDENCIES = [AXIS_DOMAIN]
 
 AXIS_IMAGE = 'http://{}:{}/axis-cgi/jpg/image.cgi'
 AXIS_VIDEO = 'http://{}:{}/axis-cgi/mjpg/video.cgi'
+AXIS_STREAM = 'rtsp://{}:{}@{}/axis-media/media.amp?videocodec=h264'
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -55,6 +57,19 @@ class AxisCamera(MjpegCamera):
             self.hass, self.device.event_new_address, self._new_address))
         self.unsub_dispatcher.append(async_dispatcher_connect(
             self.hass, self.device.event_reachable, self.update_callback))
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        return SUPPORT_STREAM
+
+    @property
+    def stream_source(self):
+        """Return the stream source."""
+        return AXIS_STREAM.format(
+            self.device.config_entry.data[CONF_DEVICE][CONF_USERNAME],
+            self.device.config_entry.data[CONF_DEVICE][CONF_PASSWORD],
+            self.device.host)
 
     @callback
     def update_callback(self, no_delay=None):

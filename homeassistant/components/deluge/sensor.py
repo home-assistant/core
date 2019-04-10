@@ -1,9 +1,4 @@
-"""
-Support for monitoring the Deluge BitTorrent client API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.deluge/
-"""
+"""Support for monitoring the Deluge BitTorrent client API."""
 import logging
 
 import voluptuous as vol

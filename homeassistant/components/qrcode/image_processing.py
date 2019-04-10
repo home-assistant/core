@@ -1,9 +1,4 @@
-"""
-Support for the QR image processing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.qr/
-"""
+"""Support for the QR image processing."""
 from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
     ImageProcessingEntity, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)

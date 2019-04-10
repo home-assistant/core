@@ -7,6 +7,8 @@ import pkgutil
 import re
 import sys
 
+from script.manifest.requirements import gather_requirements_from_manifests
+
 COMMENT_REQUIREMENTS = (
     'Adafruit-DHT',
     'Adafruit_BBIO',
@@ -213,36 +215,8 @@ def gather_modules():
 
     errors = []
 
-    for package in sorted(
-            explore_module('homeassistant.components', True) +
-            explore_module('homeassistant.scripts', True) +
-            explore_module('homeassistant.auth', True)):
-        try:
-            module = importlib.import_module(package)
-        except ImportError as err:
-            for pattern in IGNORE_PACKAGES:
-                if fnmatch.fnmatch(package, pattern):
-                    break
-            else:
-                print("{}: {}".format(package.replace('.', '/') + '.py', err))
-                errors.append(package)
-            continue
-
-        if not getattr(module, 'REQUIREMENTS', None):
-            continue
-
-        for req in module.REQUIREMENTS:
-            if req in IGNORE_REQ:
-                continue
-            if '://' in req and 'pyharmony' not in req:
-                errors.append(
-                    "{}[Only pypi dependencies are allowed: {}]".format(
-                        package, req))
-            if req.partition('==')[1] == '' and req not in IGNORE_PIN:
-                errors.append(
-                    "{}[Please pin requirement {}, see {}]".format(
-                        package, req, URL_PIN))
-            reqs.setdefault(req, []).append(package)
+    gather_requirements_from_manifests(process_requirements, errors, reqs)
+    gather_requirements_from_modules(errors, reqs)
 
     for key in reqs:
         reqs[key] = sorted(reqs[key],
@@ -257,12 +231,47 @@ def gather_modules():
     return reqs
 
 
+def gather_requirements_from_modules(errors, reqs):
+    """Collect the requirements from the modules directly."""
+    for package in sorted(
+            explore_module('homeassistant.scripts', True) +
+            explore_module('homeassistant.auth', True)):
+        try:
+            module = importlib.import_module(package)
+        except ImportError as err:
+            for pattern in IGNORE_PACKAGES:
+                if fnmatch.fnmatch(package, pattern):
+                    break
+            else:
+                print("{}: {}".format(package.replace('.', '/') + '.py', err))
+                errors.append(package)
+            continue
+
+        if getattr(module, 'REQUIREMENTS', None):
+            process_requirements(errors, module.REQUIREMENTS, package, reqs)
+
+
+def process_requirements(errors, module_requirements, package, reqs):
+    """Process all of the requirements."""
+    for req in module_requirements:
+        if req in IGNORE_REQ:
+            continue
+        if '://' in req:
+            errors.append(
+                "{}[Only pypi dependencies are allowed: {}]".format(
+                    package, req))
+        if req.partition('==')[1] == '' and req not in IGNORE_PIN:
+            errors.append(
+                "{}[Please pin requirement {}, see {}]".format(
+                    package, req, URL_PIN))
+        reqs.setdefault(req, []).append(package)
+
+
 def generate_requirements_list(reqs):
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
-        for req in sorted(requirements,
-                          key=lambda name: (len(name.split('.')), name)):
+        for req in sorted(requirements):
             output.append('\n# {}'.format(req))
 
         if comment_requirement(pkg):

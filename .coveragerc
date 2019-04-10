@@ -47,9 +47,6 @@ omit =
     homeassistant/components/august/*
     homeassistant/components/automatic/device_tracker.py
     homeassistant/components/avion/light.py
-    homeassistant/components/aws_lambda/notify.py
-    homeassistant/components/aws_sns/notify.py
-    homeassistant/components/aws_sqs/notify.py
     homeassistant/components/baidu/tts.py
     homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
@@ -67,6 +64,7 @@ omit =
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
     homeassistant/components/bmw_connected_drive/*
+    homeassistant/components/bom/camera.py
     homeassistant/components/bom/sensor.py
     homeassistant/components/bom/weather.py
     homeassistant/components/braviatv/media_player.py
@@ -323,7 +321,10 @@ omit =
     homeassistant/components/liveboxplaytv/media_player.py
     homeassistant/components/llamalab_automate/notify.py
     homeassistant/components/lockitron/lock.py
-    homeassistant/components/logi_circle/*
+    homeassistant/components/logi_circle/__init__.py
+    homeassistant/components/logi_circle/camera.py
+    homeassistant/components/logi_circle/const.py
+    homeassistant/components/logi_circle/sensor.py
     homeassistant/components/london_underground/sensor.py
     homeassistant/components/loopenergy/sensor.py
     homeassistant/components/luci/device_tracker.py
@@ -369,6 +370,7 @@ omit =
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
     homeassistant/components/mystrom/switch.py
+    homeassistant/components/n26/*
     homeassistant/components/nad/media_player.py
     homeassistant/components/nadtcp/media_player.py
     homeassistant/components/nanoleaf/light.py
@@ -400,6 +402,7 @@ omit =
     homeassistant/components/nzbget/sensor.py
     homeassistant/components/octoprint/*
     homeassistant/components/oem/climate.py
+    homeassistant/components/oasa_telematics/sensor.py
     homeassistant/components/ohmconnect/sensor.py
     homeassistant/components/onewire/sensor.py
     homeassistant/components/onkyo/media_player.py
@@ -540,6 +543,7 @@ omit =
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
     homeassistant/components/solaredge/sensor.py
+    homeassistant/components/somfy_mylink/*
     homeassistant/components/sonarr/sensor.py
     homeassistant/components/songpal/media_player.py
     homeassistant/components/sonos/*

@@ -1,9 +1,4 @@
-"""
-Lights on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/light.zha/
-"""
+"""Lights on Zigbee Home Automation networks."""
 from datetime import timedelta
 import logging
 
@@ -172,6 +167,7 @@ class Light(ZhaEntity, light.Light):
         duration = transition * 10 if transition else DEFAULT_DURATION
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
 
+        t_log = {}
         if (brightness is not None or transition) and \
                 self._supported_features & light.SUPPORT_BRIGHTNESS:
             if brightness is not None:
@@ -182,7 +178,9 @@ class Light(ZhaEntity, light.Light):
                 level,
                 duration
             )
+            t_log['move_to_level_with_on_off'] = success
             if not success:
+                self.debug("turned on: %s", t_log)
                 return
             self._state = bool(level)
             if level:
@@ -190,7 +188,9 @@ class Light(ZhaEntity, light.Light):
 
         if brightness is None or brightness:
             success = await self._on_off_channel.on()
+            t_log['on_off'] = success
             if not success:
+                self.debug("turned on: %s", t_log)
                 return
             self._state = True
 
@@ -199,7 +199,9 @@ class Light(ZhaEntity, light.Light):
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             success = await self._color_channel.move_to_color_temp(
                 temperature, duration)
+            t_log['move_to_color_temp'] = success
             if not success:
+                self.debug("turned on: %s", t_log)
                 return
             self._color_temp = temperature
 
@@ -212,10 +214,13 @@ class Light(ZhaEntity, light.Light):
                 int(xy_color[1] * 65535),
                 duration,
             )
+            t_log['move_to_color'] = success
             if not success:
+                self.debug("turned on: %s", t_log)
                 return
             self._hs_color = hs_color
 
+        self.debug("turned on: %s", t_log)
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
@@ -229,7 +234,7 @@ class Light(ZhaEntity, light.Light):
             )
         else:
             success = await self._on_off_channel.off()
-        _LOGGER.debug("%s was turned off: %s", self.entity_id, success)
+        self.debug("turned off: %s", success)
         if not success:
             return
         self._state = False
@@ -238,13 +243,37 @@ class Light(ZhaEntity, light.Light):
     async def async_update(self):
         """Attempt to retrieve on off state from the light."""
         await super().async_update()
+        await self.async_get_state()
+
+    async def async_get_state(self, from_cache=True):
+        """Attempt to retrieve on off state from the light."""
         if self._on_off_channel:
             self._state = await self._on_off_channel.get_attribute_value(
-                'on_off')
+                'on_off', from_cache=from_cache)
         if self._level_channel:
             self._brightness = await self._level_channel.get_attribute_value(
-                'current_level')
+                'current_level', from_cache=from_cache)
+        if self._color_channel:
+            color_capabilities = self._color_channel.get_color_capabilities()
+            if color_capabilities is not None and\
+                    color_capabilities & CAPABILITIES_COLOR_TEMP:
+                self._color_temp = await\
+                    self._color_channel.get_attribute_value(
+                        'color_temperature', from_cache=from_cache)
+            if color_capabilities is not None and\
+                    color_capabilities & CAPABILITIES_COLOR_XY:
+                color_x = await self._color_channel.get_attribute_value(
+                    'current_x', from_cache=from_cache)
+                color_y = await self._color_channel.get_attribute_value(
+                    'current_y', from_cache=from_cache)
+                if color_x is not None and color_y is not None:
+                    self._hs_color = color_util.color_xy_to_hs(
+                        float(color_x / 65535), float(color_y / 65535))
 
     async def refresh(self, time):
-        """Call async_update at an interval."""
-        await self.async_update()
+        """Call async_get_state at an interval."""
+        await self.async_get_state(from_cache=False)
+
+    def debug(self, msg, *args):
+        """Log debug message."""
+        _LOGGER.debug('%s: ' + msg, self.entity_id, *args)

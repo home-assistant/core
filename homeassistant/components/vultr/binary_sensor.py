@@ -1,9 +1,4 @@
-"""
-Support for monitoring the state of Vultr subscriptions (VPS).
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.vultr/
-"""
+"""Support for monitoring the state of Vultr subscriptions (VPS)."""
 import logging
 
 import voluptuous as vol

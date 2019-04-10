@@ -1,9 +1,4 @@
-"""
-Support for package tracking sensors from 17track.net.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.seventeentrack/
-"""
+"""Support for package tracking sensors from 17track.net."""
 import logging
 from datetime import timedelta
 

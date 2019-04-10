@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with lights.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light/
-"""
+"""Provides functionality to interact with lights."""
 import asyncio
 import csv
 from datetime import timedelta

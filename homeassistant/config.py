@@ -68,9 +68,6 @@ DEFAULT_CONFIG = """
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
 
-# Show the introduction message on startup.
-introduction:
-
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 # http:
 #   base_url: example.duckdns.org:8123

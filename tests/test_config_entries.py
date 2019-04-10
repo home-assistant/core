@@ -162,7 +162,7 @@ async def test_remove_entry(hass, manager):
     """Test that we can remove an entry."""
     async def mock_setup_entry(hass, entry):
         """Mock setting up entry."""
-        hass.loop.create_task(hass.config_entries.async_forward_entry_setup(
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, 'light'))
         return True
 

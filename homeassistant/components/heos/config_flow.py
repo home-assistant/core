@@ -23,8 +23,13 @@ class HeosFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_discovery(self, discovery_info):
         """Handle a discovered Heos device."""
-        return await self.async_step_user(
-            {CONF_HOST: discovery_info[CONF_HOST]})
+        # Only continue if this is the only active flow
+        flows = self.hass.config_entries.flow.async_progress()
+        heos_flows = [flow for flow in flows if flow['handler'] == DOMAIN]
+        if len(heos_flows) == 1:
+            return await self.async_step_user(
+                {CONF_HOST: discovery_info[CONF_HOST]})
+        return self.async_abort(reason='already_setup')
 
     async def async_step_import(self, user_input=None):
         """Occurs when an entry is setup through config."""

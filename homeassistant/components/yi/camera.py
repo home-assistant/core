@@ -1,9 +1,4 @@
-"""
-This component provides support for Xiaomi Cameras (HiSilicon Hi3518e V200).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.yi/
-"""
+"""Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
 import asyncio
 import logging
 

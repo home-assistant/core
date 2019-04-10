@@ -1,9 +1,4 @@
-"""
-Sensor that can display the current Home Assistant versions.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.version/
-"""
+"""Sensor that can display the current Home Assistant versions."""
 import logging
 from datetime import timedelta
 
@@ -16,7 +11,7 @@ from homeassistant.const import CONF_NAME, CONF_SOURCE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyhaversion==2.0.3']
+REQUIREMENTS = ['pyhaversion==2.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

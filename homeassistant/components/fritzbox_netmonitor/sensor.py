@@ -1,9 +1,4 @@
-"""
-Support for monitoring an AVM Fritz!Box router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fritzbox_netmonitor/
-"""
+"""Support for monitoring an AVM Fritz!Box router."""
 import logging
 from datetime import timedelta
 from requests.exceptions import RequestException

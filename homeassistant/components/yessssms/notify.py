@@ -1,9 +1,4 @@
-"""
-Support for the YesssSMS platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.yessssms/
-"""
+"""Support for the YesssSMS platform."""
 import logging
 
 import voluptuous as vol

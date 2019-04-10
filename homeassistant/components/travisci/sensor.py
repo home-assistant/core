@@ -1,9 +1,4 @@
-"""
-This component provides HA sensor support for Travis CI framework.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.travisci/
-"""
+"""This component provides HA sensor support for Travis CI framework."""
 import logging
 from datetime import timedelta
 

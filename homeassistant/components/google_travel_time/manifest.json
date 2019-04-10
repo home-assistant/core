@@ -1,0 +1,12 @@
+{
+  "domain": "google_travel_time",
+  "name": "Google travel time",
+  "documentation": "https://www.home-assistant.io/components/google_travel_time",
+  "requirements": [
+    "googlemaps==2.5.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

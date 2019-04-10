@@ -1,9 +1,4 @@
-"""
-Provide functionality to keep track of devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/device_tracker/
-"""
+"""Provide functionality to keep track of devices."""
 import asyncio
 from datetime import timedelta
 import logging

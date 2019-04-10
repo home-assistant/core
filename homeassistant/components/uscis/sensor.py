@@ -1,9 +1,4 @@
-"""
-Support for USCIS Case Status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.uscis/
-"""
+"""Support for USCIS Case Status."""
 
 import logging
 from datetime import timedelta

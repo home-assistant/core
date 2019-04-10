@@ -1,0 +1,8 @@
+{
+  "domain": "radarr",
+  "name": "Radarr",
+  "documentation": "https://www.home-assistant.io/components/radarr",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
