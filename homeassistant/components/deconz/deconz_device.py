@@ -26,10 +26,9 @@ class DeconzDevice(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
         self._device.remove_callback(self.async_update_callback)
-        self._device = None
+        del self.gateway.deconz_ids[self.entity_id]
+        self.unsub_dispatcher()
 
     @callback
     def async_update_callback(self, reason):
