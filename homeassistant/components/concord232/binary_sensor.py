@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             )
 
-        add_entities(sensors, True)
+    add_entities(sensors, True)
 
 
 def get_opening_type(zone):
