@@ -3,7 +3,7 @@ import asyncio
 from functools import wraps
 import logging
 from os import path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import Callable
 
 import voluptuous as vol
 
@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from .typing import HomeAssistantType
-if TYPE_CHECKING:
-    from homeassistant.core import ServiceCall  # noqa
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
@@ -367,16 +365,15 @@ def async_register_admin_service(
 
 
 @bind_hass
+@ha.callback
 def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
     """Ensure permission to access any entity under domain in service call."""
     def decorator(service: Callable) -> Callable:
         """Decorate."""
-        @wraps(service)
-        async def check_permissions(
-                call: 'ServiceCall') -> Any:
+        async def check_permissions(call):
             """Check user permission and raise before call if unauthorized."""
             if not call.context.user_id:
-                return await hass.async_add_job(service, call)
+                return hass.async_add_job(service, call)
 
             user = await hass.auth.async_get_user(call.context.user_id)
             if user is None:
@@ -388,10 +385,11 @@ def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
                 entity.entity_id for entity in reg.entities.values()
                 if entity.platform == domain
             ]
+            _LOGGER.error(entities)
 
             for entity_id in entities:
                 if user.permissions.check_entity(entity_id, POLICY_CONTROL):
-                    return await hass.async_add_job(service, call)
+                    return hass.async_add_job(service, call)
 
             raise Unauthorized(
                 context=call.context,
