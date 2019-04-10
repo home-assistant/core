@@ -133,7 +133,7 @@ async def test_get_platform(hass, caplog):
     caplog.clear()
 
     legacy_platform = loader.get_platform(hass, 'switch', 'test')
-    assert legacy_platform.__name__ == 'custom_components.switch.test'
+    assert legacy_platform.__name__ == 'custom_components.test.switch'
     assert 'Integrations need to be in their own folder.' in caplog.text
 
 
