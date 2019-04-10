@@ -37,11 +37,13 @@ def mock_entities():
         entity_id='light.kitchen',
         available=True,
         should_poll=False,
+        supported_features=1,
     )
     living_room = Mock(
         entity_id='light.living_room',
         available=True,
         should_poll=False,
+        supported_features=0,
     )
     entities = OrderedDict()
     entities[kitchen.entity_id] = kitchen
@@ -267,6 +269,19 @@ def test_async_get_all_descriptions(hass):
 
     assert 'description' in descriptions[logger.DOMAIN]['set_level']
     assert 'fields' in descriptions[logger.DOMAIN]['set_level']
+
+
+async def test_call_with_required_features(hass, mock_entities):
+    """Test service calls invoked only if entity has required feautres."""
+    test_service_mock = Mock(return_value=mock_coro())
+    await service.entity_service_call(hass, [
+        Mock(entities=mock_entities)
+    ], test_service_mock, ha.ServiceCall('test_domain', 'test_service', {
+        'entity_id': 'all'
+    }), required_features=1)
+    assert len(mock_entities) == 2
+    # Called once because only one of the entities had the required features
+    assert test_service_mock.call_count == 1
 
 
 async def test_call_context_user_not_exist(hass):
