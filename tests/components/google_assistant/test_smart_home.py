@@ -98,7 +98,7 @@ async def test_sync_message(hass):
                 'type': sh.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
-                    'colorModel': 'rgb',
+                    'colorModel': 'hsv',
                     'temperatureMinK': 2000,
                     'temperatureMaxK': 6535,
                 },
@@ -176,7 +176,7 @@ async def test_sync_in_area(hass, registries):
                 'type': sh.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
-                    'colorModel': 'rgb',
+                    'colorModel': 'hsv',
                     'temperatureMinK': 2000,
                     'temperatureMaxK': 6535,
                 },
@@ -253,6 +253,11 @@ async def test_query_message(hass):
                     'brightness': 30,
                     'color': {
                         'spectrumRGB': 4194303,
+                        'spectrumHSV': {
+                            'hue': 180,
+                            'saturation': 0.75,
+                            'value': 0.3058823529411765,
+                        },
                         'temperature': 2500,
                     }
                 },
@@ -339,6 +344,11 @@ async def test_execute(hass):
                     'brightness': 20,
                     'color': {
                         'spectrumRGB': 16773155,
+                        'spectrumHSV': {
+                            'hue': 56,
+                            'saturation': 0.86,
+                            'value': 0.2,
+                        },
                         'temperature': 2631,
                     },
                 }
