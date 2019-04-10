@@ -1,9 +1,4 @@
-"""
-Support for Ubee router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.ubee/
-"""
+""" Support for Ubee router. """
 
 import logging
 import voluptuous as vol
@@ -57,7 +52,9 @@ class UbeeDeviceScanner(DeviceScanner):
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
-        return self._get_connected_devices()
+        devices = self._get_connected_devices()
+        self._mac2name = devices
+        return devices
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
