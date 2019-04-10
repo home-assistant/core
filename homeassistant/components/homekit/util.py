@@ -27,7 +27,7 @@ BASIC_INFO_SCHEMA = vol.Schema({
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list,
     vol.Optional(CONF_TYPE, default=TYPE_SWITCH): vol.All(
-        cv.string, vol.In((TYPE_TELEVISION))),
+        cv.string, vol.In((TYPE_SWITCH, TYPE_TELEVISION))),
 })
 
 

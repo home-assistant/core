@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant.components.homekit.const import (
     CONF_FEATURE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
     HOMEKIT_NOTIFY_ID, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
-    TYPE_SWITCH, TYPE_VALVE)
+    TYPE_SWITCH, TYPE_TELEVISION, TYPE_VALVE)
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping, SpeedRange, convert_to_float, density_to_air_quality,
     dismiss_setup_message, show_setup_message, temperature_to_homekit,
@@ -32,6 +32,7 @@ def test_validate_entity_config():
                {'media_player.test': {CONF_FEATURE_LIST: [
                     {CONF_FEATURE: FEATURE_ON_OFF},
                     {CONF_FEATURE: FEATURE_ON_OFF}]}},
+               {'media_player.test': {CONF_TYPE: 'invalid_type'}},
                {'switch.test': {CONF_TYPE: 'invalid_type'}}]
 
     for conf in configs:
@@ -58,6 +59,13 @@ def test_validate_entity_config():
     assert vec({'media_player.demo': config}) == \
         {'media_player.demo': {CONF_FEATURE_LIST:
                                {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
+
+    assert vec({'media_player.demo': {}}) == \
+        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH}}
+    assert vec({'media_player.demo': {}}) == \
+        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH}}
+    assert vec({'media_player.demo': {CONF_TYPE: TYPE_TELEVISION}}) == \
+        {'media_player.demo': {CONF_TYPE: TYPE_TELEVISION}}
 
     assert vec({'switch.demo': {CONF_TYPE: TYPE_FAUCET}}) == \
         {'switch.demo': {CONF_TYPE: TYPE_FAUCET}}
