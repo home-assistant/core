@@ -25,9 +25,6 @@ TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 DEFAULT_NAME = 'Broadlink switch'
 DEFAULT_TIMEOUT = 10
-DEFAULT_RETRY = 3
-SERVICE_LEARN = 'broadlink_learn_command'
-SERVICE_SEND = 'broadlink_send_packet'
 CONF_SLOTS = 'slots'
 
 RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
