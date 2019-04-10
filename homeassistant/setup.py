@@ -153,11 +153,11 @@ async def _async_setup_component(hass: core.HomeAssistant,
 
     try:
         if hasattr(component, 'async_setup'):
-            result = await component.async_setup(  # type: ignore
+            result = await component.async_setup(
                 hass, processed_config)
         else:
             result = await hass.async_add_executor_job(
-                component.setup, hass, processed_config)  # type: ignore
+                component.setup, hass, processed_config)
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
         async_notify_setup_error(hass, domain, True)
@@ -181,7 +181,7 @@ async def _async_setup_component(hass: core.HomeAssistant,
         for entry in hass.config_entries.async_entries(domain):
             await entry.async_setup(hass, component=component)
 
-    hass.config.components.add(component.DOMAIN)  # type: ignore
+    hass.config.components.add(component.DOMAIN)
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:
@@ -189,7 +189,7 @@ async def _async_setup_component(hass: core.HomeAssistant,
 
     hass.bus.async_fire(
         EVENT_COMPONENT_LOADED,
-        {ATTR_COMPONENT: component.DOMAIN}  # type: ignore
+        {ATTR_COMPONENT: component.DOMAIN}
     )
 
     return True
@@ -215,7 +215,7 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
 
     if not integration:
         log_error("Integration not found")
-        return
+        return None
 
     try:
         platform = integration.get_platform(domain)

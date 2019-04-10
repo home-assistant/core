@@ -52,7 +52,7 @@ LOOKUP_PATHS = [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 _UNDEF = object()
 
 
-def manifest_from_legacy_module(module: Any) -> Dict:
+def manifest_from_legacy_module(module: ModuleType) -> Dict:
     """Generate a manifest from a legacy module."""
     return {
         'domain': module.DOMAIN,
@@ -68,7 +68,7 @@ class Integration:
     """An integration in Home Assistant."""
 
     @classmethod
-    def resolve_from_root(cls, hass: 'HomeAssistant', root_module: Any,
+    def resolve_from_root(cls, hass: 'HomeAssistant', root_module: ModuleType,
                           domain: str) -> 'Optional[Integration]':
         """Resolve an integration from a root module."""
         for base in root_module.__path__:
@@ -117,11 +117,11 @@ class Integration:
         self.dependencies = manifest['dependencies']  # type: List[str]
         self.requirements = manifest['requirements']  # type: List[str]
 
-    def get_component(self) -> Any:
+    def get_component(self) -> ModuleType:
         """Return the component."""
         return importlib.import_module(self.pkg_path)
 
-    def get_platform(self, platform_name: str) -> Any:
+    def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
         return importlib.import_module(
             "{}.{}".format(self.pkg_path, platform_name)
