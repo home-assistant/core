@@ -93,8 +93,7 @@ async def test_sync_message(hass):
                 'traits': [
                     trait.TRAIT_BRIGHTNESS,
                     trait.TRAIT_ONOFF,
-                    trait.TRAIT_COLOR_SPECTRUM,
-                    trait.TRAIT_COLOR_TEMP,
+                    trait.TRAIT_COLOR_SETTING,
                 ],
                 'type': sh.TYPE_LIGHT,
                 'willReportState': False,
@@ -172,8 +171,7 @@ async def test_sync_in_area(hass, registries):
                 'traits': [
                     trait.TRAIT_BRIGHTNESS,
                     trait.TRAIT_ONOFF,
-                    trait.TRAIT_COLOR_SPECTRUM,
-                    trait.TRAIT_COLOR_TEMP,
+                    trait.TRAIT_COLOR_SETTING,
                 ],
                 'type': sh.TYPE_LIGHT,
                 'willReportState': False,
