@@ -104,9 +104,9 @@ async def test_custom_component_name(hass):
     assert comp.__name__ == 'custom_components.test_package'
     assert comp.__package__ == 'custom_components.test_package'
 
-    comp = loader.get_component(hass, 'light.test')
-    assert comp.__name__ == 'custom_components.light.test'
-    assert comp.__package__ == 'custom_components.light'
+    comp = loader.get_component(hass, 'test.light')
+    assert comp.__name__ == 'custom_components.test.light'
+    assert comp.__package__ == 'custom_components.test'
 
     # Test custom components is mounted
     from custom_components.test_package import TEST
@@ -119,8 +119,8 @@ async def test_log_warning_custom_component(hass, caplog):
     assert \
         'You are using a custom component for test_standalone' in caplog.text
 
-    loader.get_component(hass, 'light.test')
-    assert 'You are using a custom component for light.test' in caplog.text
+    loader.get_component(hass, 'test.light')
+    assert 'You are using a custom component for test.light' in caplog.text
 
 
 async def test_get_platform(hass, caplog):
