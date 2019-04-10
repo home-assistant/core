@@ -88,6 +88,7 @@ YEELIGHT_COLOR_EFFECT_LIST = [
     *YEELIGHT_MONO_EFFECT_LIST
 ]
 
+
 def _transitions_config_parser(transitions):
     """Parse transitions config into initialized objects."""
     import yeelight
