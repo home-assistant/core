@@ -1,0 +1,12 @@
+{
+  "domain": "ness_alarm",
+  "name": "Ness alarm",
+  "documentation": "https://www.home-assistant.io/components/ness_alarm",
+  "requirements": [
+    "nessclient==0.9.15"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@nickw444"
+  ]
+}

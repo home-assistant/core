@@ -1,0 +1,10 @@
+{
+  "domain": "transmission",
+  "name": "Transmission",
+  "documentation": "https://www.home-assistant.io/components/transmission",
+  "requirements": [
+    "transmissionrpc==0.11"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

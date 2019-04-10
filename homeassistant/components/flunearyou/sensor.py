@@ -1,9 +1,4 @@
-"""
-Support for user- and CDC-based flu info sensors from Flu Near You.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.flunearyou/
-"""
+"""Support for user- and CDC-based flu info sensors from Flu Near You."""
 import logging
 from datetime import timedelta
 

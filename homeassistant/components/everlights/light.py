@@ -1,9 +1,4 @@
-"""
-Support for EverLights lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.everlights/
-"""
+"""Support for EverLights lights."""
 import logging
 from datetime import timedelta
 from typing import Tuple

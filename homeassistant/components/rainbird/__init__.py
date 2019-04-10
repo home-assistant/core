@@ -1,9 +1,4 @@
-"""
-Support for Rain Bird Irrigation system LNK WiFi Module.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/rainbird/
-"""
+"""Support for Rain Bird Irrigation system LNK WiFi Module."""
 import logging
 
 import voluptuous as vol

@@ -1,9 +1,4 @@
-"""
-Support for Enviro pHAT sensors.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.envirophat
-"""
+"""Support for Enviro pHAT sensors."""
 import importlib
 import logging
 from datetime import timedelta

@@ -1,9 +1,4 @@
-"""
-Support for Google travel time sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.google_travel_time/
-"""
+"""Support for Google travel time sensors."""
 import logging
 from datetime import datetime
 from datetime import timedelta

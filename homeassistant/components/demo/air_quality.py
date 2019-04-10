@@ -1,9 +1,4 @@
-"""
-Demo platform that offers fake air quality data.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that offers fake air quality data."""
 from homeassistant.components.air_quality import AirQualityEntity
 
 

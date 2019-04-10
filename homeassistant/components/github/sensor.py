@@ -1,9 +1,4 @@
-"""
-Support for GitHub.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.github/
-"""
+"""Support for GitHub."""
 from datetime import timedelta
 import logging
 import voluptuous as vol

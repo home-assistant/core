@@ -1,9 +1,4 @@
-"""
-Support for Concord232 alarm control panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.concord232/
-"""
+"""Support for Concord232 alarm control panels."""
 import datetime
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Platform for the Aladdin Connect cover component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.aladdin_connect/
-"""
+"""Platform for the Aladdin Connect cover component."""
 import logging
 
 import voluptuous as vol

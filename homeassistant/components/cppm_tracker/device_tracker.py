@@ -1,8 +1,4 @@
-"""
-Support for ClearPass Policy Manager.
-
-Allows tracking devices with CPPM.
-"""
+"""Support for ClearPass Policy Manager."""
 import logging
 from datetime import timedelta
 

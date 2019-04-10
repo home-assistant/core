@@ -1,9 +1,4 @@
-"""
-Support for MQTT cover devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.mqtt/
-"""
+"""Support for MQTT cover devices."""
 import logging
 
 import voluptuous as vol

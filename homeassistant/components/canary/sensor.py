@@ -1,9 +1,4 @@
-"""
-Support for Canary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.canary/
-"""
+"""Support for Canary sensors."""
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity

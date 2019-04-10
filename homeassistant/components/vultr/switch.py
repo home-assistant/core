@@ -1,9 +1,4 @@
-"""
-Support for interacting with Vultr subscriptions.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.vultr/
-"""
+"""Support for interacting with Vultr subscriptions."""
 import logging
 
 import voluptuous as vol

@@ -3,9 +3,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from tests.common import mock_coro
+from tests.common import mock_coro, MockConfigEntry
 
 from homeassistant.components.axis import device, errors
+from homeassistant.components.axis.camera import AxisCamera
 
 DEVICE_DATA = {
     device.CONF_HOST: '1.2.3.4',
@@ -16,7 +17,7 @@ DEVICE_DATA = {
 
 ENTRY_OPTIONS = {
     device.CONF_CAMERA: True,
-    device.CONF_EVENTS: ['pir'],
+    device.CONF_EVENTS: True,
 }
 
 ENTRY_CONFIG = {
@@ -51,6 +52,31 @@ async def test_device_setup():
         (entry, 'camera')
     assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == \
         (entry, 'binary_sensor')
+
+
+async def test_device_signal_new_address(hass):
+    """Successful setup."""
+    entry = MockConfigEntry(
+        domain=device.DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
+
+    api = Mock()
+    api.vapix.get_param.return_value = '1234'
+
+    axis_device = device.AxisNetworkDevice(hass, entry)
+    hass.data[device.DOMAIN] = {axis_device.serial: axis_device}
+
+    with patch.object(device, 'get_device', return_value=mock_coro(api)), \
+            patch.object(AxisCamera, '_new_address') as new_address_mock:
+        await axis_device.async_setup()
+        await hass.async_block_till_done()
+
+    entry.data[device.CONF_DEVICE][device.CONF_HOST] = '2.3.4.5'
+    hass.config_entries.async_update_entry(entry, data=entry.data)
+    await hass.async_block_till_done()
+
+    assert axis_device.host == '2.3.4.5'
+    assert axis_device.api.config.host == '2.3.4.5'
+    assert len(new_address_mock.mock_calls) == 1
 
 
 async def test_device_not_accessible():
@@ -94,7 +120,7 @@ async def test_new_event_sends_signal(hass):
     axis_device = device.AxisNetworkDevice(hass, entry)
 
     with patch.object(device, 'async_dispatcher_send') as mock_dispatch_send:
-        axis_device.async_signal_callback(action='add', event='event')
+        axis_device.async_event_callback(action='add', event='event')
         await hass.async_block_till_done()
 
     assert len(mock_dispatch_send.mock_calls) == 1

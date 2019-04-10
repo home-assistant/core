@@ -1,9 +1,4 @@
-"""
-Support for One-Time Password (OTP).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.otp/
-"""
+"""Support for One-Time Password (OTP)."""
 import time
 import logging
 

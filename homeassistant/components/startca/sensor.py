@@ -1,9 +1,4 @@
-"""
-Support for Start.ca Bandwidth Monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.startca/
-"""
+"""Support for Start.ca Bandwidth Monitor."""
 from datetime import timedelta
 from xml.parsers.expat import ExpatError
 import logging

@@ -1,9 +1,4 @@
-"""
-Sensor for retrieving latest GitLab CI job information.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gitlab_ci/
-"""
+"""Sensor for retrieving latest GitLab CI job information."""
 from datetime import timedelta
 import logging
 

@@ -1,9 +1,4 @@
-"""
-Demo platform for the cover component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform for the cover component."""
 from homeassistant.helpers.event import track_utc_time_change
 
 from homeassistant.components.cover import (

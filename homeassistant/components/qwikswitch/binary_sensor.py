@@ -1,9 +1,4 @@
-"""
-Support for Qwikswitch Binary Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.qwikswitch/
-"""
+"""Support for Qwikswitch Binary Sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -35,7 +30,7 @@ class QSBinarySensor(QSEntity, BinarySensorDevice):
 
     def __init__(self, sensor):
         """Initialize the sensor."""
-        from pyqwikswitch import SENSORS
+        from pyqwikswitch.qwikswitch import SENSORS
 
         super().__init__(sensor['id'], sensor['name'])
         self.channel = sensor['channel']

@@ -12,7 +12,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['amcrest==1.2.7']
+REQUIREMENTS = ['amcrest==1.3.0']
 DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = 'high'
 DEFAULT_STREAM_SOURCE = 'snapshot'
+DEFAULT_ARGUMENTS = '-pred 1'
 TIMEOUT = 10
 
 DATA_AMCREST = 'amcrest'
@@ -77,7 +78,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(vol.In(RESOLUTION_LIST)),
         vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
             vol.All(vol.In(STREAM_SOURCE_LIST)),
-        vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
+        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS):
+            cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
             cv.time_period,
         vol.Optional(CONF_SENSORS):

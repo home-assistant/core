@@ -1,9 +1,4 @@
-"""
-Support for International Space Station data sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.iss/
-"""
+"""Support for International Space Station data sensor."""
 import logging
 from datetime import timedelta
 
