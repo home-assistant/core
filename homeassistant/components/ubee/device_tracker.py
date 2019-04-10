@@ -41,6 +41,7 @@ def get_scanner(hass, config):
     ubee = Ubee(host, username, password, model)
     if not ubee.login():
         _LOGGER.error("Login failed")
+        return None
 
     scanner = UbeeDeviceScanner(ubee)
     return scanner
