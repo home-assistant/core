@@ -1,4 +1,9 @@
-"""Support for Ubee router."""
+"""
+Support for Ubee router.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.ubee/
+"""
 
 import logging
 import voluptuous as vol
