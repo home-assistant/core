@@ -80,9 +80,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
                          MockModule('test_component', setup=component_setup))
         # mock the dependencies
         mock_integration(self.hass,
-                         MockModule('mod2', dependencies=['test_component']),
-                         platform_name='test_domain',
-                         platform_module=MockPlatform(platform_setup))
+                         MockModule('mod2', dependencies=['test_component']))
         mock_entity_platform(self.hass, 'test_domain.mod2',
                              MockPlatform(platform_setup))
 

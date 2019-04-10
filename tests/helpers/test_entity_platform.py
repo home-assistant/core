@@ -8,7 +8,6 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.loader as loader
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import (
     EntityComponent, DEFAULT_SCAN_INTERVAL)

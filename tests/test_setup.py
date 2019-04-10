@@ -428,8 +428,6 @@ class TestSetup:
             MockModule('platform_a',
                        setup=config_check_setup,
                        dependencies=['comp_a']),
-            'switch.platform_a',
-            platform
         )
 
         mock_entity_platform(self.hass, 'switch.platform_a', platform)

@@ -901,56 +901,31 @@ async def get_system_health_info(hass, domain):
     return await hass.data['system_health']['info'][domain](hass)
 
 
-def mock_integration(hass, module, platform_name=None, platform_module=None):
+def mock_integration(hass, module):
     """Mock an integration."""
     integration = loader.Integration(
         hass, 'homeassisant.components.{}'.format(module.DOMAIN),
         loader.manifest_from_legacy_module(module))
-    integration.get_component = lambda: module
-
-    if platform_name is not None:
-        integration.get_platform = \
-            lambda p_name: platform_module \
-            if p_name == platform_name else None
-
-    # Backwards compat
-    loader.set_component(hass, module.DOMAIN, module)
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(
         loader.DATA_INTEGRATIONS, {}
     )[module.DOMAIN] = integration
-
-
-def mock_platform(hass, platform_path, module):
-    """Mock a platform."""
-    domain, platform_name = platform_path.split('.')
-    cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
-
-    if domain not in cache:
-        mock_integration(hass, MockModule(domain),
-                         platform_name=platform_name,
-                         platform_module=module)
-
-    _LOGGER.info("Adding mock integration platform: %s", platform_path)
-    cache[platform_path] = module
-
-    # Backwards compat
-    loader.set_component(hass, '{}.{}'.format(domain, platform_name), module)
+    hass.data.setdefault(loader.DATA_KEY, {})[module.DOMAIN] = module
 
 
 def mock_entity_platform(hass, platform_path, module):
-    """Mock a entity platform."""
-    domain, platform_name = platform_path.split('.')
-    cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
+    """Mock a entity platform.
 
-    if platform_name not in cache:
-        mock_integration(hass, MockModule(platform_name),
-                         platform_name=domain,
-                         platform_module=module)
+    platform_path is in form light.hue. Will create platform
+    hue.light.
+    """
+    domain, platform_name = platform_path.split('.')
+    integration_cache = hass.data.setdefault(loader.DATA_KEY, {})
+    module_cache = hass.data.setdefault(loader.DATA_KEY, {})
+
+    if platform_name not in integration_cache:
+        mock_integration(hass, MockModule(platform_name))
 
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
-    cache[platform_path] = module
-
-    # Backwards compat
-    loader.set_component(hass, '{}.{}'.format(platform_name, domain), module)
+    module_cache["{}.{}".format(platform_name, domain)] = module
