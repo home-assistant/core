@@ -18,13 +18,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(PORT_SCHEMA)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Orange Pi GPIO devices."""
-    pinmode = config.get(CONF_PINMODE)
+    pinmode = config[CONF_PINMODE]
     orangepi_gpio.setup_mode(pinmode)
 
     invert_logic = config[CONF_INVERT_LOGIC]
 
     binary_sensors = []
-    ports = config.get(CONF_PORTS)
+    ports = config[CONF_PORTS]
     for port_num, port_name in ports.items():
         binary_sensors.append(OPiGPIOBinarySensor(
             port_name, port_num, invert_logic))

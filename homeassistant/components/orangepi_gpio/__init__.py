@@ -15,7 +15,7 @@ PINMODES = ['pc', 'zeroplus', 'zeroplus2', 'deo', 'neocore2']
 
 def setup(hass, config):
     """Set up the Orange Pi GPIO component."""
-    from OPi import GPIO  # pylint: disable=import-error
+    from OPi import GPIO
 
     def cleanup_gpio(event):
         """Stuff to do before stopping."""
@@ -31,7 +31,7 @@ def setup(hass, config):
 
 def setup_mode(mode):
     """Set GPIO pin mode."""
-    from OPi import GPIO  # pylint: disable=import-error
+    from OPi import GPIO
 
     if mode == 'pc':
         import orangepi.pc
@@ -52,31 +52,31 @@ def setup_mode(mode):
 
 def setup_output(port):
     """Set up a GPIO as output."""
-    from OPi import GPIO  # pylint: disable=import-error
+    from OPi import GPIO
     GPIO.setup(port, GPIO.OUT)
 
 
 def setup_input(port):
     """Set up a GPIO as input."""
-    from OPi import GPIO  # pylint: disable=import-error
+    from OPi import GPIO
     GPIO.setup(port, GPIO.IN)
 
 
 def write_output(port, value):
     """Write a value to a GPIO."""
-    from OPi import GPIO  # pylint: disable=import-error
+    from OPi import GPIO
     GPIO.output(port, value)
 
 
 def read_input(port):
     """Read a value from a GPIO."""
-    from OPi import GPIO  # pylint: disable=import-error
+    from OPi import GPIO
     return GPIO.input(port)
 
 
 def edge_detect(port, event_callback):
     """Add detection for RISING and FALLING events."""
-    from OPi import GPIO  # pylint: disable=import-error
+    from OPi import GPIO
     GPIO.add_event_detect(
         port,
         GPIO.BOTH,
