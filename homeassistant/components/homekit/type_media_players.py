@@ -280,7 +280,8 @@ class MediaPlayer(HomeAccessory):
 
         if self.chars[FEATURE_PLAY_PAUSE]:
             hk_state = current_state == STATE_PLAYING
-            if not self._flag[FEATURE_PLAY_PAUSE]:
+            if not self._flag[FEATURE_PLAY_PAUSE] and \
+                    not self.category == CATEGORY_TELEVISION:
                 _LOGGER.debug('%s: Set current state for "play_pause" to %s',
                               self.entity_id, hk_state)
                 self.chars[FEATURE_PLAY_PAUSE].set_value(hk_state)
