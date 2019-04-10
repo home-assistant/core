@@ -31,6 +31,10 @@ Configuration:
                             # part of the URL for each location shown:
                             # the uppercase letters just before the .html
                             # suffix are the station codes.
+    usehaweathercond = <boolean>
+                            # If true, use the Home Assistant values
+                            # for weather conditions instead of
+                            # the native values from textDescription.
     monitored_conditions:   # list of conditions to get.  At least one is
                             # required. The complete condition list is:
         - temperature       # temperature in degrees Celsius or Fahrenheit
@@ -117,9 +121,9 @@ ATTR_LAST_UPDATE = 'last_update'
 ATTR_SENSOR_ID = 'sensor_id'
 ATTR_SITE_ID = 'site_id'
 CONF_STATIONCODE = 'stationcode'
+CONF_USEHAWEATHER = 'usehaweathercond'
 
-ATTRIBUTION = "Data provided by National Oceanic "\
-                "and Atmospheric Administration"
+ATTRIBUTION = "Data from NOAA/NWS"
 
 #
 # Unit name constants that are not in homeassistant.const yet.
@@ -148,10 +152,11 @@ UNIT_MAPPING = {
         'unit:percent': [RATIO_PERCENT]
 }
 
-# Sensor types are defined like: Name, type of value,
+# Sensor types attributes are: Name, type of value,
 #                       preferred metric units, preferred imperial units
 #                       icon, device class, METAR name, METAR value unit,
-#                       unit string to use for METAR value
+#                       unit string to use for METAR value, # digits for
+#                       rouning
 # where type is one of:
 #   single - single value, for example textDescription or presentWeather
 #   measurement - single measurement as a dictionary of attributes
@@ -165,77 +170,115 @@ VAL_SINGLE = 's'
 VAL_MEASUREMENT = 'm'
 VAL_ARRAY = 'a'
 
+# Define names for indices
+
+STI_NAME = 0
+STI_VALTYPE = 1
+STI_METU = 2
+STI_IMPU = 3
+STI_ICON = 4
+STI_DEVC = 5
+STI_MNAME = 6
+STI_MUNIT = 7
+STI_MUSTR = 8
+STI_DIGIT = 9
+
+
 SENSOR_TYPES = {
     'textDescription': ['Weather', VAL_SINGLE, None, None, None, None, None,
-                        None],
+                        None, None],
     'presentWeather': ['Present Weather', VAL_ARRAY, None, None, None, None,
-                       None],
+                       None, None],
     'temperature': ['Temperature', VAL_MEASUREMENT,
                     TEMP_CELSIUS, TEMP_FAHRENHEIT,
                     'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, 'temp', 'C',
-                    'unit:degC'],
+                    'unit:degC', 1],
     'dewpoint': ['dewpoint', VAL_MEASUREMENT,
                  TEMP_CELSIUS, TEMP_FAHRENHEIT,
                  'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, 'dewpt', 'C',
-                 'unit:degC'],
+                 'unit:degC', 1],
     'windChill': ['Wind Chill', VAL_MEASUREMENT,
                   TEMP_CELSIUS, TEMP_FAHRENHEIT,
                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, None, None,
-                  None],
+                  None, 1],
     'heatIndex': ['Heat Index', VAL_MEASUREMENT,
                   TEMP_CELSIUS, TEMP_FAHRENHEIT,
                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE, None, None,
-                  None],
+                  None, 1],
     'windSpeed': ['Wind Speed', VAL_MEASUREMENT,
                   SPEED_KM_PER_HOUR, SPEED_MILES_PER_HOUR,
                   'mdi:weather-windy', None, 'wind_speed', 'MPS',
-                  'unit:m_s-1'],
+                  'unit:m_s-1', 1],
     'windDirection': ['Wind Bearing', VAL_MEASUREMENT,
                       ANGLE_DEGREES, ANGLE_DEGREES,
                       'mdi:flag-triangle', None, 'wind_dir', None,
-                      'unit:degree_(angle)'],
+                      'unit:degree_(angle)', 0],
     'windGust': ['Wind Gust', VAL_MEASUREMENT,
                  SPEED_KM_PER_HOUR, SPEED_MILES_PER_HOUR, 'mdi:weather-windy',
-                 None, 'wind_gust', 'MPS', 'unit:m_s-1'],
+                 None, 'wind_gust', 'MPS', 'unit:m_s-1', 1],
     'barometricPressure': ['Pressure', VAL_MEASUREMENT, PRESSURE_MBAR,
                            PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE,
-                           'press', 'HPA', 'unit:Pa'],
+                           'press', 'HPA', 'unit:Pa', 2],
     'seaLevelPressure': ['Sea Level Pressure', VAL_MEASUREMENT,
                          PRESSURE_MBAR, PRESSURE_MBAR,
                          None, DEVICE_CLASS_PRESSURE,
-                         'press_sea_level', 'HPA', 'unit:Pa'],
+                         'press_sea_level', 'HPA', 'unit:Pa', 2],
     'maxTemperatureLast24Hours': ['Maximum Temperature last 24 Hours',
                                   VAL_MEASUREMENT, TEMP_CELSIUS,
                                   TEMP_FAHRENHEIT,
                                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE,
-                                  'max_temp_24hr', 'C', 'unit:degC'],
+                                  'max_temp_24hr', 'C', 'unit:degC', 1],
     'minTemperatureLast24Hours': ['Minimum Temperature last 24 Hours',
                                   VAL_MEASUREMENT, TEMP_CELSIUS,
                                   TEMP_FAHRENHEIT,
                                   'mdi:thermometer', DEVICE_CLASS_TEMPERATURE,
-                                  'min_temp_24hr', 'C', 'unit:degc'],
+                                  'min_temp_24hr', 'C', 'unit:degc', 1],
     'precipitationLastHour': ['Precipitation in last hour', VAL_MEASUREMENT,
                               LENGTH_MILLIMETERS, LENGTH_INCHES,
                               'mdi:cup-water', None,
-                              'precip_1hr', 'M', 'unit:m'],
+                              'precip_1hr', 'M', 'unit:m', 3],
     'precipitationLast3Hours': ['Precipitation in last 3 hours',
                                 VAL_MEASUREMENT, LENGTH_MILLIMETERS,
                                 LENGTH_INCHES, 'mdi:cup-water', None,
-                                'precip_3hr', 'M', 'unit:m'],
+                                'precip_3hr', 'M', 'unit:m', 3],
     'precipitationLast6Hours': ['Precipitation in last 6 hours',
                                 VAL_MEASUREMENT, LENGTH_MILLIMETERS,
                                 LENGTH_INCHES, 'mdi:cup-water', None,
-                                'precip_6hr', 'M', 'unit:m'],
+                                'precip_6hr', 'M', 'unit:m', 3],
     'relativeHumidity': ['Humidity', VAL_MEASUREMENT, RATIO_PERCENT,
                          RATIO_PERCENT, 'mdi:water-percent',
-                         DEVICE_CLASS_HUMIDITY, None, None, None],
-    'cloudLayers': ['Cloud Layers', VAL_ARRAY, None, None, None, None, None],
+                         DEVICE_CLASS_HUMIDITY, None, None, None, 0],
+    'cloudLayers': ['Cloud Layers', VAL_ARRAY, None, None, None, None, None,
+                    None],
     'visibility': ['Visibility', VAL_MEASUREMENT,
                    LENGTH_KILOMETERS, LENGTH_MILES, None, None, 'vis', 'M',
-                   'unit:m']
+                   'unit:m', 0]
 }
 
 SENSOR_TYPES_SET = set(SENSOR_TYPES)
+
+#
+# Translation from NOAA/NWS weather descriptions to Home Assistant
+# values.  Each row has three values: the HA condition text, an array
+# of words, of of which must match, and a second array of words, one of which
+# must match if one of the first words match (second array might be empty).
+# The table must be ordered such that the more specific values before
+# a more general value.
+#
+CONDITION_XLATE = [
+        ['lighting', ['Thunderstorm'], ['Vicinity']],
+        ['lighting-rainy', ['Thunderstorm'], [None]],
+        ['snowy-rainy', ['Snow', 'Freezing', 'Ice'], ['Rain', 'Drizzle']],
+        ['snowy', ['Snow', 'Ice Pellets'], ['Rain', 'Drizzle']],
+        ['pouring', ['Heavy Rain'], [None]],
+        ['rainy', ['Rain', 'Drizzle', 'Showers'], [None]],
+        ['windy-variant', ['Windy'], ['Clouds', 'Cloudy', 'Overcast'], [None]],
+        ['windy', ['Windy', 'Breeze'], [None]],
+        ['fog', ['Fog', 'Haze'], [None]],
+        ['partlycloudy', ['Partly Cloudy'], [None]],
+        ['cloudy', ['Cloudy', 'Overcast'], [None]],
+        ['sunny', ['Fair', 'Clear', 'Few Clouds'], [None]],
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
@@ -246,6 +289,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
     vol.Optional(CONF_STATIONCODE): cv.string,
+    vol.Optional(CONF_USEHAWEATHER, default=False): cv.boolean,
 })
 
 
@@ -332,10 +376,10 @@ def get_metar_value(metar, variable):
     """
     _LOGGER.debug("Checking for METAR value for %s in %s", variable, metar)
 
-    metaritem = SENSOR_TYPES[variable][6]
+    metaritem = SENSOR_TYPES[variable][STI_MNAME]
     if metaritem is None:
         return None
-    metarunit = SENSOR_TYPES[variable][7]
+    metarunit = SENSOR_TYPES[variable][STI_MUNIT]
     if not hasattr(metar, metaritem):
         _LOGGER.debug("No METAR item for %s(%s)", variable, metaritem)
         return None
@@ -359,7 +403,7 @@ def get_metar_value(metar, variable):
     #
     # Deal with units (and one conversion)
     #
-    res['unitCode'] = SENSOR_TYPES[variable][8]
+    res['unitCode'] = SENSOR_TYPES[variable][STI_MUSTR]
     if metarunit == 'HPA':
         #
         # Special case for pressure, since these normally
@@ -371,6 +415,41 @@ def get_metar_value(metar, variable):
     res['qualityControl'] = 'qc:S'
     _LOGGER.debug("get_metar_value returning %s", res)
     return res
+
+
+def textdesctoweather(description):
+    """Convert the values in the textDescription field to HA standard values.
+
+    Home Assistant has some standard text values for current weather
+    conditions, which do not have a one to one mapping to the
+    weather descriptions used by NOAA/NWS.  This routing will
+    convert the text descriptions to the Home Assistant standard text values.
+    If no value matches, the original text will be returned.
+    """
+    _LOGGER.debug("Converting textDescription=%s", description)
+    print("Converting textDescript={}".format(description))
+    for entry in CONDITION_XLATE:
+        for firstword in entry[1]:
+            if firstword in description:
+                if None in entry[2]:
+                    _LOGGER.debug("Found firstword=%s in entry %s",
+                                  firstword, str(entry))
+                    _LOGGER.debug("Returning %s", entry[0])
+                    return entry[0]
+                for secondword in entry[2]:
+                    if secondword in description:
+                        _LOGGER.debug(
+                            "Found firstword=%s, secondword=%s in entry %s",
+                            firstword, secondword,
+                            str(entry))
+                        _LOGGER.debug("Returning %s", entry[0])
+                        return entry[0]
+                _LOGGER.debug("Found firstword=%s in entry %s",
+                              firstword, str(entry))
+                _LOGGER.debug("Returning %s", entry[0])
+                return entry[0]
+    _LOGGER.debug("No matching condition found for %s", description)
+    return description
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -484,7 +563,8 @@ async def async_setup_platform(hass, config, async_add_entities,
             DEFAULT_NAME + '.' + noaadata.stationcode + '.' + variable,
             hass=hass)
         sensors.append(
-            NOAACurrentSensor(hass, noaadata, variable, name, entity_id))
+            NOAACurrentSensor(hass, noaadata, variable, name, entity_id,
+                              config.get(CONF_USEHAWEATHER)))
     #
     # Add all the sensors
     #
@@ -504,7 +584,8 @@ class NOAACurrentSensor(Entity):
     of measurement.
     """
 
-    def __init__(self, hass, noaadata, condition, name, entity_id):
+    def __init__(self, hass, noaadata, condition, name, entity_id,
+                 usehaweather):
         """Initialize the sensor object."""
         _LOGGER.debug("Initializing sensor %s, condition %s, sensor_type: %s",
                       name, condition, SENSOR_TYPES[condition])
@@ -512,27 +593,29 @@ class NOAACurrentSensor(Entity):
         self._noaadata = noaadata
         self._name = name
         self.entity_id = entity_id
+        self._usehaweather = usehaweather
         #
         # Set whether desired units are metric (default) or
         # imperial.
         #
         if hass.config.units == METRIC_SYSTEM:
-            self._desiredunit = SENSOR_TYPES[condition][2]
+            self._desiredunit = SENSOR_TYPES[condition][STI_METU]
         elif hass.config.units == IMPERIAL_SYSTEM:
-            self._desiredunit = SENSOR_TYPES[condition][3]
+            self._desiredunit = SENSOR_TYPES[condition][STI_IMPU]
         else:
             _LOGGER.warning("Unknown unit system %s, defaulting to metric",
                             hass.config.units)
         #
         # Set icon and device class, if any
         #
-        self._icon = SENSOR_TYPES[condition][4]
-        self._device_class = SENSOR_TYPES[condition][5]
+        self._icon = SENSOR_TYPES[condition][STI_ICON]
+        self._device_class = SENSOR_TYPES[condition][STI_DEVC]
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._name, SENSOR_TYPES[self._condition][0])
+        return '{} {}'.format(
+            self._name, SENSOR_TYPES[self._condition][STI_NAME])
 
     @property
     def icon(self):
@@ -643,32 +726,34 @@ class NOAACurrentSensor(Entity):
         _LOGGER.debug("noaadata.data set is %s", set(self._noaadata.data))
 
         if self._condition in self._noaadata.data:
-            variable = self._noaadata.data[self._condition]
-            _LOGGER.debug("Condition %s value=%s", self._condition, variable)
+            condvalue = self._noaadata.data[self._condition]
+            _LOGGER.debug("Condition %s value=%s", self._condition, condvalue)
             #
             # Now check for type of value for this attribute
             #
-            if SENSOR_TYPES[self._condition][1] == VAL_SINGLE:
+            if SENSOR_TYPES[self._condition][STI_VALTYPE] == VAL_SINGLE:
                 # attribute itself is the value for single value items
                 _LOGGER.debug("Condition %s is single value='%s'",
-                              self._condition, variable)
-                return variable
-            if SENSOR_TYPES[self._condition][1] == VAL_MEASUREMENT:
-                # value attribute of variable for measurements
+                              self._condition, condvalue)
+                if self._condition == "textDescription" and self._usehaweather:
+                    return textdesctoweather(condvalue)
+                return condvalue
+            if SENSOR_TYPES[self._condition][STI_VALTYPE] == VAL_MEASUREMENT:
+                # value attribute of condvalue for measurements
                 _LOGGER.debug("Condition %s is measurement='%s', "
                               "from string '%s'",
-                              self._condition, variable['value'], variable)
-                if variable['value'] is None:
+                              self._condition, condvalue['value'], condvalue)
+                if condvalue['value'] is None:
                     return None
                 #
                 # Convert to the target units (if required)
                 #
-                res = self._unit_convert(variable, self._desiredunit)
+                res = self._unit_convert(condvalue, self._desiredunit)
                 if res is None:
                     return res
-                return round(res, 1)
+                return round(res, SENSOR_TYPES[self._condition][STI_DIGIT])
 
-            if SENSOR_TYPES[self._condition][1] == VAL_ARRAY:
+            if SENSOR_TYPES[self._condition][STI_VALTYPE] == VAL_ARRAY:
                 # The only array types we know how to handle is cloudLayers
                 if self._condition == 'cloudLayers':
                     #
@@ -676,11 +761,11 @@ class NOAACurrentSensor(Entity):
                     # text for each layer.  At this point we will
                     # only deal with the text for the first layer (if any) and
                     # ignore the other values.
-                    if variable:
-                        return variable[0]['amount']
+                    if condvalue:
+                        return condvalue[0]['amount']
                     return None
 
-            if SENSOR_TYPES[self._condition][1] is not None:
+            if SENSOR_TYPES[self._condition][STI_VALTYPE] is not None:
                 # We only get here if the type of value is something we don't
                 # understand
                 #
@@ -716,22 +801,22 @@ class NOAACurrentSensor(Entity):
         # ensure we have some data
         #
         if self._condition in self._noaadata.data:
-            variable = self._noaadata.data[self._condition]
+            condvalue = self._noaadata.data[self._condition]
             #
             # Now check for type of value for this attribute
             # Only measurements have units
             #
-            if SENSOR_TYPES[self._condition][1] == VAL_MEASUREMENT:
+            if SENSOR_TYPES[self._condition][STI_VALTYPE] == VAL_MEASUREMENT:
                 # We should have a unitCode supplied from the API response.
                 if self._desiredunit is not None:
                     return self._desiredunit
 
-                if 'unitCode' in variable:
+                if 'unitCode' in condvalue:
                     # run it through our mapping table.  If it
                     # doesn't have a map, return the value we recevied.
-                    if variable['unitCode'] in UNIT_MAPPING:
-                        return UNIT_MAPPING[variable['unitCode']][0]
-                    return variable['unitCode']
+                    if condvalue['unitCode'] in UNIT_MAPPING:
+                        return UNIT_MAPPING[condvalue['unitCode']][0]
+                    return condvalue['unitCode']
         return None
 
     #
@@ -892,47 +977,47 @@ class NOAACurrentData(Entity):
         #           others) when they do not have a valid value.
         #
 
-        for variable in SENSOR_TYPES_SET.intersection(
+        for condition in SENSOR_TYPES_SET.intersection(
                 set(obsprop)):
-            _LOGGER.debug("setting value variable=%s, value='%s'",
-                          variable, obsprop[variable])
+            _LOGGER.debug("setting value condition=%s, value='%s'",
+                          condition, obsprop[condition])
             #
             # If this is the first time we update has been called
-            # we need to ensure every variable we want will exist
+            # we need to ensure every condition we want will exist
             # in the dictionary
             #
-            if variable not in self.data:
-                if SENSOR_TYPES[variable][1] == VAL_MEASUREMENT:
-                    self.data[variable] = "unknown"
-                if SENSOR_TYPES[variable][1] == VAL_MEASUREMENT:
-                    self.data[variable] = {
+            if condition not in self.data:
+                if SENSOR_TYPES[condition][STI_VALTYPE] == VAL_SINGLE:
+                    self.data[condition] = "unknown"
+                if SENSOR_TYPES[condition][STI_VALTYPE] == VAL_MEASUREMENT:
+                    self.data[condition] = {
                         'value': None,
                         'unitCode': None,
                         'qualityControl': None,
                         }
-                if SENSOR_TYPES[variable][2] == VAL_ARRAY:
-                    self.data[variable] = dict()
-                self.datatime[variable] = thisupdate
+                if SENSOR_TYPES[condition][STI_VALTYPE] == VAL_ARRAY:
+                    self.data[condition] = dict()
+                self.datatime[condition] = thisupdate
 
             #
             # Check for existance of useable values for
             # measurements.
             #
-            if 'qualityControl' in obsprop[variable]:
-                qcval = obsprop[variable]['qualityControl']
+            if 'qualityControl' in obsprop[condition]:
+                qcval = obsprop[condition]['qualityControl']
                 if qcval == 'qc:Z':
                     # No update of value in individual entry
                     # check if we have a metar value
                     if metar is None:
                         continue
-                    res = get_metar_value(metar, variable)
+                    res = get_metar_value(metar, condition)
                     if res is not None:
-                        _LOGGER.warning(
+                        _LOGGER.debug(
                             "using Metar value %s for %s instead of %s",
-                            res, variable, obsprop[variable])
-                        self.data[variable] = res
-                        self.datatime[variable] = thisupdate
-                    if variable != 'windGust':
+                            res, condition, obsprop[condition])
+                        self.data[condition] = res
+                        self.datatime[condition] = thisupdate
+                    if condition != 'windGust':
                         continue
                     #
                     # Special case for windGust - if it has
@@ -943,18 +1028,18 @@ class NOAACurrentData(Entity):
                     #
                     if 'windSpeed' not in obsprop:
                         continue
-                    if 'qualityControl' not in obsprop[variable]:
+                    if 'qualityControl' not in obsprop[condition]:
                         continue
                     if obsprop['windSpeed']['qualityControl'] == 'qc:Z' and \
-                                get_metar_value(metar, 'windSpeed') is None:
-                        self.data[variable] = obsprop[variable]
-                        self.datatime[variable] = thisupdate
+                            get_metar_value(metar, 'windSpeed') is None:
+                        self.data[condition] = obsprop[condition]
+                        self.datatime[condition] = thisupdate
                         continue
                     continue
                 if qcval in ('qc:S', 'qc:C'):
                     # Valid value, just update data.
-                    self.data[variable] = obsprop[variable]
-                    self.datatime[variable] = thisupdate
+                    self.data[condition] = obsprop[condition]
+                    self.datatime[condition] = thisupdate
                     continue
                 #
                 # Special case for windChill.  Value is not valid
@@ -962,7 +1047,7 @@ class NOAACurrentData(Entity):
                 # values, since it is a calculated value based on
                 # temperature and wind speed.
                 #
-                if variable == 'windChill':
+                if condition == 'windChill':
                     if 'temperature' not in obsprop or \
                             'windSpeed' not in obsprop:
                         #
@@ -983,8 +1068,8 @@ class NOAACurrentData(Entity):
                         # this value
                         #
                         continue
-                    self.data[variable] = obsprop[variable]
-                    self.datatime[variable] = thisupdate
+                    self.data[condition] = obsprop[condition]
+                    self.datatime[condition] = thisupdate
                     continue
                 #
                 # Special case for heatIndex.  Value is not valid
@@ -992,7 +1077,7 @@ class NOAACurrentData(Entity):
                 # values, since it is a calculated value based on
                 # temperature and dewpoint.
                 #
-                if variable == 'heatIndex':
+                if condition == 'heatIndex':
                     if 'temperature' not in obsprop or \
                             'dewpoint' not in obsprop:
                         #
@@ -1013,17 +1098,17 @@ class NOAACurrentData(Entity):
                         # this value
                         #
                         continue
-                    self.data[variable] = obsprop[variable]
-                    self.datatime[variable] = thisupdate
+                    self.data[condition] = obsprop[condition]
+                    self.datatime[condition] = thisupdate
                     continue
                 #
                 # Other items, check for qc:V
                 #
                 if qcval == 'qc:V':
-                    if 'value' in obsprop[variable]:
-                        if obsprop[variable]['value'] is not None:
-                            self.data[variable] = obsprop[variable]
-                            self.datatime[variable] = thisupdate
+                    if 'value' in obsprop[condition]:
+                        if obsprop[condition]['value'] is not None:
+                            self.data[condition] = obsprop[condition]
+                            self.datatime[condition] = thisupdate
                             continue
                 #
                 # If we have a qualityControl attribute but with a value
@@ -1033,6 +1118,6 @@ class NOAACurrentData(Entity):
             # Here for values that do not include a qualityControl attribute.
             #
 
-            self.data[variable] = obsprop[variable]
-            self.datatime[variable] = thisupdate
+            self.data[condition] = obsprop[condition]
+            self.datatime[condition] = thisupdate
         return
