@@ -5,6 +5,8 @@
   "requirements": [],
   "dependencies": [
     "group",
+    "litejet",
+    "mqtt",
     "webhook"
   ],
   "codeowners": [
