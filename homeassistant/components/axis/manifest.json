@@ -3,7 +3,7 @@
   "name": "Axis",
   "documentation": "https://www.home-assistant.io/components/axis",
   "requirements": [
-    "axis==19"
+    "axis==20"
   ],
   "dependencies": [],
   "codeowners": [

@@ -44,9 +44,8 @@ class AxisBinarySensor(BinarySensorDevice):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
-        self.event = None
+        self.event.remove_callback(self.update_callback)
+        self.unsub_dispatcher()
 
     @callback
     def update_callback(self, no_delay=False):
