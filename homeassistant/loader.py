@@ -55,8 +55,8 @@ _UNDEF = object()
 def manifest_from_legacy_module(module: ModuleType) -> Dict:
     """Generate a manifest from a legacy module."""
     return {
-        'domain': module.DOMAIN,
-        'name': module.DOMAIN,
+        'domain': module.DOMAIN,  # type: ignore
+        'name': module.DOMAIN,  # type: ignore
         'documentation': None,
         'requirements': getattr(module, 'REQUIREMENTS', []),
         'dependencies': getattr(module, 'DEPENDENCIES', []),
@@ -71,7 +71,7 @@ class Integration:
     def resolve_from_root(cls, hass: 'HomeAssistant', root_module: ModuleType,
                           domain: str) -> 'Optional[Integration]':
         """Resolve an integration from a root module."""
-        for base in root_module.__path__:
+        for base in root_module.__path__:   # type: ignore
             manifest_path = (
                 pathlib.Path(base) / domain / 'manifest.json'
             )

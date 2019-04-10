@@ -688,7 +688,8 @@ class ConfigEntries:
 
         Handler key is the domain of the component that we want to set up.
         """
-        integration = await loader.async_get_integration(handler_key)
+        integration = await loader.async_get_integration(
+            self.hass, handler_key)
 
         if integration is None:
             raise data_entry_flow.UnknownHandler
