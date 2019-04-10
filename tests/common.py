@@ -928,18 +928,15 @@ def mock_platform(hass, platform_path, module):
     cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
 
     if domain not in cache:
-        _LOGGER.info("Adding mock integration: %s", domain)
-        cache[domain] = loader.Integration(
-            hass, 'homeassisant.components.{}'.format(domain), {
-                'domain': domain,
-                'name': domain,
-                'dependencies': [],
-                'requirements': [],
-            }
-        )
+        mock_integration(hass, MockModule(domain),
+                         platform_name=platform_name,
+                         platform_module=module)
 
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
     cache[platform_path] = module
+
+    # Backwards compat
+    loader.set_component(hass, '{}.{}'.format(domain, platform_name), module)
 
 
 def mock_entity_platform(hass, platform_path, module):
@@ -954,3 +951,6 @@ def mock_entity_platform(hass, platform_path, module):
 
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
     cache[platform_path] = module
+
+    # Backwards compat
+    loader.set_component(hass, '{}.{}'.format(platform_name, domain), module)

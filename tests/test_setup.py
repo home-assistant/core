@@ -22,7 +22,8 @@ from homeassistant.loader import IntegrationNotFound
 
 from tests.common import \
     get_test_home_assistant, MockModule, MockPlatform, \
-    assert_setup_component, get_test_config_dir, mock_integration
+    assert_setup_component, get_test_config_dir, mock_integration, \
+    mock_entity_platform
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
@@ -52,9 +53,9 @@ class TestSetup:
                 'hello': str
             }
         }, required=True)
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'comp_conf', MockModule('comp_conf', config_schema=config_schema))
+            MockModule('comp_conf', config_schema=config_schema))
 
         with assert_setup_component(0):
             assert not setup.setup_component(self.hass, 'comp_conf', {})
@@ -99,17 +100,15 @@ class TestSetup:
         })
         platform_schema_base = PLATFORM_SCHEMA_BASE.extend({
         })
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'platform_conf',
             MockModule('platform_conf',
-                       platform_schema_base=platform_schema_base))
-
-        loader.set_component(
+                       platform_schema_base=platform_schema_base),
+        )
+        mock_entity_platform(
             self.hass,
             'platform_conf.whatever',
-            MockPlatform('whatever',
-                         platform_schema=platform_schema))
+            MockPlatform(platform_schema=platform_schema))
 
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'platform_conf', {
@@ -197,14 +196,13 @@ class TestSetup:
         platform_schema_base = PLATFORM_SCHEMA_BASE.extend({
             'hello': 'world',
         })
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'platform_conf',
             MockModule('platform_conf',
                        platform_schema=platform_schema,
                        platform_schema_base=platform_schema_base))
 
-        loader.set_component(
+        mock_entity_platform(
             self.hass,
             'platform_conf.whatever',
             MockPlatform('whatever',
@@ -251,13 +249,12 @@ class TestSetup:
             'cheers': str,
             'hello': 'world',
         })
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'platform_conf',
             MockModule('platform_conf',
                        platform_schema=component_schema))
 
-        loader.set_component(
+        mock_entity_platform(
             self.hass,
             'platform_conf.whatever',
             MockPlatform('whatever',
@@ -298,17 +295,15 @@ class TestSetup:
         """Test entity_namespace in PLATFORM_SCHEMA."""
         component_schema = PLATFORM_SCHEMA_BASE
         platform_schema = PLATFORM_SCHEMA
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'platform_conf',
             MockModule('platform_conf',
                        platform_schema_base=component_schema))
 
-        loader.set_component(
+        mock_entity_platform(
             self.hass,
             'platform_conf.whatever',
-            MockPlatform('whatever',
-                         platform_schema=platform_schema))
+            MockPlatform(platform_schema=platform_schema))
 
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'platform_conf', {
@@ -331,8 +326,9 @@ class TestSetup:
         """Test we do not set up a component twice."""
         mock_setup = mock.MagicMock(return_value=True)
 
-        loader.set_component(
-            self.hass, 'comp', MockModule('comp', setup=mock_setup))
+        mock_integration(
+            self.hass,
+            MockModule('comp', setup=mock_setup))
 
         assert setup.setup_component(self.hass, 'comp')
         assert mock_setup.called
@@ -347,9 +343,9 @@ class TestSetup:
     def test_component_not_installed_if_requirement_fails(self, mock_install):
         """Component setup should fail if requirement can't install."""
         self.hass.config.skip_pip = False
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'comp', MockModule('comp', requirements=['package==0.0.1']))
+            MockModule('comp', requirements=['package==0.0.1']))
 
         assert not setup.setup_component(self.hass, 'comp')
         assert 'comp' not in self.hass.config.components
@@ -363,9 +359,9 @@ class TestSetup:
             """Tracking Setup."""
             result.append(1)
 
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'comp', MockModule('comp', async_setup=async_setup))
+            MockModule('comp', async_setup=async_setup))
 
         def setup_component():
             """Set up the component."""
@@ -396,8 +392,8 @@ class TestSetup:
 
     def test_component_failing_setup(self):
         """Test component that fails setup."""
-        loader.set_component(
-            self.hass, 'comp',
+        mock_integration(
+            self.hass,
             MockModule('comp', setup=lambda hass, config: False))
 
         assert not setup.setup_component(self.hass, 'comp', {})
@@ -409,8 +405,8 @@ class TestSetup:
             """Raise exception."""
             raise Exception('fail!')
 
-        loader.set_component(
-            self.hass, 'comp', MockModule('comp', setup=exception_setup))
+        mock_integration(self.hass,
+                         MockModule('comp', setup=exception_setup))
 
         assert not setup.setup_component(self.hass, 'comp', {})
         assert 'comp' not in self.hass.config.components
@@ -423,12 +419,20 @@ class TestSetup:
                 return True
             raise Exception('Config not passed in: {}'.format(config))
 
-        loader.set_component(
-            self.hass, 'comp_a',
-            MockModule('comp_a', setup=config_check_setup))
+        platform = MockPlatform()
 
-        loader.set_component(
-            self.hass, 'switch.platform_a', MockPlatform('comp_b', ['comp_a']))
+        mock_integration(self.hass,
+                         MockModule('comp_a', setup=config_check_setup))
+        mock_integration(
+            self.hass,
+            MockModule('platform_a',
+                       setup=config_check_setup,
+                       dependencies=['comp_a']),
+            'switch.platform_a',
+            platform
+        )
+
+        mock_entity_platform(self.hass, 'switch.platform_a', platform)
 
         setup.setup_component(self.hass, 'switch', {
             'comp_a': {
@@ -448,7 +452,7 @@ class TestSetup:
 
         mock_setup = mock.MagicMock(spec_set=True)
 
-        loader.set_component(
+        mock_entity_platform(
             self.hass,
             'switch.platform_a',
             MockPlatform(platform_schema=platform_schema,
@@ -479,7 +483,7 @@ class TestSetup:
         self.hass.data.pop(setup.DATA_SETUP)
         self.hass.config.components.remove('switch')
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, 'switch'):
             assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'platform_a',
@@ -490,9 +494,8 @@ class TestSetup:
 
     def test_disable_component_if_invalid_return(self):
         """Test disabling component if invalid return."""
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'disabled_component',
             MockModule('disabled_component', setup=lambda hass, config: None))
 
         assert not setup.setup_component(self.hass, 'disabled_component')
@@ -500,9 +503,8 @@ class TestSetup:
         assert 'disabled_component' not in self.hass.config.components
 
         self.hass.data.pop(setup.DATA_SETUP)
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'disabled_component',
             MockModule('disabled_component', setup=lambda hass, config: False))
 
         assert not setup.setup_component(self.hass, 'disabled_component')
@@ -511,9 +513,8 @@ class TestSetup:
         assert 'disabled_component' not in self.hass.config.components
 
         self.hass.data.pop(setup.DATA_SETUP)
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'disabled_component',
             MockModule('disabled_component', setup=lambda hass, config: True))
 
         assert setup.setup_component(self.hass, 'disabled_component')
@@ -538,19 +539,16 @@ class TestSetup:
             call_order.append(1)
             return True
 
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'test_component1',
             MockModule('test_component1', setup=component1_setup))
 
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'test_component2',
             MockModule('test_component2', setup=component_track_setup))
 
-        loader.set_component(
+        mock_integration(
             self.hass,
-            'test_component3',
             MockModule('test_component3', setup=component_track_setup))
 
         @callback
@@ -578,8 +576,7 @@ def test_component_cannot_depend_config(hass):
 @asyncio.coroutine
 def test_component_warn_slow_setup(hass):
     """Warn we log when a component setup takes a long time."""
-    loader.set_component(
-        hass, 'test_component1', MockModule('test_component1'))
+    mock_integration(hass, MockModule('test_component1'))
     with mock.patch.object(hass.loop, 'call_later', mock.MagicMock()) \
             as mock_call:
         result = yield from setup.async_setup_component(
@@ -599,8 +596,7 @@ def test_component_warn_slow_setup(hass):
 @asyncio.coroutine
 def test_platform_no_warn_slow(hass):
     """Do not warn for long entity setup time."""
-    loader.set_component(
-        hass, 'test_component1',
+    mock_integration(hass,
         MockModule('test_component1', platform_schema=PLATFORM_SCHEMA))
     with mock.patch.object(hass.loop, 'call_later', mock.MagicMock()) \
             as mock_call:
