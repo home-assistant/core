@@ -150,68 +150,142 @@ def async_track_template(
             _LOGGER.exception(result)
             return
 
-        if not str_to_bool(last_result) and str_to_bool(result):
-            hass.async_run_job(action, event.data.get('entity_id'),
-                               event.data.get('old_state'),
-                               event.data.get('new_state'))
+        if last_result is not None:
+            if not str_to_bool(last_result) and str_to_bool(result):
+                hass.async_run_job(action, event.data.get('entity_id'),
+                                   event.data.get('old_state'),
+                                   event.data.get('new_state'))
+        elif str_to_bool(result):
+            # First run of the listener. Figure out an entity ID to
+            # pass back to the action because it expects one.
+            (_, entity_filter) = \
+                template.async_render_with_collect(variables)
+            state = None
+            entity_id = None
+            for eid in entity_filter.include_entities:
+                state = hass.states.get(eid)
+                if state:
+                    entity_id = eid
+                    break
+            if not state:
+                for st in hass.states.async_all():
+                    if entity_filter(st.entity_id):
+                        state = st
+                        entity_id = st.entity_id
+                        break
+            hass.async_run_job(
+                action, entity_id or MATCH_ALL, state, state)
 
-    (deregister, result) = async_track_template_result(
+    info = async_track_template_result(
         hass, template, state_changed_listener, variables)
 
-    if isinstance(result, TemplateError):
-        _LOGGER.exception(result)
-    elif str_to_bool(result):
-        # figure out an entity ID to pass back to the action
-        (result, entity_filter) = \
-            template.async_render_with_collect(variables)
-        state = None
-        entity_id = None
-        for eid in entity_filter.include_entities:
-            state = hass.states.get(eid)
-            if state:
-                entity_id = eid
-                break
-        if not state:
-            for st in hass.states.async_all():
-                if entity_filter(st.entity_id):
-                    state = st
-                    entity_id = st.entity_id
-                    break
-        hass.async_run_job(
-            action, entity_id or MATCH_ALL, state, state)
-
-    return deregister
+    return info.async_remove
 
 
 track_template = threaded_listener_factory(async_track_template)
 
 
-@callback
-@bind_hass
-def async_track_template_result(
-        hass: HomeAssistant,
-        template: Template,
-        action: Callable[[
-            Event,
-            Template,
-            Optional[str],
-            Union[str, TemplateError]], None],
-        variables: Optional[Mapping[str, Any]] = None) \
-        -> (Callable[[], None], Union[str, TemplateError]):
-    """Add a listener that fires when a the result of a template changes.
+class TrackTemplateResultInfo:
+    """Return value from async_track_template_result."""
 
-    The action will fire whenever the output from the template changes due to
-    state changes.
+    def __init__(self, hass, template, action, variables):
+        """Initialiser, should be package private."""
+        self.hass = hass
+        self._template = template
+        self._action = action
+        self._variables = variables
 
-    If the template results in an exception, this will be returned on the
-    initial call, or sent to the listener once in a row if this happens
-    after the initial call. Once the template returns to a non-error condition
-    the result is sent to the action as usual.
+        (self._last_result, self._entity_filter) = \
+            template.async_render_with_collect(variables)
+        if isinstance(self._last_result, TemplateError):
+            self._last_exception = self._last_result
+            self._last_result = None
+        else:
+            self._last_exception = None
+        self._cancel = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, self._state_changed_listener)
+
+        self.hass.async_run_job(
+            self._action, None, self._template,
+            None, self._last_exception or self._last_result)
+
+    @property
+    def template(self) -> Template:
+        """Return the template that is being tracked."""
+        return self._template
+
+    def remove(self) -> None:
+        """Cancel the listener."""
+        self.hass.add_job(self.async_remove)
+
+    @callback
+    def async_remove(self) -> None:
+        """Cancel the listener."""
+        self._cancel()
+
+    def refresh(self) -> None:
+        """Force recalculate the template."""
+        self.hass.add_job(self.async_refresh)
+
+    @callback
+    def async_refresh(self) -> None:
+        """Force recalculate the template."""
+        self._refresh()
+
+    def __call__(self) -> None:
+        """Cancel the listener."""
+        self.remove()
+
+    @callback
+    def _state_changed_listener(self, event):
+        """Check if condition is correct and run action."""
+        entity_id = event.data.get('entity_id')
+        # Optimisation: if the old and new states are not None then this is
+        # a state change rather than a life-cycle event, and therefore we
+        # only need to check the include entities.
+        old_state = event.data.get('old_state')
+        new_state = event.data.get('new_state')
+        if old_state is not None and new_state is not None:
+            if entity_id not in self._entity_filter.include_entities:
+                return
+        elif not self._entity_filter(entity_id):
+            return
+
+        self._refresh(event)
+
+    def _refresh(self, event=None) -> None:
+        (result, self._entity_filter) = \
+            self._template.async_render_with_collect(self._variables)
+
+        if isinstance(result, TemplateError):
+            if self._last_exception is None:
+                self.hass.async_run_job(
+                    self._action, event, self._template,
+                    self._last_result, result)
+                self._last_exception = result
+            return
+        self._last_exception = None
+
+        # Check to see if the result has changed
+        if result != self._last_result:
+            self.hass.async_run_job(
+                self._action, event, self._template,
+                self._last_result, result)
+            self._last_result = result
+
+
+TrackTemplateResultListener = Callable[[
+    Optional[Event],
+    Template,
+    Optional[str],
+    Union[str, TemplateError]], None]
+"""Type for the listener for template results.
 
     Action arguments
     ----------------
     event
-        Event that caused the template to change output.
+        Event that caused the template to change output. None if not
+        triggered by an event.
     template
         The template that has changed.
     last_result
@@ -220,6 +294,30 @@ def async_track_template_result(
     result
         Result from the template run. This will be a string or an
         TemplateError if the template resulted in an error.
+"""
+
+
+@callback
+@bind_hass
+def async_track_template_result(
+        hass: HomeAssistant,
+        template: Template,
+        action: TrackTemplateResultListener,
+        variables: Optional[Mapping[str, Any]] = None) \
+        -> TrackTemplateResultInfo:
+    """Add a listener that fires when a the result of a template changes.
+
+    The action will fire with the initial result from the template, and
+    then whenever the output from the template changes. The template will
+    be reevaluated if any states referenced in the last run of the
+    template change, or if manually triggered. If the result of the
+    evaluation is different from the previous run, the listener is passed
+    the result.
+
+    If the template results in an TemplateError, this will be returned to
+    the listener the first time this happens but not for subsequent errors.
+    Once the template returns to a non-error condition the result is sent
+    to the action as usual.
 
     Parameters
     ----------
@@ -228,65 +326,16 @@ def async_track_template_result(
     template
         The template to calculate.
     action
-        Callable to call with results. See above for arguments.
+        Callable to call with results.
     variables
         Variables to pass to the template.
 
     Returns
     -------
-    Tuple of:
-        Callable to unregister the listener.
-        The template's initial output or a TemplateError if the
-            template failed.
+    Info object used to unregister the listener, and refresh the template.
 
     """
-    # pylint: disable=unused-variable
-    (result, entity_filter) = \
-        template.async_render_with_collect(variables)
-
-    if isinstance(result, TemplateError):
-        last_exception = True
-        last_result = None
-    else:
-        last_exception = False
-        last_result = result
-
-    @callback
-    def state_changed_listener(event):
-        """Check if condition is correct and run action."""
-        nonlocal entity_filter, last_result, last_exception
-
-        entity_id = event.data.get('entity_id')
-        # Optimisation: if the old and new states are not None then this is
-        # a state change rather than a life-cycle event, and therefore we
-        # only need to check the include entities.
-        old_state = event.data.get('old_state')
-        new_state = event.data.get('new_state')
-        if old_state is not None and new_state is not None:
-            if entity_id not in entity_filter.include_entities:
-                return
-        elif not entity_filter(entity_id):
-            return
-
-        (result, entity_filter) = \
-            template.async_render_with_collect(variables)
-
-        if isinstance(result, TemplateError):
-            if not last_exception:
-                hass.async_run_job(
-                    action, event, template, last_result, result)
-                last_exception = True
-            return
-        last_exception = False
-
-        # Check to see if the result has changed
-        if result != last_result:
-            hass.async_run_job(action, event, template, last_result, result)
-            last_result = result
-
-    return (
-        hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener),
-        result)
+    return TrackTemplateResultInfo(hass, template, action, variables)
 
 
 def track_template_result(
@@ -300,16 +349,12 @@ def track_template_result(
         variables: Optional[Mapping[str, Any]] = None) \
         -> (Callable[[], None], Union[str, TemplateError]):
     """Add a listener that fires whenever a template changes."""
-    (async_remove, result) = run_callback_threadsafe(
+    result = run_callback_threadsafe(
         hass.loop, ft.partial(
             async_track_template_result, hass, template,
             action, variables)).result()
 
-    def remove():
-        """Threadsafe removal."""
-        run_callback_threadsafe(hass.loop, async_remove).result()
-
-    return (remove, result)
+    return result
 
 
 @callback

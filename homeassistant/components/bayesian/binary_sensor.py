@@ -156,9 +156,6 @@ class BayesianBinarySensor(BinarySensorDevice):
         async_track_state_change(
             self.hass, self.entity_obs, async_threshold_sensor_state_listener)
 
-        self._register_template_callbacks()
-
-    def _register_template_callbacks(self):
         @callback
         def async_template_result_changed(
                 event, template, old_result, new_result):
@@ -175,10 +172,10 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         for template in self.template_obs:
             template.hass = self.hass
-            (cancel, result) = async_track_template_result(
+            info = async_track_template_result(
                 self.hass, template, async_template_result_changed)
-            async_template_result_changed(None, template, None, result)
-            self._callbacks.append(cancel)
+
+            self._callbacks.append(info)
 
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
@@ -258,9 +255,7 @@ class BayesianBinarySensor(BinarySensorDevice):
 
     async def async_update(self):
         """Get the latest data and update the states."""
-        # Just recalculate the templates, the direct states
-        # get updated in the listeners.
+        # Force recalc of the templates. The states will
+        # update automatically.
         for call in self._callbacks:
-            call()
-        self._callbacks.clear()
-        self._register_template_callbacks()
+            call.async_refresh()

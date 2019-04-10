@@ -415,7 +415,7 @@ async def test_wait_template_with_trigger(hass, calls):
             },
             'action': [
                 {'wait_template':
-                    "{{ is_state(trigger.entity_id, 'hello') }}"},
+                 "{{ is_state(trigger.entity_id, 'hello') }}"},
                 {'service': 'test.automation',
                  'data_template': {
                     'some':

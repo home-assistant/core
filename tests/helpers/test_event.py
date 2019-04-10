@@ -302,35 +302,32 @@ class TestEventHelpers(unittest.TestCase):
 
         @ha.callback
         def wildcard_run_callback(event, template, old_result, new_result):
-            wildcard_runs.append((int(old_result), int(new_result)))
+            wildcard_runs.append((int(old_result or 0), int(new_result)))
 
         track_template_result(self.hass, template_condition,
                               wildcard_run_callback)
 
         @asyncio.coroutine
         def wildercard_run_callback(event, template, old_result, new_result):
-            wildercard_runs.append((int(old_result), int(new_result)))
+            wildercard_runs.append((int(old_result or 0), int(new_result)))
 
         track_template_result(
             self.hass, template_condition_var, wildercard_run_callback,
             {'test': 5})
         self.hass.block_till_done()
 
-        self.hass.states.set('sensor.test', 30)
-        self.hass.block_till_done()
-
-        assert specific_runs == [30]
-        assert wildcard_runs == [(5, 30)]
-        assert wildercard_runs == [(10, 35)]
+        assert specific_runs == [5]
+        assert wildcard_runs == [(0, 5)]
+        assert wildercard_runs == [(0, 10)]
 
         self.hass.states.set('sensor.test', 30)
         self.hass.block_till_done()
 
-        assert len(specific_runs) == 1
-        assert len(wildcard_runs) == 1
-        assert len(wildercard_runs) == 1
+        assert specific_runs == [5, 30]
+        assert wildcard_runs == [(0, 5), (5, 30)]
+        assert wildercard_runs == [(0, 10), (10, 35)]
 
-        self.hass.states.set('sensor.test', 5)
+        self.hass.states.set('sensor.test', 30)
         self.hass.block_till_done()
 
         assert len(specific_runs) == 2
@@ -338,18 +335,25 @@ class TestEventHelpers(unittest.TestCase):
         assert len(wildercard_runs) == 2
 
         self.hass.states.set('sensor.test', 5)
-        self.hass.block_till_done()
-
-        assert len(specific_runs) == 2
-        assert len(wildcard_runs) == 2
-        assert len(wildercard_runs) == 2
-
-        self.hass.states.set('sensor.test', 20)
         self.hass.block_till_done()
 
         assert len(specific_runs) == 3
         assert len(wildcard_runs) == 3
         assert len(wildercard_runs) == 3
+
+        self.hass.states.set('sensor.test', 5)
+        self.hass.block_till_done()
+
+        assert len(specific_runs) == 3
+        assert len(wildcard_runs) == 3
+        assert len(wildercard_runs) == 3
+
+        self.hass.states.set('sensor.test', 20)
+        self.hass.block_till_done()
+
+        assert len(specific_runs) == 4
+        assert len(wildcard_runs) == 4
+        assert len(wildercard_runs) == 4
 
     def test_track_template_result_errors(self):
         """Test tracking template with errors in the template."""
@@ -369,38 +373,36 @@ class TestEventHelpers(unittest.TestCase):
         def syntax_error_listener(event, template, last_result, result):
             syntax_error_runs.append(
                 (event, template, last_result, result))
-        (_, result) = track_template_result(
+        track_template_result(
             self.hass, template_syntax_error,
             syntax_error_listener)
-        assert isinstance(result, TemplateError)
+        assert len(syntax_error_runs) == 1
+        assert syntax_error_runs[0][1] == template_syntax_error
+        assert isinstance(syntax_error_runs[0][3], TemplateError)
 
-        (_, result) = track_template_result(
+        track_template_result(
             self.hass, template_not_exist,
             lambda event, template, last_result, result: (
                 not_exist_runs.append(
                     (event, template, last_result, result))))
-        assert result == ''
-
-        self.hass.block_till_done()
-
-        assert 0 == len(syntax_error_runs)
-        assert 0 == len(not_exist_runs)
+        assert len(syntax_error_runs) == 1
+        assert len(not_exist_runs) == 1
+        assert not_exist_runs[0] == (None, template_not_exist, None, '')
 
         self.hass.states.set('switch.not_exist', 'off')
         self.hass.block_till_done()
 
-        assert 0 == len(syntax_error_runs)
-        assert 1 == len(not_exist_runs)
-        assert not_exist_runs[0][1] == template_not_exist
-        assert not_exist_runs[0][3] == 'off'
+        assert 2 == len(not_exist_runs)
+        assert not_exist_runs[1][1] == template_not_exist
+        assert not_exist_runs[1][3] == 'off'
 
         self.hass.states.set('switch.not_exist', 'on')
         self.hass.block_till_done()
 
-        assert 0 == len(syntax_error_runs)
-        assert 2 == len(not_exist_runs)
-        assert not_exist_runs[1][1] == template_not_exist
-        assert not_exist_runs[1][3] == 'on'
+        assert 1 == len(syntax_error_runs)
+        assert 3 == len(not_exist_runs)
+        assert not_exist_runs[2][1] == template_not_exist
+        assert not_exist_runs[2][3] == 'on'
 
     def test_track_same_state_simple_trigger(self):
         """Test track_same_change with trigger simple."""

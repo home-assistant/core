@@ -98,7 +98,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self._child_state = None
         self._state_template = state_template
         self._state_template_result = None
-        self._state_template_cancel = None
+        self._state_template_info = None
         if state_template is not None:
             self._state_template.hass = hass
 
@@ -119,23 +119,17 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self.hass.helpers.event.async_track_state_change(
             list(set(depend)), async_on_dependency_update)
 
-        self._register_template()
-
-    def _register_template(self):
         @callback
         def async_on_template_change(event, template, last_result, result):
+            if isinstance(result, TemplateError):
+                _LOGGER.exception(result)
+                return
             self._state_template_result = result
             self.async_schedule_update_ha_state()
 
         if self._state_template is not None:
-            (cancel, result) = async_track_template_result(
+            self._state_template_info = async_track_template_result(
                 self.hass, self._state_template, async_on_template_change)
-            if isinstance(result, TemplateError):
-                _LOGGER.exception(result)
-                self._state_template_result = None
-            else:
-                self._state_template_result = result
-            self._state_template_cancel = cancel
 
     def _refresh_state(self):
         for child_name in self._children:
@@ -532,6 +526,5 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     async def async_update(self):
         """Force update the state."""
         self._refresh_state()
-        if self._state_template_cancel:
-            self._state_template_cancel()
-            self._register_template()
+        if self._state_template_info:
+            self._state_template_info.async_refresh()
