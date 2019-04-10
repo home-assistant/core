@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_HOSTS
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
@@ -88,17 +89,17 @@ async def daikin_api_setup(hass, host):
     from pydaikin.appliance import Appliance
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        with timeout(10, loop=hass.loop):
+        with timeout(10):
             device = Appliance(host, session)
             await device.init()
     except asyncio.TimeoutError:
-        _LOGGER.error("Connection to Daikin timeout")
-        return None
+        _LOGGER.debug("Connection to %s timed out", host)
+        raise ConfigEntryNotReady
     except ClientConnectionError:
-        _LOGGER.error("ServerDisconected")
-        return None
+        _LOGGER.debug("ClientConnectionError to %s", host)
+        raise ConfigEntryNotReady
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unexpected error creating device")
+        _LOGGER.error("Unexpected error creating device %s", host)
         return None
 
     api = DaikinApi(device)
