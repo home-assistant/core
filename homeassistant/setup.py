@@ -10,6 +10,7 @@ from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import IntegrationNotFound
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 
@@ -211,8 +212,11 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
                       platform_name, msg)
         async_notify_setup_error(hass, platform_path)
 
-    integration = await loader.async_get_integration(hass, platform_name)
-
+    try:
+        integration = await loader.async_get_integration(hass, platform_name)
+    except IntegrationNotFound:
+        log_error("Integration not found")
+        return None
     if not integration:
         log_error("Integration not found")
         return None
@@ -226,6 +230,18 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
     # Already loaded
     if platform_path in hass.config.components:
         return platform
+
+    if integration.domain not in hass.config.components:
+        # Set up component for platform since we removed deps
+        # from single platform
+        component = integration.get_component()
+        if (hasattr(component, 'setup')
+                or hasattr(component, 'async_setup')):
+            try:
+                await async_setup_component(hass, integration.domain, config)
+            except HomeAssistantError as err:
+                log_error(str(err))
+                return None
 
     try:
         await async_process_deps_reqs(hass, config, integration)

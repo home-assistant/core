@@ -901,16 +901,56 @@ async def get_system_health_info(hass, domain):
     return await hass.data['system_health']['info'][domain](hass)
 
 
-def mock_integration(hass, module):
+def mock_integration(hass, module, platform_name=None, platform_module=None):
     """Mock an integration."""
     integration = loader.Integration(
         hass, 'homeassisant.components.{}'.format(module.DOMAIN),
         loader.manifest_from_legacy_module(module))
     integration.get_component = lambda: module
 
+    if platform_name is not None:
+        integration.get_platform = \
+            lambda p_name: platform_module \
+            if p_name == platform_name else None
+
     # Backwards compat
     loader.set_component(hass, module.DOMAIN, module)
 
+    _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(
         loader.DATA_INTEGRATIONS, {}
     )[module.DOMAIN] = integration
+
+
+def mock_platform(hass, platform_path, module):
+    """Mock a platform."""
+    domain, platform_name = platform_path.split('.')
+    cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
+
+    if domain not in cache:
+        _LOGGER.info("Adding mock integration: %s", domain)
+        cache[domain] = loader.Integration(
+            hass, 'homeassisant.components.{}'.format(domain), {
+                'domain': domain,
+                'name': domain,
+                'dependencies': [],
+                'requirements': [],
+            }
+        )
+
+    _LOGGER.info("Adding mock integration platform: %s", platform_path)
+    cache[platform_path] = module
+
+
+def mock_entity_platform(hass, platform_path, module):
+    """Mock a entity platform."""
+    domain, platform_name = platform_path.split('.')
+    cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
+
+    if platform_name not in cache:
+        mock_integration(hass, MockModule(platform_name),
+                         platform_name=domain,
+                         platform_module=module)
+
+    _LOGGER.info("Adding mock integration platform: %s", platform_path)
+    cache[platform_path] = module

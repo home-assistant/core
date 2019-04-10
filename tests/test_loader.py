@@ -63,20 +63,18 @@ def test_component_loader_non_existing(hass):
         components.non_existing
 
 
-@asyncio.coroutine
-def test_component_wrapper(hass):
+async def test_component_wrapper(hass):
     """Test component wrapper."""
     calls = async_mock_service(hass, 'persistent_notification', 'create')
 
     components = loader.Components(hass)
     components.persistent_notification.async_create('message')
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert len(calls) == 1
 
 
-@asyncio.coroutine
-def test_helpers_wrapper(hass):
+async def test_helpers_wrapper(hass):
     """Test helpers wrapper."""
     helpers = loader.Helpers(hass)
 
@@ -88,8 +86,8 @@ def test_helpers_wrapper(hass):
 
     helpers.discovery.async_listen('service_name', discovery_callback)
 
-    yield from helpers.discovery.async_discover('service_name', 'hello')
-    yield from hass.async_block_till_done()
+    await helpers.discovery.async_discover('service_name', 'hello')
+    await hass.async_block_till_done()
 
     assert result == ['hello']
 
@@ -132,8 +130,8 @@ async def test_get_platform(hass, caplog):
 
     caplog.clear()
 
-    legacy_platform = loader.get_platform(hass, 'switch', 'test')
-    assert legacy_platform.__name__ == 'custom_components.test.switch'
+    legacy_platform = loader.get_platform(hass, 'switch', 'test_legacy')
+    assert legacy_platform.__name__ == 'custom_components.switch.test_legacy'
     assert 'Integrations need to be in their own folder.' in caplog.text
 
 
