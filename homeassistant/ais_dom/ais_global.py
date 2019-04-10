@@ -27,7 +27,8 @@ G_OFFLINE_MODE = False
 
 
 GLOBAL_MY_IP = None
-GLOBAL_MY_SSID = None
+GLOBAL_MY_WIFI_SSID = None
+GLOBAL_MY_WIFI_PASS = None
 _LOGGER = logging.getLogger(__name__)
 
 # devices fully supported by ais dom
@@ -50,6 +51,9 @@ G_BOOKMARK_MEDIA_CONTENT_ID = ""
 
 #
 G_AIS_SECURE_ANDROID_ID_DOM = None
+
+#
+G_AIS_GATE_REQ = {}
 
 
 def get_sercure_android_id_dom():
@@ -86,8 +90,14 @@ def get_bookmark_position(media_content_id):
 
 
 def set_my_ssid(ssid):
-    global GLOBAL_MY_SSID
-    GLOBAL_MY_SSID = ssid
+    global GLOBAL_MY_WIFI_SSID
+    GLOBAL_MY_WIFI_SSID = ssid
+
+
+# we need this to connect the iot device
+def set_my_wifi_pass(wifi_pass):
+    global GLOBAL_MY_WIFI_PASS
+    GLOBAL_MY_WIFI_PASS = wifi_pass
 
 
 def get_my_global_ip():
@@ -110,6 +120,17 @@ def set_global_my_ip(pIP):
             GLOBAL_MY_IP = '127.0.0.1'
     else:
         GLOBAL_MY_IP = pIP
+
+
+# to handle async req to gate
+def set_ais_gate_req(req_id, req_answer=None):
+    global G_AIS_GATE_REQ
+    G_AIS_GATE_REQ[req_id] = req_answer
+
+
+def get_ais_gate_req_answer(req_id):
+    global G_AIS_GATE_REQ
+    return G_AIS_GATE_REQ.get(req_id, None)
 
 
 set_global_my_ip(None)

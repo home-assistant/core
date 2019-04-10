@@ -8,7 +8,7 @@ import logging
 import asyncio
 from homeassistant.ais_dom import ais_global
 from homeassistant.components import ais_cloud
-from .config_flow import configured_service, setUrl
+from .config_flow import configured_service
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 aisCloud = ais_cloud.AisCloudWS()

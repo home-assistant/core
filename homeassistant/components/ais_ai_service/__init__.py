@@ -1369,10 +1369,10 @@ async def async_setup(hass, config):
                 "value": info})
         # set the WIFI as an current WIFI (only if empty)
         wifis = hass.states.get('input_select.ais_android_wifi_network')
-        if wifis.state == ais_global.G_EMPTY_OPTION and ais_global.GLOBAL_MY_SSID is not None:
+        if wifis.state == ais_global.G_EMPTY_OPTION and ais_global.GLOBAL_MY_WIFI_SSID is not None:
             options = wifis.attributes.get('options')
             for o in options:
-                if ais_global.GLOBAL_MY_SSID in o:
+                if ais_global.GLOBAL_MY_WIFI_SSID in o:
                     hass.services.call(
                         'input_select',
                         'select_option', {
@@ -1771,10 +1771,16 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == 'ais/wifi_status_info':
         _publish_wifi_status(hass, service)
         return
+    elif service.data["topic"] == 'ais/ais_gate_req_answer':
+        cci = json.loads(service.data["payload"])
+        ais_global.set_ais_gate_req(cci["req_id"], cci["req_answer"])
+        return
     elif service.data["topic"] == 'ais/wifi_connection_info':
         # current connection info
         cci = json.loads(service.data["payload"])
         info = " "
+        if "pass" in cci:
+            ais_global.set_my_wifi_pass(cci["pass"])
         if "ssid" in cci:
             ais_global.set_my_ssid(cci["ssid"])
             if cci["ssid"] == "<unknown ssid>":
@@ -1787,7 +1793,6 @@ def _process_command_from_frame(hass, service):
                     info += "; " + _wifi_rssi_to_info(cci["rssi"])
                 if "frequency_mhz" in cci:
                     info += "; " + _wifi_frequency_info(cci["frequency_mhz"])
-
         hass.states.async_set(
             'sensor.ais_android_wifi_current_network_info', info, {"friendly_name": "Połączenie Wifi"})
         return
