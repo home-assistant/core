@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     """Set up the printer API."""
     from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
-    api = EpsonPrinter(host)
+    api = EpsonPrinterAPI(host)
 
     sensors = [EpsonPrinterCartridge(hass, api, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
