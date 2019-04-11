@@ -4,8 +4,7 @@ from datetime import datetime
 from logging import getLogger
 from typing import Callable, cast, Dict, Optional
 
-from homeassistant.components.switch import (
-    ATTR_CURRENT_POWER_W, ENTITY_ID_FORMAT as SWITCH_FORMAT, SwitchDevice)
+from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
 from homeassistant.const import CONF_ICON, CONF_NAME
 from homeassistant.core import HomeAssistant, Event
 from homeassistant.exceptions import PlatformNotReady
@@ -14,14 +13,11 @@ from . import (
     ATTR_AUTO_OFF_SET, ATTR_DEVICE_NAME, ATTR_ELECTRIC_CURRNET,
     ATTR_IP_ADDRESS, ATTR_LAST_DATA_UPDATE, ATTR_LAST_STATE_CHANGE,
     ATTR_REMAINING_TIME, DISCOVERY_CONFIG, DISCOVERY_DEVICE, DOMAIN,
-    ENTITY_ID_FORMAT as SWITCHER_KIS_FORMAT, EVENT_SWITCHER_DEVICE_UPDATED,
-    UPDATED_DEVICE)
+    EVENT_SWITCHER_DEVICE_UPDATED, UPDATED_DEVICE)
 
 _LOGGER = getLogger(__name__)
 
 DEPENDENCIES = ['switcher_kis']
-
-ENTITY_ID_FORMAT = SWITCH_FORMAT.format(SWITCHER_KIS_FORMAT)
 
 PROPERTIES_TO_ATTRIBUTES = {
     'current_power_w': ATTR_CURRENT_POWER_W,

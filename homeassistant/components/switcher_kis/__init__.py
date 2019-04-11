@@ -20,8 +20,6 @@ REQUIREMENTS = ['aioswitcher==2019.3.21']
 
 DOMAIN = 'switcher_kis'
 
-ENTITY_ID_FORMAT = DOMAIN + '_{}'
-
 CONF_DEVICE_ID = 'device_id'
 CONF_DEVICE_PASSWORD = 'device_password'
 CONF_PHONE_ID = 'phone_id'
