@@ -477,6 +477,7 @@ async def test_domain_control_not_async(hass, mock_entities):
         hass.helpers.service.verify_domain_control(
             'test_domain')(mock_service_log)
 
+
 async def test_domain_control_unknown(hass, mock_entities):
     """Test domain verification in a service call with an unknown user."""
     calls = []
