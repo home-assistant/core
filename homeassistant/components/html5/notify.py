@@ -518,7 +518,7 @@ class HTML5NotificationService(BaseNotificationService):
 
 
 def add_jwt(timestamp, target, tag, jwt_secret):
-    """ Create JWT json to put into payload. """
+    """Create JWT json to put into payload."""
     import jwt
     jwt_exp = (datetime.fromtimestamp(timestamp) +
                timedelta(days=JWT_VALID_DAYS))
@@ -529,7 +529,7 @@ def add_jwt(timestamp, target, tag, jwt_secret):
 
 
 def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):
-    """ Create encrypted headers to send to WebPusher. """
+    """Create encrypted headers to send to WebPusher."""
     from py_vapid import Vapid
     try:
         from urllib.parse import urlparse
