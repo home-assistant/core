@@ -72,7 +72,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a ONVIF camera."""
     _LOGGER.debug("Setting up the ONVIF camera platform")
 
@@ -94,8 +94,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     hass.services.register(DOMAIN, SERVICE_PTZ, handle_ptz,
                            schema=SERVICE_PTZ_SCHEMA)
-    add_entities([ONVIFHassCamera(hass, config)])
 
+    _LOGGER.debug("Constructing the ONVIFHassCamera")
+
+    hassCamera = [ONVIFHassCamera(hass, config)]
+
+    await hassCamera.async_initialize()
+
+    async_add_entities(hassCamera)
+    return True
 
 class ONVIFHassCamera(Camera):
     """An implementation of an ONVIF camera."""
@@ -104,8 +111,11 @@ class ONVIFHassCamera(Camera):
         """Initialize a ONVIF camera."""
         super().__init__()
 
+        _LOGGER.debug("Importing dependencies")
+
         import onvif
         import zeep
+        from onvif import ONVIFCamera
 
         # Note: important imports foor zeep and onvif-zeep
         def zeep_pythonvalue(self, xmlvalue):
@@ -133,6 +143,11 @@ class ONVIFHassCamera(Camera):
                                    self._password,
                                    '{}/wsdl/'
                                    .format(os.path.dirname(onvif.__file__)))
+
+    async def async_initialize(self):
+        _LOGGER.debug("Obtaining input uri")
+
+        await self.async_obtain_input_uri()
 
         _LOGGER.debug("Setting up the ONVIF device management service")
 
@@ -172,7 +187,7 @@ class ONVIFHassCamera(Camera):
 
         _LOGGER.debug("Completed set up of the ONVIF camera component")
 
-    def obtain_input_uri(self):
+    async def async_obtain_input_uri(self):
         """Set the input uri for the camera."""
         from onvif import exceptions
         _LOGGER.debug("Connecting with ONVIF Camera: %s on port %s",
@@ -242,20 +257,19 @@ class ONVIFHassCamera(Camera):
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""
+
+        _LOGGER.debug("Camera '%s' added to hass", self._name)
+
         if ONVIF_DATA not in self.hass.data:
             self.hass.data[ONVIF_DATA] = {}
             self.hass.data[ONVIF_DATA][ENTITIES] = []
         self.hass.data[ONVIF_DATA][ENTITIES].append(self)
-        await self.hass.async_add_executor_job(self.obtain_input_uri)
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg.tools import ImageFrame, IMAGE_JPEG
 
-        if not self._input:
-            await self.hass.async_add_executor_job(self.obtain_input_uri)
-            if not self._input:
-                return None
+        _LOGGER.debug("Retrieving image from camera '%s'", self._name)
 
         ffmpeg = ImageFrame(
             self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
@@ -269,10 +283,7 @@ class ONVIFHassCamera(Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg.camera import CameraMjpeg
 
-        if not self._input:
-            await self.hass.async_add_executor_job(self.obtain_input_uri)
-            if not self._input:
-                return None
+        _LOGGER.debug("Handling mjpeg stream from camera '%s'", self._name)
 
         ffmpeg_manager = self.hass.data[DATA_FFMPEG]
         stream = CameraMjpeg(ffmpeg_manager.binary,
