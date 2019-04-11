@@ -172,8 +172,8 @@ mbddns==0.1.2
 # homeassistant.components.mfi
 mficlient==0.3.0
 
+# homeassistant.components.iqvia
 # homeassistant.components.opencv
-# homeassistant.components.pollen
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==1.16.2

@@ -763,8 +763,8 @@ nsw-fuel-api-client==1.0.10
 # homeassistant.components.nuheat
 nuheat==0.3.0
 
+# homeassistant.components.iqvia
 # homeassistant.components.opencv
-# homeassistant.components.pollen
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==1.16.2
@@ -1105,6 +1105,9 @@ pyicloud==0.9.1
 # homeassistant.components.ipma
 pyipma==1.2.1
 
+# homeassistant.components.iqvia
+pyiqvia==0.2.0
+
 # homeassistant.components.irish_rail_transport
 pyirishrail==0.0.2
 
@@ -1229,9 +1232,6 @@ pypjlink2==1.2.0
 
 # homeassistant.components.point
 pypoint==1.1.1
-
-# homeassistant.components.pollen
-pypollencom==2.2.3
 
 # homeassistant.components.ps4
 pyps4-homeassistant==0.7.2
