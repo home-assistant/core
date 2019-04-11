@@ -30,15 +30,13 @@ LYRIC_CONFIG_FILE = 'lyric.conf'
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 CONF_REDIRECT_URI = 'redirect_uri'
-CONF_LOCATIONS = 'locations'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_REDIRECT_URI): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=270): cv.positive_int,
-        vol.Optional(CONF_LOCATIONS): vol.All(cv.ensure_list, cv.string)
+        vol.Optional(CONF_SCAN_INTERVAL, default=270): cv.positive_int
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -144,10 +142,7 @@ class LyricDevice(object):
             _LOGGER.warning("No locations found.")
             return
 
-        if CONF_LOCATIONS not in conf:
-            self._location = [location.name for location in lyric.locations]
-        else:
-            self._location = conf[CONF_LOCATIONS]
+        self._location = [location.name for location in lyric.locations]
 
     def thermostats(self):
         """Generate a list of thermostats and their location."""
