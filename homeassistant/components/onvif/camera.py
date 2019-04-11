@@ -71,7 +71,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities, 
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up a ONVIF camera."""
     _LOGGER.debug("Setting up the ONVIF camera platform")
@@ -146,7 +146,10 @@ class ONVIFHassCamera(Camera):
                                    .format(os.path.dirname(onvif.__file__)))
 
     async def async_initialize(self):
-        """Initialize the camera by obtaining the input uri and connecting to the camera."""
+        """
+        Initialize the camera by obtaining the input uri and connecting to
+        the camera.
+        """
         _LOGGER.debug("Setting up the ONVIF device management service")
 
         self._devicemgmt = self._camera.create_devicemgmt_service()
