@@ -78,6 +78,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
             v2bridge.queue.get(), timeout=5.0, loop=hass.loop)
     except (Asyncio_TimeoutError, RuntimeError):
         _LOGGER.exception("failed to get response from device")
+        await v2bridge.stop()
         return False
 
     hass.data[DOMAIN] = {
