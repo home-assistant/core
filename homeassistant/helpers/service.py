@@ -158,7 +158,7 @@ async def _load_services_file(hass: HomeAssistantType, domain: str):
     integration = await async_get_integration(hass, domain)
     try:
         return await hass.async_add_executor_job(
-            load_yaml, integration.file_path / 'services.yaml')
+            load_yaml, str(integration.file_path / 'services.yaml'))
     except FileNotFoundError:
         _LOGGER.warning("Unable to find services.yaml for the %s integration",
                         domain)
