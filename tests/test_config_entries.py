@@ -16,12 +16,19 @@ from tests.common import (
     MockPlatform, MockEntity, mock_integration, mock_entity_platform)
 
 
-@config_entries.HANDLERS.register('test')
-@config_entries.HANDLERS.register('comp')
-class MockFlowHandler(config_entries.ConfigFlow):
-    """Define a mock flow handler."""
+@pytest.fixture(autouse=True)
+def mock_handlers():
+    """Mock config flows."""
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
 
-    VERSION = 1
+        VERSION = 1
+
+    with patch.dict(config_entries.HANDLERS, {
+        'comp': MockFlowHandler,
+        'test': MockFlowHandler,
+    }):
+        yield
 
 
 @pytest.fixture

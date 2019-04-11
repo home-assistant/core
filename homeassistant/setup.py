@@ -101,9 +101,9 @@ async def _async_setup_component(hass: core.HomeAssistant,
         _LOGGER.error("Setup failed for %s: %s", domain, msg)
         async_notify_setup_error(hass, domain, link)
 
-    integration = await loader.async_get_integration(hass, domain)
-
-    if not integration:
+    try:
+        integration = await loader.async_get_integration(hass, domain)
+    except loader.IntegrationNotFound:
         log_error("Integration not found.", False)
         return False
 
@@ -215,9 +215,6 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
     try:
         integration = await loader.async_get_integration(hass, platform_name)
     except IntegrationNotFound:
-        log_error("Integration not found")
-        return None
-    if not integration:
         log_error("Integration not found")
         return None
 

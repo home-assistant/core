@@ -319,8 +319,7 @@ class TestSetup:
 
     def test_component_not_found(self):
         """setup_component should not crash if component doesn't exist."""
-        with pytest.raises(IntegrationNotFound):
-            setup.setup_component(self.hass, 'non_existing')
+        assert setup.setup_component(self.hass, 'non_existing') is False
 
     def test_component_not_double_initialized(self):
         """Test we do not set up a component twice."""
