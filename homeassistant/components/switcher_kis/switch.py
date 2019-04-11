@@ -47,9 +47,7 @@ async def async_setup_platform(hass: HomeAssistant, config: Dict,
     else:
         raise PlatformNotReady("No device data discoverd")
 
-    async_add_entities([switcher_entity], False)
-
-    return None
+    async_add_entities([switcher_entity])
 
 
 class SwitcherControl(SwitchDevice):
@@ -171,8 +169,6 @@ class SwitcherControl(SwitchDevice):
                 self._state = self._device_data.state
                 self.async_schedule_update_ha_state()
 
-        return None
-
     async def async_turn_on(self, **kwargs: Dict) -> None:
         """Turn the entity on.
 
@@ -197,8 +193,6 @@ class SwitcherControl(SwitchDevice):
             self._state = SWITCHER_STATE_ON
             self.async_schedule_update_ha_state()
 
-        return None
-
     async def async_turn_off(self, **kwargs: Dict) -> None:
         """Turn the entity off.
 
@@ -222,5 +216,3 @@ class SwitcherControl(SwitchDevice):
             self._self_initiated = True
             self._state = SWITCHER_STATE_OFF
             self.async_schedule_update_ha_state()
-
-        return None

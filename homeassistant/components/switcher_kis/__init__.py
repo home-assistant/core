@@ -68,7 +68,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     async def async_stop_bridge(event: Event) -> None:
         """On homeassistant stop, gracefully stop the bridge if running."""
         await v2bridge.stop()
-        return None
 
     hass.async_add_job(hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, async_stop_bridge))
@@ -86,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         DISCOVERY_DEVICE: device_data
     }
 
-    await hass.async_create_task(async_load_platform(
+    hass.async_create_task(async_load_platform(
         hass, SWITCH_DOMAIN, DOMAIN, None, config))
 
     async def device_updates(timestamp: Optional[datetime]) -> None:
@@ -97,7 +96,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
                 hass.bus.async_fire(EVENT_SWITCHER_DEVICE_UPDATED,
                                     {UPDATED_DEVICE: device_new_data})
             async_call_later(hass, 3, device_updates)
-        return None
 
     async_call_later(hass, 3, device_updates)
 
