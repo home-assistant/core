@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_ASSUMED_STATE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
@@ -1049,7 +1050,9 @@ class OpenCloseTrait(_Trait):
             # Google will not issue an open command if the assumed state is
             # open, even if that is currently incorrect.
             if self.state.attributes.get(ATTR_ASSUMED_STATE):
-                response['openPercent'] = 50
+                response['willReportState'] = False
+            elif self.state.state == STATE_UNKNOWN:
+                response['willReportState'] = False
             else:
                 position = self.state.attributes.get(
                     cover.ATTR_CURRENT_POSITION
@@ -1076,22 +1079,30 @@ class OpenCloseTrait(_Trait):
 
         if domain == cover.DOMAIN:
             position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
-            if position is not None:
+            if params['openPercent'] == 0:
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True, context=data.context)
+            elif params['openPercent'] == 100:
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True, context=data.context)
+            elif position is not None:
                 await self.hass.services.async_call(
                     cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                         ATTR_ENTITY_ID: self.state.entity_id,
                         cover.ATTR_POSITION: params['openPercent']
                     }, blocking=True, context=data.context)
             else:
-                if self.state.state != cover.STATE_CLOSED:
-                    if params['openPercent'] < 100:
-                        await self.hass.services.async_call(
-                            cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
-                                ATTR_ENTITY_ID: self.state.entity_id
-                            }, blocking=True, context=data.context)
-                else:
-                    if params['openPercent'] > 0:
-                        await self.hass.services.async_call(
-                            cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
-                                ATTR_ENTITY_ID: self.state.entity_id
-                            }, blocking=True, context=data.context)
+                if params['openPercent'] < 100:
+                    await self.hass.services.async_call(
+                        cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
+                            ATTR_ENTITY_ID: self.state.entity_id
+                        }, blocking=True, context=data.context)
+                elif params['openPercent'] > 0:
+                    await self.hass.services.async_call(
+                        cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
+                            ATTR_ENTITY_ID: self.state.entity_id
+                        }, blocking=True, context=data.context)
