@@ -779,10 +779,17 @@ class TestHelpersTemplate(unittest.TestCase):
         group.Group.create_group(
             self.hass, 'location group', ['test_domain.object'])
 
-        assert 'test_domain.object' == \
-            template.Template(
-                '{{ closest("group.location_group").entity_id }}',
-                self.hass).render()
+        (result, filt) = template.Template(
+            '{{ closest("group.location_group").entity_id }}',
+            self.hass).render_with_collect()
+
+        assert 'test_domain.object' == result
+        assert filt == EntityFilter(
+            include_entities=[
+                'test_domain.object',
+                'group.location_group',
+            ]
+        )
 
     def test_closest_function_home_vs_group_state(self):
         """Test closest function home vs group state."""
@@ -846,10 +853,20 @@ class TestHelpersTemplate(unittest.TestCase):
             'longitude': self.hass.config.longitude + 0.3,
         })
 
-        assert 'test_domain.closest_zone' == \
-            template.Template(
+        (closest, filt) = template.Template(
                 '{{ closest("zone.far_away", '
-                'states.test_domain).entity_id }}', self.hass).render()
+                'states.test_domain).entity_id }}',
+                self.hass).render_with_collect()
+
+        assert 'test_domain.closest_zone' == closest
+        assert filt == EntityFilter(
+            include_domains=["test_domain"],
+            include_entities=[
+                'test_domain.closest_home',
+                'test_domain.closest_zone',
+                'zone.far_away',
+            ]
+        )
 
     def test_closest_function_to_state(self):
         """Test closest function to state."""

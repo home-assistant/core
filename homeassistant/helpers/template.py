@@ -114,6 +114,18 @@ class Template:
         except jinja2.TemplateError as err:
             raise TemplateError(err)
 
+    def render_with_collect(
+            self, variables: TemplateVarsType = None,
+            **kwargs) -> (Union[str, TemplateError],
+                          EntityFilter):
+        """Render given template and collect an entity filter."""
+        if variables is not None:
+            kwargs.update(variables)
+
+        return run_callback_threadsafe(
+            self.hass.loop, self.async_render_with_collect,
+            kwargs).result()
+
     @callback
     def async_render_with_collect(
             self, variables: TemplateVarsType = None,
@@ -219,11 +231,14 @@ class AllStates:
             raise TemplateError("Invalid domain name '{}'".format(name))
         return DomainStates(self._hass, name)
 
-    def __iter__(self):
-        """Return all states."""
+    def _collect_all(self):
         entity_collect = self._hass.data.get(_COLLECT_KEY)
         if entity_collect is not None:
             entity_collect.include_all = True
+
+    def __iter__(self):
+        """Return all states."""
+        self._collect_all()
         return iter(
             _wrap_state(self._hass, state) for state in
             sorted(self._hass.states.async_all(),
@@ -231,9 +246,7 @@ class AllStates:
 
     def __len__(self):
         """Return number of states."""
-        entity_collect = self._hass.data.get(_COLLECT_KEY)
-        if entity_collect is not None:
-            entity_collect.include_all = True
+        self._collect_all()
         return len(self._hass.states.async_entity_ids())
 
     def __call__(self, entity_id):
@@ -261,11 +274,14 @@ class DomainStates:
             raise TemplateError("Invalid entity ID '{}'".format(entity_id))
         return _get_state(self._hass, entity_id)
 
-    def __iter__(self):
-        """Return the iteration over all the states."""
+    def _collect_domain(self):
         entity_collect = self._hass.data.get(_COLLECT_KEY)
         if entity_collect is not None:
             entity_collect.include_domains.add(self._domain)
+
+    def __iter__(self):
+        """Return the iteration over all the states."""
+        self._collect_domain()
         return iter(sorted(
             (_wrap_state(self._hass, state)
              for state in self._hass.states.async_all()
@@ -274,9 +290,7 @@ class DomainStates:
 
     def __len__(self):
         """Return number of states."""
-        entity_collect = self._hass.data.get(_COLLECT_KEY)
-        if entity_collect is not None:
-            entity_collect.include_domains.add(self._domain)
+        self._collect_domain()
         return len(self._hass.states.async_entity_ids(self._domain))
 
     def __repr__(self):
@@ -297,9 +311,7 @@ class TemplateState(State):
     def _access_state(self):
         state = object.__getattribute__(self, '_state')
         hass = object.__getattribute__(self, '_hass')
-        entity_collect = hass.data.get(_COLLECT_KEY)
-        if entity_collect is not None:
-            entity_collect.include_entities.add(state.entity_id)
+        _collect_state(hass, state.entity_id)
         return state
 
     @property
@@ -331,6 +343,12 @@ class TemplateState(State):
         return '<template ' + rep[1:]
 
 
+def _collect_state(hass, entity_id):
+    entity_collect = hass.data.get(_COLLECT_KEY)
+    if entity_collect is not None:
+        entity_collect.include_entities.add(entity_id)
+
+
 def _wrap_state(hass, state):
     """Wrap a state."""
     return None if state is None else TemplateState(hass, state)
@@ -338,9 +356,11 @@ def _wrap_state(hass, state):
 
 def _get_state(hass, entity_id):
     state = hass.states.get(entity_id)
-    entity_collect = hass.data.get(_COLLECT_KEY)
-    if entity_collect is not None:
-        entity_collect.include_entities.add(entity_id)
+    if state is None:
+        # Only need to collect if none, if not none collect first actuall
+        # access to the state properties in the state wrapper.
+        _collect_state(hass, entity_id)
+        return None
     return _wrap_state(hass, state)
 
 
@@ -407,8 +427,9 @@ class TemplateMethods:
             else:
                 gr_entity_id = str(entities)
 
-            group = self._hass.components.group
+            _collect_state(self._hass, gr_entity_id)
 
+            group = self._hass.components.group
             states = [_get_state(self._hass, entity_id) for entity_id
                       in group.expand_entity_ids([gr_entity_id])]
 
