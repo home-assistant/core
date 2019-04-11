@@ -155,27 +155,27 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     assert acc.aid == 2
     assert acc.category == 31  # Television
 
-    assert acc.chars[FEATURE_ON_OFF].value is 0
-    assert acc.chars[FEATURE_PLAY_PAUSE].value is 0
-    assert acc.chars[FEATURE_SELECT_SOURCE].value is 0
+    assert acc.chars[FEATURE_ON_OFF].value == 0
+    assert acc.chars[FEATURE_PLAY_PAUSE].value == 0
+    assert acc.chars[FEATURE_SELECT_SOURCE].value == 0
     assert acc.chars[FEATURE_TOGGLE_MUTE].value is False
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_MEDIA_VOLUME_MUTED: True})
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_ON_OFF].value is 1
+    assert acc.chars[FEATURE_ON_OFF].value == 1
     assert acc.chars[FEATURE_TOGGLE_MUTE].value is True
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_ON_OFF].value is 0
+    assert acc.chars[FEATURE_ON_OFF].value == 0
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: 'HDMI 2'})
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_SELECT_SOURCE].value is 1
+    assert acc.chars[FEATURE_SELECT_SOURCE].value == 1
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: 'HDMI 3'})
     await hass.async_block_till_done()
-    assert acc.chars[FEATURE_SELECT_SOURCE].value is 2
+    assert acc.chars[FEATURE_SELECT_SOURCE].value == 2
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')
@@ -246,7 +246,7 @@ async def test_media_player_television_set_state(hass, hk_driver, events):
     await hass.async_block_till_done()
     assert call_select_source
     assert call_select_source[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_select_source[0].data[ATTR_INPUT_SOURCE] is 'HDMI 2'
+    assert call_select_source[0].data[ATTR_INPUT_SOURCE] == 'HDMI 2'
     assert len(events) == 7
     assert events[-1].data[ATTR_VALUE] is None
 

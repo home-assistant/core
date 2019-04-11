@@ -261,7 +261,7 @@ class MediaPlayer(HomeAccessory):
                 state = self.hass.states.get(self.entity_id).state
                 if state in (STATE_PLAYING, STATE_PAUSED):
                     self.set_play_pause(state == STATE_PAUSED)
-                    return;
+                    return
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
 
