@@ -3,7 +3,7 @@ import asyncio
 from collections import OrderedDict
 from copy import deepcopy
 import unittest
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import voluptuous as vol
 import pytest
@@ -18,8 +18,8 @@ from homeassistant.auth.permissions import PolicyPermissions
 from homeassistant.helpers import (
     service, template, device_registry as dev_reg, entity_registry as ent_reg)
 from tests.common import (
-    MockConfigEntry, MockModule, async_mock_service, get_test_home_assistant,
-    mock_service, mock_coro, mock_registry, mock_device_registry)
+    get_test_home_assistant, mock_service, mock_coro, mock_registry,
+    mock_device_registry)
 
 
 @pytest.fixture
