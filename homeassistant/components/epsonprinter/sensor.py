@@ -1,10 +1,11 @@
+"""Support for Epson Workforce Printer"""
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
