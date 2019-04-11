@@ -7,7 +7,8 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 from . import ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES
-REQUIREMENTS = ['vigilancemeteo==2.0.0']
+
+REQUIREMENTS = ['vigilancemeteo==3.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,14 +26,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     monitored_conditions = discovery_info[CONF_MONITORED_CONDITIONS]
     client = hass.data[DATA_METEO_FRANCE][city]
 
-    from vigilancemeteo import ZoneAlerte
+    from vigilancemeteo import DepartmentWeatherAlert
 
     alert_watcher = None
     if 'weather_alert' in monitored_conditions:
         datas = hass.data[DATA_METEO_FRANCE][city].get_data()
         if "dept" in datas:
             try:
-                alert_watcher = ZoneAlerte(datas["dept"])
+                alert_watcher = DepartmentWeatherAlert(datas["dept"])
             except ValueError as exp:
                 _LOGGER.error(exp)
 
