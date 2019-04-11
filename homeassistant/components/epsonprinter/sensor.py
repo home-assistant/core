@@ -1,4 +1,4 @@
-"""Support for Epson Workforce Printer"""
+"""Support for Epson Workforce Printer."""
 from datetime import timedelta
 import logging
 
