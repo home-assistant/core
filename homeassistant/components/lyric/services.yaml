@@ -1,0 +1,21 @@
+---
+# 
+# These are domain specific services which are not already covered by the 
+# main components
+# 
+lyric_resume_program:
+  description: 'Resumes the programmed schedule'
+  fields:
+    entity_id:
+      description: Name(s) of entities to resume
+      example: 'climate.kitchen'
+
+lyric_set_hold_time:
+  description: 'Sets the time to hold until'
+  fields:
+    time:
+      description: Time to hold until
+      example: '15:30'
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'climate.kitchen'

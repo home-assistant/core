@@ -1,0 +1,10 @@
+{
+  "domain": "lyric",
+  "name": "Honeywell Lyric",
+  "documentation": "https://www.home-assistant.io/components/lyric",
+  "requirements": [
+    "python-lyric==1.1.4"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
