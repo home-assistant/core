@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyblackbird==0.5']
+
 
 _LOGGER = logging.getLogger(__name__)
 

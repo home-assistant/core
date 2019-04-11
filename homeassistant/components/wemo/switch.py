@@ -12,7 +12,7 @@ from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 
-DEPENDENCIES = ['wemo']
+
 SCAN_INTERVAL = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)

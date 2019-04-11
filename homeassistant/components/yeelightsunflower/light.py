@@ -10,7 +10,7 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_HOST
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['yeelightsunflower==0.0.10']
+
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -13,7 +13,7 @@ from . import (
     CONF_REPORT_SERVER_PORT, EGARDIA_DEVICE, EGARDIA_SERVER,
     REPORT_SERVER_CODES_IGNORE)
 
-DEPENDENCIES = ['egardia']
+
 
 _LOGGER = logging.getLogger(__name__)
 

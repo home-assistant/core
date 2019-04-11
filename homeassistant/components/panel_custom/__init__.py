@@ -10,7 +10,7 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'panel_custom'
-DEPENDENCIES = ['frontend']
+
 
 CONF_COMPONENT_NAME = 'name'
 CONF_SIDEBAR_TITLE = 'sidebar_title'

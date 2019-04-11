@@ -6,7 +6,7 @@ import time
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['raspihats==2.2.3', 'smbus-cffi==0.5.1']
+
 
 _LOGGER = logging.getLogger(__name__)
 

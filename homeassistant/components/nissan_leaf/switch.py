@@ -7,7 +7,7 @@ from . import DATA_CLIMATE, DATA_LEAF, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['nissan_leaf']
+
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

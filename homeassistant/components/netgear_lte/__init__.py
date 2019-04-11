@@ -24,7 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from . import sensor_types
 
-REQUIREMENTS = ['eternalegypt==0.0.7']
+
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-gc100==1.0.3a']
+
 
 _LOGGER = logging.getLogger(__name__)
 

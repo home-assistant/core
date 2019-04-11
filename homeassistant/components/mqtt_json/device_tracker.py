@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_DEVICES, ATTR_GPS_ACCURACY, ATTR_LATITUDE,
     ATTR_LONGITUDE, ATTR_BATTERY_LEVEL)
 
-DEPENDENCIES = ['mqtt']
+
 
 _LOGGER = logging.getLogger(__name__)
 

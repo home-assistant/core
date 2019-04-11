@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_SWITCHES, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rpi-rf==0.9.7']
+
 
 _LOGGER = logging.getLogger(__name__)
 

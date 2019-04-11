@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Node'
 DEFAULT_DEVICE_CLASS = 'moving'
-DEPENDENCIES = ['linode']
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NODES): vol.All(cv.ensure_list, [cv.string]),

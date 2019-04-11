@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_PORT, TEMP_CELSIUS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['oemthermostat==1.1']
+
 
 _LOGGER = logging.getLogger(__name__)
 

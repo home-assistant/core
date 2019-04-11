@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['TravisPy==0.3.5']
+
 
 _LOGGER = logging.getLogger(__name__)
 

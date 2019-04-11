@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
-DEPENDENCIES = ['skybell']
+
 
 _LOGGER = logging.getLogger(__name__)
 

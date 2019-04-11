@@ -9,8 +9,8 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyfttt==0.3']
-DEPENDENCIES = ['webhook']
+
+
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,7 +8,7 @@ from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['insteon']
+
 
 MAX_BRIGHTNESS = 255
 

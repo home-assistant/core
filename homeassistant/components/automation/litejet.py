@@ -9,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_utc_time
 
-DEPENDENCIES = ['litejet']
+
 
 _LOGGER = logging.getLogger(__name__)
 

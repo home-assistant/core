@@ -12,7 +12,7 @@ from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE,
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
-REQUIREMENTS = ['pyMetno==0.4.6']
+
 
 _LOGGER = logging.getLogger(__name__)
 

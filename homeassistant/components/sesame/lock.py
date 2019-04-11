@@ -9,7 +9,7 @@ from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.helpers.typing import ConfigType
 
-REQUIREMENTS = ['pysesame==0.1.0']
+
 
 ATTR_DEVICE_ID = 'device_id'
 

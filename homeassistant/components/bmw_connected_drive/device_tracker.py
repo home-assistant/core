@@ -5,7 +5,7 @@ from homeassistant.util import slugify
 
 from . import DOMAIN as BMW_DOMAIN
 
-DEPENDENCIES = ['bmw_connected_drive']
+
 
 _LOGGER = logging.getLogger(__name__)
 

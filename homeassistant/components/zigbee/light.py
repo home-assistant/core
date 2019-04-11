@@ -8,7 +8,7 @@ from . import PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
 CONF_ON_STATE = 'on_state'
 
 DEFAULT_ON_STATE = 'high'
-DEPENDENCIES = ['zigbee']
+
 
 STATES = ['high', 'low']
 

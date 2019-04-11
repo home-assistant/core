@@ -11,7 +11,7 @@ from homeassistant.const import ATTR_BATTERY_LEVEL
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
+
 
 VALUE_TO_STATE = {
     'closed': STATE_CLOSED,

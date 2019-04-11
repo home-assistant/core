@@ -7,7 +7,7 @@ from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['nissan_leaf']
+
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

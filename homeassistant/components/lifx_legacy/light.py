@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights==0.9.4']
+
 
 BYTE_MAX = 255
 

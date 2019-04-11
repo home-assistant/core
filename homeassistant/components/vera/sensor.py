@@ -11,7 +11,7 @@ from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['vera']
+
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

@@ -6,7 +6,7 @@ from homeassistant.components.cover import (
 
 from . import FIBARO_DEVICES, FibaroDevice
 
-DEPENDENCIES = ['fibaro']
+
 
 _LOGGER = logging.getLogger(__name__)
 

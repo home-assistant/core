@@ -6,7 +6,7 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN as DOORBIRD_DOMAIN
 
-DEPENDENCIES = ['doorbird']
+
 
 _LOGGER = logging.getLogger(__name__)
 

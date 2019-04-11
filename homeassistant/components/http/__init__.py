@@ -29,7 +29,7 @@ from .real_ip import setup_real_ip
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa
 
-REQUIREMENTS = ['aiohttp_cors==0.7.0']
+
 
 DOMAIN = 'http'
 

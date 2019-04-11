@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['hole==0.3.0']
+
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['horimote==0.4.1']
+
 
 _LOGGER = logging.getLogger(__name__)
 

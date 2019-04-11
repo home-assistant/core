@@ -9,7 +9,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-blockchain-api==0.0.2']
+
 
 _LOGGER = logging.getLogger(__name__)
 

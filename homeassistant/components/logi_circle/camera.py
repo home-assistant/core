@@ -15,7 +15,7 @@ from .const import (
     RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
     SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
 
-DEPENDENCIES = ['logi_circle', 'ffmpeg']
+
 
 _LOGGER = logging.getLogger(__name__)
 

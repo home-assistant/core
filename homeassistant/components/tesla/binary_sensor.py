@@ -8,7 +8,7 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['tesla']
+
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

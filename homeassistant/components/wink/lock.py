@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, WinkDevice
 
-DEPENDENCIES = ['wink']
+
 
 _LOGGER = logging.getLogger(__name__)
 

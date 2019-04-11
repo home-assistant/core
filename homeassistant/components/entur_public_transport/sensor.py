@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['enturclient==0.2.0']
+
 
 _LOGGER = logging.getLogger(__name__)
 

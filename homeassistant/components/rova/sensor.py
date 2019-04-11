@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['rova==0.1.0']
+
 
 # Config for rova requests.
 CONF_ZIP_CODE = 'zip_code'

@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
 
-REQUIREMENTS = ['jsonrpc-async==0.6']
+
 
 _LOGGER = logging.getLogger(__name__)
 

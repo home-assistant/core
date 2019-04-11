@@ -11,7 +11,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 
-DEPENDENCIES = ['eufy']
+
 
 _LOGGER = logging.getLogger(__name__)
 

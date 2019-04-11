@@ -10,7 +10,7 @@ from . import DOMAIN as LOCATIVE_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['locative']
+
 
 DATA_KEY = '{}.{}'.format(LOCATIVE_DOMAIN, DEVICE_TRACKER_DOMAIN)
 

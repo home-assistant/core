@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt_template'
 
-DEPENDENCIES = ['mqtt']
+
 
 DEFAULT_NAME = 'MQTT Template Light'
 DEFAULT_OPTIMISTIC = False

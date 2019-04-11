@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['asterisk_mbox']
+
 
 MAILBOX_NAME = 'asterisk_cdr'
 

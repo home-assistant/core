@@ -15,7 +15,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import ToonDisplayDeviceEntity
 from .const import DATA_TOON_CLIENT, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
 
-DEPENDENCIES = ['toon']
+
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ from homeassistant.util import Throttle
 
 from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
-DEPENDENCIES = ['abode']
+
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 

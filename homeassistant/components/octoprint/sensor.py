@@ -10,7 +10,7 @@ from . import DOMAIN as COMPONENT_DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['octoprint']
+
 
 NOTIFICATION_ID = 'octoprint_notification'
 NOTIFICATION_TITLE = 'OctoPrint sensor setup error'

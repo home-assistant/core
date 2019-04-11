@@ -5,7 +5,7 @@ from homeassistant.components.device_tracker import DeviceScanner
 
 from . import DATA_ASUSWRT
 
-DEPENDENCIES = ['asuswrt']
+
 
 _LOGGER = logging.getLogger(__name__)
 

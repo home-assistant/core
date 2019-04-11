@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['libsoundtouch==0.7.2']
+
 
 _LOGGER = logging.getLogger(__name__)
 

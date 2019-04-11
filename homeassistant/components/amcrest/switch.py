@@ -8,7 +8,7 @@ from . import DATA_AMCREST, SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['amcrest']
+
 
 
 async def async_setup_platform(

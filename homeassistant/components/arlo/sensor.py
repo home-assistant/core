@@ -17,7 +17,7 @@ from . import ATTRIBUTION, DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['arlo']
+
 
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {

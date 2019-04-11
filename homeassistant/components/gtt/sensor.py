@@ -9,7 +9,7 @@ from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pygtt==1.1.2']
+
 
 _LOGGER = logging.getLogger(__name__)
 

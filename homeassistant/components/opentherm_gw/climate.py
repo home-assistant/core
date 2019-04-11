@@ -15,7 +15,7 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['opentherm_gw']
+
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 

@@ -14,7 +14,7 @@ from .const import ATTR_SENSOR_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['luftdaten']
+
 
 
 async def async_setup_platform(

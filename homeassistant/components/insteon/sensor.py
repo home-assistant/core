@@ -5,7 +5,7 @@ from homeassistant.helpers.entity import Entity
 
 from . import InsteonEntity
 
-DEPENDENCIES = ['insteon']
+
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,7 +8,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-roku==3.1.5']
+
 
 _LOGGER = logging.getLogger(__name__)
 

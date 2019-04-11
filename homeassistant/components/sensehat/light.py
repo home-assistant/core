@@ -10,7 +10,7 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_NAME
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['sense-hat==2.2.0']
+
 
 _LOGGER = logging.getLogger(__name__)
 

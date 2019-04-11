@@ -22,7 +22,7 @@ CONF_RESET_AFTER = 'reset_after'
 CONF__ACTION = 'turn_off_action'
 
 DEFAULT_NAME = 'KNX Binary Sensor'
-DEPENDENCIES = ['knx']
+
 
 AUTOMATION_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,

@@ -10,7 +10,7 @@ from homeassistant.helpers.entity import Entity
 
 from . import DATA_RAINBIRD
 
-DEPENDENCIES = ['rainbird']
+
 
 _LOGGER = logging.getLogger(__name__)
 

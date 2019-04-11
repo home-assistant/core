@@ -8,7 +8,7 @@ from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-DEPENDENCIES = ['deconz']
+
 
 ATTR_ORIENTATION = 'orientation'
 ATTR_TILTANGLE = 'tiltangle'

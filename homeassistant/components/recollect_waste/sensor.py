@@ -8,7 +8,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['recollect-waste==1.0.1']
+
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_PICKUP_TYPES = 'pickup_types'

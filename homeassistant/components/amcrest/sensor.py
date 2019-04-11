@@ -7,7 +7,7 @@ from homeassistant.helpers.entity import Entity
 
 from . import DATA_AMCREST, SENSORS
 
-DEPENDENCIES = ['amcrest']
+
 
 _LOGGER = logging.getLogger(__name__)
 

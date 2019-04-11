@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ['mopar']
+
 ICON = 'mdi:car'
 
 

@@ -12,7 +12,7 @@ from . import (ToonEntity, ToonDisplayDeviceEntity, ToonBoilerDeviceEntity,
                ToonBoilerModuleDeviceEntity)
 from .const import DATA_TOON_CLIENT, DOMAIN
 
-DEPENDENCIES = ['toon']
+
 
 _LOGGER = logging.getLogger(__name__)
 

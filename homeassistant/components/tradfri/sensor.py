@@ -9,7 +9,7 @@ from . import KEY_API, KEY_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['tradfri']
+
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

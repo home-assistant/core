@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['london-tube-status==0.2']
+
 
 _LOGGER = logging.getLogger(__name__)
 

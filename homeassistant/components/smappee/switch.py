@@ -5,7 +5,7 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import DATA_SMAPPEE
 
-DEPENDENCIES = ['smappee']
+
 
 _LOGGER = logging.getLogger(__name__)
 

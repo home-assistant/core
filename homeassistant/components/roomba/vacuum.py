@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['roombapy==1.3.1']
+
 
 _LOGGER = logging.getLogger(__name__)
 

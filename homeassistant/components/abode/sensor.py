@@ -8,7 +8,7 @@ from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['abode']
+
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {

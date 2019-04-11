@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 API_PATH = '/api/torque'
 
 DEFAULT_NAME = 'vehicle'
-DEPENDENCIES = ['http']
+
 DOMAIN = 'torque'
 
 ENTITY_NAME_FORMAT = '{0} {1}'

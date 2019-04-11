@@ -19,7 +19,7 @@ from homeassistant.util import Throttle, slugify
 
 from .const import ATTR_SMHI_CLOUDINESS, ENTITY_ID_SENSOR_FORMAT
 
-DEPENDENCIES = ['smhi']
+
 
 _LOGGER = logging.getLogger(__name__)
 

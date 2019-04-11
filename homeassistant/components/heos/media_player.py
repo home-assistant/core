@@ -17,7 +17,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
 
-DEPENDENCIES = ['heos']
+
 
 BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                           SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \

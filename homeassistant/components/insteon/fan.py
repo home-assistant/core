@@ -10,7 +10,7 @@ from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['insteon']
+
 
 SPEED_TO_HEX = {
     SPEED_OFF: 0x00,

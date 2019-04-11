@@ -8,7 +8,7 @@ from homeassistant.util.color import (
 
 from . import DOMAIN, WinkDevice
 
-DEPENDENCIES = ['wink']
+
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

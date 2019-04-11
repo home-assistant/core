@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pytrafikverket==0.1.5.9']
+
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -13,7 +13,7 @@ from homeassistant.components.light import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.util.color as color_util
 
-DEPENDENCIES = ['wemo']
+
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)

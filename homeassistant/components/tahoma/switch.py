@@ -6,7 +6,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
-DEPENDENCIES = ['tahoma']
+
 
 _LOGGER = logging.getLogger(__name__)
 

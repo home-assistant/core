@@ -7,7 +7,7 @@ from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['wink']
+
 
 SENSOR_TYPES = ['temperature', 'humidity', 'balance', 'proximity']
 

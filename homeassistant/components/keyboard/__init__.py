@@ -6,7 +6,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP)
 
-REQUIREMENTS = ['pyuserinput==0.1.11']
+
 
 DOMAIN = 'keyboard'
 

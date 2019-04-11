@@ -11,7 +11,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['xs1-api-client==2.3.5']
+
 
 _LOGGER = logging.getLogger(__name__)
 

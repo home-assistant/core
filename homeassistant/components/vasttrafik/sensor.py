@@ -11,7 +11,7 @@ from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['vtjp==0.1.14']
+
 
 _LOGGER = logging.getLogger(__name__)
 

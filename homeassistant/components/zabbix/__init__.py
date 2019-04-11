@@ -8,7 +8,7 @@ from homeassistant.const import (
     CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyzabbix==0.7.4']
+
 
 _LOGGER = logging.getLogger(__name__)
 

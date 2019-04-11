@@ -6,7 +6,7 @@ from homeassistant.const import CONF_NAME
 
 from . import DATA_DEVICE_REGISTER, DOMAIN as HLK_SW16, SW16Device
 
-DEPENDENCIES = [HLK_SW16]
+
 
 _LOGGER = logging.getLogger(__name__)
 

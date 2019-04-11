@@ -10,7 +10,7 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
 
-REQUIREMENTS = ['python-pushover==0.3']
+
 _LOGGER = logging.getLogger(__name__)
 
 

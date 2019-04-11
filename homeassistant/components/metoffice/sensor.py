@@ -14,7 +14,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['datapoint==0.4.3']
+
 
 ATTR_LAST_UPDATE = 'last_update'
 ATTR_SENSOR_ID = 'sensor_id'

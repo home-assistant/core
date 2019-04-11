@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'ios'
 
-DEPENDENCIES = ['device_tracker', 'http', 'zeroconf']
+
 
 CONF_PUSH = 'push'
 CONF_PUSH_CATEGORIES = 'categories'

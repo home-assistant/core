@@ -7,7 +7,7 @@ from homeassistant.const import (
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
-DEPENDENCIES = ['homekit_controller']
+
 
 _LOGGER = logging.getLogger(__name__)
 

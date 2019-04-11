@@ -9,7 +9,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-REQUIREMENTS = ['pycomfoconnect==0.3']
+
 
 _LOGGER = logging.getLogger(__name__)
 

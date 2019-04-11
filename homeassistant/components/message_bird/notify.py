@@ -9,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
-REQUIREMENTS = ['messagebird==1.2.0']
+
 
 _LOGGER = logging.getLogger(__name__)
 
