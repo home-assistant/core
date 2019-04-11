@@ -481,6 +481,15 @@ class HTML5NotificationService(BaseNotificationService):
             payload[ATTR_DATA][ATTR_JWT] = add_jwt(
                 timestamp, target, payload[ATTR_TAG],
                 info[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH])
+            import jwt
+            jwt_secret = info[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
+            jwt_exp = (datetime.fromtimestamp(timestamp) +
+                       timedelta(days=JWT_VALID_DAYS))
+            jwt_claims = {'exp': jwt_exp, 'nbf': timestamp,
+                          'iat': timestamp, ATTR_TARGET: target,
+                          ATTR_TAG: payload[ATTR_TAG]}
+            jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
+            payload[ATTR_DATA][ATTR_JWT] = jwt_token
             webpusher = WebPusher(info[ATTR_SUBSCRIPTION])
             if self._vapid_prv and self._vapid_email:
                 vapid_headers = create_vapid_headers(
@@ -506,7 +515,7 @@ class HTML5NotificationService(BaseNotificationService):
                     json.dumps(payload), gcm_key=gcm_key, ttl=ttl
                 )
 
-            if response and response.status_code == 410:
+            if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
                 if not save_json(self.registrations_json_path,
