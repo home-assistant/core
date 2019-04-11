@@ -10,7 +10,6 @@ from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import IntegrationNotFound
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 
@@ -215,7 +214,7 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant,
 
     try:
         integration = await loader.async_get_integration(hass, platform_name)
-    except IntegrationNotFound:
+    except loader.IntegrationNotFound:
         log_error("Integration not found")
         return None
 
