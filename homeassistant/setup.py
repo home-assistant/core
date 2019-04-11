@@ -232,7 +232,12 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant,
     # Platforms cannot exist on their own, they are part of their integration.
     # If the integration is not set up yet, and can be set up, set it up.
     if integration.domain not in hass.config.components:
-        component = integration.get_component()
+        try:
+            component = integration.get_component()
+        except ImportError:
+            log_error("Unable to import the component")
+            return None
+
         if (hasattr(component, 'setup')
                 or hasattr(component, 'async_setup')):
             if not await async_setup_component(
