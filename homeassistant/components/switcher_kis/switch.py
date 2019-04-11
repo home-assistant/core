@@ -11,8 +11,8 @@ from homeassistant.exceptions import PlatformNotReady
 
 from . import (
     ATTR_AUTO_OFF_SET, ATTR_DEVICE_NAME, ATTR_ELECTRIC_CURRNET,
-    ATTR_IP_ADDRESS, ATTR_REMAINING_TIME, DATA_CONFIG, DATA_DEVICE,
-    DOMAIN, EVENT_SWITCHER_DEVICE_UPDATED, UPDATED_DEVICE)
+    ATTR_REMAINING_TIME, DATA_CONFIG, DATA_DEVICE, DOMAIN,
+    EVENT_SWITCHER_DEVICE_UPDATED, UPDATED_DEVICE)
 
 _LOGGER = getLogger(__name__)
 
@@ -20,7 +20,6 @@ DEPENDENCIES = ['switcher_kis']
 
 PROPERTIES_TO_ATTRIBUTES = {
     'current_power_w': ATTR_CURRENT_POWER_W,
-    'device_ip_addr': ATTR_IP_ADDRESS,
     'electric_current': ATTR_ELECTRIC_CURRNET,
     'remaining_time': ATTR_REMAINING_TIME,
     'auto_off_set': ATTR_AUTO_OFF_SET,
@@ -39,7 +38,7 @@ async def async_setup_platform(hass: HomeAssistant, config: Dict,
     icon = hass.data[DOMAIN][DATA_CONFIG].get(CONF_ICON)
 
     switcher_entity = SwitcherControl(
-        hass, name, icon, hass.data[DOMAIN].get(DATA_DEVICE))
+        hass, name, icon, hass.data[DOMAIN][DATA_DEVICE])
 
     async_add_entities([switcher_entity])
 
