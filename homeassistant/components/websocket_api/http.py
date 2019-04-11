@@ -50,8 +50,6 @@ class WebSocketHandler:
         self._writer_task = None
         self._logger = logging.getLogger(
             "{}.connection.{}".format(__name__, id(self)))
-        self._connections = set()
-        hass.data[DATA_CONNECTIONS] = self._connections
 
     async def _writer(self):
         """Write outgoing messages."""
@@ -147,7 +145,8 @@ class WebSocketHandler:
 
             self._logger.debug("Received %s", msg)
             connection = await auth.async_handle(msg)
-            self._connections.add(connection)
+            self.hass.data[DATA_CONNECTIONS] = \
+                self.hass.data.get(DATA_CONNECTIONS, 0) + 1
             self.hass.helpers.dispatcher.async_dispatcher_send(
                 SIGNAL_WEBSOCKET_CONNECTED)
 
@@ -200,7 +199,7 @@ class WebSocketHandler:
             else:
                 self._logger.warning("Disconnected: %s", disconnect_warn)
 
-            self._connections.remove(connection)
+            self.hass.data[DATA_CONNECTIONS] -= 1
             self.hass.helpers.dispatcher.async_dispatcher_send(
                 SIGNAL_WEBSOCKET_DISCONNECTED)
 

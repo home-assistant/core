@@ -48,6 +48,5 @@ class APICount(Entity):
 
     @callback
     def _update_count(self):
-        connections = self.hass.data.get(DATA_CONNECTIONS)
-        self.count = len(connections) if connections else 0
+        self.count = self.hass.data.get(DATA_CONNECTIONS, 0)
         self.async_schedule_update_ha_state()
