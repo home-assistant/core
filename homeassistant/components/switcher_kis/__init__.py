@@ -1,7 +1,7 @@
 """Home Assistant Switcher Component."""
 
 from asyncio import TimeoutError as Asyncio_TimeoutError, wait_for
-from datetime import datetime
+from datetime import datetime, timedelta
 from logging import getLogger
 from typing import Dict, Optional
 
@@ -12,7 +12,7 @@ from homeassistant.const import CONF_ICON, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = getLogger(__name__)
 
@@ -95,8 +95,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
             if device_new_data:
                 hass.bus.async_fire(EVENT_SWITCHER_DEVICE_UPDATED,
                                     {UPDATED_DEVICE: device_new_data})
-            async_call_later(hass, 3, device_updates)
 
-    async_call_later(hass, 3, device_updates)
+    async_track_time_interval(hass, device_updates, timedelta(seconds=3))
 
     return True

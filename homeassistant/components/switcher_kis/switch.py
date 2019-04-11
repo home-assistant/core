@@ -11,9 +11,8 @@ from homeassistant.exceptions import PlatformNotReady
 
 from . import (
     ATTR_AUTO_OFF_SET, ATTR_DEVICE_NAME, ATTR_ELECTRIC_CURRNET,
-    ATTR_IP_ADDRESS, ATTR_LAST_DATA_UPDATE, ATTR_LAST_STATE_CHANGE,
-    ATTR_REMAINING_TIME, DATA_CONFIG, DATA_DEVICE, DOMAIN,
-    EVENT_SWITCHER_DEVICE_UPDATED, UPDATED_DEVICE)
+    ATTR_IP_ADDRESS, ATTR_REMAINING_TIME, DATA_CONFIG, DATA_DEVICE,
+    DOMAIN, EVENT_SWITCHER_DEVICE_UPDATED, UPDATED_DEVICE)
 
 _LOGGER = getLogger(__name__)
 
@@ -25,8 +24,6 @@ PROPERTIES_TO_ATTRIBUTES = {
     'electric_current': ATTR_ELECTRIC_CURRNET,
     'remaining_time': ATTR_REMAINING_TIME,
     'auto_off_set': ATTR_AUTO_OFF_SET,
-    'last_data_update': ATTR_LAST_DATA_UPDATE,
-    'last_state_change': ATTR_LAST_STATE_CHANGE,
     'device_name': ATTR_DEVICE_NAME
 }
 
@@ -35,17 +32,14 @@ async def async_setup_platform(hass: HomeAssistant, config: Dict,
                                async_add_entities: Callable,
                                discovery_info: Dict) -> None:
     """Set up the switcher platform for the switch component."""
-    if hass.data[DOMAIN][DATA_CONFIG]:
-        name = hass.data[DOMAIN][DATA_CONFIG][CONF_NAME].title()
-        icon = hass.data[DOMAIN][DATA_CONFIG].get(CONF_ICON)
-    else:
-        raise PlatformNotReady("No config data found")
+    if DOMAIN not in hass.data:
+        raise PlatformNotReady("No configuration data found.")
 
-    if hass.data[DOMAIN].get(DATA_DEVICE):
-        switcher_entity = SwitcherControl(
-            hass, name, icon, hass.data[DOMAIN].get(DATA_DEVICE))
-    else:
-        raise PlatformNotReady("No device data discoverd")
+    name = hass.data[DOMAIN][DATA_CONFIG][CONF_NAME].title()
+    icon = hass.data[DOMAIN][DATA_CONFIG].get(CONF_ICON)
+
+    switcher_entity = SwitcherControl(
+        hass, name, icon, hass.data[DOMAIN].get(DATA_DEVICE))
 
     async_add_entities([switcher_entity])
 
@@ -174,45 +168,37 @@ class SwitcherControl(SwitchDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        from aioswitcher.api import SwitcherV2Api
-        # pylint: disable=unused-import
-        from aioswitcher.api.messages import (  # noqa F401
-            SwitcherV2ControlResponseMSG)
-        # pylint: enable=unused-import
-        from aioswitcher.consts import (COMMAND_ON,
-                                        STATE_ON as SWITCHER_STATE_ON)
-        response = None  # type: SwitcherV2ControlResponseMSG
-        async with SwitcherV2Api(
-                self._hass.loop, self.device_ip_addr,
-                self._device_data.phone_id, self._device_data.device_id,
-                self._device_data.device_password) as swapi:
-            response = await swapi.control_device(COMMAND_ON)
-
-        if response and response.successful:
-            self._self_initiated = True
-            self._state = SWITCHER_STATE_ON
-            self.async_schedule_update_ha_state()
+        await self._control_device(True)
 
     async def async_turn_off(self, **kwargs: Dict) -> None:
         """Turn the entity off.
 
         This method must be run in the event loop and returns a coroutine.
         """
+        await self._control_device(False)
+
+    async def _control_device(self, send_on: bool) -> None:
+        """Turn the entity on or off."""
         from aioswitcher.api import SwitcherV2Api
         # pylint: disable=unused-import
         from aioswitcher.api.messages import (  # noqa F401
             SwitcherV2ControlResponseMSG)
         # pylint: enable=unused-import
-        from aioswitcher.consts import (COMMAND_OFF,
-                                        STATE_OFF as SWITCHER_STATE_OFF)
+        from aioswitcher.consts import (COMMAND_OFF, COMMAND_ON,
+                                        STATE_OFF as SWITCHER_STATE_OFF,
+                                        STATE_ON as SWITCHER_STATE_ON)
+
         response = None  # type: SwitcherV2ControlResponseMSG
+
         async with SwitcherV2Api(
                 self._hass.loop, self.device_ip_addr,
                 self._device_data.phone_id, self._device_data.device_id,
                 self._device_data.device_password) as swapi:
-            response = await swapi.control_device(COMMAND_OFF)
+            response = await swapi.control_device(
+                COMMAND_ON if send_on else COMMAND_OFF)
 
         if response and response.successful:
             self._self_initiated = True
-            self._state = SWITCHER_STATE_OFF
+            self._state = \
+                SWITCHER_STATE_ON if send_on else SWITCHER_STATE_OFF
             self.async_schedule_update_ha_state()
