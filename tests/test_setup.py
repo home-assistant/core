@@ -6,7 +6,6 @@ from unittest import mock
 import threading
 import logging
 
-import pytest
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -18,7 +17,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)
 from homeassistant.helpers import discovery
-from homeassistant.loader import IntegrationNotFound
 
 from tests.common import \
     get_test_home_assistant, MockModule, MockPlatform, \
