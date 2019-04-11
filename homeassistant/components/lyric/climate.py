@@ -176,36 +176,38 @@ class LyricThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
+        current_operation = None
         if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF]:
-            return self._mode
+            current_operation = self._mode
         elif self._mode == STATE_HEAT_COOL:
-            return STATE_AUTO
+            current_operation = STATE_AUTO
         else:
-            return STATE_UNKNOWN
+            current_operation = STATE_UNKNOWN
+        return current_operation
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        target_temperature = None
         if not self._dual_setpoint:
-            return self._target_temperature
-        else:
-            return None
+            target_temperature = self._target_temperature
+        return target_temperature
 
     @property
     def target_temperature_low(self):
         """Return the upper bound temperature we try to reach."""
+        target_temperature_low = None
         if self._dual_setpoint:
-            return self._target_temp_cool
-        else:
-            return None
+            target_temperature_low = self._target_temp_cool
+        return target_temperature_low
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
+        target_temperature_high = None
         if self._dual_setpoint:
-            return self._target_temp_heat
-        else:
-            return None
+            target_temperature_high = self._target_temp_heat
+        return target_temperature_high
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
