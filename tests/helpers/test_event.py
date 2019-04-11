@@ -355,6 +355,52 @@ class TestEventHelpers(unittest.TestCase):
         assert len(wildcard_runs) == 4
         assert len(wildercard_runs) == 4
 
+    def test_track_template_result_iterator(self):
+        """Test tracking template."""
+        iterator_runs = []
+        @ha.callback
+        def iterator_callback(event, template, old_result, new_result):
+            iterator_runs.append(new_result)
+
+        track_template_result(
+            self.hass,
+            Template(
+                """
+                {% for state in states.sensor %}
+                    {% if state.state == 'on' %}
+                        {{ state.entity_id }},
+                    {% endif %}
+                {% endfor %}
+                """,
+                self.hass
+            ), iterator_callback)
+        self.hass.block_till_done()
+        assert iterator_runs == ['']
+
+        filter_runs = []
+        @ha.callback
+        def filter_callback(event, template, old_result, new_result):
+            filter_runs.append(new_result)
+        track_template_result(
+            self.hass,
+            Template(
+                """{{ states.sensor|selectattr("state","equalto","on")
+                    |join(",", attribute="entity_id") }}""",
+                self.hass
+            ), filter_callback)
+        self.hass.block_till_done()
+        assert filter_runs == ['']
+
+        self.hass.states.set('sensor.test', 5)
+        self.hass.block_till_done()
+        assert iterator_runs == ['']
+        assert filter_runs == ['']
+
+        self.hass.states.set('sensor.new', 'on')
+        self.hass.block_till_done()
+        assert iterator_runs == ['', 'sensor.new,']
+        assert filter_runs == ['', 'sensor.new']
+
     def test_track_template_result_errors(self):
         """Test tracking template with errors in the template."""
         template_syntax_error = Template(

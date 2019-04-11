@@ -231,6 +231,9 @@ class AllStates:
 
     def __len__(self):
         """Return number of states."""
+        entity_collect = self._hass.data.get(_COLLECT_KEY)
+        if entity_collect is not None:
+            entity_collect.include_all = True
         return len(self._hass.states.async_entity_ids())
 
     def __call__(self, entity_id):
@@ -271,6 +274,9 @@ class DomainStates:
 
     def __len__(self):
         """Return number of states."""
+        entity_collect = self._hass.data.get(_COLLECT_KEY)
+        if entity_collect is not None:
+            entity_collect.include_domains.add(self._domain)
         return len(self._hass.states.async_entity_ids(self._domain))
 
     def __repr__(self):

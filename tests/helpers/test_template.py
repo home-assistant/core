@@ -940,6 +940,18 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_generate_filter_iterators(self):
         """Test extract entities function with none entities stuff."""
+        assert self.generate_filter("""
+{% for state in states %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_all=True)
+
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_domains=['sensor'])
+
         self.hass.states.set('sensor.test_sensor', 'off', {
             'attr': 'value'})
 
@@ -978,6 +990,31 @@ class TestHelpersTemplate(unittest.TestCase):
   {{ state.entity_id }}
 {% endfor %}
             """) == EntityFilter(include_all=True)
+
+    def test_generate_select(self):
+        """Test extract entities function with none entities stuff."""
+        template_str = """
+{{ states.sensor|selectattr("state","equalto","off")
+    |join(",", attribute="entity_id") }}
+            """
+
+        tmp = template.Template(template_str, self.hass)
+        (result, filt) = tmp.async_render_with_collect()
+
+        assert result == ''
+        assert filt == EntityFilter(
+                include_domains=['sensor'])
+
+        self.hass.states.set('sensor.test_sensor', 'off', {
+            'attr': 'value'})
+        self.hass.states.set('sensor.test_sensor_on', 'on')
+
+        (result, filt) = tmp.async_render_with_collect()
+        assert result == 'sensor.test_sensor'
+        assert filt == EntityFilter(
+                include_domains=['sensor'],
+                include_entities=[
+                    'sensor.test_sensor', 'sensor.test_sensor_on'])
 
     def test_extract_entities_match_entities(self):
         """Test extract entities function with entities stuff."""
