@@ -196,7 +196,8 @@ async def _async_setup_component(hass: core.HomeAssistant,
     return True
 
 
-async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
+async def async_prepare_setup_platform(hass: core.HomeAssistant,
+                                       hass_config: Dict,
                                        domain: str, platform_name: str) \
                                  -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup.
@@ -228,20 +229,20 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config: Dict,
     if platform_path in hass.config.components:
         return platform
 
+    # Platforms cannot exist on their own, they are part of their integration.
+    # If the integration is not set up yet, and can be set up, set it up.
     if integration.domain not in hass.config.components:
-        # Set up component for platform since we removed deps
-        # from single platform
         component = integration.get_component()
         if (hasattr(component, 'setup')
                 or hasattr(component, 'async_setup')):
-            try:
-                await async_setup_component(hass, integration.domain, config)
-            except HomeAssistantError as err:
-                log_error(str(err))
+            if not await async_setup_component(
+                    hass, integration.domain, hass_config
+            ):
+                log_error("Unable to set up component.")
                 return None
 
     try:
-        await async_process_deps_reqs(hass, config, integration)
+        await async_process_deps_reqs(hass, hass_config, integration)
     except HomeAssistantError as err:
         log_error(str(err))
         return None
