@@ -24,6 +24,7 @@ VALID_CONFIG_KJFK_MINIMAL = {
         'latitude': 40.6391,
         'longitude': -73.7639,
         'monitored_conditions': ['temperature'],
+        'useragent': 'x@example.com',
     }
 }
 

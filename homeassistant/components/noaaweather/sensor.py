@@ -78,25 +78,23 @@ Not all stations have the equipment to measure all of the conditions.
 import datetime
 from datetime import timedelta
 import logging
+from typing import Dict, List, Union, Any
+
 import aiohttp
+from astral import Location
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA, ENTITY_ID_FORMAT)
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS, CONF_NAME, LENGTH_METERS, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES, LENGTH_INCHES,
-    PRESSURE_PA, PRESSURE_MBAR,
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE)
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import (
-    Entity, async_generate_entity_id)
-from homeassistant.util import Throttle
-from homeassistant.exceptions import (
-    ConfigEntryNotReady, PlatformNotReady)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
+    CONF_NAME, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE, LENGTH_INCHES, LENGTH_KILOMETERS, LENGTH_METERS,
+    LENGTH_MILES, PRESSURE_MBAR, PRESSURE_PA, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pynws==0.5', 'metar==1.7.0']
 
@@ -121,6 +119,7 @@ ATTR_LAST_UPDATE = 'last_update'
 ATTR_SENSOR_ID = 'sensor_id'
 ATTR_SITE_ID = 'site_id'
 CONF_STATIONCODE = 'stationcode'
+CONF_USERAGENT = 'useragent'
 CONF_USEHAWEATHER = 'usehaweathercond'
 
 ATTRIBUTION = "Data from NOAA/NWS"
@@ -290,10 +289,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                   'Latitude and longitude must exist together'): cv.longitude,
     vol.Optional(CONF_STATIONCODE): cv.string,
     vol.Optional(CONF_USEHAWEATHER, default=False): cv.boolean,
+    vol.Optional(CONF_USERAGENT, default='ha-noaaweather'): cv.string,
 })
 
 
-async def get_obs_station_list(nws):
+async def get_obs_station_list(nws) -> List[str]:
     """Get list of observation stations for a location.
 
     This gets the list of stations which provide observations
@@ -343,7 +343,7 @@ async def get_obs_station_list(nws):
     return res
 
 
-async def get_obs_for_station(nws, errorstate):
+async def get_obs_for_station(nws, errorstate) -> Dict:
     """Retrieve the latest observation data for the given station.
 
     This calls the NWS API for to retrieve the latest sets of observation
@@ -366,7 +366,7 @@ async def get_obs_for_station(nws, errorstate):
     return res
 
 
-def get_metar_value(metar, variable):
+def get_metar_value(metar, variable) -> Dict:
     """Return a variable from the METAR record.
 
     This returns the VAL_MEASUREMENT dict that corresponds to
@@ -417,7 +417,7 @@ def get_metar_value(metar, variable):
     return res
 
 
-def textdesctoweather(description):
+def textdesctoweather(description) -> str:
     """Convert the values in the textDescription field to HA standard values.
 
     Home Assistant has some standard text values for current weather
@@ -452,8 +452,101 @@ def textdesctoweather(description):
     return description
 
 
+def unit_convert(variable, desiredunit) -> float:
+    """Convert the measurement from the native unit to the appropriate unit.
+
+    This will do the appropriate conversion to get the value
+    from unit it is supplied in to the standard metric or imperial
+    value used for the measurement.
+    """
+    #
+    # No conversion needed if no value
+    #
+    if variable['value'] is None:
+        return None
+
+    result = variable['value']
+    #
+    # We check if a unit is supplied, and if so we try to covert
+    # the value to the desired unit (set at initialization).
+    # If we either don't get a unit, or get a unit we don't
+    # know how to convert, we will return a null value.
+    # Otherwise the value will be converted as required.
+    #
+    if 'unitCode' not in variable:
+        return None
+
+    if variable['unitCode'] not in UNIT_MAPPING:
+        _LOGGER.debug("No translation for unitCode %s",
+                      variable['unitCode'])
+        return None
+    #
+    # We have a unit mapping to use
+    #
+    srcunit = UNIT_MAPPING[variable['unitCode']][0]
+    #
+    # If source and desired units are the same, no need to convert
+    #
+    if srcunit == desiredunit:
+        return result
+
+    # need to conver units, identify conversion required
+    #
+    # Do we have temperature in Celsius and need Fahrenheit?
+    #
+    if srcunit == TEMP_CELSIUS and desiredunit == TEMP_FAHRENHEIT:
+        return result * 9 / 5 + 32
+    #
+    # Do we have Fahrenheit and need Celsius
+    #
+    if srcunit == TEMP_FAHRENHEIT and desiredunit == TEMP_CELSIUS:
+        return (result - 32) * 5 / 9
+    #
+    # Do we have a length in meters?
+    #
+    if srcunit == LENGTH_METERS:
+        # Is the target miles? (Used for visibility)
+        if desiredunit == LENGTH_MILES:
+            return result / 1609.344
+        # Is the target kilometers? (Used for visibility)
+        if desiredunit == LENGTH_KILOMETERS:
+            return result / 1000
+        # Is the target unit millimeters? (Used for precipitation)
+        if desiredunit == LENGTH_MILLIMETERS:
+            return result * 1000
+        # Is the target unit inches? (Used for precipitation)
+        if desiredunit == LENGTH_INCHES:
+            return result * 39.37007874
+        # If we have some other target unit we have an error
+        # Return the original value
+        return result
+    #
+    # Do we have pressure in Pascals?
+    #
+    if srcunit == PRESSURE_PA and desiredunit == PRESSURE_MBAR:
+        return result / 100
+    #
+    # Do we have a speed in meters/second (wind speed and gusts)
+    #
+    if srcunit == SPEED_METERS_PER_SECOND and \
+            desiredunit == SPEED_MILES_PER_HOUR:
+        return result * 2.236936292
+    #
+    # Even for metric we need to convert meters/second
+    #
+    if srcunit == SPEED_METERS_PER_SECOND and \
+            desiredunit == SPEED_KM_PER_HOUR:
+        return result * 3.6
+    #
+    # If we fall through to here we have a unit name in our mapping
+    # table but not in the conversion code above.
+    # Just return the original value.
+    #
+    return result
+
+
 async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+                               discovery_info=None) -> None:
     """Set up the NOAA sensor platform.
 
     The key item is the location to use,
@@ -497,6 +590,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     # Set up pynws.nws object
     #
     nws = pynws.Nws(session, latlon=(latitude, longitude))
+    nws.userid = config.get(CONF_USERAGENT)
     nws.limit = 5
     #
     # Get the list of observation stations for the location.
@@ -547,7 +641,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     # Create the data object for observations for this location/station.
     #
 
-    noaadata = NOAACurrentData(hass, stationcode, name, nws)
+    noaadata = NOAACurrentData(stationcode, name, nws,
+                               latitude, longitude)
     #
     # Perform a data update to get first set of data and available
     # measurements
@@ -563,8 +658,9 @@ async def async_setup_platform(hass, config, async_add_entities,
             DEFAULT_NAME + '.' + noaadata.stationcode + '.' + variable,
             hass=hass)
         sensors.append(
-            NOAACurrentSensor(hass, noaadata, variable, name, entity_id,
-                              config.get(CONF_USEHAWEATHER)))
+            NOAACurrentSensor(noaadata, variable, name, entity_id,
+                              config.get(CONF_USEHAWEATHER),
+                              hass.config.units.is_metric))
     #
     # Add all the sensors
     #
@@ -584,8 +680,8 @@ class NOAACurrentSensor(Entity):
     of measurement.
     """
 
-    def __init__(self, hass, noaadata, condition, name, entity_id,
-                 usehaweather):
+    def __init__(self, noaadata, condition, name, entity_id,
+                 usehaweather, metricunits) -> None:
         """Initialize the sensor object."""
         _LOGGER.debug("Initializing sensor %s, condition %s, sensor_type: %s",
                       name, condition, SENSOR_TYPES[condition])
@@ -598,13 +694,10 @@ class NOAACurrentSensor(Entity):
         # Set whether desired units are metric (default) or
         # imperial.
         #
-        if hass.config.units == METRIC_SYSTEM:
+        if metricunits:
             self._desiredunit = SENSOR_TYPES[condition][STI_METU]
-        elif hass.config.units == IMPERIAL_SYSTEM:
-            self._desiredunit = SENSOR_TYPES[condition][STI_IMPU]
         else:
-            _LOGGER.warning("Unknown unit system %s, defaulting to metric",
-                            hass.config.units)
+            self._desiredunit = SENSOR_TYPES[condition][STI_IMPU]
         #
         # Set icon and device class, if any
         #
@@ -612,115 +705,23 @@ class NOAACurrentSensor(Entity):
         self._device_class = SENSOR_TYPES[condition][STI_DEVC]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return '{} {}'.format(
             self._name, SENSOR_TYPES[self._condition][STI_NAME])
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend."""
         return self._icon
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Device class of the sensor."""
         return self._device_class
 
-    def _unit_convert(self, variable, desiredunit):
-        """Check if value needs to be converted to different units.
-
-        This will do the appropriate conversion to get the value
-        from unit it is supplied in to the standard metric or imperial
-        value used for the measurement.
-        """
-        #
-        # No conversion needed if no value
-        #
-        if variable['value'] is None:
-            return None
-
-        result = variable['value']
-        #
-        # We check if a unit is supplied, and if so we try to covert
-        # the value to the desired unit (set at initialization).
-        # If we either don't get a unit, or get a unit we don't
-        # know how to convert, we will return a null value.
-        # Otherwise the value will be converted as required.
-        #
-        if 'unitCode' not in variable:
-            return None
-
-        if variable['unitCode'] not in UNIT_MAPPING:
-            _LOGGER.debug("No translation for unitCode %s",
-                          variable['unitCode'])
-            return None
-        #
-        # We have a unit mapping to use
-        #
-        srcunit = UNIT_MAPPING[variable['unitCode']][0]
-        #
-        # If source and desired units are the same, no need to convert
-        #
-        if srcunit == self._desiredunit:
-            return result
-
-        # need to conver units, identify conversion required
-        #
-        # Do we have temperature in Celsius and need Fahrenheit?
-        #
-        if srcunit == TEMP_CELSIUS and desiredunit == TEMP_FAHRENHEIT:
-            return result * 9 / 5 + 32
-        #
-        # Do we have Fahrenheit and need Celsius
-        #
-        if srcunit == TEMP_FAHRENHEIT and desiredunit == TEMP_CELSIUS:
-            return (result - 32) * 5 / 9
-        #
-        # Do we have a length in meters?
-        #
-        if srcunit == LENGTH_METERS:
-            # Is the target miles? (Used for visibility)
-            if desiredunit == LENGTH_MILES:
-                return result / 1609.344
-            # Is the target kilometers? (Used for visibility)
-            if desiredunit == LENGTH_KILOMETERS:
-                return result / 1000
-            # Is the target unit millimeters? (Used for precipitation)
-            if desiredunit == LENGTH_MILLIMETERS:
-                return result * 1000
-            # Is the target unit inches? (Used for precipitation)
-            if desiredunit == LENGTH_INCHES:
-                return result * 39.37007874
-            # If we have some other target unit we have an error
-            # Return the original value
-            return result
-        #
-        # Do we have pressure in Pascals?
-        #
-        if srcunit == PRESSURE_PA and desiredunit == PRESSURE_MBAR:
-            return result / 100
-        #
-        # Do we have a speed in meters/second (wind speed and gusts)
-        #
-        if srcunit == SPEED_METERS_PER_SECOND and \
-                desiredunit == SPEED_MILES_PER_HOUR:
-            return result * 2.236936292
-        #
-        # Even for metric we need to convert meters/second
-        #
-        if srcunit == SPEED_METERS_PER_SECOND and \
-                desiredunit == SPEED_KM_PER_HOUR:
-            return result * 3.6
-        #
-        # If we fall through to here we have a unit name in our mapping
-        # table but not in the conversion code above.
-        # Just return the original value.
-        #
-        return result
-
     @property
-    def state(self):
+    def state(self) -> Union[str, float]:
         """Return the state of the sensor."""
         _LOGGER.debug("Getting state for %s", self._condition)
         _LOGGER.debug("noaadata.data set is %s", set(self._noaadata.data))
@@ -736,7 +737,10 @@ class NOAACurrentSensor(Entity):
                 _LOGGER.debug("Condition %s is single value='%s'",
                               self._condition, condvalue)
                 if self._condition == "textDescription" and self._usehaweather:
-                    return textdesctoweather(condvalue)
+                    res = textdesctoweather(condvalue)
+                    if res == 'sunny' and self._noaadata.isnight:
+                        res = 'clear-night'
+                    return res
                 return condvalue
             if SENSOR_TYPES[self._condition][STI_VALTYPE] == VAL_MEASUREMENT:
                 # value attribute of condvalue for measurements
@@ -748,7 +752,7 @@ class NOAACurrentSensor(Entity):
                 #
                 # Convert to the target units (if required)
                 #
-                res = self._unit_convert(condvalue, self._desiredunit)
+                res = unit_convert(condvalue, self._desiredunit)
                 if res is None:
                     return res
                 return round(res, SENSOR_TYPES[self._condition][STI_DIGIT])
@@ -784,7 +788,7 @@ class NOAACurrentSensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Any:
         """Return the state attributes of the device."""
         if self._condition not in self._noaadata.data:
             return None
@@ -795,7 +799,7 @@ class NOAACurrentSensor(Entity):
         return attr
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measure for the sensor."""
         #
         # ensure we have some data
@@ -846,7 +850,8 @@ class NOAACurrentData(Entity):
     depending upon the station.
     """
 
-    def __init__(self, hass, stationcode, name, nws):
+    def __init__(
+            self, stationcode, name, nws, latitude, longitude) -> None:
         """Initialize the current data object."""
         _LOGGER.debug("Initialize NOAACurrentData with stationcode=%s, "
                       "name='%s'",
@@ -856,6 +861,14 @@ class NOAACurrentData(Entity):
         self._name = name
         self.nws = nws
         #
+        # Set up astral location object for this location.
+        self.astlocation = Location()
+        self.astlocation.name = stationcode
+        self.astlocation.region = 'US'
+        self.astlocation.latitude = latitude
+        self.astlocation.longitude = longitude
+        self.astlocation.timezone = 'UTC'
+        #
         # Set time of last update to two hours ago.  This
         # should ensure that when we get the first set of observations
         # and process those after this time, we will have at least
@@ -863,12 +876,16 @@ class NOAACurrentData(Entity):
         #
         self.lastupdate = datetime.datetime.now(datetime.timezone.utc) -\
             timedelta(hours=2)
+        self.nightstart, self.nightend = self.astlocation.night(
+            date=self.lastupdate)
+        self.isnight = self.lastupdate >= self.nightstart and \
+            self.lastupdate <= self.nightend
         self.data = dict()
         self.datatime = dict()
         self._errorstate = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest observation data from the station."""
         #
         # Log that we were called
@@ -898,7 +915,7 @@ class NOAACurrentData(Entity):
         return
 
     @staticmethod
-    def _obssortkey(obs):
+    def _obssortkey(obs) -> Union[str, int]:
         """Return key to sort observation list with.
 
         Normally this is timestamp, but if timestamp is not in the
@@ -909,7 +926,7 @@ class NOAACurrentData(Entity):
             return obs['timestamp']
         return 0
 
-    def _process_obs(self, obsprop):
+    def _process_obs(self, obsprop) -> None:
         from metar import Metar
         #
         # Get the timestamp of the report, if any
@@ -936,6 +953,14 @@ class NOAACurrentData(Entity):
         # Remember time this update was from
         #
         self.lastupdate = thisupdate
+        #
+        # Check if moving beyond last night end time
+        #
+        if self.lastupdate > self.nightend:
+            self.nightstart, self.nightend = self.astlocation.night(
+                date=self.lastupdate, local=False, use_elevation=False)
+        self.isnight = self.lastupdate >= self.nightstart and \
+            self.lastupdate <= self.nightend
         #
         # Check if observation has a "rawMessage" attribute.  This contains
         # the METAR format record, and may have valid information
