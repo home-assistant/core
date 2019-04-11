@@ -150,6 +150,7 @@ class AfterShipSensor(Entity):
             UPDATE_TOPIC, self.force_update)
 
     async def force_update(self):
+        """Force update of data."""
         await self.async_update(no_throttle=True)
         await self.async_update_ha_state()
 
