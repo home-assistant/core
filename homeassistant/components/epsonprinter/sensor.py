@@ -1,10 +1,11 @@
+"""Support for Epson Workforce Printer."""
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -31,7 +32,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the cartridge sensor."""
     host = config.get(CONF_HOST)
 
-    """Set up the printer API."""
     from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
     api = EpsonPrinterAPI(host)
 
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EpsonPrinterCartridge(Entity):
     """Representation of a cartdige sensor."""
 
-    def __init__(self, hass, api,  variable):
+    def __init__(self, hass, api, variable):
         """Initialize a cartridge sensor."""
         self._hass = hass
         self._api = api
