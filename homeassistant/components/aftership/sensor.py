@@ -155,7 +155,7 @@ class AfterShipSensor(Entity):
         await self.async_update_ha_state()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self, **kwargs):
         """Get the latest data from the AfterShip API."""
         await self.aftership.get_trackings()
 
