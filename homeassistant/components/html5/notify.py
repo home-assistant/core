@@ -1,9 +1,4 @@
-"""
-HTML5 Push Messaging notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.html5/
-"""
+"""HTML5 Push Messaging notification service."""
 from datetime import datetime, timedelta
 
 from functools import partial
