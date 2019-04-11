@@ -76,16 +76,18 @@ PARSER_HTML = 'html'
 PARSER_MD = 'markdown'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_PLATFORM): vol.In(('broadcast', 'polling', 'webhooks')),
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_ALLOWED_CHAT_IDS):
-            vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
-        vol.Optional(CONF_PROXY_URL): cv.string,
-        vol.Optional(CONF_PROXY_PARAMS): dict,
-        })
-    ])
+    DOMAIN: vol.All(cv.ensure_list, [
+        vol.Schema({
+            vol.Required(CONF_PLATFORM): vol.In(
+                ('broadcast', 'polling', 'webhooks')),
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Required(CONF_ALLOWED_CHAT_IDS):
+                vol.All(cv.ensure_list, [vol.Coerce(int)]),
+            vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
+            vol.Optional(CONF_PROXY_URL): cv.string,
+            vol.Optional(CONF_PROXY_PARAMS): dict,
+            })
+        ])
 }, extra=vol.ALLOW_EXTRA)
 
 BASE_SERVICE_SCHEMA = vol.Schema({
@@ -219,9 +221,9 @@ async def async_setup(hass, config):
     for p_config in config[DOMAIN]:
 
         p_type = p_config.get(CONF_PLATFORM)
-    
-        platform = importlib.import_module('.{}'.format(p_config[CONF_PLATFORM]),
-                                           __name__)
+
+        platform = importlib.import_module(
+            '.{}'.format(p_config[CONF_PLATFORM]), __name__)
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
