@@ -2,8 +2,6 @@
 import logging
 from statistics import mean
 
-import voluptuous as vol
-
 from homeassistant.components.iqvia import (
     DATA_CLIENT, DOMAIN, SENSORS, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
