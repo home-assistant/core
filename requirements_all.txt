@@ -1536,6 +1536,9 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
+# homeassistant.components.lyric
+python-lyric==1.1.4
+
 # homeassistant.components.xiaomi_miio
 python-miio==0.4.6
 
