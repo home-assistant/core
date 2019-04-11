@@ -5,7 +5,9 @@
   "requirements": [
     "aioautomatic==0.6.5"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "http"
+  ],
   "codeowners": [
     "@armills"
   ]

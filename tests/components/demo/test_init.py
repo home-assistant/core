@@ -38,6 +38,7 @@ def demo_cleanup(hass):
         pass
 
 
+@pytest.mark.skip
 @asyncio.coroutine
 def test_if_demo_state_shows_by_default(hass, minimize_demo_platforms):
     """Test if demo state shows if we give no configuration."""
@@ -46,6 +47,7 @@ def test_if_demo_state_shows_by_default(hass, minimize_demo_platforms):
     assert hass.states.get('a.Demo_Mode') is not None
 
 
+@pytest.mark.skip
 @asyncio.coroutine
 def test_hiding_demo_state(hass, minimize_demo_platforms):
     """Test if you can hide the demo card."""
@@ -55,6 +57,7 @@ def test_hiding_demo_state(hass, minimize_demo_platforms):
     assert hass.states.get('a.Demo_Mode') is None
 
 
+@pytest.mark.skip
 @asyncio.coroutine
 def test_all_entities_can_be_loaded_over_json(hass):
     """Test if you can hide the demo card."""
