@@ -5,16 +5,21 @@ from datetime import timedelta
 import aiohttp
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.camera import (
+    CAMERA_SERVICE_SCHEMA, DOMAIN as CAMERA)
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_BINARY_SENSORS, CONF_SENSORS, CONF_SWITCHES, CONF_SCAN_INTERVAL,
-    HTTP_BASIC_AUTHENTICATION)
+    ATTR_ENTITY_ID, CONF_AUTHENTICATION, CONF_BINARY_SENSORS, CONF_HOST,
+    CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SENSORS,
+    CONF_SWITCHES, CONF_USERNAME, ENTITY_MATCH_ALL, HTTP_BASIC_AUTHENTICATION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import async_extract_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_AUTHENTICATION = 'authentication'
 CONF_RESOLUTION = 'resolution'
 CONF_STREAM_SOURCE = 'stream_source'
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
@@ -26,8 +31,8 @@ DEFAULT_STREAM_SOURCE = 'snapshot'
 DEFAULT_ARGUMENTS = '-pred 1'
 TIMEOUT = 10
 
-DATA_AMCREST = 'amcrest'
 DOMAIN = 'amcrest'
+DATA_AMCREST = DOMAIN
 
 NOTIFICATION_ID = 'amcrest_notification'
 NOTIFICATION_TITLE = 'Amcrest Camera Setup'
@@ -88,10 +93,10 @@ def _deprecated_switches(config):
     return config
 
 
-def _has_unique_names(cameras):
-    names = [camera[CONF_NAME] for camera in cameras]
+def _has_unique_names(devices):
+    names = [device[CONF_NAME] for device in devices]
     vol.Schema(vol.Unique())(names)
-    return cameras
+    return devices
 
 
 AMCREST_SCHEMA = vol.All(
@@ -126,26 +131,52 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_ENABLE_RECORDING = 'enable_recording'
+SERVICE_DISABLE_RECORDING = 'disable_recording'
+SERVICE_ENABLE_AUDIO = 'enable_audio'
+SERVICE_DISABLE_AUDIO = 'disable_audio'
+SERVICE_ENABLE_MOTION_RECORDING = 'enable_motion_recording'
+SERVICE_DISABLE_MOTION_RECORDING = 'disable_motion_recording'
+SERVICE_GOTO_PRESET = 'goto_preset'
+SERVICE_SET_COLOR_BW = 'set_color_bw'
+SERVICE_START_TOUR = 'start_tour'
+SERVICE_STOP_TOUR = 'stop_tour'
+
+ATTR_PRESET = 'preset'
+ATTR_COLOR_BW = 'color_bw'
+
+CBW_COLOR = 'color'
+CBW_AUTO = 'auto'
+CBW_BW = 'bw'
+CBW = [CBW_COLOR, CBW_AUTO, CBW_BW]
+
+SERVICE_GOTO_PRESET_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_PRESET): vol.All(vol.Coerce(int), vol.Range(min=1)),
+})
+SERVICE_SET_COLOR_BW_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_COLOR_BW): vol.In(CBW),
+})
+
 
 def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
     from amcrest import AmcrestCamera, AmcrestError
 
-    hass.data.setdefault(DATA_AMCREST, {})
-    amcrest_cams = config[DOMAIN]
+    hass.data.setdefault(DATA_AMCREST, {'devices': {}, 'cameras': []})
+    devices = config[DOMAIN]
 
-    for device in amcrest_cams:
+    for device in devices:
         name = device[CONF_NAME]
         username = device[CONF_USERNAME]
         password = device[CONF_PASSWORD]
 
         try:
-            camera = AmcrestCamera(device[CONF_HOST],
-                                   device[CONF_PORT],
-                                   username,
-                                   password).camera
+            api = AmcrestCamera(device[CONF_HOST],
+                                device[CONF_PORT],
+                                username,
+                                password).camera
             # pylint: disable=pointless-statement
-            camera.current_time
+            api.current_time
 
         except AmcrestError as ex:
             _LOGGER.error("Unable to connect to %s camera: %s", name, str(ex))
@@ -171,47 +202,94 @@ def setup(hass, config):
         else:
             authentication = None
 
-        hass.data[DATA_AMCREST][name] = AmcrestDevice(
-            camera, name, authentication, ffmpeg_arguments, stream_source,
+        hass.data[DATA_AMCREST]['devices'][name] = AmcrestDevice(
+            api, authentication, ffmpeg_arguments, stream_source,
             resolution)
 
         discovery.load_platform(
-            hass, 'camera', DOMAIN, {
+            hass, CAMERA, DOMAIN, {
                 CONF_NAME: name,
             }, config)
 
         if binary_sensors:
             discovery.load_platform(
-                hass, 'binary_sensor', DOMAIN, {
+                hass, BINARY_SENSOR, DOMAIN, {
                     CONF_NAME: name,
                     CONF_BINARY_SENSORS: binary_sensors
                 }, config)
 
         if sensors:
             discovery.load_platform(
-                hass, 'sensor', DOMAIN, {
+                hass, SENSOR, DOMAIN, {
                     CONF_NAME: name,
                     CONF_SENSORS: sensors,
                 }, config)
 
         if switches:
             discovery.load_platform(
-                hass, 'switch', DOMAIN, {
+                hass, SWITCH, DOMAIN, {
                     CONF_NAME: name,
                     CONF_SWITCHES: switches
                 }, config)
 
-    return len(hass.data[DATA_AMCREST]) >= 1
+    if not hass.data[DATA_AMCREST]['devices']:
+        return False
+
+    async def async_extract_from_service(service):
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        if entity_ids == ENTITY_MATCH_ALL:
+            return [entity for entity in hass.data[DATA_AMCREST]['cameras']
+                    if entity.available]
+        entity_ids = await async_extract_entity_ids(hass, service)
+        return [entity for entity in hass.data[DATA_AMCREST]['cameras']
+                if entity.available and entity.entity_id in entity_ids]
+
+    async def async_service_handler(service):
+        for camera in await async_extract_from_service(service):
+            await getattr(camera, handler_services[service.service])()
+
+    async def async_goto_preset(service):
+        preset = service.data[ATTR_PRESET]
+        for camera in await async_extract_from_service(service):
+            await camera.async_goto_preset(preset)
+
+    async def async_set_color_bw(service):
+        cbw = service.data[ATTR_COLOR_BW]
+        for camera in await async_extract_from_service(service):
+            await camera.async_set_color_bw(cbw)
+
+    handler_services = {
+        SERVICE_ENABLE_RECORDING: 'async_enable_recording',
+        SERVICE_DISABLE_RECORDING: 'async_disable_recording',
+        SERVICE_ENABLE_AUDIO: 'async_enable_audio',
+        SERVICE_DISABLE_AUDIO: 'async_disable_audio',
+        SERVICE_ENABLE_MOTION_RECORDING: 'async_enable_motion_recording',
+        SERVICE_DISABLE_MOTION_RECORDING: 'async_disable_motion_recording',
+        SERVICE_START_TOUR: 'async_start_tour',
+        SERVICE_STOP_TOUR: 'async_stop_tour',
+    }
+
+    if not hass.services.has_service(DOMAIN, SERVICE_ENABLE_RECORDING):
+        for service in handler_services:
+            hass.services.async_register(
+                DOMAIN, service, async_service_handler, CAMERA_SERVICE_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, SERVICE_GOTO_PRESET, async_goto_preset,
+            SERVICE_GOTO_PRESET_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, SERVICE_SET_COLOR_BW, async_set_color_bw,
+            SERVICE_SET_COLOR_BW_SCHEMA)
+
+    return True
 
 
 class AmcrestDevice:
     """Representation of a base Amcrest discovery device."""
 
-    def __init__(self, camera, name, authentication, ffmpeg_arguments,
+    def __init__(self, api, authentication, ffmpeg_arguments,
                  stream_source, resolution):
         """Initialize the entity."""
-        self.device = camera
-        self.name = name
+        self.api = api
         self.authentication = authentication
         self.ffmpeg_arguments = ffmpeg_arguments
         self.stream_source = stream_source
