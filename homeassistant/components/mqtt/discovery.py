@@ -19,21 +19,30 @@ TOPIC_MATCHER = re.compile(
     r'(?:(?P<node_id>[a-zA-Z0-9_-]+)/)?(?P<object_id>[a-zA-Z0-9_-]+)/config')
 
 SUPPORTED_COMPONENTS = [
-    'binary_sensor', 'camera', 'cover', 'fan',
-    'light', 'sensor', 'switch', 'lock', 'climate',
-    'alarm_control_panel', 'vacuum']
-
-CONFIG_ENTRY_COMPONENTS = [
+    'alarm_control_panel',
     'binary_sensor',
     'camera',
+    'climate',
     'cover',
+    'fan',
     'light',
     'lock',
     'sensor',
     'switch',
-    'climate',
+    'vacuum',
+]
+
+CONFIG_ENTRY_COMPONENTS = [
     'alarm_control_panel',
+    'binary_sensor',
+    'camera',
+    'climate',
+    'cover',
     'fan',
+    'light',
+    'lock',
+    'sensor',
+    'switch',
     'vacuum',
 ]
 
@@ -43,6 +52,12 @@ DEPRECATED_PLATFORM_TO_SCHEMA = {
         'mqtt_template': 'template',
     }
 }
+
+IMPLICIT_STATE_COMPONENTS = [
+    'alarm_control_panel',
+    'binary_sensor',
+    'sensor',
+]
 
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
@@ -258,10 +273,15 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                                     platform, schema)
             payload[CONF_PLATFORM] = 'mqtt'
 
-            if CONF_STATE_TOPIC not in payload:
+            if (CONF_STATE_TOPIC not in payload and
+                    component in IMPLICIT_STATE_COMPONENTS):
                 payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
                     discovery_topic, component,
                     '%s/' % node_id if node_id else '', object_id)
+                _LOGGER.warning('implicit %s is deprecated, add "%s":"%s" to '
+                                'discovery message',
+                                CONF_STATE_TOPIC, CONF_STATE_TOPIC,
+                                payload[CONF_STATE_TOPIC])
 
             payload[ATTR_DISCOVERY_HASH] = discovery_hash
 

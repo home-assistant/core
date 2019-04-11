@@ -250,3 +250,146 @@ def test_discovery_expansion(hass, mqtt_mock, caplog):
 
     state = hass.states.get('switch.DiscoveryExpansionTest1')
     assert state.state == STATE_ON
+
+@asyncio.coroutine
+def test_implicit_state_topic_alarm(hass, mqtt_mock, caplog):
+    """Test implicit state topic for alarm_control_panel."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+
+    yield from async_start(hass, 'homeassistant', {}, entry)
+
+    data = (
+        '{ "name": "Test1",'
+        '  "command_topic": "homeassistant/alarm_control_panel/bla/cmnd"'
+        '}'
+    )
+
+    async_fire_mqtt_message(
+        hass, 'homeassistant/alarm_control_panel/bla/config', data)
+    yield from hass.async_block_till_done()
+    assert (
+        'implicit state_topic is deprecated, add '
+        '"state_topic":"homeassistant/alarm_control_panel/bla/state" '
+        'to discovery message'
+        in caplog.text)
+
+    state = hass.states.get('alarm_control_panel.Test1')
+    assert state is not None
+    assert state.name == 'Test1'
+    assert ('alarm_control_panel', 'bla') in hass.data[ALREADY_DISCOVERED]
+    assert state.state == 'unknown'
+
+    async_fire_mqtt_message(hass, 'homeassistant/alarm_control_panel/bla/state',
+                            'armed_away')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.Test1')
+    assert state.state == 'armed_away'
+
+
+@asyncio.coroutine
+def test_implicit_state_topic_binary_sensor(hass, mqtt_mock, caplog):
+    """Test implicit state topic for binary_sensor."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+
+    yield from async_start(hass, 'homeassistant', {}, entry)
+
+    data = (
+        '{ "name": "Test1"'
+        '}'
+    )
+
+    async_fire_mqtt_message(
+        hass, 'homeassistant/binary_sensor/bla/config', data)
+    yield from hass.async_block_till_done()
+    assert (
+        'implicit state_topic is deprecated, add '
+        '"state_topic":"homeassistant/binary_sensor/bla/state" '
+        'to discovery message'
+        in caplog.text)
+
+    state = hass.states.get('binary_sensor.Test1')
+    assert state is not None
+    assert state.name == 'Test1'
+    assert ('binary_sensor', 'bla') in hass.data[ALREADY_DISCOVERED]
+    assert state.state == 'off'
+
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/state',
+                            'ON')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('binary_sensor.Test1')
+    assert state.state == 'on'
+
+
+@asyncio.coroutine
+def test_implicit_state_topic_sensor(hass, mqtt_mock, caplog):
+    """Test implicit state topic for sensor."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+
+    yield from async_start(hass, 'homeassistant', {}, entry)
+
+    data = (
+        '{ "name": "Test1"'
+        '}'
+    )
+
+    async_fire_mqtt_message(
+        hass, 'homeassistant/sensor/bla/config', data)
+    yield from hass.async_block_till_done()
+    assert (
+        'implicit state_topic is deprecated, add '
+        '"state_topic":"homeassistant/sensor/bla/state" to discovery message'
+        in caplog.text)
+
+    state = hass.states.get('sensor.Test1')
+    assert state is not None
+    assert state.name == 'Test1'
+    assert ('sensor', 'bla') in hass.data[ALREADY_DISCOVERED]
+    assert state.state == 'unknown'
+
+    async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/state',
+                            '1234')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('sensor.Test1')
+    assert state.state == '1234'
+
+
+@asyncio.coroutine
+def test_no_implicit_state_topic_switch(hass, mqtt_mock, caplog):
+    """Test no implicit state topic for switch."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+
+    yield from async_start(hass, 'homeassistant', {}, entry)
+
+    data = (
+        '{ "name": "Test1",'
+        '  "command_topic": "cmnd"'
+        '}'
+    )
+
+    async_fire_mqtt_message(
+        hass, 'homeassistant/switch/bla/config', data)
+    yield from hass.async_block_till_done()
+    assert (
+        'implicit state_topic is deprecated'
+        not in caplog.text)
+
+    state = hass.states.get('switch.Test1')
+    assert state is not None
+    assert state.name == 'Test1'
+    assert ('switch', 'bla') in hass.data[ALREADY_DISCOVERED]
+    assert state.state == 'off'
+    assert state.attributes['assumed_state'] is True
+
+    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/state',
+                            'ON')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('switch.Test1')
+    assert state.state == 'off'
