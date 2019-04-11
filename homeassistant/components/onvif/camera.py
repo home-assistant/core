@@ -147,8 +147,10 @@ class ONVIFHassCamera(Camera):
 
     async def async_initialize(self):
         """
-        Initialize the camera by obtaining the input uri and connecting to
-        the camera.
+        Initialize the camera.
+
+        Initializes the camera by obtaining the input uri and connecting to
+        the camera. Also retrieves the ONVIF profiles.
         """
         _LOGGER.debug("Setting up the ONVIF device management service")
 
