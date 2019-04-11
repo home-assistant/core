@@ -9,8 +9,8 @@ from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE, ATTR_SUPPORTED_FEATURES, CONF_TYPE, STATE_IDLE,
-    STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_TYPE, STATE_IDLE, STATE_OFF,
+    STATE_ON, STATE_PAUSED, STATE_PLAYING)
 
 
 from tests.common import async_mock_service
