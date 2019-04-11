@@ -298,7 +298,7 @@ class FluxLight(Light):
             return
         # Preserve current brightness on color/white level change
         if hs_color is not None:
-            if brightness is not None:
+            if brightness is None:
                 brightness = self.brightness
             color = (hs_color[0], hs_color[1], brightness / 255 * 100)
         elif brightness is not None:
