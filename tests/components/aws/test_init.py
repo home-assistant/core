@@ -41,7 +41,8 @@ async def test_empty_config(hass):
     assert len(sessions) == 1
     session = sessions.get('default')
     assert isinstance(session, MockAioSession)
-    session.get_user.assert_awaited_once()
+    # we don't validate auto-created default profile
+    session.get_user.assert_not_awaited()
 
 
 async def test_empty_credential(hass):

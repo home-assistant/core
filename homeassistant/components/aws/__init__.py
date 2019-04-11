@@ -41,7 +41,11 @@ AWS_CREDENTIAL_SCHEMA = vol.Schema(
     }
 )
 
-DEFAULT_CREDENTIAL = [{CONF_NAME: "default", CONF_PROFILE_NAME: "default"}]
+DEFAULT_CREDENTIAL = [{
+    CONF_NAME: "default",
+    CONF_PROFILE_NAME: "default",
+    CONF_VALIDATE: False,
+}]
 
 SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
 
