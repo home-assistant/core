@@ -265,7 +265,7 @@ class YeelightGenericLight(Light):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._get_property('power') == 'on'
+        return self._get_property(self._power_property) == 'on'
 
     @property
     def brightness(self) -> int:
@@ -322,6 +322,10 @@ class YeelightGenericLight(Light):
     @property
     def _brightness_property(self):
         return 'bright'
+
+    @property
+    def _power_property(self):
+        return 'power'
 
     @property
     def device(self):
@@ -573,10 +577,9 @@ class YeelightWhiteTempLight(YeelightGenericLight):
 class YeelightWithAmbientLight(YeelightWhiteTempLight):
     """Representation of a Yeelight which has ambilight support."""
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self._get_property('main_power') == 'on'
+    @ property
+    def _power_property(self):
+        return 'main_power'
 
 
 class YeelightAmbientLight(YeelightColorLight):
