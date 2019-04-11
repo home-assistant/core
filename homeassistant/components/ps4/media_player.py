@@ -283,16 +283,16 @@ class PS4Device(MediaPlayerDevice):
         registry = await entity_registry.async_get_registry(self.hass)
         unique_id = self._unique_id.split('_')
         unique_id = unique_id[0]
-        entity_id = registry.async_get_entity_id(
+        old_entity_id = registry.async_get_entity_id(
             'media_player', PS4_DOMAIN, unique_id)
 
         # Remove old entity entry. Update current entry with old entity_id.
-        if entity_id is not None:
-            registry.async_remove(entity_id)
-            old_entity_id = registry.async_get_entity_id(
+        if old_entity_id is not None:
+            registry.async_remove(old_entity_id)
+            current_entity_id = registry.async_get_entity_id(
                 'media_player', PS4_DOMAIN, self._unique_id)
             registry.async_update_entity(
-                old_entity_id, new_entity_id=entity_id)
+                current_entity_id, new_entity_id=old_entity_id)
 
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
