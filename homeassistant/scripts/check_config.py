@@ -329,7 +329,14 @@ def check_ha_config_file(hass):
 
     # Process and validate config
     for domain in components:
-        component = loader.get_component(hass, domain)
+        try:
+            integration = hass.loop.run_until_complete(
+                loader.async_get_integration(hass, domain))
+        except loader.IntegrationNotFound:
+            result.add_error("Integration not found: {}".format(domain))
+            continue
+
+        component = integration.get_component()
         if not component:
             result.add_error("Component not found: {}".format(domain))
             continue
@@ -368,9 +375,18 @@ def check_ha_config_file(hass):
                 platforms.append(p_validated)
                 continue
 
-            platform = loader.get_platform(hass, domain, p_name)
+            try:
+                p_integration = hass.loop.run_until_complete(
+                    loader.async_get_integration(hass, p_name))
+            except loader.IntegrationNotFound:
+                result.add_error(
+                    "Integration {} not found when trying to verify its {} "
+                    "platform.".format(p_name, domain))
+                continue
 
-            if platform is None:
+            try:
+                platform = p_integration.get_platform(domain)
+            except ImportError:
                 result.add_error(
                     "Platform not found: {}.{}".format(domain, p_name))
                 continue
