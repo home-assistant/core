@@ -465,12 +465,23 @@ async def test_register_admin_service(hass, hass_read_only_user,
     assert calls[0].context.user_id == hass_admin_user.id
 
 
+async def test_domain_control_not_async(hass, mock_entities):
+    """Test domain verification in a service call with an unknown user."""
+    calls = []
+
+    def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    with pytest.raises(exceptions.HomeAssistantError):
+        hass.helpers.service.verify_domain_control(
+            'test_domain')(mock_service_log)
+
 async def test_domain_control_unknown(hass, mock_entities):
     """Test domain verification in a service call with an unknown user."""
     calls = []
 
-    @ha.callback
-    def mock_service_log(call):
+    async def mock_service_log(call):
         """Define a protected service."""
         calls.append(call)
 
@@ -496,8 +507,7 @@ async def test_domain_control_unauthorized(
     """Test domain verification in a service call with an unauthorized user."""
     calls = []
 
-    @ha.callback
-    def mock_service_log(call):
+    async def mock_service_log(call):
         """Define a protected service."""
         calls.append(call)
 
@@ -521,8 +531,7 @@ async def test_domain_control_admin(hass, hass_admin_user, mock_entities):
     """Test domain verification in a service call with an admin user."""
     calls = []
 
-    @ha.callback
-    def mock_service_log(call):
+    async def mock_service_log(call):
         """Define a protected service."""
         calls.append(call)
 
@@ -547,8 +556,7 @@ async def test_domain_control_no_user(hass, mock_entities):
     """Test domain verification in a service call with no user."""
     calls = []
 
-    @ha.callback
-    def mock_service_log(call):
+    async def mock_service_log(call):
         """Define a protected service."""
         calls.append(call)
 
