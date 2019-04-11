@@ -24,10 +24,10 @@ CONF_DEVICE_ID = 'device_id'
 CONF_DEVICE_PASSWORD = 'device_password'
 CONF_PHONE_ID = 'phone_id'
 
-DEFAULT_NAME = 'boiler'
+DATA_CONFIG = 'config'
+DATA_DEVICE = 'device'
 
-DISCOVERY_CONFIG = 'config'
-DISCOVERY_DEVICE = 'device'
+DEFAULT_NAME = 'boiler'
 
 EVENT_SWITCHER_DEVICE_UPDATED = 'switcher_device_update'
 UPDATED_DEVICE = 'updated_device'

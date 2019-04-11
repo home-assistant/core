@@ -2,7 +2,7 @@
 
 from typing import Any, Generator
 
-from homeassistant.components.switcher_kis import (DOMAIN, DISCOVERY_DEVICE)
+from homeassistant.components.switcher_kis import (DOMAIN, DATA_DEVICE)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -46,7 +46,7 @@ async def test_discovery_data_bucket(
     assert await async_setup_component(
         hass, DOMAIN, MANDATORY_CONFIGURATION)
 
-    device = hass.data[DOMAIN].get(DISCOVERY_DEVICE)
+    device = hass.data[DOMAIN].get(DATA_DEVICE)
     assert device.device_id == DUMMY_DEVICE_ID
     assert device.ip_addr == DUMMY_IP_ADDRESS
     assert device.mac_addr == DUMMY_MAC_ADDRESS
