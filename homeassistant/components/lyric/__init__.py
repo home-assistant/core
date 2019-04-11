@@ -6,12 +6,11 @@ https://home-assistant.io/components/lyric
 """
 import asyncio
 import logging
-import socket
 
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CONF_SCAN_INTERVAL, HTTP_BAD_REQUEST, HTTP_OK
+from homeassistant.const import CONF_SCAN_INTERVAL, HTTP_BAD_REQUEST
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -161,6 +160,7 @@ class LyricDevice(object):
 
 class LyricAuthenticateView(HomeAssistantView):
     """Handle redirects from lyric oauth2 api, to authenticate."""
+
     url = '/api/lyric/authenticate'
     name = 'api:lyric:authenticate'
     requires_auth = False

@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             thermostat.set_hold_mode(HOLD_NO_HOLD)
 
     def hold_time_service(service):
-        """Sets the time to hold until"""
+        """Sets the time to hold until."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         time = service.data.get(ATTR_TIME)
 
@@ -240,8 +240,7 @@ class LyricThermostat(ClimateDevice):
         return self._setpoint_status
 
     def set_hold_mode(self, hold_mode):
-        """Set hold mode (PermanentHold, HoldUntil, NoHold,
-        VacationHold, etc.)."""
+        """Set hold (PermanentHold, HoldUntil, NoHold, VacationHold) mode."""
         self.device.thermostatSetpointStatus = hold_mode
 
     def set_hold_period(self, period):
@@ -301,11 +300,11 @@ class LyricThermostat(ClimateDevice):
             self._schedule_sub_type = self.device.scheduleSubType
             self._vacation_hold = self.device.vacationHold
             if self.device.currentSchedulePeriod:
-                if 'period' in self.device.currentSchedulePeriod:
-                    self._current_schedule_period = self.device.currentSchedulePeriod['period']
-                if 'day' in self.device.currentSchedulePeriod:
-                    self._current_schedule_period = self.device.currentSchedulePeriod['day']
-
+                csp = self.device.currentSchedulePeriod
+                if 'period' in csp:
+                    self._current_schedule_period = csp['period']
+                if 'day' in csp:
+                    self._current_schedule_period = csp['day']
             if self.device.units == 'Celsius':
                 self._temperature_scale = TEMP_CELSIUS
             else:
