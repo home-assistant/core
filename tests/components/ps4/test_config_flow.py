@@ -324,11 +324,12 @@ async def test_credential_abort(hass):
 
 async def test_credential_timeout(hass):
     """Test that Credential Timeout shows error."""
+    from pyps4_homeassistant.errors import CredentialTimeout
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
 
     with patch('pyps4_homeassistant.Helper.get_creds',
-               side_effect=UnboundLocalError):
+               side_effect=CredentialTimeout):
         result = await flow.async_step_creds({})
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['errors'] == {'base': 'credential_timeout'}
