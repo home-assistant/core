@@ -12,7 +12,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from . import (
-    CONF_ALLOWED_CHAT_IDS, PLATFORM_SCHEMA, BaseTelegramBotEntity,
+    CONF_ALLOWED_CHAT_IDS, CONFIG_SCHEMA, BaseTelegramBotEntity,
     initialize_bot)
 
 DEPENDENCIES = ['http']

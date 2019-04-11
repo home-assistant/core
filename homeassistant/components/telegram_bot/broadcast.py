@@ -1,7 +1,7 @@
 """Support for Telegram bot to send messages only."""
 import logging
 
-from . import PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA, initialize_bot
+from . import CONFIG_SCHEMA as TELEGRAM_PLATFORM_SCHEMA, initialize_bot
 
 _LOGGER = logging.getLogger(__name__)
 

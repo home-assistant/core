@@ -6,7 +6,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from . import (
-    CONF_ALLOWED_CHAT_IDS, PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA,
+    CONF_ALLOWED_CHAT_IDS, CONFIG_SCHEMA as TELEGRAM_PLATFORM_SCHEMA,
     BaseTelegramBotEntity, initialize_bot)
 
 _LOGGER = logging.getLogger(__name__)
