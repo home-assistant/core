@@ -13,7 +13,7 @@ from homeassistant.util import dt
 
 from tests.common import (
     MockModule, mock_coro, MockConfigEntry, async_fire_time_changed,
-    MockPlatform, MockEntity)
+    MockPlatform, MockEntity, mock_integration, mock_entity_platform)
 
 
 @config_entries.HANDLERS.register('test')
@@ -185,23 +185,27 @@ async def test_remove_entry(hass, manager):
         """Mock setting up platform."""
         async_add_entities([entity])
 
-    loader.set_component(hass, 'test', MockModule(
+    mock_integration(hass, MockModule(
         'test',
         async_setup_entry=mock_setup_entry,
         async_unload_entry=mock_unload_entry,
         async_remove_entry=mock_remove_entry
     ))
-    loader.set_component(
-        hass, 'test.light',
+    mock_entity_platform(
+        hass, 'light.test',
         MockPlatform(async_setup_entry=mock_setup_entry_platform))
 
-    MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
+    MockConfigEntry(
+        domain='test_other', entry_id='test1'
+    ).add_to_manager(manager)
     entry = MockConfigEntry(
         domain='test',
         entry_id='test2',
     )
     entry.add_to_manager(manager)
-    MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
+    MockConfigEntry(
+        domain='test_other', entry_id='test3'
+    ).add_to_manager(manager)
 
     # Check all config entries exist
     assert [item.entry_id for item in manager.async_entries()] == \
