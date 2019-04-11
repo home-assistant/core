@@ -1,10 +1,12 @@
 {
     "state": {
-        "first_quarter": "Primer cuarto",
+        "first_quarter": "Cuarto creciente",
         "full_moon": "Luna llena",
-        "last_quarter": "\u00daltimo cuarto",
+        "last_quarter": "Cuarto menguante",
         "new_moon": "Luna nueva",
-        "waning_crescent": "Luna menguante",
-        "waxing_crescent": "Luna creciente"
+        "waning_crescent": "Menguante",
+        "waning_gibbous": "Gibosa menguante",
+        "waxing_crescent": "Nueva visible",
+        "waxing_gibbous": "Gibosa creciente"
     }
 }

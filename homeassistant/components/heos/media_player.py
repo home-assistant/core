@@ -141,7 +141,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self._player.set_volume(volume * 100)
+        await self._player.set_volume(int(volume * 100))
 
     async def async_update(self):
         """Update supported features of the player."""

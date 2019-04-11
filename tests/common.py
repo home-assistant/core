@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, Mock, patch
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
 
-from homeassistant import auth, config_entries, core as ha
+from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
     models as auth_models, auth_store, providers as auth_providers,
     permissions as auth_permissions)
@@ -34,6 +34,7 @@ from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -443,6 +444,7 @@ class MockModule:
                  async_migrate_entry=None, async_remove_entry=None):
         """Initialize the mock module."""
         self.__name__ = 'homeassistant.components.{}'.format(domain)
+        self.__file__ = 'homeassistant/components/{}'.format(domain)
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
@@ -482,7 +484,8 @@ class MockModule:
 class MockPlatform:
     """Provide a fake platform."""
 
-    __name__ = "homeassistant.components.light.bla"
+    __name__ = 'homeassistant.components.light.bla'
+    __file__ = 'homeassistant/components/blah/light'
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
@@ -693,13 +696,15 @@ def assert_setup_component(count, domain=None):
     config = {}
 
     @ha.callback
-    def mock_psc(hass, config_input, domain):
+    def mock_psc(hass, config_input, domain_input):
         """Mock the prepare_setup_component to capture config."""
         res = async_process_component_config(
-            hass, config_input, domain)
-        config[domain] = None if res is None else res.get(domain)
+            hass, config_input, domain_input)
+        config[domain_input] = None if res is None else res.get(domain_input)
         _LOGGER.debug("Configuration for %s, Validated: %s, Original %s",
-                      domain, config[domain], config_input.get(domain))
+                      domain_input,
+                      config[domain_input],
+                      config_input.get(domain_input))
         return res
 
     assert isinstance(config, dict)
@@ -708,7 +713,7 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert len(config) >= 1, ('assert_setup_component requires DOMAIN: {}'
+        assert len(config) == 1, ('assert_setup_component requires DOMAIN: {}'
                                   .format(list(config.keys())))
         domain = list(config.keys())[0]
 
@@ -894,3 +899,33 @@ async def flush_store(store):
 async def get_system_health_info(hass, domain):
     """Get system health info."""
     return await hass.data['system_health']['info'][domain](hass)
+
+
+def mock_integration(hass, module):
+    """Mock an integration."""
+    integration = loader.Integration(
+        hass, 'homeassisant.components.{}'.format(module.DOMAIN),
+        loader.manifest_from_legacy_module(module))
+
+    _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
+    hass.data.setdefault(
+        loader.DATA_INTEGRATIONS, {}
+    )[module.DOMAIN] = integration
+    hass.data.setdefault(loader.DATA_KEY, {})[module.DOMAIN] = module
+
+
+def mock_entity_platform(hass, platform_path, module):
+    """Mock a entity platform.
+
+    platform_path is in form light.hue. Will create platform
+    hue.light.
+    """
+    domain, platform_name = platform_path.split('.')
+    integration_cache = hass.data.setdefault(loader.DATA_KEY, {})
+    module_cache = hass.data.setdefault(loader.DATA_KEY, {})
+
+    if platform_name not in integration_cache:
+        mock_integration(hass, MockModule(platform_name))
+
+    _LOGGER.info("Adding mock integration platform: %s", platform_path)
+    module_cache["{}.{}".format(platform_name, domain)] = module

@@ -452,31 +452,32 @@ async def test_startstop_vacuum(hass):
     }
 
 
-async def test_color_spectrum_light(hass):
+async def test_color_setting_color_light(hass):
     """Test ColorSpectrum trait support for light domain."""
-    assert not trait.ColorSpectrumTrait.supported(light.DOMAIN, 0, None)
-    assert trait.ColorSpectrumTrait.supported(light.DOMAIN,
-                                              light.SUPPORT_COLOR, None)
+    assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None)
+    assert trait.ColorSettingTrait.supported(light.DOMAIN,
+                                             light.SUPPORT_COLOR, None)
 
-    trt = trait.ColorSpectrumTrait(hass, State('light.bla', STATE_ON, {
-        light.ATTR_HS_COLOR: (0, 94),
+    trt = trait.ColorSettingTrait(hass, State('light.bla', STATE_ON, {
+        light.ATTR_HS_COLOR: (20, 94),
+        light.ATTR_BRIGHTNESS: 200,
+        ATTR_SUPPORTED_FEATURES: light.SUPPORT_COLOR,
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {
-        'colorModel': 'rgb'
+        'colorModel': 'hsv'
     }
 
     assert trt.query_attributes() == {
         'color': {
-            'spectrumRGB': 16715535
+            'spectrumHsv': {
+                'hue': 20,
+                'saturation': 0.94,
+                'value': 200 / 255,
+            }
         }
     }
 
-    assert not trt.can_execute(trait.COMMAND_COLOR_ABSOLUTE, {
-        'color': {
-            'temperature': 400
-        }
-    })
     assert trt.can_execute(trait.COMMAND_COLOR_ABSOLUTE, {
         'color': {
             'spectrumRGB': 16715792
@@ -495,28 +496,46 @@ async def test_color_spectrum_light(hass):
         light.ATTR_HS_COLOR: (240, 93.725),
     }
 
+    await trt.execute(trait.COMMAND_COLOR_ABSOLUTE, BASIC_DATA, {
+        'color': {
+            'spectrumHSV': {
+                'hue': 100,
+                'saturation': .50,
+                'value': .20,
+            }
+        }
+    })
+    assert len(calls) == 2
+    assert calls[1].data == {
+        ATTR_ENTITY_ID: 'light.bla',
+        light.ATTR_HS_COLOR: [100, 50],
+        light.ATTR_BRIGHTNESS: .2 * 255,
+    }
 
-async def test_color_temperature_light(hass):
+
+async def test_color_setting_temperature_light(hass):
     """Test ColorTemperature trait support for light domain."""
-    assert not trait.ColorTemperatureTrait.supported(light.DOMAIN, 0, None)
-    assert trait.ColorTemperatureTrait.supported(light.DOMAIN,
-                                                 light.SUPPORT_COLOR_TEMP,
-                                                 None)
+    assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None)
+    assert trait.ColorSettingTrait.supported(light.DOMAIN,
+                                             light.SUPPORT_COLOR_TEMP, None)
 
-    trt = trait.ColorTemperatureTrait(hass, State('light.bla', STATE_ON, {
+    trt = trait.ColorSettingTrait(hass, State('light.bla', STATE_ON, {
         light.ATTR_MIN_MIREDS: 200,
         light.ATTR_COLOR_TEMP: 300,
         light.ATTR_MAX_MIREDS: 500,
+        ATTR_SUPPORTED_FEATURES: light.SUPPORT_COLOR_TEMP,
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {
-        'temperatureMinK': 2000,
-        'temperatureMaxK': 5000,
+        'colorTemperatureRange': {
+            'temperatureMinK': 2000,
+            'temperatureMaxK': 5000,
+        }
     }
 
     assert trt.query_attributes() == {
         'color': {
-            'temperature': 3333
+            'temperatureK': 3333
         }
     }
 
@@ -525,12 +544,6 @@ async def test_color_temperature_light(hass):
             'temperature': 400
         }
     })
-    assert not trt.can_execute(trait.COMMAND_COLOR_ABSOLUTE, {
-        'color': {
-            'spectrumRGB': 16715792
-        }
-    })
-
     calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
 
     with pytest.raises(helpers.SmartHomeError) as err:
@@ -553,14 +566,13 @@ async def test_color_temperature_light(hass):
     }
 
 
-async def test_color_temperature_light_bad_temp(hass):
+async def test_color_light_temperature_light_bad_temp(hass):
     """Test ColorTemperature trait support for light domain."""
-    assert not trait.ColorTemperatureTrait.supported(light.DOMAIN, 0, None)
-    assert trait.ColorTemperatureTrait.supported(light.DOMAIN,
-                                                 light.SUPPORT_COLOR_TEMP,
-                                                 None)
+    assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None)
+    assert trait.ColorSettingTrait.supported(light.DOMAIN,
+                                             light.SUPPORT_COLOR_TEMP, None)
 
-    trt = trait.ColorTemperatureTrait(hass, State('light.bla', STATE_ON, {
+    trt = trait.ColorSettingTrait(hass, State('light.bla', STATE_ON, {
         light.ATTR_MIN_MIREDS: 200,
         light.ATTR_COLOR_TEMP: 0,
         light.ATTR_MAX_MIREDS: 500,

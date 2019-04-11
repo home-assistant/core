@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['raincloudy==0.0.6']
+REQUIREMENTS = ['raincloudy==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 

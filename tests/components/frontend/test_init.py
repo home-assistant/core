@@ -78,9 +78,9 @@ def test_frontend_and_static(mock_http_client, mock_onboarded):
 
     # Test we can retrieve frontend.js
     frontendjs = re.search(
-        r'(?P<app>\/frontend_es5\/app-[A-Za-z0-9]{8}.js)', text)
+        r'(?P<app>\/frontend_es5\/app.[A-Za-z0-9]{8}.js)', text)
 
-    assert frontendjs is not None
+    assert frontendjs is not None, text
     resp = yield from mock_http_client.get(frontendjs.groups(0)[0])
     assert resp.status == 200
     assert 'public' in resp.headers.get('cache-control')

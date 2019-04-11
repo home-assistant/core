@@ -110,7 +110,6 @@ homeassistant/components/input_number/* @home-assistant/core
 homeassistant/components/input_select/* @home-assistant/core
 homeassistant/components/input_text/* @home-assistant/core
 homeassistant/components/integration/* @dgomes
-homeassistant/components/introduction/* @home-assistant/core
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/ipma/* @dgomes
 homeassistant/components/irish_rail_transport/* @ttroy50
@@ -126,6 +125,7 @@ homeassistant/components/lifx_legacy/* @amelchio
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
+homeassistant/components/logi_circle/* @evanjd
 homeassistant/components/lovelace/* @home-assistant/core
 homeassistant/components/luci/* @fbradyirl
 homeassistant/components/luftdaten/* @fabaff
