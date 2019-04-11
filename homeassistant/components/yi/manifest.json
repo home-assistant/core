@@ -5,7 +5,9 @@
   "requirements": [
     "aioftp==0.12.0"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "ffmpeg"
+  ],
   "codeowners": [
     "@bachya"
   ]

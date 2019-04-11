@@ -3,6 +3,8 @@
   "name": "Arwn",
   "documentation": "https://www.home-assistant.io/components/arwn",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": [
+    "mqtt"
+  ],
   "codeowners": []
 }

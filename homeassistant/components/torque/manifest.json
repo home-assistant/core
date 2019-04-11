@@ -3,6 +3,8 @@
   "name": "Torque",
   "documentation": "https://www.home-assistant.io/components/torque",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": [
+    "http"
+  ],
   "codeowners": []
 }

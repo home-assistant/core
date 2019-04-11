@@ -153,6 +153,9 @@ def setup(hass, config):
         hass.data[DATA_INDEX] = {}
 
     conf = config.get(DOMAIN, {})
+    if not conf:
+        # component is set up by tts platform
+        return True
 
     token_file = hass.config.path(TOKEN_FILE)
     if not os.path.isfile(token_file):
