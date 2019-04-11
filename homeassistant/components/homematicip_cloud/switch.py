@@ -25,6 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         AsyncBrandSwitchMeasuring,
         AsyncFullFlushSwitchMeasuring,
         AsyncOpenCollector8Module,
+        AsyncMultiIOBox,
     )
 
     from homematicip.aio.group import AsyncSwitchingGroup
@@ -44,6 +45,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(HomematicipSwitch(home, device))
         elif isinstance(device, AsyncOpenCollector8Module):
             for channel in range(1, 9):
+                devices.append(HomematicipMultiSwitch(home, device, channel))
+        elif isinstance(device, AsyncMultiIOBox):
+            for channel in range(1, 3):
                 devices.append(HomematicipMultiSwitch(home, device, channel))
 
     for group in home.groups:

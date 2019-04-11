@@ -139,7 +139,7 @@ home-assistant-frontend==20190331.0
 homekit[IP]==0.13.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.6
+homematicip==0.10.7
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
