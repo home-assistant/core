@@ -106,7 +106,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         default_region = None
         errors = {}
 
-        if user_input is None:  # noqa: pylint: disable=too-many-nested-blocks
+        if user_input is None:
             # Search for device.
             devices = await self.hass.async_add_executor_job(
                 self.helper.has_devices, self.m_device)
@@ -118,17 +118,18 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             self.device_list = [device['host-ip'] for device in devices]
 
             # Check that devices found aren't configured per account.
-            if self.hass.config_entries.async_entries(DOMAIN):
-                for entry in self.hass.config_entries.async_entries(DOMAIN):
-                    # Retrieve creds from entry
-                    creds = entry.data[CONF_TOKEN]
-                    # Retrieve device data from entry if creds match.
-                    if self.creds == creds:
-                        conf_devices = entry.data['devices']
-                        for c_device in conf_devices:
-                            if c_device['host'] in self.device_list:
-                                # Remove configured device from search list.
-                                self.device_list.remove(c_device['host'])
+            entries = self.hass.config_entries.async_entries(DOMAIN)
+            if entries:
+                # Retrieve device data from all entries if creds match.
+                conf_devices = [device for entry in entries
+                                if self.creds == entry.data[CONF_TOKEN]
+                                for device in entry.data['devices']]
+
+                # Remove configured device from search list.
+                [self.device_list.remove(c_device['host'])
+                 for c_device in conf_devices
+                 if c_device['host'] in self.device_list]
+
                 # If list is empty then all devices are configured.
                 if not self.device_list:
                     return self.async_abort(reason='devices_configured')
