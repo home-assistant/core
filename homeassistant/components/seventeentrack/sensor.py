@@ -248,8 +248,8 @@ class SeventeenTrackPackageSensor(Entity):
                     self._tracking_number))
 
             reg = self.hass.helpers.entity_registry.async_get_registry()
-            self.hass.async_create_task(self.async_remove())
             self.hass.async_create_task(reg.async_remove(self.entity_id))
+            self.hass.async_create_task(self.async_remove())
             return
 
         self._attrs.update({
