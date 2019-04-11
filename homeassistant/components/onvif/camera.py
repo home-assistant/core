@@ -23,7 +23,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
 from homeassistant.helpers.service import extract_entity_ids
-from onvif import ONVIFCamera
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,11 +71,12 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, 
+                               discovery_info=None):
     """Set up a ONVIF camera."""
     _LOGGER.debug("Setting up the ONVIF camera platform")
 
-    def handle_ptz(service):
+    async def async_handle_ptz(service):
         """Handle PTZ service call."""
         pan = service.data.get(ATTR_PAN, None)
         tilt = service.data.get(ATTR_TILT, None)
@@ -90,25 +90,26 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             target_cameras = [camera for camera in all_cameras
                               if camera.entity_id in entity_ids]
         for camera in target_cameras:
-            camera.perform_ptz(pan, tilt, zoom)
+            await camera.async_perform_ptz(pan, tilt, zoom)
 
-    hass.services.register(DOMAIN, SERVICE_PTZ, handle_ptz,
-                           schema=SERVICE_PTZ_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_PTZ, async_handle_ptz,
+                                 schema=SERVICE_PTZ_SCHEMA)
 
     _LOGGER.debug("Constructing the ONVIFHassCamera")
 
-    hassCamera = [ONVIFHassCamera(hass, config)]
+    hassCamera = ONVIFHassCamera(hass, config)
 
     await hassCamera.async_initialize()
 
-    async_add_entities(hassCamera)
+    async_add_entities([hassCamera])
     return True
+
 
 class ONVIFHassCamera(Camera):
     """An implementation of an ONVIF camera."""
 
     def __init__(self, hass, config):
-        """Initialize a ONVIF camera."""
+        """Initialize an ONVIF camera."""
         super().__init__()
 
         _LOGGER.debug("Importing dependencies")
@@ -145,10 +146,7 @@ class ONVIFHassCamera(Camera):
                                    .format(os.path.dirname(onvif.__file__)))
 
     async def async_initialize(self):
-        _LOGGER.debug("Obtaining input uri")
-
-        await self.async_obtain_input_uri()
-
+        """Initialize the camera by obtaining the input uri and connecting to the camera."""
         _LOGGER.debug("Setting up the ONVIF device management service")
 
         self._devicemgmt = self._camera.create_devicemgmt_service()
@@ -177,9 +175,9 @@ class ONVIFHassCamera(Camera):
                             cam_date,
                             system_date)
 
-        _LOGGER.debug("Setting up the ONVIF media service")
+        _LOGGER.debug("Obtaining input uri")
 
-        self._media_service = self._camera.create_media_service()
+        await self.async_obtain_input_uri()
 
         _LOGGER.debug("Setting up the ONVIF PTZ service")
 
@@ -190,13 +188,16 @@ class ONVIFHassCamera(Camera):
     async def async_obtain_input_uri(self):
         """Set the input uri for the camera."""
         from onvif import exceptions
+
         _LOGGER.debug("Connecting with ONVIF Camera: %s on port %s",
                       self._host, self._port)
 
         try:
             _LOGGER.debug("Retrieving profiles")
 
-            profiles = self._media_service.GetProfiles()
+            media_service = self._camera.create_media_service()
+
+            profiles = media_service.GetProfiles()
 
             _LOGGER.debug("Retrieved '%d' profiles",
                           len(profiles))
@@ -212,12 +213,12 @@ class ONVIFHassCamera(Camera):
 
             _LOGGER.debug("Retrieving stream uri")
 
-            req = self._media_service.create_type('GetStreamUri')
+            req = media_service.create_type('GetStreamUri')
             req.ProfileToken = profiles[self._profile_index].token
             req.StreamSetup = {'Stream': 'RTP-Unicast',
                                'Transport': {'Protocol': 'RTSP'}}
 
-            uri_no_auth = self._media_service.GetStreamUri(req).Uri
+            uri_no_auth = media_service.GetStreamUri(req).Uri
             uri_for_log = uri_no_auth.replace(
                 'rtsp://', 'rtsp://<user>:<password>@', 1)
             self._input = uri_no_auth.replace(
@@ -227,15 +228,12 @@ class ONVIFHassCamera(Camera):
             _LOGGER.debug(
                 "ONVIF Camera Using the following URL for %s: %s",
                 self._name, uri_for_log)
-
-            # we won't need the media service anymore
-            self._media_service = None
         except exceptions.ONVIFError as err:
             _LOGGER.debug("Couldn't setup camera '%s'. Error: %s",
                           self._name, err)
             return
 
-    def perform_ptz(self, pan, tilt, zoom):
+    async def async_perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
         from onvif import exceptions
         if self._ptz_service:
@@ -257,7 +255,6 @@ class ONVIFHassCamera(Camera):
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""
-
         _LOGGER.debug("Camera '%s' added to hass", self._name)
 
         if ONVIF_DATA not in self.hass.data:
