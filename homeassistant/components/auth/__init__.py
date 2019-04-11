@@ -78,20 +78,16 @@ The result payload likes
     "result": {
         "id": "USER_ID",
         "name": "John Doe",
-        "is_owner': true,
-        "credentials": [
-            {
-                "auth_provider_type": "homeassistant",
-                "auth_provider_id": null
-            }
-        ],
-        "mfa_modules": [
-            {
-                "id": "totp",
-                "name": "TOTP",
-                "enabled": true,
-            }
-        ]
+        "is_owner": true,
+        "credentials": [{
+            "auth_provider_type": "homeassistant",
+            "auth_provider_id": null
+        }],
+        "mfa_modules": [{
+            "id": "totp",
+            "name": "TOTP",
+            "enabled": true
+        }]
     }
 }
 
