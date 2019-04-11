@@ -251,6 +251,7 @@ def test_discovery_expansion(hass, mqtt_mock, caplog):
     state = hass.states.get('switch.DiscoveryExpansionTest1')
     assert state.state == STATE_ON
 
+
 @asyncio.coroutine
 def test_implicit_state_topic_alarm(hass, mqtt_mock, caplog):
     """Test implicit state topic for alarm_control_panel."""
@@ -279,8 +280,8 @@ def test_implicit_state_topic_alarm(hass, mqtt_mock, caplog):
     assert ('alarm_control_panel', 'bla') in hass.data[ALREADY_DISCOVERED]
     assert state.state == 'unknown'
 
-    async_fire_mqtt_message(hass, 'homeassistant/alarm_control_panel/bla/state',
-                            'armed_away')
+    async_fire_mqtt_message(
+        hass, 'homeassistant/alarm_control_panel/bla/state', 'armed_away')
     yield from hass.async_block_till_done()
     yield from hass.async_block_till_done()
 

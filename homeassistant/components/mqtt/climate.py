@@ -24,9 +24,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID, MQTT_BASE_PLATFORM_SCHEMA, MqttAttributes,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, CONF_UNIQUE_ID,
+    MQTT_BASE_PLATFORM_SCHEMA, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
