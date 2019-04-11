@@ -7,6 +7,7 @@ from homeassistant.components.ps4.const import (
     DEFAULT_NAME, DEFAULT_REGION)
 from homeassistant.const import (
     CONF_CODE, CONF_HOST, CONF_IP_ADDRESS, CONF_NAME, CONF_REGION, CONF_TOKEN)
+from homeassistant.util import location
 
 from tests.common import MockConfigEntry
 
@@ -47,14 +48,17 @@ MOCK_TCP_PORT = int(997)
 MOCK_AUTO = {"Config Mode": 'Auto Discover'}
 MOCK_MANUAL = {"Config Mode": 'Manual Entry', CONF_IP_ADDRESS: MOCK_HOST}
 
-MOCK_LOCATION = {'country_name': DEFAULT_REGION}
+MOCK_LOCATION = location.LocationInfo(
+    '0.0.0.0', 'US', 'United States', 'CA', 'California',
+    'San Diego', '92122', 'America/Los_Angeles', 32.8594,
+    -117.2073, True)
 
 
-@patch('homeassistant.util.location.detect_location_info', MOCK_LOCATION)
 async def test_full_flow_implementation(hass):
     """Test registering an implementation and flow works."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
+    flow.location = MOCK_LOCATION
     manager = hass.config_entries
 
     # User Step Started, results in Step Creds
@@ -104,11 +108,11 @@ async def test_full_flow_implementation(hass):
     assert len(entry.data['devices']) == 1
 
 
-@patch('homeassistant.util.location.detect_location_info', MOCK_LOCATION)
 async def test_multiple_flow_implementation(hass):
     """Test multiple device flows."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
+    flow.location = MOCK_LOCATION
     manager = hass.config_entries
 
     # User Step Started, results in Step Creds
@@ -292,11 +296,11 @@ async def test_no_devices_found_abort(hass):
     assert result['reason'] == 'no_devices_found'
 
 
-@patch('homeassistant.util.location.detect_location_info', MOCK_LOCATION)
 async def test_manual_mode(hass):
     """Test host specified in manual mode is passed to Step Link."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
+    flow.location = MOCK_LOCATION
 
     # Step Mode with User Input: manual, results in Step Link.
     with patch('pyps4_homeassistant.Helper.has_devices',
@@ -330,11 +334,11 @@ async def test_credential_timeout(hass):
     assert result['errors'] == {'base': 'credential_timeout'}
 
 
-@patch('homeassistant.util.location.detect_location_info', MOCK_LOCATION)
 async def test_wrong_pin_error(hass):
     """Test that incorrect pin throws an error."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
+    flow.location = MOCK_LOCATION
 
     with patch('pyps4_homeassistant.Helper.link',
                return_value=(True, False)), \
@@ -346,11 +350,11 @@ async def test_wrong_pin_error(hass):
     assert result['errors'] == {'base': 'login_failed'}
 
 
-@patch('homeassistant.util.location.detect_location_info', MOCK_LOCATION)
 async def test_device_connection_error(hass):
     """Test that device not connected or on throws an error."""
     flow = ps4.PlayStation4FlowHandler()
     flow.hass = hass
+    flow.location = MOCK_LOCATION
 
     with patch('pyps4_homeassistant.Helper.link',
                return_value=(False, True)), \
