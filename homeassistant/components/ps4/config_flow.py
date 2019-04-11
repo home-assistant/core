@@ -40,6 +40,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         self.region = None
         self.pin = None
         self.m_device = None
+        self.location = None
         self.device_list = []
 
     async def async_step_user(self, user_input=None):
@@ -162,10 +163,11 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                 )
 
         # Try to find region automatically.
-        loc = await self.hass.async_add_executor_job(
-            location.detect_location_info)
-        if loc:
-            country = loc.country_name
+        if not self.location:
+            self.location = await self.hass.async_add_executor_job(
+                location.detect_location_info)
+        if self.location:
+            country = self.location.country_name
             if country in COUNTRIES:
                 default_region = country
 
