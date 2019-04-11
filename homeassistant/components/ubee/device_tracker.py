@@ -1,4 +1,4 @@
-""" Support for Ubee router. """
+"""Support for Ubee router."""
 
 import logging
 import voluptuous as vol
@@ -54,7 +54,7 @@ class UbeeDeviceScanner(DeviceScanner):
         """Scan for new devices and return a list with found device IDs."""
         devices = self._get_connected_devices()
         self._mac2name = devices
-        return devices
+        return list(devices)
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
