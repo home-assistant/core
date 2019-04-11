@@ -5,7 +5,8 @@ https://github.com/home-assistant/home-assistant/issues/15336
 """
 
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_OPERATION_MODE)
 from tests.components.homekit_controller.common import (
     setup_accessories_from_file, setup_test_accessories, Helper
 )
@@ -25,7 +26,8 @@ async def test_ecobee3_setup(hass):
     climate_state = await climate_helper.poll_and_get_state()
     assert climate_state.attributes['friendly_name'] == 'HomeW'
     assert climate_state.attributes['supported_features'] == (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY |
+        SUPPORT_OPERATION_MODE
     )
 
     occ1 = entity_registry.async_get('binary_sensor.kitchen')
