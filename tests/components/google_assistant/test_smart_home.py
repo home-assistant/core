@@ -98,9 +98,11 @@ async def test_sync_message(hass):
                 'type': sh.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
-                    'colorModel': 'rgb',
-                    'temperatureMinK': 2000,
-                    'temperatureMaxK': 6535,
+                    'colorModel': 'hsv',
+                    'colorTemperatureRange': {
+                        'temperatureMinK': 2000,
+                        'temperatureMaxK': 6535,
+                    }
                 },
                 'roomHint': 'Living Room'
             }]
@@ -176,9 +178,11 @@ async def test_sync_in_area(hass, registries):
                 'type': sh.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
-                    'colorModel': 'rgb',
-                    'temperatureMinK': 2000,
-                    'temperatureMaxK': 6535,
+                    'colorModel': 'hsv',
+                    'colorTemperatureRange': {
+                        'temperatureMinK': 2000,
+                        'temperatureMaxK': 6535,
+                    }
                 },
                 'roomHint': 'Living Room'
             }]
@@ -252,8 +256,12 @@ async def test_query_message(hass):
                     'online': True,
                     'brightness': 30,
                     'color': {
-                        'spectrumRGB': 4194303,
-                        'temperature': 2500,
+                        'spectrumHsv': {
+                            'hue': 180,
+                            'saturation': 0.75,
+                            'value': 0.3058823529411765,
+                        },
+                        'temperatureK': 2500,
                     }
                 },
             }
@@ -338,8 +346,12 @@ async def test_execute(hass):
                     "online": True,
                     'brightness': 20,
                     'color': {
-                        'spectrumRGB': 16773155,
-                        'temperature': 2631,
+                        'spectrumHsv': {
+                            'hue': 56,
+                            'saturation': 0.86,
+                            'value': 0.2,
+                        },
+                        'temperatureK': 2631,
                     },
                 }
             }]
