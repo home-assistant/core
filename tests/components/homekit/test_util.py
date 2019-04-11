@@ -69,9 +69,7 @@ def test_validate_entity_config():
         {'media_player.demo': {CONF_FEATURE_LIST:
                                {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
 
-    assert vec({'media_player.demo': {}}) == \
-        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH}}
-    assert vec({'media_player.demo': {}}) == \
+    assert vec({'media_player.demo': {CONF_TYPE: TYPE_SWITCH}}) == \
         {'media_player.demo': {CONF_TYPE: TYPE_SWITCH}}
     assert vec({'media_player.demo': {CONF_TYPE: TYPE_TELEVISION}}) == \
         {'media_player.demo': {CONF_TYPE: TYPE_TELEVISION}}
