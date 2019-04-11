@@ -83,7 +83,7 @@ class MockSwitcherV2Device:
         return self._last_state_change
 
 
-@fixture()
+@fixture(name='mock_bridge')
 def mock_bridge_fixture() -> Generator[None, Any, None]:
     """Fixture for mocking aioswitcher.bridge.SwitcherV2Bridge."""
     queue = Queue()  # type: Queue

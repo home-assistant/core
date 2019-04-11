@@ -22,7 +22,7 @@ async def test_failed_config(hass: HomeAssistant) -> None:
 
 
 async def test_minimal_config(hass: HomeAssistant,
-                              mock_bridge_fixture: Generator[None, Any, None]
+                              mock_bridge: Generator[None, Any, None]
                               ) -> None:
     """Test setup with configuration minimal entries."""
     with assert_setup_component(4, DOMAIN):
@@ -31,7 +31,7 @@ async def test_minimal_config(hass: HomeAssistant,
 
 
 async def test_full_config(hass: HomeAssistant,
-                           mock_bridge_fixture: Generator[None, Any, None]
+                           mock_bridge: Generator[None, Any, None]
                            ) -> None:
     """Test setup with configuration maximum entries."""
     with assert_setup_component(5, DOMAIN):
@@ -40,7 +40,7 @@ async def test_full_config(hass: HomeAssistant,
 
 async def test_discovery_data_bucket(
         hass: HomeAssistant,
-        mock_bridge_fixture: Generator[None, Any, None]
+        mock_bridge: Generator[None, Any, None]
         ) -> None:
     """Test the event send with the updated device."""
     assert await async_setup_component(
