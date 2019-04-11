@@ -89,19 +89,18 @@ class MediaPlayer(HomeAccessory):
             if FEATURE_PLAY_PAUSE in feature_list:
                 self.chars[FEATURE_PLAY_PAUSE] \
                         = television.configure_char(
-                        CHAR_REMOTE_KEY,
-                        setter_callback=self.set_remote_key)
+                            CHAR_REMOTE_KEY,
+                            setter_callback=self.set_remote_key)
 
             if FEATURE_TOGGLE_MUTE in feature_list:
 
                 television_speaker = self.add_preload_service(
-                                                SERV_TELEVISION_SPEAKER,
-                                                [
-                                                    CHAR_NAME, CHAR_ACTIVE,
-                                                    CHAR_VOLUME_CONTROL_TYPE,
-                                                    CHAR_VOLUME_SELECTOR,
-                                                    CHAR_VOLUME
-                                                ])
+                    SERV_TELEVISION_SPEAKER, [
+                        CHAR_NAME, CHAR_ACTIVE,
+                        CHAR_VOLUME_CONTROL_TYPE,
+                        CHAR_VOLUME_SELECTOR,
+                        CHAR_VOLUME
+                    ])
                 television.add_linked_service(television_speaker)
 
                 name = '{} {}'.format(self.display_name, 'Volume')
@@ -110,34 +109,33 @@ class MediaPlayer(HomeAccessory):
 
                 self.chars[FEATURE_TOGGLE_MUTE] \
                     = television_speaker.configure_char(
-                    CHAR_MUTE, value=False,
-                    setter_callback=self.set_toggle_mute)
+                        CHAR_MUTE, value=False,
+                        setter_callback=self.set_toggle_mute)
 
                 if FEATURE_VOLUME_STEP in feature_list:
                     television_speaker.configure_char(CHAR_VOLUME_CONTROL_TYPE,
                                                       value=1)
                     self.chars[FEATURE_VOLUME_STEP] = television_speaker.\
                         configure_char(
-                        CHAR_VOLUME_SELECTOR,
-                        setter_callback=self.set_volume_step)
+                            CHAR_VOLUME_SELECTOR,
+                            setter_callback=self.set_volume_step)
 
             if FEATURE_SELECT_SOURCE in feature_list:
 
                 self.chars[FEATURE_SELECT_SOURCE] \
                         = television.configure_char(
-                        CHAR_ACTIVE_IDENTIFIER,
-                        setter_callback=self.set_input_source)
+                            CHAR_ACTIVE_IDENTIFIER,
+                            setter_callback=self.set_input_source)
 
                 self.sources = self.hass.states.get(
                     self.entity_id).attributes.get('source_list')
                 if self.sources:
                     for index, source in enumerate(self.sources):
                         input_service = self.add_preload_service(
-                                        SERV_INPUT_SOURCE,
-                                        [
-                                            CHAR_IDENTIFIER,
-                                            CHAR_NAME
-                                        ])
+                            SERV_INPUT_SOURCE, [
+                                CHAR_IDENTIFIER,
+                                CHAR_NAME
+                            ])
 
                         input_service.configure_char(
                             CHAR_CONFIGURED_NAME, value=source)
@@ -155,9 +153,9 @@ class MediaPlayer(HomeAccessory):
                         _LOGGER.debug('%s: Added source %s.', self.entity_id,
                                       source)
                 else:
-                    _LOGGER.warn('%s: Source list empty when setting up sources. Please check \
+                    _LOGGER.warning('%s: Source list empty when setting up sources. Please check \
                     to make sure your media_player is turned on.',
-                                 self.entity_id)
+                                    self.entity_id)
 
             self.set_primary_service(television)
             return
@@ -305,13 +303,13 @@ class MediaPlayer(HomeAccessory):
             self._flag[FEATURE_TOGGLE_MUTE] = False
 
         if self.chars[FEATURE_SELECT_SOURCE]:
-            sourceName = new_state.attributes.get(ATTR_INPUT_SOURCE)
+            source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
             if self.sources and not self._flag[FEATURE_SELECT_SOURCE]:
                 _LOGGER.debug(
-                            '%s: Set current state for "select_source" to %s',
-                            self.entity_id, sourceName)
-                if sourceName in self.sources:
-                    index = self.sources.index(sourceName)
+                    '%s: Set current state for "select_source" to %s',
+                    self.entity_id, source_name)
+                if source_name in self.sources:
+                    index = self.sources.index(source_name)
                     self.chars[FEATURE_SELECT_SOURCE].set_value(index)
                 else:
                     self.chars[FEATURE_SELECT_SOURCE].set_value(0)
