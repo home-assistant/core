@@ -5,11 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.onvif/
 """
 import asyncio
+import datetime as dt
 import logging
 import os
-
 import voluptuous as vol
-import datetime as dt
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT,
@@ -97,11 +96,11 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     _LOGGER.debug("Constructing the ONVIFHassCamera")
 
-    hassCamera = ONVIFHassCamera(hass, config)
+    hass_camera = ONVIFHassCamera(hass, config)
 
-    await hassCamera.async_initialize()
+    await hass_camera.async_initialize()
 
-    async_add_entities([hassCamera])
+    async_add_entities([hass_camera])
     return True
 
 
@@ -118,7 +117,8 @@ class ONVIFHassCamera(Camera):
         import zeep
         from onvif import ONVIFCamera
 
-        # Note: important imports foor zeep and onvif-zeep
+        # pylint: disable=no-member
+        # Note: important imports for zeep and onvif-zeep
         def zeep_pythonvalue(self, xmlvalue):
             return xmlvalue
         zeep.xsd.simple.AnySimpleType.pythonvalue = zeep_pythonvalue
@@ -132,6 +132,8 @@ class ONVIFHassCamera(Camera):
         self._name = config.get(CONF_NAME)
         self._ffmpeg_arguments = config.get(CONF_EXTRA_ARGUMENTS)
         self._profile_index = config.get(CONF_PROFILE)
+        self._devicemgmt = None
+        self._ptz_service = None
         self._input = None
 
         _LOGGER.debug("Setting up the ONVIF camera device @ '%s:%s'",
