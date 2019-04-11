@@ -296,11 +296,8 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
-        try:
-            # Close TCP Socket
-            await self.hass.async_add_executor_job(self._ps4.close)
-        except AttributeError:
-            pass
+        # Close TCP Socket
+        await self.hass.async_add_executor_job(self._ps4.close)
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
