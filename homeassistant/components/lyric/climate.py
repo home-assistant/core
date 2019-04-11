@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             thermostat.set_hold_mode(HOLD_NO_HOLD)
 
     def hold_time_service(service):
-        """Sets the time to hold until."""
+        """Set the time to hold until."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         time = service.data.get(ATTR_TIME)
 
