@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback, CoreState
-from homeassistant.loader import get_platform
+from homeassistant.loader import async_get_integration
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -908,7 +908,11 @@ class ZWaveDeviceEntityValues():
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
 
-        platform = get_platform(self._hass, component, DOMAIN)
+        integration = asyncio.run_coroutine_threadsafe(
+            async_get_integration(self._hass, DOMAIN),
+            self._hass.loop).result()
+        platform = integration.get_platform(component)
+
         device = platform.get_device(
             node=self._node, values=self,
             node_config=node_config, hass=self._hass)
