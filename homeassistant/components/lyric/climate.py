@@ -23,8 +23,8 @@ DEPENDENCIES = ['lyric']
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_RESUME_PROGRAM = 'lyric_resume_program'
-SERVICE_HOLD_TIME = 'lyric_set_hold_time'
+SERVICE_RESUME_PROGRAM = 'resume_program'
+SERVICE_HOLD_TIME = 'set_hold_time'
 STATE_HEAT_COOL = 'heat-cool'
 HOLD_NO_HOLD = 'NoHold'
 
