@@ -259,9 +259,9 @@ class FluxLight(Light):
         """Turn the specified or all lights on and wait for state."""
         await self.hass.async_add_executor_job(partial(self._turn_on,
                                                        **kwargs))
-        # The bulb needs a second to tell its new values,
-        # so we wait 2 seconds before updating
-        await sleep(2)
+        # The bulb needs a bit to tell its new values,
+        # so we wait 1 second before updating
+        await sleep(1)
 
     def _turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
