@@ -1,17 +1,13 @@
 """Support for IQVIA sensors."""
-from datetime import timedelta
 import logging
 from statistics import mean
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_STATE, CONF_MONITORED_CONDITIONS)
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.components.iqvia import (
+    DATA_CLIENT, DOMAIN, SENSORS, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK,
+    TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
+    TYPE_ALLERGY_YESTERDAY, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
+    TYPE_ASTHMA_TOMORROW, TYPE_ASTHMA_YESTERDAY, IQVIAEntity)
+from homeassistant.const import ATTR_STATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,49 +21,6 @@ ATTR_RATING = 'rating'
 ATTR_SEASON = 'season'
 ATTR_TREND = 'trend'
 ATTR_ZIP_CODE = 'zip_code'
-
-CONF_ZIP_CODE = 'zip_code'
-
-DEFAULT_ATTRIBUTION = 'Data provided by IQVIA™'
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
-
-TYPE_ALLERGY_FORECAST = 'allergy_average_forecasted'
-TYPE_ALLERGY_HISTORIC = 'allergy_average_historical'
-TYPE_ALLERGY_INDEX = 'allergy_index'
-TYPE_ALLERGY_OUTLOOK = 'allergy_outlook'
-TYPE_ALLERGY_TODAY = 'allergy_index_today'
-TYPE_ALLERGY_TOMORROW = 'allergy_index_tomorrow'
-TYPE_ALLERGY_YESTERDAY = 'allergy_index_yesterday'
-TYPE_ASTHMA_FORECAST = 'asthma_average_forecasted'
-TYPE_ASTHMA_HISTORIC = 'asthma_average_historical'
-TYPE_ASTHMA_INDEX = 'asthma_index'
-TYPE_ASTHMA_TODAY = 'asthma_index_today'
-TYPE_ASTHMA_TOMORROW = 'asthma_index_tomorrow'
-TYPE_ASTHMA_YESTERDAY = 'asthma_index_yesterday'
-TYPE_DISEASE_FORECAST = 'disease_average_forecasted'
-
-SENSORS = {
-    TYPE_ALLERGY_FORECAST: (
-        'ForecastSensor', 'Allergy Index: Forecasted Average', 'mdi:flower'),
-    TYPE_ALLERGY_HISTORIC: (
-        'HistoricalSensor', 'Allergy Index: Historical Average', 'mdi:flower'),
-    TYPE_ALLERGY_TODAY: ('IndexSensor', 'Allergy Index: Today', 'mdi:flower'),
-    TYPE_ALLERGY_TOMORROW: (
-        'IndexSensor', 'Allergy Index: Tomorrow', 'mdi:flower'),
-    TYPE_ALLERGY_YESTERDAY: (
-        'IndexSensor', 'Allergy Index: Yesterday', 'mdi:flower'),
-    TYPE_ASTHMA_TODAY: ('IndexSensor', 'Asthma Index: Today', 'mdi:flower'),
-    TYPE_ASTHMA_TOMORROW: (
-        'IndexSensor', 'Asthma Index: Tomorrow', 'mdi:flower'),
-    TYPE_ASTHMA_YESTERDAY: (
-        'IndexSensor', 'Asthma Index: Yesterday', 'mdi:flower'),
-    TYPE_ASTHMA_FORECAST: (
-        'ForecastSensor', 'Asthma Index: Forecasted Average', 'mdi:flower'),
-    TYPE_ASTHMA_HISTORIC: (
-        'HistoricalSensor', 'Asthma Index: Historical Average', 'mdi:flower'),
-    TYPE_DISEASE_FORECAST: (
-        'ForecastSensor', 'Cold & Flu: Forecasted Average', 'mdi:snowflake')
-}
 
 RATING_MAPPING = [{
     'label': 'Low',
@@ -94,32 +47,17 @@ RATING_MAPPING = [{
 TREND_INCREASING = 'Increasing'
 TREND_SUBSIDING = 'Subsiding'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ZIP_CODE): str,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(SENSORS)])
-})
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from pyiqvia import Client
-
-    websession = aiohttp_client.async_get_clientsession(hass)
-
-    iqvia = IQVIAData(
-        Client(config[CONF_ZIP_CODE], websession),
-        config[CONF_MONITORED_CONDITIONS])
-
-    await iqvia.async_update()
+    iqvia = hass.data[DOMAIN][DATA_CLIENT]
 
     sensors = []
-    for kind in config[CONF_MONITORED_CONDITIONS]:
+    for kind in iqvia.sensor_types:
         sensor_class, name, icon = SENSORS[kind]
         sensors.append(
-            globals()[sensor_class](
-                iqvia, kind, name, icon, config[CONF_ZIP_CODE]))
+            globals()[sensor_class](iqvia, kind, name, icon, iqvia.zip_code))
 
     async_add_entities(sensors, True)
 
@@ -149,73 +87,16 @@ def calculate_trend(indices):
     return TREND_SUBSIDING
 
 
-class BaseSensor(Entity):
-    """Define a base IQVIA sensor."""
-
-    def __init__(self, iqvia, kind, name, icon, zip_code):
-        """Initialize the sensor."""
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._icon = icon
-        self._kind = kind
-        self._name = name
-        self._state = None
-        self._zip_code = zip_code
-        self.iqvia = iqvia
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        if self._kind in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-                          TYPE_ALLERGY_YESTERDAY):
-            return bool(self.iqvia.data[TYPE_ALLERGY_INDEX])
-
-        if self._kind in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-                          TYPE_ASTHMA_YESTERDAY):
-            return bool(self.iqvia.data[TYPE_ASTHMA_INDEX])
-
-        return bool(self.iqvia.data[self._kind])
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state."""
-        return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}'.format(self._zip_code, self._kind)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return 'index'
-
-
-class ForecastSensor(BaseSensor):
+class ForecastSensor(IQVIAEntity):
     """Define sensor related to forecast data."""
 
     async def async_update(self):
         """Update the sensor."""
-        await self.iqvia.async_update()
-        if not self.iqvia.data:
+        await self._iqvia.async_update()
+        if not self._iqvia.data:
             return
 
-        data = self.iqvia.data[self._kind].get('Location')
+        data = self._iqvia.data[self._kind].get('Location')
         if not data:
             return
 
@@ -235,23 +116,23 @@ class ForecastSensor(BaseSensor):
         })
 
         if self._kind == TYPE_ALLERGY_FORECAST:
-            outlook = self.iqvia.data[TYPE_ALLERGY_OUTLOOK]
+            outlook = self._iqvia.data[TYPE_ALLERGY_OUTLOOK]
             self._attrs[ATTR_OUTLOOK] = outlook.get('Outlook')
             self._attrs[ATTR_SEASON] = outlook.get('Season')
 
         self._state = average
 
 
-class HistoricalSensor(BaseSensor):
+class HistoricalSensor(IQVIAEntity):
     """Define sensor related to historical data."""
 
     async def async_update(self):
         """Update the sensor."""
-        await self.iqvia.async_update()
-        if not self.iqvia.data:
+        await self._iqvia.async_update()
+        if not self._iqvia.data:
             return
 
-        data = self.iqvia.data[self._kind].get('Location')
+        data = self._iqvia.data[self._kind].get('Location')
         if not data:
             return
 
@@ -269,22 +150,22 @@ class HistoricalSensor(BaseSensor):
         self._state = average
 
 
-class IndexSensor(BaseSensor):
+class IndexSensor(IQVIAEntity):
     """Define sensor related to indices."""
 
     async def async_update(self):
         """Update the sensor."""
-        await self.iqvia.async_update()
-        if not self.iqvia.data:
+        await self._iqvia.async_update()
+        if not self._iqvia.data:
             return
 
         data = {}
         if self._kind in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
                           TYPE_ALLERGY_YESTERDAY):
-            data = self.iqvia.data[TYPE_ALLERGY_INDEX].get('Location')
+            data = self._iqvia.data[TYPE_ALLERGY_INDEX].get('Location')
         elif self._kind in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
                             TYPE_ASTHMA_YESTERDAY):
-            data = self.iqvia.data[TYPE_ASTHMA_INDEX].get('Location')
+            data = self._iqvia.data[TYPE_ASTHMA_INDEX].get('Location')
 
         if not data:
             return
@@ -327,76 +208,3 @@ class IndexSensor(BaseSensor):
                 })
 
         self._state = period['Index']
-
-
-class IQVIAData:
-    """Define a data object to retrieve info from IQVIA."""
-
-    def __init__(self, client, sensor_types):
-        """Initialize."""
-        self._client = client
-        self._sensor_types = sensor_types
-        self.data = {}
-
-    async def _get_data(self, method, key):
-        """Return API data from a specific call."""
-        from pyiqvia.errors import IQVIAError
-
-        try:
-            data = await method()
-            self.data[key] = data
-        except IQVIAError as err:
-            _LOGGER.error('Unable to get "%s" data: %s', key, err)
-            self.data[key] = {}
-
-    @Throttle(DEFAULT_SCAN_INTERVAL)
-    async def async_update(self):
-        """Update IQVIA data."""
-        from pyiqvia.errors import InvalidZipError
-
-        # IQVIA sites require a bit more complicated error handling, given that
-        # it sometimes has parts (but not the whole thing) go down:
-        #
-        # 1. If `InvalidZipError` is thrown, quit everything immediately.
-        # 2. If an individual request throws any other error, try the others.
-
-        try:
-            if TYPE_ALLERGY_FORECAST in self._sensor_types:
-                await self._get_data(
-                    self._client.allergens.extended, TYPE_ALLERGY_FORECAST)
-                await self._get_data(
-                    self._client.allergens.outlook, TYPE_ALLERGY_OUTLOOK)
-
-            if TYPE_ALLERGY_HISTORIC in self._sensor_types:
-                await self._get_data(
-                    self._client.allergens.historic, TYPE_ALLERGY_HISTORIC)
-
-            if any(s in self._sensor_types
-                   for s in [TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-                             TYPE_ALLERGY_YESTERDAY]):
-                await self._get_data(
-                    self._client.allergens.current, TYPE_ALLERGY_INDEX)
-
-            if TYPE_ASTHMA_FORECAST in self._sensor_types:
-                await self._get_data(
-                    self._client.asthma.extended, TYPE_ASTHMA_FORECAST)
-
-            if TYPE_ASTHMA_HISTORIC in self._sensor_types:
-                await self._get_data(
-                    self._client.asthma.historic, TYPE_ASTHMA_HISTORIC)
-
-            if any(s in self._sensor_types
-                   for s in [TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-                             TYPE_ASTHMA_YESTERDAY]):
-                await self._get_data(
-                    self._client.asthma.current, TYPE_ASTHMA_INDEX)
-
-            if TYPE_DISEASE_FORECAST in self._sensor_types:
-                await self._get_data(
-                    self._client.disease.extended, TYPE_DISEASE_FORECAST)
-
-            _LOGGER.debug("New data retrieved: %s", self.data)
-        except InvalidZipError:
-            _LOGGER.error(
-                "Cannot retrieve data for ZIP code: %s", self._client.zip_code)
-            self.data = {}
