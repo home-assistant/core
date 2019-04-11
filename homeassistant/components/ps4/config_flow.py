@@ -56,6 +56,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_creds(self, user_input=None):
         """Return PS4 credentials from 2nd Screen App."""
+        from pyps4_homeassistant.errors import CredentialTimeout
         errors = {}
         if user_input is not None:
             try:
@@ -64,7 +65,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                 if self.creds is not None:
                     return await self.async_step_mode()
                 return self.async_abort(reason='credential_error')
-            except UnboundLocalError:
+            except CredentialTimeout:
                 errors['base'] = 'credential_timeout'
 
         return self.async_show_form(
