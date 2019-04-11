@@ -61,9 +61,20 @@ SUPPORTED_COMMANDS = {
     )
 }
 
+
+def validate_token(conf):
+    if conf[CONF_DEVICE_CLASS] == 'tv' and (conf[CONF_ACCESS_TOKEN] == ''
+        or conf[CONF_ACCESS_TOKEN] is None):
+            raise vol.Invalid("If {CONF_DEVICE_CLASS} is 'tv' then "
+                            "{CONF_ACCESS_TOKEN} is required. Set "
+                            "{CONF_DEVICE_CLASS} to 'soundbar' if "
+                            "target device is soundbar without auth")
+    return conf
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN): cv.string,
+    vol.Optional(CONF_ACCESS_TOKEN, default=''): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SUPPRESS_WARNING, default=False): cv.boolean,
     vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS):
@@ -75,25 +86,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vizio media player platform."""
-    host = config.get(CONF_HOST)
-    token = config.get(CONF_ACCESS_TOKEN)
-    name = config.get(CONF_NAME)
-    volume_step = config.get(CONF_VOLUME_STEP)
-    device_type = config.get(CONF_DEVICE_CLASS)
+    host = config[CONF_HOST]
+    token = config[CONF_ACCESS_TOKEN]
+    name = config[CONF_NAME]
+    volume_step = config[CONF_VOLUME_STEP]
+    device_type = config[CONF_DEVICE_CLASS]
     device = VizioDevice(host, token, name, volume_step, device_type)
     if device.validate_setup() is False:
         _LOGGER.error("Failed to set up Vizio platform, "
                       "please check if host and API key are correct")
         return
 
-    if (token is None or token == "") and device_type == "tv":
-        _LOGGER.error("Failed to set up Vizio platform, "
-                      "if device_class is 'tv' then an auth_token needs "
-                      "to be provided, otherwise if device_class is "
-                      "'soundbar' then add the right device_class to config")
-        return
-
-    if config.get(CONF_SUPPRESS_WARNING):
+    if config[CONF_SUPPRESS_WARNING]:
         from requests.packages import urllib3
         _LOGGER.warning("InsecureRequestWarning is disabled "
                         "because of Vizio platform configuration")
