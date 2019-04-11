@@ -49,6 +49,7 @@ STORAGE_VERSION = 1
 HA_COMPONENTS = [
     'binary_sensor',
     'camera',
+    'climate',
     'cover',
     'fan',
     'light',
