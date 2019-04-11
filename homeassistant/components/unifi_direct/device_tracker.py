@@ -11,12 +11,12 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
     CONF_PORT)
 
-REQUIREMENTS = ['pexpect==4.6.0']
+REQUIREMENTS = ['paramiko==2.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSH_PORT = 22
-UNIFI_COMMAND = 'mca-dump | tr -d "\n"'
+UNIFI_COMMAND = 'mca-dump'
 UNIFI_SSID_TABLE = "vap_table"
 UNIFI_CLIENT_TABLE = "sta_table"
 
@@ -68,21 +68,25 @@ class UnifiDeviceScanner(DeviceScanner):
 
     def _connect(self):
         """Connect to the Unifi AP SSH server."""
-        from pexpect import pxssh, exceptions
+        import paramiko
 
-        self.ssh = pxssh.pxssh()
+        self.ssh = paramiko.SSHClient()
+        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy)
         try:
-            self.ssh.login(self.host, self.username,
-                           password=self.password, port=self.port)
+            self.ssh.connect(self.host, port=self.port, username=self.username,
+                             password=self.password)
             self.connected = True
-        except exceptions.EOF:
-            _LOGGER.error("Connection refused. SSH enabled?")
+        except paramiko.ssh_exception.AuthenticationException as err:
+            _LOGGER.error(("Authentication exception on connect: "
+                           "{}").format(err))
+        except paramiko.ssh_exception.SSHException as err:
+            _LOGGER.error("Error establishing SSH session: {}".format(err))
             self._disconnect()
 
     def _disconnect(self):
         """Disconnect the current SSH connection."""
         try:
-            self.ssh.logout()
+            self.ssh.close()
         except Exception:  # pylint: disable=broad-except
             pass
         finally:
@@ -91,7 +95,7 @@ class UnifiDeviceScanner(DeviceScanner):
         self.connected = False
 
     def _get_update(self):
-        from pexpect import pxssh, exceptions
+        import paramiko
 
         try:
             if not self.connected:
@@ -100,22 +104,22 @@ class UnifiDeviceScanner(DeviceScanner):
             # don't try to send anything to the AP.
             if not self.connected:
                 return None
-            self.ssh.sendline(UNIFI_COMMAND)
-            self.ssh.prompt()
-            return self.ssh.before
-        except pxssh.ExceptionPxssh as err:
+            _stdin, stdout, _stderr = self.ssh.exec_command(UNIFI_COMMAND)
+            status = stdout.channel.recv_exit_status()
+            if status == 0:
+                return ''.join(stdout.readlines())
+            else:
+                _LOGGER.error('Executing {} failed'.format(UNIFI_COMMAND))
+                return None
+        except paramiko.ssh_exception.SSHException as err:
             _LOGGER.error("Unexpected SSH error: %s", str(err))
-            self._disconnect()
-            return None
-        except (AssertionError, exceptions.EOF) as err:
-            _LOGGER.error("Connection to AP unavailable: %s", str(err))
             self._disconnect()
             return None
 
 
 def _response_to_json(response):
     try:
-        json_response = json.loads(str(response)[31:-1].replace("\\", ""))
+        json_response = json.loads(response)
         _LOGGER.debug(str(json_response))
         ssid_table = json_response.get(UNIFI_SSID_TABLE)
         active_clients = {}
@@ -126,6 +130,6 @@ def _response_to_json(response):
                 active_clients[client.get("mac")] = client
 
         return active_clients
-    except (ValueError, TypeError):
-        _LOGGER.error("Failed to decode response from AP.")
+    except ValueError:
+        _LOGGER.error("Failed to decode response from AP")
         return {}
