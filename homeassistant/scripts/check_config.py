@@ -336,8 +336,9 @@ def check_ha_config_file(hass):
             result.add_error("Integration not found: {}".format(domain))
             continue
 
-        component = integration.get_component()
-        if not component:
+        try:
+            component = integration.get_component()
+        except ImportError:
             result.add_error("Component not found: {}".format(domain))
             continue
 
