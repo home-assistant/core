@@ -1,6 +1,7 @@
 """Set up the demo environment that mimics interaction with devices."""
 import asyncio
 import time
+import sys
 
 from homeassistant import bootstrap
 import homeassistant.core as ha
@@ -31,7 +32,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
 ]
 
 
-async def async_setup(hass, config):
+async def _async_setup(hass, config):
     """Set up the demo environment."""
     group = hass.components.group
     configurator = hass.components.configurator
@@ -224,3 +225,7 @@ async def async_setup(hass, config):
     hass.async_add_job(setup_configurator)
 
     return True
+
+
+if 'pytest' not in sys.modules:
+    async_setup = _async_setup  # pylint: disable=invalid-name
