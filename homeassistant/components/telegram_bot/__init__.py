@@ -1,5 +1,6 @@
 """Support to send and receive Telegram messages."""
 import io
+from ipaddress import ip_network
 from functools import partial
 import importlib
 import logging
@@ -12,7 +13,7 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
-    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
+    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION, CONF_URL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 
@@ -53,6 +54,7 @@ ATTR_VERIFY_SSL = 'verify_ssl'
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
 CONF_PROXY_URL = 'proxy_url'
 CONF_PROXY_PARAMS = 'proxy_params'
+CONF_TRUSTED_NETWORKS = 'trusted_networks'
 
 DOMAIN = 'telegram_bot'
 
@@ -75,6 +77,15 @@ EVENT_TELEGRAM_TEXT = 'telegram_text'
 PARSER_HTML = 'html'
 PARSER_MD = 'markdown'
 
+DEFAULT_TRUSTED_NETWORKS = [
+    ip_network('149.154.167.197/32'),
+    ip_network('149.154.167.198/31'),
+    ip_network('149.154.167.200/29'),
+    ip_network('149.154.167.208/28'),
+    ip_network('149.154.167.224/29'),
+    ip_network('149.154.167.232/31')
+]
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [
         vol.Schema({
@@ -86,6 +97,11 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
             vol.Optional(CONF_PROXY_URL): cv.string,
             vol.Optional(CONF_PROXY_PARAMS): dict,
+            # webhooks
+            vol.Optional(CONF_URL): vol.Url(),
+            vol.Optional(CONF_TRUSTED_NETWORKS,
+                         default=DEFAULT_TRUSTED_NETWORKS):
+                vol.All(cv.ensure_list, [ip_network])
             })
         ])
 }, extra=vol.ALLOW_EXTRA)
