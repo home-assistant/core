@@ -81,8 +81,8 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         return False
 
     hass.data[DOMAIN] = {
-        DISCOVERY_CONFIG: config[DOMAIN],
-        DISCOVERY_DEVICE: device_data
+        DATA_CONFIG: config[DOMAIN],
+        DATA_DEVICE: device_data
     }
 
     hass.async_create_task(async_load_platform(

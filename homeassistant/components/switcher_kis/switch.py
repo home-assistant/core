@@ -35,15 +35,15 @@ async def async_setup_platform(hass: HomeAssistant, config: Dict,
                                async_add_entities: Callable,
                                discovery_info: Dict) -> None:
     """Set up the switcher platform for the switch component."""
-    if hass.data[DOMAIN][DISCOVERY_CONFIG]:
-        name = hass.data[DOMAIN][DISCOVERY_CONFIG][CONF_NAME].title()
-        icon = hass.data[DOMAIN][DISCOVERY_CONFIG].get(CONF_ICON)
+    if hass.data[DOMAIN][DATA_CONFIG]:
+        name = hass.data[DOMAIN][DATA_CONFIG][CONF_NAME].title()
+        icon = hass.data[DOMAIN][DATA_CONFIG].get(CONF_ICON)
     else:
         raise PlatformNotReady("No config data found")
 
-    if hass.data[DOMAIN].get(DISCOVERY_DEVICE):
+    if hass.data[DOMAIN].get(DATA_DEVICE):
         switcher_entity = SwitcherControl(
-            hass, name, icon, hass.data[DOMAIN].get(DISCOVERY_DEVICE))
+            hass, name, icon, hass.data[DOMAIN].get(DATA_DEVICE))
     else:
         raise PlatformNotReady("No device data discoverd")
 
