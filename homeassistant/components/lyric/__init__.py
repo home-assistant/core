@@ -129,7 +129,7 @@ def setup(hass, config):
     return True
 
 
-class LyricDevice(object):
+class LyricDevice:
     """Structure Lyric functions for hass."""
 
     def __init__(self, hass, conf, lyric):
