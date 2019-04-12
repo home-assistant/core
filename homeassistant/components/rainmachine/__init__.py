@@ -1,4 +1,5 @@
 """Support for RainMachine devices."""
+import asyncio
 import logging
 from datetime import timedelta
 from functools import wraps
@@ -20,7 +21,8 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_instances
 from .const import (
-    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
+    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN,
+    OPERATION_RESTRICTIONS_CURRENT, OPERATION_RESTRICTIONS_UNIVERSAL)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -346,17 +348,30 @@ class RainMachine:
         """Initialize."""
         self.binary_sensor_conditions = binary_sensor_conditions
         self.client = client
+        self.data = {}
         self.default_zone_runtime = default_zone_runtime
         self.device_mac = self.client.mac
-        self.restrictions = {}
         self.sensor_conditions = sensor_conditions
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        self.restrictions.update({
-            'current': await self.client.restrictions.current(),
-            'global': await self.client.restrictions.universal()
-        })
+        from regenmaschine.errors import RainMachineError
+
+        tasks = {
+            OPERATION_RESTRICTIONS_CURRENT: self.client.restrictions.current(),
+            OPERATION_RESTRICTIONS_UNIVERSAL:
+                self.client.restrictions.universal(),
+        }
+
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+        for operation, result in zip(tasks, results):
+            if isinstance(result, RainMachineError):
+                _LOGGER.error(
+                    'There was an error while updating %s: %s', operation,
+                    result)
+                continue
+
+            self.data[operation] = result
 
 
 class RainMachineEntity(Entity):
