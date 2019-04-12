@@ -1,6 +1,6 @@
 """Translation string lookup helpers."""
 import logging
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterablem, Optional
 
 from homeassistant import config_entries
 from homeassistant.loader import async_get_integration, bind_hass
@@ -30,7 +30,7 @@ def flatten(data: Dict) -> Dict[str, Any]:
 
 
 async def component_translation_file(hass: HomeAssistantType, component: str,
-                                     language: str) -> str:
+                                     language: str) -> Optional[str]:
     """Return the translation json file location for a component.
 
     For component:
