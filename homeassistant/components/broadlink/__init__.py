@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_RETRY = 3
 
+
 def ipv4_address(value):
     """Validate an ipv4 address."""
     regex = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
@@ -102,7 +103,8 @@ def async_setup_service(hass, host, device):
                                 device.auth)
                         except socket.timeout:
                             if retry == DEFAULT_RETRY-1:
-                                _LOGGER.error("Failed to send packet to device")
+                                _LOGGER.error(
+                                    "Failed to send packet to device")
 
         hass.services.async_register(
             DOMAIN, SERVICE_SEND, _send_packet,
