@@ -4,7 +4,7 @@ import pathlib
 from typing import Any, Dict, Iterable
 
 from homeassistant import config_entries
-from homeassistant.loader import get_component, get_platform, bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.json import load_json
 from .typing import HomeAssistantType
 
@@ -30,8 +30,8 @@ def flatten(data: Dict) -> Dict[str, Any]:
     return recursive_flatten('', data)
 
 
-def component_translation_file(hass: HomeAssistantType, component: str,
-                               language: str) -> str:
+async def component_translation_file(hass: HomeAssistantType, component: str,
+                                     language: str) -> str:
     """Return the translation json file location for a component.
 
     For component one of:
@@ -42,10 +42,15 @@ def component_translation_file(hass: HomeAssistantType, component: str,
      - components/light/.translations/hue.nl.json
      - components/hue/.translations/light.nl.json
     """
-    is_platform = '.' in component
+    parts = component.split('.')
+    domain = parts[-1]
+    is_platform = len(parts) == 2
+
+    integration = await async_get_integration(hass, domain)
+    assert integration is not None
 
     if not is_platform:
-        module = get_component(hass, component)
+        module = integration.get_component()
         assert module is not None
 
         module_path = pathlib.Path(module.__file__)
@@ -61,22 +66,14 @@ def component_translation_file(hass: HomeAssistantType, component: str,
 
     # It's a platform
     parts = component.split('.', 1)
-    module = get_platform(hass, *parts)
+    module = integration.get_platform(parts[0])
     assert module is not None, component
 
-    # Either within HA or custom_components
-    # Either light/hue.py or hue/light.py
+    # Either within HA or custom_components: hue/light.py
     module_path = pathlib.Path(module.__file__)
+    filename = "{}.{}.json".format(parts[0], language)
 
-    # Compare to parent so we don't have to strip off `.py`
-    if module_path.parent.name == parts[0]:
-        # this is light/hue.py
-        filename = "{}.{}.json".format(parts[1], language)
-    else:
-        # this is hue/light.py
-        filename = "{}.{}.json".format(parts[0], language)
-
-    return str(module_path.parent / '.translations' / filename)
+    return str(integration.file_path / '.translations' / filename)
 
 
 def load_translations_files(translation_files: Dict[str, str]) \
@@ -130,7 +127,7 @@ async def async_get_component_resources(hass: HomeAssistantType,
     missing_components = components - set(translation_cache)
     missing_files = {}
     for component in missing_components:
-        missing_files[component] = component_translation_file(
+        missing_files[component] = await component_translation_file(
             hass, component, language)
 
     # Load missing files
