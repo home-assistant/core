@@ -1,9 +1,11 @@
 """Philips Hue sensors platform tests."""
+import asyncio
 from collections import deque
 import datetime
 import logging
 from unittest.mock import Mock
 
+import aiohue
 from aiohue.sensors import Sensors
 import pytest
 
@@ -292,6 +294,23 @@ TEMPERATURE_SENSOR_3 = {
         "certified": True
     }
 }
+UNSUPPORTED_SENSOR = {
+    "state": {
+        "status": 0,
+        "lastupdated": "2019-01-01T01:00:00"
+    },
+    "config": {
+        "on": True,
+        "reachable": True
+    },
+    "name": "Unsupported sensor",
+    "type": "CLIPGenericStatus",
+    "modelid": "PHWA01",
+    "manufacturername": "Philips",
+    "swversion": "1.0",
+    "uniqueid": "arbitrary",
+    "recycle": True
+}
 SENSOR_RESPONSE = {
     "1": PRESENCE_SENSOR_1_PRESENT,
     "2": LIGHT_LEVEL_SENSOR_1,
@@ -402,6 +421,17 @@ async def test_sensors(hass, mock_bridge):
     assert temperature_sensor_2.name == 'Kitchen sensor temperature'
 
 
+async def test_unsupported_sensors(hass, mock_bridge):
+    """Test that unsupported sensors don't get added and don't fail."""
+    response_with_unsupported = dict(SENSOR_RESPONSE)
+    response_with_unsupported['7'] = UNSUPPORTED_SENSOR
+    mock_bridge.mock_sensor_responses.append(response_with_unsupported)
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 1
+    # 2 "physical" sensors with 3 virtual sensors each
+    assert len(hass.states.async_all()) == 6
+
+
 async def test_new_sensor_discovered(hass, mock_bridge):
     """Test if 2nd update has a new sensor."""
     mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
@@ -435,3 +465,21 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     temperature = hass.states.get('sensor.bedroom_sensor_temperature')
     assert temperature is not None
     assert temperature.state == '17.75'
+
+
+async def test_update_timeout(hass, mock_bridge):
+    """Test bridge marked as not available if timeout error during update."""
+    mock_bridge.api.sensors.update = Mock(side_effect=asyncio.TimeoutError)
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 0
+    assert len(hass.states.async_all()) == 0
+    assert mock_bridge.available is False
+
+
+async def test_update_unauthorized(hass, mock_bridge):
+    """Test bridge marked as not available if unauthorized during update."""
+    mock_bridge.api.sensors.update = Mock(side_effect=aiohue.Unauthorized)
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 0
+    assert len(hass.states.async_all()) == 0
+    assert mock_bridge.available is False
