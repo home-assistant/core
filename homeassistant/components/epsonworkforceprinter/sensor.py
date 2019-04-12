@@ -83,4 +83,3 @@ class EpsonPrinterCartridge(Entity):
     def update(self):
         """Get the latest data from the Epson printer."""
         self._api.update()
-
