@@ -210,6 +210,8 @@ class PhilipsTV(MediaPlayerDevice):
         """Return content type of playing media"""
         if (self._tv.source_id == 'tv' or self._tv.source_id == '11'):
             return MEDIA_TYPE_CHANNEL
+        elif(self._tv.source_id is None and self._tv.channels):
+            return MEDIA_TYPE_CHANNEL
         else:
             return None
 
