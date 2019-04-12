@@ -9,7 +9,7 @@ from homeassistant.components.camera import (
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.helpers import config_validation as cv
 
-from . import CameraData
+from . import CameraData, NETATMO_AUTH
 
 DEPENDENCIES = ['netatmo']
 
@@ -35,13 +35,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to Netatmo cameras."""
-    netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
     quality = config.get(CONF_QUALITY, DEFAULT_QUALITY)
     import pyatmo
     try:
-        data = CameraData(hass, netatmo.NETATMO_AUTH, home)
+        data = CameraData(hass, NETATMO_AUTH, home)
         for camera_name in data.get_camera_names():
             camera_type = data.get_camera_type(camera=camera_name, home=home)
             if CONF_CAMERAS in config:
