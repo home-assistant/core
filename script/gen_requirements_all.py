@@ -62,6 +62,7 @@ TEST_REQUIREMENTS = (
     'foobot_async',
     'geojson_client',
     'georss_generic_client',
+    'georss_ign_sismologia_client',
     'google-api-python-client',
     'gTTS-token',
     'ha-ffmpeg',
