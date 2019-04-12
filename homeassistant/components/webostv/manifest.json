@@ -6,6 +6,6 @@
     "pylgtv==0.1.9",
     "websockets==6.0"
   ],
-  "dependencies": [],
+  "dependencies": ["configurator"],
   "codeowners": []
 }
