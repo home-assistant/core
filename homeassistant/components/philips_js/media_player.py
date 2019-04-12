@@ -14,11 +14,10 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import call_later, track_time_interval
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
                      SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -29,6 +28,10 @@ CONF_ON_ACTION = 'turn_on_action'
 
 DEFAULT_NAME = "Philips TV"
 DEFAULT_API_VERSION = '1'
+DEFAULT_SCAN_INTERVAL = 30
+
+DELAY_ACTION_DEFAULT = 2.0
+DELAY_ACTION_ON = 10.0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -69,6 +72,32 @@ class PhilipsTV(MediaPlayerDevice):
         self._supports = SUPPORT_PHILIPS_JS
         if self._on_script:
             self._supports |= SUPPORT_TURN_ON
+        self._update_task = None
+
+    def _update_soon(self, delay):
+        """Reschedule update task"""
+        if self._update_task:
+            self._update_task()
+            self._update_task = None
+
+        self.schedule_update_ha_state(
+            force_refresh=False)
+
+        def update_forced(event_time):
+            self.schedule_update_ha_state(force_refresh=True)
+
+        def update_and_restart(event_time):
+            update_forced(event_time)
+            self._update_task = track_time_interval(
+                self.hass, update_forced,
+                timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+
+        call_later(self.hass, delay, update_and_restart)
+
+    async def async_added_to_hass(self):
+        """Start running updates once we are added to hass"""
+        self.hass.add_job(
+            self._update_soon, 0)
 
     @property
     def name(self):
@@ -78,7 +107,7 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def should_poll(self):
         """Device should be polled."""
-        return True
+        return False
 
     @property
     def supported_features(self):
@@ -108,6 +137,7 @@ class PhilipsTV(MediaPlayerDevice):
         source_id = _inverted(self._sources).get(source)
         if source_id:
             self._tv.setSource(source_id)
+            self._update_soon(DELAY_ACTION_DEFAULT)
 
     @property
     def volume_level(self):
@@ -123,34 +153,42 @@ class PhilipsTV(MediaPlayerDevice):
         """Turn on the device."""
         if self._on_script:
             self._on_script.run()
+            self._update_soon(DELAY_ACTION_ON)
 
     def turn_off(self):
         """Turn off the device."""
         self._tv.sendKey('Standby')
+        self._update_soon(DELAY_ACTION_DEFAULT)
 
     def volume_up(self):
         """Send volume up command."""
         self._tv.sendKey('VolumeUp')
+        self._update_soon(DELAY_ACTION_DEFAULT)
 
     def volume_down(self):
         """Send volume down command."""
         self._tv.sendKey('VolumeDown')
+        self._update_soon(DELAY_ACTION_DEFAULT)
 
     def mute_volume(self, mute):
         """Send mute command."""
         self._tv.setVolume(self._tv.volume, mute)
+        self._update_soon(DELAY_ACTION_DEFAULT)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._tv.setVolume(volume, self._tv.muted)
+        self._update_soon(DELAY_ACTION_DEFAULT)
 
     def media_previous_track(self):
         """Send rewind command."""
         self._tv.sendKey('Previous')
+        self._update_soon(DELAY_ACTION_DEFAULT)
 
     def media_next_track(self):
         """Send fast forward command."""
         self._tv.sendKey('Next')
+        self._update_soon(DELAY_ACTION_DEFAULT)
 
     @property
     def media_channel(self):
