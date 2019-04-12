@@ -46,14 +46,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EpsonPrinterCartridge(Entity):
     """Representation of a cartridge sensor."""
 
-    def __init__(self, hass, api, id):
+    def __init__(self, hass, api, cartridgeidx):
         """Initialize a cartridge sensor."""
         self._api = api
 
-        self._id = id
-        self._name = MONITORED_CONDITIONS[id][0]
-        self._unit = MONITORED_CONDITIONS[id][1]
-        self._icon = MONITORED_CONDITIONS[id][2]
+        self._id = cartridgeidx
+        self._name = MONITORED_CONDITIONS[self._id][0]
+        self._unit = MONITORED_CONDITIONS[self._id][1]
+        self._icon = MONITORED_CONDITIONS[self._id][2]
 
     @property
     def name(self):
