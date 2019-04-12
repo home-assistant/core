@@ -904,7 +904,7 @@ async def get_system_health_info(hass, domain):
 def mock_integration(hass, module):
     """Mock an integration."""
     integration = loader.Integration(
-        hass, 'homeassisant.components.{}'.format(module.DOMAIN),
+        hass, 'homeassisant.components.{}'.format(module.DOMAIN), None,
         loader.manifest_from_legacy_module(module))
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
