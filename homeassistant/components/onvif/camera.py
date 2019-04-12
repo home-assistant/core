@@ -115,6 +115,7 @@ class ONVIFHassCamera(Camera):
 
         import onvif
         import zeep
+        from zeep.asyncio import AsyncTransport
         from onvif import ONVIFCamera
 
         # pylint: disable=no-member
@@ -132,7 +133,7 @@ class ONVIFHassCamera(Camera):
         self._name = config.get(CONF_NAME)
         self._ffmpeg_arguments = config.get(CONF_EXTRA_ARGUMENTS)
         self._profile_index = config.get(CONF_PROFILE)
-        self._devicemgmt = None
+        self._transport = None
         self._ptz_service = None
         self._input = None
 
@@ -140,6 +141,11 @@ class ONVIFHassCamera(Camera):
                       self._host,
                       self._port)
 
+        loop = asyncio.get_event_loop()
+        self._transport = AsyncTransport(loop, cache=None)
+
+        # Note: don't pass in the _transport here to the camera itself, it's
+        # not async aware
         self._camera = ONVIFCamera(self._host,
                                    self._port,
                                    self._username,
@@ -156,12 +162,13 @@ class ONVIFHassCamera(Camera):
         """
         _LOGGER.debug("Setting up the ONVIF device management service")
 
-        self._devicemgmt = self._camera.create_devicemgmt_service()
+        devicemgmt = self._camera.create_devicemgmt_service(transport=self._transport)
 
         _LOGGER.debug("Retrieving current camera date/time")
 
         system_date = dt.datetime.utcnow()
-        cdate = self._devicemgmt.GetSystemDateAndTime().UTCDateTime
+        device_time = await devicemgmt.GetSystemDateAndTime()
+        cdate = device_time.UTCDateTime
         cam_date = dt.datetime(cdate.Date.Year, cdate.Date.Month,
                                cdate.Date.Day, cdate.Time.Hour,
                                cdate.Time.Minute, cdate.Time.Second)
@@ -188,7 +195,7 @@ class ONVIFHassCamera(Camera):
 
         _LOGGER.debug("Setting up the ONVIF PTZ service")
 
-        self._ptz_service = self._camera.create_ptz_service()
+        self._ptz_service = self._camera.create_ptz_service(transport=self._transport)
 
         _LOGGER.debug("Completed set up of the ONVIF camera component")
 
@@ -202,9 +209,9 @@ class ONVIFHassCamera(Camera):
         try:
             _LOGGER.debug("Retrieving profiles")
 
-            media_service = self._camera.create_media_service()
+            media_service = self._camera.create_media_service(transport=self._transport)
 
-            profiles = media_service.GetProfiles()
+            profiles = await media_service.GetProfiles()
 
             _LOGGER.debug("Retrieved '%d' profiles",
                           len(profiles))
@@ -225,7 +232,8 @@ class ONVIFHassCamera(Camera):
             req.StreamSetup = {'Stream': 'RTP-Unicast',
                                'Transport': {'Protocol': 'RTSP'}}
 
-            uri_no_auth = media_service.GetStreamUri(req).Uri
+            streamUri = await media_service.GetStreamUri(req)
+            uri_no_auth = streamUri.Uri
             uri_for_log = uri_no_auth.replace(
                 'rtsp://', 'rtsp://<user>:<password>@', 1)
             self._input = uri_no_auth.replace(
@@ -251,7 +259,11 @@ class ONVIFHassCamera(Camera):
                 "PanTilt": {"_x": pan_val, "_y": tilt_val},
                 "Zoom": {"_x": zoom_val}}}
             try:
-                self._ptz_service.ContinuousMove(req)
+                _LOGGER.debug(
+                    "Calling PTZ | Pan = %d | Tilt = %d | Zoom = %d",
+                    pan_val, tilt_val, zoom_val)
+
+                await self._ptz_service.ContinuousMove(req)
             except exceptions.ONVIFError as err:
                 if "Bad Request" in err.reason:
                     self._ptz_service = None
