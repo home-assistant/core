@@ -12,7 +12,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 URL = "https://github.com/zxdavb/geniushub-client/archive/master.zip"
-REQUIREMENTS = [URL + '#geniushub-client==0.2.6']                                # TODO: delete me
+REQUIREMENTS = [URL + '#geniushub-client==0.3.0']                                # TODO: delete me
 # REQUIREMENTS = ['geniushub-client==0.2.5']
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,17 +44,7 @@ async def async_setup(hass, hass_config):
             session=async_get_clientsession(hass)
         )
 
-        await client.populate()
-
-        # hub = client.hub
-        # zones = await hub.zones
-        # discovered = [z for z in zones if z['type'] == 'radiator']
-
-        # hass.async_create_task(async_load_platform(
-        #     hass, 'climate', DOMAIN, discovered, hass_config))
-
-        hass.async_create_task(async_load_platform(
-            hass, 'climate', DOMAIN, {}, hass_config))
+        await client.hub.update()
 
     except AssertionError:  # assert response.status == HTTP_OK, response.text
         _LOGGER.warn(
@@ -62,14 +52,7 @@ async def async_setup(hass, hass_config):
             exc_info=True)
         return False
 
-    # @callback
-    # def _first_update(event):
-    #     """When HA has started, the hub knows to retrieve it's first update."""
-    #     pkt = {'signal': 'update'}
-    #     async_dispatcher_send(hass, DOMAIN, pkt)
-
-    # hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
-
-    _LOGGER.warn("setup(): Finished!")
+    hass.async_create_task(async_load_platform(
+        hass, 'climate', DOMAIN, {}, hass_config))
 
     return True
