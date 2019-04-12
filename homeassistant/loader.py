@@ -87,7 +87,8 @@ class Integration:
                 continue
 
             return cls(
-                hass, "{}.{}".format(root_module.__name__, domain), manifest
+                hass, "{}.{}".format(root_module.__name__, domain),
+                manifest_path.parent, manifest
             )
 
         return None
@@ -105,13 +106,16 @@ class Integration:
             return None
 
         return cls(
-            hass, comp.__name__, manifest_from_legacy_module(comp)
+            hass, comp.__name__, pathlib.Path(comp.__file__).parent,
+            manifest_from_legacy_module(comp)
         )
 
-    def __init__(self, hass: 'HomeAssistant', pkg_path: str, manifest: Dict):
+    def __init__(self, hass: 'HomeAssistant', pkg_path: str,
+                 file_path: pathlib.Path, manifest: Dict):
         """Initialize an integration."""
         self.hass = hass
         self.pkg_path = pkg_path
+        self.file_path = file_path
         self.name = manifest['name']  # type: str
         self.domain = manifest['domain']  # type: str
         self.dependencies = manifest['dependencies']  # type: List[str]

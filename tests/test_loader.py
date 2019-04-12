@@ -164,12 +164,13 @@ async def test_get_integration_custom_component(hass):
 
 def test_integration_properties(hass):
     """Test integration properties."""
-    integration = loader.Integration(hass, 'homeassistant.components.hue', {
-        'name': 'Philips Hue',
-        'domain': 'hue',
-        'dependencies': ['test-dep'],
-        'requirements': ['test-req==1.0.0'],
-    })
+    integration = loader.Integration(
+        hass, 'homeassistant.components.hue', None, {
+            'name': 'Philips Hue',
+            'domain': 'hue',
+            'dependencies': ['test-dep'],
+            'requirements': ['test-req==1.0.0'],
+        })
     assert integration.name == "Philips Hue"
     assert integration.domain == 'hue'
     assert integration.dependencies == ['test-dep']

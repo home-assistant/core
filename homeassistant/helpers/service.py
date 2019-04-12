@@ -2,7 +2,6 @@
 import asyncio
 from functools import wraps
 import logging
-from os import path
 from typing import Callable
 
 import voluptuous as vol
@@ -11,12 +10,14 @@ from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.const import (
     ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ATTR_AREA_ID)
 import homeassistant.core as ha
-from homeassistant.exceptions import TemplateError, Unauthorized, UnknownUser
+from homeassistant.exceptions import (
+    HomeAssistantError, TemplateError, Unauthorized, UnknownUser)
 from homeassistant.helpers import template, typing
-from homeassistant.loader import get_component, bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
+from homeassistant.helpers.typing import HomeAssistantType
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
@@ -152,60 +153,68 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
     return extracted
 
 
+async def _load_services_file(hass: HomeAssistantType, domain: str):
+    """Load services file for an integration."""
+    integration = await async_get_integration(hass, domain)
+    try:
+        return await hass.async_add_executor_job(
+            load_yaml, str(integration.file_path / 'services.yaml'))
+    except FileNotFoundError:
+        _LOGGER.warning("Unable to find services.yaml for the %s integration",
+                        domain)
+        return {}
+    except HomeAssistantError:
+        _LOGGER.warning("Unable to parse services.yaml for the %s integration",
+                        domain)
+        return {}
+
+
 @bind_hass
 async def async_get_all_descriptions(hass):
     """Return descriptions (i.e. user documentation) for all service calls."""
-    if SERVICE_DESCRIPTION_CACHE not in hass.data:
-        hass.data[SERVICE_DESCRIPTION_CACHE] = {}
-    description_cache = hass.data[SERVICE_DESCRIPTION_CACHE]
-
+    descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
     format_cache_key = '{}.{}'.format
-
-    def domain_yaml_file(domain):
-        """Return the services.yaml location for a domain."""
-        component_path = path.dirname(get_component(hass, domain).__file__)
-        return path.join(component_path, 'services.yaml')
-
-    def load_services_files(yaml_files):
-        """Load and parse services.yaml files."""
-        loaded = {}
-        for yaml_file in yaml_files:
-            try:
-                loaded[yaml_file] = load_yaml(yaml_file)
-            except FileNotFoundError:
-                loaded[yaml_file] = {}
-
-        return loaded
-
     services = hass.services.async_services()
 
-    # Load missing files
+    # See if there are new services not seen before.
+    # Any service that we saw before already has an entry in description_cache.
     missing = set()
     for domain in services:
         for service in services[domain]:
-            if format_cache_key(domain, service) not in description_cache:
-                missing.add(domain_yaml_file(domain))
+            if format_cache_key(domain, service) not in descriptions_cache:
+                missing.add(domain)
                 break
 
+    # Files we loaded for missing descriptions
+    loaded = {}
+
     if missing:
-        loaded = await hass.async_add_job(load_services_files, missing)
+        contents = await asyncio.gather(*[
+            _load_services_file(hass, domain) for domain in missing
+        ])
+
+        for domain, content in zip(missing, contents):
+            loaded[domain] = content
 
     # Build response
     descriptions = {}
     for domain in services:
         descriptions[domain] = {}
-        yaml_file = domain_yaml_file(domain)
 
         for service in services[domain]:
             cache_key = format_cache_key(domain, service)
-            description = description_cache.get(cache_key)
+            description = descriptions_cache.get(cache_key)
 
             # Cache missing descriptions
             if description is None:
-                yaml_services = loaded[yaml_file]
-                yaml_description = yaml_services.get(service, {})
+                domain_yaml = loaded[domain]
+                yaml_description = domain_yaml.get(service, {})
 
-                description = description_cache[cache_key] = {
+                if not yaml_description:
+                    _LOGGER.warning("Missing service description for %s/%s",
+                                    domain, service)
+
+                description = descriptions_cache[cache_key] = {
                     'description': yaml_description.get('description', ''),
                     'fields': yaml_description.get('fields', {})
                 }
