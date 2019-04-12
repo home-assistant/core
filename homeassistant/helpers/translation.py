@@ -1,6 +1,6 @@
 """Translation string lookup helpers."""
 import logging
-from typing import Any, Dict, Iterablem, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant import config_entries
 from homeassistant.loader import async_get_integration, bind_hass
