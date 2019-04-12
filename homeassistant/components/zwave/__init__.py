@@ -1,7 +1,7 @@
 """Support for Z-Wave."""
 import asyncio
 import copy
-import importlib
+from importlib import import_module
 import logging
 from pprint import pprint
 
@@ -908,8 +908,8 @@ class ZWaveDeviceEntityValues():
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
 
-        platform = importlib.import_module('.{}'.format(component),
-                                           __name__)
+        platform = import_module('.{}'.format(component),
+                                 __name__)
 
         device = platform.get_device(
             node=self._node, values=self,
