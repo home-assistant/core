@@ -15,6 +15,8 @@ from homeassistant.util import Throttle, slugify
 REQUIREMENTS = ['py17track==2.2.2']
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'seventeentrack'
+
 ATTR_DESTINATION_COUNTRY = 'destination_country'
 ATTR_FRIENDLY_NAME = 'friendly_name'
 ATTR_INFO_TEXT = 'info_text'
@@ -72,8 +74,8 @@ async def async_setup_platform(
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     data = SeventeenTrackData(
-        client, async_add_entities, scan_interval, config[CONF_SHOW_ARCHIVED],
-        config[CONF_SHOW_DELIVERED])
+        client, hass, async_add_entities, scan_interval,
+        config[CONF_SHOW_ARCHIVED], config[CONF_SHOW_DELIVERED])
     await data.async_update()
 
     sensors = []
@@ -263,11 +265,12 @@ class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
     def __init__(
-            self, client, async_add_entities, scan_interval, show_archived,
-            show_delivered):
+            self, hass, client, async_add_entities, scan_interval,
+            show_archived, show_delivered):
         """Initialize."""
         self._async_add_entities = async_add_entities
         self._client = client
+        self._hass = hass
         self._scan_interval = scan_interval
         self._show_archived = show_archived
         self.account_id = client.profile.account_id
@@ -296,6 +299,17 @@ class SeventeenTrackData:
                     SeventeenTrackPackageSensor(self, package)
                     for package in to_add
                 ], True)
+
+            # Remove archived packages from the entity registry:
+            to_remove = set(self.packages) - set(packages)
+            reg = self._hass.helpers.entity_registry.async_get_registry()
+            for package in to_remove:
+                entity_id = reg.async_get_entity_id(
+                    self, DOMAIN, 'sensor', 'package_{0}_{1}'.format(
+                        self.account_id, package.tracking_number))
+                if not entity_id:
+                    continue
+                self._hass.async_create_task(reg.async_remove(entity_id))
 
             self.packages = packages
         except SeventeenTrackError as err:
