@@ -17,8 +17,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==1.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AUTO_HIDE = 'auto_hide'

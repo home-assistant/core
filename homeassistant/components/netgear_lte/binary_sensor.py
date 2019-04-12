@@ -7,8 +7,6 @@ from homeassistant.exceptions import PlatformNotReady
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
 from .sensor_types import BINARY_SENSOR_CLASSES
 
-DEPENDENCIES = ['netgear_lte']
-
 _LOGGER = logging.getLogger(__name__)
 
 

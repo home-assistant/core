@@ -13,7 +13,6 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyflunearyou==1.0.3']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CITY = 'city'

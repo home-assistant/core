@@ -11,8 +11,6 @@ from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN as AXIS_DOMAIN, LOGGER
 
-DEPENDENCIES = [AXIS_DOMAIN]
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Axis binary sensor."""

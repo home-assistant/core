@@ -8,8 +8,6 @@ from homeassistant.const import (CONF_DEVICE, CONF_NAME)
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['scsgate==0.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_STATE = 'state'

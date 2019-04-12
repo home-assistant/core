@@ -12,8 +12,6 @@ from . import BLOOMSKY
 
 LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['bloomsky']
-
 # These are the available sensors
 SENSOR_TYPES = ['Temperature',
                 'Humidity',

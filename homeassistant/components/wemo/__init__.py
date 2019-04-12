@@ -11,8 +11,6 @@ from homeassistant.helpers import discovery
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pywemo==0.4.34']
-
 DOMAIN = 'wemo'
 
 # Mapping from Wemo model_name to component.

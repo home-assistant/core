@@ -13,8 +13,6 @@ from . import CONF_ADS_VAR, DATA_ADS, AdsEntity, STATE_KEY_STATE
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'ADS binary sensor'
-DEPENDENCIES = ['ads']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

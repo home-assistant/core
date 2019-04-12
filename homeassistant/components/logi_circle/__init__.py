@@ -20,8 +20,6 @@ from .const import (
     RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
     SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
 
-REQUIREMENTS = ['logi_circle==0.2.2']
-
 NOTIFICATION_ID = 'logi_circle_notification'
 NOTIFICATION_TITLE = 'Logi Circle Setup'
 

@@ -11,11 +11,7 @@ from homeassistant.const import (
 
 from . import CONF_SANDBOX, DOMAIN as MAILGUN_DOMAIN
 
-REQUIREMENTS = ['pymailgunner==1.4']
-
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['mailgun']
 
 # Images to attach to notification
 ATTR_IMAGES = 'images'

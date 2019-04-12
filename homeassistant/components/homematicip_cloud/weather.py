@@ -7,8 +7,6 @@ from homeassistant.const import TEMP_CELSIUS
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
-DEPENDENCIES = ['homematicip_cloud']
-
 _LOGGER = logging.getLogger(__name__)
 
 

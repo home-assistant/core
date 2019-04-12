@@ -23,8 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_TOPIC = 'topic'
 DEFAULT_NAME = 'MQTT Camera'
 
-DEPENDENCIES = ['mqtt']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,

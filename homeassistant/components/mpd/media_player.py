@@ -20,8 +20,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-mpd2==1.0.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MPD'

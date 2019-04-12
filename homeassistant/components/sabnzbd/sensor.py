@@ -6,8 +6,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import DATA_SABNZBD, SENSOR_TYPES, SIGNAL_SABNZBD_UPDATED
 
-DEPENDENCIES = ['sabnzbd']
-
 _LOGGER = logging.getLogger(__name__)
 
 

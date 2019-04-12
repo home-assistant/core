@@ -14,8 +14,6 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyhomematic==0.1.58']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'homematic'

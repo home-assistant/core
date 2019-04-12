@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_DATA, PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
-REQUIREMENTS = ['rocketchat-API==0.6.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=no-value-for-parameter

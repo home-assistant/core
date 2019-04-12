@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from . import (
     DATA_HYDRAWISE, DEVICE_MAP, DEVICE_MAP_INDEX, SENSORS, HydrawiseEntity)
 
-DEPENDENCIES = ['hydrawise']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

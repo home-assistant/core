@@ -12,8 +12,6 @@ from . import CameraData, NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['netatmo']
-
 # These are the available sensors mapped to binary_sensor class
 WELCOME_SENSOR_TYPES = {
     "Someone known": "motion",

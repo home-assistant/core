@@ -8,7 +8,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['somfy-mylink-synergy==1.0.4']
 CONF_ENTITY_CONFIG = 'entity_config'
 CONF_SYSTEM_ID = 'system_id'
 CONF_REVERSE = 'reverse'

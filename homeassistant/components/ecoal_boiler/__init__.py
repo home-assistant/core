@@ -9,8 +9,6 @@ from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['ecoaliface==0.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ecoal_boiler"

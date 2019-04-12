@@ -51,8 +51,6 @@ from .reproduce_state import async_reproduce_states  # noqa
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
 
-DEPENDENCIES = ['http']
-
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}&cache={2}'

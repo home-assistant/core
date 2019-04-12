@@ -12,8 +12,6 @@ from homeassistant.const import (
     CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['avion==0.10']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_AVION_LED = SUPPORT_BRIGHTNESS

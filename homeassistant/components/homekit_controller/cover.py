@@ -12,8 +12,6 @@ from . import KNOWN_DEVICES, HomeKitEntity
 
 STATE_STOPPED = 'stopped'
 
-DEPENDENCIES = ['homekit_controller']
-
 _LOGGER = logging.getLogger(__name__)
 
 CURRENT_GARAGE_STATE_MAP = {

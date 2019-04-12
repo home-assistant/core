@@ -10,8 +10,6 @@ from homeassistant.exceptions import PlatformNotReady
 
 from . import SUBSCRIPTION_REGISTRY
 
-DEPENDENCIES = ['wemo']
-
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -13,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['sisyphus-control==2.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SISYPHUS = 'sisyphus'

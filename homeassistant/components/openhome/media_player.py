@@ -10,8 +10,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 
-REQUIREMENTS = ['openhomedevice==0.4.2']
-
 SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | \
     SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
     SUPPORT_TURN_OFF | SUPPORT_TURN_ON
