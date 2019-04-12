@@ -83,6 +83,7 @@ async def test_webhook_post(hass, aiohttp_client):
     assert len(events) == 1
     assert events[0].data['hello'] == 'yo world'
 
+
 async def test_webhook_query(hass, aiohttp_client):
     """Test triggering with a query POST webhook."""
     events = []
