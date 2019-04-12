@@ -7,9 +7,10 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MEDIA_TYPE_CHANNEL)
 from homeassistant.const import (
     CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
@@ -21,10 +22,8 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
                      SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-                     SUPPORT_SELECT_SOURCE
-
-SUPPORT_PHILIPS_JS_TV = SUPPORT_PHILIPS_JS | SUPPORT_NEXT_TRACK | \
-                        SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
+                     SUPPORT_SELECT_SOURCE | SUPPORT_NEXT_TRACK | \
+                     SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY_MEDIA
 
 CONF_ON_ACTION = 'turn_on_action'
 
@@ -38,6 +37,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
 })
 
+
+def _inverted(data):
+    return {v: k for k, v in data.items()}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Philips TV platform."""
@@ -61,18 +63,12 @@ class PhilipsTV(MediaPlayerDevice):
         """Initialize the Philips TV."""
         self._tv = tv
         self._name = name
-        self._state = None
-        self._volume = None
-        self._muted = False
-        self._program_name = None
-        self._channel_name = None
-        self._source = None
-        self._source_list = []
-        self._connfail = 0
-        self._source_mapping = {}
-        self._watching_tv = None
-        self._channel_name = None
+        self._sources = {}
+        self._channels = {}
         self._on_script = on_script
+        self._supports = SUPPORT_PHILIPS_JS
+        if self._on_script:
+            self._supports |= SUPPORT_TURN_ON
 
     @property
     def name(self):
@@ -87,40 +83,41 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        is_supporting_turn_on = SUPPORT_TURN_ON if self._on_script else 0
-        if self._watching_tv:
-            return SUPPORT_PHILIPS_JS_TV | is_supporting_turn_on
-        return SUPPORT_PHILIPS_JS | is_supporting_turn_on
+        return self._supports
 
     @property
     def state(self):
         """Get the device state. An exception means OFF state."""
-        return self._state
+        if self._tv.on:
+            return STATE_ON
+        else:
+            return STATE_OFF
 
     @property
     def source(self):
         """Return the current input source."""
-        return self._source
+        return self._sources.get(self._tv.source_id)
 
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._source_list
+        return list(self._sources.values())
 
     def select_source(self, source):
         """Set the input source."""
-        if source in self._source_mapping:
-            self._tv.setSource(self._source_mapping.get(source))
+        source_id = _inverted(self._sources).get(source)
+        if source_id:
+            self._tv.setSource(source_id)
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._volume
+        return self._tv.volume
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._muted
+        return self._tv.muted
 
     def turn_on(self):
         """Turn on the device."""
@@ -141,13 +138,11 @@ class PhilipsTV(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Send mute command."""
-        if self._muted != mute:
-            self._tv.sendKey('Mute')
-            self._muted = mute
+        self._tv.setVolume(self._tv.volume, mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._tv.setVolume(volume)
+        self._tv.setVolume(volume, self._tv.muted)
 
     def media_previous_track(self):
         """Send rewind command."""
@@ -158,34 +153,56 @@ class PhilipsTV(MediaPlayerDevice):
         self._tv.sendKey('Next')
 
     @property
+    def media_channel(self):
+        if self.media_content_type == MEDIA_TYPE_CHANNEL:
+            return self._channels.get(self._tv.channel_id)
+        else:
+            return None
+
+    @property
     def media_title(self):
         """Title of current playing media."""
-        if self._watching_tv and self._channel_name:
-            return '{} - {}'.format(self._source, self._channel_name)
-        return self._source
+        if self.media_content_type == MEDIA_TYPE_CHANNEL:
+            return self._channels.get(self._tv.channel_id)
+        else:
+            return self._sources.get(self._tv.source_id)
+
+    @property
+    def media_content_type(self):
+        """Return content type of playing media"""
+        if (self._tv.source_id == 'tv' or self._tv.source_id == '11'):
+            return MEDIA_TYPE_CHANNEL
+        else:
+            return None
+
+    @property
+    def media_content_id(self):
+        """Content type of current playing media."""
+        if self.media_content_type == MEDIA_TYPE_CHANNEL:
+            return self._channels.get(self._tv.channel_id)
+        else:
+            return None
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'channel_list': list(self._channels.values())
+        }
+
 
     def update(self):
         """Get the latest data and update device state."""
         self._tv.update()
-        self._volume = self._tv.volume
-        self._muted = self._tv.muted
-        if self._tv.source_id:
-            self._source = self._tv.getSourceName(self._tv.source_id)
-        if self._tv.sources and not self._source_list:
-            for srcid in self._tv.sources:
-                srcname = self._tv.getSourceName(srcid)
-                self._source_list.append(srcname)
-                self._source_mapping[srcname] = srcid
-        if self._tv.on:
-            self._state = STATE_ON
-        else:
-            self._state = STATE_OFF
-
-        self._watching_tv = bool(self._tv.source_id == 'tv')
-
         self._tv.getChannelId()
         self._tv.getChannels()
-        if self._tv.channels and self._tv.channel_id in self._tv.channels:
-            self._channel_name = self._tv.channels[self._tv.channel_id]['name']
-        else:
-            self._channel_name = None
+
+        self._sources = {
+            srcid: source['name'] or "Source {}".format(srcid)
+            for srcid, source in (self._tv.sources or {}).items()
+        }
+
+        self._channels = {
+            chid: channel['name']
+            for chid, channel in (self._tv.channels or {}).items()
+        }
