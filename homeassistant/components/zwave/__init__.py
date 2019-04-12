@@ -1,6 +1,7 @@
 """Support for Z-Wave."""
 import asyncio
 import copy
+import importlib
 import logging
 from pprint import pprint
 
@@ -8,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback, CoreState
-from homeassistant.loader import async_get_integration
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -908,10 +908,8 @@ class ZWaveDeviceEntityValues():
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
 
-        integration = asyncio.run_coroutine_threadsafe(
-            async_get_integration(self._hass, DOMAIN),
-            self._hass.loop).result()
-        platform = integration.get_platform(component)
+        platform = importlib.import_module('.{}'.format(component),
+                                           __name__)
 
         device = platform.get_device(
             node=self._node, values=self,
