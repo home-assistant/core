@@ -22,17 +22,19 @@ def validate_manifest(integration: Integration):
     try:
         MANIFEST_SCHEMA(integration.manifest)
     except vol.Invalid as err:
-        integration.errors.append(
+        integration.add_error(
+            'manifest',
             "Invalid manifest: {}".format(
                 humanize_error(integration.manifest, err)))
+        integration.manifest = None
         return
 
     if integration.manifest['domain'] != integration.path.name:
-        integration.errors.append('Domain does not match dir name')
+        integration.add_error('manifest', 'Domain does not match dir name')
 
 
-def validate_all(integrations: Dict[str, Integration]):
-    """Validate all integrations manifests."""
+def validate(integrations: Dict[str, Integration], config):
+    """Handle all integrations manifests."""
     for integration in integrations.values():
         if integration.manifest:
             validate_manifest(integration)

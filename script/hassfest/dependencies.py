@@ -34,16 +34,18 @@ def validate_dependencies(integration: Integration):
     referenced = grep_dir(integration.path, "**/*.py",
                           r"hass\.components\.(\w+)")
     referenced -= ALLOWED_USED_COMPONENTS
-    referenced -= set(integration.dependencies)
+    referenced -= set(integration.manifest['dependencies'])
 
     if referenced:
         for domain in sorted(referenced):
-            integration.errors.append(
-                "Using component {} but it's not a dependency".format(domain))
+            integration.add_error(
+                'dependencies',
+                "Using component {} but it's not a dependency".format(domain)
+            )
 
 
-def validate_all(integrations: Dict[str, Integration]):
-    """Validate all dependencies."""
+def validate(integrations: Dict[str, Integration], config):
+    """Handle dependencies for integrations."""
     # check for non-existing dependencies
     for integration in integrations.values():
         if not integration.manifest:
@@ -52,8 +54,9 @@ def validate_all(integrations: Dict[str, Integration]):
         validate_dependencies(integration)
 
         # check that all referenced dependencies exist
-        for dep in integration.dependencies:
+        for dep in integration.manifest['dependencies']:
             if dep not in integrations:
-                integration.errors.append(
+                integration.add_error(
+                    'dependencies',
                     "Dependency {} does not exist"
                 )
