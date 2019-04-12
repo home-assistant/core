@@ -12,6 +12,7 @@ class Error:
 
     plugin = attr.ib(type=str)
     error = attr.ib(type=str)
+    fixable = attr.ib(type=bool, default=False)
 
     def __str__(self):
         """String reprepsentation of the error."""

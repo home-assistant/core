@@ -38,25 +38,41 @@ def main():
     dependencies.validate(integrations, config)
     codeowners.validate(integrations, config)
 
-    invalid = [itg for itg in integrations.values() if itg.errors]
+    # When we generate, all errors that are fixable will be ignored,
+    # as generating them will be fixed.
+    if config.action == 'generate':
+        general_errors = [err for err in config.errors if not err.fixable]
+        invalid_itg = [
+            itg for itg in integrations.values()
+            if any(
+                not error.fixable for error in itg.errors
+            )
+        ]
+    else:
+        # action == validate
+        general_errors = config.errors
+        invalid_itg = [itg for itg in integrations.values() if itg.errors]
 
     print("Integrations:", len(integrations))
-    print("Invalid integrations:", len(invalid))
+    print("Invalid integrations:", len(invalid_itg))
 
-    if not invalid and not config.errors:
+    if not invalid_itg and not general_errors:
         codeowners.generate(integrations, config)
         return 0
 
     print()
+    if config.action == 'generate':
+        print("Found errors. Generating files canceled.")
+        print()
 
-    if config.errors:
-        print("Generic errors:")
-        for error in config.errors:
+    if general_errors:
+        print("General errors:")
+        for error in general_errors:
             print("*", error)
         print()
 
-    for integration in sorted(invalid, key=lambda itg: itg.domain):
-        print(integration.domain)
+    for integration in sorted(invalid_itg, key=lambda itg: itg.domain):
+        print("Integration {}:".format(integration.domain))
         for error in integration.errors:
             print("*", error)
         print()

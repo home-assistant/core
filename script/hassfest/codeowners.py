@@ -51,7 +51,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             if not owner.startswith('@'):
                 integration.add_error(
                     'codeowners',
-                    'Code owners need to be valid GitHub handles.'
+                    'Code owners need to be valid GitHub handles.',
                 )
 
         parts.append("homeassistant/components/{}/* {}".format(
@@ -72,7 +72,8 @@ def validate(integrations: Dict[str, Integration], config: Config):
             config.add_error(
                 "codeowners",
                 "File CODEOWNERS is not up to date. "
-                "Run python3 -m script.hassfest"
+                "Run python3 -m script.hassfest",
+                fixable=True
             )
         return
 
