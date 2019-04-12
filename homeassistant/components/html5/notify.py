@@ -76,8 +76,9 @@ ATTR_ACTIONS = 'actions'
 ATTR_TYPE = 'type'
 ATTR_URL = 'url'
 ATTR_DISMISS = 'dismiss'
+ATTR_PRIORITY = "priority"
+DEFAULT_PRIORITY = "normal"
 ATTR_TTL = "ttl"
-
 DEFAULT_TTL = 86400
 
 ATTR_JWT = 'jwt'
@@ -465,7 +466,9 @@ class HTML5NotificationService(BaseNotificationService):
 
         timestamp = int(time.time())
         ttl = int(kwargs.get(ATTR_TTL, DEFAULT_TTL))
-
+        priority = kwargs.get(ATTR_PRIORITY, DEFAULT_PRIORITY)
+        if priority not in ['normal', 'high']:
+            priority = DEFAULT_PRIORITY
         payload['timestamp'] = (timestamp*1000)  # Javascript ms since epoch
         targets = kwargs.get(ATTR_TARGET)
 
@@ -496,8 +499,8 @@ class HTML5NotificationService(BaseNotificationService):
                     self._vapid_email, info[ATTR_SUBSCRIPTION],
                     self._vapid_prv)
                 vapid_headers.update({
-                    'urgency': 'high',
-                    'priority': 'high'
+                    'urgency': priority,
+                    'priority': priority
                 })
                 response = webpusher.send(
                     data=json.dumps(payload),
