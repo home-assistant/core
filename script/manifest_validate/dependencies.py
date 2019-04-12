@@ -22,7 +22,7 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) \
     return found
 
 
-# Allowed components to be referend without being a dependency
+# Allowed components to be referenced without being a dependency
 ALLOWED_USED_COMPONENTS = {
     'persistent_notification',
 }

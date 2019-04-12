@@ -7,6 +7,8 @@ import attr
 
 @attr.s
 class Integration:
+    """Represent an integration in our validator."""
+
     path = attr.ib(type=pathlib.Path)
     manifest = attr.ib(type=dict, default=None)
     errors = attr.ib(type=list, factory=list)
