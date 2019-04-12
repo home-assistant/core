@@ -1,6 +1,5 @@
 """Translation string lookup helpers."""
 import logging
-import pathlib
 from typing import Any, Dict, Iterable
 
 from homeassistant import config_entries
