@@ -7,7 +7,6 @@ https://home-assistant.io/components/camera.environment_canada/
 import datetime
 import logging
 
-from env_canada import ECRadar
 import voluptuous as vol
 
 from homeassistant.components.camera import (
@@ -32,7 +31,7 @@ CONF_PRECIP_TYPE = 'precip_type'
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_LOOP, default=True): cv.boolean,
+    vol.Optional(CONF_LOOP, default=True): cv.boolean,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_STATION): cv.string,
     vol.Inclusive(CONF_LATITUDE, 'latlon'): cv.latitude,
@@ -43,6 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada camera."""
+    from env_canada import ECRadar
+
     if config.get(CONF_STATION):
         radar_object = ECRadar(station_id=config[CONF_STATION],
                                precip_type=config.get(CONF_PRECIP_TYPE))
@@ -55,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             hass.config.longitude),
                                precip_type=config.get(CONF_PRECIP_TYPE))
 
-    add_devices([ECCamera(radar_object, config.get(CONF_NAME))])
+    add_devices([ECCamera(radar_object, config.get(CONF_NAME))], True)
 
 
 class ECCamera(Camera):
@@ -69,7 +70,6 @@ class ECCamera(Camera):
         self.camera_name = camera_name
         self.content_type = 'image/gif'
         self.image = None
-        self.update()
 
     def camera_image(self):
         """Return bytes of camera image."""

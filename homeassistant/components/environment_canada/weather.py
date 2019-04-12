@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATION): validate_station,
     vol.Inclusive(CONF_LATITUDE, 'latlon'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'latlon'): cv.longitude,
-    vol.Required(CONF_FORECAST, default='daily'):
+    vol.Optional(CONF_FORECAST, default='daily'):
         vol.In(['daily', 'hourly']),
 })
 

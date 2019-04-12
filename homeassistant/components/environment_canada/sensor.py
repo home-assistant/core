@@ -100,7 +100,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                       hass.config.longitude))
 
     add_devices([ECSensor(sensor_type, ec_data, config.get(CONF_NAME))
-                 for sensor_type in config[CONF_MONITORED_CONDITIONS]])
+                 for sensor_type in config[CONF_MONITORED_CONDITIONS]],
+                True)
 
 
 class ECSensor(Entity):
@@ -113,7 +114,6 @@ class ECSensor(Entity):
         self.platform_name = platform_name
         self._state = None
         self._attr = None
-        self.update()
 
     @property
     def name(self):
