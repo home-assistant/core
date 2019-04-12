@@ -34,45 +34,33 @@ async def component_translation_file(hass: HomeAssistantType, component: str,
                                      language: str) -> str:
     """Return the translation json file location for a component.
 
-    For component one of:
-     - components/light/.translations/nl.json
-     - components/.translations/group.nl.json
+    For component:
+     - components/hue/.translations/nl.json
 
-    For platform one of:
-     - components/light/.translations/hue.nl.json
+    For platform:
      - components/hue/.translations/light.nl.json
+
+    If component is just a single file, will return None.
     """
     parts = component.split('.')
     domain = parts[-1]
     is_platform = len(parts) == 2
 
     integration = await async_get_integration(hass, domain)
-    assert integration is not None
+    assert integration is not None, domain
 
-    if not is_platform:
-        module = integration.get_component()
-        assert module is not None
+    if is_platform:
+        filename = "{}.{}.json".format(parts[0], language)
+        return str(integration.file_path / '.translations' / filename)
 
-        module_path = pathlib.Path(module.__file__)
+    module = integration.get_component()
 
-        if module.__name__ == module.__package__:
-            # light/__init__.py
-            filename = '{}.json'.format(language)
-        else:
-            # group.py
-            filename = '{}.{}.json'.format(component, language)
+    # If it's a component that is just one file, we don't support translations
+    # Example custom_components/my_component.py
+    if module.__name__ != module.__package__:
+        return None
 
-        return str(module_path.parent / '.translations' / filename)
-
-    # It's a platform
-    parts = component.split('.', 1)
-    module = integration.get_platform(parts[0])
-    assert module is not None, component
-
-    # Either within HA or custom_components: hue/light.py
-    module_path = pathlib.Path(module.__file__)
-    filename = "{}.{}.json".format(parts[0], language)
-
+    filename = '{}.json'.format(language)
     return str(integration.file_path / '.translations' / filename)
 
 
@@ -127,8 +115,12 @@ async def async_get_component_resources(hass: HomeAssistantType,
     missing_components = components - set(translation_cache)
     missing_files = {}
     for component in missing_components:
-        missing_files[component] = await component_translation_file(
-            hass, component, language)
+        path = await component_translation_file(hass, component, language)
+        # No translation available
+        if path is None:
+            translation_cache[component] = {}
+        else:
+            missing_files[component] = path
 
     # Load missing files
     if missing_files:

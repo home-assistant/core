@@ -62,9 +62,9 @@ async def test_component_translation_file(hass):
             'custom_components', 'test_embedded', '.translations',
             'switch.en.json'))
 
-    assert path.normpath(await translation.component_translation_file(
-        hass, 'test_standalone', 'en')) == path.normpath(hass.config.path(
-            'custom_components', '.translations', 'test_standalone.en.json'))
+    assert await translation.component_translation_file(
+        hass, 'test_standalone', 'en'
+    ) is None
 
     assert path.normpath(await translation.component_translation_file(
         hass, 'test_package', 'en')) == path.normpath(hass.config.path(
