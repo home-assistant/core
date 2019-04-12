@@ -91,6 +91,7 @@ REGISTRATION_SCHEMA = vol.Schema({
     vol.Required(ATTR_APP_ID): cv.string,
     vol.Required(ATTR_APP_NAME): cv.string,
     vol.Required(ATTR_APP_VERSION): cv.string,
+    vol.Required(ATTR_DEVICE_ID): cv.string,
     vol.Required(ATTR_DEVICE_NAME): cv.string,
     vol.Required(ATTR_MANUFACTURER): cv.string,
     vol.Required(ATTR_MODEL): cv.string,
@@ -102,6 +103,7 @@ REGISTRATION_SCHEMA = vol.Schema({
 UPDATE_REGISTRATION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_APP_DATA, default={}): dict,
     vol.Required(ATTR_APP_VERSION): cv.string,
+    vol.Required(ATTR_DEVICE_ID): cv.string,
     vol.Required(ATTR_DEVICE_NAME): cv.string,
     vol.Required(ATTR_MANUFACTURER): cv.string,
     vol.Required(ATTR_MODEL): cv.string,

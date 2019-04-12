@@ -36,8 +36,6 @@ class RegistrationsView(HomeAssistantView):
             data[CONF_CLOUDHOOK_URL] = \
                 await async_create_cloudhook(hass, webhook_id)
 
-        data[ATTR_DEVICE_ID] = str(uuid.uuid4()).replace("-", "")
-
         data[CONF_WEBHOOK_ID] = webhook_id
 
         if data[ATTR_SUPPORTS_ENCRYPTION] and supports_encryption():
