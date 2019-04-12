@@ -98,7 +98,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PROXY_URL): cv.string,
             vol.Optional(CONF_PROXY_PARAMS): dict,
             # webhooks
-            vol.Optional(CONF_URL): vol.Url(),
+            vol.Optional(CONF_URL): cv.url,
             vol.Optional(CONF_TRUSTED_NETWORKS,
                          default=DEFAULT_TRUSTED_NETWORKS):
                 vol.All(cv.ensure_list, [ip_network])
