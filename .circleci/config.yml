@@ -95,7 +95,7 @@ jobs:
           name: validate CODEOWNERS
           command: |
             . venv/bin/activate
-            python script/manifest/codeowners.py validate
+            python script/manifest_validate/codeowners.py validate
 
       - run:
           name: run static type check
