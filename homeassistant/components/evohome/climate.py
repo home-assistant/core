@@ -1,6 +1,7 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell evohome systems."""
 from datetime import datetime, timedelta
 import logging
+import requests.exceptions
 
 from requests.exceptions import HTTPError
 
@@ -346,10 +347,11 @@ class EvoZone(EvoClimateDevice):
     def _set_operation_mode(self, operation_mode):
         if operation_mode == EVO_FOLLOW:
             try:
-              #  self._obj.cancel_temp_override(self._obj)
-                self._obj.cancel_temp_override()
-            except HTTPError as err:
-                self._handle_exception("HTTPError", str(err))  # noqa: E501; pylint: disable=no-member
+                import evohomeclient2
+                self._obj.cancel_temp_override(operation_mode)
+            except (requests.exceptions.RequestException,
+                    evohomeclient2.AuthenticationError) as err:
+                self._handle_exception(err)
 
         elif operation_mode == EVO_TEMPOVER:
             _LOGGER.error(
