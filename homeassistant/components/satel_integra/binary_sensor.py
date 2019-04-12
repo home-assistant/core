@@ -7,7 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
     CONF_OUTPUTS, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES,
-    SIGNAL_OUTPUTS_UPDATED, SIGNAL_ZONES_UPDATED, CONTROLLER)
+    SIGNAL_OUTPUTS_UPDATED, SIGNAL_ZONES_UPDATED, DATA_SATEL)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ async def async_setup_platform(
         return
 
     configured_zones = discovery_info[CONF_ZONES]
-    controller = discovery_info[CONTROLLER]
+    controller = hass.data[DATA_SATEL]
 
     devices = []
 

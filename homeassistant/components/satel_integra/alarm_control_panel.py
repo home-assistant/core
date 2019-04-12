@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_ARM_HOME_MODE, CONF_DEVICE_PARTITIONS, CONTROLLER, CONF_ZONE_NAME,
+    CONF_ARM_HOME_MODE, CONF_DEVICE_PARTITIONS, DATA_SATEL, CONF_ZONE_NAME,
     SIGNAL_PANEL_MESSAGE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ async def async_setup_platform(
         return
 
     configured_partitions = discovery_info[CONF_DEVICE_PARTITIONS]
-    controller = discovery_info[CONTROLLER]
+    controller = hass.data[DATA_SATEL]
 
     devices = []
 
