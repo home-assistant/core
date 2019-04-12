@@ -427,7 +427,6 @@ def textdesctoweather(description) -> str:
     If no value matches, the original text will be returned.
     """
     _LOGGER.debug("Converting textDescription=%s", description)
-    print("Converting textDescript={}".format(description))
     for entry in CONDITION_XLATE:
         for firstword in entry[1]:
             if firstword in description:
@@ -862,12 +861,24 @@ class NOAACurrentData(Entity):
         self.nws = nws
         #
         # Set up astral location object for this location.
+        # Note that since astral calculates the times for a current
+        # date, we need to have an idea of what offset from GMT the location
+        # has.  To get this, we will get the solar noon for both the
+        # actual location and for the location at 0,0.  The difference
+        # of these gives a good idea of the offset (note, this is not the
+        # timezone, but the solar time difference.
+        #
         self.astlocation = Location()
         self.astlocation.name = stationcode
         self.astlocation.region = 'US'
+        self.astlocation.timezone = 'UTC'
+        self.astlocation.latitude = 0
+        self.astlocation.longitude = 0
+        zerozeronoon = self.astlocation.solar_noon(local=False)
         self.astlocation.latitude = latitude
         self.astlocation.longitude = longitude
-        self.astlocation.timezone = 'UTC'
+        self._timeoffset = zerozeronoon - \
+            self.astlocation.solar_noon(local=False)
         #
         # Set time of last update to two hours ago.  This
         # should ensure that when we get the first set of observations
@@ -877,7 +888,7 @@ class NOAACurrentData(Entity):
         self.lastupdate = datetime.datetime.now(datetime.timezone.utc) -\
             timedelta(hours=2)
         self.nightstart, self.nightend = self.astlocation.night(
-            date=self.lastupdate)
+            date=self.lastupdate + self._timeoffset)
         self.isnight = self.lastupdate >= self.nightstart and \
             self.lastupdate <= self.nightend
         self.data = dict()
@@ -958,7 +969,8 @@ class NOAACurrentData(Entity):
         #
         if self.lastupdate > self.nightend:
             self.nightstart, self.nightend = self.astlocation.night(
-                date=self.lastupdate, local=False, use_elevation=False)
+                date=self.lastupdate + self._timeoffset,
+                local=False, use_elevation=False)
         self.isnight = self.lastupdate >= self.nightstart and \
             self.lastupdate <= self.nightend
         #
