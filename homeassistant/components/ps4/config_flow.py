@@ -126,7 +126,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
                                 for device in entry.data['devices']]
 
                 # Remove configured device from search list.
-                self.device_list = [self.device_list.remove(c_device['host'])
+                [self.device_list.remove(c_device['host'])
                  for c_device in conf_devices
                  if c_device['host'] in self.device_list]
 
