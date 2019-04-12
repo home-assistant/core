@@ -1,16 +1,16 @@
 """Integrates Native Apps to Home Assistant."""
 from homeassistant import config_entries
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.webhook import async_register as webhook_register
-from homeassistant.helpers import device_registry as dr, discovery
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
-                    ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
-                    DATA_BINARY_SENSOR, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
-                    DATA_DEVICES, DATA_SENSOR, DATA_STORE, DOMAIN, STORAGE_KEY,
-                    STORAGE_VERSION)
+from .const import (ATTR_APP_ID, ATTR_APP_NAME, DATA_BINARY_SENSOR,
+                    DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
+                    DATA_LOADED_ENTITIES, DATA_LOADED_REGISTRATIONS,
+                    DATA_REGISTRATIONS, DATA_SENSOR, DATA_STORE, DOMAIN,
+                    STORAGE_KEY, STORAGE_VERSION)
 
+from .device_helpers import register_device
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 from .websocket_api import register_websocket_handlers
@@ -29,7 +29,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
             DATA_BINARY_SENSOR: {},
             DATA_CONFIG_ENTRIES: {},
             DATA_DELETED_IDS: [],
-            DATA_DEVICES: {},
+            DATA_LOADED_ENTITIES: [],
+            DATA_LOADED_REGISTRATIONS: [],
+            DATA_REGISTRATIONS: {},
             DATA_SENSOR: {}
         }
 
@@ -37,7 +39,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         DATA_BINARY_SENSOR: app_config.get(DATA_BINARY_SENSOR, {}),
         DATA_CONFIG_ENTRIES: {},
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
-        DATA_DEVICES: {},
+        DATA_LOADED_ENTITIES: [],
+        DATA_LOADED_REGISTRATIONS: [],
+        DATA_REGISTRATIONS: app_config.get(DATA_REGISTRATIONS, {}),
         DATA_SENSOR: app_config.get(DATA_SENSOR, {}),
         DATA_STORE: store,
     }
@@ -52,7 +56,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         except ValueError:
             pass
 
-    hass.async_create_task(discovery.async_load_platform(
+    hass.async_create_task(async_load_platform(
         hass, 'notify', DOMAIN, {}, config))
 
     return True
@@ -60,33 +64,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass, entry):
     """Set up a mobile_app entry."""
-    registration = entry.data
+    app_id = entry.data[ATTR_APP_ID]
 
-    webhook_id = registration[CONF_WEBHOOK_ID]
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][app_id] = entry
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id] = entry
-
-    device_registry = await dr.async_get_registry(hass)
-
-    identifiers = {
-        (ATTR_DEVICE_ID, registration[ATTR_DEVICE_ID]),
-        (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID])
-    }
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers=identifiers,
-        manufacturer=registration[ATTR_MANUFACTURER],
-        model=registration[ATTR_MODEL],
-        name=registration[ATTR_DEVICE_NAME],
-        sw_version=registration[ATTR_OS_VERSION]
-    )
-
-    hass.data[DOMAIN][DATA_DEVICES][webhook_id] = device
-
-    registration_name = 'Mobile App: {}'.format(registration[ATTR_DEVICE_NAME])
-    webhook_register(hass, DOMAIN, registration_name, webhook_id,
-                     handle_webhook)
+    for registration in hass.data[DOMAIN][DATA_REGISTRATIONS].values():
+        await register_device(hass, entry, registration)
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry,
@@ -116,5 +99,5 @@ class MobileAppFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_registration(self, user_input=None):
         """Handle a flow initialized during registration."""
-        return self.async_create_entry(title=user_input[ATTR_DEVICE_NAME],
+        return self.async_create_entry(title=user_input[ATTR_APP_NAME],
                                        data=user_input)

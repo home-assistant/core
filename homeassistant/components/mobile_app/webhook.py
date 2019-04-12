@@ -24,7 +24,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.template import attach
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
+from .const import (ATTR_ALTITUDE, ATTR_APP_ID, ATTR_BATTERY,
+                    ATTR_CONFIG_ENTRY_ID, ATTR_COURSE, ATTR_DEVICE_ID,
                     ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
                     ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_LOCATION_NAME,
                     ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
@@ -34,7 +35,7 @@ from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
                     CONF_CLOUDHOOK_URL, CONF_REMOTE_UI_URL, CONF_SECRET,
-                    DATA_CONFIG_ENTRIES, DATA_DELETED_IDS, DATA_STORE, DOMAIN,
+                    DATA_DELETED_IDS, DATA_REGISTRATIONS, DATA_STORE, DOMAIN,
                     ERR_ENCRYPTION_REQUIRED, ERR_SENSOR_DUPLICATE_UNIQUE_ID,
                     ERR_SENSOR_NOT_REGISTERED, SIGNAL_SENSOR_UPDATE,
                     WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS, WEBHOOK_TYPES,
@@ -62,9 +63,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
     headers = {}
 
-    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
-
-    registration = config_entry.data
+    registration = hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id]
 
     try:
         req_data = await request.json()
@@ -183,15 +182,17 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
         return empty_okay_response(headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
+        entry_id = registration[ATTR_CONFIG_ENTRY_ID]
         new_registration = {**registration, **data}
 
         device_registry = await dr.async_get_registry(hass)
 
         device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
+            config_entry_id=entry_id,
             identifiers={
-                (ATTR_DEVICE_ID, registration[ATTR_DEVICE_ID]),
-                (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID])
+                (ATTR_APP_ID, new_registration[ATTR_APP_ID]),
+                (ATTR_DEVICE_ID, new_registration[ATTR_DEVICE_ID]),
+                (CONF_WEBHOOK_ID, webhook_id)
             },
             manufacturer=new_registration[ATTR_MANUFACTURER],
             model=new_registration[ATTR_MODEL],
@@ -199,11 +200,8 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
             sw_version=new_registration[ATTR_OS_VERSION]
         )
 
-        hass.config_entries.async_update_entry(config_entry,
-                                               data=new_registration)
-
         return webhook_response(safe_registration(new_registration),
-                                registration=registration, headers=headers)
+                                registration=new_registration, headers=headers)
 
     if webhook_type == WEBHOOK_TYPE_REGISTER_SENSOR:
         entity_type = data[ATTR_SENSOR_TYPE]
@@ -221,6 +219,8 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
                                   status=409)
 
         data[CONF_WEBHOOK_ID] = webhook_id
+
+        data[ATTR_CONFIG_ENTRY_ID] = registration[ATTR_CONFIG_ENTRY_ID]
 
         hass.data[DOMAIN][entity_type][unique_store_key] = data
 

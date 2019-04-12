@@ -17,8 +17,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (CONF_CLOUDHOOK_URL, CONF_USER_ID, DATA_CONFIG_ENTRIES,
-                    DATA_DELETED_IDS, DATA_STORE, DOMAIN)
+from .const import (ATTR_CONFIG_ENTRY_ID, CONF_CLOUDHOOK_URL, CONF_USER_ID,
+                    DATA_DELETED_IDS, DATA_REGISTRATIONS, DATA_STORE, DOMAIN)
 
 from .helpers import safe_registration, savable_state
 
@@ -52,8 +52,7 @@ async def websocket_get_user_registrations(
 
     user_registrations = []
 
-    for config_entry in hass.config_entries.async_entries(domain=DOMAIN):
-        registration = config_entry.data
+    for registration in hass.data[DOMAIN][DATA_REGISTRATIONS].values():
         if connection.user.is_admin or registration[CONF_USER_ID] is user_id:
             user_registrations.append(safe_registration(registration))
 
@@ -79,9 +78,9 @@ async def websocket_delete_registration(hass: HomeAssistantType,
                               "Webhook ID not provided")
         return
 
-    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+    registration = hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id]
 
-    registration = config_entry.data
+    config_entry_id = registration[ATTR_CONFIG_ENTRY_ID]
 
     if registration is None:
         connection.send_error(msg['id'], ERR_NOT_FOUND,
@@ -92,7 +91,7 @@ async def websocket_delete_registration(hass: HomeAssistantType,
         return error_message(
             msg['id'], ERR_UNAUTHORIZED, 'User is not registration owner')
 
-    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.config_entries.async_remove(config_entry_id)
 
     hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
 

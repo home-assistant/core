@@ -18,7 +18,7 @@ from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_VERSION,
                     ATTR_PUSH_RATE_LIMITS_MAXIMUM,
                     ATTR_PUSH_RATE_LIMITS_RESETS_AT,
                     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL, ATTR_PUSH_TOKEN,
-                    ATTR_PUSH_URL, DATA_CONFIG_ENTRIES, DOMAIN)
+                    ATTR_PUSH_URL, DATA_REGISTRATIONS, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +28,7 @@ DEPENDENCIES = ['mobile_app']
 def push_registrations(hass):
     """Return a dictionary of push enabled registrations."""
     targets = {}
-    for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items():
-        data = entry.data
+    for webhook_id, data in hass.data[DOMAIN][DATA_REGISTRATIONS].items():
         app_data = data[ATTR_APP_DATA]
         if ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data:
             device_name = data[ATTR_DEVICE_NAME]
@@ -98,21 +97,20 @@ class MobileAppNotificationService(BaseNotificationService):
 
         for target in targets:
 
-            entry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
-            entry_data = entry.data
+            device = self.hass.data[DOMAIN][DATA_REGISTRATIONS][target]
 
-            app_data = entry_data[ATTR_APP_DATA]
+            app_data = device[ATTR_APP_DATA]
             push_token = app_data[ATTR_PUSH_TOKEN]
             push_url = app_data[ATTR_PUSH_URL]
 
             data[ATTR_PUSH_TOKEN] = push_token
 
             reg_info = {
-                ATTR_APP_ID: entry_data[ATTR_APP_ID],
-                ATTR_APP_VERSION: entry_data[ATTR_APP_VERSION],
+                ATTR_APP_ID: device[ATTR_APP_ID],
+                ATTR_APP_VERSION: device[ATTR_APP_VERSION],
             }
-            if ATTR_OS_VERSION in entry_data:
-                reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
+            if ATTR_OS_VERSION in device:
+                reg_info[ATTR_OS_VERSION] = device[ATTR_OS_VERSION]
 
             data['registration_info'] = reg_info
 
@@ -123,7 +121,7 @@ class MobileAppNotificationService(BaseNotificationService):
 
                 if response.status == 201:
                     log_rate_limits(self.hass,
-                                    entry_data[ATTR_DEVICE_NAME], result)
+                                    device[ATTR_DEVICE_NAME], result)
                     return
 
                 fallback_error = result.get("errorMessage",
@@ -135,7 +133,7 @@ class MobileAppNotificationService(BaseNotificationService):
                 if response.status == 429:
                     _LOGGER.warning(message)
                     log_rate_limits(self.hass,
-                                    entry_data[ATTR_DEVICE_NAME],
+                                    device[ATTR_DEVICE_NAME],
                                     result, logging.WARNING)
                 else:
                     _LOGGER.error(message)

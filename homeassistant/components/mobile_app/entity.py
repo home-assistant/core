@@ -1,16 +1,12 @@
 """A entity class for mobile_app."""
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
-                    ATTR_MODEL, ATTR_OS_VERSION, ATTR_SENSOR_ATTRIBUTES,
-                    ATTR_SENSOR_DEVICE_CLASS, ATTR_SENSOR_ICON,
-                    ATTR_SENSOR_NAME, ATTR_SENSOR_TYPE, ATTR_SENSOR_UNIQUE_ID,
-                    DOMAIN, SIGNAL_SENSOR_UPDATE)
+from .const import (ATTR_SENSOR_ATTRIBUTES, ATTR_SENSOR_DEVICE_CLASS,
+                    ATTR_SENSOR_ICON, ATTR_SENSOR_NAME, ATTR_SENSOR_TYPE,
+                    ATTR_SENSOR_UNIQUE_ID, DOMAIN, SIGNAL_SENSOR_UPDATE)
 
 
 def sensor_id(webhook_id, unique_id):
@@ -21,13 +17,10 @@ def sensor_id(webhook_id, unique_id):
 class MobileAppEntity(Entity):
     """Representation of an mobile app entity."""
 
-    def __init__(self, config: dict, device: DeviceEntry, entry: ConfigEntry):
+    def __init__(self, config: dict):
         """Initialize the sensor."""
         self._config = config
-        self._device = device
-        self._entry = entry
-        self._registration = entry.data
-        self._sensor_id = sensor_id(self._registration[CONF_WEBHOOK_ID],
+        self._sensor_id = sensor_id(self._config[CONF_WEBHOOK_ID],
                                     config[ATTR_SENSOR_UNIQUE_ID])
         self._entity_type = config[ATTR_SENSOR_TYPE]
         self.unsub_dispatcher = None
@@ -78,14 +71,8 @@ class MobileAppEntity(Entity):
         """Return device registry information for this entity."""
         return {
             'identifiers': {
-                (ATTR_DEVICE_ID, self._registration[ATTR_DEVICE_ID]),
-                (CONF_WEBHOOK_ID, self._registration[CONF_WEBHOOK_ID])
-            },
-            'manufacturer': self._registration[ATTR_MANUFACTURER],
-            'model': self._registration[ATTR_MODEL],
-            'device_name': self._registration[ATTR_DEVICE_NAME],
-            'sw_version': self._registration[ATTR_OS_VERSION],
-            'config_entries': self._device.config_entries
+                (CONF_WEBHOOK_ID, self._config[CONF_WEBHOOK_ID])
+            }
         }
 
     async def async_update(self):

@@ -4,13 +4,16 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 
-from homeassistant.components.mobile_app.const import DOMAIN
+from homeassistant.components.mobile_app.const import (
+    DATA_BINARY_SENSOR, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
+    DATA_REGISTRATIONS, DATA_SENSOR, DOMAIN, STORAGE_KEY, STORAGE_VERSION)
+
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-async def setup_push_receiver(hass, aioclient_mock):
+async def setup_push_receiver(hass, hass_storage, aioclient_mock):
     """Fixture that sets up a mocked push receiver."""
     push_url = 'https://mobile-push.home-assistant.dev/push'
 
@@ -30,30 +33,46 @@ async def setup_push_receiver(hass, aioclient_mock):
         }
     })
 
+    hass_storage[STORAGE_KEY] = {
+        'version': STORAGE_VERSION,
+        'data': {
+            DATA_BINARY_SENSOR: {},
+            DATA_CONFIG_ENTRIES: {},
+            DATA_DELETED_IDS: [],
+            DATA_REGISTRATIONS: {
+                "webhook_id": {
+                    "app_data": {
+                        "push_token": "PUSH_TOKEN",
+                        "push_url": push_url
+                    },
+                    "app_id": "io.homeassistant.mobile_app",
+                    "app_name": "mobile_app tests",
+                    "app_version": "1.0",
+                    "device_id": "4d5e6f",
+                    "device_name": "Test",
+                    "manufacturer": "Home Assistant",
+                    "model": "mobile_app",
+                    "os_name": "Linux",
+                    "os_version": "5.0.6",
+                    "secret": "123abc",
+                    "supports_encryption": False,
+                    "user_id": "1a2b3c",
+                    "webhook_id": "webhook_id"
+                }
+            },
+            DATA_SENSOR: {}
+        }
+    }
+
     entry = MockConfigEntry(
         connection_class="cloud_push",
         data={
-            "app_data": {
-                "push_token": "PUSH_TOKEN",
-                "push_url": push_url
-            },
             "app_id": "io.homeassistant.mobile_app",
             "app_name": "mobile_app tests",
-            "app_version": "1.0",
-            "device_id": "4d5e6f",
-            "device_name": "Test",
-            "manufacturer": "Home Assistant",
-            "model": "mobile_app",
-            "os_name": "Linux",
-            "os_version": "5.0.6",
-            "secret": "123abc",
-            "supports_encryption": False,
-            "user_id": "1a2b3c",
-            "webhook_id": "webhook_id"
         },
         domain=DOMAIN,
         source="registration",
-        title="mobile_app test entry",
+        title="mobile_app test app",
         version=1
     )
     entry.add_to_hass(hass)

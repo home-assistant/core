@@ -37,17 +37,8 @@ async def test_registration(hass, hass_client):  # noqa: F811
 
     entries = hass.config_entries.async_entries(DOMAIN)
 
-    assert entries[0].data['app_data'] == REGISTER['app_data']
     assert entries[0].data['app_id'] == REGISTER['app_id']
     assert entries[0].data['app_name'] == REGISTER['app_name']
-    assert entries[0].data['app_version'] == REGISTER['app_version']
-    assert entries[0].data['device_name'] == REGISTER['device_name']
-    assert entries[0].data['manufacturer'] == REGISTER['manufacturer']
-    assert entries[0].data['model'] == REGISTER['model']
-    assert entries[0].data['os_name'] == REGISTER['os_name']
-    assert entries[0].data['os_version'] == REGISTER['os_version']
-    assert entries[0].data['supports_encryption'] == \
-        REGISTER['supports_encryption']
 
     keylen = SecretBox.KEY_SIZE
     key = register_json[CONF_SECRET].encode("utf-8")

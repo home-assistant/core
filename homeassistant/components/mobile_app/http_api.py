@@ -12,10 +12,13 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import (HTTP_CREATED, CONF_WEBHOOK_ID)
 
-from .const import (ATTR_DEVICE_ID, ATTR_SUPPORTS_ENCRYPTION,
+from .const import (ATTR_APP_ID, ATTR_APP_NAME,
+                    ATTR_DEVICE_ID, ATTR_SUPPORTS_ENCRYPTION,
                     CONF_CLOUDHOOK_URL, CONF_REMOTE_UI_URL, CONF_SECRET,
-                    CONF_USER_ID, DOMAIN, REGISTRATION_SCHEMA)
+                    CONF_USER_ID, DATA_CONFIG_ENTRIES, DATA_REGISTRATIONS,
+                    DOMAIN, REGISTRATION_SCHEMA)
 
+from .device_helpers import register_device
 from .helpers import supports_encryption
 
 
@@ -47,10 +50,21 @@ class RegistrationsView(HomeAssistantView):
 
         data[CONF_USER_ID] = request['hass_user'].id
 
-        ctx = {'source': 'registration'}
-        await hass.async_create_task(
-            hass.config_entries.flow.async_init(DOMAIN, context=ctx,
-                                                data=data))
+        app_id = data[ATTR_APP_ID]
+
+        if app_id in hass.data[DOMAIN][DATA_CONFIG_ENTRIES]:
+            entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][app_id]
+            await register_device(hass, entry, data)
+        else:
+            ctx = {'source': 'registration'}
+            reg_data = {
+                ATTR_APP_ID: app_id,
+                ATTR_APP_NAME: data[ATTR_APP_NAME]
+            }
+            hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id] = data
+            await hass.async_create_task(
+                hass.config_entries.flow.async_init(DOMAIN, context=ctx,
+                                                    data=reg_data))
 
         remote_ui_url = None
         try:
