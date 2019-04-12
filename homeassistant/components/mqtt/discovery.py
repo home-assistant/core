@@ -53,7 +53,9 @@ DEPRECATED_PLATFORM_TO_SCHEMA = {
     }
 }
 
-IMPLICIT_STATE_COMPONENTS = [
+# These components require state_topic to be set.
+# If not specified, infer state_topic from discovery topic.
+IMPLICIT_STATE_TOPIC_COMPONENTS = [
     'alarm_control_panel',
     'binary_sensor',
     'sensor',
@@ -274,14 +276,15 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
             payload[CONF_PLATFORM] = 'mqtt'
 
             if (CONF_STATE_TOPIC not in payload and
-                    component in IMPLICIT_STATE_COMPONENTS):
+                    component in IMPLICIT_STATE_TOPIC_COMPONENTS):
+                # state_topic not specified, infer from discovery topic
                 payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
                     discovery_topic, component,
                     '%s/' % node_id if node_id else '', object_id)
                 _LOGGER.warning('implicit %s is deprecated, add "%s":"%s" to '
-                                'discovery message',
+                                '%s discovery message',
                                 CONF_STATE_TOPIC, CONF_STATE_TOPIC,
-                                payload[CONF_STATE_TOPIC])
+                                payload[CONF_STATE_TOPIC], topic)
 
             payload[ATTR_DISCOVERY_HASH] = discovery_hash
 
