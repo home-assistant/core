@@ -8,6 +8,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
+from . import BLOOMSKY
+
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['bloomsky']
@@ -25,14 +27,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available BloomSky weather binary sensors."""
-    bloomsky = hass.components.bloomsky
     # Default needed in case of discovery
     sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
 
-    for device in bloomsky.BLOOMSKY.devices.values():
+    for device in BLOOMSKY.devices.values():
         for variable in sensors:
             add_entities(
-                [BloomSkySensor(bloomsky.BLOOMSKY, device, variable)], True)
+                [BloomSkySensor(BLOOMSKY, device, variable)], True)
 
 
 class BloomSkySensor(BinarySensorDevice):
