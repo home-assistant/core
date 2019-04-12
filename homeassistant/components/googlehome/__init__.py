@@ -10,8 +10,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['googledevices==1.0.2']
-
 DOMAIN = 'googlehome'
 CLIENT = 'googlehome_client'
 

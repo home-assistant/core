@@ -16,7 +16,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 from . import SUBSCRIPTION_REGISTRY
 
-DEPENDENCIES = ['wemo']
 SCAN_INTERVAL = timedelta(seconds=10)
 DATA_KEY = 'fan.wemo'
 

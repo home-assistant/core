@@ -7,8 +7,6 @@ from . import CONF_BINARY_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['eight_sleep']
-
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):

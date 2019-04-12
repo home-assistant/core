@@ -9,8 +9,6 @@ from . import (
     CONF_OUTPUTS, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES, DATA_SATEL,
     SIGNAL_OUTPUTS_UPDATED, SIGNAL_ZONES_UPDATED)
 
-DEPENDENCIES = ['satel_integra']
-
 _LOGGER = logging.getLogger(__name__)
 
 

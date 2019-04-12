@@ -9,7 +9,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['raspyrfm-client==1.2.8']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_GATEWAY_MANUFACTURER = 'gateway_manufacturer'

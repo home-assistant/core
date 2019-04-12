@@ -19,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MODULES = 'modules'
 CONF_STATION = 'station'
 
-DEPENDENCIES = ['netatmo']
-
 # This is the NetAtmo data upload interval in seconds
 NETATMO_UPDATE_INTERVAL = 600
 

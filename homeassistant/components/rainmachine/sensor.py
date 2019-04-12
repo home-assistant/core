@@ -8,7 +8,6 @@ from . import (
     DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, SENSOR_UPDATE_TOPIC, SENSORS,
     RainMachineEntity)
 
-DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)
 
 

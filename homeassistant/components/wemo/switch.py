@@ -14,7 +14,6 @@ from homeassistant.const import (
 
 from . import SUBSCRIPTION_REGISTRY
 
-DEPENDENCIES = ['wemo']
 SCAN_INTERVAL = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)

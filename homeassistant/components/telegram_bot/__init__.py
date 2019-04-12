@@ -16,8 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 
-REQUIREMENTS = ['python-telegram-bot==11.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ARGS = 'args'

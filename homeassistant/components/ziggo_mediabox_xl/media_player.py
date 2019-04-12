@@ -14,8 +14,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['ziggo-mediabox-xl==1.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_KNOWN_DEVICES = 'ziggo_mediabox_xl_known_devices'

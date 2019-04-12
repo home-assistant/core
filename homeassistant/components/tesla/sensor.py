@@ -11,8 +11,6 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['tesla']
-
 SCAN_INTERVAL = timedelta(minutes=5)
 
 

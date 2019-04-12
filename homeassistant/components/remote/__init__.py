@@ -26,7 +26,6 @@ ATTR_DELAY_SECS = 'delay_secs'
 ATTR_HOLD_SECS = 'hold_secs'
 
 DOMAIN = 'remote'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_ALL_REMOTES = group.ENTITY_ID_FORMAT.format('all_remotes')

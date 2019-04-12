@@ -6,8 +6,6 @@ from homeassistant.components.switch import SwitchDevice
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

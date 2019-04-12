@@ -5,8 +5,6 @@ from . import (
     CONF_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity,
     EightSleepUserEntity)
 
-DEPENDENCIES = ['eight_sleep']
-
 ATTR_ROOM_TEMP = 'Room Temperature'
 ATTR_AVG_ROOM_TEMP = 'Average Room Temperature'
 ATTR_BED_TEMP = 'Bed Temperature'

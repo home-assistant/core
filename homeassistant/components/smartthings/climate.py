@@ -17,8 +17,6 @@ from homeassistant.const import (
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
-
 ATTR_OPERATION_STATE = 'operation_state'
 MODE_TO_STATE = {
     'auto': STATE_AUTO,

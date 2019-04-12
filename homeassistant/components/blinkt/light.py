@@ -11,8 +11,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_NAME
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['blinkt==0.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_BLINKT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)

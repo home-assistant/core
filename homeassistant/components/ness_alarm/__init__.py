@@ -13,8 +13,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['nessclient==0.9.15']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'ness_alarm'

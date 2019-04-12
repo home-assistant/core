@@ -37,8 +37,6 @@ DEFAULT_ARM_AWAY = 'ARM_AWAY'
 DEFAULT_ARM_HOME = 'ARM_HOME'
 DEFAULT_DISARM = 'DISARM'
 DEFAULT_NAME = 'MQTT Alarm'
-DEPENDENCIES = ['mqtt']
-
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CODE): cv.string,
     vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,

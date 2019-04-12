@@ -11,8 +11,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['magicseaweed==1.0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_HOURS = 'hours'

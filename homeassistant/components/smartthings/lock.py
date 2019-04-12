@@ -6,8 +6,6 @@ from homeassistant.components.lock import LockDevice
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
-
 ST_STATE_LOCKED = 'locked'
 ST_LOCK_ATTR_MAP = {
     'codeId': 'code_id',

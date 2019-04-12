@@ -17,8 +17,6 @@ from homeassistant.util.json import load_json, save_json
 
 from .const import DOMAIN as PS4_DOMAIN, REGIONS as deprecated_regions
 
-DEPENDENCIES = ['ps4']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PS4 = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \

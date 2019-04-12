@@ -12,8 +12,6 @@ from .const import DOMAIN as DOMAIN_UPNP, SIGNAL_REMOVE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['upnp']
-
 BYTES_RECEIVED = 'bytes_received'
 BYTES_SENT = 'bytes_sent'
 PACKETS_RECEIVED = 'packets_received'

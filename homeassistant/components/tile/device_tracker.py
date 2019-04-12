@@ -13,8 +13,6 @@ from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pytile==2.0.6']
-
 CLIENT_UUID_CONFIG_FILE = '.tile.conf'
 DEVICE_TYPES = ['PHONE', 'TILE']
 

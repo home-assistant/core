@@ -13,8 +13,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from .const import DOMAIN
 
-REQUIREMENTS = ['pyaftership==0.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Information provided by AfterShip'

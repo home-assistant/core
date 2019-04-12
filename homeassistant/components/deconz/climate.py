@@ -11,8 +11,6 @@ from .const import ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-DEPENDENCIES = ['deconz']
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ climate devices.

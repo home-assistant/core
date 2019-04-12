@@ -7,7 +7,6 @@ from homeassistant import bootstrap
 import homeassistant.core as ha
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 
-DEPENDENCIES = ['conversation', 'zone']
 DOMAIN = 'demo'
 
 COMPONENTS_WITH_DEMO_PLATFORM = [

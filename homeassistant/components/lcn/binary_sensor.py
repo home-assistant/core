@@ -6,8 +6,6 @@ from . import LcnDevice, get_connection
 from .const import (
     BINSENSOR_PORTS, CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, SETPOINTS)
 
-DEPENDENCIES = ['lcn']
-
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):

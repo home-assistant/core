@@ -12,8 +12,6 @@ from .const import (ATTR_SENSOR_STATE,
 
 from .entity import MobileAppEntity, sensor_id
 
-DEPENDENCIES = ['mobile_app']
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up mobile app sensor from a config entry."""

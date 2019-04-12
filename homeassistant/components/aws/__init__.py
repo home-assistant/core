@@ -26,8 +26,6 @@ from .const import (
     DOMAIN,
 )
 
-REQUIREMENTS = ["aiobotocore==0.10.2"]
-
 _LOGGER = logging.getLogger(__name__)
 
 AWS_CREDENTIAL_SCHEMA = vol.Schema(

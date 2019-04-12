@@ -10,8 +10,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pocketcasts==0.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:rss'

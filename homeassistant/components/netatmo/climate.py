@@ -16,8 +16,6 @@ from homeassistant.util import Throttle
 
 from . import NETATMO_AUTH
 
-DEPENDENCIES = ['netatmo']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_HOMES = 'homes'

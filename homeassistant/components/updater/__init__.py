@@ -18,8 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['distro==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_RELEASE_NOTES = 'release_notes'

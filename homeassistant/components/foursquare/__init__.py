@@ -12,7 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PUSH_SECRET = 'push_secret'
 
-DEPENDENCIES = ['http']
 DOMAIN = 'foursquare'
 
 EVENT_CHECKIN = 'foursquare.checkin'
