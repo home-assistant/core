@@ -8,7 +8,8 @@ from homeassistant.components.iqvia import (
     DATA_CLIENT, DOMAIN, SENSORS, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
     TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
-    TYPE_ASTHMA_TOMORROW, TYPE_DISEASE_FORECAST, IQVIAEntity)
+    TYPE_ASTHMA_TOMORROW, TYPE_DISEASE_FORECAST, TYPE_DISEASE_INDEX,
+    TYPE_DISEASE_TODAY, IQVIAEntity)
 from homeassistant.const import ATTR_STATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,6 +140,8 @@ class IndexSensor(IQVIAEntity):
             data = self._iqvia.data[TYPE_ALLERGY_INDEX].get('Location')
         elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             data = self._iqvia.data[TYPE_ASTHMA_INDEX].get('Location')
+        elif self._type == TYPE_DISEASE_TODAY:
+            data = self._iqvia.data[TYPE_DISEASE_INDEX].get('Location')
 
         if not data:
             return
@@ -177,5 +180,9 @@ class IndexSensor(IQVIAEntity):
                     '{0}_{1}'.format(ATTR_ALLERGEN_AMOUNT, index):
                         attrs['PPM'],
                 })
+        elif self._type == TYPE_DISEASE_TODAY:
+            for attrs in period['Triggers']:
+                self._attrs['{0}_index'.format(
+                    attrs['Name'].lower())] = attrs['Index']
 
         self._state = period['Index']
