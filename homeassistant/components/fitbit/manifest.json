@@ -6,6 +6,7 @@
     "fitbit==0.3.0"
   ],
   "dependencies": [
+    "configurator",
     "http"
   ],
   "codeowners": [
