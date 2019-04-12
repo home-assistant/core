@@ -4,9 +4,14 @@ try:
 except ImportError:
     av = None
 
+from homeassistant.setup import async_setup_component
+
 DOMAIN = 'default_config'
 
 
 async def async_setup(hass, config):
     """Initialize default configuration."""
-    return True
+    if av is None:
+        return True
+
+    return await async_setup_component(hass, 'stream', config)
