@@ -9,10 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_ICON, CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import EventType, HomeAssistantType
 
 _LOGGER = getLogger(__name__)
 
@@ -29,8 +30,7 @@ DATA_DEVICE = 'device'
 
 DEFAULT_NAME = 'boiler'
 
-EVENT_SWITCHER_DEVICE_UPDATED = 'switcher_device_update'
-UPDATED_DEVICE = 'updated_device'
+SIGNAL_SWITCHER_DEVICE_UPDATE = 'switcher_device_update'
 
 ATTR_AUTO_OFF_SET = 'auto_off_set'
 ATTR_DEVICE_NAME = 'device_name'
@@ -52,7 +52,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     """Set up the switcher component."""
     from aioswitcher.bridge import SwitcherV2Bridge
 
@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
     await v2bridge.start()
 
-    async def async_stop_bridge(event: Event) -> None:
+    async def async_stop_bridge(event: EventType) -> None:
         """On homeassistant stop, gracefully stop the bridge if running."""
         await v2bridge.stop()
 
@@ -93,8 +93,9 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         if v2bridge.running:
             device_new_data = await v2bridge.queue.get()
             if device_new_data:
-                hass.bus.async_fire(EVENT_SWITCHER_DEVICE_UPDATED,
-                                    {UPDATED_DEVICE: device_new_data})
+                async_dispatcher_send(hass,
+                                      SIGNAL_SWITCHER_DEVICE_UPDATE,
+                                      device_new_data)
 
     async_track_time_interval(hass, device_updates, timedelta(seconds=3))
 

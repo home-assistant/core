@@ -1,18 +1,18 @@
 """Home Assistant Switcher Component Switch platform."""
 
-from datetime import datetime
 from logging import getLogger
 from typing import Callable, cast, Dict, Optional
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
 from homeassistant.const import CONF_ICON, CONF_NAME
-from homeassistant.core import HomeAssistant, Event
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.exceptions import PlatformNotReady
 
 from . import (
     ATTR_AUTO_OFF_SET, ATTR_DEVICE_NAME, ATTR_ELECTRIC_CURRNET,
     ATTR_REMAINING_TIME, DATA_CONFIG, DATA_DEVICE, DOMAIN,
-    EVENT_SWITCHER_DEVICE_UPDATED, UPDATED_DEVICE)
+    SIGNAL_SWITCHER_DEVICE_UPDATE)
 
 _LOGGER = getLogger(__name__)
 
@@ -27,7 +27,7 @@ PROPERTIES_TO_ATTRIBUTES = {
 }
 
 
-async def async_setup_platform(hass: HomeAssistant, config: Dict,
+async def async_setup_platform(hass: HomeAssistantType, config: Dict,
                                async_add_entities: Callable,
                                discovery_info: Dict) -> None:
     """Set up the switcher platform for the switch component."""
@@ -48,7 +48,7 @@ class SwitcherControl(SwitchDevice):
 
     from aioswitcher.devices import SwitcherV2Device
 
-    def __init__(self, hass: HomeAssistant, name: str, icon: Optional[str],
+    def __init__(self, hass: HomeAssistantType, name: str, icon: Optional[str],
                  device_data: SwitcherV2Device) -> None:
         """Initialize the entity."""
         self._hass = hass
@@ -58,8 +58,8 @@ class SwitcherControl(SwitchDevice):
 
         self._device_data = device_data
         self._state = device_data.state
-        hass.bus.async_listen(EVENT_SWITCHER_DEVICE_UPDATED,
-                              self.async_update_data)
+        self._unsub_dispatcher = async_dispatcher_connect(
+            hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data)
 
     @property
     def device_ip_addr(self) -> str:
@@ -82,16 +82,6 @@ class SwitcherControl(SwitchDevice):
     def auto_off_set(self) -> str:
         """Return the auto off configuration set."""
         return cast(str, self._device_data.auto_off_set)
-
-    @property
-    def last_data_update(self) -> datetime:
-        """Return the datetime for the last update received by the device."""
-        return cast(datetime, self._device_data.last_data_update)
-
-    @property
-    def last_state_change(self) -> datetime:
-        """Return the datetime for the last state change."""
-        return cast(datetime, self._device_data.last_state_change)
 
     @property
     def device_name(self) -> str:
@@ -151,9 +141,13 @@ class SwitcherControl(SwitchDevice):
                                         STATE_ON as SWITCHER_STATE_ON)
         return self._state in [SWITCHER_STATE_ON, SWITCHER_STATE_OFF]
 
-    async def async_update_data(self, event: Event) -> None:
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._unsub_dispatcher:
+            self._unsub_dispatcher()
+
+    async def async_update_data(self, device_data: SwitcherV2Device) -> None:
         """Update the entity data."""
-        device_data = event.data.get(UPDATED_DEVICE)
         if device_data:
             if self._self_initiated:
                 self._self_initiated = False
