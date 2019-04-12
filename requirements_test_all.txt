@@ -20,7 +20,7 @@ requests_mock==1.5.2
 
 
 # homeassistant.components.homekit
-HAP-python==2.4.2
+HAP-python==2.5.0
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
