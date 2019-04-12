@@ -8,7 +8,7 @@ from typing import Dict, Optional
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import CONF_ICON, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -25,10 +25,7 @@ CONF_DEVICE_ID = 'device_id'
 CONF_DEVICE_PASSWORD = 'device_password'
 CONF_PHONE_ID = 'phone_id'
 
-DATA_CONFIG = 'config'
 DATA_DEVICE = 'device'
-
-DEFAULT_NAME = 'boiler'
 
 SIGNAL_SWITCHER_DEVICE_UPDATE = 'switcher_device_update'
 
@@ -44,10 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PHONE_ID): cv.string,
         vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Required(CONF_DEVICE_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME,
-                     default=DEFAULT_NAME): cv.slugify,
-        vol.Optional(CONF_ICON): cv.icon
+        vol.Required(CONF_DEVICE_PASSWORD): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -81,7 +75,6 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
         return False
 
     hass.data[DOMAIN] = {
-        DATA_CONFIG: config[DOMAIN],
         DATA_DEVICE: device_data
     }
 

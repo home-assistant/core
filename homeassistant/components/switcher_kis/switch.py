@@ -4,15 +4,13 @@ from logging import getLogger
 from typing import Callable, cast, Dict, Optional
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
-from homeassistant.const import CONF_ICON, CONF_NAME
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.exceptions import PlatformNotReady
 
 from . import (
     ATTR_AUTO_OFF_SET, ATTR_DEVICE_NAME, ATTR_ELECTRIC_CURRNET,
-    ATTR_REMAINING_TIME, DATA_CONFIG, DATA_DEVICE, DOMAIN,
-    SIGNAL_SWITCHER_DEVICE_UPDATE)
+    ATTR_REMAINING_TIME, DATA_DEVICE, DOMAIN, SIGNAL_SWITCHER_DEVICE_UPDATE)
 
 _LOGGER = getLogger(__name__)
 
@@ -34,13 +32,8 @@ async def async_setup_platform(hass: HomeAssistantType, config: Dict,
     if DOMAIN not in hass.data:
         raise PlatformNotReady("No configuration data found.")
 
-    name = hass.data[DOMAIN][DATA_CONFIG][CONF_NAME].title()
-    icon = hass.data[DOMAIN][DATA_CONFIG].get(CONF_ICON)
-
-    switcher_entity = SwitcherControl(
-        hass, name, icon, hass.data[DOMAIN][DATA_DEVICE])
-
-    async_add_entities([switcher_entity])
+    async_add_entities([
+        SwitcherControl(hass, hass.data[DOMAIN][DATA_DEVICE])])
 
 
 class SwitcherControl(SwitchDevice):
@@ -48,12 +41,9 @@ class SwitcherControl(SwitchDevice):
 
     from aioswitcher.devices import SwitcherV2Device
 
-    def __init__(self, hass: HomeAssistantType, name: str, icon: Optional[str],
+    def __init__(self, hass: HomeAssistantType,
                  device_data: SwitcherV2Device) -> None:
         """Initialize the entity."""
-        self._hass = hass
-        self._name = name
-        self._icon = icon
         self._self_initiated = False
 
         self._device_data = device_data
@@ -100,11 +90,6 @@ class SwitcherControl(SwitchDevice):
             self._device_data.device_id, self._device_data.mac_addr)
 
     @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
         from aioswitcher.consts import STATE_ON as SWITCHER_STATE_ON
@@ -128,11 +113,6 @@ class SwitcherControl(SwitchDevice):
                 attribs[attr] = value
 
         return attribs
-
-    @property
-    def icon(self) -> Optional[str]:
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
 
     @property
     def available(self) -> bool:
@@ -184,7 +164,7 @@ class SwitcherControl(SwitchDevice):
         response = None  # type: SwitcherV2ControlResponseMSG
 
         async with SwitcherV2Api(
-                self._hass.loop, self.device_ip_addr,
+                self.hass.loop, self.device_ip_addr,
                 self._device_data.phone_id, self._device_data.device_id,
                 self._device_data.device_password) as swapi:
             response = await swapi.control_device(
