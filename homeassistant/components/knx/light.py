@@ -31,6 +31,7 @@ DEFAULT_COLOR_TEMP_MODE = 'absolute'
 DEFAULT_MIN_KELVIN = 2700  # 370 mireds
 DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
+
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 

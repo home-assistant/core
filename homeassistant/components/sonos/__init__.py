@@ -5,6 +5,7 @@ from homeassistant.helpers import config_entry_flow
 
 DOMAIN = 'sonos'
 
+
 async def async_setup(hass, config):
     """Set up the Sonos component."""
     conf = config.get(DOMAIN)

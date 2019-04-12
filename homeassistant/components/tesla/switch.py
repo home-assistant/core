@@ -8,6 +8,7 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla switch platform."""
     controller = hass.data[TESLA_DOMAIN]['devices']['controller']
