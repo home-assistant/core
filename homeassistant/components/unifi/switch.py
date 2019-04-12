@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN
+from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
