@@ -18,6 +18,7 @@ from homeassistant.components.device_tracker import (
 
 CONF_VALIDATOR = 'validator'
 CONF_SECRET = 'secret'
+DEPENDENCIES = ['http']
 URL = '/api/meraki'
 VERSION = '2.0'
 

@@ -8,6 +8,7 @@ from . import DOMAIN, JuicenetDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['juicenet']
 
 SENSOR_TYPES = {
     'status': ['Charging Status', None],

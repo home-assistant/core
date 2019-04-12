@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 
+DEPENDENCIES = ['eufy']
 
 _LOGGER = logging.getLogger(__name__)
 

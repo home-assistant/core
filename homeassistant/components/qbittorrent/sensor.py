@@ -12,6 +12,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
+REQUIREMENTS = ['python-qbittorrent==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 

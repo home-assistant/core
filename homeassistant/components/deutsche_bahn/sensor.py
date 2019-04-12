@@ -9,6 +9,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
+REQUIREMENTS = ['schiene==0.23']
 
 _LOGGER = logging.getLogger(__name__)
 

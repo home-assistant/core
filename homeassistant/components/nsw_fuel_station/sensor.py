@@ -11,6 +11,7 @@ from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['nsw-fuel-api-client==1.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 

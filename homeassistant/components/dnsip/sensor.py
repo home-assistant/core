@@ -8,6 +8,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['aiodns==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

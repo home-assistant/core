@@ -28,6 +28,7 @@ from .http import async_register_http
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['http']
 
 ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,

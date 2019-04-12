@@ -8,6 +8,7 @@ from . import DATA_SISYPHUS
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['sisyphus']
 
 SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 

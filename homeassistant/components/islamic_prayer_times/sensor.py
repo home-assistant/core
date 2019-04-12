@@ -11,6 +11,7 @@ from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_time
 
+REQUIREMENTS = ['prayer_times_calculator==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

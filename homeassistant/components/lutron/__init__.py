@@ -10,6 +10,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
+REQUIREMENTS = ['pylutron==0.2.0']
 
 DOMAIN = 'lutron'
 

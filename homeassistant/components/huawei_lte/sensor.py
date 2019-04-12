@@ -16,6 +16,7 @@ from ..huawei_lte import DATA_KEY, RouterData
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['huawei_lte']
 
 DEFAULT_NAME_TEMPLATE = 'Huawei {} {}'
 

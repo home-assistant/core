@@ -15,6 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.json import load_json, save_json
 
+REQUIREMENTS = ['pysabnzbd==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -20,6 +20,7 @@ from homeassistant.helpers.icon import icon_for_battery_level
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vacuum'
+DEPENDENCIES = ['group']
 
 SCAN_INTERVAL = timedelta(seconds=20)
 

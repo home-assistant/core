@@ -29,6 +29,7 @@ DATA_TYPE_FLOAT = 'float'
 DATA_TYPE_INT = 'int'
 DATA_TYPE_UINT = 'uint'
 
+DEPENDENCIES = ['modbus']
 
 REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'

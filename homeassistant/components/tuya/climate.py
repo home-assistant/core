@@ -10,6 +10,7 @@ from homeassistant.const import (
 
 from . import DATA_TUYA, TuyaDevice
 
+DEPENDENCIES = ['tuya']
 DEVICE_TYPE = 'climate'
 
 HA_STATE_TO_TUYA = {

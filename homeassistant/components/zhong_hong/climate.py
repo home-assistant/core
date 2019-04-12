@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
 
+REQUIREMENTS = ['zhong_hong_hvac==1.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 

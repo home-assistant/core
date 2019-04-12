@@ -10,6 +10,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['python-sochain-api==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 

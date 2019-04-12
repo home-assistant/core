@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEFAULT_ROOM = 'default_room'
 
 DOMAIN = 'matrix'
+DEPENDENCIES = [DOMAIN]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEFAULT_ROOM): cv.string,

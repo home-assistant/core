@@ -10,6 +10,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (CONF_HOST, STATE_HOME, STATE_IDLE,
                                  STATE_PLAYING)
 
+DEPENDENCIES = ['roku']
 
 DEFAULT_PORT = 8060
 

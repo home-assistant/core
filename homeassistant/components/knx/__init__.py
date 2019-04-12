@@ -11,6 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
+REQUIREMENTS = ['xknx==0.10.0']
 
 _LOGGER = logging.getLogger(__name__)
 

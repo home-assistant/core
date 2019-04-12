@@ -7,6 +7,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['python-join-api==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

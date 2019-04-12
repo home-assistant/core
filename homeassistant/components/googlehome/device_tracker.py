@@ -10,6 +10,7 @@ from . import CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['googlehome']
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 

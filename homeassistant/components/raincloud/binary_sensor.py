@@ -10,6 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import BINARY_SENSORS, DATA_RAINCLOUD, ICON_MAP, RainCloudEntity
 
+DEPENDENCIES = ['raincloud']
 
 _LOGGER = logging.getLogger(__name__)
 

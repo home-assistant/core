@@ -4,6 +4,7 @@ from homeassistant.components.cover import (
 
 from . import DATA_TUYA, TuyaDevice
 
+DEPENDENCIES = ['tuya']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

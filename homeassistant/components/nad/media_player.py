@@ -11,6 +11,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, CONF_HOST
 
+REQUIREMENTS = ['nad_receiver==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 

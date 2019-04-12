@@ -1,6 +1,7 @@
 """Support for SleepIQ sensors."""
 from homeassistant.components import sleepiq
 
+DEPENDENCIES = ['sleepiq']
 ICON = 'mdi:hotel'
 
 

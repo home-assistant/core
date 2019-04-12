@@ -15,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+REQUIREMENTS = ['millheater==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 

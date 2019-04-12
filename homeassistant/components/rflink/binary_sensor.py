@@ -14,6 +14,7 @@ from . import CONF_ALIASES, CONF_DEVICES, RflinkDevice
 CONF_OFF_DELAY = 'off_delay'
 DEFAULT_FORCE_UPDATE = False
 
+DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 

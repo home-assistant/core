@@ -3,6 +3,7 @@ from homeassistant.components.scene import Scene
 
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
+DEPENDENCIES = [ELK_DOMAIN]
 
 
 async def async_setup_platform(

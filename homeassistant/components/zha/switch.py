@@ -13,6 +13,7 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['zha']
 
 
 async def async_setup_platform(hass, config, async_add_entities,

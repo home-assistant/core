@@ -9,6 +9,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['pyubee==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

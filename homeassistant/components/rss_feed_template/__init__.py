@@ -8,6 +8,7 @@ from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
 CONTENT_TYPE_XML = 'text/xml'
+DEPENDENCIES = ['http']
 
 DOMAIN = 'rss_feed_template'
 

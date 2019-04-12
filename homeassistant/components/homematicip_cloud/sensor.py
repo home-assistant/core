@@ -9,6 +9,7 @@ from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['homematicip_cloud']
 
 ATTR_TEMPERATURE_OFFSET = 'temperature_offset'
 ATTR_WIND_DIRECTION = 'wind_direction'

@@ -11,6 +11,7 @@ from homeassistant.const import (
 
 from . import ATTR_NEW, CecDevice
 
+DEPENDENCIES = ['hdmi_cec']
 
 _LOGGER = logging.getLogger(__name__)
 

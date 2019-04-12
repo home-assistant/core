@@ -7,6 +7,7 @@ from . import SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['alarmdecoder']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

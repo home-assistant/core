@@ -16,6 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
+REQUIREMENTS = ['yeelight==0.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 

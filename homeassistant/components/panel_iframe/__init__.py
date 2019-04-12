@@ -4,6 +4,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_ICON, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
+DEPENDENCIES = ['frontend']
 
 DOMAIN = 'panel_iframe'
 

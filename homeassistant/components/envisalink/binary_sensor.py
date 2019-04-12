@@ -14,6 +14,7 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['envisalink']
 
 
 async def async_setup_platform(hass, config, async_add_entities,

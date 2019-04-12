@@ -8,6 +8,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
+REQUIREMENTS = ['btsmarthub_devicelist==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

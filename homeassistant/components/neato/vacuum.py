@@ -21,6 +21,7 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['neato']
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

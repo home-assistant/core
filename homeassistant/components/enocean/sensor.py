@@ -12,6 +12,7 @@ from homeassistant.components import enocean
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'EnOcean sensor'
+DEPENDENCIES = ['enocean']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),

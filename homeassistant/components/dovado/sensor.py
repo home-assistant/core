@@ -14,6 +14,7 @@ from . import DOMAIN as DOVADO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['dovado']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 

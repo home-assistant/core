@@ -9,6 +9,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['pykwb==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 

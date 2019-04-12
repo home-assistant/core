@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _CONFIGURING = {}
 
+REQUIREMENTS = ['py-august==0.7.0']
 
 DEFAULT_TIMEOUT = 10
 ACTIVITY_FETCH_LIMIT = 10

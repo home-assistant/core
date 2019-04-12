@@ -15,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['epson-projector==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

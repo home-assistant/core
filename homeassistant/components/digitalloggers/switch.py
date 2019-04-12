@@ -10,6 +10,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['dlipower==0.7.165']
 
 _LOGGER = logging.getLogger(__name__)
 

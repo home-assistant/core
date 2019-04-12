@@ -25,6 +25,7 @@ from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['mqtt']
 
 CONF_GET_POSITION_TOPIC = 'position_topic'
 CONF_SET_POSITION_TEMPLATE = 'set_position_template'

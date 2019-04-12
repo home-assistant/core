@@ -8,6 +8,7 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_ROOM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['gitterpy==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 

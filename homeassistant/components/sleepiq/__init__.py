@@ -13,6 +13,7 @@ from homeassistant.util import Throttle
 
 DOMAIN = 'sleepiq'
 
+REQUIREMENTS = ['sleepyq==0.6']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 

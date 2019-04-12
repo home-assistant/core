@@ -5,6 +5,7 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN as SPIDER_DOMAIN
 
+DEPENDENCIES = ['spider']
 
 _LOGGER = logging.getLogger(__name__)
 

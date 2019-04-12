@@ -12,6 +12,7 @@ from .const import (
 )
 from .const import DOMAIN   # noqa: pylint: disable=unused-import
 
+REQUIREMENTS = ['homekit[IP]==0.13.0']
 
 HOMEKIT_IGNORE = [
     'BSB002',

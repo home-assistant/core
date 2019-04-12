@@ -18,6 +18,7 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['envisalink']
 
 SERVICE_ALARM_KEYPRESS = 'envisalink_alarm_keypress'
 ATTR_KEYPRESS = 'keypress'

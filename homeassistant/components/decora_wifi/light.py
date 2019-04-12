@@ -12,6 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['decora_wifi==1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

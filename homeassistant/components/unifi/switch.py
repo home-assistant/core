@@ -13,6 +13,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN
 
+DEPENDENCIES = [DOMAIN]
 SCAN_INTERVAL = timedelta(seconds=15)
 
 LOGGER = logging.getLogger(__name__)

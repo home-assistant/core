@@ -4,6 +4,7 @@ from homeassistant.helpers.entity import Entity
 
 from . import DATA_HIVE, DOMAIN
 
+DEPENDENCIES = ['hive']
 
 FRIENDLY_NAMES = {
     'Hub_OnlineStatus': 'Hive Hub Status',

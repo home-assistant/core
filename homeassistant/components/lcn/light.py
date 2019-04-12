@@ -9,6 +9,7 @@ from .const import (
     CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
     OUTPUT_PORTS)
 
+DEPENDENCIES = ['lcn']
 
 
 async def async_setup_platform(

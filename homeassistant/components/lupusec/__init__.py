@@ -11,6 +11,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['lupupy==0.0.17']
 
 DOMAIN = 'lupusec'
 

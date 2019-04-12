@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['mficlient==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 

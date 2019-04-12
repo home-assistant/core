@@ -5,6 +5,7 @@ from homeassistant.components.scene import Scene
 
 from . import DOMAIN as TAHOMA_DOMAIN
 
+DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 

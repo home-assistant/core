@@ -13,6 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 
+DEPENDENCIES = ['arlo', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 

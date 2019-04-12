@@ -13,6 +13,7 @@ from . import DATA_SISYPHUS
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['sisyphus']
 
 MEDIA_TYPE_TRACK = 'sisyphus_track'
 

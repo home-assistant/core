@@ -8,6 +8,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 
+REQUIREMENTS = [
+    '--only-binary=all '  # avoid compilation of gattlib
+    'nuimo==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

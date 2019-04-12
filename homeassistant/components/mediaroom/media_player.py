@@ -19,6 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 
+REQUIREMENTS = ['pymediaroom==0.6.4']
 
 _LOGGER = logging.getLogger(__name__)
 

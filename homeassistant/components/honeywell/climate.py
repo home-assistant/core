@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)
 
+REQUIREMENTS = ['evohomeclient==0.3.2', 'somecomfort==0.5.2']
 
 _LOGGER = logging.getLogger(__name__)
 

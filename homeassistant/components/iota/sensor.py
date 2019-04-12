@@ -15,6 +15,7 @@ CONF_IRI = 'iri'
 CONF_SEED = 'seed'
 CONF_TESTNET = 'testnet'
 
+DEPENDENCIES = ['iota']
 
 SCAN_INTERVAL = timedelta(minutes=3)
 

@@ -8,6 +8,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['temperusb==1.5.3']
 
 CONF_SCALE = 'scale'
 CONF_OFFSET = 'offset'

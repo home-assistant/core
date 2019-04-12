@@ -17,6 +17,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'image_processing'
+DEPENDENCIES = ['camera']
 
 SCAN_INTERVAL = timedelta(seconds=10)
 

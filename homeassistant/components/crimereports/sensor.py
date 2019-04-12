@@ -16,6 +16,7 @@ from homeassistant.util.distance import convert
 from homeassistant.util.dt import now
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['crimereports==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

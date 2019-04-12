@@ -12,6 +12,7 @@ from homeassistant.helpers.aiohttp_client import (
 
 from . import DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT
 
+DEPENDENCIES = ['amcrest', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 

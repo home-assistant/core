@@ -3,6 +3,7 @@ from homeassistant.const import TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
+DEPENDENCIES = ['homekit_controller']
 
 HUMIDITY_ICON = 'mdi-water-percent'
 TEMP_C_ICON = "mdi-temperature-celsius"

@@ -12,6 +12,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+REQUIREMENTS = ['pyenvisalink==3.8']
 
 _LOGGER = logging.getLogger(__name__)
 

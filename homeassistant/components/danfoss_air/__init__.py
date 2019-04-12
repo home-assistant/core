@@ -9,6 +9,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['pydanfossair==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 

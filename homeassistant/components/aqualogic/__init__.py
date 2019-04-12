@@ -11,6 +11,7 @@ from homeassistant.const import (CONF_HOST, CONF_PORT,
                                  EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 
+REQUIREMENTS = ["aqualogic==1.0"]
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -9,6 +9,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['fixerio==1.0.0a0']
 
 _LOGGER = logging.getLogger(__name__)
 

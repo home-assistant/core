@@ -9,6 +9,7 @@ from homeassistant.components.media_player.const import (
 
 from homeassistant.const import STATE_ON
 
+REQUIREMENTS = ['temescal==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

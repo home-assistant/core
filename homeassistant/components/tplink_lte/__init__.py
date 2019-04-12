@@ -14,6 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+REQUIREMENTS = ['tp-connected==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -31,6 +31,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
 import homeassistant.util.dt as dt_util
 
+REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

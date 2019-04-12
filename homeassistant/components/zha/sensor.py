@@ -16,6 +16,7 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['zha']
 
 
 # Formatter functions

@@ -4,6 +4,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 from . import BINARY_SENSORS, BLINK_DATA
 
+DEPENDENCIES = ['blink']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['pytautulli==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 

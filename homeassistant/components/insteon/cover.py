@@ -10,6 +10,7 @@ from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['insteon']
 SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 

@@ -12,6 +12,7 @@ from . import DOMAIN as ZONEMINDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['zoneminder']
 
 CONF_INCLUDE_ARCHIVED = "include_archived"
 

@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['snapcast==2.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 

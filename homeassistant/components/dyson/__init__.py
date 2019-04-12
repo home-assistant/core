@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME)
 from homeassistant.helpers import discovery
 
+REQUIREMENTS = ['libpurecool==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 

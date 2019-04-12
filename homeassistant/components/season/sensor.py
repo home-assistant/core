@@ -9,6 +9,7 @@ from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
 from homeassistant import util
 
+REQUIREMENTS = ['ephem==3.7.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
