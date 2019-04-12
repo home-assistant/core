@@ -28,12 +28,11 @@ SUPPORT_PHILIPS_JS_TV = SUPPORT_PHILIPS_JS | SUPPORT_NEXT_TRACK | \
 
 CONF_ON_ACTION = 'turn_on_action'
 
-DEFAULT_HOST = '127.0.0.1'
 DEFAULT_NAME = "Philips TV"
 DEFAULT_API_VERSION = '1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): cv.string,
     vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
