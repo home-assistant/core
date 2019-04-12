@@ -15,8 +15,6 @@ from homeassistant.util import Throttle
 
 from . import DOMAIN as NUHEAT_DOMAIN
 
-DEPENDENCIES = ["nuheat"]
-
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:thermometer"

@@ -7,8 +7,6 @@ from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['insteon']
-
 SENSOR_TYPES = {
     'openClosedSensor': 'opening',
     'ioLincSensor': 'opening',

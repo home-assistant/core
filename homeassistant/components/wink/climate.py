@@ -26,8 +26,6 @@ ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_HEAT_ON = 'heat_on'
 ATTR_COOL_ON = 'cool_on'
 
-DEPENDENCIES = ['wink']
-
 SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'

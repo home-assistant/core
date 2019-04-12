@@ -9,8 +9,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['niko-home-control==0.1.8']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

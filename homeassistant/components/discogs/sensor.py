@@ -12,8 +12,6 @@ from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['discogs_client==2.2.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_IDENTITY = 'identity'

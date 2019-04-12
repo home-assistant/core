@@ -9,8 +9,6 @@ import homeassistant.helpers.device_registry as dr
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
 
-DEPENDENCIES = ['tplink']
-
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)

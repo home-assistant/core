@@ -3,8 +3,6 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN as QWIKSWITCH, QSToggleEntity
 
-DEPENDENCIES = [QWIKSWITCH]
-
 
 async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     """Add switches from the main Qwikswitch component."""

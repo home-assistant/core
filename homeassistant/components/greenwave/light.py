@@ -10,7 +10,6 @@ from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['greenwavereality==0.5.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VERSION = 'version'

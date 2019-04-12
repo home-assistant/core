@@ -14,8 +14,6 @@ from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['srpenergy==1.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by SRP Energy"

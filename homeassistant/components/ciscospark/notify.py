@@ -9,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_TITLE, PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
-REQUIREMENTS = ['ciscosparkapi==0.4.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ROOMID = 'roomid'

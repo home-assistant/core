@@ -8,8 +8,6 @@ from homeassistant.helpers.entity import ToggleEntity
 
 from . import DATA_TRANSMISSION, DATA_UPDATED
 
-DEPENDENCIES = ['transmission']
-
 _LOGGING = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Transmission Turtle Mode'

@@ -7,8 +7,6 @@ from homeassistant.components.camera import Camera
 
 from . import BLOOMSKY
 
-DEPENDENCIES = ['bloomsky']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to BloomSky cameras."""

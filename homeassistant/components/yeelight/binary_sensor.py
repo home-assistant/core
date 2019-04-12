@@ -6,8 +6,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DATA_YEELIGHT, DATA_UPDATED
 
-DEPENDENCIES = ['yeelight']
-
 _LOGGER = logging.getLogger(__name__)
 
 

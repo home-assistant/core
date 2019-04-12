@@ -22,8 +22,6 @@ from .config_flow import configured_instances
 from .const import (
     DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
 
-REQUIREMENTS = ['regenmaschine==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_LISTENER = 'listener'

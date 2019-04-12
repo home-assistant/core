@@ -10,8 +10,6 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pythonegardia==1.0.39']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DISCOVER_DEVICES = 'egardia_sensor'

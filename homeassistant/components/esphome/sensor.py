@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from aioesphomeapi import ( # noqa
         SensorInfo, SensorState, TextSensorInfo, TextSensorState)
 
-DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 

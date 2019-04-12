@@ -16,8 +16,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['geojson_client==0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EXTERNAL_ID = 'external_id'

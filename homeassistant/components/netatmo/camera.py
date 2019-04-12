@@ -11,8 +11,6 @@ from homeassistant.helpers import config_validation as cv
 
 from . import CameraData, NETATMO_AUTH
 
-DEPENDENCIES = ['netatmo']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_HOME = 'home'

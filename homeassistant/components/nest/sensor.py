@@ -8,8 +8,6 @@ from homeassistant.const import (
 
 from . import CONF_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
 
-DEPENDENCIES = ['nest']
-
 SENSOR_TYPES = ['humidity', 'operation_mode', 'hvac_state']
 
 TEMP_SENSOR_TYPES = ['temperature', 'target']

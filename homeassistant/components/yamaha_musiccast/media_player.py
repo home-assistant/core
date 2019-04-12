@@ -15,8 +15,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pymusiccast==0.1.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = (

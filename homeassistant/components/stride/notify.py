@@ -10,8 +10,6 @@ from homeassistant.components.notify import (ATTR_DATA, ATTR_TARGET,
                                              PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
-REQUIREMENTS = ['pystride==0.1.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PANEL = 'panel'

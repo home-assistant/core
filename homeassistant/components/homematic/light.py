@@ -9,8 +9,6 @@ from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['homematic']
-
 SUPPORT_HOMEMATIC = SUPPORT_BRIGHTNESS
 
 

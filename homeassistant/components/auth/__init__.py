@@ -138,8 +138,6 @@ from . import login_flow
 from . import mfa_setup_flow
 
 DOMAIN = 'auth'
-DEPENDENCIES = ['http']
-
 WS_TYPE_CURRENT_USER = 'auth/current_user'
 SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_CURRENT_USER,

@@ -9,8 +9,6 @@ from homeassistant.const import (
     CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pysnmp==4.4.8']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BASEOID = 'baseoid'

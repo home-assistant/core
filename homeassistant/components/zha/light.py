@@ -17,8 +17,6 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['zha']
-
 DEFAULT_DURATION = 5
 
 CAPABILITIES_COLOR_XY = 0x08

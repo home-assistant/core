@@ -11,7 +11,6 @@ from . import (
     TYPE_HOURLY, TYPE_MONTH, TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY,
     RainMachineEntity)
 
-DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)
 
 

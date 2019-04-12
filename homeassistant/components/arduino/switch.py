@@ -8,8 +8,6 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['arduino']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PINS = 'pins'

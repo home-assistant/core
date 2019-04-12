@@ -36,8 +36,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN, DATA_CAMERA_PREFS
 from .prefs import CameraPreferences
 
-DEPENDENCIES = ['http']
-
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ENABLE_MOTION = 'enable_motion_detection'

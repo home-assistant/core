@@ -15,8 +15,6 @@ import homeassistant.util.color as color_util
 
 from . import SUBSCRIPTION_REGISTRY
 
-DEPENDENCIES = ['wemo']
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
