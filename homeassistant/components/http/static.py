@@ -8,7 +8,7 @@ from aiohttp.web_urldispatcher import StaticResource
 
 CACHE_TIME = 31 * 86400  # = 1 month
 CACHE_HEADERS = {hdrs.CACHE_CONTROL: "public, max-age={}".format(CACHE_TIME)}
-
+CONTENT_TYPE_JS = {hdrs.CONTENT_TYPE:'application/javascript'}
 
 # https://github.com/PyCQA/astroid/issues/633
 # pylint: disable=duplicate-bases
@@ -38,7 +38,12 @@ class CachingStaticResource(StaticResource):
         # on opening a dir, load its contents if allowed
         if filepath.is_dir():
             return await super()._handle(request)
+        RESPONSE_HEADER = {}
+        RESPONSE_HEADER.update(CACHE_HEADERS)
         if filepath.is_file():
+            if filepath.name.endswith(".js"):
+                RESPONSE_HEADER.update(CONTENT_TYPE_JS)
             return FileResponse(
-                filepath, chunk_size=self._chunk_size, headers=CACHE_HEADERS)
+                    filepath, chunk_size=self._chunk_size, headers=RESPONSE_HEADER)
+
         raise HTTPNotFound
