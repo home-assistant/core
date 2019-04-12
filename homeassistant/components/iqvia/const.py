@@ -20,6 +20,10 @@ TYPE_ASTHMA_TODAY = 'asthma_index_today'
 TYPE_ASTHMA_TOMORROW = 'asthma_index_tomorrow'
 TYPE_ASTHMA_YESTERDAY = 'asthma_index_yesterday'
 TYPE_DISEASE_FORECAST = 'disease_average_forecasted'
+TYPE_DISEASE_HISTORIC = 'disease_average_historical'
+TYPE_DISEASE_INDEX = 'disease_index'
+TYPE_DISEASE_TODAY = 'disease_index_today'
+TYPE_DISEASE_YESTERDAY = 'disease_index_yesterday'
 
 SENSORS = {
     TYPE_ALLERGY_FORECAST: (
@@ -41,5 +45,8 @@ SENSORS = {
     TYPE_ASTHMA_HISTORIC: (
         'HistoricalSensor', 'Asthma Index: Historical Average', 'mdi:flower'),
     TYPE_DISEASE_FORECAST: (
-        'ForecastSensor', 'Cold & Flu: Forecasted Average', 'mdi:snowflake')
+        'ForecastSensor', 'Cold & Flu: Forecasted Average', 'mdi:pill'),
+    TYPE_DISEASE_TODAY: ('IndexSensor', 'Cold & Flu Index: Today', 'mdi:pill'),
+    TYPE_DISEASE_YESTERDAY: (
+        'IndexSensor', 'Cold & Flu Index: Yesterday', 'mdi:pill'),
 }

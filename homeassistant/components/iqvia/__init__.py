@@ -20,7 +20,8 @@ from .const import (
     TYPE_ALLERGY_OUTLOOK, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
     TYPE_ALLERGY_YESTERDAY, TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_HISTORIC,
     TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-    TYPE_ASTHMA_YESTERDAY, TYPE_DISEASE_FORECAST)
+    TYPE_ASTHMA_YESTERDAY, TYPE_DISEASE_FORECAST, TYPE_DISEASE_HISTORIC,
+    TYPE_DISEASE_INDEX, TYPE_DISEASE_TODAY, TYPE_DISEASE_YESTERDAY)
 
 REQUIREMENTS = ['numpy==1.16.2', 'pyiqvia==0.2.0']
 
@@ -160,6 +161,15 @@ class IQVIAData:
                 await self._get_data(
                     self._client.disease.extended, TYPE_DISEASE_FORECAST)
 
+            if TYPE_DISEASE_HISTORIC in self.sensor_types:
+                await self._get_data(
+                    self._client.disease.historic, TYPE_DISEASE_HISTORIC)
+
+            if any(s in self.sensor_types
+                   for s in [TYPE_DISEASE_TODAY, TYPE_DISEASE_YESTERDAY]):
+                await self._get_data(
+                    self._client.disease.current, TYPE_DISEASE_INDEX)
+
             _LOGGER.debug("New data retrieved: %s", self.data)
         except InvalidZipError:
             _LOGGER.error(
@@ -191,6 +201,9 @@ class IQVIAEntity(Entity):
         if self._kind in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
                           TYPE_ASTHMA_YESTERDAY):
             return self._iqvia.data.get(TYPE_ASTHMA_INDEX) is not None
+
+        if self._kind in (TYPE_DISEASE_TODAY, TYPE_DISEASE_YESTERDAY):
+            return self._iqvia.data.get(TYPE_DISEASE_INDEX) is not None
 
         return self._iqvia.data.get(self._kind) is not None
 
