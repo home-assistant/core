@@ -30,7 +30,7 @@ def main():
     if not invalid:
         return 0
 
-    print("Found invalid manifests")
+    print("Found invalid integrations")
     print()
 
     for integration in sorted(invalid, key=lambda itg: itg.domain):
