@@ -25,6 +25,7 @@ REGISTER = {
     'app_id': 'io.homeassistant.mobile_app_test',
     'app_name': 'Mobile App Tests',
     'app_version': '1.0.0',
+    'device_id': 'test_1',
     'device_name': 'Test 1',
     'manufacturer': 'mobile_app',
     'model': 'Test',
@@ -38,6 +39,7 @@ REGISTER_CLEARTEXT = {
     'app_id': 'io.homeassistant.mobile_app_test',
     'app_name': 'Mobile App Tests',
     'app_version': '1.0.0',
+    'device_id': 'test_1',
     'device_name': 'Test 1',
     'manufacturer': 'mobile_app',
     'model': 'Test',
@@ -58,7 +60,8 @@ RENDER_TEMPLATE = {
 UPDATE = {
     'app_data': {'foo': 'bar'},
     'app_version': '2.0.0',
-    'device_name': 'Test 1',
+    'device_id': 'test_2',
+    'device_name': 'Test 2',
     'manufacturer': 'mobile_app',
     'model': 'Test',
     'os_version': '1.0'

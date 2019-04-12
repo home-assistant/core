@@ -1,5 +1,4 @@
 """Provides an HTTP API for mobile_app."""
-import uuid
 from typing import Dict
 
 from aiohttp.web import Response, Request
@@ -12,9 +11,9 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import (HTTP_CREATED, CONF_WEBHOOK_ID)
 
-from .const import (ATTR_DEVICE_ID, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_CLOUDHOOK_URL, CONF_REMOTE_UI_URL, CONF_SECRET,
-                    CONF_USER_ID, DOMAIN, REGISTRATION_SCHEMA)
+from .const import (ATTR_SUPPORTS_ENCRYPTION, CONF_CLOUDHOOK_URL,
+                    CONF_REMOTE_UI_URL, CONF_SECRET, CONF_USER_ID, DOMAIN,
+                    REGISTRATION_SCHEMA)
 
 from .helpers import supports_encryption
 

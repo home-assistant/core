@@ -10,10 +10,10 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME,
-                    ATTR_APP_VERSION, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
-                    ATTR_MODEL, ATTR_OS_VERSION, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_SECRET, CONF_USER_ID, DATA_BINARY_SENSOR,
-                    DATA_DELETED_IDS, DATA_SENSOR, DOMAIN)
+                    ATTR_APP_VERSION, ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
+                    ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
+                    ATTR_SUPPORTS_ENCRYPTION, CONF_SECRET, CONF_USER_ID,
+                    DATA_BINARY_SENSOR, DATA_DELETED_IDS, DATA_SENSOR, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,6 +114,7 @@ def safe_registration(registration: Dict) -> Dict:
         ATTR_APP_ID: registration[ATTR_APP_ID],
         ATTR_APP_NAME: registration[ATTR_APP_NAME],
         ATTR_APP_VERSION: registration[ATTR_APP_VERSION],
+        ATTR_DEVICE_ID: registration[ATTR_DEVICE_ID],
         ATTR_DEVICE_NAME: registration[ATTR_DEVICE_NAME],
         ATTR_MANUFACTURER: registration[ATTR_MANUFACTURER],
         ATTR_MODEL: registration[ATTR_MODEL],

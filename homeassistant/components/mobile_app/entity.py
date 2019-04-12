@@ -31,8 +31,9 @@ class MobileAppEntity(Entity):
                                     config[ATTR_SENSOR_UNIQUE_ID])
         self._entity_type = config[ATTR_SENSOR_TYPE]
         self.unsub_dispatcher = None
+        device_id = self._registration[ATTR_DEVICE_ID]
         self.entity_id = "{}.{}_{}_{}".format(self._entity_type, DOMAIN,
-                                              config[ATTR_DEVICE_ID],
+                                              device_id,
                                               config[ATTR_SENSOR_UNIQUE_ID])
 
     async def async_added_to_hass(self):

@@ -97,6 +97,8 @@ async def test_webhook_update_registration(webhook_client, hass_client):  # noqa
 
     assert update_resp.status == 200
     update_json = await update_resp.json()
+    assert update_json['device_id'] == 'test_2'
+    assert update_json['device_name'] == 'Test 2'
     assert update_json['app_version'] == '2.0.0'
     assert CONF_WEBHOOK_ID not in update_json
     assert CONF_SECRET not in update_json
