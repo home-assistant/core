@@ -16,8 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['aioharmony==0.1.11']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHANNEL = 'channel'

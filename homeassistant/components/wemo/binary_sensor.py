@@ -8,8 +8,6 @@ import requests
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.exceptions import PlatformNotReady
 
-DEPENDENCIES = ['wemo']
-
 _LOGGER = logging.getLogger(__name__)
 
 

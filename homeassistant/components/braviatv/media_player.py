@@ -15,8 +15,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['braviarc-homeassistant==0.3.7.dev0']
-
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
 CLIENTID_PREFIX = 'HomeAssistant'

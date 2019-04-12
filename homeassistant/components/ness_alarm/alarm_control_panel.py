@@ -13,8 +13,6 @@ from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['ness_alarm']
-
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):

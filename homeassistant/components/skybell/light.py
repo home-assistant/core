@@ -7,8 +7,6 @@ import homeassistant.util.color as color_util
 
 from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
-DEPENDENCIES = ['skybell']
-
 _LOGGER = logging.getLogger(__name__)
 
 

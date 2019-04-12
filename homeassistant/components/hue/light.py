@@ -16,7 +16,6 @@ from homeassistant.components.light import (
     Light)
 from homeassistant.util import color
 
-DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)

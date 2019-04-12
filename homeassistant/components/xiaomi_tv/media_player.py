@@ -10,8 +10,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymitv==1.4.3']
-
 DEFAULT_NAME = "Xiaomi TV"
 
 _LOGGER = logging.getLogger(__name__)

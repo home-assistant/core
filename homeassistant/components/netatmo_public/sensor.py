@@ -14,8 +14,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['netatmo']
-
 CONF_AREAS = 'areas'
 CONF_LAT_NE = 'lat_ne'
 CONF_LON_NE = 'lon_ne'

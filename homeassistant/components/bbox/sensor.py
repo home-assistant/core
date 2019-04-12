@@ -12,8 +12,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pybbox==0.0.5-alpha']
-
 _LOGGER = logging.getLogger(__name__)
 
 BANDWIDTH_MEGABITS_SECONDS = 'Mb/s'  # type: str

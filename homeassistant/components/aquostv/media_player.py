@@ -15,8 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sharp_aquos_rc==0.3.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Sharp Aquos TV'

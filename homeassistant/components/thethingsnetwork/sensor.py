@@ -22,8 +22,6 @@ ATTR_RAW = 'raw'
 ATTR_TIME = 'time'
 
 DEFAULT_TIMEOUT = 10
-DEPENDENCIES = ['thethingsnetwork']
-
 CONF_DEVICE_ID = 'device_id'
 CONF_VALUES = 'values'
 

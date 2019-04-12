@@ -14,8 +14,6 @@ from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.util import Throttle
 
-DEPENDENCIES = ['netatmo']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_HOMES = 'homes'

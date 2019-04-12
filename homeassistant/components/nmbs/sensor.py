@@ -23,8 +23,6 @@ CONF_STATION_TO = 'station_to'
 CONF_STATION_LIVE = 'station_live'
 CONF_EXCLUDE_VIAS = 'exclude_vias'
 
-REQUIREMENTS = ["pyrail==0.0.3"]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_FROM): cv.string,
     vol.Required(CONF_STATION_TO): cv.string,

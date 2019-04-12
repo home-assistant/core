@@ -13,8 +13,6 @@ from homeassistant.const import (
 
 from . import DATA_MELISSA
 
-DEPENDENCIES = ['melissa']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = (SUPPORT_FAN_MODE | SUPPORT_OPERATION_MODE |

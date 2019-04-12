@@ -11,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['mficlient==0.3.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSL = True

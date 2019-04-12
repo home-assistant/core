@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['bloomsky']
-
 # These are the available sensors
 SENSOR_TYPES = ['Temperature',
                 'Humidity',

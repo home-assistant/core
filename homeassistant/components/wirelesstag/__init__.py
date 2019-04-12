@@ -11,8 +11,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import (
     dispatcher_send)
 
-REQUIREMENTS = ['wirelesstagpy==0.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 

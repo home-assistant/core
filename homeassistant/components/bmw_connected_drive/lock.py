@@ -6,8 +6,6 @@ from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
 from . import DOMAIN as BMW_DOMAIN
 
-DEPENDENCIES = ['bmw_connected_drive']
-
 _LOGGER = logging.getLogger(__name__)
 
 

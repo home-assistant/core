@@ -13,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert, slugify
 
-REQUIREMENTS = ['fiblary3==0.1.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_ENERGY_KWH = 'current_energy_kwh'

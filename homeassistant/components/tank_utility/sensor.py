@@ -12,10 +12,6 @@ from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = [
-    "tank_utility==1.4.0"
-]
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(hours=1)

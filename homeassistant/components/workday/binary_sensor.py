@@ -9,8 +9,6 @@ from homeassistant.const import CONF_NAME, WEEKDAYS
 from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['holidays==0.9.10']
-
 _LOGGER = logging.getLogger(__name__)
 
 # List of all countries currently supported by holidays

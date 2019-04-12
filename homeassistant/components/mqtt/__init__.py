@@ -40,8 +40,6 @@ from .const import (
     CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY, CONF_STATE_TOPIC,
     ATTR_DISCOVERY_HASH)
 
-REQUIREMENTS = ['paho-mqtt==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt'

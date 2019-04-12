@@ -6,8 +6,6 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY
 
 from . import ATTR_NEW, CecDevice
 
-DEPENDENCIES = ['hdmi_cec']
-
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'

@@ -6,8 +6,6 @@ from homeassistant.components.switch import SwitchDevice
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
-DEPENDENCIES = ['homematicip_cloud']
-
 _LOGGER = logging.getLogger(__name__)
 
 

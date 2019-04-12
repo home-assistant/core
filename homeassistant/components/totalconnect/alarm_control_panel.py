@@ -13,8 +13,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
 
-REQUIREMENTS = ['total_connect_client==0.25']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Total Connect'

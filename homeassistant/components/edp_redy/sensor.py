@@ -8,8 +8,6 @@ from . import EDP_REDY, EdpRedyDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['edp_redy']
-
 # Load power in watts (W)
 ATTR_ACTIVE_POWER = 'active_power'
 

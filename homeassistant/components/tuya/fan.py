@@ -5,8 +5,6 @@ from homeassistant.const import STATE_OFF
 
 from . import DATA_TUYA, TuyaDevice
 
-DEPENDENCIES = ['tuya']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tuya fan platform."""

@@ -16,8 +16,6 @@ from . import ATTRIBUTION, DATA_RING, NOTIFICATION_ID
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
-DEPENDENCIES = ['ring', 'ffmpeg']
-
 FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
 
 _LOGGER = logging.getLogger(__name__)

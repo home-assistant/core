@@ -10,8 +10,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pylaunches==0.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Launch Library."
