@@ -6,7 +6,7 @@ import inspect
 import logging
 import threading
 import traceback
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Coroutine, Optional
 
 from .async_ import run_coroutine_threadsafe
 
@@ -173,3 +173,21 @@ def catch_log_exception(
                 log_exception(*args)
         wrapper_func = wrapper
     return wrapper_func
+
+
+def async_create_catching_coro(
+        target: Coroutine, catch=False) -> Coroutine:
+    """Wrap a coroutine to catch and log exceptions.
+
+    The exception will be logged together with a stacktrace of where the
+    coroutine was wrapped.
+
+    target: target coroutine.
+    """
+    trace = traceback.extract_stack()
+    wrapped_target = catch_log_exception(
+        target, lambda *args:
+        "Exception in {} called from\n {}".format(
+            target.__name__, "".join(traceback.format_list(trace))))
+
+    return wrapped_target
