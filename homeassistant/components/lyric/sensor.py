@@ -116,7 +116,7 @@ class LyricSensor(Entity):
                     self._state = 'Following Schedule'
                 elif status == 'HoldUntil':
                     self._state = 'Held until {}'.format(
-                        self.device.nextPeriodTime)
+                        self.device.nextPeriodTime[:-3])
                 elif status == 'PermanentHold':
                     self._state = 'Held Permanently'
                 elif status == 'VacationHold':
