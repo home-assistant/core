@@ -3,6 +3,7 @@ DOMAIN = 'homekit_controller'
 
 KNOWN_DEVICES = "{}-devices".format(DOMAIN)
 CONTROLLER = "{}-controller".format(DOMAIN)
+ENTITY_MAP = '{}-entity-map'.format(DOMAIN)
 
 HOMEKIT_DIR = '.homekit'
 PAIRING_FILE = 'pairing.json'
