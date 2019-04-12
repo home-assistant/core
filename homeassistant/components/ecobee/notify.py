@@ -10,7 +10,6 @@ from homeassistant.components.notify import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['ecobee']
 
 CONF_INDEX = 'index'
 

@@ -6,7 +6,6 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
-DEPENDENCIES = ['lupusec']
 
 SCAN_INTERVAL = timedelta(seconds=2)
 

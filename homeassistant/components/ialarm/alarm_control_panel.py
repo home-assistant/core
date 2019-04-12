@@ -12,7 +12,6 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyialarm==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

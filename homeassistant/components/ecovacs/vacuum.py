@@ -11,7 +11,6 @@ from . import ECOVACS_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['ecovacs']
 
 SUPPORT_ECOVACS = (
     SUPPORT_BATTERY | SUPPORT_RETURN_HOME | SUPPORT_CLEAN_SPOT |

@@ -11,7 +11,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['konnected']
 
 
 async def async_setup_platform(

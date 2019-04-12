@@ -10,7 +10,6 @@ from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import mqtt
 
 DOMAIN = 'snips'
-DEPENDENCIES = ['mqtt']
 
 CONF_INTENTS = 'intents'
 CONF_ACTION = 'action'

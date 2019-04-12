@@ -3,7 +3,6 @@ from homeassistant.components.scene import Scene
 
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
 
 
 async def async_setup_platform(

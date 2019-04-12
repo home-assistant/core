@@ -12,7 +12,6 @@ from .core.const import (
 )
 from .entity import ZhaEntity
 
-DEPENDENCIES = ['zha']
 
 _LOGGER = logging.getLogger(__name__)
 

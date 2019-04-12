@@ -16,7 +16,6 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-clementine-remote==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

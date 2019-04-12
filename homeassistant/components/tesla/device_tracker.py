@@ -8,7 +8,6 @@ from . import DOMAIN as TESLA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['tesla']
 
 
 def setup_scanner(hass, config, see, discovery_info=None):

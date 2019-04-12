@@ -11,7 +11,6 @@ import homeassistant.util.color as color_util
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
 
 
 async def async_setup_platform(

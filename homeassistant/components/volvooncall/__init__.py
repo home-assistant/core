@@ -21,7 +21,6 @@ DOMAIN = 'volvooncall'
 
 DATA_KEY = DOMAIN
 
-REQUIREMENTS = ['volvooncall==0.8.7']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -11,7 +11,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.25']
 
 DOMAIN = 'tesla'
 

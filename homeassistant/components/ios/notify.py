@@ -14,7 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PUSH_URL = "https://ios-push.home-assistant.io/push"
 
-DEPENDENCIES = ["ios"]
 
 
 # pylint: disable=invalid-name

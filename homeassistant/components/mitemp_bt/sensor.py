@@ -12,7 +12,6 @@ from homeassistant.const import (
 )
 
 
-REQUIREMENTS = ['mitemp_bt==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

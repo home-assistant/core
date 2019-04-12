@@ -11,7 +11,6 @@ from homeassistant.util import convert
 
 from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
-DEPENDENCIES = ['vera']
 
 _LOGGER = logging.getLogger(__name__)
 

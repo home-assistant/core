@@ -8,7 +8,6 @@ from homeassistant.const import (
 
 from . import ATTRIBUTION, DOMAIN as ABODE_DOMAIN, AbodeDevice
 
-DEPENDENCIES = ['abode']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -15,7 +15,6 @@ ATTR_CLEAN_ID = 'clean_id'
 ATTR_FULL_CLEAN_TYPE = 'full_clean_type'
 ATTR_POSITION = 'position'
 
-DEPENDENCIES = ['dyson']
 
 DYSON_360_EYE_DEVICES = "dyson_360_eye_devices"
 

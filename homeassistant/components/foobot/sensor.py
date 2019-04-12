@@ -16,7 +16,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 
-REQUIREMENTS = ['foobot_async==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 

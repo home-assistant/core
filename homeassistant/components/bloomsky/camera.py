@@ -5,7 +5,6 @@ import requests
 
 from homeassistant.components.camera import Camera
 
-DEPENDENCIES = ['bloomsky']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

@@ -11,7 +11,6 @@ from . import NEATO_LOGIN, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['neato']
 
 SCAN_INTERVAL = timedelta(minutes=10)
 

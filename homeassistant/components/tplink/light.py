@@ -12,7 +12,6 @@ from homeassistant.util.color import (
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
 
-DEPENDENCIES = ['tplink']
 
 PARALLEL_UPDATES = 0
 

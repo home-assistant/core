@@ -8,7 +8,6 @@ from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['apcaccess==0.0.13']
 
 _LOGGER = logging.getLogger(__name__)
 

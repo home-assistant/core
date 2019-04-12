@@ -10,7 +10,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['nest']
 
 BINARY_TYPES = {'online': 'connectivity'}
 

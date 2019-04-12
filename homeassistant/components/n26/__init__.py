@@ -12,7 +12,6 @@ from homeassistant.util import Throttle
 
 from .const import DATA, DOMAIN
 
-REQUIREMENTS = ['n26==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 

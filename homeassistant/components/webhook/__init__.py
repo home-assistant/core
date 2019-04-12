@@ -12,7 +12,6 @@ from homeassistant.components.http.view import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['http']
 
 DOMAIN = 'webhook'
 

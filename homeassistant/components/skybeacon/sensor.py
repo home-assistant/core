@@ -11,7 +11,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pygatt[GATTTOOL]==3.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['spotipy-homeassistant==2.4.4.dev1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +34,6 @@ CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
 
 DEFAULT_CACHE_PATH = '.spotify-token-cache'
 DEFAULT_NAME = 'Spotify'
-DEPENDENCIES = ['http']
 DOMAIN = 'spotify'
 
 ICON = 'mdi:spotify'

@@ -5,7 +5,6 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import InsteonEntity
 
-DEPENDENCIES = ['insteon']
 
 _LOGGER = logging.getLogger(__name__)
 

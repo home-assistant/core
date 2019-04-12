@@ -11,7 +11,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['greeneye_monitor==1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

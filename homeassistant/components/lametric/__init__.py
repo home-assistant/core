@@ -5,7 +5,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['lmnotify==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

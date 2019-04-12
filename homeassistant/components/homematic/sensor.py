@@ -7,7 +7,6 @@ from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['homematic']
 
 HM_STATE_HA_CAST = {
     'RotaryHandleSensor': {0: 'closed', 1: 'tilted', 2: 'open'},

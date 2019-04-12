@@ -7,7 +7,6 @@ from homeassistant.components.binary_sensor import (
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
-DEPENDENCIES = ['lupusec']
 
 SCAN_INTERVAL = timedelta(seconds=2)
 

@@ -32,7 +32,6 @@ from .handlers import HANDLERS
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['konnected==0.1.5']
 
 _BINARY_SENSOR_SCHEMA = vol.All(
     vol.Schema({
@@ -96,7 +95,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DEPENDENCIES = ['http']
 
 
 async def async_setup(hass, config):

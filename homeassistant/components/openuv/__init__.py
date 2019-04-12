@@ -15,7 +15,6 @@ from homeassistant.helpers.entity import Entity
 from .config_flow import configured_instances
 from .const import DOMAIN
 
-REQUIREMENTS = ['pyopenuv==1.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -24,7 +24,6 @@ from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['mutagen==1.42.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +42,6 @@ CONF_BASE_URL = 'base_url'
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = 'tts'
 DEFAULT_TIME_MEMORY = 300
-DEPENDENCIES = ['http']
 DOMAIN = 'tts'
 
 MEM_CACHE_FILENAME = 'filename'

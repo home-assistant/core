@@ -17,7 +17,6 @@ from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
 
 CONF_SCHEMA = 'schema'
 

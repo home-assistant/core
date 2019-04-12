@@ -6,7 +6,6 @@ from homeassistant.core import callback
 
 from . import DATA_VELUX
 
-DEPENDENCIES = ['velux']
 
 
 async def async_setup_platform(

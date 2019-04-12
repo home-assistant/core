@@ -14,7 +14,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['russound_rio==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 

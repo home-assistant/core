@@ -5,7 +5,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import SENSE_DATA
 
-DEPENDENCIES = ['sense']
 
 _LOGGER = logging.getLogger(__name__)
 

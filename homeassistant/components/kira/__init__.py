@@ -12,7 +12,6 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pykira==0.1.1']
 
 DOMAIN = 'kira'
 

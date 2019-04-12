@@ -13,7 +13,6 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pybluez==0.22', 'bt_proximity==0.1.2']
 
 BT_PREFIX = 'BT_'
 

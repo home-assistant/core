@@ -7,7 +7,6 @@ from .const import NEW_LIGHT, POWER_PLUGS, SIRENS
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-DEPENDENCIES = ['deconz']
 
 
 async def async_setup_platform(

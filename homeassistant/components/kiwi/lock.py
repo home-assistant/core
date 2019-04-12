@@ -11,7 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers.event import async_call_later
 from homeassistant.core import callback
 
-REQUIREMENTS = ['kiwiki-client==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

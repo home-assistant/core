@@ -7,7 +7,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import DATA_SMAPPEE
 
-DEPENDENCIES = ['smappee']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,7 +3,6 @@ from homeassistant.components.scene import Scene
 
 from . import _LOGGER, DATA_VELUX
 
-DEPENDENCIES = ['velux']
 
 
 async def async_setup_platform(

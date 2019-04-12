@@ -11,7 +11,6 @@ from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 CONF_STATE_ADDRESS = 'state_address'
 
 DEFAULT_NAME = 'KNX Switch'
-DEPENDENCIES = ['knx']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADDRESS): cv.string,

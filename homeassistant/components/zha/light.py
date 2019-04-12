@@ -17,7 +17,6 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['zha']
 
 DEFAULT_DURATION = 5
 

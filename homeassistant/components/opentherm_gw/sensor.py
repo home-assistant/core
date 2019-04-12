@@ -16,7 +16,6 @@ UNIT_KW = 'kW'
 UNIT_L_MIN = 'L/min'
 UNIT_PERCENT = '%'
 
-DEPENDENCIES = ['opentherm_gw']
 
 
 async def async_setup_platform(

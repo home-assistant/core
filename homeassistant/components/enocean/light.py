@@ -15,7 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SENDER_ID = 'sender_id'
 
 DEFAULT_NAME = 'EnOcean Light'
-DEPENDENCIES = ['enocean']
 
 SUPPORT_ENOCEAN = SUPPORT_BRIGHTNESS
 

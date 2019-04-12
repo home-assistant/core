@@ -5,7 +5,6 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
-DEPENDENCIES = ['homekit_controller']
 
 OUTLET_IN_USE = "outlet_in_use"
 

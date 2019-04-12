@@ -51,7 +51,6 @@ from .reproduce_state import async_reproduce_states  # noqa
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
 
-DEPENDENCIES = ['http']
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
