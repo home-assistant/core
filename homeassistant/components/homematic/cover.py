@@ -9,7 +9,7 @@ from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['homematic']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

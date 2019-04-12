@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'gpslogger'
-
+DEPENDENCIES = ['webhook']
 
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 

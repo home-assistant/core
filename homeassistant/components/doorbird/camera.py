@@ -11,7 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN as DOORBIRD_DOMAIN
 
-
+DEPENDENCIES = ['doorbird']
 
 _CAMERA_LAST_VISITOR = "{} Last Ring"
 _CAMERA_LAST_MOTION = "{} Last Motion"

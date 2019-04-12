@@ -13,7 +13,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-
+REQUIREMENTS = ['neurio==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 

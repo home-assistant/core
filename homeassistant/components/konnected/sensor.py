@@ -13,7 +13,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['konnected']
 
 SENSOR_TYPES = {
     DEVICE_CLASS_TEMPERATURE: ['Temperature', TEMP_CELSIUS],

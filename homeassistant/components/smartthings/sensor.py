@@ -10,7 +10,7 @@ from homeassistant.const import (
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-
+DEPENDENCIES = ['smartthings']
 
 Map = namedtuple("map", "attribute name default_unit device_class")
 

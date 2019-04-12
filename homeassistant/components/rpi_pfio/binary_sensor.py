@@ -18,7 +18,7 @@ CONF_SETTLE_TIME = 'settle_time'
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_SETTLE_TIME = 20
 
-
+DEPENDENCIES = ['rpi_pfio']
 
 PORT_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,

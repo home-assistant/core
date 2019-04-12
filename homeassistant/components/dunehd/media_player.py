@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-
+REQUIREMENTS = ['pdunehd==1.3']
 
 DEFAULT_NAME = 'DuneHD'
 

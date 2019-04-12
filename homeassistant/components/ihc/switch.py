@@ -6,7 +6,7 @@ from .const import CONF_OFF_ID, CONF_ON_ID
 from .ihcdevice import IHCDevice
 from .util import async_pulse, async_set_bool
 
-
+DEPENDENCIES = ['ihc']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

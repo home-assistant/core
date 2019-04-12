@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_COIL = 'coil'
 CONF_COILS = 'coils'
 
-
+DEPENDENCIES = ['modbus']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COILS): [{

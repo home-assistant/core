@@ -4,7 +4,7 @@ import requests.exceptions
 from homeassistant.components import remote
 from homeassistant.const import (CONF_HOST)
 
-
+DEPENDENCIES = ['roku']
 
 
 async def async_setup_platform(

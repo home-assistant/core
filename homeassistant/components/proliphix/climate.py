@@ -9,7 +9,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
-
+REQUIREMENTS = ['proliphix==0.4.1']
 
 ATTR_FAN = 'fan'
 

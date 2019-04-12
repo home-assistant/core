@@ -8,7 +8,7 @@ from . import DOMAIN as DOVADO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['dovado']
 
 
 def get_service(hass, config, discovery_info=None):

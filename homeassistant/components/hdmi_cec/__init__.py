@@ -17,7 +17,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-
+REQUIREMENTS = ['pyCEC==0.4.13']
 
 DOMAIN = 'hdmi_cec'
 

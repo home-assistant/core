@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['bbb_gpio']
 
 CONF_PINS = 'pins'
 CONF_INITIAL = 'initial'

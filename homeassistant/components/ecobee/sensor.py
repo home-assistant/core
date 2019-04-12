@@ -4,7 +4,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
-
+DEPENDENCIES = ['ecobee']
 
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 

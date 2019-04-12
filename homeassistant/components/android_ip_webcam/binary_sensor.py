@@ -3,7 +3,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import CONF_HOST, CONF_NAME, DATA_IP_WEBCAM, KEY_MAP, AndroidIPCamEntity
 
-
+DEPENDENCIES = ['android_ip_webcam']
 
 
 async def async_setup_platform(

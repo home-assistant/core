@@ -10,7 +10,7 @@ from homeassistant.components.notify import (ATTR_DATA, ATTR_TARGET,
                                              PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
-
+REQUIREMENTS = ['hipnotify==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 

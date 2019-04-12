@@ -22,7 +22,7 @@ from . import (
     YEELIGHT_FLOW_TRANSITION_SCHEMA, ACTION_RECOVER, CONF_FLOW_PARAMS,
     ATTR_ACTION, ATTR_COUNT)
 
-
+DEPENDENCIES = ['yeelight']
 
 _LOGGER = logging.getLogger(__name__)
 

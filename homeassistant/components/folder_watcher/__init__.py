@@ -8,7 +8,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-
+REQUIREMENTS = ['watchdog==0.8.3']
 
 _LOGGER = logging.getLogger(__name__)
 

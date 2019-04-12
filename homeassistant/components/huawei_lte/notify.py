@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 
 from ..huawei_lte import DATA_KEY
 
-
+DEPENDENCIES = ['huawei_lte']
 
 _LOGGER = logging.getLogger(__name__)
 

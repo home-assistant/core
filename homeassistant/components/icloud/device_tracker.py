@@ -17,7 +17,7 @@ from homeassistant.util.location import distance
 
 _LOGGER = logging.getLogger(__name__)
 
-
+REQUIREMENTS = ['pyicloud==0.9.1']
 
 CONF_ACCOUNTNAME = 'account_name'
 CONF_MAX_INTERVAL = 'max_interval'

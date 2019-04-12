@@ -14,7 +14,7 @@ from . import DOMAIN, UPDATE_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['aqualogic']
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = ['%', '%']

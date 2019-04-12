@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-
+REQUIREMENTS = ['pynetio==0.1.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ CONF_OUTLETS = 'outlets'
 
 DEFAULT_PORT = 1234
 DEFAULT_USERNAME = 'admin'
-
+DEPENDENCIES = ['http']
 Device = namedtuple('device', ['netio', 'entities'])
 DEVICES = {}
 

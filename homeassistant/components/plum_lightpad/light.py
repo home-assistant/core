@@ -5,7 +5,7 @@ import homeassistant.util.color as color_util
 
 from . import PLUM_DATA
 
-
+DEPENDENCIES = ['plum_lightpad']
 
 
 async def async_setup_platform(

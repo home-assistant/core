@@ -17,7 +17,7 @@ from homeassistant.util import dt, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['mqtt']
 
 ATTR_DEVICE_ID = 'device_id'
 ATTR_DISTANCE = 'distance'

@@ -12,7 +12,7 @@ from . import DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, SIGNAL_SENSOR_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['konnected']
 
 
 async def async_setup_platform(

@@ -6,7 +6,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 
-
+DEPENDENCIES = ['cloud']
 
 
 WAIT_UNTIL_CHANGE = 3

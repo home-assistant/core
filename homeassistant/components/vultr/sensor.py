@@ -15,7 +15,7 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Vultr {} {}'
-
+DEPENDENCIES = ['vultr']
 
 MONITORED_CONDITIONS = {
     ATTR_CURRENT_BANDWIDTH_USED: ['Current Bandwidth Used', 'GB',

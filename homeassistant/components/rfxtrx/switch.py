@@ -12,7 +12,7 @@ from . import (
     CONF_AUTOMATIC_ADD, CONF_DEVICES, CONF_FIRE_EVENT, CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS)
 
-
+DEPENDENCIES = ['rfxtrx']
 
 _LOGGER = logging.getLogger(__name__)
 

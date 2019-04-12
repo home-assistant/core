@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['enocean']
 DEFAULT_NAME = 'EnOcean binary sensor'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

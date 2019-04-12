@@ -16,7 +16,7 @@ from . import (
     ATTR_STATE_LOCKED, ATTR_STATE_SUMMER_MODE, ATTR_STATE_WINDOW_OPEN,
     DOMAIN as FRITZBOX_DOMAIN)
 
-
+DEPENDENCIES = ['fritzbox']
 
 _LOGGER = logging.getLogger(__name__)
 

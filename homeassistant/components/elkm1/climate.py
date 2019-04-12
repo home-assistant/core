@@ -9,7 +9,7 @@ from homeassistant.const import PRECISION_WHOLE, STATE_ON
 
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
-
+DEPENDENCIES = [ELK_DOMAIN]
 
 
 async def async_setup_platform(hass, config, async_add_entities,

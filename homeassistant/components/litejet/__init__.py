@@ -7,7 +7,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import CONF_PORT
 
-
+REQUIREMENTS = ['pylitejet==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

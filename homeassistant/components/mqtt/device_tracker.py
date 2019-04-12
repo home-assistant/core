@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import CONF_QOS
 
-
+DEPENDENCIES = ['mqtt']
 
 _LOGGER = logging.getLogger(__name__)
 

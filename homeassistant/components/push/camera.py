@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
-
+DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
 

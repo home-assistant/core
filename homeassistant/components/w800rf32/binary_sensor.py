@@ -15,7 +15,7 @@ from . import W800RF32_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['w800rf32']
 CONF_OFF_DELAY = 'off_delay'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

@@ -11,7 +11,7 @@ from . import (
     ALLOWED_WATERING_TIME, ATTRIBUTION, CONF_WATERING_TIME, DATA_RAINCLOUD,
     DEFAULT_WATERING_TIME, SWITCHES, RainCloudEntity)
 
-
+DEPENDENCIES = ['raincloud']
 
 _LOGGER = logging.getLogger(__name__)
 

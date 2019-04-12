@@ -12,7 +12,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType  # noqa
 
-
+REQUIREMENTS = ['elkm1-lib==0.7.13']
 
 DOMAIN = 'elkm1'
 

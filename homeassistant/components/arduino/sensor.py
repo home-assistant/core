@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PINS = 'pins'
 CONF_TYPE = 'analog'
 
-
+DEPENDENCIES = ['arduino']
 
 PIN_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,

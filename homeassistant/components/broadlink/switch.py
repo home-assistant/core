@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, slugify
 from homeassistant.util.dt import utcnow
 
-
+REQUIREMENTS = ['broadlink==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 

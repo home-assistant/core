@@ -7,7 +7,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-
+REQUIREMENTS = ['python-twitch-client==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 

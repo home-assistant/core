@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-
+REQUIREMENTS = ['python-family-hub-local==0.0.2']
 
 DEFAULT_NAME = 'FamilyHub Camera'
 

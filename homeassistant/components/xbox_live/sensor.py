@@ -8,7 +8,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 
-
+REQUIREMENTS = ['xboxapi==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

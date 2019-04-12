@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['zabbix']
 
 _CONF_TRIGGERS = 'triggers'
 _CONF_HOSTIDS = 'hostids'

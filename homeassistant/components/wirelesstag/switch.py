@@ -9,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as WIRELESSTAG_DOMAIN, WirelessTagBaseSensor
 
-
+DEPENDENCIES = ['wirelesstag']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ from homeassistant.helpers import config_validation as cv
 
 from . import DATA_RAINBIRD
 
-
+DEPENDENCIES = ['rainbird']
 
 DOMAIN = 'rainbird'
 _LOGGER = logging.getLogger(__name__)

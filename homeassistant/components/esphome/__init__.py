@@ -32,7 +32,7 @@ if TYPE_CHECKING:
         ServiceCall, UserService
 
 DOMAIN = 'esphome'
-
+REQUIREMENTS = ['aioesphomeapi==2.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

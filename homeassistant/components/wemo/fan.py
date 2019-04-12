@@ -14,7 +14,7 @@ from homeassistant.components.fan import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import ATTR_ENTITY_ID
 
-
+DEPENDENCIES = ['wemo']
 SCAN_INTERVAL = timedelta(seconds=10)
 DATA_KEY = 'fan.wemo'
 

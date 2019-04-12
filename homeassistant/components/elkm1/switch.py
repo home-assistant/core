@@ -3,7 +3,7 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
-
+DEPENDENCIES = [ELK_DOMAIN]
 
 
 async def async_setup_platform(

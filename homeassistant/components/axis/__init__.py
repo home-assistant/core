@@ -11,7 +11,7 @@ from .config_flow import DEVICE_SCHEMA
 from .const import CONF_CAMERA, CONF_EVENTS, DEFAULT_TRIGGER_TIME, DOMAIN
 from .device import AxisNetworkDevice, get_device
 
-
+REQUIREMENTS = ['axis==19']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.schema_with_slug_keys(DEVICE_SCHEMA),

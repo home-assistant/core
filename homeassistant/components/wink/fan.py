@@ -9,7 +9,7 @@ from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['wink']
 
 SPEED_AUTO = 'auto'
 SPEED_LOWEST = 'lowest'

@@ -12,7 +12,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 from homeassistant.util import slugify
 
-
+REQUIREMENTS = ['pyhomeworks==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

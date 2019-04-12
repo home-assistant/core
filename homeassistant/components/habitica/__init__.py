@@ -9,7 +9,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-
+REQUIREMENTS = ['habitipy==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

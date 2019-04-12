@@ -6,7 +6,7 @@ from homeassistant.core import callback
 
 from . import DOMAIN as QWIKSWITCH, QSEntity
 
-
+DEPENDENCIES = [QWIKSWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -30,8 +30,8 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-
+DEPENDENCIES = ['lifx']
+REQUIREMENTS = ['aiolifx_effects==0.2.1']
 
 SCAN_INTERVAL = timedelta(seconds=10)
 

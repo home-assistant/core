@@ -10,7 +10,7 @@ from homeassistant.const import (
 from . import (
     ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED, DOMAIN as FRITZBOX_DOMAIN)
 
-
+DEPENDENCIES = ['fritzbox']
 
 _LOGGER = logging.getLogger(__name__)
 

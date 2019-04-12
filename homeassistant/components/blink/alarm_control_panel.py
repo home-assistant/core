@@ -9,7 +9,7 @@ from . import BLINK_DATA, DEFAULT_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['blink']
 
 ICON = 'mdi:security'
 

@@ -14,7 +14,7 @@ import homeassistant.util.dt as dt_util
 
 from . import ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES
 
-
+DEPENDENCIES = ['apple_tv']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ from homeassistant.components.light import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['litejet']
 
 ATTR_NUMBER = 'number'
 

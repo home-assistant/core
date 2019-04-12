@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, UPDATE_TOPIC
 
-
+DEPENDENCIES = ['aqualogic']
 
 _LOGGER = logging.getLogger(__name__)
 

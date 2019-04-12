@@ -14,7 +14,7 @@ from . import (
     ATTR_DATA_TYPE, ATTR_FIRE_EVENT, CONF_AUTOMATIC_ADD, CONF_DATA_TYPE,
     CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
 
-
+DEPENDENCIES = ['rfxtrx']
 
 _LOGGER = logging.getLogger(__name__)
 

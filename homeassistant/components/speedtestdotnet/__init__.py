@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
 
-
+REQUIREMENTS = ['speedtest-cli==2.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

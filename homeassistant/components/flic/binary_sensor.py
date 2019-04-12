@@ -11,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 
-
+REQUIREMENTS = ['pyflic-homeassistant==0.4.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 

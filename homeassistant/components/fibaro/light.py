@@ -14,7 +14,7 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['fibaro']
 
 
 def scaleto255(value):

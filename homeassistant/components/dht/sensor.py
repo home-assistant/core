@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-
+REQUIREMENTS = ['Adafruit-DHT==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

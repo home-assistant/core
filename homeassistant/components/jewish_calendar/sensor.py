@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-
+REQUIREMENTS = ['hdate==0.8.7']
 
 _LOGGER = logging.getLogger(__name__)
 

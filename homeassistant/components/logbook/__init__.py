@@ -31,7 +31,7 @@ CONF_DOMAINS = 'domains'
 CONF_ENTITIES = 'entities'
 CONTINUOUS_DOMAINS = ['proximity', 'sensor']
 
-
+DEPENDENCIES = ['recorder', 'frontend']
 
 DOMAIN = 'logbook'
 

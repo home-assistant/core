@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = [apcupsd.DOMAIN]
 
 SENSOR_PREFIX = 'UPS '
 SENSOR_TYPES = {

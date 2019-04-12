@@ -11,7 +11,7 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['tesla']
 
 OPERATION_LIST = [STATE_ON, STATE_OFF]
 

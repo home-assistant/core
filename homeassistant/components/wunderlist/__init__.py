@@ -7,7 +7,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, CONF_ACCESS_TOKEN)
 
-
+REQUIREMENTS = ['wunderpy2==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 

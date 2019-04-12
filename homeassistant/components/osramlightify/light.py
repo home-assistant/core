@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-
+REQUIREMENTS = ['lightify==1.0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 

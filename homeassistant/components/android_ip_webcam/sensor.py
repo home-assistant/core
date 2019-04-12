@@ -5,7 +5,7 @@ from . import (
     CONF_HOST, CONF_NAME, CONF_SENSORS, DATA_IP_WEBCAM, ICON_MAP, KEY_MAP,
     AndroidIPCamEntity)
 
-
+DEPENDENCIES = ['android_ip_webcam']
 
 
 async def async_setup_platform(

@@ -5,7 +5,7 @@ from homeassistant.helpers.entity import ToggleEntity
 
 from . import DOMAIN, WinkDevice
 
-
+DEPENDENCIES = ['wink']
 
 _LOGGER = logging.getLogger(__name__)
 

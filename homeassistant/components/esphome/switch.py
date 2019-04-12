@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     # pylint: disable=unused-import
     from aioesphomeapi import SwitchInfo, SwitchState  # noqa
 
-
+DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 

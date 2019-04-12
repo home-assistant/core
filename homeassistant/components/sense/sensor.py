@@ -15,7 +15,7 @@ ACTIVE_TYPE = 'active'
 
 CONSUMPTION_NAME = 'Usage'
 
-
+DEPENDENCIES = ['sense']
 
 ICON = 'mdi:flash'
 

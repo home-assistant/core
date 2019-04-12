@@ -15,7 +15,7 @@ from . import (
     CONF_ALLOWED_CHAT_IDS, PLATFORM_SCHEMA, BaseTelegramBotEntity,
     initialize_bot)
 
-
+DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 

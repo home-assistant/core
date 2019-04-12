@@ -15,7 +15,7 @@ import homeassistant.util.color as color_util
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.exceptions import PlatformNotReady
 
-
+REQUIREMENTS = ['pyeverlights==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

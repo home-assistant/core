@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import Throttle
 
-
+REQUIREMENTS = ['pizzapi==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ ATTR_ORDER_CODES = 'codes'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 MIN_TIME_BETWEEN_STORE_UPDATES = timedelta(minutes=3330)
 
-
+DEPENDENCIES = ['http']
 
 _ORDERS_SCHEMA = vol.Schema({
     vol.Required(ATTR_ORDER_NAME): cv.string,

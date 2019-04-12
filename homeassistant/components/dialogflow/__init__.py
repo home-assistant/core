@@ -10,7 +10,7 @@ from homeassistant.helpers import intent, template, config_entry_flow
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['webhook']
 DOMAIN = 'dialogflow'
 
 SOURCE = "Home Assistant Dialogflow"

@@ -13,7 +13,7 @@ from homeassistant.const import (
 
 from . import DATA_MELISSA
 
-
+DEPENDENCIES = ['melissa']
 
 _LOGGER = logging.getLogger(__name__)
 

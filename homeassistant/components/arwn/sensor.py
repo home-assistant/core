@@ -10,7 +10,7 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['mqtt']
 DOMAIN = 'arwn'
 
 DATA_ARWN = 'arwn'

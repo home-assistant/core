@@ -15,7 +15,7 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.json import load_json, save_json
 
-
+REQUIREMENTS = ['pynanoleaf==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

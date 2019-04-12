@@ -16,7 +16,7 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
+DEPENDENCIES = ['satel_integra']
 
 
 async def async_setup_platform(
