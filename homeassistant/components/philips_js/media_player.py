@@ -10,7 +10,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
-    MEDIA_TYPE_CHANNEL)
+    MEDIA_TYPE_CHANNEL, SUPPORT_PLAY_MEDIA)
 from homeassistant.const import (
     CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
@@ -190,6 +190,20 @@ class PhilipsTV(MediaPlayerDevice):
             'channel_list': list(self._channels.values())
         }
 
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        _LOGGER.debug(
+            "Call play media type <%s>, Id <%s>", media_type, media_id)
+
+        if media_type == MEDIA_TYPE_CHANNEL:
+            channel_id = _inverted(self._channels).get(media_id)
+            if channel_id:
+                self._tv.setChannel(channel_id)
+                self._update_soon(DELAY_ACTION_DEFAULT)
+            else:
+                _LOGGER.error("Unable to find channel <%s>", media_id)
+        else:
+            _LOGGER.error("Unsupported media type <%s>", media_type)
 
     def update(self):
         """Get the latest data and update device state."""
