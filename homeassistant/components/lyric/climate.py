@@ -142,6 +142,7 @@ class LyricThermostat(ClimateDevice):
         self._mode = None
         self._min_temperature = None
         self._max_temperature = None
+        self._next_period_time = None
         self._schedule_type = None
         self._schedule_sub_type = None
         self._current_schedule_period = None
@@ -273,6 +274,8 @@ class LyricThermostat(ClimateDevice):
             attrs["current_schedule_period"] = self._current_schedule_period
         if self._humidity:
             attrs["humidity"] = self._humidity
+        if self._next_period_time:
+            attrs["next_period_time"] = self._next_period_time
         if self._setpoint_status:
             attrs["setpoint_status"] = self._setpoint_status
         if self._dual_setpoint:
@@ -291,6 +294,7 @@ class LyricThermostat(ClimateDevice):
             self._humidity = self.device.indoorHumidity
             self._temperature = self.device.indoorTemperature
             self._mode = self.device.operationMode.lower()
+            self._next_period_time = self.device.nextPeriodTime
             self._setpoint_status = self.device.thermostatSetpointStatus
             self._target_temperature = self.device.temperatureSetpoint
             self._target_temp_heat = self.device.heatSetpoint

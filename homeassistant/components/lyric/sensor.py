@@ -49,6 +49,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devices.append(LyricSensor(
                 location, device, hass, 'displayedOutdoorHumidity',
                 'Humidity Outside', '%', 'mdi:water-percent'))
+        if device.nextPeriodTime:
+            devices.append(LyricSensor(
+                location, device, hass, 'nextPeriodTime',
+                'Next Period Time', '', 'mdi:clock'))
+        if device.thermostatSetpointStatus:
+            devices.append(LyricSensor(
+                location, device, hass, 'thermostatSetpointStatus',
+                'Status', '', 'mdi:thermostat'))
 
     add_devices(devices, True)
 
@@ -102,5 +110,17 @@ class LyricSensor(Entity):
     def update(self):
         """Get values from lyric."""
         if self.device:
-            self._state = getattr(self.device, self.key)
+            if self.key == 'thermostatSetpointStatus':
+                status = getattr(self.device, self.key)
+                if status == 'NoHold':
+                    self._state = 'Following Schedule'
+                elif status == 'HoldUntil':
+                    self._state = 'Held until {}'.format(
+                        self.device.nextPeriodTime)
+                elif status == 'PermanentHold':
+                    self._state = 'Held Permanently'
+                elif status == 'VacationHold':
+                    self._state = 'Holiday'
+            else:
+                self._state = getattr(self.device, self.key)
             self._available = True
