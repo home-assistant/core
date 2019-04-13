@@ -34,7 +34,6 @@ homeassistant/components/axis/* @kane610
 homeassistant/components/azuredns/* @Cloudenius
 
 # B
-homeassistant/components/bitcoin/sensor.py @fabaff
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmw_connected_drive/* @ChristianKuehnel
