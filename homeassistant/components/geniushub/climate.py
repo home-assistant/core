@@ -59,16 +59,13 @@ class GeniusClimate(ClimateDevice):
 
     def __init__(self, client, zone):
         """Initialize the climate device."""
-        from geniushubclient.const import (  # noqa; pylint: disable=no-name-in-module
-            ITYPE_TO_TYPE as ZONE_TYPE, ZONE_TYPES)
-
         self._client = client
         self._objref = zone
         self._id = zone.id
         self._name = zone.name
 
         tmp = list(HA_OPMODE_TO_GH)
-        if not self._objref.type != ZONE_TYPE[ZONE_TYPES.ControlSP]:
+        if self._objref.type != 'radiator':
             # should be: if no PIR, but currently no known way to do this
             tmp.remove(STATE_ECO)
         self._operation_list = tmp
