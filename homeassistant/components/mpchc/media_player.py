@@ -1,9 +1,4 @@
-"""
-Support to interface with the MPC-HC Web API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.mpchc/
-"""
+"""Support to interface with the MPC-HC Web API."""
 import logging
 import re
 

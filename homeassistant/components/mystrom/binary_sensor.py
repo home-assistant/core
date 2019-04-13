@@ -1,9 +1,4 @@
-"""
-Support for the myStrom buttons.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.mystrom/
-"""
+"""Support for the myStrom buttons."""
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
@@ -11,8 +6,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['http']
 
 
 async def async_setup_platform(hass, config, async_add_entities,

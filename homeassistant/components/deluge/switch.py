@@ -1,9 +1,4 @@
-"""
-Support for setting the Deluge BitTorrent client in Pause.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.deluge/
-"""
+"""Support for setting the Deluge BitTorrent client in Pause."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (
     STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['deluge-client==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

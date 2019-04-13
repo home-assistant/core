@@ -53,7 +53,8 @@ class WebSocketHandler:
     async def _writer(self):
         """Write outgoing messages."""
         # Exceptions if Socket disconnected or cancelled by connection handler
-        with suppress(RuntimeError, *CANCELLATION_ERRORS):
+        with suppress(RuntimeError, ConnectionResetError,
+                      *CANCELLATION_ERRORS):
             while not self.wsock.closed:
                 message = await self._to_write.get()
                 if message is None:

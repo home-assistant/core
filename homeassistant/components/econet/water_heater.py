@@ -13,8 +13,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyeconet==0.0.10']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_VACATION_START = 'next_vacation_start_date'

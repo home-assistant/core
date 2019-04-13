@@ -1,9 +1,4 @@
-"""
-Support for Zyxel Keenetic NDMS2 based routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.keenetic_ndms2/
-"""
+"""Support for Zyxel Keenetic NDMS2 based routers."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_PASSWORD, CONF_USERNAME
 )
-
-REQUIREMENTS = ['ndms2_client==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

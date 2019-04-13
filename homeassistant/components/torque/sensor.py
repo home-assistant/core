@@ -1,9 +1,4 @@
-"""
-Support for the Torque OBD application.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.torque/
-"""
+"""Support for the Torque OBD application."""
 import logging
 import re
 
@@ -21,7 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 API_PATH = '/api/torque'
 
 DEFAULT_NAME = 'vehicle'
-DEPENDENCIES = ['http']
 DOMAIN = 'torque'
 
 ENTITY_NAME_FORMAT = '{0} {1}'

@@ -1,9 +1,4 @@
-"""
-Support for Wi-Fi enabled iRobot Roombas.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum.roomba/
-"""
+"""Support for Wi-Fi enabled iRobot Roombas."""
 import asyncio
 import logging
 
@@ -18,8 +13,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['roombapy==1.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 

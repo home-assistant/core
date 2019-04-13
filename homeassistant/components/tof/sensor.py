@@ -12,10 +12,6 @@ from homeassistant.components import rpi_gpio
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['VL53L1X2==0.1.5']
-
-DEPENDENCIES = ['rpi_gpio']
-
 _LOGGER = logging.getLogger(__name__)
 
 LENGTH_MILLIMETERS = 'mm'

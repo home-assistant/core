@@ -1,9 +1,4 @@
-"""
-Support for Mikrotik routers as device tracker.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.mikrotik/
-"""
+"""Support for Mikrotik routers as device tracker."""
 import logging
 
 import ssl
@@ -16,12 +11,13 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_SSL, CONF_METHOD)
 
-REQUIREMENTS = ['librouteros==2.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 MTK_DEFAULT_API_PORT = '8728'
 MTK_DEFAULT_API_SSL_PORT = '8729'
+
+CONF_ENCODING = 'encoding'
+DEFAULT_ENCODING = 'utf-8'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -29,7 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_METHOD): cv.string,
     vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=False): cv.boolean
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
 })
 
 
@@ -64,6 +61,7 @@ class MikrotikScanner(DeviceScanner):
         self.client = None
         self.wireless_exist = None
         self.success_init = self.connect_to_device()
+        self.encoding = config[CONF_ENCODING]
 
         if self.success_init:
             _LOGGER.info("Start polling Mikrotik (%s) router...", self.host)
@@ -77,7 +75,7 @@ class MikrotikScanner(DeviceScanner):
         try:
             kwargs = {
                 'port': self.port,
-                'encoding': 'utf-8'
+                'encoding': self.encoding
             }
             if self.ssl:
                 ssl_context = ssl.create_default_context()

@@ -1,9 +1,4 @@
-"""
-A sensor to monitor incoming and outgoing phone calls on a Fritz!Box router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fritzbox_callmonitor/
-"""
+"""Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 import logging
 import socket
 import threading
@@ -20,8 +15,6 @@ from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME,
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['fritzconnection==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Support for sensor value(s) stored in local files.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.file/
-"""
+"""Support for sensor value(s) stored in local files."""
 import os
 import logging
 

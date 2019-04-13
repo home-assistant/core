@@ -17,8 +17,6 @@ from homeassistant.util.dt import utcnow
 from .const import (
     DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
 
-DEPENDENCIES = ['heos']
-
 BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                           SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \
                           SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOURCE
@@ -141,7 +139,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self._player.set_volume(volume * 100)
+        await self._player.set_volume(int(volume * 100))
 
     async def async_update(self):
         """Update supported features of the player."""

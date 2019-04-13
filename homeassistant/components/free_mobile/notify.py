@@ -1,9 +1,4 @@
-"""
-Support for thr Free Mobile SMS platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.free_mobile/
-"""
+"""Support for thr Free Mobile SMS platform."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (PLATFORM_SCHEMA,
                                              BaseNotificationService)
-
-REQUIREMENTS = ['freesms==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

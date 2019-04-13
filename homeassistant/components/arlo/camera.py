@@ -28,8 +28,7 @@ ATTR_UNSEEN_VIDEOS = 'unseen_videos'
 ATTR_LAST_REFRESH = 'last_refresh'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-
-DEPENDENCIES = ['arlo', 'ffmpeg']
+DEFAULT_ARGUMENTS = '-pred 1'
 
 POWERSAVE_MODE_MAPPING = {
     1: 'best_battery_life',
@@ -38,7 +37,7 @@ POWERSAVE_MODE_MAPPING = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
 })
 
 

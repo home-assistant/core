@@ -1,9 +1,4 @@
-"""
-InfluxDB component which allows you to get data from an Influx database.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.influxdb/
-"""
+"""InfluxDB component which allows you to get data from an Influx database."""
 from datetime import timedelta
 import logging
 
@@ -22,8 +17,6 @@ from homeassistant.util import Throttle
 from . import CONF_DB_NAME
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['influxdb==5.2.0']
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086

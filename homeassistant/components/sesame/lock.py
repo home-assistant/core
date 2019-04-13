@@ -1,9 +1,4 @@
-"""
-Support for Sesame, by CANDY HOUSE.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/lock.sesame/
-"""
+"""Support for Sesame, by CANDY HOUSE."""
 from typing import Callable
 import voluptuous as vol
 
@@ -13,8 +8,6 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
     STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.helpers.typing import ConfigType
-
-REQUIREMENTS = ['pysesame==0.1.0']
 
 ATTR_DEVICE_ID = 'device_id'
 

@@ -11,8 +11,6 @@ from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['nest']
-
 NEST_BRAND = 'Nest'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})

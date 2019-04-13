@@ -1,9 +1,4 @@
-"""
-Support gathering system information of hosts which are running glances.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.glances/
-"""
+"""Support gathering system information of hosts which are running glances."""
 from datetime import timedelta
 import logging
 
@@ -12,14 +7,12 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_SSL,
-    CONF_VERIFY_SSL, CONF_RESOURCES, TEMP_CELSIUS)
+    CONF_VERIFY_SSL, CONF_RESOURCES, STATE_UNAVAILABLE, TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['glances_api==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,21 +181,34 @@ class GlancesSensor(Entity):
                         self._state = sensor['value']
             elif self.type == 'docker_active':
                 count = 0
-                for container in value['docker']['containers']:
-                    if container['Status'] == 'running' or \
-                            'Up' in container['Status']:
-                        count += 1
-                self._state = count
+                try:
+                    for container in value['docker']['containers']:
+                        if container['Status'] == 'running' or \
+                                'Up' in container['Status']:
+                            count += 1
+                    self._state = count
+                except KeyError:
+                    self._state = count
             elif self.type == 'docker_cpu_use':
-                use = 0.0
-                for container in value['docker']['containers']:
-                    use += container['cpu']['total']
-                self._state = round(use, 1)
+                cpu_use = 0.0
+                try:
+                    for container in value['docker']['containers']:
+                        if container['Status'] == 'running' or \
+                                'Up' in container['Status']:
+                            cpu_use += container['cpu']['total']
+                        self._state = round(cpu_use, 1)
+                except KeyError:
+                    self._state = STATE_UNAVAILABLE
             elif self.type == 'docker_memory_use':
-                use = 0.0
-                for container in value['docker']['containers']:
-                    use += container['memory']['usage']
-                self._state = round(use / 1024**2, 1)
+                mem_use = 0.0
+                try:
+                    for container in value['docker']['containers']:
+                        if container['Status'] == 'running' or \
+                                'Up' in container['Status']:
+                            mem_use += container['memory']['usage']
+                        self._state = round(mem_use / 1024**2, 1)
+                except KeyError:
+                    self._state = STATE_UNAVAILABLE
 
 
 class GlancesData:

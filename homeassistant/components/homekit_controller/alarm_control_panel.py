@@ -8,8 +8,6 @@ from homeassistant.const import (
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
-DEPENDENCIES = ['homekit_controller']
-
 ICON = 'mdi:security'
 
 _LOGGER = logging.getLogger(__name__)

@@ -15,7 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SANDBOX = 'sandbox'
 
 DEFAULT_SANDBOX = False
-DEPENDENCIES = ['webhook']
 DOMAIN = 'mailgun'
 
 MESSAGE_RECEIVED = '{}_message_received'.format(DOMAIN)

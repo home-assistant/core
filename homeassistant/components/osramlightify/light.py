@@ -1,9 +1,4 @@
-"""
-Support for Osram Lightify.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.osramlightify/
-"""
+"""Support for Osram Lightify."""
 import logging
 import random
 import socket
@@ -20,17 +15,19 @@ from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['lightify==1.0.7.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALLOW_LIGHTIFY_NODES = 'allow_lightify_nodes'
 CONF_ALLOW_LIGHTIFY_GROUPS = 'allow_lightify_groups'
+CONF_ALLOW_LIGHTIFY_SENSORS = 'allow_lightify_sensors'
+CONF_ALLOW_LIGHTIFY_SWITCHES = 'allow_lightify_switches'
 CONF_INTERVAL_LIGHTIFY_STATUS = 'interval_lightify_status'
 CONF_INTERVAL_LIGHTIFY_CONF = 'interval_lightify_conf'
 
 DEFAULT_ALLOW_LIGHTIFY_NODES = True
 DEFAULT_ALLOW_LIGHTIFY_GROUPS = True
+DEFAULT_ALLOW_LIGHTIFY_SENSORS = True
+DEFAULT_ALLOW_LIGHTIFY_SWITCHES = True
 DEFAULT_INTERVAL_LIGHTIFY_STATUS = 5
 DEFAULT_INTERVAL_LIGHTIFY_CONF = 3600
 
@@ -40,6 +37,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=DEFAULT_ALLOW_LIGHTIFY_NODES): cv.boolean,
     vol.Optional(CONF_ALLOW_LIGHTIFY_GROUPS,
                  default=DEFAULT_ALLOW_LIGHTIFY_GROUPS): cv.boolean,
+    vol.Optional(CONF_ALLOW_LIGHTIFY_SENSORS,
+                 default=DEFAULT_ALLOW_LIGHTIFY_SENSORS): cv.boolean,
+    vol.Optional(CONF_ALLOW_LIGHTIFY_SWITCHES,
+                 default=DEFAULT_ALLOW_LIGHTIFY_SWITCHES): cv.boolean,
     vol.Optional(CONF_INTERVAL_LIGHTIFY_STATUS,
                  default=DEFAULT_INTERVAL_LIGHTIFY_STATUS): cv.positive_int,
     vol.Optional(CONF_INTERVAL_LIGHTIFY_CONF,
@@ -50,7 +51,7 @@ DEFAULT_BRIGHTNESS = 2
 DEFAULT_KELVIN = 2700
 
 
-def setup_platform(_hass, config, add_entities, _discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Osram Lightify lights."""
     import lightify
 
@@ -88,6 +89,12 @@ def setup_bridge(bridge, add_entities, config):
         if new_lights and config[CONF_ALLOW_LIGHTIFY_NODES]:
             new_entities = []
             for addr, light in new_lights.items():
+                if ((light.devicetype().name == 'SENSOR'
+                     and not config[CONF_ALLOW_LIGHTIFY_SENSORS]) or
+                        (light.devicetype().name == 'SWITCH'
+                         and not config[CONF_ALLOW_LIGHTIFY_SWITCHES])):
+                    continue
+
                 if addr not in lights:
                     osram_light = OsramLightifyLight(light, update_lights,
                                                      lights_changed)
@@ -105,14 +112,15 @@ def setup_bridge(bridge, add_entities, config):
         lights_changed = update_lights()
 
         try:
+            bridge.update_scene_list(config[CONF_INTERVAL_LIGHTIFY_CONF])
             new_groups = bridge.update_group_list(
                 config[CONF_INTERVAL_LIGHTIFY_CONF])
             groups_updated = bridge.groups_updated()
         except TimeoutError:
-            _LOGGER.error("Timeout during updating of groups")
+            _LOGGER.error("Timeout during updating of scenes/groups")
             return 0
         except OSError:
-            _LOGGER.error("OSError during updating of groups")
+            _LOGGER.error("OSError during updating of scenes/groups")
             return 0
 
         if new_groups:
@@ -155,11 +163,13 @@ class Luminary(Light):
         self._supported_features = []
         self._effect_list = []
         self._is_on = False
+        self._available = True
         self._min_mireds = None
         self._max_mireds = None
         self._brightness = None
         self._color_temp = None
         self._rgb_color = None
+        self._device_attributes = None
 
         self.update_static_attributes()
         self.update_dynamic_attributes()
@@ -241,6 +251,16 @@ class Luminary(Light):
         """Return a unique ID."""
         return self._unique_id
 
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return self._device_attributes
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
     def play_effect(self, effect, transition):
         """Play selected effect."""
         if effect == EFFECT_RANDOM:
@@ -308,6 +328,8 @@ class Luminary(Light):
     def update_dynamic_attributes(self):
         """Update dynamic attributes of the luminary."""
         self._is_on = self._luminary.on()
+        self._available = (self._luminary.reachable() and
+                           not self._luminary.deleted())
         if self._supported_features & SUPPORT_BRIGHTNESS:
             self._brightness = int(self._luminary.lum() * 2.55)
 
@@ -333,6 +355,17 @@ class OsramLightifyLight(Luminary):
         """Get a unique ID."""
         return self._luminary.addr()
 
+    def update_static_attributes(self):
+        """Update static attributes of the luminary."""
+        super().update_static_attributes()
+        attrs = {'device_type': '{} ({})'.format(self._luminary.type_id(),
+                                                 self._luminary.devicename()),
+                 'firmware_version': self._luminary.version()}
+        if self._luminary.devicetype().name == 'SENSOR':
+            attrs['sensor_values'] = self._luminary.raw_values()
+
+        self._device_attributes = attrs
+
 
 class OsramLightifyGroup(Luminary):
     """Representation of an Osram Lightify Group."""
@@ -347,3 +380,33 @@ class OsramLightifyGroup(Luminary):
 #       For now keeping it as is for backward compatibility with existing
 #       users.
         return '{}'.format(self._luminary.lights())
+
+    def _get_supported_features(self):
+        """Get list of supported features."""
+        features = super()._get_supported_features()
+        if self._luminary.scenes():
+            features = features | SUPPORT_EFFECT
+
+        return features
+
+    def _get_effect_list(self):
+        """Get list of supported effects."""
+        effects = super()._get_effect_list()
+        effects.extend(self._luminary.scenes())
+        return sorted(effects)
+
+    def play_effect(self, effect, transition):
+        """Play selected effect."""
+        if super().play_effect(effect, transition):
+            return True
+
+        if effect in self._luminary.scenes():
+            self._luminary.activate_scene(effect)
+            return True
+
+        return False
+
+    def update_static_attributes(self):
+        """Update static attributes of the luminary."""
+        super().update_static_attributes()
+        self._device_attributes = {'lights': self._luminary.light_names()}

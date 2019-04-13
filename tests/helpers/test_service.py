@@ -37,11 +37,13 @@ def mock_entities():
         entity_id='light.kitchen',
         available=True,
         should_poll=False,
+        supported_features=1,
     )
     living_room = Mock(
         entity_id='light.living_room',
         available=True,
         should_poll=False,
+        supported_features=0,
     )
     entities = OrderedDict()
     entities[kitchen.entity_id] = kitchen
@@ -269,6 +271,19 @@ def test_async_get_all_descriptions(hass):
     assert 'fields' in descriptions[logger.DOMAIN]['set_level']
 
 
+async def test_call_with_required_features(hass, mock_entities):
+    """Test service calls invoked only if entity has required feautres."""
+    test_service_mock = Mock(return_value=mock_coro())
+    await service.entity_service_call(hass, [
+        Mock(entities=mock_entities)
+    ], test_service_mock, ha.ServiceCall('test_domain', 'test_service', {
+        'entity_id': 'all'
+    }), required_features=1)
+    assert len(mock_entities) == 2
+    # Called once because only one of the entities had the required features
+    assert test_service_mock.call_count == 1
+
+
 async def test_call_context_user_not_exist(hass):
     """Check we don't allow deleted users to do things."""
     with pytest.raises(exceptions.UnknownUser) as err:
@@ -406,7 +421,11 @@ async def test_register_admin_service(hass, hass_read_only_user,
         calls.append(call)
 
     hass.helpers.service.async_register_admin_service(
-        'test', 'test', mock_service, vol.Schema({})
+        'test', 'test', mock_service
+    )
+    hass.helpers.service.async_register_admin_service(
+        'test', 'test2', mock_service,
+        vol.Schema({vol.Required('required'): cv.boolean})
     )
 
     with pytest.raises(exceptions.UnknownUser):
@@ -423,8 +442,21 @@ async def test_register_admin_service(hass, hass_read_only_user,
             ))
     assert len(calls) == 0
 
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            'test', 'test', {'invalid': True}, blocking=True,
+            context=ha.Context(user_id=hass_admin_user.id))
+    assert len(calls) == 0
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            'test', 'test2', {}, blocking=True, context=ha.Context(
+                user_id=hass_admin_user.id
+            ))
+    assert len(calls) == 0
+
     await hass.services.async_call(
-        'test', 'test', {}, blocking=True, context=ha.Context(
+        'test', 'test2', {'required': True}, blocking=True, context=ha.Context(
             user_id=hass_admin_user.id
         ))
     assert len(calls) == 1

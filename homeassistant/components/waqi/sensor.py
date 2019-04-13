@@ -1,9 +1,4 @@
-"""
-Support for the World Air Quality Index service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.waqi/
-"""
+"""Support for the World Air Quality Index service."""
 import asyncio
 import logging
 from datetime import timedelta
@@ -18,8 +13,6 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['waqiasync==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

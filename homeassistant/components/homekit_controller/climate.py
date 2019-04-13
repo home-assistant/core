@@ -9,8 +9,6 @@ from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
-DEPENDENCIES = ['homekit_controller']
-
 _LOGGER = logging.getLogger(__name__)
 
 # Map of Homekit operation modes to hass modes

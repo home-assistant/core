@@ -22,10 +22,7 @@ async def test_flow_works(hass, aioclient_mock):
     flow.hass = hass
 
     await flow.async_step_user()
-    await flow.async_step_link(user_input={})
-
-    result = await flow.async_step_options(
-        user_input={'allow_clip_sensor': True, 'allow_deconz_groups': True})
+    result = await flow.async_step_link(user_input={})
 
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
@@ -33,23 +30,8 @@ async def test_flow_works(hass, aioclient_mock):
         'bridgeid': 'id',
         'host': '1.2.3.4',
         'port': 80,
-        'api_key': '1234567890ABCDEF',
-        'allow_clip_sensor': True,
-        'allow_deconz_groups': True
+        'api_key': '1234567890ABCDEF'
     }
-
-
-async def test_flow_already_registered_bridge(hass):
-    """Test config flow don't allow more than one bridge to be registered."""
-    MockConfigEntry(domain='deconz', data={
-        'host': '1.2.3.4'
-    }).add_to_hass(hass)
-
-    flow = config_flow.DeconzFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user()
-    assert result['type'] == 'abort'
 
 
 async def test_flow_bridge_discovery_fails(hass, aioclient_mock):
@@ -153,24 +135,6 @@ async def test_link_no_api_key(hass):
     assert result['errors'] == {'base': 'no_key'}
 
 
-async def test_link_already_registered_bridge(hass):
-    """Test that link verifies to only allow one config entry to complete.
-
-    This is possible with discovery which will allow the user to complete
-    a second config entry and then complete the discovered config entry.
-    """
-    MockConfigEntry(domain='deconz', data={
-        'host': '1.2.3.4'
-    }).add_to_hass(hass)
-
-    flow = config_flow.DeconzFlowHandler()
-    flow.hass = hass
-    flow.deconz_config = {'host': '1.2.3.4', 'port': 80}
-
-    result = await flow.async_step_link(user_input={})
-    assert result['type'] == 'abort'
-
-
 async def test_bridge_discovery(hass):
     """Test a bridge being discovered."""
     flow = config_flow.DeconzFlowHandler()
@@ -197,6 +161,7 @@ async def test_bridge_discovery_already_configured(hass):
 
     result = await flow.async_step_discovery({
         'host': '1.2.3.4',
+        'port': 80,
         'serial': 'id'
     })
 
@@ -234,14 +199,12 @@ async def test_import_with_api_key(hass):
         'bridgeid': 'id',
         'host': '1.2.3.4',
         'port': 80,
-        'api_key': '1234567890ABCDEF',
-        'allow_clip_sensor': True,
-        'allow_deconz_groups': True
+        'api_key': '1234567890ABCDEF'
     }
 
 
-async def test_options(hass, aioclient_mock):
-    """Test that options work and that bridgeid can be requested."""
+async def test_create_entry(hass, aioclient_mock):
+    """Test that _create_entry work and that bridgeid can be requested."""
     aioclient_mock.get('http://1.2.3.4:80/api/1234567890ABCDEF/config',
                        json={"bridgeid": "id"},
                        headers={'content-type': 'application/json'})
@@ -252,8 +215,7 @@ async def test_options(hass, aioclient_mock):
                           'port': 80,
                           'api_key': '1234567890ABCDEF'}
 
-    result = await flow.async_step_options(
-        user_input={'allow_clip_sensor': False, 'allow_deconz_groups': False})
+    result = await flow._create_entry()
 
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
@@ -261,7 +223,49 @@ async def test_options(hass, aioclient_mock):
         'bridgeid': 'id',
         'host': '1.2.3.4',
         'port': 80,
-        'api_key': '1234567890ABCDEF',
-        'allow_clip_sensor': False,
-        'allow_deconz_groups': False
+        'api_key': '1234567890ABCDEF'
+    }
+
+
+async def test_hassio_single_instance(hass):
+    """Test we only allow a single config flow."""
+    MockConfigEntry(domain='deconz', data={
+        'host': '1.2.3.4'
+    }).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        'deconz', context={'source': 'hassio'})
+    assert result['type'] == 'abort'
+    assert result['reason'] == 'one_instance_only'
+
+
+async def test_hassio_confirm(hass):
+    """Test we can finish a config flow."""
+    result = await hass.config_entries.flow.async_init(
+        'deconz',
+        data={
+            'addon': 'Mock Addon',
+            'host': 'mock-deconz',
+            'port': 80,
+            'serial': 'id',
+            'api_key': '1234567890ABCDEF',
+        },
+        context={'source': 'hassio'}
+    )
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'hassio_confirm'
+    assert result['description_placeholders'] == {
+        'addon': 'Mock Addon',
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result['flow_id'], user_input={}
+    )
+
+    assert result['type'] == 'create_entry'
+    assert result['result'].data == {
+        'host': 'mock-deconz',
+        'port': 80,
+        'bridgeid': 'id',
+        'api_key': '1234567890ABCDEF'
     }

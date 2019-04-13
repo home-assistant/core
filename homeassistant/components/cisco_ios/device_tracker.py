@@ -1,9 +1,4 @@
-"""
-Support for Cisco IOS Routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.cisco_ios/
-"""
+"""Support for Cisco IOS Routers."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
     CONF_PORT
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pexpect==4.6.0']
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({

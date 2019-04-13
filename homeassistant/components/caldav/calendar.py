@@ -1,9 +1,4 @@
-"""
-Support for WebDav Calendar.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/calendar.caldav/
-"""
+"""Support for WebDav Calendar."""
 from datetime import datetime, timedelta
 import logging
 import re
@@ -16,8 +11,6 @@ from homeassistant.const import (
     CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, dt
-
-REQUIREMENTS = ['caldav==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 

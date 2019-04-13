@@ -132,10 +132,14 @@ class TestHelpersDiscovery:
             self.hass, 'test_component',
             MockModule('test_component', setup=component_setup))
 
+        # dependencies are only set in component level
+        # since we are using manifest to hold them
         loader.set_component(
-            self.hass, 'switch.test_circular',
-            MockPlatform(setup_platform,
-                         dependencies=['test_component']))
+            self.hass, 'test_circular',
+            MockModule('test_circular', dependencies=['test_component']))
+        loader.set_component(
+            self.hass, 'test_circular.switch',
+            MockPlatform(setup_platform))
 
         setup.setup_component(self.hass, 'test_component', {
             'test_component': None,

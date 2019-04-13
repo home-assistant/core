@@ -1,9 +1,4 @@
-"""
-Support for DLNA DMR (Device Media Renderer).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.dlna_dmr/
-"""
+"""Support for DLNA DMR (Device Media Renderer)."""
 import asyncio
 from datetime import datetime
 from datetime import timedelta
@@ -31,8 +26,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
-
-REQUIREMENTS = ['async-upnp-client==0.14.7']
 
 _LOGGER = logging.getLogger(__name__)
 

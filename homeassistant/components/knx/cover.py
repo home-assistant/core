@@ -25,8 +25,6 @@ CONF_INVERT_ANGLE = 'invert_angle'
 
 DEFAULT_TRAVEL_TIME = 25
 DEFAULT_NAME = 'KNX Cover'
-DEPENDENCIES = ['knx']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,

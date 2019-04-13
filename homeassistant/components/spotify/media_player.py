@@ -1,9 +1,4 @@
-"""
-Support for interacting with Spotify Connect.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.spotify/
-"""
+"""Support for interacting with Spotify Connect."""
 from datetime import timedelta
 import logging
 
@@ -20,8 +15,6 @@ from homeassistant.const import (
     CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['spotipy-homeassistant==2.4.4.dev1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +33,6 @@ CONFIGURATOR_SUBMIT_CAPTION = 'I authorized successfully'
 
 DEFAULT_CACHE_PATH = '.spotify-token-cache'
 DEFAULT_NAME = 'Spotify'
-DEPENDENCIES = ['http']
 DOMAIN = 'spotify'
 
 ICON = 'mdi:spotify'

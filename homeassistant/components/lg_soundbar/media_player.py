@@ -1,9 +1,4 @@
-"""
-Support for LG soundbars.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.lg_soundbar/
-"""
+"""Support for LG soundbars."""
 import logging
 
 from homeassistant.components.media_player import (
@@ -13,8 +8,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOUND_MODE)
 
 from homeassistant.const import STATE_ON
-
-REQUIREMENTS = ['temescal==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

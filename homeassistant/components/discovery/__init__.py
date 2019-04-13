@@ -20,8 +20,6 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==2.5.0']
-
 DOMAIN = 'discovery'
 
 SCAN_INTERVAL = timedelta(seconds=300)
@@ -35,6 +33,7 @@ SERVICE_FREEBOX = 'freebox'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_HASSIO = 'hassio'
 SERVICE_HOMEKIT = 'homekit'
+SERVICE_HEOS = 'heos'
 SERVICE_HUE = 'philips_hue'
 SERVICE_IGD = 'igd'
 SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
@@ -57,6 +56,7 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
     'esphome': 'esphome',
     'google_cast': 'cast',
+    SERVICE_HEOS: 'heos',
     SERVICE_HUE: 'hue',
     SERVICE_TELLDUSLIVE: 'tellduslive',
     SERVICE_IKEA_TRADFRI: 'tradfri',

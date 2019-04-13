@@ -1,9 +1,4 @@
-"""
-Support for KWB Easyfire.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.kwb/
-"""
+"""Support for KWB Easyfire."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE,
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pykwb==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 

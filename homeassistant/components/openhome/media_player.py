@@ -1,9 +1,4 @@
-"""
-Support for Openhome Devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.openhome/
-"""
+"""Support for Openhome Devices."""
 import logging
 
 from homeassistant.components.media_player import (
@@ -14,8 +9,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
-
-REQUIREMENTS = ['openhomedevice==0.4.2']
 
 SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | \
     SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \

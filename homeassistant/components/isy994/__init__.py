@@ -12,8 +12,6 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, Dict
 
-REQUIREMENTS = ['PyISY==1.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'isy994'

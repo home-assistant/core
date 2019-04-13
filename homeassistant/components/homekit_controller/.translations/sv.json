@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "unable_to_pair": "Det g\u00e5r inte att para ihop, f\u00f6rs\u00f6k igen."
+        },
+        "step": {
+            "pair": {
+                "title": "Para HomeKit-tillbeh\u00f6r"
+            },
+            "user": {
+                "data": {
+                    "device": "Enhet"
+                },
+                "description": "V\u00e4lj den enhet du vill para med",
+                "title": "Para HomeKit-tillbeh\u00f6r"
+            }
+        },
+        "title": "HomeKit-tillbeh\u00f6r"
+    }
+}

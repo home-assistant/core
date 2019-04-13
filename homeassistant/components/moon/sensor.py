@@ -1,9 +1,4 @@
-"""
-Support for tracking the moon phases.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.moon/
-"""
+"""Support for tracking the moon phases."""
 import logging
 
 import voluptuous as vol

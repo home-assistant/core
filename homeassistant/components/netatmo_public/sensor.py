@@ -1,9 +1,4 @@
-"""
-Support for Sensors using public Netatmo data.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.netatmo_public/.
-"""
+"""Support for Sensors using public Netatmo data."""
 from datetime import timedelta
 import logging
 
@@ -18,8 +13,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['netatmo']
 
 CONF_AREAS = 'areas'
 CONF_LAT_NE = 'lat_ne'

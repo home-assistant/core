@@ -2,14 +2,12 @@
 import logging
 
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    POWER_WATT, TEMP_CELSIUS)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE, POWER_WATT, TEMP_CELSIUS)
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['homematicip_cloud']
 
 ATTR_TEMPERATURE_OFFSET = 'temperature_offset'
 ATTR_WIND_DIRECTION = 'wind_direction'
@@ -28,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         AsyncHeatingThermostat, AsyncHeatingThermostatCompact,
         AsyncTemperatureHumiditySensorWithoutDisplay,
         AsyncTemperatureHumiditySensorDisplay, AsyncMotionDetectorIndoor,
-        AsyncTemperatureHumiditySensorOutdoor,
+        AsyncMotionDetectorOutdoor, AsyncTemperatureHumiditySensorOutdoor,
         AsyncMotionDetectorPushButton, AsyncLightSensor,
         AsyncPlugableSwitchMeasuring, AsyncBrandSwitchMeasuring,
         AsyncFullFlushSwitchMeasuring, AsyncWeatherSensor,
@@ -49,6 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
         if isinstance(device, (AsyncMotionDetectorIndoor,
+                               AsyncMotionDetectorOutdoor,
                                AsyncMotionDetectorPushButton,
                                AsyncWeatherSensor,
                                AsyncWeatherSensorPlus,
@@ -237,6 +236,11 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
     def __init__(self, home, device):
         """Initialize the  device."""
         super().__init__(home, device, 'Power')
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_POWER
 
     @property
     def state(self):

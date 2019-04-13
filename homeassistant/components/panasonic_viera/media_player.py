@@ -1,9 +1,4 @@
-"""
-Support for interface with a Panasonic Viera TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.panasonic_viera/
-"""
+"""Support for interface with a Panasonic Viera TV."""
 import logging
 
 import voluptuous as vol
@@ -18,8 +13,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['panasonic_viera==0.3.2', 'wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 

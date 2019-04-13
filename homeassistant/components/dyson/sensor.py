@@ -1,17 +1,10 @@
-"""
-Support for Dyson Pure Cool Link Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dyson/
-"""
+"""Support for Dyson Pure Cool Link Sensors."""
 import logging
 
 from homeassistant.const import STATE_OFF, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DYSON_DEVICES
-
-DEPENDENCIES = ['dyson']
 
 SENSOR_UNITS = {
     'air_quality': None,

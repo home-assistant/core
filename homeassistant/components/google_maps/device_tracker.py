@@ -1,9 +1,4 @@
-"""
-Support for Google Maps location sharing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.google_maps/
-"""
+"""Support for Google Maps location sharing."""
 from datetime import timedelta
 import logging
 
@@ -18,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify, dt as dt_util
-
-REQUIREMENTS = ['locationsharinglib==3.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
