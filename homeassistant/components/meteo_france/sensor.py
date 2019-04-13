@@ -1,6 +1,5 @@
 """Support for Meteo-France raining forecast sensor."""
 import logging
-import pytz
 
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
@@ -8,14 +7,10 @@ import homeassistant.util.dt as dt_util
 
 from . import ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES
 
-REQUIREMENTS = ['vigilancemeteo==3.0.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 STATE_ATTR_FORECAST = '1h rain forecast'
 STATE_ATTR_BULLETIN_TIME = 'Date du bulletin'
-
-PARIS_TZ = pytz.timezone('Europe/Paris')
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Meteo-France sensor."""
@@ -36,7 +31,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 alert_watcher = DepartmentWeatherAlert(datas["dept"])
             except ValueError as exp:
                 _LOGGER.error(exp)
-
+        else:
+            _LOGGER.debug("No dept key found for %s", city)
+    
     add_entities([MeteoFranceSensor(variable, client, alert_watcher)
                   for variable in monitored_conditions], True)
 
@@ -77,26 +74,9 @@ class MeteoFranceSensor(Entity):
 
         # Attributes for weather_alert sensor
         elif self._condition == 'weather_alert' and self._alert_watcher is not None:
-            from vigilancemeteo import ZoneAlerte
-
-            alert_type_list = {}
-            # Create one attribute for each weather alert type.
-            for alert_type in ZoneAlerte.LISTE_TYPE_ALERTE:
-                if alert_type in self._alert_watcher.liste_alertes:
-                    alert_type_list[alert_type] = self._alert_watcher.liste_alertes[alert_type]
-                elif self._alert_watcher.date_mise_a_jour is None:
-                    alert_type_list[alert_type] = 'unknown'
-                else:
-                    alert_type_list[alert_type] = 'Vert'
-            if self._alert_watcher.date_mise_a_jour is not None:
-                date_bulletin_tz = dt_util.as_local(PARIS_TZ.localize(
-                    self._alert_watcher.date_mise_a_jour)).isoformat()
-            else:
-                date_bulletin_tz = None
-
             return {
-                **{STATE_ATTR_BULLETIN_TIME: date_bulletin_tz},
-                ** alert_type_list,
+                **{STATE_ATTR_BULLETIN_TIME: self._alert_watcher.bulletin_date},
+                ** self._alert_watcher.alerts_list,
                 ATTR_ATTRIBUTION: ATTRIBUTION
             }
 
@@ -116,12 +96,9 @@ class MeteoFranceSensor(Entity):
 
             if self._condition == 'weather_alert':
                 if self._alert_watcher is not None:
-                    self._alert_watcher.mise_a_jour_etat()
-                    self._state = self._alert_watcher.synthese_couleur
+                    self._alert_watcher.update_department_status()
+                    self._state = self._alert_watcher.department_color
 
-                    # Patch to have consistent state when dificulties to fetch source online
-                    if self._state == 'Inconnue':
-                        self._state = 'unknown'
                 else:
                     _LOGGER.debug("No weather alert data for location %s",
                                   self._data['name'])
