@@ -1071,12 +1071,18 @@ async def test_openclose_cover(hass):
 
     assert trt.sync_attributes() == {}
 
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
+
     # Assumed state
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
         ATTR_ASSUMED_STATE: True,
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError):
+        trt.query_attributes()
 
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
         cover.ATTR_CURRENT_POSITION: 75
@@ -1134,3 +1140,4 @@ async def test_openclose_binary_sensor(hass, device_class):
     assert trt.query_attributes() == {
         'openPercent': 0
     }
+
