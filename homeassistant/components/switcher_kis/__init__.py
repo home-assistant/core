@@ -30,9 +30,6 @@ SIGNAL_SWITCHER_DEVICE_UPDATE = 'switcher_device_update'
 ATTR_AUTO_OFF_SET = 'auto_off_set'
 ATTR_DEVICE_NAME = 'device_name'
 ATTR_ELECTRIC_CURRNET = 'electric_current'
-ATTR_IP_ADDRESS = 'ip_address'
-ATTR_LAST_DATA_UPDATE = 'last_data_update'
-ATTR_LAST_STATE_CHANGE = 'last_state_change'
 ATTR_REMAINING_TIME = 'remaining_time'
 
 CONFIG_SCHEMA = vol.Schema({
