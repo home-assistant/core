@@ -1,7 +1,7 @@
 """Home Assistant Switcher Component Switch platform."""
 
 from logging import getLogger
-from typing import Any, Callable, cast, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -46,22 +46,22 @@ class SwitcherControl(SwitchDevice):
     @property
     def electric_current(self) -> float:
         """Return the electric current."""
-        return cast(float, self._device_data.electric_current)
+        return self._device_data.electric_current
 
     @property
     def remaining_time(self) -> str:
         """Return the remaining time to off command."""
-        return cast(str, self._device_data.remaining_time)
+        return self._device_data.remaining_time
 
     @property
     def auto_off_set(self) -> str:
         """Return the auto off configuration set."""
-        return cast(str, self._device_data.auto_off_set)
+        return self._device_data.auto_off_set
 
     @property
     def device_name(self) -> str:
         """Return the device's name."""
-        return cast(str, self._device_data.name)
+        return self._device_data.name
 
     @property
     def should_poll(self) -> bool:
@@ -78,12 +78,12 @@ class SwitcherControl(SwitchDevice):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         from aioswitcher.consts import STATE_ON as SWITCHER_STATE_ON
-        return cast(bool, self._state == SWITCHER_STATE_ON)
+        return self._state == SWITCHER_STATE_ON
 
     @property
     def current_power_w(self) -> int:
         """Return the current power usage in W."""
-        return cast(int, self._device_data.power_consumption)
+        return self._device_data.power_consumption
 
     @property
     def device_state_attributes(self) -> Dict:
