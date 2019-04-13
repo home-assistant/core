@@ -31,8 +31,6 @@ CONF_DOMAINS = 'domains'
 CONF_ENTITIES = 'entities'
 CONTINUOUS_DOMAINS = ['proximity', 'sensor']
 
-DEPENDENCIES = ['recorder', 'frontend']
-
 DOMAIN = 'logbook'
 
 GROUP_BY_MINUTES = 15

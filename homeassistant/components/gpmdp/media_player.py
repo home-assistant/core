@@ -16,8 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['websocket-client==0.54.0']
-
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 

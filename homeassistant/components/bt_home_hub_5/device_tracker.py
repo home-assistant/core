@@ -8,8 +8,6 @@ from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
                                                      DeviceScanner)
 from homeassistant.const import CONF_HOST
 
-REQUIREMENTS = ['bthomehub5-devicelist==0.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_IP = '192.168.1.254'

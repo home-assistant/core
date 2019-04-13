@@ -10,8 +10,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['concord232==0.15']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXCLUDE_ZONES = 'exclude_zones'
@@ -74,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             )
 
-        add_entities(sensors, True)
+    add_entities(sensors, True)
 
 
 def get_opening_type(zone):

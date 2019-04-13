@@ -30,8 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt_template'
 
-DEPENDENCIES = ['mqtt']
-
 DEFAULT_NAME = 'MQTT Template Light'
 DEFAULT_OPTIMISTIC = False
 
@@ -51,23 +49,18 @@ PLATFORM_SCHEMA_TEMPLATE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
     vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
     vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
+    vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
+    vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
     vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_RED_TEMPLATE): cv.template,
-    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
-    vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-    vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
-    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
-        vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema).extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 
@@ -150,7 +143,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 CONF_WHITE_VALUE_TEMPLATE,
             )
         }
-        optimistic = config.get(CONF_OPTIMISTIC)
+        optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic \
             or self._topics[CONF_STATE_TOPIC] is None \
             or self._templates[CONF_STATE_TEMPLATE] is None
@@ -257,7 +250,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self.hass, self._sub_state,
                 {'state_topic': {'topic': self._topics[CONF_STATE_TOPIC],
                                  'msg_callback': state_received,
-                                 'qos': self._config.get(CONF_QOS)}})
+                                 'qos': self._config[CONF_QOS]}})
 
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
@@ -310,7 +303,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self):
         """Return the name of the entity."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def unique_id(self):
@@ -396,7 +389,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(**values),
-            self._config.get(CONF_QOS), self._config.get(CONF_RETAIN)
+            self._config[CONF_QOS], self._config[CONF_RETAIN]
         )
 
         if self._optimistic:
@@ -417,7 +410,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(**values),
-            self._config.get(CONF_QOS), self._config.get(CONF_RETAIN)
+            self._config[CONF_QOS], self._config[CONF_RETAIN]
         )
 
         if self._optimistic:

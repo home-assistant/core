@@ -1,6 +1,8 @@
 """Support to send and receive Telegram messages."""
 import io
+from ipaddress import ip_network
 from functools import partial
+import importlib
 import logging
 
 import requests
@@ -11,12 +13,9 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
-    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
+    CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION, CONF_URL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
-from homeassistant.setup import async_prepare_setup_platform
-
-REQUIREMENTS = ['python-telegram-bot==11.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +52,7 @@ ATTR_VERIFY_SSL = 'verify_ssl'
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
 CONF_PROXY_URL = 'proxy_url'
 CONF_PROXY_PARAMS = 'proxy_params'
+CONF_TRUSTED_NETWORKS = 'trusted_networks'
 
 DOMAIN = 'telegram_bot'
 
@@ -75,17 +75,34 @@ EVENT_TELEGRAM_TEXT = 'telegram_text'
 PARSER_HTML = 'html'
 PARSER_MD = 'markdown'
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_ALLOWED_CHAT_IDS):
-        vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
-    vol.Optional(CONF_PROXY_URL): cv.string,
-    vol.Optional(CONF_PROXY_PARAMS): dict,
-})
+DEFAULT_TRUSTED_NETWORKS = [
+    ip_network('149.154.167.197/32'),
+    ip_network('149.154.167.198/31'),
+    ip_network('149.154.167.200/29'),
+    ip_network('149.154.167.208/28'),
+    ip_network('149.154.167.224/29'),
+    ip_network('149.154.167.232/31')
+]
 
-PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [
+        vol.Schema({
+            vol.Required(CONF_PLATFORM): vol.In(
+                ('broadcast', 'polling', 'webhooks')),
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Required(CONF_ALLOWED_CHAT_IDS):
+                vol.All(cv.ensure_list, [vol.Coerce(int)]),
+            vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
+            vol.Optional(CONF_PROXY_URL): cv.string,
+            vol.Optional(CONF_PROXY_PARAMS): dict,
+            # webhooks
+            vol.Optional(CONF_URL): cv.url,
+            vol.Optional(CONF_TRUSTED_NETWORKS,
+                         default=DEFAULT_TRUSTED_NETWORKS):
+                vol.All(cv.ensure_list, [ip_network])
+            })
+        ])
+}, extra=vol.ALLOW_EXTRA)
 
 BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -215,36 +232,33 @@ async def async_setup(hass, config):
     if not config[DOMAIN]:
         return False
 
-    p_config = config[DOMAIN][0]
+    for p_config in config[DOMAIN]:
 
-    p_type = p_config.get(CONF_PLATFORM)
+        p_type = p_config.get(CONF_PLATFORM)
 
-    platform = await async_prepare_setup_platform(
-        hass, config, DOMAIN, p_type)
+        platform = importlib.import_module(
+            '.{}'.format(p_config[CONF_PLATFORM]), __name__)
 
-    if platform is None:
-        return
+        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
+        try:
+            receiver_service = await \
+                platform.async_setup_platform(hass, p_config)
+            if receiver_service is False:
+                _LOGGER.error(
+                    "Failed to initialize Telegram bot %s", p_type)
+                return False
 
-    _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
-    try:
-        receiver_service = await \
-            platform.async_setup_platform(hass, p_config)
-        if receiver_service is False:
-            _LOGGER.error(
-                "Failed to initialize Telegram bot %s", p_type)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error setting up platform %s", p_type)
             return False
 
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Error setting up platform %s", p_type)
-        return False
-
-    bot = initialize_bot(p_config)
-    notify_service = TelegramNotificationService(
-        hass,
-        bot,
-        p_config.get(CONF_ALLOWED_CHAT_IDS),
-        p_config.get(ATTR_PARSER)
-    )
+        bot = initialize_bot(p_config)
+        notify_service = TelegramNotificationService(
+            hass,
+            bot,
+            p_config.get(CONF_ALLOWED_CHAT_IDS),
+            p_config.get(ATTR_PARSER)
+        )
 
     async def async_send_telegram_message(service):
         """Handle sending Telegram Bot message service calls."""

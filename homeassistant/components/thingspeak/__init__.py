@@ -9,8 +9,6 @@ from homeassistant.const import (
 from homeassistant.helpers import event, state as state_helper
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['thingspeak==0.4.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'thingspeak'

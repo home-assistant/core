@@ -11,7 +11,6 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PATH,
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
-DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRAND = 'Xiaomi Home Camera'

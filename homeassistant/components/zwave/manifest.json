@@ -3,7 +3,7 @@
   "name": "Z-Wave",
   "documentation": "https://www.home-assistant.io/components/zwave",
   "requirements": [
-    "homeassistant-pyozw==0.1.3",
+    "homeassistant-pyozw==0.1.4",
     "pydispatcher==2.0.5"
   ],
   "dependencies": [],

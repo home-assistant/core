@@ -8,8 +8,6 @@ from . import BLINK_DATA, SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['blink']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Blink sensor."""

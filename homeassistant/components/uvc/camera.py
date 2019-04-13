@@ -10,8 +10,6 @@ from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['uvcclient==0.11.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NVR = 'nvr'

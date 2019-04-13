@@ -6,8 +6,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import NEW_SCENE
 from .gateway import get_gateway_from_config_entry
 
-DEPENDENCIES = ['deconz']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

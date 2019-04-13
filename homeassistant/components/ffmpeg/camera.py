@@ -14,8 +14,6 @@ from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['ffmpeg']
-
 DEFAULT_NAME = 'FFmpeg'
 DEFAULT_ARGUMENTS = "-pred 1"
 

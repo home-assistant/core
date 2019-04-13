@@ -6,8 +6,6 @@ from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DATA_CANARY
 
-DEPENDENCIES = ['canary']
-
 SENSOR_VALUE_PRECISION = 2
 ATTR_AIR_QUALITY = "air_quality"
 

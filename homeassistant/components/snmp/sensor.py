@@ -11,8 +11,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
     CONF_USERNAME, CONF_VALUE_TEMPLATE)
 
-REQUIREMENTS = ['pysnmp==4.4.8']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BASEOID = 'baseoid'

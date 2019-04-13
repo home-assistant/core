@@ -13,8 +13,6 @@ from .const import (
     CONF_MASTER_GATEWAY, DEFAULT_PORT, DOMAIN, _LOGGER)
 from .gateway import DeconzGateway
 
-REQUIREMENTS = ['pydeconz==54']
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_API_KEY): cv.string,

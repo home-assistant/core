@@ -14,8 +14,6 @@ from . import CONF_ALIASES, CONF_DEVICES, RflinkDevice
 CONF_OFF_DELAY = 'off_delay'
 DEFAULT_FORCE_UPDATE = False
 
-DEPENDENCIES = ['rflink']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -53,7 +51,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
     """Representation of an Rflink binary sensor."""
 
     def __init__(self, device_id, device_class=None,
-                 force_update=None, off_delay=None,
+                 force_update=False, off_delay=None,
                  **kwargs):
         """Handle sensor specific args and super init."""
         self._state = None

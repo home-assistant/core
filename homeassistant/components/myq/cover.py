@@ -1,16 +1,16 @@
 """Support for MyQ-Enabled Garage Doors."""
 import logging
-
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN, CoverDevice)
+    CoverDevice, PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN
+)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_CLOSING,
-    STATE_OPEN, STATE_OPENING)
+    STATE_OPEN, STATE_OPENING
+)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-REQUIREMENTS = ['pymyq==1.1.0']
 _LOGGER = logging.getLogger(__name__)
 
 MYQ_TO_HASS = {

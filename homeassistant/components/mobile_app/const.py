@@ -28,7 +28,6 @@ DATA_DEVICES = 'devices'
 DATA_SENSOR = 'sensor'
 DATA_STORE = 'store'
 
-ATTR_APP_COMPONENT = 'app_component'
 ATTR_APP_DATA = 'app_data'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
@@ -42,6 +41,11 @@ ATTR_OS_NAME = 'os_name'
 ATTR_OS_VERSION = 'os_version'
 ATTR_PUSH_TOKEN = 'push_token'
 ATTR_PUSH_URL = 'push_url'
+ATTR_PUSH_RATE_LIMITS = 'rateLimits'
+ATTR_PUSH_RATE_LIMITS_ERRORS = 'errors'
+ATTR_PUSH_RATE_LIMITS_MAXIMUM = 'maximum'
+ATTR_PUSH_RATE_LIMITS_RESETS_AT = 'resetsAt'
+ATTR_PUSH_RATE_LIMITS_SUCCESSFUL = 'successful'
 ATTR_SUPPORTS_ENCRYPTION = 'supports_encryption'
 
 ATTR_EVENT_DATA = 'event_data'
@@ -61,12 +65,12 @@ ATTR_WEBHOOK_ENCRYPTED_DATA = 'encrypted_data'
 ATTR_WEBHOOK_TYPE = 'type'
 
 ERR_ENCRYPTION_REQUIRED = 'encryption_required'
-ERR_INVALID_COMPONENT = 'invalid_component'
 ERR_SENSOR_NOT_REGISTERED = 'not_registered'
 ERR_SENSOR_DUPLICATE_UNIQUE_ID = 'duplicate_unique_id'
 
 WEBHOOK_TYPE_CALL_SERVICE = 'call_service'
 WEBHOOK_TYPE_FIRE_EVENT = 'fire_event'
+WEBHOOK_TYPE_GET_CONFIG = 'get_config'
 WEBHOOK_TYPE_GET_ZONES = 'get_zones'
 WEBHOOK_TYPE_REGISTER_SENSOR = 'register_sensor'
 WEBHOOK_TYPE_RENDER_TEMPLATE = 'render_template'
@@ -75,14 +79,14 @@ WEBHOOK_TYPE_UPDATE_REGISTRATION = 'update_registration'
 WEBHOOK_TYPE_UPDATE_SENSOR_STATES = 'update_sensor_states'
 
 WEBHOOK_TYPES = [WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
-                 WEBHOOK_TYPE_GET_ZONES, WEBHOOK_TYPE_REGISTER_SENSOR,
-                 WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
+                 WEBHOOK_TYPE_GET_CONFIG, WEBHOOK_TYPE_GET_ZONES,
+                 WEBHOOK_TYPE_REGISTER_SENSOR, WEBHOOK_TYPE_RENDER_TEMPLATE,
+                 WEBHOOK_TYPE_UPDATE_LOCATION,
                  WEBHOOK_TYPE_UPDATE_REGISTRATION,
                  WEBHOOK_TYPE_UPDATE_SENSOR_STATES]
 
 
 REGISTRATION_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_APP_COMPONENT): cv.string,
     vol.Optional(ATTR_APP_DATA, default={}): dict,
     vol.Required(ATTR_APP_ID): cv.string,
     vol.Required(ATTR_APP_NAME): cv.string,
@@ -164,7 +168,7 @@ REGISTER_SENSOR_SCHEMA = vol.Schema({
     vol.Required(ATTR_SENSOR_NAME): cv.string,
     vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
     vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-    vol.Required(ATTR_SENSOR_UOM): cv.string,
+    vol.Optional(ATTR_SENSOR_UOM): cv.string,
     vol.Required(ATTR_SENSOR_STATE): vol.Any(bool, str, int, float),
     vol.Optional(ATTR_SENSOR_ICON, default='mdi:cellphone'): cv.icon,
 })

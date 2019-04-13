@@ -15,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt
 
-REQUIREMENTS = ['python_awair==0.0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SCORE = 'score'

@@ -5,8 +5,6 @@ from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
-DEPENDENCIES = ['homematicip_cloud']
-
 _LOGGER = logging.getLogger(__name__)
 
 HMIP_COVER_OPEN = 0

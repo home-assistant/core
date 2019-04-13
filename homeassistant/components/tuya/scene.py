@@ -3,8 +3,6 @@ from homeassistant.components.scene import DOMAIN, Scene
 
 from . import DATA_TUYA, TuyaDevice
 
-DEPENDENCIES = ['tuya']
-
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 

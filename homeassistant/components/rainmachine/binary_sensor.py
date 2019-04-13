@@ -7,11 +7,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
     BINARY_SENSORS, DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN,
+    OPERATION_RESTRICTIONS_CURRENT, OPERATION_RESTRICTIONS_UNIVERSAL,
     SENSOR_UPDATE_TOPIC, TYPE_FREEZE, TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS,
     TYPE_HOURLY, TYPE_MONTH, TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY,
     RainMachineEntity)
 
-DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -80,21 +80,26 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     async def async_update(self):
         """Update the state."""
         if self._sensor_type == TYPE_FREEZE:
-            self._state = self.rainmachine.restrictions['current']['freeze']
+            self._state = self.rainmachine.data[
+                OPERATION_RESTRICTIONS_CURRENT]['freeze']
         elif self._sensor_type == TYPE_FREEZE_PROTECTION:
-            self._state = self.rainmachine.restrictions['global'][
-                'freezeProtectEnabled']
+            self._state = self.rainmachine.data[
+                OPERATION_RESTRICTIONS_UNIVERSAL]['freezeProtectEnabled']
         elif self._sensor_type == TYPE_HOT_DAYS:
-            self._state = self.rainmachine.restrictions['global'][
-                'hotDaysExtraWatering']
+            self._state = self.rainmachine.data[
+                OPERATION_RESTRICTIONS_UNIVERSAL]['hotDaysExtraWatering']
         elif self._sensor_type == TYPE_HOURLY:
-            self._state = self.rainmachine.restrictions['current']['hourly']
+            self._state = self.rainmachine.data[
+                OPERATION_RESTRICTIONS_CURRENT]['hourly']
         elif self._sensor_type == TYPE_MONTH:
-            self._state = self.rainmachine.restrictions['current']['month']
+            self._state = self.rainmachine.data[
+                OPERATION_RESTRICTIONS_CURRENT]['month']
         elif self._sensor_type == TYPE_RAINDELAY:
-            self._state = self.rainmachine.restrictions['current']['rainDelay']
+            self._state = self.rainmachine.data[
+                OPERATION_RESTRICTIONS_CURRENT]['rainDelay']
         elif self._sensor_type == TYPE_RAINSENSOR:
-            self._state = self.rainmachine.restrictions['current'][
-                'rainSensor']
+            self._state = self.rainmachine.data[
+                OPERATION_RESTRICTIONS_CURRENT]['rainSensor']
         elif self._sensor_type == TYPE_WEEKDAY:
-            self._state = self.rainmachine.restrictions['current']['weekDay']
+            self._state = self.rainmachine.data[
+                OPERATION_RESTRICTIONS_CURRENT]['weekDay']

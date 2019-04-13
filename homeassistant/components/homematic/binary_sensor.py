@@ -8,8 +8,6 @@ from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['homematic']
-
 SENSOR_TYPES_CLASS = {
     'IPShutterContact': 'opening',
     'MaxShutterContact': 'opening',

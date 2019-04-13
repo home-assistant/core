@@ -36,9 +36,8 @@ class TestMQTT:
         assert setup_component(self.hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: {CONF_PASSWORD: password},
         })
+        self.hass.block_till_done()
         assert mock_mqtt.called
-        from pprint import pprint
-        pprint(mock_mqtt.mock_calls)
         assert mock_mqtt.mock_calls[1][2]['username'] == 'homeassistant'
         assert mock_mqtt.mock_calls[1][2]['password'] == password
 
@@ -61,9 +60,8 @@ class TestMQTT:
             'http': {'api_password': 'http_secret'},
             mqtt.DOMAIN: {CONF_PASSWORD: password},
         })
+        self.hass.block_till_done()
         assert mock_mqtt.called
-        from pprint import pprint
-        pprint(mock_mqtt.mock_calls)
         assert mock_mqtt.mock_calls[1][2]['username'] == 'homeassistant'
         assert mock_mqtt.mock_calls[1][2]['password'] == password
 

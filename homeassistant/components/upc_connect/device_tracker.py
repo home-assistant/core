@@ -13,8 +13,6 @@ from homeassistant.const import CONF_HOST, HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['defusedxml==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CMD_DEVICES = 123

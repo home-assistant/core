@@ -21,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_TEXT = 'text'
 
-DEPENDENCIES = ['http']
 DOMAIN = 'conversation'
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')

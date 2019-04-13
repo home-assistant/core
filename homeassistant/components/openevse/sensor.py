@@ -11,8 +11,6 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['openevsewifi==0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {

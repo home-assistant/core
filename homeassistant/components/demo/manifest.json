@@ -5,10 +5,9 @@
   "requirements": [],
   "dependencies": [
     "conversation",
-    "introduction",
     "zone"
   ],
   "codeowners": [
-    "@fabaff"
+    "@home-assistant/core"
   ]
 }

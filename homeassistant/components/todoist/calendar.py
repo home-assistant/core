@@ -12,8 +12,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import Throttle, dt
 
-REQUIREMENTS = ['todoist-python==7.0.17']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXTRA_PROJECTS = 'custom_projects'
