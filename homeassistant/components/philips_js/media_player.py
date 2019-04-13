@@ -124,8 +124,7 @@ class PhilipsTV(MediaPlayerDevice):
         """Get the device state. An exception means OFF state."""
         if self._tv.on:
             return STATE_ON
-        else:
-            return STATE_OFF
+        return STATE_OFF
 
     @property
     def source(self):
@@ -137,10 +136,9 @@ class PhilipsTV(MediaPlayerDevice):
             name = self._sources.get(self._tv.source_id)
             prefix = PREFIX_SOURCE
 
-        if name:
-            return prefix + PREFIX_SEPARATOR + name
-        else:
+        if name is None:
             return None
+        return prefix + PREFIX_SEPARATOR + name
 
     @property
     def source_list(self):
@@ -221,34 +219,30 @@ class PhilipsTV(MediaPlayerDevice):
         """Get current channel if it's a channel."""
         if self.media_content_type == MEDIA_TYPE_CHANNEL:
             return self._channels.get(self._tv.channel_id)
-        else:
-            return None
+        return None
 
     @property
     def media_title(self):
         """Title of current playing media."""
         if self.media_content_type == MEDIA_TYPE_CHANNEL:
             return self._channels.get(self._tv.channel_id)
-        else:
-            return self._sources.get(self._tv.source_id)
+        return self._sources.get(self._tv.source_id)
 
     @property
     def media_content_type(self):
         """Return content type of playing media."""
         if (self._tv.source_id == 'tv' or self._tv.source_id == '11'):
             return MEDIA_TYPE_CHANNEL
-        elif(self._tv.source_id is None and self._tv.channels):
+        if (self._tv.source_id is None and self._tv.channels):
             return MEDIA_TYPE_CHANNEL
-        else:
-            return None
+        return None
 
     @property
     def media_content_id(self):
         """Content type of current playing media."""
         if self.media_content_type == MEDIA_TYPE_CHANNEL:
             return self._channels.get(self._tv.channel_id)
-        else:
-            return None
+        return None
 
     @property
     def device_state_attributes(self):
