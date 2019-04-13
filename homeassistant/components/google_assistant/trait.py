@@ -33,7 +33,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
-from .const import ERR_VALUE_OUT_OF_RANGE, ERR_FUNCTION_NOT_SUPPORTED
+from .const import (
+    ERR_VALUE_OUT_OF_RANGE,
+    ERR_NOT_SUPPORTED,
+    ERR_FUNCTION_NOT_SUPPORTED,
+)
 from .helpers import SmartHomeError
 
 _LOGGER = logging.getLogger(__name__)
@@ -1050,9 +1054,13 @@ class OpenCloseTrait(_Trait):
             # Google will not issue an open command if the assumed state is
             # open, even if that is currently incorrect.
             if self.state.attributes.get(ATTR_ASSUMED_STATE):
-                response['openPercent'] = 50
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    'Querying state is not supported')
             elif self.state.state == STATE_UNKNOWN:
-                response['openPercent'] = 50
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    'Querying state is not supported')
             else:
                 position = self.state.attributes.get(
                     cover.ATTR_CURRENT_POSITION

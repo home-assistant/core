@@ -1070,9 +1070,6 @@ async def test_openclose_cover(hass):
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
-    assert trt.query_attributes() == {
-        'openPercent': 50
-    }
 
     # Assumed state
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
@@ -1080,9 +1077,6 @@ async def test_openclose_cover(hass):
     }), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {}
-    assert trt.query_attributes() == {
-        'openPercent': 50
-    }
 
     trt = trait.OpenCloseTrait(hass, State('cover.bla', cover.STATE_OPEN, {
         cover.ATTR_CURRENT_POSITION: 75
