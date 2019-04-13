@@ -11,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['deluge-client==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 _THROTTLED_REFRESH = None
 

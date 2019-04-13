@@ -13,8 +13,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
     CONF_PORT, CONF_SSL, CONF_VERIFY_SSL)
 
-REQUIREMENTS = ['synology-srm==0.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_USERNAME = 'admin'

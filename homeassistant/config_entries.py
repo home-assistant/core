@@ -126,7 +126,7 @@ import uuid
 from typing import Callable, Dict, List, Optional, Set  # noqa pylint: disable=unused-import
 import weakref
 
-from homeassistant import data_entry_flow
+from homeassistant import data_entry_flow, loader
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
@@ -688,7 +688,12 @@ class ConfigEntries:
 
         Handler key is the domain of the component that we want to set up.
         """
-        component = getattr(self.hass.components, handler_key)
+        integration = await loader.async_get_integration(
+            self.hass, handler_key)
+
+        if integration is None:
+            raise data_entry_flow.UnknownHandler
+
         handler = HANDLERS.get(handler_key)
 
         if handler is None:
@@ -698,7 +703,7 @@ class ConfigEntries:
 
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(
-            self.hass, self._hass_config, handler, component)
+            self.hass, self._hass_config, integration)
 
         # Create notification.
         if source in DISCOVERY_SOURCES:

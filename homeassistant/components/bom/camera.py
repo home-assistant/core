@@ -5,8 +5,6 @@ from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['bomradarloop==0.1.2']
-
 CONF_DELTA = 'delta'
 CONF_FRAMES = 'frames'
 CONF_LOCATION = 'location'

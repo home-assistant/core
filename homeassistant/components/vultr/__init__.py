@@ -8,8 +8,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['vultr==0.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AUTO_BACKUPS = 'auto_backups'

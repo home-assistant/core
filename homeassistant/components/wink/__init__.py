@@ -20,8 +20,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['python-wink==1.10.3', 'pubnubsub-handler==1.0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'wink'

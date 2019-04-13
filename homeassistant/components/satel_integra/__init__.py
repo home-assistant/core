@@ -9,8 +9,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['satel_integra==0.3.2']
-
 DEFAULT_ALARM_NAME = 'satel_integra'
 DEFAULT_PORT = 7094
 DEFAULT_CONF_ARM_HOME_MODE = 1

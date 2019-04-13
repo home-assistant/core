@@ -14,8 +14,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['digital_ocean']
-
 DEFAULT_NAME = 'Droplet'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

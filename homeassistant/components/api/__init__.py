@@ -33,8 +33,6 @@ ATTR_REQUIRES_API_PASSWORD = 'requires_api_password'
 ATTR_VERSION = 'version'
 
 DOMAIN = 'api'
-DEPENDENCIES = ['http']
-
 STREAM_PING_PAYLOAD = 'ping'
 STREAM_PING_INTERVAL = 50  # seconds
 

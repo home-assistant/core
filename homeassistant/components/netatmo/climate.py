@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.util import Throttle
 
-DEPENDENCIES = ['netatmo']
+from . import NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,12 +66,10 @@ NA_VALVE = 'NRV'
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
-    netatmo = hass.components.netatmo
-
     import pyatmo
     homes_conf = config.get(CONF_HOMES)
     try:
-        home_data = HomeData(netatmo.NETATMO_AUTH)
+        home_data = HomeData(NETATMO_AUTH)
     except pyatmo.NoDevice:
         return
 
@@ -90,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for home in homes:
         _LOGGER.debug("Setting up %s ...", home)
         try:
-            room_data = ThermostatData(netatmo.NETATMO_AUTH, home)
+            room_data = ThermostatData(NETATMO_AUTH, home)
         except pyatmo.NoDevice:
             continue
         for room_id in room_data.get_room_ids():

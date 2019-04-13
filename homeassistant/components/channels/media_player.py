@@ -15,8 +15,6 @@ from homeassistant.const import (
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pychannels==1.0.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CHANNELS = 'channels'

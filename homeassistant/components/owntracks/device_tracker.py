@@ -10,8 +10,6 @@ from homeassistant.util import decorator, slugify
 
 from . import DOMAIN as OT_DOMAIN
 
-DEPENDENCIES = ['owntracks']
-
 _LOGGER = logging.getLogger(__name__)
 
 HANDLERS = decorator.Registry()

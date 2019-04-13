@@ -16,9 +16,6 @@ from homeassistant.const import PRECISION_TENTHS
 from homeassistant.util import Throttle
 
 
-REQUIREMENTS = ['Adafruit-GPIO==1.0.3',
-                'Adafruit-SHT31==1.0.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_I2C_ADDRESS = 'i2c_address'

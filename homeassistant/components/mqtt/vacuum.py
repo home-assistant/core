@@ -22,8 +22,6 @@ from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
-
 SERVICE_TO_STRING = {
     SUPPORT_TURN_ON: 'turn_on',
     SUPPORT_TURN_OFF: 'turn_off',

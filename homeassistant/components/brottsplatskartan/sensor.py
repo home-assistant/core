@@ -12,8 +12,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['brottsplatskartan==0.0.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AREA = 'area'

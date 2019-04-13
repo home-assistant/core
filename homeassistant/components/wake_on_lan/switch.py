@@ -10,8 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['wakeonlan==1.1.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BROADCAST_ADDRESS = 'broadcast_address'

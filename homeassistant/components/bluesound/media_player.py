@@ -29,8 +29,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['xmltodict==0.11.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MASTER = 'master'

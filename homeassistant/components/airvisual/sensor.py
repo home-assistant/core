@@ -13,7 +13,6 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyairvisual==3.0.1']
 _LOGGER = getLogger(__name__)
 
 ATTR_CITY = 'city'

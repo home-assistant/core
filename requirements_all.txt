@@ -466,6 +466,9 @@ geojson_client==0.3
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.2
 
+# homeassistant.components.ign_sismologia
+georss_ign_sismologia_client==0.2
+
 # homeassistant.components.gitter
 gitterpy==0.1.7
 
@@ -551,7 +554,7 @@ homeassistant-pyozw==0.1.4
 homekit[IP]==0.13.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.6
+homematicip==0.10.7
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1423,7 +1426,7 @@ pytradfri[async]==6.0.1
 pytrafikverket==0.1.5.9
 
 # homeassistant.components.ubee
-pyubee==0.2
+pyubee==0.5
 
 # homeassistant.components.unifi
 pyunifi==2.16

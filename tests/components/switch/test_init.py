@@ -18,7 +18,7 @@ class TestSwitch(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        platform = loader.get_component(self.hass, 'switch.test')
+        platform = loader.get_component(self.hass, 'test.switch')
         platform.init()
         # Switch 1 is ON, switch 2 is OFF
         self.switch_1, self.switch_2, self.switch_3 = \
@@ -77,7 +77,7 @@ class TestSwitch(unittest.TestCase):
     def test_setup_two_platforms(self):
         """Test with bad configuration."""
         # Test if switch component returns 0 switches
-        test_platform = loader.get_component(self.hass, 'switch.test')
+        test_platform = loader.get_component(self.hass, 'test.switch')
         test_platform.init(True)
 
         loader.set_component(self.hass, 'switch.test2', test_platform)
@@ -98,6 +98,8 @@ async def test_switch_context(hass, hass_admin_user):
             'platform': 'test'
         }
     })
+
+    await hass.async_block_till_done()
 
     state = hass.states.get('switch.ac')
     assert state is not None

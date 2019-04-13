@@ -14,7 +14,6 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['http']
 DOMAIN = 'system_health'
 
 INFO_CALLBACK_TIMEOUT = 5

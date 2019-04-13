@@ -12,8 +12,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['xmltodict==0.11.0']
-
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.zillow.com/webservice/GetZestimate.htm'
 

@@ -9,8 +9,6 @@ from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['wink']
-
 STATE_ALARM_PRIVACY = 'Private'
 
 

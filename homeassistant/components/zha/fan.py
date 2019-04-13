@@ -12,8 +12,6 @@ from .core.const import (
 )
 from .entity import ZhaEntity
 
-DEPENDENCIES = ['zha']
-
 _LOGGER = logging.getLogger(__name__)
 
 # Additional speeds in zigbee's ZCL

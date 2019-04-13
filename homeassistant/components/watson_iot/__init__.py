@@ -13,8 +13,6 @@ from homeassistant.const import (
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['ibmiotf==0.3.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ORG = 'organization'

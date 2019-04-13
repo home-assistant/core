@@ -8,8 +8,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_SWITCHES, CONF_MAC, CONF_DISCOVERY)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['orvibo==1.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Orvibo S20 Switch'

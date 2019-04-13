@@ -14,8 +14,6 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pynut2==2.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'NUT UPS'

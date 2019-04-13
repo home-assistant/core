@@ -5,10 +5,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, SENSOR_UPDATE_TOPIC, SENSORS,
+    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN,
+    OPERATION_RESTRICTIONS_UNIVERSAL, SENSOR_UPDATE_TOPIC, SENSORS,
     RainMachineEntity)
 
-DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -82,5 +82,5 @@ class RainMachineSensor(RainMachineEntity):
 
     async def async_update(self):
         """Update the sensor's state."""
-        self._state = self.rainmachine.restrictions['global'][
+        self._state = self.rainmachine.data[OPERATION_RESTRICTIONS_UNIVERSAL][
             'freezeProtectTemp']

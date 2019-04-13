@@ -11,8 +11,6 @@ from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['libpyfoscam==1.0']
-
 CONF_IP = 'ip'
 CONF_RTSP_PORT = 'rtsp_port'
 

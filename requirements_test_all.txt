@@ -111,6 +111,12 @@ geojson_client==0.3
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.2
 
+# homeassistant.components.ign_sismologia
+georss_ign_sismologia_client==0.2
+
+# homeassistant.components.google
+google-api-python-client==1.6.4
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==2.0
 
@@ -136,7 +142,11 @@ home-assistant-frontend==20190331.0
 homekit[IP]==0.13.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.6
+homematicip==0.10.7
+
+# homeassistant.components.google
+# homeassistant.components.remember_the_milk
+httplib2==0.10.3
 
 # homeassistant.components.influxdb
 influxdb==5.2.0
@@ -164,6 +174,9 @@ mficlient==0.3.0
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==1.16.2
+
+# homeassistant.components.google
+oauth2client==4.0.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr

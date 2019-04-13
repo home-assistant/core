@@ -8,8 +8,6 @@ import homeassistant.util.dt as dt_util
 
 from . import CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME
 
-DEPENDENCIES = ['googlehome']
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)

@@ -8,8 +8,6 @@ from .const import CARD_STATE_ACTIVE, CARD_STATE_BLOCKED, DATA
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['n26']
-
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
 

@@ -8,11 +8,9 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
-from . import CameraData
+from . import CameraData, NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['netatmo']
 
 # These are the available sensors mapped to binary_sensor class
 WELCOME_SENSOR_TYPES = {
@@ -53,7 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
-    netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     timeout = config.get(CONF_TIMEOUT)
     if timeout is None:
@@ -63,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     import pyatmo
     try:
-        data = CameraData(hass, netatmo.NETATMO_AUTH, home)
+        data = CameraData(hass, NETATMO_AUTH, home)
         if not data.get_camera_names():
             return None
     except pyatmo.NoDevice:

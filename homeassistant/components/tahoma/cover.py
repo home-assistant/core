@@ -7,8 +7,6 @@ from homeassistant.util.dt import utcnow
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
-DEPENDENCIES = ['tahoma']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MEM_POS = 'memorized_position'

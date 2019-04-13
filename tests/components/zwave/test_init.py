@@ -558,13 +558,13 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_discovery(self, discovery, get_platform):
+    def test_entity_discovery(self, discovery, import_module):
         """Test the creation of a new entity."""
         discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
-        get_platform.return_value = mock_platform
+        import_module.return_value = mock_platform
         mock_device = MagicMock()
         mock_device.name = 'test_device'
         mock_platform.get_device.return_value = mock_device
@@ -618,13 +618,13 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert values._entity.value_changed.called
         assert len(values._entity.value_changed.mock_calls) == 1
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_existing_values(self, discovery, get_platform):
+    def test_entity_existing_values(self, discovery, import_module):
         """Test the loading of already discovered values."""
         discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
-        get_platform.return_value = mock_platform
+        import_module.return_value = mock_platform
         mock_device = MagicMock()
         mock_device.name = 'test_device'
         mock_platform.get_device.return_value = mock_device
@@ -663,9 +663,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert args[4] == self.zwave_config
         assert not self.primary.enable_poll.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_node_schema_mismatch(self, discovery, get_platform):
+    def test_node_schema_mismatch(self, discovery, import_module):
         """Test node schema mismatch."""
         self.node.generic = 'no_match'
         self.node.values = {
@@ -686,13 +686,13 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_workaround_component(self, discovery, get_platform):
+    def test_entity_workaround_component(self, discovery, import_module):
         """Test component workaround."""
         discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
-        get_platform.return_value = mock_platform
+        import_module.return_value = mock_platform
         mock_device = MagicMock()
         mock_device.name = 'test_device'
         mock_platform.get_device.return_value = mock_device
@@ -729,9 +729,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             args = mock_dispatch_send.mock_calls[0][1]
             assert args[1] == 'zwave_new_binary_sensor'
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_workaround_ignore(self, discovery, get_platform):
+    def test_entity_workaround_ignore(self, discovery, import_module):
         """Test ignore workaround."""
         self.node.manufacturer_id = '010f'
         self.node.product_type = '0301'
@@ -758,9 +758,9 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_config_ignore(self, discovery, get_platform):
+    def test_entity_config_ignore(self, discovery, import_module):
         """Test ignore config."""
         self.node.values = {
             self.primary.value_id: self.primary,
@@ -782,9 +782,10 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_config_ignore_with_registry(self, discovery, get_platform):
+    def test_entity_config_ignore_with_registry(self, discovery,
+                                                import_module):
         """Test ignore config.
 
         The case when the device is in entity registry.
@@ -813,16 +814,16 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_entity_platform_ignore(self, discovery, get_platform):
+    def test_entity_platform_ignore(self, discovery, import_module):
         """Test platform ignore device."""
         self.node.values = {
             self.primary.value_id: self.primary,
             self.secondary.value_id: self.secondary,
         }
         platform = MagicMock()
-        get_platform.return_value = platform
+        import_module.return_value = platform
         platform.get_device.return_value = None
         zwave.ZWaveDeviceEntityValues(
             hass=self.hass,
@@ -836,12 +837,12 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
         assert not discovery.async_load_platform.called
 
-    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'import_module')
     @patch.object(zwave, 'discovery')
-    def test_config_polling_intensity(self, discovery, get_platform):
+    def test_config_polling_intensity(self, discovery, import_module):
         """Test polling intensity."""
         mock_platform = MagicMock()
-        get_platform.return_value = mock_platform
+        import_module.return_value = mock_platform
         mock_device = MagicMock()
         mock_device.name = 'test_device'
         mock_platform.get_device.return_value = mock_device
