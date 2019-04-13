@@ -18,6 +18,9 @@ class HuePresence(GenericZLLSensor, BinarySensorDevice):
 
     device_class = 'presence'
 
+    async def _async_update_ha_state(self, *args, **kwargs):
+        await self.async_update_ha_state(self, *args, **kwargs)
+
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""

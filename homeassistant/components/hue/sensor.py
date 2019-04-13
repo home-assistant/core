@@ -16,7 +16,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, config_entry, async_add_entities, binary=False)
 
 
-class HueLightLevel(GenericZLLSensor, Entity):
+class GenericHueGaugeSensorEntity(GenericZLLSensor, Entity):
+    """Parent class for all 'gauge' Hue device sensors."""
+
+    async def _async_update_ha_state(self, *args, **kwargs):
+        await self.async_update_ha_state(self, *args, **kwargs)
+
+
+class HueLightLevel(GenericHueGaugeSensorEntity):
     """The light level sensor entity for a Hue motion sensor device."""
 
     device_class = DEVICE_CLASS_ILLUMINANCE
@@ -38,7 +45,7 @@ class HueLightLevel(GenericZLLSensor, Entity):
         return attributes
 
 
-class HueTemperature(GenericZLLSensor, Entity):
+class HueTemperature(GenericHueGaugeSensorEntity):
     """The temperature sensor entity for a Hue motion sensor device."""
 
     device_class = DEVICE_CLASS_TEMPERATURE

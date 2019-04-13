@@ -7,6 +7,7 @@ from time import monotonic
 import async_timeout
 
 from homeassistant.components import hue
+from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -164,7 +165,8 @@ class SensorManager:
         for item_id in api:
             existing = current.get(api[item_id].uniqueid)
             if existing is not None:
-                self.hass.async_create_task(existing.async_update_ha_state())
+                self.hass.async_create_task(
+                    existing.async_maybe_update_ha_state())
                 continue
 
             primary_sensor = None
@@ -206,6 +208,9 @@ class GenericHueSensor:
         self._primary_sensor = primary_sensor
         self.bridge = bridge
 
+    async def _async_update_ha_state(self, *args, **kwargs):
+        raise NotImplementedError
+
     @property
     def primary_sensor(self):
         """Return the primary sensor entity of the physical device."""
@@ -236,6 +241,17 @@ class GenericHueSensor:
     def swupdatestate(self):
         """Return detail of available software updates for this device."""
         return self.primary_sensor.raw.get('swupdate', {}).get('state')
+
+    async def async_maybe_update_ha_state(self):
+        """Try to update Home Assistant with current state of entity.
+
+        But if it's not been added to hass yet, then don't throw an error.
+        """
+        try:
+            await self._async_update_ha_state()
+        except (RuntimeError, NoEntitySpecifiedError):
+            _LOGGER.debug(
+                "Hue sensor update requested before it has been added.")
 
     @property
     def device_info(self):
