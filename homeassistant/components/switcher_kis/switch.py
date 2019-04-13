@@ -16,7 +16,7 @@ _LOGGER = getLogger(__name__)
 
 DEPENDENCIES = ['switcher_kis']
 
-PROPERTIES_TO_ATTRIBUTES = {
+PROPERTIES_TO_DEVICE_ATTRIBUTES = {
     'current_power_w': ATTR_CURRENT_POWER_W,
     'electric_current': ATTR_ELECTRIC_CURRNET,
     'remaining_time': ATTR_REMAINING_TIME,
@@ -97,7 +97,7 @@ class SwitcherControl(SwitchDevice):
 
         attribs = {}
 
-        for prop, attr in PROPERTIES_TO_ATTRIBUTES.items():
+        for prop, attr in PROPERTIES_TO_DEVICE_ATTRIBUTES.items():
             value = getattr(self, prop)
             if value and value is not WAITING_TEXT:
                 attribs[attr] = value

@@ -17,8 +17,6 @@ from homeassistant.helpers.typing import EventType, HomeAssistantType
 
 _LOGGER = getLogger(__name__)
 
-REQUIREMENTS = ['aioswitcher==2019.3.21']
-
 DOMAIN = 'switcher_kis'
 
 CONF_DEVICE_ID = 'device_id'
