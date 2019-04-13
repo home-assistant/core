@@ -70,7 +70,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
     assert result['data'] == {CONF_HOST: "127.0.0.1"}
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
-    assert not hass.data[DATA_DISCOVERED_HOSTS]
+    assert DATA_DISCOVERED_HOSTS not in hass.data
 
 
 async def test_discovery_shows_create_form(hass, controller, discovery_data):
