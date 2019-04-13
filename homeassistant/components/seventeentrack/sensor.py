@@ -265,7 +265,7 @@ class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
     def __init__(
-            self, hass, client, async_add_entities, scan_interval,
+            self, client, hass, async_add_entities, scan_interval,
             show_archived, show_delivered):
         """Initialize."""
         self._async_add_entities = async_add_entities
