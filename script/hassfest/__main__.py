@@ -18,7 +18,7 @@ def get_config() -> Config:
         raise RuntimeError("Run from project root")
 
     return Config(
-        root=pathlib.Path('.'),
+        root=pathlib.Path('.').absolute(),
         action='validate' if sys.argv[-1] == 'validate' else 'generate',
     )
 
