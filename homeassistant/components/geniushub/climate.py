@@ -66,7 +66,7 @@ class GeniusClimate(ClimateDevice):
 
         # Only some zones have movement detectors, which allows footprint mode
         op_list = list(HA_OPMODE_TO_GH)
-        if hasattr(self._objref, 'occupied'):
+        if not hasattr(self._objref, 'occupied'):
             op_list.remove(STATE_ECO)
         self._operation_list = op_list
 
