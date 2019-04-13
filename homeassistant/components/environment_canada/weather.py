@@ -20,8 +20,6 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['env_canada==0.0.8']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FORECAST = 'forecast'

@@ -396,11 +396,11 @@ enocean==0.50
 
 # homeassistant.components.entur_public_transport
 enturclient==0.2.0
-# homeassistant.components.sensor.entur_public_transport
-enturclient==0.1.3
+
+# homeassistant.components.environment_canada
+env_canada==0.0.8
 
 # homeassistant.components.envirophat
-# homeassistant.components.sensor.envirophat
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
