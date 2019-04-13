@@ -67,7 +67,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
     codeowners_path = config.root / 'CODEOWNERS'
     config.cache['codeowners'] = content = generate_and_validate(integrations)
 
-    with open(codeowners_path, 'r') as fp:
+    with open(str(codeowners_path), 'r') as fp:
         if fp.read().strip() != content:
             config.add_error(
                 "codeowners",
@@ -81,5 +81,5 @@ def validate(integrations: Dict[str, Integration], config: Config):
 def generate(integrations: Dict[str, Integration], config: Config):
     """Generate CODEOWNERS."""
     codeowners_path = config.root / 'CODEOWNERS'
-    with open(codeowners_path, 'w') as fp:
+    with open(str(codeowners_path), 'w') as fp:
         fp.write(config.cache['codeowners'] + '\n')
