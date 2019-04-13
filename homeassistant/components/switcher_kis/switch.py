@@ -6,7 +6,6 @@ from typing import Any, Callable, cast, Dict, Optional
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.exceptions import PlatformNotReady
 
 from . import (
     ATTR_AUTO_OFF_SET, ATTR_DEVICE_NAME, ATTR_ELECTRIC_CURRNET,
@@ -27,9 +26,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: Dict,
                                async_add_entities: Callable,
                                discovery_info: Dict) -> None:
     """Set up the switcher platform for the switch component."""
-    if DOMAIN not in hass.data:
-        raise PlatformNotReady("No configuration data found.")
-
+    assert DOMAIN in hass.data
     async_add_entities([SwitcherControl(hass.data[DOMAIN][DATA_DEVICE])])
 
 
