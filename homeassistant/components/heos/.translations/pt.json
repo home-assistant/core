@@ -3,10 +3,10 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Servidor"
+                    "host": "Servidor"
                 }
             }
         },
-        "title": "Heos"
+        "title": "HEOS"
     }
 }

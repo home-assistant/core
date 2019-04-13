@@ -4,7 +4,7 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 
 from .const import DOMAIN
 
@@ -20,15 +20,22 @@ class HeosFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+    DISCOVERED_HOSTS = {}
 
     async def async_step_discovery(self, discovery_info):
         """Handle a discovered Heos device."""
+        friendly_name = "{} ({})".format(
+            discovery_info[CONF_NAME], discovery_info[CONF_HOST])
+        self.DISCOVERED_HOSTS[friendly_name] = discovery_info[CONF_HOST]
+        # Only a single entry is needed for all devices
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        if entries:
+            return self.async_abort(reason='already_setup')
         # Only continue if this is the only active flow
         flows = self.hass.config_entries.flow.async_progress()
         heos_flows = [flow for flow in flows if flow['handler'] == DOMAIN]
         if len(heos_flows) == 1:
-            return await self.async_step_user(
-                {CONF_HOST: discovery_info[CONF_HOST]})
+            return self.async_show_form(step_id='user')
         return self.async_abort(reason='already_setup')
 
     async def async_step_import(self, user_input=None):
@@ -52,19 +59,24 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         host = None
         if user_input is not None:
             host = user_input[CONF_HOST]
+            # Map host from friendly name if in discovered hosts
+            host = self.DISCOVERED_HOSTS.get(host, host)
             heos = Heos(host)
             try:
                 await heos.connect()
-                return await self.async_step_import(user_input)
+                self.DISCOVERED_HOSTS.clear()
+                return await self.async_step_import({CONF_HOST: host})
             except (asyncio.TimeoutError, ConnectionError):
                 errors[CONF_HOST] = 'connection_failure'
             finally:
                 await heos.disconnect()
 
         # Return form
+        host_type = str if not self.DISCOVERED_HOSTS \
+            else vol.In(list(self.DISCOVERED_HOSTS))
         return self.async_show_form(
             step_id='user',
             data_schema=vol.Schema({
-                vol.Required(CONF_HOST, default=host): str
+                vol.Required(CONF_HOST, default=host): host_type
             }),
             errors=errors)
