@@ -1,5 +1,4 @@
 """Support for Broadlink RM devices."""
-from base64 import b64decode
 import binascii
 from datetime import timedelta
 import logging
@@ -15,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, slugify
 
-from . import async_setup_service
+from . import async_setup_service, data_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,8 +34,8 @@ MP1_TYPES = ['mp1']
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF): cv.string,
-    vol.Optional(CONF_COMMAND_ON): cv.string,
+    vol.Optional(CONF_COMMAND_OFF): data_packet,
+    vol.Optional(CONF_COMMAND_ON): data_packet,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 
@@ -124,8 +123,8 @@ class BroadlinkRMSwitch(SwitchDevice):
         self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
         self._name = friendly_name
         self._state = False
-        self._command_on = b64decode(command_on) if command_on else None
-        self._command_off = b64decode(command_off) if command_off else None
+        self._command_on = command_on
+        self._command_off = command_off
         self._device = device
 
     @property
