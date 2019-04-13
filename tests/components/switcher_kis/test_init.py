@@ -6,8 +6,6 @@ from homeassistant.components.switcher_kis import (DOMAIN, DATA_DEVICE)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component
-
 from .consts import (
     DUMMY_AUTO_OFF_SET, DUMMY_DEVICE_ID, DUMMY_DEVICE_NAME,
     DUMMY_DEVICE_STATE, DUMMY_ELECTRIC_CURRENT, DUMMY_IP_ADDRESS,
@@ -25,9 +23,7 @@ async def test_minimal_config(hass: HomeAssistantType,
                               mock_bridge: Generator[None, Any, None]
                               ) -> None:
     """Test setup with configuration minimal entries."""
-    with assert_setup_component(3, DOMAIN):
-        assert await async_setup_component(
-            hass, DOMAIN, MANDATORY_CONFIGURATION)
+    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
 
 
 async def test_discovery_data_bucket(
