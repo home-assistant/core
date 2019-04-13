@@ -1,7 +1,7 @@
 """Home Assistant Switcher Component Switch platform."""
 
 from logging import getLogger
-from typing import Callable, cast, Dict, Optional
+from typing import Any, Callable, cast, Dict, Optional
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -32,29 +32,21 @@ async def async_setup_platform(hass: HomeAssistantType, config: Dict,
     if DOMAIN not in hass.data:
         raise PlatformNotReady("No configuration data found.")
 
-    async_add_entities([
-        SwitcherControl(hass, hass.data[DOMAIN][DATA_DEVICE])])
+    async_add_entities([SwitcherControl(hass.data[DOMAIN][DATA_DEVICE])])
 
 
 class SwitcherControl(SwitchDevice):
     """Home Assistant switch entity."""
 
-    from aioswitcher.devices import SwitcherV2Device
-
-    def __init__(self, hass: HomeAssistantType,
-                 device_data: SwitcherV2Device) -> None:
+    def __init__(self, device_data: Any) -> None:
         """Initialize the entity."""
+        # pylint: disable=unused-import
+        from aioswitcher.devices import SwitcherV2Device
+        # pylint: enable=unused-import
         self._self_initiated = False
-
-        self._device_data = device_data
+        self._device_data = device_data  # type: SwitcherV2Device
         self._state = device_data.state
-        self._unsub_dispatcher = async_dispatcher_connect(
-            hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data)
-
-    @property
-    def device_ip_addr(self) -> str:
-        """Return the device's ip address."""
-        return cast(str, self._device_data.ip_addr)
+        self._unsub_dispatcher = None  # type: Optional[Callable[..., Any]]
 
     @property
     def electric_current(self) -> float:
@@ -62,11 +54,9 @@ class SwitcherControl(SwitchDevice):
         return cast(float, self._device_data.electric_current)
 
     @property
-    def remaining_time(self) -> Optional[str]:
+    def remaining_time(self) -> str:
         """Return the remaining time to off command."""
-        return self._device_data.remaining_time \
-            if isinstance(self._device_data.remaining_time, str) \
-            else None
+        return cast(str, self._device_data.remaining_time)
 
     @property
     def auto_off_set(self) -> str:
@@ -121,18 +111,29 @@ class SwitcherControl(SwitchDevice):
                                         STATE_ON as SWITCHER_STATE_ON)
         return self._state in [SWITCHER_STATE_ON, SWITCHER_STATE_OFF]
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        if not self.hass:
+            return
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data)
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._unsub_dispatcher:
             self._unsub_dispatcher()
 
-    async def async_update_data(self, device_data: SwitcherV2Device) -> None:
+    async def async_update_data(self, device_data: Any) -> None:
         """Update the entity data."""
-        if device_data:
+        # pylint: disable=unused-import
+        from aioswitcher.devices import SwitcherV2Device
+        # pylint: enable=unused-import
+        temp_device = device_data  # type: SwitcherV2Device
+        if temp_device:
             if self._self_initiated:
                 self._self_initiated = False
             else:
-                self._device_data = device_data
+                self._device_data = temp_device
                 self._state = self._device_data.state
                 self.async_schedule_update_ha_state()
 
@@ -154,17 +155,18 @@ class SwitcherControl(SwitchDevice):
         """Turn the entity on or off."""
         from aioswitcher.api import SwitcherV2Api
         # pylint: disable=unused-import
-        from aioswitcher.api.messages import (  # noqa F401
-            SwitcherV2ControlResponseMSG)
+        from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
         # pylint: enable=unused-import
         from aioswitcher.consts import (COMMAND_OFF, COMMAND_ON,
                                         STATE_OFF as SWITCHER_STATE_OFF,
                                         STATE_ON as SWITCHER_STATE_ON)
+        if not self.hass:
+            return
 
         response = None  # type: SwitcherV2ControlResponseMSG
 
         async with SwitcherV2Api(
-                self.hass.loop, self.device_ip_addr,
+                self.hass.loop, self._device_data.ip_addr,
                 self._device_data.phone_id, self._device_data.device_id,
                 self._device_data.device_password) as swapi:
             response = await swapi.control_device(
