@@ -126,8 +126,8 @@ async def _async_setup_component(hass: core.HomeAssistant,
             "%s -> %s", domain, err.from_domain, err.to_domain)
         return False
 
-    processed_config = \
-        conf_util.async_process_component_config(hass, config, domain)
+    processed_config = await conf_util.async_process_component_config(
+        hass, config, integration)
 
     if processed_config is None:
         log_error("Invalid config.")
