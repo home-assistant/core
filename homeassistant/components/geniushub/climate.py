@@ -152,11 +152,6 @@ class GeniusClimate(ClimateDevice):
         # TODO: also change target temp to appropriate SP
         _LOGGER.error("self(%s).set_op_mode(operation_mode=%s", self._id, operation_mode)  # TODO: remove this
 
-        # if operation_mode == STATE_MANUAL:
-        #     temperature = self._objref.setpoint
-        #     _LOGGER.warn("self._objref.set_override(3600, %s)", temperature)
-        #     await self._objref.set_override(3600, temperature)  # 1 hour
-        # else:
         _LOGGER.warn("self._objref.set_mode(HA_OPMODE_TO_GH.get(%s))", operation_mode)
         _LOGGER.warn("self._objref.set_mode(%s)", HA_OPMODE_TO_GH.get(operation_mode))
         await self._objref.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
