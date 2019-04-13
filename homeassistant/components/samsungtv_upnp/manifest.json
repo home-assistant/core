@@ -1,0 +1,10 @@
+{
+  "domain": "samsungtv_upnp",
+  "name": "SamsungTV UPNP",
+  "documentation": "https://www.home-assistant.io/components/samsungtv_upnp",
+  "requirements": [
+    "async-upnp-client==0.14.7"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
