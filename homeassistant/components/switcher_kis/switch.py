@@ -146,11 +146,8 @@ class SwitcherControl(SwitchDevice):
         from aioswitcher.consts import (COMMAND_OFF, COMMAND_ON,
                                         STATE_OFF as SWITCHER_STATE_OFF,
                                         STATE_ON as SWITCHER_STATE_ON)
-        if not self.hass:
-            return
 
         response = None  # type: SwitcherV2ControlResponseMSG
-
         async with SwitcherV2Api(
                 self.hass.loop, self._device_data.ip_addr,
                 self._device_data.phone_id, self._device_data.device_id,
