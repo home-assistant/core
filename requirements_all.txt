@@ -96,7 +96,6 @@ abodepy==0.15.0
 # homeassistant.components.azuredns
 adal==1.2.1
 
-# homeassistant.components.frontier_silicon.media_player
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
 
