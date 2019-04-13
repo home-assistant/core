@@ -1057,21 +1057,22 @@ class OpenCloseTrait(_Trait):
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED,
                     'Querying state is not supported')
-            elif self.state.state == STATE_UNKNOWN:
+
+            if self.state.state == STATE_UNKNOWN:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED,
                     'Querying state is not supported')
-            else:
-                position = self.state.attributes.get(
-                    cover.ATTR_CURRENT_POSITION
-                )
 
-                if position is not None:
-                    response['openPercent'] = position
-                elif self.state.state != cover.STATE_CLOSED:
-                    response['openPercent'] = 100
-                else:
-                    response['openPercent'] = 0
+            position = self.state.attributes.get(
+                cover.ATTR_CURRENT_POSITION
+            )
+
+            if position is not None:
+                response['openPercent'] = position
+            elif self.state.state != cover.STATE_CLOSED:
+                response['openPercent'] = 100
+            else:
+                response['openPercent'] = 0
 
         elif domain == binary_sensor.DOMAIN:
             if self.state.state == STATE_ON:
