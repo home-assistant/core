@@ -3,7 +3,7 @@ import asyncio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.heos.config_flow import HeosFlowHandler
-from homeassistant.components.heos.const import DOMAIN
+from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 
 
@@ -60,7 +60,7 @@ async def test_create_entry_when_host_valid(hass, controller):
 
 async def test_create_entry_when_friendly_name_valid(hass, controller):
     """Test result type is create entry when friendly name is valid."""
-    HeosFlowHandler.DISCOVERED_HOSTS["Office (127.0.0.1)"] = "127.0.0.1"
+    hass.data[DATA_DISCOVERED_HOSTS] = {"Office (127.0.0.1)": "127.0.0.1"}
     flow = HeosFlowHandler()
     flow.hass = hass
     data = {CONF_HOST: "Office (127.0.0.1)"}
@@ -70,7 +70,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
     assert result['data'] == {CONF_HOST: "127.0.0.1"}
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
-    assert not HeosFlowHandler.DISCOVERED_HOSTS
+    assert not hass.data[DATA_DISCOVERED_HOSTS]
 
 
 async def test_discovery_shows_create_form(hass, controller, discovery_data):
@@ -80,7 +80,7 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
                 data=discovery_data)
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 1
-    assert HeosFlowHandler.DISCOVERED_HOSTS == {
+    assert hass.data[DATA_DISCOVERED_HOSTS] == {
         "Office (127.0.0.1)": "127.0.0.1"
     }
 
@@ -91,11 +91,10 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
                 data=discovery_data)
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 1
-    assert HeosFlowHandler.DISCOVERED_HOSTS == {
+    assert hass.data[DATA_DISCOVERED_HOSTS] == {
         "Office (127.0.0.1)": "127.0.0.1",
         "Bedroom (127.0.0.2)": "127.0.0.2"
     }
-    HeosFlowHandler.DISCOVERED_HOSTS.clear()
 
 
 async def test_disovery_flow_aborts_already_setup(
