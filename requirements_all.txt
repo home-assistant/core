@@ -458,24 +458,12 @@ gearbest_parser==1.0.7
 # homeassistant.components.geizhals
 geizhals==0.0.9
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 # homeassistant.components.geniushub
-geniushub==0.1
+geniushub-client==0.3.4
 
-# homeassistant.components.geo_json_events.geo_location
-# homeassistant.components.nsw_rural_fire_service_feed.geo_location
-# homeassistant.components.usgs_earthquakes_feed.geo_location
-=======
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
 # homeassistant.components.usgs_earthquakes_feed
->>>>>>> e8343452cd4702a61166fd74d78323bf95092f7c
-=======
-# homeassistant.components.geo_json_events
-# homeassistant.components.nsw_rural_fire_service_feed
-# homeassistant.components.usgs_earthquakes_feed
->>>>>>> d09dfa0a25c4c84617f3bce6f4ac98d0ad309e32
 geojson_client==0.3
 
 # homeassistant.components.geo_rss_events
