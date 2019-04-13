@@ -1,0 +1,14 @@
+{
+  "domain": "stiebel_eltron",
+  "name": "STIEBEL ELTRON",
+  "documentation": "https://www.home-assistant.io/components/stiebel_eltron",
+  "requirements": [
+    "pystiebeleltron==0.0.1.dev2"
+  ],
+  "dependencies": [
+    "modbus"
+  ],
+  "codeowners": [
+    "@fucm"
+  ]
+}

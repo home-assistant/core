@@ -21,7 +21,8 @@ ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
 ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
 
-def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
     """Set up the platform.
 
     Deprecated.
