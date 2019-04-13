@@ -3,11 +3,12 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_MANUAL,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.stiebel_eltron import DOMAIN as STE_DOMAIN
+    STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, TEMP_CELSIUS, STATE_OFF, STATE_ON)
+    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS)
+
+from . import DOMAIN as STE_DOMAIN
 
 DEPENDENCIES = ['stiebel_eltron']
 

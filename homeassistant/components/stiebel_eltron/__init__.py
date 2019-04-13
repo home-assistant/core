@@ -11,9 +11,6 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pystiebeleltron==0.0.1.dev2']
-DEPENDENCIES = ['modbus']
-
 DOMAIN = 'stiebel_eltron'
 
 CONFIG_SCHEMA = vol.Schema({
