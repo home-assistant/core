@@ -1,7 +1,6 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
 import logging
 
-
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -55,7 +54,7 @@ class SatelIntegraSwitch(SwitchDevice):
     @callback
     def _devices_updated(self, zones):
         """Update switch state, if needed."""
-        _LOGGER.debug("Update switch name: %s zones: %s.", self._name, zones)
+        _LOGGER.debug("Update switch name: %s zones: %s", self._name, zones)
         if self._device_number in zones:
             new_state = self._read_state()
             _LOGGER.debug("New state: %s", new_state)

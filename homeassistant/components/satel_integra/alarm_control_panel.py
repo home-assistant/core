@@ -150,5 +150,5 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         _LOGGER.debug("Arming home")
 
         if code:
-            await self._satel\
-                      .arm(code, [self._partition_id], self._arm_home_mode)
+            await self._satel.arm(
+                code, [self._partition_id], self._arm_home_mode)
