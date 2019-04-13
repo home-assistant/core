@@ -1,9 +1,4 @@
-"""
-Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.bt_smarthub/
-"""
+"""Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
-
-REQUIREMENTS = ['btsmarthub_devicelist==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

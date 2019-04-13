@@ -1,9 +1,4 @@
-"""
-Support for Rflink Cover devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.rflink/
-"""
+"""Support for Rflink Cover devices."""
 import logging
 
 import voluptuous as vol
@@ -17,8 +12,6 @@ from . import (
     CONF_ALIASES, CONF_DEVICE_DEFAULTS, CONF_DEVICES, CONF_FIRE_EVENT,
     CONF_GROUP, CONF_GROUP_ALIASES, CONF_NOGROUP_ALIASES,
     CONF_SIGNAL_REPETITIONS, DEVICE_DEFAULTS_SCHEMA, RflinkCommand)
-
-DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 

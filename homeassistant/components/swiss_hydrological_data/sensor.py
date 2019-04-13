@@ -1,9 +1,4 @@
-"""
-Support for hydrological data from the Federal Office for the Environment FOEN.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.swiss_hydrological_data/
-"""
+"""Support for hydrological data from the Fed. Office for the Environment."""
 from datetime import timedelta
 import logging
 
@@ -14,8 +9,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['swisshydrodata==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

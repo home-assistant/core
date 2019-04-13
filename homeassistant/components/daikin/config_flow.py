@@ -2,7 +2,8 @@
 import asyncio
 import logging
 
-import async_timeout
+from aiohttp import ClientError
+from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,11 +39,17 @@ class FlowHandler(config_entries.ConfigFlow):
         """Create device."""
         from pydaikin.appliance import Appliance
         try:
-            with async_timeout.timeout(10):
-                device = await self.hass.async_add_executor_job(
-                    Appliance, host)
+            device = Appliance(
+                host,
+                self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            )
+            with timeout(10):
+                await device.init()
         except asyncio.TimeoutError:
             return self.async_abort(reason='device_timeout')
+        except ClientError:
+            _LOGGER.exception("ClientError")
+            return self.async_abort(reason='device_fail')
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error creating device")
             return self.async_abort(reason='device_fail')

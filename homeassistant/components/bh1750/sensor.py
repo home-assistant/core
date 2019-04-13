@@ -1,9 +1,4 @@
-"""
-Support for BH1750 light sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bh1750/
-"""
+"""Support for BH1750 light sensor."""
 from functools import partial
 import logging
 
@@ -13,9 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['i2csense==0.0.4',
-                'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 

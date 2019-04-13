@@ -16,8 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'locative'
-DEPENDENCIES = ['webhook']
-
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
 

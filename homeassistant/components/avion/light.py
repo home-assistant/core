@@ -1,9 +1,4 @@
-"""
-Support for Avion dimmers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.avion/
-"""
+"""Support for Avion dimmers."""
 import importlib
 import logging
 import time
@@ -16,8 +11,6 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_DEVICES, CONF_ID, CONF_NAME, CONF_PASSWORD,
     CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['avion==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 

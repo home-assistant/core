@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with lights.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light/
-"""
+"""Provides functionality to interact with lights."""
 import asyncio
 import csv
 from datetime import timedelta
@@ -29,7 +24,6 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
 DOMAIN = 'light'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'

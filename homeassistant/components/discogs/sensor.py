@@ -1,9 +1,4 @@
-"""
-Show the amount of records in a user's Discogs collection.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.discogs/
-"""
+"""Show the amount of records in a user's Discogs collection."""
 from datetime import timedelta
 import logging
 import random
@@ -16,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['discogs_client==2.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 

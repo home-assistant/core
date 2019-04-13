@@ -1,9 +1,4 @@
-"""
-Read the balance of your bank accounts via FinTS.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fints/
-"""
+"""Read the balance of your bank accounts via FinTS."""
 
 from collections import namedtuple
 from datetime import timedelta
@@ -14,8 +9,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PIN, CONF_URL, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['fints==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

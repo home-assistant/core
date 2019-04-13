@@ -16,8 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.pressure import convert as convert_pressure
-REQUIREMENTS = ['python-forecastio==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by Dark Sky"

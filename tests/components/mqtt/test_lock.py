@@ -11,6 +11,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
     mock_registry)
+from tests.components.lock import common
 
 
 async def test_controlling_state_via_topic(hass, mqtt_mock):
@@ -73,6 +74,82 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
 
     state = hass.states.get('lock.test')
     assert state.state is STATE_UNLOCKED
+
+
+async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
+    """Test optimistic mode without state topic."""
+    assert await async_setup_component(hass, lock.DOMAIN, {
+        lock.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'command_topic': 'command-topic',
+            'payload_lock': 'LOCK',
+            'payload_unlock': 'UNLOCK'
+        }
+    })
+
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    common.async_lock(hass, 'lock.test')
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'LOCK', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_LOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    common.async_unlock(hass, 'lock.test')
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'UNLOCK', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
+    """Test optimistic mode without state topic."""
+    assert await async_setup_component(hass, lock.DOMAIN, {
+        lock.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'state-topic',
+            'command_topic': 'command-topic',
+            'payload_lock': 'LOCK',
+            'payload_unlock': 'UNLOCK',
+            'optimistic': True
+        }
+    })
+
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    common.async_lock(hass, 'lock.test')
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'LOCK', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_LOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    common.async_unlock(hass, 'lock.test')
+    await hass.async_block_till_done()
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        'command-topic', 'UNLOCK', 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get('lock.test')
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
 async def test_default_availability_payload(hass, mqtt_mock):

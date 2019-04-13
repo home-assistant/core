@@ -6,8 +6,6 @@ from .const import (
     CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, LED_PORTS, S0_INPUTS, SETPOINTS,
     THRESHOLDS, VARIABLES)
 
-DEPENDENCIES = ['lcn']
-
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):

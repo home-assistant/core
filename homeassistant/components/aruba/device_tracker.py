@@ -1,9 +1,4 @@
-"""
-Support for Aruba Access Points.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.aruba/
-"""
+"""Support for Aruba Access Points."""
 import logging
 import re
 
@@ -15,8 +10,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pexpect==4.6.0']
 
 _DEVICES_REGEX = re.compile(
     r'(?P<name>([^\s]+)?)\s+' +

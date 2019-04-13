@@ -1,9 +1,4 @@
-"""
-Support for package tracking sensors from 17track.net.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.seventeentrack/
-"""
+"""Support for package tracking sensors from 17track.net."""
 import logging
 from datetime import timedelta
 
@@ -17,7 +12,6 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['py17track==2.2.2']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DESTINATION_COUNTRY = 'destination_country'
@@ -237,7 +231,8 @@ class SeventeenTrackPackageSensor(Entity):
             return
 
         # If the user has elected to not see delivered packages and one gets
-        # delivered, post a notification and delete the entity:
+        # delivered, post a notification, remove the entity from the UI, and
+        # delete it from the entity registry:
         if package.status == VALUE_DELIVERED and not self._data.show_delivered:
             _LOGGER.info('Package delivered: %s', self._tracking_number)
             self.hass.components.persistent_notification.create(
@@ -250,6 +245,9 @@ class SeventeenTrackPackageSensor(Entity):
                 title=NOTIFICATION_DELIVERED_TITLE,
                 notification_id=NOTIFICATION_DELIVERED_ID_SCAFFOLD.format(
                     self._tracking_number))
+
+            reg = self.hass.helpers.entity_registry.async_get_registry()
+            self.hass.async_create_task(reg.async_remove(self.entity_id))
             self.hass.async_create_task(self.async_remove())
             return
 

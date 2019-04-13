@@ -1,9 +1,4 @@
-"""
-Support for International Space Station data sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.iss/
-"""
+"""Support for International Space Station data sensor."""
 import logging
 from datetime import timedelta
 
@@ -16,8 +11,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     CONF_NAME, ATTR_LONGITUDE, ATTR_LATITUDE, CONF_SHOW_ON_MAP)
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['pyiss==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

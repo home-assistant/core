@@ -1,9 +1,4 @@
-"""
-Support for balance data via the Starling Bank API.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.starlingbank/
-"""
+"""Support for balance data via the Starling Bank API."""
 import logging
 
 import requests
@@ -13,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['starlingbank==3.1']
 
 _LOGGER = logging.getLogger(__name__)
 

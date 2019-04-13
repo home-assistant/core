@@ -1,9 +1,4 @@
-"""
-Interfaces with iAlarm control panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.ialarm/
-"""
+"""Interfaces with iAlarm control panels."""
 import logging
 import re
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyialarm==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

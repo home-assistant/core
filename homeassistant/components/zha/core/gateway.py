@@ -23,11 +23,11 @@ from .const import (
     ADD_DEVICE_RELAY_LOGGERS, ATTR_MANUFACTURER, BELLOWS, CONF_BAUDRATE,
     CONF_DATABASE, CONF_RADIO_TYPE, CONF_USB_PATH, CONTROLLER, CURRENT,
     DATA_ZHA, DATA_ZHA_BRIDGE_ID, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_GATEWAY,
-    DATA_ZHA_RADIO, DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
-    DEVICE_FULL_INIT, DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE,
-    LOG_ENTRY, LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION,
-    RAW_INIT, SIGNAL_REMOVE, SIGNATURE, TYPE, ZHA, ZHA_GW_MSG, ZIGPY,
-    ZIGPY_DECONZ, ZIGPY_XBEE)
+    DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
+    DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
+    LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
+    SIGNAL_REMOVE, SIGNATURE, TYPE, ZHA, ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ,
+    ZIGPY_XBEE)
 from .device import DeviceStatus, ZHADevice
 from .discovery import (
     async_create_device_entity, async_dispatch_discovery_info,
@@ -76,7 +76,6 @@ class ZHAGateway:
         radio = radio_details[RADIO]
         self.radio_description = RADIO_TYPES[radio_type][RADIO_DESCRIPTION]
         await radio.connect(usb_path, baudrate)
-        self._hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
 
         if CONF_DATABASE in self._config:
             database = self._config[CONF_DATABASE]
@@ -146,14 +145,14 @@ class ZHAGateway:
 
     def device_removed(self, device):
         """Handle device being removed from the network."""
-        device = self._devices.pop(device.ieee, None)
+        zha_device = self._devices.pop(device.ieee, None)
         self._device_registry.pop(device.ieee, None)
-        if device is not None:
-            device_info = async_get_device_info(self._hass, device)
-            self._hass.async_create_task(device.async_unsub_dispatcher())
+        if zha_device is not None:
+            device_info = async_get_device_info(self._hass, zha_device)
+            self._hass.async_create_task(zha_device.async_unsub_dispatcher())
             async_dispatcher_send(
                 self._hass,
-                "{}_{}".format(SIGNAL_REMOVE, str(device.ieee))
+                "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
             )
             if device_info is not None:
                 async_dispatcher_send(
@@ -311,6 +310,11 @@ class ZHAGateway:
                     DEVICE_INFO: device_info
                 }
             )
+
+    async def shutdown(self):
+        """Stop ZHA Controller Application."""
+        _LOGGER.debug("Shutting down ZHA ControllerApplication")
+        await self.application_controller.shutdown()
 
 
 @callback

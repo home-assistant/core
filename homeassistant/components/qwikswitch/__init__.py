@@ -1,9 +1,4 @@
-"""
-Support for Qwikswitch devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/qwikswitch/
-"""
+"""Support for Qwikswitch devices."""
 import logging
 
 import voluptuous as vol
@@ -18,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['pyqwikswitch==0.93']
 
 _LOGGER = logging.getLogger(__name__)
 

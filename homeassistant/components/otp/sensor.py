@@ -1,9 +1,4 @@
-"""
-Support for One-Time Password (OTP).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.otp/
-"""
+"""Support for One-Time Password (OTP)."""
 import time
 import logging
 
@@ -14,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_TOKEN)
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['pyotp==2.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 

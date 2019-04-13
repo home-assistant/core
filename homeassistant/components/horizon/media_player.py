@@ -1,9 +1,4 @@
-"""
-Support for the Unitymedia Horizon HD Recorder.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/media_player.horizon/
-"""
+"""Support for the Unitymedia Horizon HD Recorder."""
 from datetime import timedelta
 import logging
 
@@ -20,8 +15,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['horimote==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 

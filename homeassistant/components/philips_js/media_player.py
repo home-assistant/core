@@ -1,9 +1,4 @@
-"""
-Media Player component to integrate TVs exposing the Joint Space API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.philips_js/
-"""
+"""Media Player component to integrate TVs exposing the Joint Space API."""
 from datetime import timedelta
 import logging
 
@@ -19,8 +14,6 @@ from homeassistant.const import (
     CONF_API_VERSION, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-
-REQUIREMENTS = ['ha-philipsjs==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

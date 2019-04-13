@@ -1,9 +1,4 @@
-"""
-Support for interface with an Samsung TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.samsungtv/
-"""
+"""Support for interface with an Samsung TV."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -22,8 +17,6 @@ from homeassistant.const import (
     STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
-
-REQUIREMENTS = ['samsungctl[websocket]==0.7.1', 'wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 

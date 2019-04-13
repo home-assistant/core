@@ -3,9 +3,8 @@ from homeassistant.components.scene import Scene
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN as DECONZ_DOMAIN, NEW_SCENE
-
-DEPENDENCIES = ['deconz']
+from .const import NEW_SCENE
+from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_platform(
@@ -16,17 +15,20 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up scenes for deCONZ component."""
-    gateway = hass.data[DECONZ_DOMAIN]
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     @callback
     def async_add_scene(scenes):
         """Add scene from deCONZ."""
         entities = []
+
         for scene in scenes:
             entities.append(DeconzScene(scene, gateway))
+
         async_add_entities(entities)
-    gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_SCENE, async_add_scene))
+
+    gateway.listeners.append(async_dispatcher_connect(
+        hass, gateway.async_event_new_device(NEW_SCENE), async_add_scene))
 
     async_add_scene(gateway.api.scenes.values())
 

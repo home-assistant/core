@@ -14,7 +14,8 @@ from homeassistant.components.fan import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import ATTR_ENTITY_ID
 
-DEPENDENCIES = ['wemo']
+from . import SUBSCRIPTION_REGISTRY
+
 SCAN_INTERVAL = timedelta(seconds=10)
 DATA_KEY = 'fan.wemo'
 
@@ -229,7 +230,7 @@ class WemoHumidifier(FanEntity):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = self.hass.components.wemo.SUBSCRIPTION_REGISTRY
+        registry = SUBSCRIPTION_REGISTRY
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 

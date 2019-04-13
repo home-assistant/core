@@ -1,9 +1,4 @@
-"""
-Pushbullet platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.pushbullet/
-"""
+"""Pushbullet platform for notify component."""
 import logging
 import mimetypes
 
@@ -15,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
-
-REQUIREMENTS = ['pushbullet.py==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 

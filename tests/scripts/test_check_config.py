@@ -90,7 +90,7 @@ class TestCheckConfig(unittest.TestCase):
             res = check_config.check(get_test_config_dir())
             assert res['components'].keys() == {'homeassistant'}
             assert res['except'] == {
-                check_config.ERROR_STR: ['Component not found: beer']}
+                check_config.ERROR_STR: ['Integration not found: beer']}
             assert res['secret_cache'] == {}
             assert res['secrets'] == {}
             assert len(res['yaml_files']) == 1
@@ -104,7 +104,8 @@ class TestCheckConfig(unittest.TestCase):
             assert res['components']['light'] == []
             assert res['except'] == {
                 check_config.ERROR_STR: [
-                    'Platform not found: light.beer',
+                    'Integration beer not found when trying to verify its '
+                    'light platform.',
                 ]}
             assert res['secret_cache'] == {}
             assert res['secrets'] == {}

@@ -16,13 +16,9 @@ from homeassistant.setup import async_when_setup
 
 from .config_flow import CONF_SECRET
 
-REQUIREMENTS = ['PyNaCl==1.3.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'owntracks'
-DEPENDENCIES = ['webhook']
-
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_WAYPOINT_IMPORT = 'waypoints'
 CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'

@@ -1,28 +1,26 @@
 """Support for RainMachine devices."""
+import asyncio
 import logging
 from datetime import timedelta
-from functools import wraps
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_IP_ADDRESS, CONF_PASSWORD,
     CONF_PORT, CONF_SCAN_INTERVAL, CONF_SENSORS, CONF_SSL,
     CONF_MONITORED_CONDITIONS, CONF_SWITCHES)
-from homeassistant.exceptions import (
-    ConfigEntryNotReady, Unauthorized, UnknownUser)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import verify_domain_control
 
 from .config_flow import configured_instances
 from .const import (
-    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
-
-REQUIREMENTS = ['regenmaschine==1.4.0']
+    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN,
+    OPERATION_RESTRICTIONS_CURRENT, OPERATION_RESTRICTIONS_UNIVERSAL)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,44 +129,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def _check_valid_user(hass):
-    """Ensure the user of a service call has proper permissions."""
-    def decorator(service):
-        """Decorate."""
-        @wraps(service)
-        async def check_permissions(call):
-            """Check user permission and raise before call if unauthorized."""
-            if not call.context.user_id:
-                return
-
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(
-                    context=call.context,
-                    permission=POLICY_CONTROL
-                )
-
-            # RainMachine services don't interact with specific entities.
-            # Therefore, we examine _all_ RainMachine entities and if the user
-            # has permission to control _any_ of them, the user has permission
-            # to call the service:
-            en_reg = await hass.helpers.entity_registry.async_get_registry()
-            rainmachine_entities = [
-                entity.entity_id for entity in en_reg.entities.values()
-                if entity.platform == DOMAIN
-            ]
-            for entity_id in rainmachine_entities:
-                if user.permissions.check_entity(entity_id, POLICY_CONTROL):
-                    return await service(call)
-
-            raise Unauthorized(
-                context=call.context,
-                permission=POLICY_CONTROL,
-            )
-        return check_permissions
-    return decorator
-
-
 async def async_setup(hass, config):
     """Set up the RainMachine component."""
     hass.data[DOMAIN] = {}
@@ -197,6 +157,8 @@ async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
     from regenmaschine import login
     from regenmaschine.errors import RainMachineError
+
+    _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
@@ -238,69 +200,69 @@ async def async_setup_entry(hass, config_entry):
             refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def disable_program(call):
         """Disable a program."""
         await rainmachine.client.programs.disable(
             call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def disable_zone(call):
         """Disable a zone."""
         await rainmachine.client.zones.disable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def enable_program(call):
         """Enable a program."""
         await rainmachine.client.programs.enable(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def enable_zone(call):
         """Enable a zone."""
         await rainmachine.client.zones.enable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def pause_watering(call):
         """Pause watering for a set number of seconds."""
         await rainmachine.client.watering.pause_all(call.data[CONF_SECONDS])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def start_program(call):
         """Start a particular program."""
         await rainmachine.client.programs.start(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def start_zone(call):
         """Start a particular zone for a certain amount of time."""
         await rainmachine.client.zones.start(
             call.data[CONF_ZONE_ID], call.data[CONF_ZONE_RUN_TIME])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def stop_all(call):
         """Stop all watering."""
         await rainmachine.client.watering.stop_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def stop_program(call):
         """Stop a program."""
         await rainmachine.client.programs.stop(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def stop_zone(call):
         """Stop a zone."""
         await rainmachine.client.zones.stop(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    @_check_valid_user(hass)
+    @_verify_domain_control
     async def unpause_watering(call):
         """Unpause watering."""
         await rainmachine.client.watering.unpause_all()
@@ -348,17 +310,30 @@ class RainMachine:
         """Initialize."""
         self.binary_sensor_conditions = binary_sensor_conditions
         self.client = client
+        self.data = {}
         self.default_zone_runtime = default_zone_runtime
         self.device_mac = self.client.mac
-        self.restrictions = {}
         self.sensor_conditions = sensor_conditions
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        self.restrictions.update({
-            'current': await self.client.restrictions.current(),
-            'global': await self.client.restrictions.universal()
-        })
+        from regenmaschine.errors import RainMachineError
+
+        tasks = {
+            OPERATION_RESTRICTIONS_CURRENT: self.client.restrictions.current(),
+            OPERATION_RESTRICTIONS_UNIVERSAL:
+                self.client.restrictions.universal(),
+        }
+
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+        for operation, result in zip(tasks, results):
+            if isinstance(result, RainMachineError):
+                _LOGGER.error(
+                    'There was an error while updating %s: %s', operation,
+                    result)
+                continue
+
+            self.data[operation] = result
 
 
 class RainMachineEntity(Entity):

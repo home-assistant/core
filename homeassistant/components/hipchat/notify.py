@@ -1,9 +1,4 @@
-"""
-HipChat platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.hipchat/
-"""
+"""HipChat platform for notify component."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_DATA, ATTR_TARGET,
                                              PLATFORM_SCHEMA,
                                              BaseNotificationService)
-
-REQUIREMENTS = ['hipnotify==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 

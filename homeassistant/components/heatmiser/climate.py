@@ -1,9 +1,4 @@
-"""
-Support for the PRT Heatmiser themostats using the V3 protocol.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.heatmiser/
-"""
+"""Support for the PRT Heatmiser themostats using the V3 protocol."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['heatmiserV3==0.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 

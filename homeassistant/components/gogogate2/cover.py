@@ -1,9 +1,4 @@
-"""
-Support for Gogogate2 garage Doors.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.gogogate2/
-"""
+"""Support for Gogogate2 garage Doors."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
     CONF_IP_ADDRESS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pygogogate2==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

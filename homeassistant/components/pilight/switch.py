@@ -1,9 +1,4 @@
-"""
-Support for switching devices via Pilight to on and off.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.pilight/
-"""
+"""Support for switching devices via Pilight to on and off."""
 import logging
 
 import voluptuous as vol
@@ -25,8 +20,6 @@ CONF_SYSTEMCODE = 'systemcode'
 CONF_UNIT = 'unit'
 CONF_UNITCODE = 'unitcode'
 CONF_ECHO = 'echo'
-
-DEPENDENCIES = ['pilight']
 
 COMMAND_SCHEMA = vol.Schema({
     vol.Optional(CONF_PROTOCOL): cv.string,

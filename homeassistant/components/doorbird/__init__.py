@@ -11,8 +11,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util, slugify
 
-REQUIREMENTS = ['doorbirdpy==2.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'doorbird'

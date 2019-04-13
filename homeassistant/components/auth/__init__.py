@@ -78,20 +78,16 @@ The result payload likes
     "result": {
         "id": "USER_ID",
         "name": "John Doe",
-        "is_owner': true,
-        "credentials": [
-            {
-                "auth_provider_type": "homeassistant",
-                "auth_provider_id": null
-            }
-        ],
-        "mfa_modules": [
-            {
-                "id": "totp",
-                "name": "TOTP",
-                "enabled": true,
-            }
-        ]
+        "is_owner": true,
+        "credentials": [{
+            "auth_provider_type": "homeassistant",
+            "auth_provider_id": null
+        }],
+        "mfa_modules": [{
+            "id": "totp",
+            "name": "TOTP",
+            "enabled": true
+        }]
     }
 }
 
@@ -142,8 +138,6 @@ from . import login_flow
 from . import mfa_setup_flow
 
 DOMAIN = 'auth'
-DEPENDENCIES = ['http']
-
 WS_TYPE_CURRENT_USER = 'auth/current_user'
 SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_CURRENT_USER,

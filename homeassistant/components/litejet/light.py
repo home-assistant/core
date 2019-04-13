@@ -1,9 +1,4 @@
-"""
-Support for LiteJet lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.litejet/
-"""
+"""Support for LiteJet lights."""
 import logging
 
 from homeassistant.components import litejet
@@ -11,8 +6,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['litejet']
 
 ATTR_NUMBER = 'number'
 

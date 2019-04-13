@@ -1,0 +1,12 @@
+{
+  "domain": "ephember",
+  "name": "Ephember",
+  "documentation": "https://www.home-assistant.io/components/ephember",
+  "requirements": [
+    "pyephember==0.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@ttroy50"
+  ]
+}

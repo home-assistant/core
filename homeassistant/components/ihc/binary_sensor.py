@@ -6,8 +6,6 @@ from . import IHC_CONTROLLER, IHC_DATA, IHC_INFO
 from .const import CONF_INVERTING
 from .ihcdevice import IHCDevice
 
-DEPENDENCIES = ['ihc']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IHC binary sensor platform."""

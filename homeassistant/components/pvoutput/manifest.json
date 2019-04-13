@@ -1,0 +1,10 @@
+{
+  "domain": "pvoutput",
+  "name": "Pvoutput",
+  "documentation": "https://www.home-assistant.io/components/pvoutput",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff"
+  ]
+}

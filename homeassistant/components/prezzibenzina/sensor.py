@@ -1,9 +1,4 @@
-"""
-Support for the PrezziBenzina.it service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.prezzibenzina/
-"""
+"""Support for the PrezziBenzina.it service."""
 import datetime as dt
 from datetime import timedelta
 import logging
@@ -14,8 +9,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, ATTR_TIME, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['prezzibenzina-py==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 

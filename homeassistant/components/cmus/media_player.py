@@ -1,9 +1,4 @@
-"""
-Support for interacting with and controlling the cmus music player.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.cmus/
-"""
+"""Support for interacting with and controlling the cmus music player."""
 import logging
 
 import voluptuous as vol
@@ -18,8 +13,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pycmus==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-This component provides support to the Ring Door Bell camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.ring/
-"""
+"""This component provides support to the Ring Door Bell camera."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -20,8 +15,6 @@ from homeassistant.util import dt as dt_util
 from . import ATTRIBUTION, DATA_RING, NOTIFICATION_ID
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-
-DEPENDENCIES = ['ring', 'ffmpeg']
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
 

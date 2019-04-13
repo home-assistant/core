@@ -1,9 +1,4 @@
-"""
-Support for LimitlessLED bulbs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.limitlessled/
-"""
+"""Support for LimitlessLED bulbs."""
 import logging
 
 import voluptuous as vol
@@ -19,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_hs_to_RGB)
 from homeassistant.helpers.restore_state import RestoreEntity
-
-REQUIREMENTS = ['limitlessled==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -18,7 +18,7 @@ class TestScene(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        test_light = loader.get_component(self.hass, 'light.test')
+        test_light = loader.get_component(self.hass, 'test.light')
         test_light.init()
 
         assert setup_component(self.hass, light.DOMAIN, {

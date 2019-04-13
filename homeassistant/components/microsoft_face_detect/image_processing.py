@@ -1,9 +1,4 @@
-"""
-Component that will help set the Microsoft face detect processing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.microsoft_face_detect/
-"""
+"""Component that will help set the Microsoft face detect processing."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
 from homeassistant.core import split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-
-DEPENDENCIES = ['microsoft_face']
 
 _LOGGER = logging.getLogger(__name__)
 

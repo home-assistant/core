@@ -1,0 +1,24 @@
+{
+  "domain": "default_config",
+  "name": "Default config",
+  "documentation": "https://www.home-assistant.io/components/default_config",
+  "requirements": [],
+  "dependencies": [
+    "automation",
+    "cloud",
+    "config",
+    "conversation",
+    "frontend",
+    "history",
+    "logbook",
+    "map",
+    "mobile_app",
+    "person",
+    "script",
+    "sun",
+    "system_health",
+    "updater",
+    "zeroconf"
+  ],
+  "codeowners": []
+}

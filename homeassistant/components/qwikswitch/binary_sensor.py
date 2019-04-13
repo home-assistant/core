@@ -1,17 +1,10 @@
-"""
-Support for Qwikswitch Binary Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.qwikswitch/
-"""
+"""Support for Qwikswitch Binary Sensors."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 
 from . import DOMAIN as QWIKSWITCH, QSEntity
-
-DEPENDENCIES = [QWIKSWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 

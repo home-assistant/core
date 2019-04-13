@@ -1,9 +1,4 @@
-"""
-Support for the Locative platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.locative/
-"""
+"""Support for the Locative platform."""
 import logging
 
 from homeassistant.components.device_tracker import (
@@ -14,8 +9,6 @@ from homeassistant.util import slugify
 from . import DOMAIN as LOCATIVE_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['locative']
 
 DATA_KEY = '{}.{}'.format(LOCATIVE_DOMAIN, DEVICE_TRACKER_DOMAIN)
 
