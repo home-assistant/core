@@ -1,6 +1,6 @@
 """
 Support to use FortiOS device like FortiGate as device tracker.
-This module is part of the device_tracker component
+This component is part of the device_tracker platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fortiosapi/
