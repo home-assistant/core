@@ -33,6 +33,10 @@ DEFAULT_SCAN_INTERVAL = 30
 DELAY_ACTION_DEFAULT = 2.0
 DELAY_ACTION_ON = 10.0
 
+PREFIX_SEPARATOR = ': '
+PREFIX_SOURCE = 'Input'
+PREFIX_CHANNEL = 'Channel'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -43,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def _inverted(data):
     return {v: k for k, v in data.items()}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Philips TV platform."""
@@ -75,7 +80,7 @@ class PhilipsTV(MediaPlayerDevice):
         self._update_task = None
 
     def _update_soon(self, delay):
-        """Reschedule update task"""
+        """Reschedule update task."""
         if self._update_task:
             self._update_task()
             self._update_task = None
@@ -95,7 +100,7 @@ class PhilipsTV(MediaPlayerDevice):
         call_later(self.hass, delay, update_and_restart)
 
     async def async_added_to_hass(self):
-        """Start running updates once we are added to hass"""
+        """Start running updates once we are added to hass."""
         self.hass.add_job(
             self._update_soon, 0)
 
@@ -125,19 +130,40 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def source(self):
         """Return the current input source."""
-        return self._sources.get(self._tv.source_id)
+        if self.media_content_type == MEDIA_TYPE_CHANNEL:
+            name = self._channels.get(self._tv.channel_id)
+            prefix = PREFIX_CHANNEL
+        else:
+            name = self._sources.get(self._tv.source_id)
+            prefix = PREFIX_SOURCE
+
+        if name:
+            return prefix + PREFIX_SEPARATOR + name
+        else:
+            return None
 
     @property
     def source_list(self):
         """List of available input sources."""
-        return list(self._sources.values())
+        complete = []
+        for source in self._sources.values():
+            complete.append(PREFIX_SOURCE + PREFIX_SEPARATOR + source)
+        for channel in self._channels.values():
+            complete.append(PREFIX_CHANNEL + PREFIX_SEPARATOR + channel)
+        return complete
 
     def select_source(self, source):
         """Set the input source."""
-        source_id = _inverted(self._sources).get(source)
-        if source_id:
-            self._tv.setSource(source_id)
-            self._update_soon(DELAY_ACTION_DEFAULT)
+        data = source.split(PREFIX_SEPARATOR, 1)
+        if data[0] == PREFIX_SOURCE:
+            source_id = _inverted(self._sources).get(data[1])
+            if source_id:
+                self._tv.setSource(source_id)
+        elif data[0] == PREFIX_CHANNEL:
+            channel_id = _inverted(self._channels).get(data[1])
+            if channel_id:
+                self._tv.setChannel(channel_id)
+        self._update_soon(DELAY_ACTION_DEFAULT)
 
     @property
     def volume_level(self):
@@ -192,6 +218,7 @@ class PhilipsTV(MediaPlayerDevice):
 
     @property
     def media_channel(self):
+        """Get current channel if it's a channel."""
         if self.media_content_type == MEDIA_TYPE_CHANNEL:
             return self._channels.get(self._tv.channel_id)
         else:
@@ -207,7 +234,7 @@ class PhilipsTV(MediaPlayerDevice):
 
     @property
     def media_content_type(self):
-        """Return content type of playing media"""
+        """Return content type of playing media."""
         if (self._tv.source_id == 'tv' or self._tv.source_id == '11'):
             return MEDIA_TYPE_CHANNEL
         elif(self._tv.source_id is None and self._tv.channels):
