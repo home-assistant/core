@@ -1,5 +1,4 @@
-"""Supports Genius hub to provide climate controls.
-"""
+"""Supports Genius hub to provide climate controls."""
 import asyncio
 import logging
 
