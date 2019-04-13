@@ -64,11 +64,11 @@ class GeniusClimate(ClimateDevice):
         self._id = zone.id
         self._name = zone.name
 
-        tmp = list(HA_OPMODE_TO_GH)
-        if self._objref.type != 'radiator':
-            # should be: if no PIR, but currently no known way to do this
-            tmp.remove(STATE_ECO)
-        self._operation_list = tmp
+        # Only some zones have movement detectors, which allows footprint mode
+        op_list = list(HA_OPMODE_TO_GH)
+        if hasattr(self._objref, 'occupied'):
+            op_list.remove(STATE_ECO)
+        self._operation_list = op_list
 
     @property
     def name(self):
