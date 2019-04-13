@@ -1,6 +1,6 @@
 """Home Assistant Switcher Component."""
 
-from asyncio import TimeoutError as Asyncio_TimeoutError, wait_for
+from asyncio import QueueEmpty, TimeoutError as Asyncio_TimeoutError, wait_for
 from datetime import datetime, timedelta
 from logging import getLogger
 from typing import Dict, Optional
@@ -78,12 +78,14 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     async def device_updates(timestamp: Optional[datetime]) -> None:
         """Use for updating the device data from the queue."""
         if v2bridge.running:
-            device_new_data = await v2bridge.queue.get()
-            if device_new_data:
-                async_dispatcher_send(hass,
-                                      SIGNAL_SWITCHER_DEVICE_UPDATE,
-                                      device_new_data)
+            try:
+                device_new_data = v2bridge.queue.get_nowait()
+                if device_new_data:
+                    async_dispatcher_send(
+                        hass, SIGNAL_SWITCHER_DEVICE_UPDATE, device_new_data)
+            except QueueEmpty:
+                pass
 
-    async_track_time_interval(hass, device_updates, timedelta(seconds=3))
+    async_track_time_interval(hass, device_updates, timedelta(seconds=4))
 
     return True
