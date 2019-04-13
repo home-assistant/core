@@ -33,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
-from .const import ERR_VALUE_OUT_OF_RANGE
+from .const import ERR_VALUE_OUT_OF_RANGE, ERR_FUNCTION_NOT_SUPPORTED
 from .helpers import SmartHomeError
 
 _LOGGER = logging.getLogger(__name__)
@@ -1050,9 +1050,9 @@ class OpenCloseTrait(_Trait):
             # Google will not issue an open command if the assumed state is
             # open, even if that is currently incorrect.
             if self.state.attributes.get(ATTR_ASSUMED_STATE):
-                response['willReportState'] = False
+                response['openPercent'] = 50
             elif self.state.state == STATE_UNKNOWN:
-                response['willReportState'] = False
+                response['openPercent'] = 50
             else:
                 position = self.state.attributes.get(
                     cover.ATTR_CURRENT_POSITION
@@ -1096,13 +1096,6 @@ class OpenCloseTrait(_Trait):
                         cover.ATTR_POSITION: params['openPercent']
                     }, blocking=True, context=data.context)
             else:
-                if params['openPercent'] < 100:
-                    await self.hass.services.async_call(
-                        cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
-                            ATTR_ENTITY_ID: self.state.entity_id
-                        }, blocking=True, context=data.context)
-                elif params['openPercent'] > 0:
-                    await self.hass.services.async_call(
-                        cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
-                            ATTR_ENTITY_ID: self.state.entity_id
-                        }, blocking=True, context=data.context)
+                raise SmartHomeError(
+                    ERR_FUNCTION_NOT_SUPPORTED,
+                    'Setting a position is not supported')
