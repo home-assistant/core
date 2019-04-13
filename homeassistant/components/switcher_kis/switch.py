@@ -14,8 +14,6 @@ from . import (
 
 _LOGGER = getLogger(__name__)
 
-DEPENDENCIES = ['switcher_kis']
-
 PROPERTIES_TO_DEVICE_ATTRIBUTES = {
     'current_power_w': ATTR_CURRENT_POWER_W,
     'electric_current': ATTR_ELECTRIC_CURRNET,
