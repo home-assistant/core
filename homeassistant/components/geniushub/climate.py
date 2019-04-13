@@ -64,7 +64,7 @@ class GeniusClimate(ClimateDevice):
             zone_types as ZONE_TYPES,
         )
 
-        _LOGGER.debug("GeniusClimate(): Found Zone, id = %s [%s]", zone.id, zone.name)
+        _LOGGER.debug("GeniusClimate(): Found Zone(%s), name = %s", zone.id, zone.name)
 
         self._client = client
         self._objref = zone
@@ -105,6 +105,7 @@ class GeniusClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        _LOGGER.warn("target_temperature(%s) = %s", self._id, self._objref.setpoint)
         return self._objref.setpoint
 
     @property
@@ -139,7 +140,7 @@ class GeniusClimate(ClimateDevice):
 
     @property
     def is_on(self):
-        """Return true if the device is on."""
+        """Return True if the device is on."""
         from geniushubclient.const import (
             IMODE_TO_MODE as ZONE_MODE,
             zone_modes as ZONE_MODES,
@@ -147,55 +148,60 @@ class GeniusClimate(ClimateDevice):
         return self._objref.mode != ZONE_MODE[ZONE_MODES.Off]
 
     async def async_set_operation_mode(self, operation_mode):
-        """Set new operation mode."""
-        _LOGGER.warn("self(%s [%s]).async_set_operation_mode(operation_mode=%s",
-                     self._id, self._name, operation_mode)                       # TODO: remove this
+        """Set a new operation mode for this zone."""
+        # TODO: also change target temp to appropriate SP
+        _LOGGER.error("self(%s).set_op_mode(operation_mode=%s", self._id, operation_mode)  # TODO: remove this
 
-        if operation_mode == STATE_MANUAL:
-            temperature = self._objref.setpoint
-            _LOGGER.warn("self._objref.set_override(3600, %s)", temperature)
-            await self._objref.set_override(3600, temperature)  # 1 hour
-        else:
-            _LOGGER.warn("self._objref.set_mode(HA_OPMODE_TO_GH.get(%s))", operation_mode)
-            _LOGGER.warn("self._objref.set_mode(%s)", HA_OPMODE_TO_GH.get(operation_mode))
-            await self._objref.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
+        # if operation_mode == STATE_MANUAL:
+        #     temperature = self._objref.setpoint
+        #     _LOGGER.warn("self._objref.set_override(3600, %s)", temperature)
+        #     await self._objref.set_override(3600, temperature)  # 1 hour
+        # else:
+        _LOGGER.warn("self._objref.set_mode(HA_OPMODE_TO_GH.get(%s))", operation_mode)
+        _LOGGER.warn("self._objref.set_mode(%s)", HA_OPMODE_TO_GH.get(operation_mode))
+        await self._objref.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
 
     async def async_set_temperature(self, **kwargs):
-        """Set new target temperatures."""
+        """Set a new target temperature for this zone."""
+        # TODO: also change target temp to new SP
         temperature = kwargs.get(ATTR_TEMPERATURE)
+        duration = kwargs.get('duration', 3600)                                  # TODO: needs ATTR_something
+        _LOGGER.error("self(%s).set_temp(temperature=%s, duration=%s)...",
+                      self._id, temperature, duration)                           # TODO: remove this
 
-        _LOGGER.warn("self(%s [%s]).async_set_temperature(temperature=%s",
-                     self._id, self._name, temperature)                          # TODO: remove this
-        _LOGGER.warn("self._objref.set_override(3600, %s)", temperature)
-        await self._objref.set_override(3600, temperature)  # 1 hour
+        _LOGGER.warn("self._objref.set_override(%s, %s)", temperature, duration)
+        await self._objref.set_override(temperature, duration)
 
     async def async_turn_on(self):
-        """Turn on."""
-        _LOGGER.warn("self(%s [%s]).async_turn_on()",
-                     self._id, self._name)                                       # TODO: remove this
-        _LOGGER.warn("self._objref.set_mode(HA_OPMODE_TO_GH.get(%s))", STATE_AUTO)
+        """Turn on this heating zone."""
+        # TODO: also change target temp to (scheduled) SP
+        _LOGGER.error("self(%s).turn_on()", self._id)                            # TODO: remove this
+
         _LOGGER.warn("self._objref.set_mode(%s)", HA_OPMODE_TO_GH.get(STATE_AUTO))
         await self._objref.set_mode(HA_OPMODE_TO_GH.get(STATE_AUTO))
 
     async def async_turn_off(self):
-        """Turn off."""
+        """Turn off this heating zone (i.e. to frost protect)."""
+        # TODO: also change target temp to minimum SP
+        _LOGGER.error("self(%s).turn_off()", self._id)                           # TODO: remove this
         from geniushubclient.const import (
-            IMODE_TO_MODE as ZONE_MODE,
             zone_modes as ZONE_MODES,
         )
-        _LOGGER.warn("self(%s [%s]).async_turn_off()",
-                     self._id, self._name)                                       # TODO: remove this
-        _LOGGER.warn("self._objref.set_mode(ZONE_MODE[%s)", ZONE_MODES.Off)
-        _LOGGER.warn("self._objref.set_mode(%s)", ZONE_MODE[ZONE_MODES.Off])
-        await self._objref.set_mode(ZONE_MODE[ZONE_MODES.Off])
+        _LOGGER.warn("self._objref.set_mode(%s)", ZONE_MODES.Off)
+        await self._objref.set_mode(ZONE_MODES.Off)
 
     async def async_update(self):
         """Get the latest data from the hub."""
-        _LOGGER.warn("update(id=%s): updating...", self._id)
+        _LOGGER.error("self.(%s).update(): updating...", self._id)               # TODO: remove this
+
         try:
+            _LOGGER.warn("self._objref.update()")
             await self._objref.update()
-        # except (AssertionError, TimeoutError) as err:
-        except KeyError as err:
-            _LOGGER.warn(
-                "update(id=%s): Failed (maybe just arbitary), message: %s",
+
+        except (AssertionError, TimeoutError) as err:
+            _LOGGER.warning(
+                "self.(%s).update(): Failed (maybe just arbitary), message: %s",
                 self._id, err)
+
+        else:
+            _LOGGER.debug("self.(%s).update(): success!", self._id)              # TODO: remove this
