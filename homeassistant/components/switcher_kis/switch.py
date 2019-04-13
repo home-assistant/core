@@ -8,8 +8,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
-    ATTR_AUTO_OFF_SET, ATTR_DEVICE_NAME, ATTR_ELECTRIC_CURRNET,
-    ATTR_REMAINING_TIME, DATA_DEVICE, DOMAIN, SIGNAL_SWITCHER_DEVICE_UPDATE)
+    ATTR_AUTO_OFF_SET, ATTR_ELECTRIC_CURRNET, ATTR_REMAINING_TIME,
+    DATA_DEVICE, DOMAIN, SIGNAL_SWITCHER_DEVICE_UPDATE)
 
 _LOGGER = getLogger(__name__)
 

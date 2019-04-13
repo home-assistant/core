@@ -28,7 +28,6 @@ DATA_DEVICE = 'device'
 SIGNAL_SWITCHER_DEVICE_UPDATE = 'switcher_device_update'
 
 ATTR_AUTO_OFF_SET = 'auto_off_set'
-ATTR_DEVICE_NAME = 'device_name'
 ATTR_ELECTRIC_CURRNET = 'electric_current'
 ATTR_REMAINING_TIME = 'remaining_time'
 
