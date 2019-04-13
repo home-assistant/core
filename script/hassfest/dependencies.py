@@ -22,7 +22,7 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) \
     return found
 
 
-# Allowed components to be referenced without being a dependency
+# These components will always be set up
 ALLOWED_USED_COMPONENTS = {
     'persistent_notification',
 }
@@ -38,10 +38,13 @@ def validate_dependencies(integration: Integration):
 
     if referenced:
         for domain in sorted(referenced):
-            integration.add_error(
-                'dependencies',
-                "Using component {} but it's not a dependency".format(domain)
-            )
+            print("Warning: {} references integration {} but it's not a "
+                  "dependency".format(integration.domain, domain))
+            # Not enforced yet.
+            # integration.add_error(
+            #     'dependencies',
+            #     "Using component {} but it's not a dependency".format(domain)
+            # )
 
 
 def validate(integrations: Dict[str, Integration], config):
