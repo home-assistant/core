@@ -373,7 +373,7 @@ def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):
             raise HomeAssistantError(
-                'Cannot decorate service handler: {0}'.format(service_handler))
+                'Can only decorate async functions.')
 
         async def check_permissions(call):
             """Check user permission and raise before call if unauthorized."""
