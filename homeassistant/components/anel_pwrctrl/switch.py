@@ -1,9 +1,4 @@
-"""
-Support for ANEL PwrCtrl switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.pwrctrl/
-"""
+"""Support for ANEL PwrCtrl switches."""
 import logging
 import socket
 from datetime import timedelta
@@ -14,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['anel_pwrctrl-homeassistant==0.0.1.dev2']
 
 _LOGGER = logging.getLogger(__name__)
 

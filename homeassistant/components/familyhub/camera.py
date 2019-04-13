@@ -1,9 +1,4 @@
-"""
-Family Hub camera for Samsung Refrigerators.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/camera.familyhub/
-"""
+"""Family Hub camera for Samsung Refrigerators."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['python-family-hub-local==0.0.2']
 
 DEFAULT_NAME = 'FamilyHub Camera'
 

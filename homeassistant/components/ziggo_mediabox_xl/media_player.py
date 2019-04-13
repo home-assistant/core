@@ -1,9 +1,4 @@
-"""
-Support for interface with a Ziggo Mediabox XL.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.ziggo_mediabox_xl/
-"""
+"""Support for interface with a Ziggo Mediabox XL."""
 import logging
 import socket
 
@@ -18,8 +13,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['ziggo-mediabox-xl==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

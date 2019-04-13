@@ -25,6 +25,12 @@
                 },
                 "description": "Ange din PlayStation 4 information. F\u00f6r 'PIN', navigera till 'Inst\u00e4llningar' p\u00e5 din PlayStation 4 konsol. Navigera sedan till \"Inst\u00e4llningar f\u00f6r mobilappanslutning\" och v\u00e4lj \"L\u00e4gg till enhet\". Ange PIN-koden som visas.",
                 "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "mode": "Konfigureringsl\u00e4ge"
+                },
+                "title": "PlayStation 4"
             }
         },
         "title": "PlayStation 4"

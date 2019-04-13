@@ -1,9 +1,4 @@
-"""
-Support for SNMP enabled switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.snmp/
-"""
+"""Support for SNMP enabled switch."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF,
     CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pysnmp==4.4.8']
 
 _LOGGER = logging.getLogger(__name__)
 

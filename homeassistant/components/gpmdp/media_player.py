@@ -1,9 +1,4 @@
-"""
-Support for Google Play Music Desktop Player.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.gpmdp/
-"""
+"""Support for Google Play Music Desktop Player."""
 import json
 import logging
 import socket
@@ -20,8 +15,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
-
-REQUIREMENTS = ['websocket-client==0.54.0']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)

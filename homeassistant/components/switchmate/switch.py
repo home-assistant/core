@@ -1,9 +1,4 @@
-"""
-Support for Switchmate.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.switchmate/
-"""
+"""Support for Switchmate."""
 import logging
 from datetime import timedelta
 
@@ -12,8 +7,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_MAC
-
-REQUIREMENTS = ['pySwitchmate==0.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 

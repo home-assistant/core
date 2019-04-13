@@ -37,11 +37,15 @@ def mock_entities():
         entity_id='light.kitchen',
         available=True,
         should_poll=False,
+        supported_features=1,
+        platform='test_domain',
     )
     living_room = Mock(
         entity_id='light.living_room',
         available=True,
         should_poll=False,
+        supported_features=0,
+        platform='test_domain',
     )
     entities = OrderedDict()
     entities[kitchen.entity_id] = kitchen
@@ -269,6 +273,19 @@ def test_async_get_all_descriptions(hass):
     assert 'fields' in descriptions[logger.DOMAIN]['set_level']
 
 
+async def test_call_with_required_features(hass, mock_entities):
+    """Test service calls invoked only if entity has required feautres."""
+    test_service_mock = Mock(return_value=mock_coro())
+    await service.entity_service_call(hass, [
+        Mock(entities=mock_entities)
+    ], test_service_mock, ha.ServiceCall('test_domain', 'test_service', {
+        'entity_id': 'all'
+    }), required_features=1)
+    assert len(mock_entities) == 2
+    # Called once because only one of the entities had the required features
+    assert test_service_mock.call_count == 1
+
+
 async def test_call_context_user_not_exist(hass):
     """Check we don't allow deleted users to do things."""
     with pytest.raises(exceptions.UnknownUser) as err:
@@ -446,3 +463,116 @@ async def test_register_admin_service(hass, hass_read_only_user,
         ))
     assert len(calls) == 1
     assert calls[0].context.user_id == hass_admin_user.id
+
+
+async def test_domain_control_not_async(hass, mock_entities):
+    """Test domain verification in a service call with an unknown user."""
+    calls = []
+
+    def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    with pytest.raises(exceptions.HomeAssistantError):
+        hass.helpers.service.verify_domain_control(
+            'test_domain')(mock_service_log)
+
+
+async def test_domain_control_unknown(hass, mock_entities):
+    """Test domain verification in a service call with an unknown user."""
+    calls = []
+
+    async def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    with patch('homeassistant.helpers.entity_registry.async_get_registry',
+               return_value=mock_coro(Mock(entities=mock_entities))):
+        protected_mock_service = hass.helpers.service.verify_domain_control(
+            'test_domain')(mock_service_log)
+
+        hass.services.async_register(
+            'test_domain', 'test_service', protected_mock_service, schema=None)
+
+        with pytest.raises(exceptions.UnknownUser):
+            await hass.services.async_call(
+                'test_domain',
+                'test_service', {},
+                blocking=True,
+                context=ha.Context(user_id='fake_user_id'))
+        assert len(calls) == 0
+
+
+async def test_domain_control_unauthorized(
+        hass, hass_read_only_user, mock_entities):
+    """Test domain verification in a service call with an unauthorized user."""
+    calls = []
+
+    async def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    with patch('homeassistant.helpers.entity_registry.async_get_registry',
+               return_value=mock_coro(Mock(entities=mock_entities))):
+        protected_mock_service = hass.helpers.service.verify_domain_control(
+            'test_domain')(mock_service_log)
+
+        hass.services.async_register(
+            'test_domain', 'test_service', protected_mock_service, schema=None)
+
+        with pytest.raises(exceptions.Unauthorized):
+            await hass.services.async_call(
+                'test_domain',
+                'test_service', {},
+                blocking=True,
+                context=ha.Context(user_id=hass_read_only_user.id))
+
+
+async def test_domain_control_admin(hass, hass_admin_user, mock_entities):
+    """Test domain verification in a service call with an admin user."""
+    calls = []
+
+    async def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    with patch('homeassistant.helpers.entity_registry.async_get_registry',
+               return_value=mock_coro(Mock(entities=mock_entities))):
+        protected_mock_service = hass.helpers.service.verify_domain_control(
+            'test_domain')(mock_service_log)
+
+        hass.services.async_register(
+            'test_domain', 'test_service', protected_mock_service, schema=None)
+
+        await hass.services.async_call(
+            'test_domain',
+            'test_service', {},
+            blocking=True,
+            context=ha.Context(user_id=hass_admin_user.id))
+
+        assert len(calls) == 1
+
+
+async def test_domain_control_no_user(hass, mock_entities):
+    """Test domain verification in a service call with no user."""
+    calls = []
+
+    async def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    with patch('homeassistant.helpers.entity_registry.async_get_registry',
+               return_value=mock_coro(Mock(entities=mock_entities))):
+        protected_mock_service = hass.helpers.service.verify_domain_control(
+            'test_domain')(mock_service_log)
+
+        hass.services.async_register(
+            'test_domain', 'test_service', protected_mock_service, schema=None)
+
+        await hass.services.async_call(
+            'test_domain',
+            'test_service', {},
+            blocking=True,
+            context=ha.Context(user_id=None))
+
+        assert len(calls) == 1

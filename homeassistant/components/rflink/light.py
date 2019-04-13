@@ -1,9 +1,4 @@
-"""
-Support for Rflink lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.rflink/
-"""
+"""Support for Rflink lights."""
 import logging
 
 import voluptuous as vol
@@ -19,8 +14,6 @@ from . import (
     CONF_GROUP_ALIASSES, CONF_NOGROUP_ALIASES, CONF_NOGROUP_ALIASSES,
     CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER, DEVICE_DEFAULTS_SCHEMA,
     EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, remove_deprecated)
-
-DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 

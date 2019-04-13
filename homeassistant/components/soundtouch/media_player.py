@@ -1,9 +1,4 @@
-"""
-Support for interface with a Bose Soundtouch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.soundtouch/
-"""
+"""Support for interface with a Bose Soundtouch."""
 import logging
 import re
 
@@ -19,8 +14,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNAVAILABLE)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['libsoundtouch==0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Support for Brunt Blind Engine covers.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/cover.brunt
-"""
+"""Support for Brunt Blind Engine covers."""
 
 import logging
 
@@ -17,8 +12,6 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN, SUPPORT_SET_POSITION
 )
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['brunt==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

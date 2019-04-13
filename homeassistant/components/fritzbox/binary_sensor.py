@@ -7,8 +7,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import DOMAIN as FRITZBOX_DOMAIN
 
-DEPENDENCIES = ['fritzbox']
-
 _LOGGER = logging.getLogger(__name__)
 
 

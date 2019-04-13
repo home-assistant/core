@@ -8,8 +8,6 @@ from . import ATTR_DISCOVER_DEVICES, EGARDIA_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['egardia']
-
 EGARDIA_TYPE_TO_DEVICE_CLASS = {
     'IR Sensor': 'motion',
     'Door Contact': 'opening',

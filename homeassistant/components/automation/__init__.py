@@ -18,11 +18,9 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.loader import bind_hass
-from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.dt import utcnow
 
 DOMAIN = 'automation'
-DEPENDENCIES = ['group']
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
@@ -416,11 +414,8 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
     }
 
     for conf in trigger_configs:
-        platform = await async_prepare_setup_platform(
-            hass, config, DOMAIN, conf.get(CONF_PLATFORM))
-
-        if platform is None:
-            return None
+        platform = importlib.import_module('.{}'.format(conf[CONF_PLATFORM]),
+                                           __name__)
 
         remove = await platform.async_trigger(hass, conf, action, info)
 

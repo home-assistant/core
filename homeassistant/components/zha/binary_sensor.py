@@ -1,9 +1,4 @@
-"""
-Binary sensors on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/binary_sensor.zha/
-"""
+"""Binary sensors on Zigbee Home Automation networks."""
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
@@ -18,8 +13,6 @@ from .core.const import (
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['zha']
 
 # Zigbee Cluster Library Zone Type to Home Assistant device class
 CLASS_MAPPING = {

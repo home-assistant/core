@@ -14,16 +14,15 @@ from . import const, decorators, messages
 
 
 @callback
-def async_register_commands(hass):
+def async_register_commands(hass, async_reg):
     """Register commands."""
-    async_reg = hass.components.websocket_api.async_register_command
-    async_reg(handle_subscribe_events)
-    async_reg(handle_unsubscribe_events)
-    async_reg(handle_call_service)
-    async_reg(handle_get_states)
-    async_reg(handle_get_services)
-    async_reg(handle_get_config)
-    async_reg(handle_ping)
+    async_reg(hass, handle_subscribe_events)
+    async_reg(hass, handle_unsubscribe_events)
+    async_reg(hass, handle_call_service)
+    async_reg(hass, handle_get_states)
+    async_reg(hass, handle_get_services)
+    async_reg(hass, handle_get_config)
+    async_reg(hass, handle_ping)
 
 
 def pong_message(iden):

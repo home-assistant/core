@@ -1,9 +1,4 @@
-"""
-Provide functionality to stream video source.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/stream/
-"""
+"""Provide functionality to stream video source."""
 import logging
 import threading
 
@@ -24,11 +19,7 @@ from .worker import stream_worker
 from .hls import async_setup_hls
 from .recorder import async_setup_recorder
 
-REQUIREMENTS = ['av==6.1.2']
-
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['http']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({}),

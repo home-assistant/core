@@ -14,8 +14,6 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
 from homeassistant.util.json import load_json, save_json
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ['matrix-client==0.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 SESSION_FILE = '.matrix.conf'

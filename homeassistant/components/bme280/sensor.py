@@ -1,9 +1,4 @@
-"""
-Support for BME280 temperature, humidity and pressure sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bme280/
-"""
+"""Support for BME280 temperature, humidity and pressure sensor."""
 from datetime import timedelta
 from functools import partial
 import logging
@@ -17,9 +12,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
-
-REQUIREMENTS = ['i2csense==0.0.4',
-                'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 

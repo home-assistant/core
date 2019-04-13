@@ -1,9 +1,4 @@
-"""
-Support for Sense Hat LEDs.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.sensehat/
-"""
+"""Support for Sense Hat LEDs."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.util.color as color_util
-
-REQUIREMENTS = ['sense-hat==2.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

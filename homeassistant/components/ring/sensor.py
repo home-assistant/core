@@ -1,9 +1,4 @@
-"""
-This component provides HA sensor support for Ring Door Bell/Chimes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ring/
-"""
+"""This component provides HA sensor support for Ring Door Bell/Chimes."""
 from datetime import timedelta
 import logging
 
@@ -17,8 +12,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import ATTRIBUTION, DATA_RING, DEFAULT_ENTITY_NAMESPACE
-
-DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
 

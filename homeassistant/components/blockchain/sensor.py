@@ -1,9 +1,4 @@
-"""
-Support for Blockchain.info sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.blockchain/
-"""
+"""Support for Blockchain.info sensors."""
 import logging
 from datetime import timedelta
 
@@ -13,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['python-blockchain-api==0.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 

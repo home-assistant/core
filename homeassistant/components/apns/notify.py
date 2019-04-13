@@ -1,9 +1,4 @@
-"""
-APNS Notification platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.apns/
-"""
+"""APNS Notification platform."""
 import logging
 import os
 
@@ -17,8 +12,6 @@ from homeassistant.helpers.event import track_state_change
 
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, DOMAIN, PLATFORM_SCHEMA, BaseNotificationService)
-
-REQUIREMENTS = ['apns2==0.3.0']
 
 APNS_DEVICES = 'apns.yaml'
 CONF_CERTFILE = 'cert_file'

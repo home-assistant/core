@@ -1,9 +1,4 @@
-"""
-Support turning on/off motion detection on Hikvision cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hikvision/
-"""
+"""Support turning on/off motion detection on Hikvision cameras."""
 import logging
 
 import voluptuous as vol
@@ -15,7 +10,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['hikvision==0.4']
 # This is the last working version, please test before updating
 
 _LOGGING = logging.getLogger(__name__)

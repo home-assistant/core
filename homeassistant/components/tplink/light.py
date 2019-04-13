@@ -1,9 +1,4 @@
-"""
-Support for TPLink lights.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.tplink/
-"""
+"""Support for TPLink lights."""
 import logging
 import time
 
@@ -16,8 +11,6 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin)
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
-
-DEPENDENCIES = ['tplink']
 
 PARALLEL_UPDATES = 0
 

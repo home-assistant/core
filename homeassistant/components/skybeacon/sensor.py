@@ -1,9 +1,4 @@
-"""
-Support for Skybeacon temperature/humidity Bluetooth LE sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.skybeacon/
-"""
+"""Support for Skybeacon temperature/humidity Bluetooth LE sensors."""
 import logging
 import threading
 from uuid import UUID
@@ -15,8 +10,6 @@ from homeassistant.const import (
     CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['pygatt[GATTTOOL]==3.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

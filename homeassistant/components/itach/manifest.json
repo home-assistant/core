@@ -1,0 +1,10 @@
+{
+  "domain": "itach",
+  "name": "Itach",
+  "documentation": "https://www.home-assistant.io/components/itach",
+  "requirements": [
+    "pyitachip2ir==0.0.7"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

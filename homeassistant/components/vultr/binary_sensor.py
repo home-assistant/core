@@ -1,9 +1,4 @@
-"""
-Support for monitoring the state of Vultr subscriptions (VPS).
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.vultr/
-"""
+"""Support for monitoring the state of Vultr subscriptions (VPS)."""
 import logging
 
 import voluptuous as vol
@@ -23,8 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DEVICE_CLASS = 'power'
 DEFAULT_NAME = 'Vultr {}'
-DEPENDENCIES = ['vultr']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SUBSCRIPTION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string

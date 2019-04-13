@@ -1,9 +1,4 @@
-"""
-Support for D-Link W215 smart switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.dlink/
-"""
+"""Support for D-Link W215 smart switch."""
 from datetime import timedelta
 import logging
 import urllib
@@ -16,8 +11,6 @@ from homeassistant.const import (
     TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
-
-REQUIREMENTS = ['pyW215==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 

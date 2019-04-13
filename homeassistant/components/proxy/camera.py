@@ -1,9 +1,4 @@
-"""
-Proxy camera platform that enables image processing of camera data.
-
-For more details about this platform, please refer to the documentation
-https://www.home-assistant.io/components/camera.proxy/
-"""
+"""Proxy camera platform that enables image processing of camera data."""
 import asyncio
 import logging
 
@@ -16,8 +11,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['pillow==5.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,0 +1,10 @@
+{
+  "domain": "homematicip_cloud",
+  "name": "Homematicip cloud",
+  "documentation": "https://www.home-assistant.io/components/homematicip_cloud",
+  "requirements": [
+    "homematicip==0.10.7"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

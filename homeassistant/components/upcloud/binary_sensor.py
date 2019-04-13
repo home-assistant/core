@@ -11,8 +11,6 @@ from . import CONF_SERVERS, DATA_UPCLOUD, UpCloudServerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['upcloud']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERVERS): vol.All(cv.ensure_list, [cv.string]),
 })

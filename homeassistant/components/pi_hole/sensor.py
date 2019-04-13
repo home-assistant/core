@@ -1,9 +1,4 @@
-"""
-Support for getting statistical data from a Pi-hole system.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.pi_hole/
-"""
+"""Support for getting statistical data from a Pi-hole system."""
 from datetime import timedelta
 import logging
 
@@ -17,8 +12,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['hole==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Support for zestimate data from zillow.com.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.zestimate/
-"""
+"""Support for zestimate data from zillow.com."""
 from datetime import timedelta
 import logging
 
@@ -16,8 +11,6 @@ from homeassistant.const import (CONF_API_KEY,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.zillow.com/webservice/GetZestimate.htm'

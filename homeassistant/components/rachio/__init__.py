@@ -1,9 +1,4 @@
-"""
-Integration with the Rachio Iro sprinkler system controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/rachio/
-"""
+"""Integration with the Rachio Iro sprinkler system controller."""
 import asyncio
 import logging
 from typing import Optional
@@ -15,8 +10,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-REQUIREMENTS = ['rachiopy==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

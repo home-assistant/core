@@ -1,0 +1,10 @@
+{
+  "domain": "google_pubsub",
+  "name": "Google pubsub",
+  "documentation": "https://www.home-assistant.io/components/google_pubsub",
+  "requirements": [
+    "google-cloud-pubsub==0.39.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

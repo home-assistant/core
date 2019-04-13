@@ -8,6 +8,7 @@ import pytest
 from homeassistant import config_entries
 import homeassistant.helpers.translation as translation
 from homeassistant.setup import async_setup_component
+from tests.common import mock_coro
 
 
 @pytest.fixture
@@ -52,20 +53,20 @@ async def test_component_translation_file(hass):
         'test_package'
     })
 
-    assert path.normpath(translation.component_translation_file(
+    assert path.normpath(await translation.component_translation_file(
         hass, 'switch.test', 'en')) == path.normpath(hass.config.path(
-            'custom_components', 'switch', '.translations', 'test.en.json'))
+            'custom_components', 'test', '.translations', 'switch.en.json'))
 
-    assert path.normpath(translation.component_translation_file(
+    assert path.normpath(await translation.component_translation_file(
         hass, 'switch.test_embedded', 'en')) == path.normpath(hass.config.path(
             'custom_components', 'test_embedded', '.translations',
             'switch.en.json'))
 
-    assert path.normpath(translation.component_translation_file(
-        hass, 'test_standalone', 'en')) == path.normpath(hass.config.path(
-            'custom_components', '.translations', 'test_standalone.en.json'))
+    assert await translation.component_translation_file(
+        hass, 'test_standalone', 'en'
+    ) is None
 
-    assert path.normpath(translation.component_translation_file(
+    assert path.normpath(await translation.component_translation_file(
         hass, 'test_package', 'en')) == path.normpath(hass.config.path(
             'custom_components', 'test_package', '.translations', 'en.json'))
 
@@ -74,9 +75,9 @@ def test_load_translations_files(hass):
     """Test the load translation files function."""
     # Test one valid and one invalid file
     file1 = hass.config.path(
-        'custom_components', 'switch', '.translations', 'test.en.json')
+        'custom_components', 'test', '.translations', 'switch.en.json')
     file2 = hass.config.path(
-        'custom_components', 'switch', '.translations', 'invalid.json')
+        'custom_components', 'test', '.translations', 'invalid.json')
     assert translation.load_translations_files({
         'switch.test': file1,
         'invalid': file2
@@ -133,7 +134,7 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     mock_config_flows.append('component1')
 
     with patch.object(translation, 'component_translation_file',
-                      return_value='bla.json'), \
+                      return_value=mock_coro('bla.json')), \
             patch.object(translation, 'load_translations_files', return_value={
                 'component1': {'hello': 'world'}}):
         translations = await translation.async_get_translations(hass, 'en')

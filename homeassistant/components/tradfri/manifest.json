@@ -1,0 +1,12 @@
+{
+  "domain": "tradfri",
+  "name": "Tradfri",
+  "documentation": "https://www.home-assistant.io/components/tradfri",
+  "requirements": [
+    "pytradfri[async]==6.0.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@ggravlingen"
+  ]
+}

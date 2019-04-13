@@ -11,8 +11,6 @@ from homeassistant.util import convert
 
 from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
-DEPENDENCIES = ['vera']
-
 _LOGGER = logging.getLogger(__name__)
 
 OPERATION_LIST = [STATE_HEAT, STATE_COOL, STATE_AUTO, STATE_OFF]

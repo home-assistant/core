@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Abre la aplicaci\u00f3n en el m\u00f3vil para configurar la integraci\u00f3n con Home Assistant. Echa un vistazo a [la documentaci\u00f3n]({apps_url}) para ver una lista de apps compatibles."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u00bfQuieres configurar el componente de la aplicaci\u00f3n para el m\u00f3vil?",
+                "title": "Aplicaci\u00f3n para el m\u00f3vil"
+            }
+        },
+        "title": "Aplicaci\u00f3n para el m\u00f3vil"
+    }
+}

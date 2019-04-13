@@ -1,9 +1,4 @@
-"""
-Provide functionality to keep track of devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/device_tracker/
-"""
+"""Provide functionality to keep track of devices."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -40,8 +35,6 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'device_tracker'
-DEPENDENCIES = ['zone', 'group']
-
 GROUP_NAME_ALL_DEVICES = 'all devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
 

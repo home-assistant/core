@@ -98,7 +98,7 @@ async def test_heater_input_boolean(hass, setup_comp_1):
 
 async def test_heater_switch(hass, setup_comp_1):
     """Test heater switching test switch."""
-    platform = loader.get_component(hass, 'switch.test')
+    platform = loader.get_component(hass, 'test.switch')
     platform.init()
     switch_1 = platform.DEVICES[1]
     assert await async_setup_component(hass, switch.DOMAIN, {'switch': {
@@ -112,6 +112,7 @@ async def test_heater_switch(hass, setup_comp_1):
         'target_sensor': ENT_SENSOR
     }})
 
+    await hass.async_block_till_done()
     assert STATE_OFF == \
         hass.states.get(heater_switch).state
 

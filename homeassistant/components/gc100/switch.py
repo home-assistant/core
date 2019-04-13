@@ -1,9 +1,4 @@
-"""
-Support for switches using GC100.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.gc100/
-"""
+"""Support for switches using GC100."""
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
@@ -12,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import CONF_PORTS, DATA_GC100
-
-DEPENDENCIES = ['gc100']
 
 _SWITCH_SCHEMA = vol.Schema({
     cv.string: cv.string,

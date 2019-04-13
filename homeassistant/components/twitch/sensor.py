@@ -1,9 +1,4 @@
-"""
-Support for the Twitch stream status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.twitch/
-"""
+"""Support for the Twitch stream status."""
 import logging
 
 import voluptuous as vol
@@ -11,8 +6,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['python-twitch-client==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 

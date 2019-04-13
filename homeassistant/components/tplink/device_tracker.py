@@ -1,9 +1,4 @@
-"""
-Support for TP-Link routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.tplink/
-"""
+"""Support for TP-Link routers."""
 import base64
 from datetime import datetime
 import hashlib
@@ -21,8 +16,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_HEADER_X_REQUESTED_WITH)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['tplink==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 

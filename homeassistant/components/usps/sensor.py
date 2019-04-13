@@ -11,8 +11,6 @@ from . import DATA_USPS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['usps']
-
 STATUS_DELIVERED = 'delivered'
 
 

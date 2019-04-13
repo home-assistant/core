@@ -7,8 +7,6 @@ from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, XS1DeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['xs1']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

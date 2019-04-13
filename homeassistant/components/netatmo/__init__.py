@@ -12,9 +12,6 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyatmo==1.9']
-DEPENDENCIES = ['webhook']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_PERSONS = 'netatmo_persons'

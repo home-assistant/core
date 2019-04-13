@@ -1,9 +1,4 @@
-"""
-Support for Osram Lightify.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.osramlightify/
-"""
+"""Support for Osram Lightify."""
 import logging
 import random
 import socket
@@ -19,8 +14,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-REQUIREMENTS = ['lightify==1.0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 

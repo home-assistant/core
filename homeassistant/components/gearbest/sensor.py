@@ -1,9 +1,4 @@
-"""
-Parse prices of an item from gearbest.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gearbest/
-"""
+"""Parse prices of an item from gearbest."""
 import logging
 from datetime import timedelta
 
@@ -16,7 +11,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_URL, CONF_CURRENCY)
 
-REQUIREMENTS = ['gearbest_parser==1.0.7']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ITEMS = 'items'

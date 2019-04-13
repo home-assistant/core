@@ -10,8 +10,6 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'panel_custom'
-DEPENDENCIES = ['frontend']
-
 CONF_COMPONENT_NAME = 'name'
 CONF_SIDEBAR_TITLE = 'sidebar_title'
 CONF_SIDEBAR_ICON = 'sidebar_icon'
@@ -126,9 +124,12 @@ async def async_register_panel(
 
 async def async_setup(hass, config):
     """Initialize custom panel."""
+    if DOMAIN not in config:
+        return True
+
     success = False
 
-    for panel in config.get(DOMAIN):
+    for panel in config[DOMAIN]:
         name = panel[CONF_COMPONENT_NAME]
 
         kwargs = {

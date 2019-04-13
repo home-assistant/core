@@ -1,9 +1,4 @@
-"""
-Support for tracking which astronomical or meteorological season it is.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor/season/
-"""
+"""Support for tracking which astronomical or meteorological season it is."""
 import logging
 from datetime import datetime
 
@@ -13,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
 from homeassistant import util
-
-REQUIREMENTS = ['ephem==3.7.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 

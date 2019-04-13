@@ -1,9 +1,4 @@
-"""
-Support to interface with the Plex API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.plex/
-"""
+"""Support to interface with the Plex API."""
 from datetime import timedelta
 import json
 import logging
@@ -24,8 +19,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json, save_json
-
-REQUIREMENTS = ['plexapi==3.0.6']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)

@@ -1,9 +1,4 @@
-"""
-Support for interface with an Harman/Kardon or JBL AVR.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.harman_kardon_avr/
-"""
+"""Support for interface with an Harman/Kardon or JBL AVR."""
 import logging
 
 import voluptuous as vol
@@ -16,8 +11,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
-
-REQUIREMENTS = ['hkavr==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

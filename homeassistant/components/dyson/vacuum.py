@@ -1,9 +1,4 @@
-"""
-Support for the Dyson 360 eye vacuum cleaner robot.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/vacuum.dyson/
-"""
+"""Support for the Dyson 360 eye vacuum cleaner robot."""
 import logging
 
 from homeassistant.components.vacuum import (
@@ -19,8 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CLEAN_ID = 'clean_id'
 ATTR_FULL_CLEAN_TYPE = 'full_clean_type'
 ATTR_POSITION = 'position'
-
-DEPENDENCIES = ['dyson']
 
 DYSON_360_EYE_DEVICES = "dyson_360_eye_devices"
 

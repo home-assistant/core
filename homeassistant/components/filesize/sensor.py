@@ -1,9 +1,4 @@
-"""
-Sensor for monitoring the size of a file.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.filesize/
-"""
+"""Sensor for monitoring the size of a file."""
 import datetime
 import logging
 import os

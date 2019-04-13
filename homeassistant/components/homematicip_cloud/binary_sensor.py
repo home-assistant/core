@@ -6,8 +6,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
-DEPENDENCIES = ['homematicip_cloud']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MOTIONDETECTED = 'motion detected'
@@ -30,9 +28,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     from homematicip.aio.device import (
         AsyncDevice, AsyncShutterContact, AsyncMotionDetectorIndoor,
-        AsyncSmokeDetector, AsyncWaterSensor, AsyncRotaryHandleSensor,
-        AsyncMotionDetectorPushButton, AsyncWeatherSensor,
-        AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+        AsyncMotionDetectorOutdoor, AsyncSmokeDetector, AsyncWaterSensor,
+        AsyncRotaryHandleSensor, AsyncMotionDetectorPushButton,
+        AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
 
     from homematicip.aio.group import (
         AsyncSecurityGroup, AsyncSecurityZoneGroup)
@@ -43,6 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if isinstance(device, (AsyncShutterContact, AsyncRotaryHandleSensor)):
             devices.append(HomematicipShutterContact(home, device))
         if isinstance(device, (AsyncMotionDetectorIndoor,
+                               AsyncMotionDetectorOutdoor,
                                AsyncMotionDetectorPushButton)):
             devices.append(HomematicipMotionDetector(home, device))
         if isinstance(device, AsyncSmokeDetector):

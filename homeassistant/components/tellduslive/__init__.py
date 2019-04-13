@@ -1,45 +1,32 @@
 """Support for Telldus Live."""
 import asyncio
-from functools import partial
 import logging
+from functools import partial
 
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL, \
-    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION
 import homeassistant.helpers.config_validation as cv
+from homeassistant import config_entries
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
     CONF_HOST, DOMAIN, KEY_SCAN_INTERVAL, KEY_SESSION,
     MIN_UPDATE_INTERVAL, NOT_SO_PRIVATE_KEY, PUBLIC_KEY, SCAN_INTERVAL,
-    SIGNAL_UPDATE_ENTITY, TELLDUS_DISCOVERY_NEW)
+    SIGNAL_UPDATE_ENTITY, TELLDUS_DISCOVERY_NEW
+)
 
 APPLICATION_NAME = 'Home Assistant'
-
-REQUIREMENTS = ['tellduslive==0.10.10']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(
-        vol.Schema({
-            vol.Optional(CONF_HOST, default=DOMAIN): cv.string,
-            vol.Optional(CONF_UPDATE_INTERVAL):
-                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
-            vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
-        }),
-        cv.deprecated(
-            CONF_UPDATE_INTERVAL,
-            replacement_key=CONF_SCAN_INTERVAL,
-            invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-            default=SCAN_INTERVAL
-        )
-    )
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_HOST, default=DOMAIN): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 DATA_CONFIG_ENTRY_LOCK = 'tellduslive_config_entry_lock'
