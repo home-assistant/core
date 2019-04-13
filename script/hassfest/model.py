@@ -14,8 +14,8 @@ class Error:
     error = attr.ib(type=str)
     fixable = attr.ib(type=bool, default=False)
 
-    def __str__(self):
-        """String reprepsentation of the error."""
+    def __str__(self) -> str:
+        """Reprepsentat error as string."""
         return "[{}] {}".format(self.plugin.upper(), self.error)
 
 
