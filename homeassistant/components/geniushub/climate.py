@@ -130,7 +130,7 @@ class GeniusClimate(ClimateDevice):
     @property
     def is_on(self):
         """Return True if the device is on."""
-        return self._objref.mode not in GH_STATE_TO_HA
+        return self._objref.mode in GH_STATE_TO_HA
 
     async def async_set_operation_mode(self, operation_mode):
         """Set a new operation mode for this zone."""
