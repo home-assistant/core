@@ -20,6 +20,7 @@ from .const import (
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
     CONF_SERVICE,
+    CONF_VALIDATE,
     DATA_CONFIG,
     DATA_HASS_CONFIG,
     DATA_SESSIONS,
@@ -34,10 +35,15 @@ AWS_CREDENTIAL_SCHEMA = vol.Schema(
         vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
         vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
         vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
+        vol.Optional(CONF_VALIDATE, default=True): cv.boolean,
     }
 )
 
-DEFAULT_CREDENTIAL = [{CONF_NAME: "default", CONF_PROFILE_NAME: "default"}]
+DEFAULT_CREDENTIAL = [{
+    CONF_NAME: "default",
+    CONF_PROFILE_NAME: "default",
+    CONF_VALIDATE: False,
+}]
 
 SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
 
@@ -168,7 +174,8 @@ async def _validate_aws_credentials(hass, credential):
     else:
         session = aiobotocore.AioSession(loop=hass.loop)
 
-    async with session.create_client("iam", **aws_config) as client:
-        await client.get_user()
+    if credential[CONF_VALIDATE]:
+        async with session.create_client("iam", **aws_config) as client:
+            await client.get_user()
 
     return session
