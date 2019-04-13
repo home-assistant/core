@@ -7,7 +7,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.discovery import SERVICE_SABNZBD
 from homeassistant.const import (
-    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_SENSORS, CONF_SSL)
+    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PATH, CONF_PORT, CONF_SENSORS,
+    CONF_SSL)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -61,6 +62,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PATH): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SENSORS):
@@ -89,6 +91,7 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
+    web_root = config[CONF_PATH]
     uri_scheme = 'https' if use_ssl else 'http'
     base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
     if api_key is None:
@@ -97,11 +100,12 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
         api_key = conf.get(base_url, {}).get(CONF_API_KEY, '')
 
     sab_api = SabnzbdApi(base_url, api_key,
+                         web_root=web_root,
                          session=async_get_clientsession(hass))
     if await async_check_sabnzbd(sab_api):
         async_setup_sabnzbd(hass, sab_api, config, name)
     else:
-        async_request_configuration(hass, config, base_url)
+        async_request_configuration(hass, config, base_url, web_root)
 
 
 async def async_setup(hass, config):
@@ -167,7 +171,7 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
 
 
 @callback
-def async_request_configuration(hass, config, host):
+def async_request_configuration(hass, config, host, web_root):
     """Request configuration steps from the user."""
     from pysabnzbd import SabnzbdApi
 
@@ -184,6 +188,7 @@ def async_request_configuration(hass, config, host):
         """Handle configuration changes."""
         api_key = data.get(CONF_API_KEY)
         sab_api = SabnzbdApi(host, api_key,
+                             web_root=web_root,
                              session=async_get_clientsession(hass))
         if not await async_check_sabnzbd(sab_api):
             return
