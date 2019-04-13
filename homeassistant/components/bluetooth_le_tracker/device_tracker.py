@@ -22,7 +22,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     new_devices = {}
     adapter = None
 
-    async def async_stop():
+    async def async_stop(event):
         if adapter is not None:
             adapter.kill()
 
