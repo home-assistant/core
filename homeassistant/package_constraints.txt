@@ -8,7 +8,7 @@ jinja2>=2.10
 PyJWT==1.7.1
 cryptography==2.6.1
 pip>=8.0.3
-python-slugify==1.2.6
+python-slugify==3.0.2
 pytz>=2019.01
 pyyaml>=3.13,<4
 requests==2.21.0
