@@ -9,8 +9,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['geniushub-client==0.3.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'geniushub'
