@@ -60,9 +60,7 @@ class GeniusClimate(ClimateDevice):
     def __init__(self, client, zone):
         """Initialize the climate device."""
         from geniushubclient.const import (
-            ITYPE_TO_TYPE as ZONE_TYPE,
-            zone_types as ZONE_TYPES,
-        )
+            ITYPE_TO_TYPE as ZONE_TYPE, ZONE_TYPES)
 
         _LOGGER.debug("GeniusClimate(): Found Zone(%s), name = %s", zone.id, zone.name)
 
@@ -75,10 +73,6 @@ class GeniusClimate(ClimateDevice):
         if not self._objref.type != ZONE_TYPE[ZONE_TYPES.ControlSP]:             # TODO: should be: if no PIR
             tmp.remove(STATE_ECO)
         self._operation_list = tmp
-
-        # self._current_temperature = None
-        # self._target_temperature = None
-        # self._mode = None
 
     @property
     def name(self):
@@ -142,9 +136,7 @@ class GeniusClimate(ClimateDevice):
     def is_on(self):
         """Return True if the device is on."""
         from geniushubclient.const import (
-            IMODE_TO_MODE as ZONE_MODE,
-            zone_modes as ZONE_MODES,
-        )
+            IMODE_TO_MODE as ZONE_MODE, ZONE_MODES)
         return self._objref.mode != ZONE_MODE[ZONE_MODES.Off]
 
     async def async_set_operation_mode(self, operation_mode):
@@ -179,9 +171,7 @@ class GeniusClimate(ClimateDevice):
         """Turn off this heating zone (i.e. to frost protect)."""
         # TODO: also change target temp to minimum SP
         _LOGGER.error("self(%s).turn_off()", self._id)                           # TODO: remove this
-        from geniushubclient.const import (
-            zone_modes as ZONE_MODES,
-        )
+        from geniushubclient.const import ZONE_MODES
         _LOGGER.warn("self._objref.set_mode(%s)", ZONE_MODES.Off)
         await self._objref.set_mode(ZONE_MODES.Off)
 
