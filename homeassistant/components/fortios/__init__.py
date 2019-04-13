@@ -1,1 +1,1 @@
-"""Fortinet FortiOS components"""
+"""Fortinet FortiOS components."""

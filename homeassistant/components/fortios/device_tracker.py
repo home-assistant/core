@@ -1,3 +1,10 @@
+"""
+Support to use FortiOS device like FortiGate as device tracker.
+This module is part of the device_tracker component
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/fortiosapi/
+"""
 import logging
 import voluptuous as vol
 
@@ -90,7 +97,6 @@ class FortiOSDeviceScanner(DeviceScanner):
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         _LOGGER.debug('get_device_name(self, device)')
-        import json
 
         _LOGGER.debug("get_device_name device=%s", device)
 
