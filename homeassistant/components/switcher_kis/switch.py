@@ -1,7 +1,7 @@
 """Home Assistant Switcher Component Switch platform."""
 
 from logging import getLogger
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,7 +40,6 @@ class SwitcherControl(SwitchDevice):
         self._self_initiated = False
         self._device_data = device_data  # type: SwitcherV2Device
         self._state = device_data.state
-        self._unsub_dispatcher = None  # type: Optional[Callable[..., Any]]
 
     @property
     def electric_current(self) -> float:
@@ -107,13 +106,8 @@ class SwitcherControl(SwitchDevice):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        self._unsub_dispatcher = async_dispatcher_connect(
+        async_dispatcher_connect(
             self.hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        if self._unsub_dispatcher:
-            self._unsub_dispatcher()
 
     async def async_update_data(self, device_data: Any) -> None:
         """Update the entity data."""
