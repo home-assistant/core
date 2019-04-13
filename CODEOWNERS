@@ -32,8 +32,6 @@ homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @kane610
 homeassistant/components/azuredns/* @Cloudenius
-
-# B
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmw_connected_drive/* @ChristianKuehnel
