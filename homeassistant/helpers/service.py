@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .typing import HomeAssistantType
-
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
 CONF_SERVICE_ENTITY_ID = 'entity_id'
