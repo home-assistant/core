@@ -1,4 +1,4 @@
-"""Support for monitoring a Neurio energy sensor."""
+"""Neurio Custom"""
 import logging
 from datetime import timedelta
 
@@ -6,8 +6,9 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, POWER_WATT,
-                                 ENERGY_KILO_WATT_HOUR)
+from homeassistant.const import CONF_API_KEY
+from homeassistant.const import POWER_WATT
+from homeassistant.const import ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -20,6 +21,9 @@ CONF_SENSOR_ID = 'sensor_id'
 
 ACTIVE_NAME = 'Energy Usage'
 DAILY_NAME = 'Daily Energy Usage'
+GENERATION_NAME = 'Solar Generation'
+GENERATION_DAILY_NAME = 'Generation Total'
+NET_CONSUMPTION = 'Net Consumption'
 
 ACTIVE_TYPE = 'active'
 DAILY_TYPE = 'daily'
@@ -53,14 +57,35 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def update_active():
         """Update the active power usage."""
         data.get_active_power()
+		
+    @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
+    def update_generation():
+        """Update the active power usage."""
+        data.get_active_generation()
+
+    @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
+    def update_generation_daily():
+        """Update the active power usage."""
+        data.get_daily_generation()
+		
+    @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
+    def update_net_consumption():
+        """Update the active power usage."""
+        data.get_net_consumption()
 
     update_daily()
     update_active()
+    update_generation()
+    update_generation_daily()
+    update_net_consumption()
 
     # Active power sensor
     add_entities([NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
+    add_entities([NeurioEnergy(data, GENERATION_NAME, ACTIVE_TYPE, update_generation)])
     # Daily power sensor
     add_entities([NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily)])
+    add_entities([NeurioEnergy(data, GENERATION_DAILY_NAME, DAILY_TYPE, update_generation_daily)])
+    add_entities([NeurioEnergy(data, NET_CONSUMPTION, DAILY_TYPE, update_net_consumption)])
 
 
 class NeurioData:
@@ -76,6 +101,9 @@ class NeurioData:
 
         self._daily_usage = None
         self._active_power = None
+        self._active_generation = None
+        self._generation_daily = None
+        self._net_consumption = None
 
         self._state = None
 
@@ -99,6 +127,21 @@ class NeurioData:
         """Return latest active power value."""
         return self._active_power
 
+    @property
+    def active_generation(self):
+        """Return latest active power value."""
+        return self._active_generation
+		
+    @property
+    def daily_generation(self):
+        """Return latest active power value."""
+        return self._daily_generation
+		
+    @property
+    def net_consumption(self):
+        """Return latest active power value."""
+        return self._net_consumption
+
     def get_active_power(self):
         """Return current power value."""
         try:
@@ -106,6 +149,15 @@ class NeurioData:
             self._active_power = sample['consumptionPower']
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update current power usage")
+            return None
+			
+    def get_active_generation(self):
+        """Return current solar generation value."""
+        try:
+            sample = self.neurio_client.get_samples_live_last(self.sensor_id)
+            self._active_generation = sample['generationPower']
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            _LOGGER.warning("Could not update current generation")
             return None
 
     def get_daily_usage(self):
@@ -128,6 +180,58 @@ class NeurioData:
             kwh += result['consumptionEnergy'] / 3600000
 
         self._daily_usage = round(kwh, 2)
+		
+    def get_daily_generation(self):
+        """Return current daily power usage."""
+        kwh = 0
+        start_time = dt_util.start_of_local_day() \
+            .astimezone(dt_util.UTC).isoformat()
+        end_time = dt_util.utcnow().isoformat()
+
+        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
+
+        try:
+            history = self.neurio_client.get_samples_stats(
+                self.sensor_id, start_time, 'days', end_time)
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            _LOGGER.warning("Could not update daily power usage")
+            return None
+
+        for result in history:
+            kwh += result['generationEnergy'] / 3600000
+
+        self._daily_generation = round(kwh, 2)
+		
+    def get_net_consumption(self):
+        """Return current daily power usage."""
+        kwhIn = 0
+        kwhOut = 0
+        start_time = dt_util.start_of_local_day() \
+            .astimezone(dt_util.UTC).isoformat()
+        end_time = dt_util.utcnow().isoformat()
+
+        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
+
+        try:
+            historyImported = self.neurio_client.get_samples_stats(
+                self.sensor_id, start_time, 'days', end_time)
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            _LOGGER.warning("Could not update daily power usage")
+            return None
+
+        try:
+            historyExported = self.neurio_client.get_samples_stats(
+                self.sensor_id, start_time, 'days', end_time)
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            _LOGGER.warning("Could not update daily power usage")
+            return None
+
+        for result in historyImported:
+            kwhIn += result['importedEnergy'] / 3600000
+        for result in historyExported:
+            kwhOut += result['exportedEnergy'] / 3600000
+
+        self._net_consumption = round(kwhIn-kwhOut, 2)
 
 
 class NeurioEnergy(Entity):
@@ -170,7 +274,13 @@ class NeurioEnergy(Entity):
         """Get the latest data, update state."""
         self.update_sensor()
 
-        if self._sensor_type == ACTIVE_TYPE:
+        if self._name == ACTIVE_NAME:
             self._state = self._data.active_power
-        elif self._sensor_type == DAILY_TYPE:
+        elif self.name == DAILY_NAME:
             self._state = self._data.daily_usage
+        elif self.name == GENERATION_NAME:
+            self._state = self._data.active_generation
+        elif self.name == GENERATION_DAILY_NAME:
+            self._state = self._data.daily_generation
+        elif self.name == NET_CONSUMPTION:
+            self._state = self._data.net_consumption
