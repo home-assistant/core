@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class HMBatterySensor(HMDevice, BinarySensorDevice):
-    """Representation of an homematic low battery sensor."""
+    """Representation of an HomeMatic low battery sensor."""
 
     @property
     def device_class(self):
