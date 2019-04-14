@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "NHC2 CoCo is already configured"
+        },
+        "error": {
+            "cannot_connect": "Unable to connect to the Connected Controller."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "TCP Port",
+                    "username": "Username"
+                },
+                "description": "You can use an IP as host, but make sure it's static/fixed.",
+                "title": "Details to your Niko Connected Controller"
+            }
+        },
+        "title": "Niko Connected Controller"
+    }
+}
