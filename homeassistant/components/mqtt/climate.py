@@ -24,9 +24,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
-    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID, MQTT_BASE_PLATFORM_SCHEMA, MqttAttributes,
-    MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+    ATTR_DISCOVERY_HASH, CONF_QOS, CONF_RETAIN, CONF_UNIQUE_ID,
+    MQTT_BASE_PLATFORM_SCHEMA, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
@@ -161,8 +161,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Discover and add a MQTT climate device."""
         try:
             discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
-            # state_topic is implicitly set by MQTT discovery, remove it
-            discovery_payload.pop(CONF_STATE_TOPIC, None)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(hass, config, async_add_entities,
                                       config_entry, discovery_hash)
@@ -225,8 +223,6 @@ class MqttClimate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
-        # state_topic is implicitly set by MQTT discovery, remove it
-        discovery_payload.pop(CONF_STATE_TOPIC, None)
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
         self._setup_from_config(config)
