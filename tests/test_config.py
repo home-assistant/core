@@ -9,7 +9,7 @@ from ipaddress import ip_network
 
 import asynctest
 import pytest
-from voluptuous import MultipleInvalid, Invalid
+import voluptuous as vol
 import yaml
 
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.util.async_ import run_coroutine_threadsafe
+from homeassistant.helpers import config_validation as cv 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.config.group import (
     CONFIG_PATH as GROUP_CONFIG_PATH)
@@ -35,7 +36,8 @@ from homeassistant.components.config.customize import (
 import homeassistant.scripts.check_config as check_config
 
 from tests.common import (
-    get_test_config_dir, get_test_home_assistant, patch_yaml_files)
+    get_test_config_dir, get_test_home_assistant, patch_yaml_files, MockModule,
+    MockPlatform)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -223,7 +225,7 @@ class TestConfig(unittest.TestCase):
                 {'customize': {'light.sensor': 100}},
                 {'customize': {'entity_id': []}},
         ):
-            with pytest.raises(MultipleInvalid):
+            with pytest.raises(vol.MultipleInvalid):
                 config_util.CORE_CONFIG_SCHEMA(value)
 
         config_util.CORE_CONFIG_SCHEMA({
@@ -248,7 +250,7 @@ class TestConfig(unittest.TestCase):
 
         for val in values:
             print(val)
-            with pytest.raises(MultipleInvalid):
+            with pytest.raises(vol.MultipleInvalid):
                 config_util.CUSTOMIZE_DICT_SCHEMA(val)
 
         assert config_util.CUSTOMIZE_DICT_SCHEMA({
@@ -469,7 +471,7 @@ class TestConfig(unittest.TestCase):
             }), self.hass.loop).result()
 
         # Empty packages not allowed
-        with pytest.raises(MultipleInvalid):
+        with pytest.raises(vol.MultipleInvalid):
             run_coroutine_threadsafe(
                 config_util.async_process_ha_core_config(self.hass, {
                     'latitude': 39,
@@ -921,7 +923,7 @@ async def test_disallowed_auth_provider_config(hass):
             }],
         }]
     }
-    with pytest.raises(Invalid):
+    with pytest.raises(vol.Invalid):
         await config_util.async_process_ha_core_config(hass, core_config)
 
 
@@ -940,7 +942,7 @@ async def test_disallowed_duplicated_auth_provider_config(hass):
             'type': 'homeassistant',
         }]
     }
-    with pytest.raises(Invalid):
+    with pytest.raises(vol.Invalid):
         await config_util.async_process_ha_core_config(hass, core_config)
 
 
@@ -961,7 +963,7 @@ async def test_disallowed_auth_mfa_module_config(hass):
             }]
         }]
     }
-    with pytest.raises(Invalid):
+    with pytest.raises(vol.Invalid):
         await config_util.async_process_ha_core_config(hass, core_config)
 
 
@@ -980,7 +982,7 @@ async def test_disallowed_duplicated_auth_mfa_module_config(hass):
             'type': 'totp',
         }]
     }
-    with pytest.raises(Invalid):
+    with pytest.raises(vol.Invalid):
         await config_util.async_process_ha_core_config(hass, core_config)
 
 
@@ -1000,3 +1002,222 @@ def test_merge_split_component_definition(hass):
     assert len(config['light one']) == 1
     assert len(config['light two']) == 1
     assert len(config['light three']) == 1
+
+
+async def test_async_process_component_config_config_schema(hass):
+    """Test process component config with CONFIG_SCHEMA."""
+    comp_config_schema = vol.Schema({
+        'test_comp': vol.Schema({
+            vol.Required('hello'): cv.string,
+            vol.Required('goodbye'): cv.string,
+        })
+    }, extra=vol.ALLOW_EXTRA)
+    with mock.patch(
+            'homeassistant.config.get_component',
+            return_value=MockModule(
+                'test_comp',
+                config_schema=comp_config_schema,
+            )
+    ):
+        # invalid config, missing required field
+        config = {
+            'test_comp': {
+                'hello': 'world',
+            }
+        }
+        validated = config_util.async_process_component_config(
+            hass, config, 'test_comp')
+        assert validated is None
+
+        # valid config
+        config = {
+            'test_comp': {
+                'hello': 'world',
+                'goodbye': 'world',
+            }
+        }
+        validated = config_util.async_process_component_config(
+            hass, config, 'test_comp')
+        assert validated == config
+
+
+async def test_async_process_component_config(hass):
+    """Test process component config."""
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({
+        vol.Required('field_str'): cv.string,
+        vol.Optional('field_bool'): cv.boolean,
+    })
+    comp_platform_schema_base = cv.PLATFORM_SCHEMA_BASE.extend(
+        comp_platform_schema.schema)
+    test_platform_schema = comp_platform_schema.extend({
+        vol.Required('field_platform'): cv.string,
+    })
+    with mock.patch(
+            'homeassistant.config.get_component',
+            return_value=MockModule(
+                'test_comp',
+                platform_schema=comp_platform_schema,
+                platform_schema_base=comp_platform_schema_base,
+            )
+    ), mock.patch(
+            'homeassistant.config.get_platform',
+            return_value=MockPlatform(
+                platform_schema=test_platform_schema
+            )
+    ):
+        # valid config
+        config = {
+            'test_comp': [
+                {
+                    'platform': 'demo',
+                    'field_str': 'hello',
+                    'field_platform': 'world',
+                }
+            ]
+        }
+        validated = config_util.async_process_component_config(
+            hass, config, 'test_comp')
+        assert validated == config
+
+        # invalid config, missing platform type
+        config = {
+            'test_comp': [
+                {
+                    'field_str': 'hello',
+                    'field_platform': 'world',
+                }
+            ]
+        }
+        validated = config_util.async_process_component_config(
+            hass, config, 'test_comp')
+        assert validated == {'test_comp': []}
+
+        assert len(cv.INVALID_EXTRA_KEYS_FOUND) == 0
+        # invalid config, extra key
+        # Note: so far we still allow extra key
+        config = {
+            'test_comp': [
+                {
+                    'platform': 'demo',
+                    'field_str': 'hello',
+                    'field_platform': 'world',
+                    'extra': 'key',
+                }
+            ]
+        }
+        validated = config_util.async_process_component_config(
+            hass, config, 'test_comp')
+        assert validated == config
+        assert len(cv.INVALID_EXTRA_KEYS_FOUND) == 1
+
+        # invalid platform config, missing required key in platform
+        # still got component config, but no platform config
+        config = {
+            'test_comp': [
+                {
+                    'platform': 'demo',
+                    'field_str': 'hello',
+                    'field_platform': 'world',
+                },
+                {
+                    'platform': 'demo',
+                    'field_str': 'goodbye',
+                }
+            ]
+        }
+        validated = config_util.async_process_component_config(
+            hass, config, 'test_comp')
+        assert validated == {'test_comp': [{
+                    'platform': 'demo',
+                    'field_str': 'hello',
+                    'field_platform': 'world',
+                }]}
+
+
+async def test_async_process_component_config_chained(hass):
+    """Test process component config will validate PLATFORM_SCHEMA_BASE."""
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({
+        vol.Required('field_bool'): cv.boolean,
+    })
+    comp_platform_schema_base = cv.PLATFORM_SCHEMA_BASE.extend(
+        comp_platform_schema.schema)
+    test_platform_schema = comp_platform_schema.extend({
+        vol.Required('field_bool'): cv.string,
+    })
+    with mock.patch(
+            'homeassistant.config.get_component',
+            return_value=MockModule(
+                'test_comp',
+                platform_schema=comp_platform_schema,
+                platform_schema_base=comp_platform_schema_base,
+            )
+    ), mock.patch(
+            'homeassistant.config.get_platform',
+            return_value=MockPlatform(
+                platform_schema=test_platform_schema
+            )
+    ):
+        config = {
+            'test_comp': [
+                {
+                    'platform': 'demo',
+                    'field_bool': '1',
+                }
+            ]
+        }
+        validated = config_util.async_process_component_config(
+            hass, config, 'test_comp')
+        assert validated is not None
+        # field_bool first convert to bool True, then covert to string 'True'
+        assert validated['test_comp'][0]['field_bool'] == 'True'
+
+
+async def test_async_process_component_change_platform_type(hass):
+    """Test process component config allow change platform type."""
+    def _change_platform_type(conf):
+        """Change platform type."""
+        conf['platform'] = 'new'
+        conf['hello'] = 'WORLD'
+        return conf
+
+    comp_platform_schema = cv.PLATFORM_SCHEMA.extend({
+        vol.Required('hello'): str,
+    })
+    comp_platform_schema_base = vol.Schema(vol.All(
+        cv.PLATFORM_SCHEMA_BASE.extend(
+            comp_platform_schema.schema
+        ).schema,
+        _change_platform_type,
+    ))
+    test_platform_schema = comp_platform_schema
+    with mock.patch(
+            'homeassistant.config.get_component',
+            return_value=MockModule(
+                'test_comp',
+                platform_schema=comp_platform_schema,
+                platform_schema_base=comp_platform_schema_base,
+            )
+    ), mock.patch(
+            'homeassistant.config.get_platform',
+            return_value=MockPlatform(
+                platform_schema=test_platform_schema
+            )
+    ):
+        config = {
+            'test_comp': [
+                {
+                    'platform': 'old',
+                    'hello': 'world',
+                }
+            ]
+        }
+        validated = config_util.async_process_component_config(
+            hass, config, 'test_comp')
+        assert validated == {
+            'test_comp': [
+                {
+                    'platform': 'new',
+                    'hello': 'WORLD',
+                }
+            ]
+        }
