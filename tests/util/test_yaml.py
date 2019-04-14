@@ -134,7 +134,7 @@ class TestYaml(unittest.TestCase):
     def test_include_dir_named(self, mock_walk):
         """Test include dir named yaml."""
         mock_walk.return_value = [
-            ['/tmp', [], ['first.yaml', 'second.yaml']]
+            ['/tmp', [], ['first.yaml', 'second.yaml', 'secrets.yaml']]
         ]
 
         with patch_yaml_files({
