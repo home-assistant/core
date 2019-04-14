@@ -10,7 +10,7 @@ from . import ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES
 _LOGGER = logging.getLogger(__name__)
 
 STATE_ATTR_FORECAST = '1h rain forecast'
-STATE_ATTR_BULLETIN_TIME = 'Date du bulletin'
+STATE_ATTR_BULLETIN_TIME = 'Bulletin date'
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Meteo-France sensor."""
@@ -20,6 +20,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     city = discovery_info[CONF_CITY]
     monitored_conditions = discovery_info[CONF_MONITORED_CONDITIONS]
     client = hass.data[DATA_METEO_FRANCE][city]
+    weather_alert_client = hass.data[DATA_METEO_FRANCE]['weather_alert_client']
 
     from vigilancemeteo import DepartmentWeatherAlert
 
@@ -28,12 +29,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         datas = hass.data[DATA_METEO_FRANCE][city].get_data()
         if "dept" in datas:
             try:
-                alert_watcher = DepartmentWeatherAlert(datas["dept"])
+                alert_watcher = DepartmentWeatherAlert(datas["dept"], weather_alert_client)
             except ValueError as exp:
                 _LOGGER.error(exp)
+                alert_watcher = None
+            else:
+                _LOGGER.info("weather alert watcher added for %s in department %s",
+                             city, datas["dept"])
         else:
-            _LOGGER.debug("No dept key found for %s", city)
-    
+            _LOGGER.warning("No dept key found for '%s'. So weather alert "
+                            "information won't be available", city)
+            # don't create the sensor
+            return
+
     add_entities([MeteoFranceSensor(variable, client, alert_watcher)
                   for variable in monitored_conditions], True)
 
@@ -100,8 +108,8 @@ class MeteoFranceSensor(Entity):
                     self._state = self._alert_watcher.department_color
 
                 else:
-                    _LOGGER.debug("No weather alert data for location %s",
-                                  self._data['name'])
+                    _LOGGER.warning("No weather alert data for location %s",
+                                    self._data['name'])
                 return
             else:
                 self._state = self._data[self._condition]
