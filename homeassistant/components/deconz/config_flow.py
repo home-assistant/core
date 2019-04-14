@@ -44,7 +44,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow):
         self.deconz_config = {}
 
     async def async_step_init(self, user_input=None):
-        """Keep for legacy support, or flow won't work properly."""
+        """Needed in order to not require re-translation of strings."""
         return await self.async_step_user(user_input)
 
     async def async_step_user(self, user_input=None):
