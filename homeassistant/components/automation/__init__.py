@@ -5,6 +5,7 @@ import importlib
 import logging
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_NAME, CONF_ID, CONF_PLATFORM,
@@ -74,7 +75,11 @@ _TRIGGER_SCHEMA = vol.All(
 
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
-PLATFORM_SCHEMA = vol.Schema({
+CONFIG_SCHEMA = vol.All(cv.gather_domain_platforms(DOMAIN), vol.Schema({
+    DOMAIN: [dict],
+}, extra=vol.ALLOW_EXTRA))
+
+AUTOMATION_SCHEMA = vol.Schema({
     # str on purpose
     CONF_ID: str,
     CONF_ALIAS: cv.string,
@@ -328,39 +333,46 @@ async def _async_process_config(hass, config, component):
     """
     entities = []
 
-    for config_key in extract_domain_configs(config, DOMAIN):
-        conf = config[config_key]
+    for list_no, config_block in enumerate(config[DOMAIN]):
+        automation_id = config_block.get(CONF_ID)
+        name = (config_block.get(CONF_ALIAS) or
+                automation_id or
+                "Automation {}".format(list_no))
 
-        for list_no, config_block in enumerate(conf):
-            automation_id = config_block.get(CONF_ID)
-            name = config_block.get(CONF_ALIAS) or "{} {}".format(config_key,
-                                                                  list_no)
-
-            hidden = config_block[CONF_HIDE_ENTITY]
-            initial_state = config_block.get(CONF_INITIAL_STATE)
-
-            action = _async_get_action(hass, config_block.get(CONF_ACTION, {}),
-                                       name)
-
-            if CONF_CONDITION in config_block:
-                cond_func = _async_process_if(hass, config, config_block)
-
-                if cond_func is None:
-                    continue
-            else:
-                def cond_func(variables):
-                    """Condition will always pass."""
-                    return True
-
-            async_attach_triggers = partial(
-                _async_process_trigger, hass, config,
-                config_block.get(CONF_TRIGGER, []), name
+        try:
+            config_block = AUTOMATION_SCHEMA(config_block)
+        except vol.Invalid as err:
+            _LOGGER.error(
+                "Unable to load automation %s: %s",
+                name, humanize_error(config_block, err)
             )
-            entity = AutomationEntity(
-                automation_id, name, async_attach_triggers, cond_func, action,
-                hidden, initial_state)
+            continue
 
-            entities.append(entity)
+        hidden = config_block[CONF_HIDE_ENTITY]
+        initial_state = config_block.get(CONF_INITIAL_STATE)
+
+        action = _async_get_action(hass, config_block.get(CONF_ACTION, {}),
+                                   name)
+
+        if CONF_CONDITION in config_block:
+            cond_func = _async_process_if(hass, config, config_block)
+
+            if cond_func is None:
+                continue
+        else:
+            def cond_func(variables):
+                """Condition will always pass."""
+                return True
+
+        async_attach_triggers = partial(
+            _async_process_trigger, hass, config,
+            config_block.get(CONF_TRIGGER, []), name
+        )
+        entity = AutomationEntity(
+            automation_id, name, async_attach_triggers, cond_func, action,
+            hidden, initial_state)
+
+        entities.append(entity)
 
     if entities:
         await component.async_add_entities(entities)

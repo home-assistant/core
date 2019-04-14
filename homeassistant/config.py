@@ -711,7 +711,6 @@ def async_process_component_config(
     This method must be run in the event loop.
     """
     component = get_component(hass, domain)
-
     if hasattr(component, 'CONFIG_SCHEMA'):
         try:
             config = component.CONFIG_SCHEMA(config)  # type: ignore

@@ -22,7 +22,8 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL, CONF_ENTITY_NAMESPACE, __version__)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template as template_helper
+from homeassistant.helpers import (
+    template as template_helper, config_per_platform, extract_domain_configs)
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 
@@ -635,6 +636,20 @@ def deprecated(key: str,
         return has_at_most_one_key(key, replacement_key)(config)
 
     return validator
+
+
+def gather_domain_platforms(domain):
+    """Return a function that will organize a domain in a HA config."""
+    def gather_domain_validator(config):
+        """Gather domain validator."""
+        filter_keys = extract_domain_configs(config, domain)
+        result = {key: value for key, value in config.items()
+                  if key not in filter_keys}
+        result[domain] = [conf[1] for conf
+                          in config_per_platform(config, domain)]
+        return result
+
+    return gather_domain_validator
 
 
 # Validator helpers
