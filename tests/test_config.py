@@ -14,6 +14,7 @@ import yaml
 
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
+from homeassistant.loader import async_get_integration
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
@@ -587,7 +588,7 @@ def merge_log_err(hass):
         yield logerr
 
 
-def test_merge(merge_log_err, hass):
+async def test_merge(merge_log_err, hass):
     """Test if we can merge packages."""
     packages = {
         'pack_dict': {'input_boolean': {'ib1': None}},
@@ -601,7 +602,7 @@ def test_merge(merge_log_err, hass):
         'input_boolean': {'ib2': None},
         'light': {'platform': 'test'}
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
     assert len(config) == 5
@@ -611,7 +612,7 @@ def test_merge(merge_log_err, hass):
     assert isinstance(config['wake_on_lan'], OrderedDict)
 
 
-def test_merge_try_falsy(merge_log_err, hass):
+async def test_merge_try_falsy(merge_log_err, hass):
     """Ensure we dont add falsy items like empty OrderedDict() to list."""
     packages = {
         'pack_falsy_to_lst': {'automation': OrderedDict()},
@@ -622,7 +623,7 @@ def test_merge_try_falsy(merge_log_err, hass):
         'automation': {'do': 'something'},
         'light': {'some': 'light'},
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
     assert len(config) == 3
@@ -630,7 +631,7 @@ def test_merge_try_falsy(merge_log_err, hass):
     assert len(config['light']) == 1
 
 
-def test_merge_new(merge_log_err, hass):
+async def test_merge_new(merge_log_err, hass):
     """Test adding new components to outer scope."""
     packages = {
         'pack_1': {'light': [{'platform': 'one'}]},
@@ -643,7 +644,7 @@ def test_merge_new(merge_log_err, hass):
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
     assert 'api' in config
@@ -652,7 +653,7 @@ def test_merge_new(merge_log_err, hass):
     assert len(config['panel_custom']) == 1
 
 
-def test_merge_type_mismatch(merge_log_err, hass):
+async def test_merge_type_mismatch(merge_log_err, hass):
     """Test if we have a type mismatch for packages."""
     packages = {
         'pack_1': {'input_boolean': [{'ib1': None}]},
@@ -665,7 +666,7 @@ def test_merge_type_mismatch(merge_log_err, hass):
         'input_select': [{'ib2': None}],
         'light': [{'platform': 'two'}]
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 2
     assert len(config) == 4
@@ -673,14 +674,14 @@ def test_merge_type_mismatch(merge_log_err, hass):
     assert len(config['light']) == 2
 
 
-def test_merge_once_only_keys(merge_log_err, hass):
+async def test_merge_once_only_keys(merge_log_err, hass):
     """Test if we have a merge for a comp that may occur only once. Keys."""
     packages = {'pack_2': {'api': None}}
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
         'api': None,
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
     assert config['api'] == OrderedDict()
 
     packages = {'pack_2': {'api': {
@@ -693,7 +694,7 @@ def test_merge_once_only_keys(merge_log_err, hass):
             'key_2': 2,
         }
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
     assert config['api'] == {'key_1': 1, 'key_2': 2, 'key_3': 3, }
 
     # Duplicate keys error
@@ -704,11 +705,11 @@ def test_merge_once_only_keys(merge_log_err, hass):
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
         'api': {'key': 1, }
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
     assert merge_log_err.call_count == 1
 
 
-def test_merge_once_only_lists(hass):
+async def test_merge_once_only_lists(hass):
     """Test if we have a merge for a comp that may occur only once. Lists."""
     packages = {'pack_2': {'api': {
         'list_1': ['item_2', 'item_3'],
@@ -721,14 +722,14 @@ def test_merge_once_only_lists(hass):
             'list_1': ['item_1'],
         }
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
     assert config['api'] == {
         'list_1': ['item_1', 'item_2', 'item_3'],
         'list_2': ['item_1'],
     }
 
 
-def test_merge_once_only_dictionaries(hass):
+async def test_merge_once_only_dictionaries(hass):
     """Test if we have a merge for a comp that may occur only once. Dicts."""
     packages = {'pack_2': {'api': {
         'dict_1': {
@@ -747,7 +748,7 @@ def test_merge_once_only_dictionaries(hass):
             },
         }
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
     assert config['api'] == {
         'dict_1': {
             'key_1': 1,
@@ -758,7 +759,7 @@ def test_merge_once_only_dictionaries(hass):
     }
 
 
-def test_merge_id_schema(hass):
+async def test_merge_id_schema(hass):
     """Test if we identify the config schemas correctly."""
     types = {
         'panel_custom': 'list',
@@ -768,14 +769,15 @@ def test_merge_id_schema(hass):
         'shell_command': 'dict',
         'qwikswitch': 'dict',
     }
-    for name, expected_type in types.items():
-        module = config_util.get_component(hass, name)
+    for domain, expected_type in types.items():
+        integration = await async_get_integration(hass, domain)
+        module = integration.get_component()
         typ, _ = config_util._identify_config_schema(module)
         assert typ == expected_type, "{} expected {}, got {}".format(
-            name, expected_type, typ)
+            domain, expected_type, typ)
 
 
-def test_merge_duplicate_keys(merge_log_err, hass):
+async def test_merge_duplicate_keys(merge_log_err, hass):
     """Test if keys in dicts are duplicates."""
     packages = {
         'pack_1': {'input_select': {'ib1': None}},
@@ -784,7 +786,7 @@ def test_merge_duplicate_keys(merge_log_err, hass):
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
         'input_select': {'ib1': 1},
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 1
     assert len(config) == 2
@@ -984,7 +986,7 @@ async def test_disallowed_duplicated_auth_mfa_module_config(hass):
         await config_util.async_process_ha_core_config(hass, core_config)
 
 
-def test_merge_split_component_definition(hass):
+async def test_merge_split_component_definition(hass):
     """Test components with trailing description in packages are merged."""
     packages = {
         'pack_1': {'light one': {'l1': None}},
@@ -994,7 +996,7 @@ def test_merge_split_component_definition(hass):
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
     }
-    config_util.merge_packages_config(hass, config, packages)
+    await config_util.merge_packages_config(hass, config, packages)
 
     assert len(config) == 4
     assert len(config['light one']) == 1

@@ -1,14 +1,8 @@
 """
-The methods for loading Home Assistant components.
+The methods for loading Home Assistant integrations.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
-
-Components can be accessed via hass.components.switch from your code.
-If you want to retrieve a platform that is part of a component, you should
-call get_component(hass, 'switch.your_platform'). In both cases the config
-directory is checked to see if it contains a user provided version. If not
-available it will check the built-in components and platforms.
 """
 import functools as ft
 import importlib
@@ -100,7 +94,7 @@ class Integration:
 
         Will create a stub manifest.
         """
-        comp = get_component(hass, domain)
+        comp = _load_file(hass, domain, LOOKUP_PATHS)
 
         if comp is None:
             return None

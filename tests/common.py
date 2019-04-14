@@ -695,11 +695,11 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
-    @ha.callback
-    def mock_psc(hass, config_input, domain_input):
+    async def mock_psc(hass, config_input, integration):
         """Mock the prepare_setup_component to capture config."""
-        res = async_process_component_config(
-            hass, config_input, domain_input)
+        domain_input = integration.domain
+        res = await async_process_component_config(
+            hass, config_input, integration)
         config[domain_input] = None if res is None else res.get(domain_input)
         _LOGGER.debug("Configuration for %s, Validated: %s, Original %s",
                       domain_input,
