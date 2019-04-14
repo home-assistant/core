@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.service import async_extract_entity_ids
-from homeassistant.loader import bind_hass
+from homeassistant.loader import bind_hass, async_get_integration
 from homeassistant.util import slugify
 from .entity_platform import EntityPlatform
 
@@ -276,8 +276,10 @@ class EntityComponent:
             self.logger.error(err)
             return None
 
-        conf = conf_util.async_process_component_config(
-            self.hass, conf, self.domain)
+        integration = await async_get_integration(self.hass, self.domain)
+
+        conf = await conf_util.async_process_component_config(
+            self.hass, conf, integration)
 
         if conf is None:
             return None
