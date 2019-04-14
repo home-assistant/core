@@ -705,6 +705,15 @@ class ConfigEntries:
         except loader.IntegrationNotFound:
             raise data_entry_flow.UnknownHandler
 
+        try:
+            component = await self.hass.async_add_executor_job(
+                loader.get_component, self.hass, handler_key)
+        except ImportError:
+            raise data_entry_flow.UnknownHandler
+
+        if component is None:
+            raise data_entry_flow.UnknownHandler
+
         handler = HANDLERS.get(handler_key)
 
         if handler is None:
