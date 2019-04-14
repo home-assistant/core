@@ -151,10 +151,9 @@ class ECWeather(WeatherEntity):
         icon_code = self.ec_data.conditions.get('icon_code')
         if icon_code:
             return icon_code_to_condition(int(icon_code))
-        else:
-            condition = self.ec_data.conditions.get('condition')
-            if condition:
-                return condition
+        condition = self.ec_data.conditions.get('condition')
+        if condition:
+            return condition
         return 'Condition not observed'
 
     @property
