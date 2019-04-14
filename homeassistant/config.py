@@ -746,7 +746,7 @@ async def async_process_component_config(
     for p_name, p_config in config_per_platform(config, domain):
         # Validate component specific platform schema
         try:
-            p_validated = component_platform_schema(p_config)    # type: ignore
+            p_validated = component_platform_schema(p_config)
         except vol.Invalid as ex:
             async_log_exception(ex, domain, p_config, hass)
             continue
