@@ -24,7 +24,7 @@ SLOW_SETUP_WARNING = 10
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
-                    config: Optional[Dict] = None) -> bool:
+                    config: Dict) -> bool:
     """Set up a component and all its dependencies."""
     return run_coroutine_threadsafe(  # type: ignore
         async_setup_component(hass, domain, config), loop=hass.loop).result()
