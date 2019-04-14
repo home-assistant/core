@@ -1,5 +1,6 @@
 """Support for a generic MQTT vacuum."""
 import logging
+import json
 
 import voluptuous as vol
 
@@ -507,8 +508,13 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """Send a command to a vacuum cleaner."""
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
             return
-
+        if params:
+            message = {"command": command}
+            message.update(params)
+            message = json.dumps(message)
+        else:
+            message = command
         mqtt.async_publish(self.hass, self._send_command_topic,
-                           command, self._qos, self._retain)
-        self._status = "Sending command {}...".format(command)
+                           message, self._qos, self._retain)
+        self._status = "Sending command {}...".format(message)
         self.async_write_ha_state()
