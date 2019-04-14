@@ -157,6 +157,8 @@ def _include_dir_named_yaml(loader: SafeLineLoader,
     loc = os.path.join(os.path.dirname(loader.name), node.value)
     for fname in _find_files(loc, '*.yaml'):
         filename = os.path.splitext(os.path.basename(fname))[0]
+        if os.path.basename(fname) == SECRET_YAML:
+            continue
         mapping[filename] = load_yaml(fname)
     return _add_reference(mapping, loader, node)
 
