@@ -31,7 +31,7 @@ def setup_component(hass: core.HomeAssistant, domain: str,
 
 
 async def async_setup_component(hass: core.HomeAssistant, domain: str,
-                                config: Optional[Dict] = None) -> bool:
+                                config: Dict) -> bool:
     """Set up a component and all its dependencies.
 
     This method is a coroutine.
@@ -39,16 +39,10 @@ async def async_setup_component(hass: core.HomeAssistant, domain: str,
     if domain in hass.config.components:
         return True
 
-    setup_tasks = hass.data.get(DATA_SETUP)
+    setup_tasks = hass.data.setdefault(DATA_SETUP, {})
 
-    if setup_tasks is not None and domain in setup_tasks:
+    if domain in setup_tasks:
         return await setup_tasks[domain]  # type: ignore
-
-    if config is None:
-        config = {}
-
-    if setup_tasks is None:
-        setup_tasks = hass.data[DATA_SETUP] = {}
 
     task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config))

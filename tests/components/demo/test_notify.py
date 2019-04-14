@@ -74,7 +74,7 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.block_till_done()
         assert notify.DOMAIN in self.hass.config.components
         assert mock_demo_get_service.called
-        assert mock_demo_get_service.call_args[0] == (
+        assert mock_demo_get_service.mock_calls[0][1] == (
             self.hass, {}, {'test_key': 'test_val'})
 
     @callback
