@@ -156,10 +156,7 @@ class ECSensor(Entity):
         else:
             updated_local = None
 
-        if self._state is None or self._state == '':
-            hidden = True
-        else:
-            hidden = False
+        hidden = bool(self._state is None or self._state == '')
 
         self._attr = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
