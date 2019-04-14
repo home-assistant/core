@@ -320,8 +320,8 @@ def check_ha_config_file(hass):
         core_config = {}
 
     # Merge packages
-    merge_packages_config(
-        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
+    hass.loop.run_until_complete(merge_packages_config(
+        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error))
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
