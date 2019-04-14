@@ -1357,7 +1357,7 @@ python-mystrom==0.5.0
 python-nest==4.1.0
 
 # homeassistant.components.nhc2
-nhc2-coco==0.0.1
+nhc2-coco==0.0.2
 
 # homeassistant.components.nmap_tracker
 python-nmap==0.6.1
