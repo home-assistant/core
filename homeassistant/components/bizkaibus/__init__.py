@@ -1,2 +1,2 @@
-"""The Bizkaibus, Biscays (Basque Country, Spain)
-bus service, bus tracker component."""
+# The Bizkaibus, Biscays (Basque Country, Spain)
+# bus service, bus tracker component.
