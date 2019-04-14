@@ -179,10 +179,9 @@ async def test_gravatar_and_picture(hass):
     autospec=True)
 async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
     """Test discovery of device_tracker demo platform."""
-    assert device_tracker.DOMAIN not in hass.config.components
     await discovery.async_load_platform(
         hass, device_tracker.DOMAIN, 'demo', {'test_key': 'test_val'},
-        {'demo': {}})
+        {'bla': {}})
     await hass.async_block_till_done()
     assert device_tracker.DOMAIN in hass.config.components
     assert mock_demo_setup_scanner.called

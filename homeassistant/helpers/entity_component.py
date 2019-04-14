@@ -124,7 +124,11 @@ class EntityComponent:
         """Set up a config entry."""
         platform_type = config_entry.domain
         platform = await async_prepare_setup_platform(
-            self.hass, self.config, self.domain, platform_type)
+            self.hass,
+            # In future PR we should make hass_config part of the constructor
+            # params.
+            self.config or {},
+            self.domain, platform_type)
 
         if platform is None:
             return False
