@@ -1,9 +1,4 @@
-"""
-Support for Bluesound devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.bluesound/
-"""
+"""Support for Bluesound devices."""
 import asyncio
 from asyncio.futures import CancelledError
 from datetime import timedelta
@@ -33,8 +28,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 

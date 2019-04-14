@@ -1,0 +1,8 @@
+{
+  "domain": "tomato",
+  "name": "Tomato",
+  "documentation": "https://www.home-assistant.io/components/tomato",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

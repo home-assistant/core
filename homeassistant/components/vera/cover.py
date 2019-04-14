@@ -1,12 +1,10 @@
 """Support for Vera cover - curtains, rollershutters etc."""
 import logging
 
-from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT, \
-    ATTR_POSITION
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+from homeassistant.components.cover import (
+    ATTR_POSITION, ENTITY_ID_FORMAT, CoverDevice)
 
-DEPENDENCIES = ['vera']
+from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
 

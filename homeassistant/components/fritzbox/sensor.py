@@ -3,13 +3,11 @@ import logging
 
 import requests
 
-from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
-from homeassistant.components.fritzbox import (
-    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED)
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ['fritzbox']
+from . import (
+    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED, DOMAIN as FRITZBOX_DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -19,12 +19,12 @@ from tests.components.light import common as common_light
 def scanner(hass):
     """Initialize components."""
     scanner = loader.get_component(
-        hass, 'device_tracker.test').get_scanner(None, None)
+        hass, 'test.device_tracker').get_scanner(None, None)
 
     scanner.reset()
     scanner.come_home('DEV1')
 
-    loader.get_component(hass, 'light.test').init()
+    loader.get_component(hass, 'test.light').init()
 
     with patch(
         'homeassistant.components.device_tracker.load_yaml_config_file',

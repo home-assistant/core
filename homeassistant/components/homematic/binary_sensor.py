@@ -2,12 +2,11 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.const import STATE_UNKNOWN
 
-_LOGGER = logging.getLogger(__name__)
+from . import ATTR_DISCOVER_DEVICES, HMDevice
 
-DEPENDENCIES = ['homematic']
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES_CLASS = {
     'IPShutterContact': 'opening',

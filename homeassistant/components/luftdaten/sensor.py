@@ -1,19 +1,18 @@
 """Support for Luftdaten sensors."""
 import logging
 
-from homeassistant.components.luftdaten import (
-    DATA_LUFTDATEN, DATA_LUFTDATEN_CLIENT, DEFAULT_ATTRIBUTION, DOMAIN,
-    SENSORS, TOPIC_UPDATE)
-from homeassistant.components.luftdaten.const import ATTR_SENSOR_ID
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from . import (
+    DATA_LUFTDATEN, DATA_LUFTDATEN_CLIENT, DEFAULT_ATTRIBUTION, DOMAIN,
+    SENSORS, TOPIC_UPDATE)
+from .const import ATTR_SENSOR_ID
 
-DEPENDENCIES = ['luftdaten']
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(

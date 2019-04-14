@@ -1,10 +1,9 @@
 """Support for Abode Security System locks."""
 import logging
 
-from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.lock import LockDevice
 
-DEPENDENCIES = ['abode']
+from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 _LOGGER = logging.getLogger(__name__)
 

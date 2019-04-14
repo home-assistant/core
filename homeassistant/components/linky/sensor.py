@@ -1,9 +1,4 @@
-"""
-Support for Linky.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.linky/
-"""
+"""Support for Linky."""
 import logging
 import json
 from datetime import timedelta
@@ -17,7 +12,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pylinky==0.3.0']
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=10)

@@ -1,15 +1,9 @@
-"""
-Asuswrt status sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.asuswrt/
-"""
+"""Asuswrt status sensors."""
 import logging
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.asuswrt import DATA_ASUSWRT
 
-DEPENDENCIES = ['asuswrt']
+from . import DATA_ASUSWRT
 
 _LOGGER = logging.getLogger(__name__)
 

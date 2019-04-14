@@ -1,18 +1,17 @@
 """Support for DHT and DS18B20 sensors attached to a Konnected device."""
 import logging
 
-from homeassistant.components.konnected.const import (
-    DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW, SIGNAL_SENSOR_UPDATE)
 from homeassistant.const import (
-    CONF_DEVICES, CONF_PIN, CONF_TYPE, CONF_NAME, CONF_SENSORS,
+    CONF_DEVICES, CONF_NAME, CONF_PIN, CONF_SENSORS, CONF_TYPE,
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW, SIGNAL_SENSOR_UPDATE)
 
-DEPENDENCIES = ['konnected']
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     DEVICE_CLASS_TEMPERATURE: ['Temperature', TEMP_CELSIUS],

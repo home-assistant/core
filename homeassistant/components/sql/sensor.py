@@ -15,8 +15,6 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['sqlalchemy==1.2.18']
-
 CONF_COLUMN_NAME = 'column'
 CONF_QUERIES = 'queries'
 CONF_QUERY = 'query'

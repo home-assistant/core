@@ -1,9 +1,4 @@
-"""
-Support for the Opple light.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.opple/
-"""
+"""Support for the Opple light."""
 
 import logging
 
@@ -18,8 +13,6 @@ from homeassistant.util.color import \
     color_temperature_kelvin_to_mired as kelvin_to_mired
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
-
-REQUIREMENTS = ['pyoppleio==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

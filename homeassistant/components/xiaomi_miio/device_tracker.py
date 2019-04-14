@@ -8,8 +8,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

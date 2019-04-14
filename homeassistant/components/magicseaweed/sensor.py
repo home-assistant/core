@@ -1,9 +1,4 @@
-"""
-Support for magicseaweed data from magicseaweed.com.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.magicseaweed/
-"""
+"""Support for magicseaweed data from magicseaweed.com."""
 from datetime import timedelta
 import logging
 import voluptuous as vol
@@ -15,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['magicseaweed==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

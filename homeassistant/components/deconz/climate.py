@@ -7,12 +7,9 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    ATTR_OFFSET, ATTR_VALVE, CONF_ALLOW_CLIP_SENSOR,
-    DOMAIN as DECONZ_DOMAIN, NEW_SENSOR)
+from .const import ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
-
-DEPENDENCIES = ['deconz']
+from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -20,22 +17,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     Thermostats are based on the same device class as sensors in deCONZ.
     """
-    gateway = hass.data[DECONZ_DOMAIN]
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     @callback
     def async_add_climate(sensors):
         """Add climate devices from deCONZ."""
         from pydeconz.sensor import THERMOSTAT
         entities = []
-        allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
+
         for sensor in sensors:
+
             if sensor.type in THERMOSTAT and \
-               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
+               not (not gateway.allow_clip_sensor and
+                    sensor.type.startswith('CLIP')):
+
                 entities.append(DeconzThermostat(sensor, gateway))
+
         async_add_entities(entities, True)
 
-    gateway.listeners.append(
-        async_dispatcher_connect(hass, NEW_SENSOR, async_add_climate))
+    gateway.listeners.append(async_dispatcher_connect(
+        hass, gateway.async_event_new_device(NEW_SENSOR), async_add_climate))
 
     async_add_climate(gateway.api.sensors.values())
 

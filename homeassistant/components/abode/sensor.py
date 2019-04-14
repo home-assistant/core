@@ -1,13 +1,12 @@
 """Support for Abode Security System sensors."""
 import logging
 
-from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
-DEPENDENCIES = ['abode']
+_LOGGER = logging.getLogger(__name__)
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {

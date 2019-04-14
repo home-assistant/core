@@ -1,9 +1,4 @@
-"""
-Support for USCIS Case Status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.uscis/
-"""
+"""Support for USCIS Case Status."""
 
 import logging
 from datetime import timedelta
@@ -17,8 +12,6 @@ from homeassistant.const import CONF_FRIENDLY_NAME
 
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['uscisstatus==0.1.1']
 
 DEFAULT_NAME = "USCIS"
 

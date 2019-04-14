@@ -1,9 +1,4 @@
-"""
-Support for controlling projector via the PJLink protocol.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.pjlink/
-"""
+"""Support for controlling projector via the PJLink protocol."""
 import logging
 
 import voluptuous as vol
@@ -16,8 +11,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pypjlink2==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

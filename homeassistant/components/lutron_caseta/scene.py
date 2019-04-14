@@ -1,12 +1,11 @@
 """Support for Lutron Caseta scenes."""
 import logging
 
-from homeassistant.components.lutron_caseta import LUTRON_CASETA_SMARTBRIDGE
 from homeassistant.components.scene import Scene
 
-_LOGGER = logging.getLogger(__name__)
+from . import LUTRON_CASETA_SMARTBRIDGE
 
-DEPENDENCIES = ['lutron_caseta']
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(

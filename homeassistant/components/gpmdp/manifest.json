@@ -1,0 +1,10 @@
+{
+  "domain": "gpmdp",
+  "name": "Gpmdp",
+  "documentation": "https://www.home-assistant.io/components/gpmdp",
+  "requirements": [
+    "websocket-client==0.54.0"
+  ],
+  "dependencies": ["configurator"],
+  "codeowners": []
+}

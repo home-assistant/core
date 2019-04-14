@@ -2,13 +2,11 @@
 import logging
 
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockDevice
-from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+
+from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['vera']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

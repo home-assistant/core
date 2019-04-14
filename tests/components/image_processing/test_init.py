@@ -80,7 +80,7 @@ class TestImageProcessing:
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
+    @patch('homeassistant.components.demo.camera.DemoCamera.camera_image',
            autospec=True, return_value=b'Test')
     def test_get_image_from_camera(self, mock_camera):
         """Grab an image from camera entity."""

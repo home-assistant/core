@@ -1,11 +1,10 @@
 """Support for BMW car locks with BMW ConnectedDrive."""
 import logging
 
-from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
-DEPENDENCIES = ['bmw_connected_drive']
+from . import DOMAIN as BMW_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

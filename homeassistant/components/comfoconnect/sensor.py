@@ -1,18 +1,16 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
-from homeassistant.components.comfoconnect import (
-    DOMAIN, ComfoConnectBridge, ATTR_CURRENT_TEMPERATURE,
-    ATTR_CURRENT_HUMIDITY, ATTR_OUTSIDE_TEMPERATURE,
-    ATTR_OUTSIDE_HUMIDITY, ATTR_AIR_FLOW_SUPPLY,
-    ATTR_AIR_FLOW_EXHAUST, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED)
 from homeassistant.const import CONF_RESOURCES, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from . import (
+    ATTR_AIR_FLOW_EXHAUST, ATTR_AIR_FLOW_SUPPLY, ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE, ATTR_OUTSIDE_HUMIDITY, ATTR_OUTSIDE_TEMPERATURE,
+    DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge)
 
-DEPENDENCIES = ['comfoconnect']
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {}
 

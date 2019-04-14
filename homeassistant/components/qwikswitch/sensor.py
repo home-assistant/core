@@ -1,15 +1,9 @@
-"""
-Support for Qwikswitch Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.qwikswitch/
-"""
+"""Support for Qwikswitch Sensors."""
 import logging
 
-from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH, QSEntity
 from homeassistant.core import callback
 
-DEPENDENCIES = [QWIKSWITCH]
+from . import DOMAIN as QWIKSWITCH, QSEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +26,7 @@ class QSSensor(QSEntity):
 
     def __init__(self, sensor):
         """Initialize the sensor."""
-        from pyqwikswitch import SENSORS
+        from pyqwikswitch.qwikswitch import SENSORS
 
         super().__init__(sensor['id'], sensor['name'])
         self.channel = sensor['channel']

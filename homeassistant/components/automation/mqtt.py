@@ -8,8 +8,6 @@ from homeassistant.components import mqtt
 from homeassistant.const import (CONF_PLATFORM, CONF_PAYLOAD)
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['mqtt']
-
 CONF_ENCODING = 'encoding'
 CONF_TOPIC = 'topic'
 DEFAULT_ENCODING = 'utf-8'

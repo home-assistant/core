@@ -27,7 +27,6 @@ class EntityPlatform:
         domain: str
         platform_name: str
         scan_interval: timedelta
-        parallel_updates: int
         entity_namespace: str
         async_entities_added_callback: @callback method
         """
@@ -52,22 +51,21 @@ class EntityPlatform:
         # which powers entity_component.add_entities
         if platform is None:
             self.parallel_updates = None
+            self.parallel_updates_semaphore = None
             return
 
-        # Async platforms do all updates in parallel by default
-        if hasattr(platform, 'async_setup_platform'):
-            default_parallel_updates = 0
-        else:
-            default_parallel_updates = 1
+        self.parallel_updates = getattr(platform, 'PARALLEL_UPDATES', None)
+        # semaphore will be created on demand
+        self.parallel_updates_semaphore = None
 
-        parallel_updates = getattr(platform, 'PARALLEL_UPDATES',
-                                   default_parallel_updates)
-
-        if parallel_updates:
-            self.parallel_updates = asyncio.Semaphore(
-                parallel_updates, loop=hass.loop)
-        else:
-            self.parallel_updates = None
+    def _get_parallel_updates_semaphore(self):
+        """Get or create a semaphore for parallel updates."""
+        if self.parallel_updates_semaphore is None:
+            self.parallel_updates_semaphore = asyncio.Semaphore(
+                self.parallel_updates if self.parallel_updates else 1,
+                loop=self.hass.loop
+            )
+        return self.parallel_updates_semaphore
 
     async def async_setup(self, platform_config, discovery_info=None):
         """Set up the platform from a config file."""
@@ -240,7 +238,22 @@ class EntityPlatform:
 
         entity.hass = self.hass
         entity.platform = self
-        entity.parallel_updates = self.parallel_updates
+
+        # Async entity
+        # PARALLEL_UPDATE == None: entity.parallel_updates = None
+        # PARALLEL_UPDATE == 0:    entity.parallel_updates = None
+        # PARALLEL_UPDATE > 0:     entity.parallel_updates = Semaphore(p)
+        # Sync entity
+        # PARALLEL_UPDATE == None: entity.parallel_updates = Semaphore(1)
+        # PARALLEL_UPDATE == 0:    entity.parallel_updates = None
+        # PARALLEL_UPDATE > 0:     entity.parallel_updates = Semaphore(p)
+        if hasattr(entity, 'async_update') and not self.parallel_updates:
+            entity.parallel_updates = None
+        elif (not hasattr(entity, 'async_update')
+              and self.parallel_updates == 0):
+            entity.parallel_updates = None
+        else:
+            entity.parallel_updates = self._get_parallel_updates_semaphore()
 
         # Update properties before we generate the entity_id
         if update_before_add:

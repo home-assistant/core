@@ -1,9 +1,4 @@
-"""
-Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.yeelightsunflower/
-"""
+"""Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi)."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_HOST
 import homeassistant.util.color as color_util
-
-REQUIREMENTS = ['yeelightsunflower==0.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 

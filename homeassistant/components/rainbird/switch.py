@@ -1,22 +1,16 @@
-"""
-Support for Rain Bird Irrigation system LNK WiFi Module.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.rainbird/
-"""
+"""Support for Rain Bird Irrigation system LNK WiFi Module."""
 
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.rainbird import DATA_RAINBIRD
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_SWITCHES, CONF_ZONE,
-                                 CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME,
-                                 CONF_SCAN_INTERVAL)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import (
+    CONF_FRIENDLY_NAME, CONF_SCAN_INTERVAL, CONF_SWITCHES, CONF_TRIGGER_TIME,
+    CONF_ZONE)
 from homeassistant.helpers import config_validation as cv
 
-DEPENDENCIES = ['rainbird']
+from . import DATA_RAINBIRD
 
 DOMAIN = 'rainbird'
 _LOGGER = logging.getLogger(__name__)

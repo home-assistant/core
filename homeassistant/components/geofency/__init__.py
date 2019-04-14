@@ -16,8 +16,6 @@ from homeassistant.util import slugify
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'geofency'
-DEPENDENCIES = ['webhook']
-
 CONF_MOBILE_BEACONS = 'mobile_beacons'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -132,6 +130,11 @@ async def async_unload_entry(hass, entry):
 
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
+
+
+# pylint: disable=invalid-name
+async_remove_entry = config_entry_flow.webhook_async_remove_entry
+
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,

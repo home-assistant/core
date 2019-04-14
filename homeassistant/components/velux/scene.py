@@ -1,8 +1,7 @@
 """Support for VELUX scenes."""
 from homeassistant.components.scene import Scene
-from homeassistant.components.velux import _LOGGER, DATA_VELUX
 
-DEPENDENCIES = ['velux']
+from . import _LOGGER, DATA_VELUX
 
 
 async def async_setup_platform(

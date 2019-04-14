@@ -1,9 +1,4 @@
-"""
-Support for Dutch Smart Meter (also known as Smartmeter or P1 port).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dsmr/
-"""
+"""Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
 from datetime import timedelta
 from functools import partial
@@ -19,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['dsmr_parser==0.12']
 
 CONF_DSMR_VERSION = 'dsmr_version'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'

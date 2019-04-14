@@ -2,12 +2,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
-from homeassistant.components.homematicip_cloud.device import (
-    ATTR_GROUP_MEMBER_UNREACHABLE)
 
-DEPENDENCIES = ['homematicip_cloud']
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,10 +27,10 @@ async def async_setup_platform(
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     from homematicip.aio.device import (
-        AsyncShutterContact, AsyncMotionDetectorIndoor, AsyncSmokeDetector,
-        AsyncWaterSensor, AsyncRotaryHandleSensor,
-        AsyncMotionDetectorPushButton, AsyncWeatherSensor,
-        AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+        AsyncDevice, AsyncShutterContact, AsyncMotionDetectorIndoor,
+        AsyncMotionDetectorOutdoor, AsyncSmokeDetector, AsyncWaterSensor,
+        AsyncRotaryHandleSensor, AsyncMotionDetectorPushButton,
+        AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
 
     from homematicip.aio.group import (
         AsyncSecurityGroup, AsyncSecurityZoneGroup)
@@ -44,6 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if isinstance(device, (AsyncShutterContact, AsyncRotaryHandleSensor)):
             devices.append(HomematicipShutterContact(home, device))
         if isinstance(device, (AsyncMotionDetectorIndoor,
+                               AsyncMotionDetectorOutdoor,
                                AsyncMotionDetectorPushButton)):
             devices.append(HomematicipMotionDetector(home, device))
         if isinstance(device, AsyncSmokeDetector):
@@ -57,6 +55,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                AsyncWeatherSensorPro)):
             devices.append(HomematicipStormSensor(home, device))
             devices.append(HomematicipSunshineSensor(home, device))
+        if isinstance(device, AsyncDevice) and device.lowBat is not None:
+            devices.append(HomematicipBatterySensor(home, device))
 
     for group in home.groups:
         if isinstance(group, AsyncSecurityGroup):
@@ -196,6 +196,24 @@ class HomematicipSunshineSensor(HomematicipGenericDevice, BinarySensorDevice):
             attr[ATTR_TODAY_SUNSHINE_DURATION] = \
                 self._device.todaySunshineDuration
         return attr
+
+
+class HomematicipBatterySensor(HomematicipGenericDevice, BinarySensorDevice):
+    """Representation of a HomematicIP Cloud low battery sensor."""
+
+    def __init__(self, home, device):
+        """Initialize battery sensor."""
+        super().__init__(home, device, 'Battery')
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return 'battery'
+
+    @property
+    def is_on(self):
+        """Return true if battery is low."""
+        return self._device.lowBat
 
 
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice,

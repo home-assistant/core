@@ -17,8 +17,6 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['python-miio==0.4.4', 'construct==2.9.45']
-
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_LEARN = 'xiaomi_miio_learn_command'

@@ -1,13 +1,12 @@
 """Support for Insteon lights via PowerLinc Modem."""
 import logging
 
-from homeassistant.components.insteon import InsteonEntity
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 
-_LOGGER = logging.getLogger(__name__)
+from . import InsteonEntity
 
-DEPENDENCIES = ['insteon']
+_LOGGER = logging.getLogger(__name__)
 
 MAX_BRIGHTNESS = 255
 

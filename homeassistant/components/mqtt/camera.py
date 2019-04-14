@@ -1,9 +1,4 @@
-"""
-Camera that loads a picture from an MQTT topic.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.mqtt/
-"""
+"""Camera that loads a picture from an MQTT topic."""
 
 import asyncio
 import logging
@@ -12,28 +7,26 @@ import voluptuous as vol
 
 from homeassistant.components import camera, mqtt
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttDiscoveryUpdate,
-    subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttDiscoveryUpdate,
+    subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TOPIC = 'topic'
 DEFAULT_NAME = 'MQTT Camera'
 
-DEPENDENCIES = ['mqtt']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
@@ -108,7 +101,7 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
-            {'state_topic': {'topic': self._config.get(CONF_TOPIC),
+            {'state_topic': {'topic': self._config[CONF_TOPIC],
                              'msg_callback': message_received,
                              'qos': self._qos,
                              'encoding': None}})
@@ -126,7 +119,7 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
     @property
     def name(self):
         """Return the name of this camera."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def unique_id(self):

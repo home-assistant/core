@@ -1,13 +1,13 @@
 """Support for Fibaro sensors."""
 import logging
 
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.components.fibaro import (
-    FIBARO_DEVICES, FibaroDevice)
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.helpers.entity import Entity
+
+from . import FIBARO_DEVICES, FibaroDevice
 
 SENSOR_TYPES = {
     'com.fibaro.temperatureSensor':
@@ -22,7 +22,6 @@ SENSOR_TYPES = {
         ['Light', 'lx', None, DEVICE_CLASS_ILLUMINANCE]
 }
 
-DEPENDENCIES = ['fibaro']
 _LOGGER = logging.getLogger(__name__)
 
 

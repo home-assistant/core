@@ -1,32 +1,27 @@
-"""
-Support for Canary camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.canary/
-"""
+"""Support for Canary camera."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-from homeassistant.components.canary import DATA_CANARY, DEFAULT_TIMEOUT
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.util import Throttle
 
-CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-
-DEPENDENCIES = ['canary', 'ffmpeg']
+from . import DATA_CANARY, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+DEFAULT_ARGUMENTS = '-pred 1'
 
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
 })
 
 
@@ -79,7 +74,7 @@ class CanaryCamera(Camera):
         """Return a still image response from the camera."""
         self.renew_live_stream_session()
 
-        from haffmpeg import ImageFrame, IMAGE_JPEG
+        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
         image = await asyncio.shield(ffmpeg.get_image(
             self._live_stream_session.live_stream_url,
@@ -92,15 +87,16 @@ class CanaryCamera(Camera):
         if self._live_stream_session is None:
             return
 
-        from haffmpeg import CameraMjpeg
+        from haffmpeg.camera import CameraMjpeg
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
         await stream.open_camera(
             self._live_stream_session.live_stream_url,
             extra_cmd=self._ffmpeg_arguments)
 
         try:
+            stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
+                self.hass, request, stream_reader,
                 self._ffmpeg.ffmpeg_stream_content_type)
         finally:
             await stream.close()

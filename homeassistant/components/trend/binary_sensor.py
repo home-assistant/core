@@ -10,14 +10,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, CONF_DEVICE_CLASS, CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME, STATE_UNKNOWN, CONF_SENSORS)
+    CONF_FRIENDLY_NAME, STATE_UNKNOWN, STATE_UNAVAILABLE, CONF_SENSORS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import utcnow
-
-REQUIREMENTS = ['numpy==1.16.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,8 +138,8 @@ class SensorTrend(BinarySensorDevice):
                     state = new_state.attributes.get(self._attribute)
                 else:
                     state = new_state.state
-                if state != STATE_UNKNOWN:
-                    sample = (utcnow().timestamp(), float(state))
+                if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                    sample = (new_state.last_updated.timestamp(), float(state))
                     self.samples.append(sample)
                     self.async_schedule_update_ha_state(True)
             except (ValueError, TypeError) as ex:

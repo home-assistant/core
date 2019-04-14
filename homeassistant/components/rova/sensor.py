@@ -1,9 +1,4 @@
-"""
-Support for Rova garbage calendar.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rova/
-"""
+"""Support for Rova garbage calendar."""
 
 from datetime import datetime, timedelta
 import logging
@@ -16,8 +11,6 @@ from homeassistant.const import (CONF_MONITORED_CONDITIONS, CONF_NAME,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['rova==0.1.0']
 
 # Config for rova requests.
 CONF_ZIP_CODE = 'zip_code'

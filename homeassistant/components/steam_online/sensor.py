@@ -1,9 +1,4 @@
-"""
-Sensor for Steam account status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.steam_online/
-"""
+"""Sensor for Steam account status."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['steamodd==4.21']
 
 _LOGGER = logging.getLogger(__name__)
 

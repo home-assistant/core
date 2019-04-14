@@ -1,9 +1,4 @@
-"""
-Platform that supports scanning iCloud.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.icloud/
-"""
+"""Platform that supports scanning iCloud."""
 import logging
 import random
 import os
@@ -21,8 +16,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pyicloud==0.9.1']
 
 CONF_ACCOUNTNAME = 'account_name'
 CONF_MAX_INTERVAL = 'max_interval'

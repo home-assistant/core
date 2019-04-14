@@ -1,12 +1,4 @@
-"""
-Support for BME680 Sensor over SMBus.
-
-Temperature, humidity, pressure and volatile gas support.
-Air Quality calculation based on humidity and volatile gas.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bme680/
-"""
+"""Support for BME680 Sensor over SMBus."""
 import importlib
 import logging
 
@@ -20,9 +12,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
-
-REQUIREMENTS = ['bme680==1.0.5',
-                'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,15 +3,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.arlo import (
-    DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +28,7 @@ ATTR_UNSEEN_VIDEOS = 'unseen_videos'
 ATTR_LAST_REFRESH = 'last_refresh'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-
-DEPENDENCIES = ['arlo', 'ffmpeg']
+DEFAULT_ARGUMENTS = '-pred 1'
 
 POWERSAVE_MODE_MAPPING = {
     1: 'best_battery_life',
@@ -38,7 +37,7 @@ POWERSAVE_MODE_MAPPING = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
 })
 
 
@@ -83,7 +82,7 @@ class ArloCam(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg import CameraMjpeg
+        from haffmpeg.camera import CameraMjpeg
         video = self._camera.last_video
         if not video:
             error_msg = \
@@ -97,8 +96,9 @@ class ArloCam(Camera):
             video.video_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
+            stream_reader = await stream.get_reader()
             return await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
+                self.hass, request, stream_reader,
                 self._ffmpeg.ffmpeg_stream_content_type)
         finally:
             await stream.close()

@@ -3,8 +3,6 @@ import logging
 
 import voluptuous as vol
 
-# Reuse data and API logic from the sensor implementation
-from homeassistant.components.buienradar.sensor import BrData
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
@@ -12,7 +10,8 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['buienradar==0.91']
+# Reuse data and API logic from the sensor implementation
+from .sensor import BrData
 
 _LOGGER = logging.getLogger(__name__)
 

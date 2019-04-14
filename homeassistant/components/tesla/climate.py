@@ -1,17 +1,15 @@
 """Support for Tesla HVAC system."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
 from homeassistant.components.climate.const import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
-from homeassistant.components.tesla import TeslaDevice
 from homeassistant.const import (
     ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
-DEPENDENCIES = ['tesla']
+_LOGGER = logging.getLogger(__name__)
 
 OPERATION_LIST = [STATE_ON, STATE_OFF]
 

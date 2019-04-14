@@ -1,9 +1,4 @@
-"""
-Support for Denon AVR receivers using their HTTP interface.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.denon/
-"""
+"""Support for Denon AVR receivers using their HTTP interface."""
 
 from collections import namedtuple
 import logging
@@ -22,8 +17,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_TIMEOUT, CONF_ZONE, STATE_OFF, STATE_ON,
     STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['denonavr==0.7.8']
 
 _LOGGER = logging.getLogger(__name__)
 

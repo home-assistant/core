@@ -3,21 +3,20 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.digital_ocean import (
-    CONF_DROPLETS, ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME,
-    ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
-    ATTR_REGION, ATTR_VCPUS, ATTRIBUTION, DATA_DIGITAL_OCEAN)
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import ATTR_ATTRIBUTION
+import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME, ATTR_FEATURES,
+    ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY, ATTR_REGION, ATTR_VCPUS,
+    ATTRIBUTION, CONF_DROPLETS, DATA_DIGITAL_OCEAN)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Droplet'
 DEFAULT_DEVICE_CLASS = 'moving'
-DEPENDENCIES = ['digital_ocean']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string]),
 })

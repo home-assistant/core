@@ -1,28 +1,21 @@
-"""
-Support for information from HP ILO sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sensor.hp_ilo/
-"""
-import logging
+"""Support for information from HP iLO sensors."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
-    CONF_MONITORED_VARIABLES, CONF_VALUE_TEMPLATE, CONF_SENSOR_TYPE,
-    CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_MONITORED_VARIABLES, CONF_NAME, CONF_PASSWORD, CONF_PORT,
+    CONF_SENSOR_TYPE, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
+    CONF_VALUE_TEMPLATE)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['python-hpilo==3.9']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'HP ILO'
+DEFAULT_NAME = "HP ILO"
 DEFAULT_PORT = 443
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
@@ -60,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the HP ILO sensor."""
+    """Set up the HP iLO sensors."""
     hostname = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     login = config.get(CONF_USERNAME)
@@ -73,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hp_ilo_data = HpIloData(hostname, port, login, password)
     except ValueError as error:
         _LOGGER.error(error)
-        return False
+        return
 
     # Initialize and add all of the sensors.
     devices = []
@@ -93,11 +86,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class HpIloSensor(Entity):
-    """Representation of a HP ILO sensor."""
+    """Representation of a HP iLO sensor."""
 
     def __init__(self, hass, hp_ilo_data, sensor_type, sensor_name,
                  sensor_value_template, unit_of_measurement):
-        """Initialize the sensor."""
+        """Initialize the HP iLO sensor."""
         self._hass = hass
         self._name = sensor_name
         self._unit_of_measurement = unit_of_measurement
@@ -111,7 +104,7 @@ class HpIloSensor(Entity):
         self._state = None
         self._state_attributes = None
 
-        _LOGGER.debug("Created HP ILO sensor %r", self)
+        _LOGGER.debug("Created HP iLO sensor %r", self)
 
     @property
     def name(self):
@@ -130,11 +123,11 @@ class HpIloSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes."""
+        """Return the device state attributes."""
         return self._state_attributes
 
     def update(self):
-        """Get the latest data from HP ILO and updates the states."""
+        """Get the latest data from HP iLO and updates the states."""
         # Call the API for new data. Each sensor will re-trigger this
         # same exact call, but that's fine. Results should be cached for
         # a short period of time to prevent hitting API limits.
@@ -148,7 +141,7 @@ class HpIloSensor(Entity):
 
 
 class HpIloData:
-    """Gets the latest data from HP ILO."""
+    """Gets the latest data from HP iLO."""
 
     def __init__(self, host, port, login, password):
         """Initialize the data object."""
@@ -163,7 +156,7 @@ class HpIloData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from HP ILO."""
+        """Get the latest data from HP iLO."""
         import hpilo
 
         try:

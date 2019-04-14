@@ -15,7 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SANDBOX = 'sandbox'
 
 DEFAULT_SANDBOX = False
-DEPENDENCIES = ['webhook']
 DOMAIN = 'mailgun'
 
 MESSAGE_RECEIVED = '{}_message_received'.format(DOMAIN)
@@ -87,6 +86,11 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     return True
+
+
+# pylint: disable=invalid-name
+async_remove_entry = config_entry_flow.webhook_async_remove_entry
+
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,

@@ -32,8 +32,6 @@ from .handlers import HANDLERS
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['konnected==0.1.5']
-
 _BINARY_SENSOR_SCHEMA = vol.All(
     vol.Schema({
         vol.Exclusive(CONF_PIN, 's_pin'): vol.Any(*PIN_TO_ZONE),
@@ -95,8 +93,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-DEPENDENCIES = ['http']
 
 
 async def async_setup(hass, config):
@@ -429,7 +425,7 @@ class KonnectedView(HomeAssistantView):
 
         if not pin:
             return self.json_message(
-                'Switch on pin ' + pin_num + ' not configured',
+                format('Switch on pin {} not configured', pin_num),
                 status_code=HTTP_NOT_FOUND)
 
         return self.json(

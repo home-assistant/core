@@ -3,13 +3,11 @@ import logging
 
 import requests
 
-from homeassistant.components.octoprint import (BINARY_SENSOR_TYPES,
-                                                DOMAIN as COMPONENT_DOMAIN)
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-_LOGGER = logging.getLogger(__name__)
+from . import BINARY_SENSOR_TYPES, DOMAIN as COMPONENT_DOMAIN
 
-DEPENDENCIES = ['octoprint']
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

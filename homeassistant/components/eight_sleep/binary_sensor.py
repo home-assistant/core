@@ -2,12 +2,10 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.eight_sleep import (
-    DATA_EIGHT, EightSleepHeatEntity, CONF_BINARY_SENSORS, NAME_MAP)
+
+from . import CONF_BINARY_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['eight_sleep']
 
 
 async def async_setup_platform(hass, config, async_add_entities,

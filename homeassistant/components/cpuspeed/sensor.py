@@ -1,9 +1,4 @@
-"""
-Support for displaying the current CPU speed.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.cpuspeed/
-"""
+"""Support for displaying the current CPU speed."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['py-cpuinfo==4.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

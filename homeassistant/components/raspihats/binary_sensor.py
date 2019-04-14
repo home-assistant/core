@@ -5,16 +5,15 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.components.raspihats import (
-    CONF_BOARD, CONF_CHANNELS, CONF_I2C_HATS, CONF_INDEX, CONF_INVERT_LOGIC,
-    I2C_HAT_NAMES, I2C_HATS_MANAGER, I2CHatsException)
 from homeassistant.const import (
     CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, DEVICE_DEFAULT_NAME)
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from . import (
+    CONF_BOARD, CONF_CHANNELS, CONF_I2C_HATS, CONF_INDEX, CONF_INVERT_LOGIC,
+    I2C_HAT_NAMES, I2C_HATS_MANAGER, I2CHatsException)
 
-DEPENDENCIES = ['raspihats']
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_DEVICE_CLASS = None

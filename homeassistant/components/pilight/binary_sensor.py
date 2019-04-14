@@ -1,9 +1,4 @@
-"""
-Support for Pilight binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.pilight/
-"""
+"""Support for Pilight binary sensors."""
 import datetime
 import logging
 
@@ -31,8 +26,6 @@ CONF_VARIABLE = 'variable'
 CONF_RESET_DELAY_SEC = 'reset_delay_sec'
 
 DEFAULT_NAME = 'Pilight Binary Sensor'
-DEPENDENCIES = ['pilight']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_VARIABLE): cv.string,
     vol.Required(CONF_PAYLOAD): vol.Schema(dict),

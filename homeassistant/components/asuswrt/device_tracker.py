@@ -1,15 +1,9 @@
-"""
-Support for ASUSWRT routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.asuswrt/
-"""
+"""Support for ASUSWRT routers."""
 import logging
 
-from homeassistant.components.asuswrt import DATA_ASUSWRT
 from homeassistant.components.device_tracker import DeviceScanner
 
-DEPENDENCIES = ['asuswrt']
+from . import DATA_ASUSWRT
 
 _LOGGER = logging.getLogger(__name__)
 

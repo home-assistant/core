@@ -1,8 +1,5 @@
 """Support for control of ElkM1 sensors."""
-from homeassistant.components.elkm1 import (
-    DOMAIN as ELK_DOMAIN, create_elk_entities, ElkEntity)
-
-DEPENDENCIES = [ELK_DOMAIN]
+from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 
 async def async_setup_platform(

@@ -1,9 +1,4 @@
-"""
-Support for Niko Home Control.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/light.niko_home_control/
-"""
+"""Support for Niko Home Control."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['niko-home-control==0.1.8']
 
 _LOGGER = logging.getLogger(__name__)
 

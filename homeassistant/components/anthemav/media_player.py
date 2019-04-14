@@ -1,9 +1,4 @@
-"""
-Support for Anthem Network Receivers and Processors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.anthemav/
-"""
+"""Support for Anthem Network Receivers and Processors."""
 import logging
 
 import voluptuous as vol
@@ -17,8 +12,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_OFF,
     STATE_ON)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['anthemav==1.1.10']
 
 _LOGGER = logging.getLogger(__name__)
 

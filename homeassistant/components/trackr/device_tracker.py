@@ -1,9 +1,4 @@
-"""
-Support for the TrackR platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.trackr/
-"""
+"""Support for the TrackR platform."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pytrackr==0.0.5']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,

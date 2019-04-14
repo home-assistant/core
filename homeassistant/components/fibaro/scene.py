@@ -1,12 +1,9 @@
 """Support for Fibaro scenes."""
 import logging
 
-from homeassistant.components.scene import (
-    Scene)
-from homeassistant.components.fibaro import (
-    FIBARO_DEVICES, FibaroDevice)
+from homeassistant.components.scene import Scene
 
-DEPENDENCIES = ['fibaro']
+from . import FIBARO_DEVICES, FibaroDevice
 
 _LOGGER = logging.getLogger(__name__)
 

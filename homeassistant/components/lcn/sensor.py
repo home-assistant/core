@@ -1,11 +1,10 @@
 """Support for LCN sensors."""
-from homeassistant.components.lcn import LcnDevice, get_connection
-from homeassistant.components.lcn.const import (
-    CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, LED_PORTS, S0_INPUTS, SETPOINTS,
-    THRESHOLDS, VARIABLES)
 from homeassistant.const import CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
 
-DEPENDENCIES = ['lcn']
+from . import LcnDevice, get_connection
+from .const import (
+    CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, LED_PORTS, S0_INPUTS, SETPOINTS,
+    THRESHOLDS, VARIABLES)
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,

@@ -1,16 +1,15 @@
 """Support for Lutron Homeworks lights."""
 import logging
 
-from homeassistant.components.homeworks import (
-    CONF_ADDR, CONF_DIMMERS, CONF_RATE, ENTITY_SIGNAL, HOMEWORKS_CONTROLLER,
-    HomeworksDevice)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-DEPENDENCIES = ['homeworks']
+from . import (
+    CONF_ADDR, CONF_DIMMERS, CONF_RATE, ENTITY_SIGNAL, HOMEWORKS_CONTROLLER,
+    HomeworksDevice)
 
 _LOGGER = logging.getLogger(__name__)
 

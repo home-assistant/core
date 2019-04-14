@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "bad_config_file": "Feelerhaft Donn\u00e9e\u00eb aus der Konfiguratioun's Datei",
+            "link_local_address": "Lokal Link Adressen ginn net \u00ebnnerst\u00ebtzt"
+        },
+        "error": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "device_unavailable": "Apparat ass net erreechbar",
+            "faulty_credentials": "Ong\u00eblteg Login Informatioune"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "title": "Axis Apparat ariichten"
+            }
+        },
+        "title": "Axis Apparat"
+    }
+}

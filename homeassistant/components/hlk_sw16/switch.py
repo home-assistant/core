@@ -1,14 +1,10 @@
 """Support for HLK-SW16 switches."""
 import logging
 
-from homeassistant.components.hlk_sw16 import (
-    SW16Device, DOMAIN as HLK_SW16,
-    DATA_DEVICE_REGISTER)
-from homeassistant.components.switch import (
-    ToggleEntity)
+from homeassistant.components.switch import ToggleEntity
 from homeassistant.const import CONF_NAME
 
-DEPENDENCIES = [HLK_SW16]
+from . import DATA_DEVICE_REGISTER, SW16Device
 
 _LOGGER = logging.getLogger(__name__)
 

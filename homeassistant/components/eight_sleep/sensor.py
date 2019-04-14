@@ -1,11 +1,9 @@
 """Support for Eight Sleep sensors."""
 import logging
 
-from homeassistant.components.eight_sleep import (
-    DATA_EIGHT, EightSleepHeatEntity, EightSleepUserEntity,
-    CONF_SENSORS, NAME_MAP)
-
-DEPENDENCIES = ['eight_sleep']
+from . import (
+    CONF_SENSORS, DATA_EIGHT, NAME_MAP, EightSleepHeatEntity,
+    EightSleepUserEntity)
 
 ATTR_ROOM_TEMP = 'Room Temperature'
 ATTR_AVG_ROOM_TEMP = 'Average Room Temperature'

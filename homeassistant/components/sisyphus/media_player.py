@@ -6,13 +6,12 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
-from homeassistant.components.sisyphus import DATA_SISYPHUS
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 
-_LOGGER = logging.getLogger(__name__)
+from . import DATA_SISYPHUS
 
-DEPENDENCIES = ['sisyphus']
+_LOGGER = logging.getLogger(__name__)
 
 MEDIA_TYPE_TRACK = 'sisyphus_track'
 

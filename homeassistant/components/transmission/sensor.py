@@ -1,16 +1,13 @@
 """Support for monitoring the Transmission BitTorrent client API."""
 from datetime import timedelta
-
 import logging
 
-from homeassistant.components.transmission import (
-    DATA_TRANSMISSION, SENSOR_TYPES, DATA_UPDATED)
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ['transmission']
+from . import DATA_TRANSMISSION, DATA_UPDATED, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 

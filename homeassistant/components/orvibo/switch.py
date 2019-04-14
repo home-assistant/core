@@ -1,9 +1,4 @@
-"""
-Support for Orvibo S20 Wifi Smart Switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.orvibo/
-"""
+"""Support for Orvibo S20 Wifi Smart Switches."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_SWITCHES, CONF_MAC, CONF_DISCOVERY)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['orvibo==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,11 +3,11 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.components.knx import (
-    ATTR_DISCOVER_DEVICES, DATA_KNX, KNXAutomation)
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+
+from . import ATTR_DISCOVER_DEVICES, DATA_KNX, KNXAutomation
 
 CONF_SIGNIFICANT_BIT = 'significant_bit'
 CONF_DEFAULT_SIGNIFICANT_BIT = 1
@@ -22,8 +22,6 @@ CONF_RESET_AFTER = 'reset_after'
 CONF__ACTION = 'turn_off_action'
 
 DEFAULT_NAME = 'KNX Binary Sensor'
-DEPENDENCIES = ['knx']
-
 AUTOMATION_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
     vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,

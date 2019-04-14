@@ -1,9 +1,4 @@
-"""
-Support for monitoring a Neurio energy sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.neurio_energy/
-"""
+"""Support for monitoring a Neurio energy sensor."""
 import logging
 from datetime import timedelta
 
@@ -17,8 +12,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['neurio==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,19 +2,17 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, ENTITY_ID_FORMAT)
-from homeassistant.components.opentherm_gw import (
-    DATA_GW_VARS, DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE)
+    ENTITY_ID_FORMAT, BinarySensorDevice)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
+
+from . import DATA_GW_VARS, DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_COLD = 'cold'
 DEVICE_CLASS_HEAT = 'heat'
 DEVICE_CLASS_PROBLEM = 'problem'
-
-DEPENDENCIES = ['opentherm_gw']
 
 
 async def async_setup_platform(

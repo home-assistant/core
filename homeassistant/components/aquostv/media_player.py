@@ -1,9 +1,4 @@
-"""
-Support for interface with an Aquos TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.aquostv/
-"""
+"""Support for interface with an Aquos TV."""
 import logging
 
 import voluptuous as vol
@@ -19,8 +14,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
     CONF_USERNAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['sharp_aquos_rc==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,0 +1,10 @@
+{
+  "domain": "dialogflow",
+  "name": "Dialogflow",
+  "documentation": "https://www.home-assistant.io/components/dialogflow",
+  "requirements": [],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": []
+}

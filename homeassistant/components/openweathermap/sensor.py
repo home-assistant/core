@@ -1,9 +1,4 @@
-"""
-Support for the OpenWeatherMap (OWM) service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.openweathermap/
-"""
+"""Support for the OpenWeatherMap (OWM) service."""
 from datetime import timedelta
 import logging
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['pyowm==2.10.0']
 
 _LOGGER = logging.getLogger(__name__)
 

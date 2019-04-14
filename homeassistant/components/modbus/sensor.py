@@ -4,14 +4,14 @@ import struct
 
 import voluptuous as vol
 
-from homeassistant.components.modbus import (
-    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_OFFSET, CONF_SLAVE, CONF_STRUCTURE,
     CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +28,6 @@ DATA_TYPE_CUSTOM = 'custom'
 DATA_TYPE_FLOAT = 'float'
 DATA_TYPE_INT = 'int'
 DATA_TYPE_UINT = 'uint'
-
-DEPENDENCIES = ['modbus']
 
 REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'

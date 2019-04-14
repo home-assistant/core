@@ -1,26 +1,19 @@
-"""
-Support for Rflink sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rflink/
-"""
+"""Support for Rflink sensors."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.rflink import (
-    CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES,
-    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, EVENT_KEY_ID,
-    EVENT_KEY_SENSOR, EVENT_KEY_UNIT, RflinkDevice, remove_deprecated,
-    SIGNAL_AVAILABILITY, SIGNAL_HANDLE_EVENT, TMP_ENTITY)
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
-from homeassistant.helpers.dispatcher import (async_dispatcher_connect)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-DEPENDENCIES = ['rflink']
+from . import (
+    CONF_ALIASES, CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES,
+    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, EVENT_KEY_ID, EVENT_KEY_SENSOR,
+    EVENT_KEY_UNIT, SIGNAL_AVAILABILITY, SIGNAL_HANDLE_EVENT, TMP_ENTITY,
+    RflinkDevice, remove_deprecated)
 
 _LOGGER = logging.getLogger(__name__)
 

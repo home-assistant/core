@@ -1,8 +1,7 @@
 """Support for the Hive switches."""
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
 from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['hive']
+from . import DATA_HIVE, DOMAIN
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

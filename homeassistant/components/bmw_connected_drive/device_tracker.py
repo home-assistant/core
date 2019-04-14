@@ -1,11 +1,9 @@
 """Device tracker for BMW Connected Drive vehicles."""
 import logging
 
-from homeassistant.components.bmw_connected_drive import DOMAIN \
-    as BMW_DOMAIN
 from homeassistant.util import slugify
 
-DEPENDENCIES = ['bmw_connected_drive']
+from . import DOMAIN as BMW_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

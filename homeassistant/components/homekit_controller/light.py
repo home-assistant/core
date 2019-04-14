@@ -1,13 +1,11 @@
 """Support for Homekit lights."""
 import logging
 
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 
-DEPENDENCIES = ['homekit_controller']
+from . import KNOWN_DEVICES, HomeKitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit lighting."""
     if discovery_info is not None:
-        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
         add_entities([HomeKitLight(accessory, discovery_info)], True)
 
 

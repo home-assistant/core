@@ -1,9 +1,4 @@
-"""
-Support for DLNA DMR (Device Media Renderer).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.dlna_dmr/
-"""
+"""Support for DLNA DMR (Device Media Renderer)."""
 import asyncio
 from datetime import datetime
 from datetime import timedelta
@@ -17,6 +12,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_EPISODE, MEDIA_TYPE_IMAGE,
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
@@ -28,8 +26,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
-
-REQUIREMENTS = ['async-upnp-client==0.14.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,20 +47,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
-    'music': 'object.item.audioItem',
-    'tvshow': 'object.item.videoItem',
-    'video': 'object.item.videoItem',
-    'episode': 'object.item.videoItem',
-    'channel': 'object.item.videoItem',
-    'playlist': 'object.item.playlist',
+    MEDIA_TYPE_MUSIC: 'object.item.audioItem',
+    MEDIA_TYPE_TVSHOW: 'object.item.videoItem',
+    MEDIA_TYPE_MOVIE: 'object.item.videoItem',
+    MEDIA_TYPE_VIDEO: 'object.item.videoItem',
+    MEDIA_TYPE_EPISODE: 'object.item.videoItem',
+    MEDIA_TYPE_CHANNEL: 'object.item.videoItem',
+    MEDIA_TYPE_IMAGE: 'object.item.imageItem',
+    MEDIA_TYPE_PLAYLIST: 'object.item.playlist',
 }
+UPNP_CLASS_DEFAULT = 'object.item'
 HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING = {
-    'music': 'audio/*',
-    'tvshow': 'video/*',
-    'video': 'video/*',
-    'episode': 'video/*',
-    'channel': 'video/*',
-    'playlist': 'playlist/*',
+    MEDIA_TYPE_MUSIC: 'audio/*',
+    MEDIA_TYPE_TVSHOW: 'video/*',
+    MEDIA_TYPE_MOVIE: 'video/*',
+    MEDIA_TYPE_VIDEO: 'video/*',
+    MEDIA_TYPE_EPISODE: 'video/*',
+    MEDIA_TYPE_CHANNEL: 'video/*',
+    MEDIA_TYPE_IMAGE: 'image/*',
+    MEDIA_TYPE_PLAYLIST: 'playlist/*',
 }
 
 
@@ -319,8 +320,10 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         title = "Home Assistant"
-        mime_type = HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING[media_type]
-        upnp_class = HOME_ASSISTANT_UPNP_CLASS_MAPPING[media_type]
+        mime_type = HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING.get(media_type,
+                                                              media_type)
+        upnp_class = HOME_ASSISTANT_UPNP_CLASS_MAPPING.get(media_type,
+                                                           UPNP_CLASS_DEFAULT)
 
         # Stop current playing media
         if self._device.can_stop:

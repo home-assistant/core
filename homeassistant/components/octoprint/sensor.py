@@ -3,14 +3,12 @@ import logging
 
 import requests
 
-from homeassistant.components.octoprint import (SENSOR_TYPES,
-                                                DOMAIN as COMPONENT_DOMAIN)
-from homeassistant.const import (TEMP_CELSIUS)
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as COMPONENT_DOMAIN, SENSOR_TYPES
 
-DEPENDENCIES = ['octoprint']
+_LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_ID = 'octoprint_notification'
 NOTIFICATION_TITLE = 'OctoPrint sensor setup error'

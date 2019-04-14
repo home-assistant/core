@@ -1,29 +1,23 @@
-"""
-Support for monitoring the state of Vultr subscriptions (VPS).
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.vultr/
-"""
+"""Support for monitoring the state of Vultr subscriptions (VPS)."""
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.vultr import (
-    CONF_SUBSCRIPTION, ATTR_AUTO_BACKUPS, ATTR_ALLOWED_BANDWIDTH,
-    ATTR_CREATED_AT, ATTR_SUBSCRIPTION_ID, ATTR_SUBSCRIPTION_NAME,
-    ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY, ATTR_DISK,
-    ATTR_COST_PER_MONTH, ATTR_OS, ATTR_REGION, ATTR_VCPUS, DATA_VULTR)
+    PLATFORM_SCHEMA, BinarySensorDevice)
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_ALLOWED_BANDWIDTH, ATTR_AUTO_BACKUPS, ATTR_COST_PER_MONTH,
+    ATTR_CREATED_AT, ATTR_DISK, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS,
+    ATTR_MEMORY, ATTR_OS, ATTR_REGION, ATTR_SUBSCRIPTION_ID,
+    ATTR_SUBSCRIPTION_NAME, ATTR_VCPUS, CONF_SUBSCRIPTION, DATA_VULTR)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DEVICE_CLASS = 'power'
 DEFAULT_NAME = 'Vultr {}'
-DEPENDENCIES = ['vultr']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SUBSCRIPTION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string

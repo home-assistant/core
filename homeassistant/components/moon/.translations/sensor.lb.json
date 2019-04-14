@@ -1,12 +1,12 @@
 {
     "state": {
-        "first_quarter": "\u00c9ischt V\u00e9ierel",
+        "first_quarter": "zouhuelend",
         "full_moon": "Vollmound",
-        "last_quarter": "L\u00e4scht V\u00e9ierel",
+        "last_quarter": "ofhuelend",
         "new_moon": "Neimound",
-        "waning_crescent": "Ofhuelende Mound",
-        "waning_gibbous": "Dr\u00ebtt V\u00e9ierel",
-        "waxing_crescent": "Zouhuelende Mound",
-        "waxing_gibbous": "Zweet V\u00e9ierel"
+        "waning_crescent": "ofhuelend hallef",
+        "waning_gibbous": "ofhuelend dr\u00e4i v\u00e9ierels",
+        "waxing_crescent": "zouhuelend hallef",
+        "waxing_gibbous": "zouhuelend dr\u00e4i v\u00e9ierels"
     }
 }

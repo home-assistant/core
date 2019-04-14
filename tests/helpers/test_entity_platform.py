@@ -8,7 +8,6 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.loader as loader
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import (
     EntityComponent, DEFAULT_SCAN_INTERVAL)
@@ -18,7 +17,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, MockPlatform, fire_time_changed, mock_registry,
-    MockEntity, MockEntityPlatform, MockConfigEntry)
+    MockEntity, MockEntityPlatform, MockConfigEntry, mock_entity_platform)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -149,7 +148,7 @@ class TestHelpersEntityPlatform(unittest.TestCase):
         platform = MockPlatform(platform_setup)
         platform.SCAN_INTERVAL = timedelta(seconds=30)
 
-        loader.set_component(self.hass, 'test_domain.platform', platform)
+        mock_entity_platform(self.hass, 'test_domain.platform', platform)
 
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -186,7 +185,7 @@ def test_platform_warn_slow_setup(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
-    loader.set_component(hass, 'test_domain.platform', platform)
+    mock_entity_platform(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -199,7 +198,9 @@ def test_platform_warn_slow_setup(hass):
         })
         assert mock_call.called
 
-        timeout, logger_method = mock_call.mock_calls[0][1][:2]
+        # mock_calls[0] is the warning message for component setup
+        # mock_calls[3] is the warning message for platform setup
+        timeout, logger_method = mock_call.mock_calls[3][1][:2]
 
         assert timeout == entity_platform.SLOW_SETUP_WARNING
         assert logger_method == _LOGGER.warning
@@ -220,7 +221,7 @@ def test_platform_error_slow_setup(hass, caplog):
 
         platform = MockPlatform(async_setup_platform=setup_platform)
         component = EntityComponent(_LOGGER, DOMAIN, hass)
-        loader.set_component(hass, 'test_domain.test_platform', platform)
+        mock_entity_platform(hass, 'test_domain.test_platform', platform)
         yield from component.async_setup({
             DOMAIN: {
                 'platform': 'test_platform',
@@ -251,80 +252,126 @@ def test_updated_state_used_for_entity_id(hass):
     assert entity_ids[0] == "test_domain.living_room"
 
 
-@asyncio.coroutine
-def test_parallel_updates_async_platform(hass):
-    """Warn we log when platform setup takes a long time."""
+async def test_parallel_updates_async_platform(hass):
+    """Test async platform does not have parallel_updates limit by default."""
     platform = MockPlatform()
 
-    @asyncio.coroutine
-    def mock_update(*args, **kwargs):
-        pass
-
-    platform.async_setup_platform = mock_update
-
-    loader.set_component(hass, 'test_domain.platform', platform)
+    mock_entity_platform(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
 
-    yield from component.async_setup({
+    await component.async_setup({
         DOMAIN: {
             'platform': 'platform',
         }
     })
 
     handle = list(component._platforms.values())[-1]
-
     assert handle.parallel_updates is None
 
+    class AsyncEntity(MockEntity):
+        """Mock entity that has async_update."""
 
-@asyncio.coroutine
-def test_parallel_updates_async_platform_with_constant(hass):
-    """Warn we log when platform setup takes a long time."""
+        async def async_update(self):
+            pass
+
+    entity = AsyncEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is None
+
+
+async def test_parallel_updates_async_platform_with_constant(hass):
+    """Test async platform can set parallel_updates limit."""
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 2
+
+    mock_entity_platform(hass, 'test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    await component.async_setup({
+        DOMAIN: {
+            'platform': 'platform',
+        }
+    })
+
+    handle = list(component._platforms.values())[-1]
+
+    assert handle.parallel_updates == 2
+
+    class AsyncEntity(MockEntity):
+        """Mock entity that has async_update."""
+
+        async def async_update(self):
+            pass
+
+    entity = AsyncEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is not None
+    assert entity.parallel_updates._value == 2
+
+
+async def test_parallel_updates_sync_platform(hass):
+    """Test sync platform parallel_updates default set to 1."""
     platform = MockPlatform()
 
-    @asyncio.coroutine
-    def mock_update(*args, **kwargs):
-        pass
-
-    platform.async_setup_platform = mock_update
-    platform.PARALLEL_UPDATES = 1
-
-    loader.set_component(hass, 'test_domain.platform', platform)
+    mock_entity_platform(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
 
-    yield from component.async_setup({
+    await component.async_setup({
         DOMAIN: {
             'platform': 'platform',
         }
     })
 
     handle = list(component._platforms.values())[-1]
+    assert handle.parallel_updates is None
 
-    assert handle.parallel_updates is not None
+    class SyncEntity(MockEntity):
+        """Mock entity that has update."""
+
+        async def update(self):
+            pass
+
+    entity = SyncEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is not None
+    assert entity.parallel_updates._value == 1
 
 
-@asyncio.coroutine
-def test_parallel_updates_sync_platform(hass):
-    """Warn we log when platform setup takes a long time."""
-    platform = MockPlatform(setup_platform=lambda *args: None)
+async def test_parallel_updates_sync_platform_with_constant(hass):
+    """Test sync platform can set parallel_updates limit."""
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 2
 
-    loader.set_component(hass, 'test_domain.platform', platform)
+    mock_entity_platform(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
 
-    yield from component.async_setup({
+    await component.async_setup({
         DOMAIN: {
             'platform': 'platform',
         }
     })
 
     handle = list(component._platforms.values())[-1]
+    assert handle.parallel_updates == 2
 
-    assert handle.parallel_updates is not None
+    class SyncEntity(MockEntity):
+        """Mock entity that has update."""
+
+        async def update(self):
+            pass
+
+    entity = SyncEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is not None
+    assert entity.parallel_updates._value == 2
 
 
 @asyncio.coroutine

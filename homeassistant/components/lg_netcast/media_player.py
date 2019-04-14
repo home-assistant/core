@@ -1,9 +1,4 @@
-"""
-Support for LG TV running on NetCast 3 or 4.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.lg_netcast/
-"""
+"""Support for LG TV running on NetCast 3 or 4."""
 from datetime import timedelta
 import logging
 
@@ -21,8 +16,6 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pylgnetcast-homeassistant==0.2.0.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 

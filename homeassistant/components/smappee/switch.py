@@ -1,10 +1,9 @@
 """Support for interacting with Smappee Comport Plugs."""
 import logging
 
-from homeassistant.components.smappee import DATA_SMAPPEE
-from homeassistant.components.switch import (SwitchDevice)
+from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['smappee']
+from . import DATA_SMAPPEE
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Support for transport.opendata.ch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.swiss_public_transport/
-"""
+"""Support for transport.opendata.ch."""
 from datetime import timedelta
 import logging
 
@@ -15,8 +10,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['python_opendata_transport==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 

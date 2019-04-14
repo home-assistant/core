@@ -1,8 +1,7 @@
 """Support for the Tuya scenes."""
-from homeassistant.components.scene import Scene, DOMAIN
-from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
+from homeassistant.components.scene import DOMAIN, Scene
 
-DEPENDENCIES = ['tuya']
+from . import DATA_TUYA, TuyaDevice
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 

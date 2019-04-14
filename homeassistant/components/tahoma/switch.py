@@ -2,11 +2,9 @@
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.tahoma import (
-    DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
-from homeassistant.const import (STATE_OFF, STATE_ON)
+from homeassistant.const import STATE_OFF, STATE_ON
 
-DEPENDENCIES = ['tahoma']
+from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
 _LOGGER = logging.getLogger(__name__)
 

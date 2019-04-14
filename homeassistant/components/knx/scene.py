@@ -1,17 +1,16 @@
 """Support for KNX scenes."""
 import voluptuous as vol
 
-from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.components.scene import CONF_PLATFORM, Scene
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
+from . import ATTR_DISCOVER_DEVICES, DATA_KNX
+
 CONF_SCENE_NUMBER = 'scene_number'
 
 DEFAULT_NAME = 'KNX SCENE'
-DEPENDENCIES = ['knx']
-
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'knx',
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

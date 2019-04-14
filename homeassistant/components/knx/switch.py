@@ -1,17 +1,16 @@
 """Support for KNX/IP switches."""
 import voluptuous as vol
 
-from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
+from . import ATTR_DISCOVER_DEVICES, DATA_KNX
+
 CONF_STATE_ADDRESS = 'state_address'
 
 DEFAULT_NAME = 'KNX Switch'
-DEPENDENCIES = ['knx']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

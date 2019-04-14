@@ -1,0 +1,10 @@
+{
+  "domain": "trafikverket_weatherstation",
+  "name": "Trafikverket weatherstation",
+  "documentation": "https://www.home-assistant.io/components/trafikverket_weatherstation",
+  "requirements": [
+    "pytrafikverket==0.1.5.9"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

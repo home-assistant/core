@@ -1,9 +1,4 @@
-"""
-Support for GPS tracking MQTT enabled devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.mqtt_json/
-"""
+"""Support for GPS tracking MQTT enabled devices."""
 import json
 import logging
 
@@ -17,8 +12,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_DEVICES, ATTR_GPS_ACCURACY, ATTR_LATITUDE,
     ATTR_LONGITUDE, ATTR_BATTERY_LEVEL)
-
-DEPENDENCIES = ['mqtt']
 
 _LOGGER = logging.getLogger(__name__)
 

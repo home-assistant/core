@@ -1,11 +1,10 @@
 """Support for IHC switches."""
-from homeassistant.components.ihc import IHC_CONTROLLER, IHC_DATA, IHC_INFO
-from homeassistant.components.ihc.const import CONF_OFF_ID, CONF_ON_ID
-from homeassistant.components.ihc.util import async_pulse, async_set_bool
-from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['ihc']
+from . import IHC_CONTROLLER, IHC_DATA, IHC_INFO
+from .const import CONF_OFF_ID, CONF_ON_ID
+from .ihcdevice import IHCDevice
+from .util import async_pulse, async_set_bool
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

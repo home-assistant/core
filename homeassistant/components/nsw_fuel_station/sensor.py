@@ -1,9 +1,4 @@
-"""
-Sensor platform to display the current fuel prices at a NSW fuel station.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nsw_fuel_station/
-"""
+"""Sensor platform to display the current fuel prices at a NSW fuel station."""
 import datetime
 import logging
 from typing import Optional
@@ -15,8 +10,6 @@ from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['nsw-fuel-api-client==1.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,14 +1,13 @@
 """Support for Speedtest.net internet speed testing sensor."""
 import logging
 
-from homeassistant.components.speedtestdotnet.const import \
-    DOMAIN as SPEEDTESTDOTNET_DOMAIN, DATA_UPDATED, SENSOR_TYPES
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
-DEPENDENCIES = ['speedtestdotnet']
+from .const import (
+    DATA_UPDATED, DOMAIN as SPEEDTESTDOTNET_DOMAIN, SENSOR_TYPES)
 
 _LOGGER = logging.getLogger(__name__)
 

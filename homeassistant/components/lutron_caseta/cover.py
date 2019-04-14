@@ -2,14 +2,12 @@
 import logging
 
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
-    ATTR_POSITION, DOMAIN)
-from homeassistant.components.lutron_caseta import (
-    LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
+    ATTR_POSITION, DOMAIN, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
+    CoverDevice)
+
+from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['lutron_caseta']
 
 
 async def async_setup_platform(

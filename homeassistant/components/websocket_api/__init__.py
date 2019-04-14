@@ -43,5 +43,5 @@ def async_register_command(hass, command_or_handler, handler=None,
 async def async_setup(hass, config):
     """Initialize the websocket API."""
     hass.http.register_view(http.WebsocketAPIView)
-    commands.async_register_commands(hass)
+    commands.async_register_commands(hass, async_register_command)
     return True

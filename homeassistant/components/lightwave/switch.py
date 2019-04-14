@@ -1,9 +1,8 @@
 """Support for LightwaveRF switches."""
-from homeassistant.components.lightwave import LIGHTWAVE_LINK
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_NAME
 
-DEPENDENCIES = ['lightwave']
+from . import LIGHTWAVE_LINK
 
 
 async def async_setup_platform(

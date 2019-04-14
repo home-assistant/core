@@ -16,8 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'locative'
-DEPENDENCIES = ['webhook']
-
 TRACKER_UPDATE = '{}_tracker_update'.format(DOMAIN)
 
 
@@ -141,9 +139,13 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-
     await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
     return True
+
+
+# pylint: disable=invalid-name
+async_remove_entry = config_entry_flow.webhook_async_remove_entry
+
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,

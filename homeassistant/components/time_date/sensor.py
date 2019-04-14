@@ -1,9 +1,4 @@
-"""
-Support for showing the date and the time.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.time_date/
-"""
+"""Support for showing the date and the time."""
 from datetime import timedelta
 import logging
 
@@ -25,6 +20,7 @@ OPTION_TYPES = {
     'time': 'Time',
     'date': 'Date',
     'date_time': 'Date & Time',
+    'date_time_iso': 'Date & Time ISO',
     'time_date': 'Time & Date',
     'beat': 'Internet Time',
     'time_utc': 'Time (UTC)',
@@ -123,6 +119,9 @@ class TimeDateSensor(Entity):
             self._state = time_utc
         elif self.type == 'beat':
             self._state = '@{0:03d}'.format(beat)
+        elif self.type == 'date_time_iso':
+            self._state = dt_util.parse_datetime(
+                '{} {}'.format(date, time)).isoformat()
 
     @callback
     def point_in_time_listener(self, time_date):

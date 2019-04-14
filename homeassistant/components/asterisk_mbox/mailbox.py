@@ -1,15 +1,14 @@
 """Support for the Asterisk Voicemail interface."""
 import logging
 
-from homeassistant.components.asterisk_mbox import DOMAIN as ASTERISK_DOMAIN
 from homeassistant.components.mailbox import (
     CONTENT_TYPE_MPEG, Mailbox, StreamError)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as ASTERISK_DOMAIN
 
-DEPENDENCIES = ['asterisk_mbox']
+_LOGGER = logging.getLogger(__name__)
 
 SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'

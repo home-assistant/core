@@ -1,9 +1,4 @@
-"""
-Support for interfacing with an instance of Channels (https://getchannels.com).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.channels/
-"""
+"""Support for interfacing with an instance of getchannels.com."""
 import logging
 
 import voluptuous as vol
@@ -19,8 +14,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_PAUSED,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pychannels==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

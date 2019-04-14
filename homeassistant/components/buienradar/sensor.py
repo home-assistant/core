@@ -1,29 +1,21 @@
-"""
-Support for Buienradar.nl weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.buienradar/
-"""
+"""Support for Buienradar.nl weather service."""
 import asyncio
 from datetime import datetime, timedelta
 import logging
 
-import async_timeout
 import aiohttp
+import async_timeout
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
+    CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time)
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
-
-REQUIREMENTS = ['buienradar==0.91']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +136,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Create the buienradar sensor."""
-    from homeassistant.components.buienradar.weather import DEFAULT_TIMEFRAME
+    from .weather import DEFAULT_TIMEFRAME
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)

@@ -4,15 +4,14 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarmdecoder import DATA_AD, SIGNAL_PANEL_MESSAGE
 from homeassistant.const import (
     ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from . import DATA_AD, SIGNAL_PANEL_MESSAGE
 
-DEPENDENCIES = ['alarmdecoder']
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_ALARM_TOGGLE_CHIME = 'alarmdecoder_alarm_toggle_chime'
 ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({

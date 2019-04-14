@@ -1,19 +1,17 @@
 """Support for ESPHome switches."""
 import logging
-
 from typing import TYPE_CHECKING, Optional
 
-from homeassistant.components.esphome import EsphomeEntity, \
-    platform_async_setup_entry
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import EsphomeEntity, platform_async_setup_entry
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
     from aioesphomeapi import SwitchInfo, SwitchState  # noqa
 
-DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -50,7 +48,7 @@ class EsphomeSwitch(EsphomeEntity, SwitchDevice):
     @property
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
-        return self._static_info.optimistic
+        return self._static_info.assumed_state
 
     @property
     def is_on(self):

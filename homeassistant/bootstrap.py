@@ -1,18 +1,19 @@
 """Provide methods to bootstrap a Home Assistant instance."""
+import asyncio
 import logging
 import logging.handlers
 import os
 import sys
 from time import time
 from collections import OrderedDict
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Set
 
 import voluptuous as vol
 
-from homeassistant import (
-    core, config as conf_util, config_entries, components as core_components,
-    loader)
-from homeassistant.components import persistent_notification
+from homeassistant import core, config as conf_util, config_entries, loader
+from homeassistant.components import (
+    persistent_notification, homeassistant as core_component
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import AsyncHandler
@@ -34,7 +35,6 @@ FIRST_INIT_COMPONENT = {
     'recorder',
     'mqtt',
     'mqtt_eventstream',
-    'introduction',
     'frontend',
     'history',
 }
@@ -127,19 +127,20 @@ async def async_from_config_dict(config: Dict[str, Any],
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await hass.config_entries.async_initialize()
 
-    components = _get_components(hass, config)
+    domains = _get_domains(hass, config)
 
     # Resolve all dependencies of all components.
-    for component in list(components):
-        try:
-            components.update(loader.component_dependencies(hass, component))
-        except loader.LoaderError:
-            # Ignore it, or we'll break startup
-            # It will be properly handled during setup.
-            pass
+    for dep_domains in await asyncio.gather(*[
+            loader.async_component_dependencies(hass, domain)
+            for domain in domains
+    ], return_exceptions=True):
+        # Result is either a set or an exception. We ignore exceptions
+        # It will be properly handled during setup of the domain.
+        if isinstance(dep_domains, set):
+            domains.update(dep_domains)
 
     # setup components
-    res = await core_components.async_setup(hass, config)
+    res = await core_component.async_setup(hass, config)
     if not res:
         _LOGGER.error("Home Assistant core failed to initialize. "
                       "Further initialization aborted")
@@ -150,26 +151,32 @@ async def async_from_config_dict(config: Dict[str, Any],
     _LOGGER.info("Home Assistant core initialized")
 
     # stage 0, load logging components
-    for component in components:
-        if component in LOGGING_COMPONENT:
+    for domain in domains:
+        if domain in LOGGING_COMPONENT:
             hass.async_create_task(
-                async_setup_component(hass, component, config))
+                async_setup_component(hass, domain, config))
 
     await hass.async_block_till_done()
 
+    # Kick off loading the registries. They don't need to be awaited.
+    asyncio.gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry(),
+        hass.helpers.area_registry.async_get_registry())
+
     # stage 1
-    for component in components:
-        if component in FIRST_INIT_COMPONENT:
+    for domain in domains:
+        if domain in FIRST_INIT_COMPONENT:
             hass.async_create_task(
-                async_setup_component(hass, component, config))
+                async_setup_component(hass, domain, config))
 
     await hass.async_block_till_done()
 
     # stage 2
-    for component in components:
-        if component in FIRST_INIT_COMPONENT or component in LOGGING_COMPONENT:
+    for domain in domains:
+        if domain in FIRST_INIT_COMPONENT or domain in LOGGING_COMPONENT:
             continue
-        hass.async_create_task(async_setup_component(hass, component, config))
+        hass.async_create_task(async_setup_component(hass, domain, config))
 
     await hass.async_block_till_done()
 
@@ -391,17 +398,17 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 
 
 @core.callback
-def _get_components(hass: core.HomeAssistant, config: Dict[str, Any]):
-    """Get components to set up."""
+def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
+    """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
-    components = set(key.split(' ')[0] for key in config.keys()
-                     if key != core.DOMAIN)
+    domains = set(key.split(' ')[0] for key in config.keys()
+                  if key != core.DOMAIN)
 
     # Add config entry domains
-    components.update(hass.config_entries.async_domains())
+    domains.update(hass.config_entries.async_domains())  # type: ignore
 
     # Make sure the Hass.io component is loaded
     if 'HASSIO' in os.environ:
-        components.add('hassio')
+        domains.add('hassio')
 
-    return components
+    return domains

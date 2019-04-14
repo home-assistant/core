@@ -1,9 +1,8 @@
 """Support for Blink system camera control."""
-from homeassistant.components.blink import BLINK_DATA, BINARY_SENSORS
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 
-DEPENDENCIES = ['blink']
+from . import BINARY_SENSORS, BLINK_DATA
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
