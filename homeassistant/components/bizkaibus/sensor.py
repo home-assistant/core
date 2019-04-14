@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from bizkaibus import BizkaibusData
+from bizkaibus.bizkaibus import BizkaibusData
 
 import xml.etree.ElementTree as ET
 
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     stop = config.get(CONF_STOP_ID)
     route = config.get(CONF_ROUTE)
 
-    data = BizkaibusData(stop, route)
+    data = Bizkaibus(stop, route)
     add_entities([BizkaibusSensor(data, stop, route, name)], True)
 
 
