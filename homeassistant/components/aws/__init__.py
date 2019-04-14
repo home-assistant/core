@@ -161,6 +161,7 @@ async def _validate_aws_credentials(hass, credential):
 
     aws_config = credential.copy()
     del aws_config[CONF_NAME]
+    del aws_config[CONF_VALIDATE]
 
     profile = aws_config.get(CONF_PROFILE_NAME)
 
