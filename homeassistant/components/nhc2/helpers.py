@@ -1,4 +1,4 @@
-""" Helpers for NHC2 """
+"""Helpers for NHC2."""
 
 from homeassistant.core import callback
 import logging
@@ -7,20 +7,29 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # Helps to process NHC2 entities
-def nhc2_entity_processor(hass, config_entry, async_add_entities, key, obj_create):
+def nhc2_entity_processor(hass,
+                          config_entry,
+                          async_add_entities,
+                          key,
+                          obj_create):
+    """Processes entities into HA."""
     @callback
     def process_entities(entities):
         # Collect a list of active UUIDs
-        active_uuids = list(map(lambda x: x.uuid, hass.data[key][config_entry.entry_id]))
+        active_uuids = list(map(lambda x: x.uuid,
+                                hass.data[key][config_entry.entry_id]))
         _LOGGER.debug('Active UUIDs: %s', ', '.join(active_uuids))
 
         # Sort out existing and new entities
         new_entities, existing_entities = [], []
         for entity in entities:
-            (new_entities, existing_entities)[entity.uuid in active_uuids].append(entity)
+            (new_entities, existing_entities)[entity.uuid in active_uuids]\
+                .append(entity)
 
-        _LOGGER.debug('Existing UUIDs: %s', ', '.join(list(map(lambda x: x.uuid, existing_entities))))
-        _LOGGER.debug('New UUIDs: %s', ', '.join(list(map(lambda x: x.uuid, new_entities))))
+        _LOGGER.debug('Existing UUIDs: %s', ', '
+                      .join(list(map(lambda x: x.uuid, existing_entities))))
+        _LOGGER.debug('New UUIDs: %s', ', '
+                      .join(list(map(lambda x: x.uuid, new_entities))))
 
         # Process the new entities
         new_hass_entities = []
@@ -42,7 +51,9 @@ def nhc2_entity_processor(hass, config_entry, async_add_entities, key, obj_creat
 
         # List UUIDs that should be removed
         uuids_from_entities = list(map(lambda x: x.uuid, entities))
-        uuids_to_remove = [i for i in uuids_from_entities + active_uuids if i not in uuids_from_entities]
+        uuids_to_remove = \
+            [i for i in uuids_from_entities + active_uuids
+             if i not in uuids_from_entities]
         _LOGGER.debug('UUIDs to remove: %s', ', '.join(uuids_to_remove))
 
         # Remove entities (the need be removed)
@@ -59,9 +70,18 @@ def nhc2_entity_processor(hass, config_entry, async_add_entities, key, obj_creat
 
 # Extract version numbers from sysinfo
 def extract_versions(nhc2_sysinfo):
+    """Extracts versiosn from sysinfo"""
     params = nhc2_sysinfo['Params']
-    system_info = next(filter((lambda x: x and 'SystemInfo' in x), params), None)['SystemInfo']
-    s_w_versions = next(filter((lambda x: x and 'SWversions' in x), system_info), None)['SWversions']
-    coco_image = next(filter((lambda x: x and 'CocoImage' in x), s_w_versions), None)['CocoImage']
-    nhc_version = next(filter((lambda x: x and 'NhcVersion' in x), s_w_versions), None)['NhcVersion']
+    system_info = next(filter(
+            (lambda x: x and 'SystemInfo' in x),
+        params), None)['SystemInfo']
+    s_w_versions = next(filter(
+        (lambda x: x and 'SWversions' in x),
+        system_info), None)['SWversions']
+    coco_image = next(filter(
+        (lambda x: x and 'CocoImage' in x),
+        s_w_versions), None)['CocoImage']
+    nhc_version = next(filter(
+        (lambda x: x and 'NhcVersion' in x),
+        s_w_versions), None)['NhcVersion']
     return coco_image, nhc_version

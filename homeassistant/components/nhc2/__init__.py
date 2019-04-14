@@ -2,14 +2,15 @@
 import logging
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME,\
+    CONF_PASSWORD
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
 import voluptuous as vol
 
 from .helpers import extract_versions
-from .config_flow import Nhc2FlowHandler
+from .config_flow import Nhc2FlowHandler  # noqa  pylint_disable=unused-import
 from .const import DOMAIN, KEY_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +68,9 @@ async def async_setup_entry(hass, entry):
     def get_process_sysinfo(dev_reg):
         def process_sysinfo(nhc2_sysinfo):
             coco_image, nhc_version = extract_versions(nhc2_sysinfo)
-            _LOGGER.debug('Sysinfo: NhcVersion %s - CocoImage %s', nhc_version, coco_image)
+            _LOGGER.debug('Sysinfo: NhcVersion %s - CocoImage %s',
+                          nhc_version,
+                          coco_image)
             dev_reg.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 connections=set(),

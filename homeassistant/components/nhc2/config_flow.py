@@ -2,7 +2,8 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME,\
+    CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
