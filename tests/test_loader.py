@@ -84,7 +84,7 @@ async def test_helpers_wrapper(hass):
 
     helpers.discovery.async_listen('service_name', discovery_callback)
 
-    await helpers.discovery.async_discover('service_name', 'hello')
+    await helpers.discovery.async_discover('service_name', 'hello', None, {})
     await hass.async_block_till_done()
 
     assert result == ['hello']

@@ -46,17 +46,17 @@ class TestHelpersDiscovery:
                                  callback_multi)
 
         helpers.discovery.discover('test service', 'discovery info',
-                                   'test_component')
+                                   'test_component', {})
         self.hass.block_till_done()
 
         assert mock_setup_component.called
         assert mock_setup_component.call_args[0] == \
-            (self.hass, 'test_component', None)
+            (self.hass, 'test_component', {})
         assert len(calls_single) == 1
         assert calls_single[0] == ('test service', 'discovery info')
 
         helpers.discovery.discover('another service', 'discovery info',
-                                   'test_component')
+                                   'test_component', {})
         self.hass.block_till_done()
 
         assert len(calls_single) == 1
@@ -171,8 +171,8 @@ class TestHelpersDiscovery:
         def component1_setup(hass, config):
             """Set up mock component."""
             print('component1 setup')
-            discovery.discover(hass, 'test_component2',
-                               component='test_component2')
+            discovery.discover(hass, 'test_component2', {},
+                               'test_component2', {})
             return True
 
         def component2_setup(hass, config):
@@ -213,4 +213,4 @@ async def test_load_platform_forbids_config():
 async def test_discover_forbids_config():
     """Test you cannot setup config component with load_platform."""
     with pytest.raises(HomeAssistantError):
-        await discovery.async_discover(None, None, None, 'config')
+        await discovery.async_discover(None, None, None, 'config', {})
