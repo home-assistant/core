@@ -380,6 +380,7 @@ omit =
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/*
+    homeassistant/components/nhc/*
     homeassistant/components/netatmo/*
     homeassistant/components/netatmo_public/sensor.py
     homeassistant/components/netdata/sensor.py

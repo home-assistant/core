@@ -1,0 +1,11 @@
+{
+  "domain": "nhc2",
+  "name": "Niko Home Control II",
+  "requirements": [
+    "nhc2-coco==0.0.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@filipvh"
+  ]
+}
