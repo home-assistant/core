@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.util.async_ import run_coroutine_threadsafe
-from homeassistant.helpers import config_validation as cv 
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.config.group import (
     CONFIG_PATH as GROUP_CONFIG_PATH)
