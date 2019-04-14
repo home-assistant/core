@@ -494,7 +494,6 @@ class TestSetup:
             MockModule('disabled_component', setup=lambda hass, config: None))
 
         assert not setup.setup_component(self.hass, 'disabled_component', {})
-        assert loader.get_component(self.hass, 'disabled_component') is None
         assert 'disabled_component' not in self.hass.config.components
 
         self.hass.data.pop(setup.DATA_SETUP)
