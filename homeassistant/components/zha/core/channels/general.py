@@ -45,14 +45,14 @@ class OnOffChannel(ZigbeeChannel):
             self.attribute_updated(self.ON_OFF, True)
         elif cmd == 'on_with_timed_off':
             should_accept = args[0]
-            off_time = args[2]
+            on_time = args[1]
             # 0 is always accept 1 is only accept when already on
             if should_accept == 0 or (should_accept == 1 and self._state):
                 self.attribute_updated(self.ON_OFF, True)
-                if off_time > 0:
+                if on_time > 0:
                     async_call_later(
                         self.device.hass,
-                        (off_time / 10),  # value is in 10ths of a second
+                        (on_time / 10),  # value is in 10ths of a second
                         self.set_to_off
                     )
         elif cmd == 'toggle':
