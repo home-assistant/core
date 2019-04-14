@@ -1,8 +1,6 @@
 """Support for Samsung TV via UPNP."""
 import asyncio
 from datetime import datetime
-from datetime import timedelta
-from didl_lite import didl_lite
 import functools
 import logging
 from typing import Optional
@@ -12,10 +10,11 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.components.media_player.const import SUPPORT_SELECT_SOURCE
+from homeassistant.components.media_player.const import (
+    SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (
     CONF_NAME, CONF_URL, EVENT_HOMEASSISTANT_STOP, STATE_OFF,
-    STATE_ON, STATE_PLAYING)
+    STATE_IDLE, STATE_PLAYING)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
@@ -25,6 +24,7 @@ from homeassistant.util import get_local_ip
 _LOGGER = logging.getLogger(__name__)
 
 SAMSUNGTV_UPNP_DATA = 'samsungtv_upnp'
+SAMSUNGTV_UPNP_SUPPORT = SUPPORT_SELECT_SOURCE
 
 SAMSUNGTV_UPNP_DEVICE_TYPES = [
         'urn:samsung.com:device:MainTVServer2:1',
@@ -224,7 +224,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Return the media player features that are supported."""
-        return SUPPORT_SELECT_SOURCE
+        return SAMSUNGTV_UPNP_SUPPORT
 
     @property
     def available(self):
@@ -238,7 +238,7 @@ class SamsungTvUpnpDevice(MediaPlayerDevice):
             return STATE_OFF
         elif self._source == 'TV':
             return STATE_PLAYING
-        return STATE_ON
+        return STATE_IDLE
 
     @property
     def source_list(self):
