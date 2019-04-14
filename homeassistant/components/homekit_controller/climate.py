@@ -65,15 +65,15 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         else:
             valid_values = DEFAULT_VALID_MODES
             if 'minValue' in characteristic:
-                valid_values = filter(
-                    lambda val: val >= characteristic['minValue'],
-                    valid_values
-                )
+                valid_values = [
+                    val for val in valid_values
+                    if val >= characteristic['minValue']
+                ]
             if 'maxValue' in characteristic:
-                valid_values = filter(
-                    lambda val: val <= characteristic['maxValue'],
-                    valid_values
-                )
+                valid_values = [
+                    val for val in valid_values
+                    if val <= characteristic['maxValue']
+                ]
 
         self._valid_modes = [
             MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values
