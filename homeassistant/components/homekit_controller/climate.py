@@ -58,10 +58,10 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         self._features |= SUPPORT_OPERATION_MODE
 
         if 'valid-values' in characteristic:
-            valid_values = filter(
-                lambda val: val in DEFAULT_VALID_MODES,
-                characteristic['valid-values']
-            )
+            valid_values = [
+                val for val in DEFAULT_VALID_MODES
+                if val in characteristic['valid-values']
+            ]
         else:
             valid_values = DEFAULT_VALID_MODES
             if 'minValue' in characteristic:
