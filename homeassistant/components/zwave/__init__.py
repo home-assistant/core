@@ -46,6 +46,7 @@ ATTR_POWER = 'power_consumption'
 CONF_POLLING_INTENSITY = 'polling_intensity'
 CONF_IGNORED = 'ignored'
 CONF_INVERT_OPENCLOSE_BUTTONS = 'invert_openclose_buttons'
+CONF_INVERT_PERCENT = 'invert_percent'
 CONF_REFRESH_VALUE = 'refresh_value'
 CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
@@ -56,6 +57,7 @@ DATA_ZWAVE_CONFIG = 'zwave_config'
 
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
+DEFAULT_CONF_INVERT_PERCENT = 'invert_percent'
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
@@ -145,6 +147,8 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_INVERT_OPENCLOSE_BUTTONS,
                  default=DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS): cv.boolean,
+    vol.Optional(CONF_INVERT_PERCENT,
+                 default=DEFAULT_CONF_INVERT_PERCENT): cv.boolean,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
         cv.boolean,
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
