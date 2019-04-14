@@ -46,7 +46,7 @@ class TestRequirements:
         loader.set_component(
             self.hass, 'comp',
             MockModule('comp', requirements=['package==0.0.1']))
-        assert setup.setup_component(self.hass, 'comp')
+        assert setup.setup_component(self.hass, 'comp', {})
         assert 'comp' in self.hass.config.components
         assert mock_install.call_args == call(
             'package==0.0.1',
@@ -63,7 +63,7 @@ class TestRequirements:
         loader.set_component(
             self.hass, 'comp',
             MockModule('comp', requirements=['package==0.0.1']))
-        assert setup.setup_component(self.hass, 'comp')
+        assert setup.setup_component(self.hass, 'comp', {})
         assert 'comp' in self.hass.config.components
         assert mock_install.call_args == call(
             'package==0.0.1', target=self.hass.config.path('deps'),

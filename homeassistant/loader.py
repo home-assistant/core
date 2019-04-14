@@ -132,6 +132,10 @@ class Integration:
             )
         return cache[full_name]  # type: ignore
 
+    def __repr__(self) -> str:
+        """Text representation of class."""
+        return "<Integration {}: {}>".format(self.domain, self.pkg_path)
+
 
 async def async_get_integration(hass: 'HomeAssistant', domain: str)\
          -> Integration:
