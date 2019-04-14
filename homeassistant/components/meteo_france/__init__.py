@@ -78,13 +78,15 @@ def setup(hass, config):
     """Set up the Meteo-France component."""
     hass.data[DATA_METEO_FRANCE] = {}
 
-    # Check if at least weather alert have to be monitored for one location
+    # Check if at least weather alert have to be monitored for one location.
     need_weather_alert_watcher = False
     for location in config[DOMAIN]:
         if CONF_MONITORED_CONDITIONS in location \
-            and 'weather_alert' in location[CONF_MONITORED_CONDITIONS]:
+                 and 'weather_alert' in location[CONF_MONITORED_CONDITIONS]:
             need_weather_alert_watcher = True
 
+    # If weather alert monitoring is expected initiate a client to be used by
+    # all weather_alert entities.
     if need_weather_alert_watcher:
         from vigilancemeteo import VigilanceMeteoFranceProxy
 

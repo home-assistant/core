@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
 
 from . import ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES
 
@@ -11,6 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_ATTR_FORECAST = '1h rain forecast'
 STATE_ATTR_BULLETIN_TIME = 'Bulletin date'
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Meteo-France sensor."""
@@ -27,19 +27,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     alert_watcher = None
     if 'weather_alert' in monitored_conditions:
         datas = hass.data[DATA_METEO_FRANCE][city].get_data()
+        # Check if a department code is available for this city.
         if "dept" in datas:
             try:
-                alert_watcher = DepartmentWeatherAlert(datas["dept"], weather_alert_client)
+                # If yes create the watcher DepartmentWeatherAlert object.
+                alert_watcher = DepartmentWeatherAlert(datas["dept"],
+                                                       weather_alert_client)
             except ValueError as exp:
                 _LOGGER.error(exp)
                 alert_watcher = None
             else:
-                _LOGGER.info("weather alert watcher added for %s in department %s",
+                _LOGGER.info("weather alert watcher added for %s"
+                             "in department %s",
                              city, datas["dept"])
         else:
             _LOGGER.warning("No dept key found for '%s'. So weather alert "
                             "information won't be available", city)
-            # don't create the sensor
+            # Exit and don't create the sensor if no department code available.
             return
 
     add_entities([MeteoFranceSensor(variable, client, alert_watcher)
@@ -71,8 +75,7 @@ class MeteoFranceSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-
-        # Attributes for next_rain sensor
+        # Attributes for next_rain sensor.
         if self._condition == 'next_rain' and 'rain_forecast' in self._data:
             return {
                 **{STATE_ATTR_FORECAST: self._data['rain_forecast']},
@@ -80,10 +83,12 @@ class MeteoFranceSensor(Entity):
                 **{ATTR_ATTRIBUTION: ATTRIBUTION}
             }
 
-        # Attributes for weather_alert sensor
-        elif self._condition == 'weather_alert' and self._alert_watcher is not None:
+        # Attributes for weather_alert sensor.
+        if self._condition == 'weather_alert' \
+                and self._alert_watcher is not None:
             return {
-                **{STATE_ATTR_BULLETIN_TIME: self._alert_watcher.bulletin_date},
+                **{STATE_ATTR_BULLETIN_TIME:
+                   self._alert_watcher.bulletin_date},
                 ** self._alert_watcher.alerts_list,
                 ATTR_ATTRIBUTION: ATTRIBUTION
             }
@@ -110,7 +115,6 @@ class MeteoFranceSensor(Entity):
                 else:
                     _LOGGER.warning("No weather alert data for location %s",
                                     self._data['name'])
-                return
             else:
                 self._state = self._data[self._condition]
         except KeyError:
