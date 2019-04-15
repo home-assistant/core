@@ -1,7 +1,8 @@
 """Helpers for NHC2."""
 
-from homeassistant.core import callback
 import logging
+
+from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +74,7 @@ def extract_versions(nhc2_sysinfo):
     """Extracts versiosn from sysinfo"""
     params = nhc2_sysinfo['Params']
     system_info = next(filter(
-            (lambda x: x and 'SystemInfo' in x),
+        (lambda x: x and 'SystemInfo' in x),
         params), None)['SystemInfo']
     s_w_versions = next(filter(
         (lambda x: x and 'SWversions' in x),

@@ -1,17 +1,16 @@
 """Support for Niko Home Control II - CoCo"""
 import logging
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME,\
-    CONF_PASSWORD
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-import homeassistant.helpers.config_validation as cv
-
 import voluptuous as vol
 
-from .helpers import extract_versions
+import homeassistant.helpers.config_validation as cv
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, \
+    CONF_PASSWORD
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from .config_flow import Nhc2FlowHandler  # noqa  pylint_disable=unused-import
 from .const import DOMAIN, KEY_GATEWAY
+from .helpers import extract_versions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,19 +82,24 @@ async def async_setup_entry(hass, entry):
                 sw_version=nhc_version + ' - CoCo Image: ' + coco_image,
             )
 
-            hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-                entry, 'light'
-            ))
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    entry, 'light')
+            )
 
-            hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-                entry, 'switch'
-            ))
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    entry, 'switch')
+            )
         return process_sysinfo
 
     hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = coco
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
-    _LOGGER.debug('Connecting to %s:%s', entry.data[CONF_HOST], str(entry.data[CONF_PORT]))
+    _LOGGER.debug('Connecting to %s:%s',
+                  entry.data[CONF_HOST],
+                  str(entry.data[CONF_PORT])
+                  )
     coco.connect()
     dev_reg = await hass.helpers.device_registry.async_get_registry()
     coco.get_systeminfo(get_process_sysinfo(dev_reg))
