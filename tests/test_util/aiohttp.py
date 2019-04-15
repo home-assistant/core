@@ -82,6 +82,10 @@ class AiohttpClientMocker:
         """Register a mock options request."""
         self.request('options', *args, **kwargs)
 
+    def patch(self, *args, **kwargs):
+        """Register a mock options request."""
+        self.request('patch', *args, **kwargs)
+
     @property
     def call_count(self):
         """Return the number of requests made."""
