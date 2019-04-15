@@ -8,14 +8,6 @@ from homeassistant.components.hue import light as hue_light
 from tests.common import MockModule, async_mock_service, mock_integration
 
 
-def test_set_component(hass):
-    """Test if set_component works."""
-    comp = object()
-    loader.set_component(hass, 'switch.test_set', comp)
-
-    assert loader.get_component(hass, 'switch.test_set') is comp
-
-
 def test_get_component(hass):
     """Test if get_component works."""
     assert http == loader.get_component(hass, 'http')
@@ -117,27 +109,6 @@ async def test_log_warning_custom_component(hass, caplog):
 
     loader.get_component(hass, 'test.light')
     assert 'You are using a custom component for test.light' in caplog.text
-
-
-async def test_get_platform(hass, caplog):
-    """Test get_platform."""
-    # Test we prefer embedded over normal platforms."""
-    embedded_platform = loader.get_platform(hass, 'switch', 'test_embedded')
-    assert embedded_platform.__name__ == \
-        'custom_components.test_embedded.switch'
-
-    caplog.clear()
-
-    legacy_platform = loader.get_platform(hass, 'switch', 'test_legacy')
-    assert legacy_platform.__name__ == 'custom_components.switch.test_legacy'
-    assert 'Integrations need to be in their own folder.' in caplog.text
-
-
-async def test_get_platform_enforces_component_path(hass, caplog):
-    """Test that existence of a component limits lookup path of platforms."""
-    assert loader.get_platform(hass, 'comp_path_test', 'hue') is None
-    assert ('Search path was limited to path of component: '
-            'homeassistant.components') in caplog.text
 
 
 async def test_get_integration(hass):

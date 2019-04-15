@@ -7,7 +7,7 @@ from homeassistant import core, loader
 from homeassistant.components import switch
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_entity_platform
 from tests.components.switch import common
 
 
@@ -80,7 +80,7 @@ class TestSwitch(unittest.TestCase):
         test_platform = loader.get_component(self.hass, 'test.switch')
         test_platform.init(True)
 
-        loader.set_component(self.hass, 'switch.test2', test_platform)
+        mock_entity_platform(self.hass, 'switch.test2', test_platform)
         test_platform.init(False)
 
         assert setup_component(
