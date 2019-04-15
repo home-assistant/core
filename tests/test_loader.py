@@ -113,7 +113,7 @@ async def test_log_warning_custom_component(hass, caplog):
     assert 'You are using a custom integration for test_standalone' \
         in caplog.text
 
-    integration = await loader.async_get_integration(hass, 'test')
+    await loader.async_get_integration(hass, 'test')
     assert 'You are using a custom integration for test ' in caplog.text
 
 

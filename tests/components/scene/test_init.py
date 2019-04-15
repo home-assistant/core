@@ -3,7 +3,6 @@ import io
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant import loader
 from homeassistant.components import light, scene
 from homeassistant.util import yaml
 

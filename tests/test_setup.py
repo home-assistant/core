@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_COMPONENT_LOADED)
 import homeassistant.config as config_util
-from homeassistant import setup, loader
+from homeassistant import setup
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE)

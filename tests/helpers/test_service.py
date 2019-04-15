@@ -10,7 +10,7 @@ import pytest
 
 # To prevent circular import when running just this file
 import homeassistant.components  # noqa
-from homeassistant import core as ha, loader, exceptions
+from homeassistant import core as ha, exceptions
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 import homeassistant.helpers.config_validation as cv
