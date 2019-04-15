@@ -111,7 +111,9 @@ class MeteoFranceSensor(Entity):
                 if self._alert_watcher is not None:
                     self._alert_watcher.update_department_status()
                     self._state = self._alert_watcher.department_color
-
+                    _LOGGER.debug("weather alert watcher for %s updated. Proxy"
+                                  " have the status: %s", self._data['name'],
+                                  self._alert_watcher.proxy.status)
                 else:
                     _LOGGER.warning("No weather alert data for location %s",
                                     self._data['name'])

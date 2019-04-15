@@ -88,10 +88,14 @@ def setup(hass, config):
     # If weather alert monitoring is expected initiate a client to be used by
     # all weather_alert entities.
     if need_weather_alert_watcher:
-        from vigilancemeteo import VigilanceMeteoFranceProxy
+        from vigilancemeteo import VigilanceMeteoFranceProxy, \
+            VigilanceMeteoError
 
         weather_alert_client = VigilanceMeteoFranceProxy()
-        weather_alert_client.update_data()
+        try:
+            weather_alert_client.update_data()
+        except VigilanceMeteoError as exp:
+            _LOGGER.error(exp)
     else:
         weather_alert_client = None
     hass.data[DATA_METEO_FRANCE]['weather_alert_client'] = weather_alert_client
