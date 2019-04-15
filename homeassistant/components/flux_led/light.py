@@ -186,11 +186,6 @@ class FluxLight(Light):
             else:
                 self._mode = MODE_RGB
 
-        if self._mode != MODE_WHITE and self._bulb.getRgb() != (0, 0, 0):
-            color = self._bulb.getRgbw()
-            self._color = color_util.color_RGB_to_hsv(*color[0:3])
-            self._white_value = color[3]
-
     def _disconnect(self):
         """Disconnect from Flux light."""
         self._bulb = None
