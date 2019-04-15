@@ -24,14 +24,14 @@ SLOW_SETUP_WARNING = 10
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
-                    config: Optional[Dict] = None) -> bool:
+                    config: Dict) -> bool:
     """Set up a component and all its dependencies."""
     return run_coroutine_threadsafe(  # type: ignore
         async_setup_component(hass, domain, config), loop=hass.loop).result()
 
 
 async def async_setup_component(hass: core.HomeAssistant, domain: str,
-                                config: Optional[Dict] = None) -> bool:
+                                config: Dict) -> bool:
     """Set up a component and all its dependencies.
 
     This method is a coroutine.
@@ -39,16 +39,10 @@ async def async_setup_component(hass: core.HomeAssistant, domain: str,
     if domain in hass.config.components:
         return True
 
-    setup_tasks = hass.data.get(DATA_SETUP)
+    setup_tasks = hass.data.setdefault(DATA_SETUP, {})
 
-    if setup_tasks is not None and domain in setup_tasks:
+    if domain in setup_tasks:
         return await setup_tasks[domain]  # type: ignore
-
-    if config is None:
-        config = {}
-
-    if setup_tasks is None:
-        setup_tasks = hass.data[DATA_SETUP] = {}
 
     task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config))
@@ -126,8 +120,8 @@ async def _async_setup_component(hass: core.HomeAssistant,
             "%s -> %s", domain, err.from_domain, err.to_domain)
         return False
 
-    processed_config = \
-        conf_util.async_process_component_config(hass, config, domain)
+    processed_config = await conf_util.async_process_component_config(
+        hass, config, integration)
 
     if processed_config is None:
         log_error("Invalid config.")
@@ -174,12 +168,11 @@ async def _async_setup_component(hass: core.HomeAssistant,
     if result is not True:
         log_error("Component {!r} did not return boolean if setup was "
                   "successful. Disabling component.".format(domain))
-        loader.set_component(hass, domain, None)
         return False
 
     if hass.config_entries:
         for entry in hass.config_entries.async_entries(domain):
-            await entry.async_setup(hass, component=component)
+            await entry.async_setup(hass, integration=integration)
 
     hass.config.components.add(component.DOMAIN)  # type: ignore
 

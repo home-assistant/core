@@ -174,7 +174,7 @@ async def test_gen_auth_url(hass, mock_logi_circle):  # pylint: disable=W0621
     flow = config_flow.LogiCircleFlowHandler()
     flow.hass = hass
     flow.flow_impl = 'test-auth-url'
-    await async_setup_component(hass, 'http')
+    await async_setup_component(hass, 'http', {})
 
     result = flow._get_authorization_url()  # pylint: disable=W0212
     assert result == 'http://authorize.url'

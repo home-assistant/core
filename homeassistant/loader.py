@@ -1,14 +1,8 @@
 """
-The methods for loading Home Assistant components.
+The methods for loading Home Assistant integrations.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
-
-Components can be accessed via hass.components.switch from your code.
-If you want to retrieve a platform that is part of a component, you should
-call get_component(hass, 'switch.your_platform'). In both cases the config
-directory is checked to see if it contains a user provided version. If not
-available it will check the built-in components and platforms.
 """
 import functools as ft
 import importlib
@@ -28,8 +22,6 @@ from typing import (
     Dict
 )
 
-from homeassistant.const import PLATFORM_FORMAT
-
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test,unused-import
 if TYPE_CHECKING:
@@ -44,11 +36,17 @@ DEPENDENCY_BLACKLIST = {'config'}
 _LOGGER = logging.getLogger(__name__)
 
 
-DATA_KEY = 'components'
+DATA_COMPONENTS = 'components'
 DATA_INTEGRATIONS = 'integrations'
 PACKAGE_CUSTOM_COMPONENTS = 'custom_components'
 PACKAGE_BUILTIN = 'homeassistant.components'
 LOOKUP_PATHS = [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+CUSTOM_WARNING = (
+    'You are using a custom integration for %s which has not '
+    'been tested by Home Assistant. This component might '
+    'cause stability problems, be sure to disable it if you '
+    'do experience issues with Home Assistant.'
+)
 _UNDEF = object()
 
 
@@ -100,7 +98,7 @@ class Integration:
 
         Will create a stub manifest.
         """
-        comp = get_component(hass, domain)
+        comp = _load_file(hass, domain, LOOKUP_PATHS)
 
         if comp is None:
             return None
@@ -123,20 +121,24 @@ class Integration:
 
     def get_component(self) -> ModuleType:
         """Return the component."""
-        cache = self.hass.data.setdefault(DATA_KEY, {})
+        cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
         if self.domain not in cache:
             cache[self.domain] = importlib.import_module(self.pkg_path)
         return cache[self.domain]  # type: ignore
 
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        cache = self.hass.data.setdefault(DATA_KEY, {})
+        cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
         full_name = "{}.{}".format(self.domain, platform_name)
         if full_name not in cache:
             cache[full_name] = importlib.import_module(
                 "{}.{}".format(self.pkg_path, platform_name)
             )
         return cache[full_name]  # type: ignore
+
+    def __repr__(self) -> str:
+        """Text representation of class."""
+        return "<Integration {}: {}>".format(self.domain, self.pkg_path)
 
 
 async def async_get_integration(hass: 'HomeAssistant', domain: str)\
@@ -163,6 +165,7 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
             Integration.resolve_from_root, hass, custom_components, domain
         )
         if integration is not None:
+            _LOGGER.warning(CUSTOM_WARNING, domain)
             cache[domain] = integration
             return integration
 
@@ -214,82 +217,6 @@ class CircularDependency(LoaderError):
         self.to_domain = to_domain
 
 
-def set_component(hass,  # type: HomeAssistant
-                  comp_name: str, component: Optional[ModuleType]) -> None:
-    """Set a component in the cache.
-
-    Async friendly.
-    """
-    cache = hass.data.setdefault(DATA_KEY, {})
-    cache[comp_name] = component
-
-
-def get_platform(hass,  # type: HomeAssistant
-                 domain: str, platform_name: str) -> Optional[ModuleType]:
-    """Try to load specified platform.
-
-    Example invocation: get_platform(hass, 'light', 'hue')
-
-    Async friendly.
-    """
-    # If the platform has a component, we will limit the platform loading path
-    # to be the same source (custom/built-in).
-    component = _load_file(hass, platform_name, LOOKUP_PATHS)
-
-    # Until we have moved all platforms under their component/own folder, it
-    # can be that the component is None.
-    if component is not None:
-        base_paths = [component.__name__.rsplit('.', 1)[0]]
-    else:
-        base_paths = LOOKUP_PATHS
-
-    platform = _load_file(
-        hass, PLATFORM_FORMAT.format(domain=domain, platform=platform_name),
-        base_paths)
-
-    if platform is not None:
-        return platform
-
-    # Legacy platform check for custom: custom_components/light/hue.py
-    # Only check if the component was also in custom components.
-    if component is None or base_paths[0] == PACKAGE_CUSTOM_COMPONENTS:
-        platform = _load_file(
-            hass,
-            PLATFORM_FORMAT.format(domain=platform_name, platform=domain),
-            [PACKAGE_CUSTOM_COMPONENTS]
-        )
-
-    if platform is None:
-        if component is None:
-            extra = ""
-        else:
-            extra = " Search path was limited to path of component: {}".format(
-                base_paths[0])
-        _LOGGER.error("Unable to find platform %s.%s", platform_name, extra)
-        return None
-
-    _LOGGER.error(
-        "Integrations need to be in their own folder. Change %s/%s.py to "
-        "%s/%s.py. This will stop working soon.",
-        domain, platform_name, platform_name, domain)
-
-    return platform
-
-
-def get_component(hass,  # type: HomeAssistant
-                  comp_or_platform: str) -> Optional[ModuleType]:
-    """Try to load specified component.
-
-    Async friendly.
-    """
-    comp = _load_file(hass, comp_or_platform, LOOKUP_PATHS)
-
-    if comp is None:
-        _LOGGER.error("Unable to find component %s", comp_or_platform)
-
-    return comp
-
-
 def _load_file(hass,  # type: HomeAssistant
                comp_or_platform: str,
                base_paths: List[str]) -> Optional[ModuleType]:
@@ -300,15 +227,15 @@ def _load_file(hass,  # type: HomeAssistant
     Async friendly.
     """
     try:
-        return hass.data[DATA_KEY][comp_or_platform]  # type: ignore
+        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
     except KeyError:
         pass
 
-    cache = hass.data.get(DATA_KEY)
+    cache = hass.data.get(DATA_COMPONENTS)
     if cache is None:
         if not _async_mount_config_dir(hass):
             return None
-        cache = hass.data[DATA_KEY] = {}
+        cache = hass.data[DATA_COMPONENTS] = {}
 
     for path in ('{}.{}'.format(base, comp_or_platform)
                  for base in base_paths):
@@ -332,12 +259,7 @@ def _load_file(hass,  # type: HomeAssistant
             cache[comp_or_platform] = module
 
             if module.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
-                _LOGGER.warning(
-                    'You are using a custom component for %s which has not '
-                    'been tested by Home Assistant. This component might '
-                    'cause stability problems, be sure to disable it if you '
-                    'do experience issues with Home Assistant.',
-                    comp_or_platform)
+                _LOGGER.warning(CUSTOM_WARNING, comp_or_platform)
 
             return module
 
@@ -394,9 +316,18 @@ class Components:
 
     def __getattr__(self, comp_name: str) -> ModuleWrapper:
         """Fetch a component."""
-        component = get_component(self._hass, comp_name)
+        # Test integration cache
+        integration = self._hass.data.get(DATA_INTEGRATIONS, {}).get(comp_name)
+
+        if integration:
+            component = integration.get_component()
+        else:
+            # Fallback to importing old-school
+            component = _load_file(self._hass, comp_name, LOOKUP_PATHS)
+
         if component is None:
             raise ImportError('Unable to load {}'.format(comp_name))
+
         wrapped = ModuleWrapper(self._hass, component)
         setattr(self, comp_name, wrapped)
         return wrapped

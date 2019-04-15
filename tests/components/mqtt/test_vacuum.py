@@ -130,6 +130,16 @@ async def test_all_commands(hass, mock_publish):
     await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/send_command', '44 FE 93', 0, False)
+    mock_publish.async_publish.reset_mock()
+
+    common.send_command(hass, '44 FE 93', {"key": "value"},
+                        entity_id='vacuum.mqtttest')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert json.loads(mock_publish.async_publish.mock_calls[-1][1][1]) == {
+        "command": "44 FE 93",
+        "key": "value"
+    }
 
 
 async def test_status(hass, mock_publish):

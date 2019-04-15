@@ -11,9 +11,6 @@ from typing import Any, Optional, Dict, Set
 import voluptuous as vol
 
 from homeassistant import core, config as conf_util, config_entries, loader
-from homeassistant.components import (
-    persistent_notification, homeassistant as core_component
-)
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import AsyncHandler
@@ -121,7 +118,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     config = OrderedDict(config)
 
     # Merge packages
-    conf_util.merge_packages_config(
+    await conf_util.merge_packages_config(
         hass, config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
@@ -139,17 +136,18 @@ async def async_from_config_dict(config: Dict[str, Any],
         if isinstance(dep_domains, set):
             domains.update(dep_domains)
 
-    # setup components
-    res = await core_component.async_setup(hass, config)
-    if not res:
+    # Set up core.
+    if not all(await asyncio.gather(
+            async_setup_component(hass, 'homeassistant', config),
+            async_setup_component(hass, 'persistent_notification', config),
+    )):
         _LOGGER.error("Home Assistant core failed to initialize. "
                       "Further initialization aborted")
         return hass
 
-    await persistent_notification.async_setup(hass, config)
+    _LOGGER.debug("Home Assistant core initialized")
 
-    _LOGGER.info("Home Assistant core initialized")
-
+    # setup components
     # stage 0, load logging components
     for domain in domains:
         if domain in LOGGING_COMPONENT:
