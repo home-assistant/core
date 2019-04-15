@@ -153,8 +153,12 @@ homeassistant/components/mcp23017/* @jardiamj
 homeassistant/components/mediaroom/* @dgomes
 homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/met/* @danielhiversen
+<<<<<<< HEAD
 homeassistant/components/meteo_france/* @victorcerutti
 homeassistant/components/meteoalarm/* @rolfberkenbosch
+=======
+homeassistant/components/meteo_france/* @victorcerutti @oncleben31
+>>>>>>> Correction following PR checklist
 homeassistant/components/miflora/* @danielhiversen @ChristianKuehnel
 homeassistant/components/mill/* @danielhiversen
 homeassistant/components/min_max/* @fabaff
