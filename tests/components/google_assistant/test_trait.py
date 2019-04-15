@@ -1163,4 +1163,3 @@ async def test_openclose_binary_sensor(hass, device_class):
     assert trt.query_attributes() == {
         'openPercent': 0
     }
-
