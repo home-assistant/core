@@ -202,8 +202,17 @@ class ZHADevice:
 
     async def async_configure(self):
         """Configure the device."""
+        cluster_ids = []
+        channels = []
+        for channel in self.all_channels:
+            if hasattr(channel.cluster, 'cluster_id') and\
+                    channel.cluster.cluster_id not in cluster_ids:
+                cluster_ids.append(channel.cluster.cluster_id)
+                channels.append(channel)
+            else:
+                channels.append(channel)  # ZDO
         _LOGGER.debug('%s: started configuration', self.name)
-        await self._execute_channel_tasks('async_configure')
+        await self._execute_channel_tasks(channels, 'async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
         entry = self.gateway.zha_storage.async_create_or_update(self)
         _LOGGER.debug('%s: stored in registry: %s', self.name, entry)
@@ -211,7 +220,8 @@ class ZHADevice:
     async def async_initialize(self, from_cache=False):
         """Initialize channels."""
         _LOGGER.debug('%s: started initialization', self.name)
-        await self._execute_channel_tasks('async_initialize', from_cache)
+        await self._execute_channel_tasks(
+            self.all_channels, 'async_initialize', from_cache)
         _LOGGER.debug(
             '%s: power source: %s',
             self.name,
@@ -220,12 +230,12 @@ class ZHADevice:
         self.status = DeviceStatus.INITIALIZED
         _LOGGER.debug('%s: completed initialization', self.name)
 
-    async def _execute_channel_tasks(self, task_name, *args):
+    async def _execute_channel_tasks(self, channels, task_name, *args):
         """Gather and execute a set of CHANNEL tasks."""
         channel_tasks = []
         semaphore = asyncio.Semaphore(3)
         zdo_task = None
-        for channel in self.all_channels:
+        for channel in channels:
             if channel.name == ZDO_CHANNEL:
                 # pylint: disable=E1111
                 zdo_task = self._async_create_task(
