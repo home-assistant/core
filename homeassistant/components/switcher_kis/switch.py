@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 
 _LOGGER = getLogger(__name__)
 
-PROPERTIES_TO_DEVICE_ATTRIBUTES = {
-    'current_power_w': ATTR_CURRENT_POWER_W,
+DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
+    'power_consumption': ATTR_CURRENT_POWER_W,
     'electric_current': ATTR_ELECTRIC_CURRNET,
     'remaining_time': ATTR_REMAINING_TIME,
     'auto_off_set': ATTR_AUTO_OFF_SET
@@ -42,21 +42,6 @@ class SwitcherControl(SwitchDevice):
         self._self_initiated = False
         self._device_data = device_data
         self._state = device_data.state
-
-    @property
-    def electric_current(self) -> float:
-        """Return the electric current."""
-        return self._device_data.electric_current
-
-    @property
-    def remaining_time(self) -> str:
-        """Return the remaining time to off command."""
-        return self._device_data.remaining_time
-
-    @property
-    def auto_off_set(self) -> str:
-        """Return the auto off configuration set."""
-        return self._device_data.auto_off_set
 
     @property
     def name(self) -> str:
@@ -92,8 +77,8 @@ class SwitcherControl(SwitchDevice):
 
         attribs = {}
 
-        for prop, attr in PROPERTIES_TO_DEVICE_ATTRIBUTES.items():
-            value = getattr(self, prop)
+        for prop, attr in DEVICE_PROPERTIES_TO_HA_ATTRIBUTES.items():
+            value = getattr(self._device_data, prop)
             if value and value is not WAITING_TEXT:
                 attribs[attr] = value
 
