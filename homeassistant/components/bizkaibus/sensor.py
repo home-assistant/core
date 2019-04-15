@@ -2,22 +2,17 @@
 """Support for Bizkaibus, Biscay (Basque Country, Spain) Bus service."""
 
 import logging
-import requests
-import json
 
 import voluptuous as vol
+from bizkaibus.bizkaibus import BizkaibusData
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from bizkaibus.bizkaibus import BizkaibusData
 
-import xml.etree.ElementTree as ET
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'http://apli.bizkaia.net/'
-_RESOURCE += 'APPS/DANOK/TQWS/TQ.ASMX/GetPasoParadaMobile_JSON'
 
 ATTR_ROUTE = 'Route'
 ATTR_ROUTE_NAME = 'Route name'
@@ -95,4 +90,4 @@ class Bizkaibus:
         """Retrieve the information from API."""
         bridge = BizkaibusData(self.stop, self.route)
         bridge.getNextBus()
-        status = bridge.info
+        self.info = bridge.info
