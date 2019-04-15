@@ -66,7 +66,8 @@ class HomeAssistantView:
         urls = [self.url] + self.extra_urls
         routes = []
 
-        for method in ('get', 'post', 'delete', 'put'):
+        for method in ('get', 'post', 'delete', 'put', 'patch', 'head',
+                       'options'):
             handler = getattr(self, method, None)
 
             if not handler:
