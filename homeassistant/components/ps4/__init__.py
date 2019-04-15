@@ -74,9 +74,8 @@ async def async_migrate_entry(hass, entry):
                 registry.async_remove(entity_id)
                 await hass.async_block_till_done()
 
-                # Use last 4 of credential for suffix.
-                suffix = entry.data[CONF_TOKEN][-4:]
-                unique_id = '{}_{}'.format(unique_id, suffix)
+                # Format old unique_id.
+                unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)
 
                 # Create new entry with old entity_id.
                 new_id = split_entity_id(entity_id)[1]
@@ -103,3 +102,9 @@ async def async_migrate_entry(hass, entry):
         notification_id='config_entry_migration'
     )
     return False
+
+
+def format_unique_id(creds, mac_address):
+    """Use last 4 Chars of credential as suffix. Unique ID per PSN user."""
+    suffix = creds[-4:]
+    return "{}_{}".format(mac_address, suffix)
