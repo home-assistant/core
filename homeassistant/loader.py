@@ -163,6 +163,7 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
             return integration
 
     except ImportError:
+        # Import error if "custom_components" doesn't exist
         pass
 
     from homeassistant import components
@@ -387,9 +388,6 @@ async def _async_component_dependencies(hass,  # type: HomeAssistant
     Async friendly.
     """
     integration = await async_get_integration(hass, domain)
-
-    if integration is None:
-        raise IntegrationNotFound(domain)
 
     loading.add(domain)
 

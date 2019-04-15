@@ -26,14 +26,13 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
-LOGGING_COMPONENT = {'logger', 'system_log'}
+LOGGING_INTEGRATIONS = {'logger', 'system_log'}
 
-FIRST_INIT_COMPONENT = {
+STAGE_1_INTEGRATIONS = {
+    # To record data
     'recorder',
-    'mqtt',
+    # To make sure we forward data to other instances
     'mqtt_eventstream',
-    'frontend',
-    'history',
 }
 
 
@@ -126,15 +125,12 @@ async def async_from_config_dict(config: Dict[str, Any],
 
     domains = _get_domains(hass, config)
 
-    # Resolve all dependencies of all components.
-    for dep_domains in await asyncio.gather(*[
-            loader.async_component_dependencies(hass, domain)
-            for domain in domains
-    ], return_exceptions=True):
-        # Result is either a set or an exception. We ignore exceptions
-        # It will be properly handled during setup of the domain.
-        if isinstance(dep_domains, set):
-            domains.update(dep_domains)
+    # Resolve all dependencies of all components so we can find the logging
+    # and integrations that need faster initialization.
+    resolved_domains_task = asyncio.gather(*[
+        loader.async_component_dependencies(hass, domain)
+        for domain in domains
+    ], return_exceptions=True)
 
     # Set up core.
     if not all(await asyncio.gather(
@@ -147,14 +143,22 @@ async def async_from_config_dict(config: Dict[str, Any],
 
     _LOGGER.debug("Home Assistant core initialized")
 
-    # setup components
-    # stage 0, load logging components
-    for domain in domains:
-        if domain in LOGGING_COMPONENT:
-            hass.async_create_task(
-                async_setup_component(hass, domain, config))
+    # Finish resolving domains
+    for dep_domains in await resolved_domains_task:
+        # Result is either a set or an exception. We ignore exceptions
+        # It will be properly handled during setup of the domain.
+        if isinstance(dep_domains, set):
+            domains.update(dep_domains)
 
-    await hass.async_block_till_done()
+    # setup components
+    logging_domains = domains & LOGGING_INTEGRATIONS
+    stage_1_domains = domains & STAGE_1_INTEGRATIONS
+    stage_2_domains = domains - logging_domains - stage_1_domains
+
+    await asyncio.gather(*[
+        async_setup_component(hass, domain, config)
+        for domain in logging_domains
+    ])
 
     # Kick off loading the registries. They don't need to be awaited.
     asyncio.gather(
@@ -162,19 +166,15 @@ async def async_from_config_dict(config: Dict[str, Any],
         hass.helpers.entity_registry.async_get_registry(),
         hass.helpers.area_registry.async_get_registry())
 
-    # stage 1
-    for domain in domains:
-        if domain in FIRST_INIT_COMPONENT:
-            hass.async_create_task(
-                async_setup_component(hass, domain, config))
-
-    await hass.async_block_till_done()
-
-    # stage 2
-    for domain in domains:
-        if domain in FIRST_INIT_COMPONENT or domain in LOGGING_COMPONENT:
+    # Continue setting up the components
+    for to_load in (stage_1_domains, stage_2_domains):
+        if not to_load:
             continue
-        hass.async_create_task(async_setup_component(hass, domain, config))
+
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in to_load
+        ])
 
     await hass.async_block_till_done()
 

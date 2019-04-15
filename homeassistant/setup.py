@@ -100,12 +100,6 @@ async def _async_setup_component(hass: core.HomeAssistant,
         log_error("Integration not found.", False)
         return False
 
-    try:
-        component = integration.get_component()
-    except ImportError:
-        log_error("Unable to import component", False)
-        return False
-
     # Validate all dependencies exist and there are no circular dependencies
     try:
         await loader.async_component_dependencies(hass, domain)
@@ -135,6 +129,12 @@ async def _async_setup_component(hass: core.HomeAssistant,
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
+
+    try:
+        component = integration.get_component()
+    except ImportError:
+        log_error("Unable to import component", False)
+        return False
 
     if hasattr(component, 'PLATFORM_SCHEMA'):
         # Entity components have their own warning
