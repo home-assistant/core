@@ -216,11 +216,10 @@ async def test_ingress_websocket(
         build_type[0], build_type[1]))
 
     # Ignore error because we can setup a full IO infrastructure
-    with pytest.raises(WSServerHandshakeError):
-        await hassio_client.ws_connect(
-            '/api/hassio_ingress/{}/{}'.format(build_type[0], build_type[1]),
-            headers={"X-Test-Header": "beer"}
-        )
+    await hassio_client.ws_connect(
+        '/api/hassio_ingress/{}/{}'.format(build_type[0], build_type[1]),
+        headers={"X-Test-Header": "beer"}
+    )
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
