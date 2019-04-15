@@ -170,16 +170,13 @@ class NeurioData:
         _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
 
         try:
-            history = self.neurio_client.get_samples_stats(
-                self.sensor_id, start_time, 'days', end_time)
+            history = self.neurio_client.get_samples_stats(self.sensor_id, start_time, 'days', end_time)
+            for result in history:
+                kwh += result['consumptionEnergy'] / 3600000
+            self._daily_usage = round(kwh, 2)
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update daily power usage")
             return None
-
-        for result in history:
-            kwh += result['consumptionEnergy'] / 3600000
-
-        self._daily_usage = round(kwh, 2)
 		
     def get_daily_generation(self):
         """Return current daily power usage."""
@@ -191,16 +188,15 @@ class NeurioData:
         _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
 
         try:
-            history = self.neurio_client.get_samples_stats(
-                self.sensor_id, start_time, 'days', end_time)
+            history = self.neurio_client.get_samples_stats(self.sensor_id, start_time, 'days', end_time)
+            for result in history:
+                kwh += result['generationEnergy'] / 3600000
+            self._daily_generation = round(kwh, 2)
         except (requests.exceptions.RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update daily power usage")
+            _LOGGER.warning("Could not update daily generation")
             return None
 
-        for result in history:
-            kwh += result['generationEnergy'] / 3600000
-
-        self._daily_generation = round(kwh, 2)
+        
 		
     def get_net_consumption(self):
         """Return current daily power usage."""
@@ -213,25 +209,17 @@ class NeurioData:
         _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
 
         try:
-            historyImported = self.neurio_client.get_samples_stats(
-                self.sensor_id, start_time, 'days', end_time)
+            history = self.neurio_client.get_samples_stats(self.sensor_id, start_time, 'days', end_time)
+            for result in history:
+                kwhIn += result['importedEnergy'] / 3600000
+            for result in history:
+                kwhOut += result['exportedEnergy'] / 3600000
+            self._net_consumption = round(kwhIn-kwhOut, 2)
         except (requests.exceptions.RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update daily power usage")
+            _LOGGER.warning("Could not update net consumption")
             return None
 
-        try:
-            historyExported = self.neurio_client.get_samples_stats(
-                self.sensor_id, start_time, 'days', end_time)
-        except (requests.exceptions.RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update daily power usage")
-            return None
 
-        for result in historyImported:
-            kwhIn += result['importedEnergy'] / 3600000
-        for result in historyExported:
-            kwhOut += result['exportedEnergy'] / 3600000
-
-        self._net_consumption = round(kwhIn-kwhOut, 2)
 
 
 class NeurioEnergy(Entity):
