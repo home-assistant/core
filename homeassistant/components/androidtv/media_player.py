@@ -326,8 +326,8 @@ class AndroidTVDevice(ADBDevice):
         self._is_volume_muted = None
 
         if 'serialno' in self._device_properties:
-            self._unique_id = 'androidtv-{}-{}'.format(
-                name, self._device_properties['serialno'])
+            self._unique_id = 'androidtv-{}'.format(
+                self._device_properties['serialno'])
         else:
             self._unique_id = None
 
