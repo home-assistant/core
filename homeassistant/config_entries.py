@@ -123,7 +123,7 @@ import asyncio
 import logging
 import functools
 import uuid
-from typing import Callable, Dict, List, Optional, Set  # noqa pylint: disable=unused-import
+from typing import Callable, List, Optional, Set  # noqa pylint: disable=unused-import
 import weakref
 
 from homeassistant import data_entry_flow, loader
@@ -703,6 +703,15 @@ class ConfigEntries:
             integration = await loader.async_get_integration(
                 self.hass, handler_key)
         except loader.IntegrationNotFound:
+            _LOGGER.error('Cannot find integration %s', handler_key)
+            raise data_entry_flow.UnknownHandler
+
+        try:
+            integration.get_component()
+        except ImportError as err:
+            _LOGGER.error(
+                'Error occurred while loading integration %s: %s',
+                handler_key, err)
             raise data_entry_flow.UnknownHandler
 
         handler = HANDLERS.get(handler_key)
