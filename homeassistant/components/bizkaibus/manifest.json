@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/components/bizkaibus",
   "dependencies": [],
   "codeowners": ["@UgaitzEtxebarria"],
-  "requirements": []
+  "requirements": ["bizkaibus==0.1.1"]
 }
