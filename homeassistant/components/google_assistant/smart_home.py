@@ -141,6 +141,13 @@ class _GoogleEntity:
         if not traits:
             return None
 
+        device_type = get_google_type(domain,
+                                      device_class)
+
+        # If no device type found, skip
+        if not device_type:
+            return None
+
         device = {
             'id': state.entity_id,
             'name': {
@@ -149,7 +156,7 @@ class _GoogleEntity:
             'attributes': {},
             'traits': [trait.name for trait in traits],
             'willReportState': False,
-            'type': get_google_type(domain, device_class),
+            'type': device_type,
         }
 
         # use aliases
