@@ -31,6 +31,7 @@ async def test_webcomponent_custom_path_not_found(hass):
         assert panels
         assert 'nice_url' not in panels
 
+
 async def test_webcomponent_custom_path(hass):
     """Test if a web component is found in config panels dir."""
     filename = 'mock.file'
