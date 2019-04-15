@@ -200,19 +200,50 @@ class ZHADevice:
             self.cluster_channels[cluster_channel.name] = cluster_channel
             self._all_channels.append(cluster_channel)
 
+    def get_channels_to_configure(self):
+        """Get a deduped list of channels for configuration.
+
+        This goes through all channels and gets a unique list of channels to
+        configure. It first assembles a unique list of channels that are part
+        of entities while stashing relay channels off to the side. It then
+        takse the stashed relay channels and adds them to the list of channels
+        that will be returned if there isn't a channel in the list for that
+        cluster already. This is done to ensure each cluster is only configured
+        once.
+        """
+        channel_keys = []
+        channels = []
+        relay_channels = self._relay_channels.values()
+
+        def get_key(channel):
+            channel_key = "ZDO"
+            if hasattr(channel.cluster, 'cluster_id'):
+                channel_key = "{}_{}".format(
+                    channel.cluster.endpoint.endpoint_id,
+                    channel.cluster.cluster_id
+                )
+            return channel_key
+
+        # first we get all unique non event channels
+        for channel in self.all_channels:
+            c_key = get_key(channel)
+            if c_key not in channel_keys and channel not in relay_channels:
+                channel_keys.append(c_key)
+                channels.append(channel)
+
+        # now we get event channels that still need their cluster configured
+        for channel in relay_channels:
+            channel_key = get_key(channel)
+            if channel_key not in channel_keys:
+                channel_keys.append(channel_key)
+                channels.append(channel)
+        return channels
+
     async def async_configure(self):
         """Configure the device."""
-        cluster_ids = []
-        channels = []
-        for channel in self.all_channels:
-            if hasattr(channel.cluster, 'cluster_id') and\
-                    channel.cluster.cluster_id not in cluster_ids:
-                cluster_ids.append(channel.cluster.cluster_id)
-                channels.append(channel)
-            else:
-                channels.append(channel)  # ZDO
         _LOGGER.debug('%s: started configuration', self.name)
-        await self._execute_channel_tasks(channels, 'async_configure')
+        await self._execute_channel_tasks(
+            self.get_channels_to_configure(), 'async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
         entry = self.gateway.zha_storage.async_create_or_update(self)
         _LOGGER.debug('%s: stored in registry: %s', self.name, entry)
