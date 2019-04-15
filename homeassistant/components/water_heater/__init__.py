@@ -39,8 +39,6 @@ STATE_GAS = 'gas'
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_OPERATION_MODE = 2
 SUPPORT_AWAY_MODE = 4
-SUPPORT_TARGET_TEMPERATURE_HIGH = 8
-SUPPORT_TARGET_TEMPERATURE_LOW = 16
 
 ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
@@ -149,6 +147,12 @@ class WaterHeaterDevice(Entity):
             ATTR_TEMPERATURE: show_temp(
                 self.hass, self.target_temperature, self.temperature_unit,
                 self.precision),
+            ATTR_TARGET_TEMP_HIGH: show_temp(
+                self.hass, self.target_temperature_high, self.temperature_unit,
+                self.precision),
+            ATTR_TARGET_TEMP_LOW: show_temp(
+                self.hass, self.target_temperature_low, self.temperature_unit,
+                self.precision),
         }
 
         supported_features = self.supported_features
@@ -161,16 +165,6 @@ class WaterHeaterDevice(Entity):
         if supported_features & SUPPORT_AWAY_MODE:
             is_away = self.is_away_mode_on
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
-
-        if supported_features & SUPPORT_TARGET_TEMPERATURE_HIGH:
-            data[ATTR_TARGET_TEMP_HIGH] = show_temp(
-                self.hass, self.target_temperature_high, self.temperature_unit,
-                self.precision)
-
-        if supported_features & SUPPORT_TARGET_TEMPERATURE_LOW:
-            data[ATTR_TARGET_TEMP_LOW] = show_temp(
-                self.hass, self.target_temperature_low, self.temperature_unit,
-                self.precision)
 
         return data
 
