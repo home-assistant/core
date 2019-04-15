@@ -118,7 +118,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     config = OrderedDict(config)
 
     # Merge packages
-    conf_util.merge_packages_config(
+    await conf_util.merge_packages_config(
         hass, config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
