@@ -95,11 +95,11 @@ class AxisNetworkDevice:
             task = self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, 'binary_sensor'))
-            task.add_done_callback(self.start)
 
             self.api.stream.connection_status_callback = \
                 self.async_connection_status_callback
             self.api.enable_events(event_callback=self.async_event_callback)
+            task.add_done_callback(self.start)
 
         self.config_entry.add_update_listener(self.async_new_address_callback)
 
