@@ -1,9 +1,4 @@
-"""
-Tracks devices by sending a ICMP echo request (ping).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.ping/
-"""
+"""Tracks devices by sending a ICMP echo request (ping)."""
 import logging
 import subprocess
 import sys

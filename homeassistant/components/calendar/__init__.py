@@ -22,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'calendar'
 
-DEPENDENCIES = ['http']
-
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=60)

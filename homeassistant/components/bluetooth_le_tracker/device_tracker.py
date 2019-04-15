@@ -1,9 +1,4 @@
-"""
-Tracking for bluetooth low energy devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.bluetooth_le_tracker/
-"""
+"""Tracking for bluetooth low energy devices."""
 import logging
 
 from homeassistant.helpers.event import track_point_in_utc_time
@@ -14,8 +9,6 @@ from homeassistant.components.device_tracker import (
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pygatt[GATTTOOL]==3.2.0']
 
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5

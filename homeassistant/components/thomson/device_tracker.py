@@ -1,9 +1,4 @@
-"""
-Support for THOMSON routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.thomson/
-"""
+"""Support for THOMSON routers."""
 import logging
 import re
 import telnetlib

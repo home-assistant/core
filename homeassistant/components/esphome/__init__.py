@@ -32,8 +32,6 @@ if TYPE_CHECKING:
         ServiceCall, UserService
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==1.7.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'
@@ -49,6 +47,7 @@ STORAGE_VERSION = 1
 HA_COMPONENTS = [
     'binary_sensor',
     'camera',
+    'climate',
     'cover',
     'fan',
     'light',
@@ -381,16 +380,15 @@ async def _async_setup_device_registry(hass: HomeAssistantType,
 async def _register_service(hass: HomeAssistantType,
                             entry_data: RuntimeEntryData,
                             service: 'UserService'):
-    from aioesphomeapi import USER_SERVICE_ARG_BOOL, USER_SERVICE_ARG_INT, \
-        USER_SERVICE_ARG_FLOAT, USER_SERVICE_ARG_STRING
+    from aioesphomeapi import UserServiceArgType
     service_name = '{}_{}'.format(entry_data.device_info.name, service.name)
     schema = {}
     for arg in service.args:
         schema[vol.Required(arg.name)] = {
-            USER_SERVICE_ARG_BOOL: cv.boolean,
-            USER_SERVICE_ARG_INT: vol.Coerce(int),
-            USER_SERVICE_ARG_FLOAT: vol.Coerce(float),
-            USER_SERVICE_ARG_STRING: cv.string,
+            UserServiceArgType.BOOL: cv.boolean,
+            UserServiceArgType.INT: vol.Coerce(int),
+            UserServiceArgType.FLOAT: vol.Coerce(float),
+            UserServiceArgType.STRING: cv.string,
         }[arg.type_]
 
     async def execute_service(call):

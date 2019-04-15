@@ -11,8 +11,6 @@ from homeassistant.const import ATTR_BATTERY_LEVEL
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
-
 VALUE_TO_STATE = {
     'closed': STATE_CLOSED,
     'closing': STATE_CLOSING,
@@ -135,6 +133,8 @@ class SmartThingsCover(SmartThingsEntity, CoverDevice):
     @property
     def current_cover_position(self):
         """Return current position of cover."""
+        if not self._supported_features & SUPPORT_SET_POSITION:
+            return None
         return self._device.status.level
 
     @property

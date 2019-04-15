@@ -12,8 +12,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['dovado==0.4.1']
-
 DOMAIN = 'dovado'
 
 CONFIG_SCHEMA = vol.Schema({

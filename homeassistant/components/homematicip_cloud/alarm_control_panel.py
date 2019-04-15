@@ -10,11 +10,6 @@ from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['homematicip_cloud']
-
-HMIP_ZONE_AWAY = 'EXTERNAL'
-HMIP_ZONE_HOME = 'INTERNAL'
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

@@ -1,0 +1,12 @@
+{
+  "domain": "bt_smarthub",
+  "name": "Bt smarthub",
+  "documentation": "https://www.home-assistant.io/components/bt_smarthub",
+  "requirements": [
+    "btsmarthub_devicelist==0.1.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@jxwolstenholme"
+  ]
+}

@@ -1,9 +1,4 @@
-"""
-Support for SCSGate components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/scsgate/
-"""
+"""Support for SCSGate components."""
 import logging
 from threading import Lock
 
@@ -12,8 +7,6 @@ import voluptuous as vol
 from homeassistant.const import (CONF_DEVICE, CONF_NAME)
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['scsgate==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

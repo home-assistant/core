@@ -1,9 +1,4 @@
-"""
-Support for Cover devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover/
-"""
+"""Support for Cover devices."""
 from datetime import timedelta
 import functools as ft
 import logging
@@ -27,7 +22,6 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'cover'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=15)
 
 GROUP_NAME_ALL_COVERS = 'all covers'

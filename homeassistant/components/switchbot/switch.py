@@ -8,8 +8,6 @@ from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_MAC
 from homeassistant.helpers.restore_state import RestoreEntity
 
-REQUIREMENTS = ['PySwitchbot==0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Switchbot'

@@ -1,9 +1,4 @@
-"""
-Support for real-time departure information for Rhein-Main public transport.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rmvtransport/
-"""
+"""Support for departure information for Rhein-Main public transport."""
 import asyncio
 import logging
 from datetime import timedelta
@@ -17,8 +12,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['PyRMVtransport==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

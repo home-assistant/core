@@ -10,12 +10,10 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
     CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME,
-    STATE_UNKNOWN, TEMP_CELSIUS)
+    PRESSURE_HPA, PRESSURE_INHG, STATE_UNKNOWN, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['pyowm==2.10.0']
-
+from homeassistant.util.pressure import convert as convert_pressure
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
@@ -114,7 +112,11 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return self.data.get_pressure().get('press')
+        pressure = self.data.get_pressure().get('press')
+        if self.hass.config.units.name == 'imperial':
+            return round(
+                convert_pressure(pressure, PRESSURE_HPA, PRESSURE_INHG), 2)
+        return pressure
 
     @property
     def humidity(self):

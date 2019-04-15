@@ -108,7 +108,7 @@ async def test_async_from_config_file_not_mount_deps_folder(loop):
 async def test_load_hassio(hass):
     """Test that we load Hass.io component."""
     with patch.dict(os.environ, {}, clear=True):
-        assert bootstrap._get_components(hass, {}) == set()
+        assert bootstrap._get_domains(hass, {}) == set()
 
     with patch.dict(os.environ, {'HASSIO': '1'}):
-        assert bootstrap._get_components(hass, {}) == {'hassio'}
+        assert bootstrap._get_domains(hass, {}) == {'hassio'}

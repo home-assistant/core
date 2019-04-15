@@ -1,9 +1,4 @@
-"""
-Support for Melnor RainCloud sprinkler water timer.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.raincloud/
-"""
+"""Support for Melnor RainCloud sprinkler water timer."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import BINARY_SENSORS, DATA_RAINCLOUD, ICON_MAP, RainCloudEntity
-
-DEPENDENCIES = ['raincloud']
 
 _LOGGER = logging.getLogger(__name__)
 

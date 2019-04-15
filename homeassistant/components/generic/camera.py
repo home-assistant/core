@@ -1,9 +1,4 @@
-"""
-Support for IP Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.generic/
-"""
+"""Support for IP Cameras."""
 import asyncio
 import logging
 
@@ -18,7 +13,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, CONF_VERIFY_SSL)
 from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA, DEFAULT_CONTENT_TYPE, Camera)
+    PLATFORM_SCHEMA, DEFAULT_CONTENT_TYPE, SUPPORT_STREAM, Camera)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async_ import run_coroutine_threadsafe
@@ -68,6 +63,7 @@ class GenericCamera(Camera):
         self._still_image_url.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._frame_interval = 1 / device_info[CONF_FRAMERATE]
+        self._supported_features = SUPPORT_STREAM if self._stream_source else 0
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
 
@@ -84,6 +80,11 @@ class GenericCamera(Camera):
 
         self._last_url = None
         self._last_image = None
+
+    @property
+    def supported_features(self):
+        """Return supported features for this camera."""
+        return self._supported_features
 
     @property
     def frame_interval(self):

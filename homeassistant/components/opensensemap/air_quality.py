@@ -11,8 +11,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['opensensemap-api==0.1.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Data provided by openSenseMap'

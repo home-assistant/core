@@ -1,9 +1,4 @@
-"""
-Support for fetching WiFi associations through SNMP.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.snmp/
-"""
+"""Support for fetching WiFi associations through SNMP."""
 import binascii
 import logging
 
@@ -13,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
-
-REQUIREMENTS = ['pysnmp==4.4.8']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -89,7 +89,7 @@ def mock_isfile():
 @pytest.fixture
 def mock_image():
     """Return a mock camera image."""
-    with patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
+    with patch('homeassistant.components.demo.camera.DemoCamera.camera_image',
                return_value=b'Test') as image:
         yield image
 

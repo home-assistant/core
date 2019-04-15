@@ -1,0 +1,10 @@
+{
+  "domain": "reddit",
+  "name": "Reddit",
+  "documentation": "https://www.home-assistant.io/components/reddit",
+  "requirements": [
+    "praw==6.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,9 +1,4 @@
-"""
-Support for Google Actions Smart Home Control.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/google_assistant/
-"""
+"""Support for Google Actions Smart Home Control."""
 import logging
 
 from aiohttp.web import Request, Response

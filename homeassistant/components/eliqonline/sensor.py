@@ -1,9 +1,4 @@
-"""
-Monitors home energy use for the ELIQ Online service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.eliqonline/
-"""
+"""Monitors home energy use for the ELIQ Online service."""
 from datetime import timedelta
 import logging
 
@@ -14,8 +9,6 @@ from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, POWER_WATT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-REQUIREMENTS = ['eliqonline==1.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 

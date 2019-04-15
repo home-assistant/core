@@ -1,9 +1,4 @@
-"""
-Support for wake on lan.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.wake_on_lan/
-"""
+"""Support for wake on lan."""
 import logging
 import platform
 import subprocess as sp
@@ -14,8 +9,6 @@ from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-
-REQUIREMENTS = ['wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 

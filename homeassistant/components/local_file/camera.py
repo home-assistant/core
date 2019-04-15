@@ -1,9 +1,4 @@
-"""
-Camera that loads a picture from a local file.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.local_file/
-"""
+"""Camera that loads a picture from a local file."""
 import logging
 import mimetypes
 import os
@@ -12,7 +7,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import (
-    Camera, CAMERA_SERVICE_SCHEMA, DOMAIN, PLATFORM_SCHEMA)
+    Camera, CAMERA_SERVICE_SCHEMA, PLATFORM_SCHEMA)
+from homeassistant.components.camera.const import DOMAIN
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

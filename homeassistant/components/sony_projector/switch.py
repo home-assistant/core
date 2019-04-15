@@ -8,8 +8,6 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pysdcp==1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Sony Projector'

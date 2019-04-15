@@ -4,8 +4,6 @@ import logging
 from homeassistant.components import litejet
 from homeassistant.components.scene import Scene
 
-DEPENDENCIES = ['litejet']
-
 ATTR_NUMBER = 'number'
 
 _LOGGER = logging.getLogger(__name__)

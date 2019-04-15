@@ -24,8 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA),
 })
 
-DEPENDENCIES = ['velbus']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up cover controlled by Velbus."""

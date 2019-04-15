@@ -1,0 +1,10 @@
+{
+  "domain": "camera",
+  "name": "Camera",
+  "documentation": "https://www.home-assistant.io/components/camera",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

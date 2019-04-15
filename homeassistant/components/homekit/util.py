@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import fan, media_player
+from homeassistant.components import fan, media_player, sensor
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, TEMP_CELSIUS)
 from homeassistant.core import split_entity_id
@@ -12,21 +12,22 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 
 from .const import (
-    CONF_FEATURE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, HOMEKIT_NOTIFY_ID, TYPE_FAUCET,
-    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
+    CONF_FEATURE, CONF_FEATURE_LIST, CONF_LINKED_BATTERY_SENSOR,
+    FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE,
+    HOMEKIT_NOTIFY_ID, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
+    TYPE_SWITCH, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 BASIC_INFO_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(sensor.DOMAIN),
 })
 
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list,
 })
-
 
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(ATTR_CODE, default=None): vol.Any(None, cv.string),
@@ -147,6 +148,8 @@ class HomeKitSpeedMapping:
 
     def speed_to_homekit(self, speed):
         """Map Home Assistant speed state to HomeKit speed."""
+        if speed is None:
+            return None
         speed_range = self.speed_ranges[speed]
         return speed_range.target
 

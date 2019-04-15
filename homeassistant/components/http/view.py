@@ -98,12 +98,14 @@ def request_handler_factory(view, handler):
 
         if view.requires_auth:
             if authenticated:
+                if 'deprecate_warning_message' in request:
+                    _LOGGER.warning(request['deprecate_warning_message'])
                 await process_success_login(request)
             else:
                 raise HTTPUnauthorized()
 
-        _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request.get(KEY_REAL_IP), authenticated)
+        _LOGGER.debug('Serving %s to %s (auth: %s)',
+                      request.path, request.get(KEY_REAL_IP), authenticated)
 
         try:
             result = handler(request, **request.match_info)

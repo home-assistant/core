@@ -8,8 +8,6 @@ from . import DATA_LEAF, DATA_LOCATION, SIGNAL_UPDATE_LEAF
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['nissan_leaf']
-
 ICON_CAR = "mdi:car"
 
 

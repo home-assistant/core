@@ -1,9 +1,4 @@
-"""
-Support for Flux lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.flux_led/
-"""
+"""Support for Flux lights."""
 import logging
 import socket
 import random
@@ -19,8 +14,6 @@ from homeassistant.components.light import (
     SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-REQUIREMENTS = ['flux_led==0.22']
 
 _LOGGER = logging.getLogger(__name__)
 

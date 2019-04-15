@@ -54,15 +54,14 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
     zone_cluster = zigpy_device_zone.endpoints.get(
         1).ias_zone
     zone_entity_id = make_entity_id(DOMAIN, zigpy_device_zone, zone_cluster)
-    zone_zha_device = zha_gateway.get_device(str(zigpy_device_zone.ieee))
+    zone_zha_device = zha_gateway.get_device(zigpy_device_zone.ieee)
 
     # occupancy binary_sensor
     occupancy_cluster = zigpy_device_occupancy.endpoints.get(
         1).occupancy
     occupancy_entity_id = make_entity_id(
         DOMAIN, zigpy_device_occupancy, occupancy_cluster)
-    occupancy_zha_device = zha_gateway.get_device(
-        str(zigpy_device_occupancy.ieee))
+    occupancy_zha_device = zha_gateway.get_device(zigpy_device_occupancy.ieee)
 
     # dimmable binary_sensor
     remote_on_off_cluster = zigpy_device_remote.endpoints.get(
@@ -72,7 +71,7 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
     remote_entity_id = make_entity_id(DOMAIN, zigpy_device_remote,
                                       remote_on_off_cluster,
                                       use_suffix=False)
-    remote_zha_device = zha_gateway.get_device(str(zigpy_device_remote.ieee))
+    remote_zha_device = zha_gateway.get_device(zigpy_device_remote.ieee)
 
     # test that the sensors exist and are in the unavailable state
     assert hass.states.get(zone_entity_id).state == STATE_UNAVAILABLE
