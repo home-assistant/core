@@ -70,6 +70,9 @@ async def test_device_signal_new_address(hass):
         await axis_device.async_setup()
         await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 1
+    assert len(axis_device.listeners) == 1
+
     entry.data[device.CONF_DEVICE][device.CONF_HOST] = '2.3.4.5'
     hass.config_entries.async_update_entry(entry, data=entry.data)
     await hass.async_block_till_done()
@@ -77,6 +80,50 @@ async def test_device_signal_new_address(hass):
     assert axis_device.host == '2.3.4.5'
     assert axis_device.api.config.host == '2.3.4.5'
     assert len(new_address_mock.mock_calls) == 1
+
+
+async def test_device_unavailable(hass):
+    """Successful setup."""
+    entry = MockConfigEntry(
+        domain=device.DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
+
+    api = Mock()
+    api.vapix.get_param.return_value = '1234'
+
+    axis_device = device.AxisNetworkDevice(hass, entry)
+    hass.data[device.DOMAIN] = {axis_device.serial: axis_device}
+
+    with patch.object(device, 'get_device', return_value=mock_coro(api)), \
+            patch.object(device, 'async_dispatcher_send') as mock_dispatcher:
+        await axis_device.async_setup()
+        await hass.async_block_till_done()
+
+        axis_device.async_connection_status_callback(status=False)
+
+    assert not axis_device.available
+    assert len(mock_dispatcher.mock_calls) == 1
+
+
+async def test_device_reset(hass):
+    """Successfully reset device."""
+    entry = MockConfigEntry(
+        domain=device.DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
+
+    api = Mock()
+    api.vapix.get_param.return_value = '1234'
+
+    axis_device = device.AxisNetworkDevice(hass, entry)
+    hass.data[device.DOMAIN] = {axis_device.serial: axis_device}
+
+    with patch.object(device, 'get_device', return_value=mock_coro(api)):
+        await axis_device.async_setup()
+        await hass.async_block_till_done()
+
+    await axis_device.async_reset()
+
+    assert len(api.stop.mock_calls) == 1
+    assert len(hass.states.async_all()) == 0
+    assert len(axis_device.listeners) == 0
 
 
 async def test_device_not_accessible():
