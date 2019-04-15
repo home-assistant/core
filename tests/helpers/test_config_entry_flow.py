@@ -3,9 +3,10 @@ from unittest.mock import patch, Mock
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, loader, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.helpers import config_entry_flow
-from tests.common import MockConfigEntry, MockModule, mock_coro
+from tests.common import (
+    MockConfigEntry, MockModule, mock_coro, mock_integration)
 
 
 @pytest.fixture
@@ -101,7 +102,7 @@ async def test_discovery_confirmation(hass, discovery_flow_conf):
 
 async def test_multiple_discoveries(hass, discovery_flow_conf):
     """Test we only create one instance for multiple discoveries."""
-    loader.set_component(hass, 'test', MockModule('test'))
+    mock_integration(hass, MockModule('test'))
 
     result = await hass.config_entries.flow.async_init(
         'test', context={'source': config_entries.SOURCE_DISCOVERY}, data={})
@@ -115,7 +116,7 @@ async def test_multiple_discoveries(hass, discovery_flow_conf):
 
 async def test_only_one_in_progress(hass, discovery_flow_conf):
     """Test a user initialized one will finish and cancel discovered one."""
-    loader.set_component(hass, 'test', MockModule('test'))
+    mock_integration(hass, MockModule('test'))
 
     # Discovery starts flow
     result = await hass.config_entries.flow.async_init(
@@ -202,7 +203,7 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     async_setup_entry = Mock(return_value=mock_coro(True))
     async_unload_entry = Mock(return_value=mock_coro(True))
 
-    loader.set_component(hass, 'test_single', MockModule(
+    mock_integration(hass, MockModule(
         'test_single',
         async_setup_entry=async_setup_entry,
         async_unload_entry=async_unload_entry,

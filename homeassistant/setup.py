@@ -168,12 +168,11 @@ async def _async_setup_component(hass: core.HomeAssistant,
     if result is not True:
         log_error("Component {!r} did not return boolean if setup was "
                   "successful. Disabling component.".format(domain))
-        loader.set_component(hass, domain, None)
         return False
 
     if hass.config_entries:
         for entry in hass.config_entries.async_entries(domain):
-            await entry.async_setup(hass, component=component)
+            await entry.async_setup(hass, integration=integration)
 
     hass.config.components.add(component.DOMAIN)  # type: ignore
 
