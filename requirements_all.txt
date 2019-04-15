@@ -75,6 +75,7 @@ PyTransportNSW==0.1.1
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.12.3
 
+# homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.5
 
@@ -98,6 +99,12 @@ YesssSMS==0.2.3
 
 # homeassistant.components.abode
 abodepy==0.15.0
+
+# homeassistant.components.mcp23017
+adafruit-blinka==1.2.1
+
+# homeassistant.components.mcp23017
+adafruit-circuitpython-mcp230xx==1.1.2
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
