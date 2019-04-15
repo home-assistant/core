@@ -317,7 +317,7 @@ datapoint==0.4.3
 # decora==0.6
 
 # homeassistant.components.decora_wifi
-# decora_wifi==1.3
+# decora_wifi==1.4
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
