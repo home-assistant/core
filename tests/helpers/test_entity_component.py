@@ -10,7 +10,6 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.core as ha
-import homeassistant.loader as loader
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components import group
 from homeassistant.helpers.entity_component import EntityComponent
@@ -226,9 +225,8 @@ def test_platform_not_ready(hass):
     """Test that we retry when platform not ready."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady,
                                         None])
-    loader.set_component(hass, 'mod1',
-                         MockModule('mod1'))
-    loader.set_component(hass, 'mod1.test_domain',
+    mock_integration(hass, MockModule('mod1'))
+    mock_entity_platform(hass, 'test_domain.mod1',
                          MockPlatform(platform1_setup))
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -326,12 +324,10 @@ def test_setup_dependencies_platform(hass):
     We're explictely testing that we process dependencies even if a component
     with the same name has already been loaded.
     """
-    loader.set_component(hass, 'test_component',
-                         MockModule('test_component',
-                                    dependencies=['test_component2']))
-    loader.set_component(hass, 'test_component2',
-                         MockModule('test_component2'))
-    loader.set_component(hass, 'test_component.test_domain', MockPlatform())
+    mock_integration(hass, MockModule('test_component',
+                                      dependencies=['test_component2']))
+    mock_integration(hass, MockModule('test_component2'))
+    mock_entity_platform(hass, 'test_domain.test_component', MockPlatform())
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 

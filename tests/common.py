@@ -4,6 +4,7 @@ import functools as ft
 import json
 import logging
 import os
+import uuid
 import sys
 import threading
 
@@ -607,7 +608,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
                  connection_class=config_entries.CONN_CLASS_UNKNOWN):
         """Initialize a mock config entry."""
         kwargs = {
-            'entry_id': entry_id or 'mock-id',
+            'entry_id': entry_id or uuid.uuid4().hex,
             'domain': domain,
             'data': data or {},
             'options': options,
@@ -911,7 +912,7 @@ def mock_integration(hass, module):
     hass.data.setdefault(
         loader.DATA_INTEGRATIONS, {}
     )[module.DOMAIN] = integration
-    hass.data.setdefault(loader.DATA_KEY, {})[module.DOMAIN] = module
+    hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
 
 
 def mock_entity_platform(hass, platform_path, module):
@@ -921,8 +922,8 @@ def mock_entity_platform(hass, platform_path, module):
     hue.light.
     """
     domain, platform_name = platform_path.split('.')
-    integration_cache = hass.data.setdefault(loader.DATA_KEY, {})
-    module_cache = hass.data.setdefault(loader.DATA_KEY, {})
+    integration_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
 
     if platform_name not in integration_cache:
         mock_integration(hass, MockModule(platform_name))
