@@ -41,6 +41,12 @@ DATA_INTEGRATIONS = 'integrations'
 PACKAGE_CUSTOM_COMPONENTS = 'custom_components'
 PACKAGE_BUILTIN = 'homeassistant.components'
 LOOKUP_PATHS = [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+CUSTOM_WARNING = (
+    'You are using a custom integration for %s which has not '
+    'been tested by Home Assistant. This component might '
+    'cause stability problems, be sure to disable it if you '
+    'do experience issues with Home Assistant.'
+)
 _UNDEF = object()
 
 
@@ -159,6 +165,7 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
             Integration.resolve_from_root, hass, custom_components, domain
         )
         if integration is not None:
+            _LOGGER.warning(CUSTOM_WARNING, domain)
             cache[domain] = integration
             return integration
 
@@ -210,20 +217,6 @@ class CircularDependency(LoaderError):
         self.to_domain = to_domain
 
 
-def get_component(hass,  # type: HomeAssistant
-                  comp_or_platform: str) -> Optional[ModuleType]:
-    """Try to load specified component.
-
-    Async friendly.
-    """
-    comp = _load_file(hass, comp_or_platform, LOOKUP_PATHS)
-
-    if comp is None:
-        _LOGGER.error("Unable to find component %s", comp_or_platform)
-
-    return comp
-
-
 def _load_file(hass,  # type: HomeAssistant
                comp_or_platform: str,
                base_paths: List[str]) -> Optional[ModuleType]:
@@ -266,12 +259,7 @@ def _load_file(hass,  # type: HomeAssistant
             cache[comp_or_platform] = module
 
             if module.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
-                _LOGGER.warning(
-                    'You are using a custom component for %s which has not '
-                    'been tested by Home Assistant. This component might '
-                    'cause stability problems, be sure to disable it if you '
-                    'do experience issues with Home Assistant.',
-                    comp_or_platform)
+                _LOGGER.warning(CUSTOM_WARNING, comp_or_platform)
 
             return module
 

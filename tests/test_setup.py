@@ -502,8 +502,6 @@ class TestSetup:
             MockModule('disabled_component', setup=lambda hass, config: False))
 
         assert not setup.setup_component(self.hass, 'disabled_component', {})
-        assert loader.get_component(
-            self.hass, 'disabled_component') is not None
         assert 'disabled_component' not in self.hass.config.components
 
         self.hass.data.pop(setup.DATA_SETUP)
@@ -512,8 +510,6 @@ class TestSetup:
             MockModule('disabled_component', setup=lambda hass, config: True))
 
         assert setup.setup_component(self.hass, 'disabled_component', {})
-        assert loader.get_component(
-            self.hass, 'disabled_component') is not None
         assert 'disabled_component' in self.hass.config.components
 
     def test_all_work_done_before_start(self):
