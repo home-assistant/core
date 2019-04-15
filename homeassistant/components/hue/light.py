@@ -5,6 +5,7 @@ import logging
 from time import monotonic
 import random
 
+import aiohue
 import async_timeout
 
 from homeassistant.components import hue
@@ -152,8 +153,6 @@ async def async_update_items(hass, bridge, async_add_entities,
                              request_bridge_update, is_group, current,
                              progress_waiting):
     """Update either groups or lights from the bridge."""
-    import aiohue
-
     if is_group:
         api_type = 'group'
         api = bridge.api.groups

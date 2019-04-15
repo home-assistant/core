@@ -114,17 +114,19 @@ async def _async_setup_component(hass: core.HomeAssistant,
             "%s -> %s", domain, err.from_domain, err.to_domain)
         return False
 
+    # Process requirements as soon as possible, so we can import the component
+    # without requiring imports to be in functions.
+    try:
+        await async_process_deps_reqs(hass, config, integration)
+    except HomeAssistantError as err:
+        log_error(str(err))
+        return False
+
     processed_config = await conf_util.async_process_component_config(
         hass, config, integration)
 
     if processed_config is None:
         log_error("Invalid config.")
-        return False
-
-    try:
-        await async_process_deps_reqs(hass, config, integration)
-    except HomeAssistantError as err:
-        log_error(str(err))
         return False
 
     start = timer()
