@@ -101,7 +101,21 @@ class DeconzGateway:
 
         self.api.start()
 
+        self.config_entry.add_update_listener(self.async_new_address_callback)
+
         return True
+
+    @staticmethod
+    async def async_new_address_callback(hass, entry):
+        """Handle signals of gateway getting new address.
+
+        This is a static method because a class method (bound method),
+        can not be used with weak references.
+        """
+        gateway = hass.data[DOMAIN][entry.data[CONF_BRIDGEID]]
+        gateway.api.close()
+        gateway.api.host = entry.data[CONF_HOST]
+        gateway.api.start()
 
     @property
     def event_reachable(self):
