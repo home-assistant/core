@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
-    ATTR_AUTO_OFF_SET, ATTR_ELECTRIC_CURRNET, ATTR_REMAINING_TIME,
+    ATTR_AUTO_OFF_SET, ATTR_ELECTRIC_CURRENT, ATTR_REMAINING_TIME,
     DATA_DEVICE, DOMAIN, SIGNAL_SWITCHER_DEVICE_UPDATE)
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ _LOGGER = getLogger(__name__)
 
 DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
     'power_consumption': ATTR_CURRENT_POWER_W,
-    'electric_current': ATTR_ELECTRIC_CURRNET,
+    'electric_current': ATTR_ELECTRIC_CURRENT,
     'remaining_time': ATTR_REMAINING_TIME,
     'auto_off_set': ATTR_AUTO_OFF_SET
 }
