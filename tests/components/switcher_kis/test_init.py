@@ -34,6 +34,8 @@ async def test_discovery_data_bucket(
     assert await async_setup_component(
         hass, DOMAIN, MANDATORY_CONFIGURATION)
 
+    await hass.async_block_till_done()
+
     device = hass.data[DOMAIN].get(DATA_DEVICE)
     assert device.device_id == DUMMY_DEVICE_ID
     assert device.ip_addr == DUMMY_IP_ADDRESS
