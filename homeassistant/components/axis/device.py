@@ -67,13 +67,9 @@ class AxisNetworkDevice:
 
     async def async_setup(self):
         """Set up the device."""
-        from axis.vapix import VAPIX_FW_VERSION, VAPIX_PROD_TYPE
-
-        hass = self.hass
-
         try:
             self.api = await get_device(
-                hass, self.config_entry.data[CONF_DEVICE])
+                self.hass, self.config_entry.data[CONF_DEVICE])
 
         except CannotConnect:
             raise ConfigEntryNotReady
@@ -83,8 +79,8 @@ class AxisNetworkDevice:
                 'Unknown error connecting with Axis device on %s', self.host)
             return False
 
-        self.fw_version = self.api.vapix.get_param(VAPIX_FW_VERSION)
-        self.product_type = self.api.vapix.get_param(VAPIX_PROD_TYPE)
+        self.fw_version = self.api.vapix.params.firmware_version
+        self.product_type = self.api.vapix.params.prodtype
 
         if self.config_entry.options[CONF_CAMERA]:
             self.hass.async_create_task(
@@ -190,7 +186,7 @@ async def get_device(hass, config):
 
     try:
         with async_timeout.timeout(15):
-            await hass.async_add_executor_job(device.vapix.load_params)
+            await hass.async_add_executor_job(device.vapix.initialize_params)
         return device
 
     except axis.Unauthorized:
