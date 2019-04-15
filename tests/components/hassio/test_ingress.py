@@ -1,7 +1,6 @@
 """The tests for the hassio component."""
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
-from aiohttp.client_exceptions import WSServerHandshakeError
 import pytest
 
 
