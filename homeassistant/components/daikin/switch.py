@@ -27,7 +27,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if zones:
         async_add_entities([
             DaikinZoneSwitch(daikin_api, zone_id)
-            for zone_id in range(len(zones))
+            for zone_id, name in enumerate(zones)
+            if name != '-'
         ])
 
 
