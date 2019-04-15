@@ -143,6 +143,7 @@ homeassistant/components/luci/* @fbradyirl
 homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
+homeassistant/components/mcp23017/* @jardiamj
 homeassistant/components/mediaroom/* @dgomes
 homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/met/* @danielhiversen

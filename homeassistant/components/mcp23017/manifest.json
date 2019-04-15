@@ -8,5 +8,5 @@
     "adafruit-circuitpython-mcp230xx==1.1.2"
     ],
   "dependencies": [],
-  "codeowners": ["jardiamj"]
+  "codeowners": ["@jardiamj"]
 }
