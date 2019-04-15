@@ -7,13 +7,12 @@ from homeassistant.core import callback
 _LOGGER = logging.getLogger(__name__)
 
 
-# Helps to process NHC2 entities
 def nhc2_entity_processor(hass,
                           config_entry,
                           async_add_entities,
                           key,
                           obj_create):
-    """Processes entities into HA."""
+    """Loops the entities list and creates, updates or deletes HA entities."""
     @callback
     def process_entities(entities):
         # Collect a list of active UUIDs
@@ -71,7 +70,7 @@ def nhc2_entity_processor(hass,
 
 # Extract version numbers from sysinfo
 def extract_versions(nhc2_sysinfo):
-    """Extracts versiosn from sysinfo"""
+    """Return the versions, extracted from sysinfo."""
     params = nhc2_sysinfo['Params']
     system_info = next(filter(
         (lambda x: x and 'SystemInfo' in x),

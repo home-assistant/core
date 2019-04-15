@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "NHC2 CoCo is already configured"
+            "already_configured": "Nico Home Control II is already configured"
         },
         "error": {
             "cannot_connect": "Unable to connect to the Connected Controller."
@@ -17,6 +17,6 @@
                 "title": "Details to your Niko Connected Controller"
             }
         },
-        "title": "Niko Connected Controller"
+        "title": "Niko Home Control II"
     }
 }

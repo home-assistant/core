@@ -1,4 +1,4 @@
-"""Support for Niko Home Control II - CoCo"""
+"""Support for Niko Home Control II - CoCo."""
 import logging
 
 import voluptuous as vol
