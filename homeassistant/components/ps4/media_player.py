@@ -13,7 +13,6 @@ from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
     CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import entity_registry
 from homeassistant.util.json import load_json, save_json
 
 from .const import DOMAIN as PS4_DOMAIN, REGIONS as deprecated_regions
@@ -126,7 +125,6 @@ class PS4Device(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Subscribe PS4 events."""
         self.hass.data[PS4_DATA].devices.append(self)
-        await self.async_update_entity_data()
 
     def update(self):
         """Retrieve the latest data."""
@@ -277,22 +275,6 @@ class PS4Device(MediaPlayerDevice):
         # Use last 4 Chars of credential as suffix. Unique ID per PSN user.
         suffix = self._creds[-4:]
         self._unique_id = "{}_{}".format(status['host-id'], suffix)
-
-    async def async_update_entity_data(self):
-        """From 0.89. Update identifier. Prevent changing entity_id."""
-        registry = await entity_registry.async_get_registry(self.hass)
-        unique_id = self._unique_id.split('_')
-        unique_id = unique_id[0]
-        old_entity_id = registry.async_get_entity_id(
-            'media_player', PS4_DOMAIN, unique_id)
-
-        # Remove old entity entry. Update current entry with old entity_id.
-        if old_entity_id is not None:
-            registry.async_remove(old_entity_id)
-            current_entity_id = registry.async_get_entity_id(
-                'media_player', PS4_DOMAIN, self._unique_id)
-            registry.async_update_entity(
-                current_entity_id, new_entity_id=old_entity_id)
 
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
