@@ -7,7 +7,7 @@ from homeassistant.helpers import entity_registry
 from homeassistant.util import location
 
 from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
-from .const import DOMAIN
+from .const import DOMAIN  # noqa: pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,8 +69,6 @@ async def async_migrate_entry(hass, entry):
         for entity_id, e_entry in registry.entities.items():
             if e_entry.config_entry_id == entry.entry_id:
                 unique_id = e_entry.unique_id
-                entity_id = registry.async_get_entity_id(
-                    'media_player', DOMAIN, unique_id)
 
                 # Remove old entity entry.
                 registry.async_remove(entity_id)
