@@ -59,7 +59,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
-    cover.DEVICE_CLASS_GARAGE: TYPE_GARAGE,
+    (cover.DOMAIN, cover.DEVICE_CLASS_GARAGE): TYPE_GARAGE,
 }
 
 
@@ -75,9 +75,9 @@ def deep_update(target, source):
 
 def get_google_type(domain, device_class):
     """Google type based on domain and device class."""
-    if DEVICE_CLASS_TO_GOOGLE_TYPES.get(device_class) is not None:
-        return DEVICE_CLASS_TO_GOOGLE_TYPES[device_class]
-    return DOMAIN_TO_GOOGLE_TYPES[domain]
+    typ = DEVICE_CLASS_TO_GOOGLE_TYPES.get((domain, device_class))
+    
+    return typ if typ is not None else DOMAIN_TO_GOOGLE_TYPES.get(domain)
 
 
 class _GoogleEntity:
