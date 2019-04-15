@@ -36,38 +36,6 @@ STAGE_1_INTEGRATIONS = {
 }
 
 
-def from_config_dict(config: Dict[str, Any],
-                     hass: Optional[core.HomeAssistant] = None,
-                     config_dir: Optional[str] = None,
-                     enable_log: bool = True,
-                     verbose: bool = False,
-                     skip_pip: bool = False,
-                     log_rotate_days: Any = None,
-                     log_file: Any = None,
-                     log_no_color: bool = False) \
-                     -> Optional[core.HomeAssistant]:
-    """Try to configure Home Assistant from a configuration dictionary.
-
-    Dynamically loads required components and its dependencies.
-    """
-    if hass is None:
-        hass = core.HomeAssistant()
-        if config_dir is not None:
-            config_dir = os.path.abspath(config_dir)
-            hass.config.config_dir = config_dir
-            if not is_virtual_env():
-                hass.loop.run_until_complete(
-                    async_mount_local_lib_path(config_dir))
-
-    # run task
-    hass = hass.loop.run_until_complete(
-        async_from_config_dict(
-            config, hass, config_dir, enable_log, verbose, skip_pip,
-            log_rotate_days, log_file, log_no_color)
-    )
-    return hass
-
-
 async def async_from_config_dict(config: Dict[str, Any],
                                  hass: core.HomeAssistant,
                                  config_dir: Optional[str] = None,
@@ -225,32 +193,6 @@ async def async_from_config_dict(config: Dict[str, Any],
         hass.components.persistent_notification.async_create(
             '\n\n'.join(msg), "Config Warning", "config_warning"
         )
-
-    return hass
-
-
-def from_config_file(config_path: str,
-                     hass: Optional[core.HomeAssistant] = None,
-                     verbose: bool = False,
-                     skip_pip: bool = True,
-                     log_rotate_days: Any = None,
-                     log_file: Any = None,
-                     log_no_color: bool = False)\
-        -> Optional[core.HomeAssistant]:
-    """Read the configuration file and try to start all the functionality.
-
-    Will add functionality to 'hass' parameter if given,
-    instantiates a new Home Assistant object if 'hass' is not given.
-    """
-    if hass is None:
-        hass = core.HomeAssistant()
-
-    # run task
-    hass = hass.loop.run_until_complete(
-        async_from_config_file(
-            config_path, hass, verbose, skip_pip,
-            log_rotate_days, log_file, log_no_color)
-    )
 
     return hass
 
