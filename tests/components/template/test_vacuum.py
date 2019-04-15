@@ -51,7 +51,6 @@ async def test_missing_optional_config(hass, calls):
     _verify(hass, STATE_UNKNOWN, None)
 
 
-# Configuration tests #
 async def test_missing_start_config(hass, calls):
     """Test: missing 'start' will fail."""
     with assert_setup_component(0, 'vacuum'):
@@ -216,6 +215,35 @@ async def test_state_services(hass, calls):
     _verify(hass, STATE_RETURNING, None)
 
 
+async def test_unused_services(hass, calls):
+    """Test calling unused services should not crash."""
+    await _register_basic_vacuum(hass)
+
+    # Pause vacuum
+    common.async_pause(hass, _TEST_VACUUM)
+    await hass.async_block_till_done()
+
+    # Stop vacuum
+    common.async_stop(hass, _TEST_VACUUM)
+    await hass.async_block_till_done()
+
+    # Return vacuum to base
+    common.async_return_to_base(hass, _TEST_VACUUM)
+    await hass.async_block_till_done()
+
+    # Spot cleaning
+    common.async_clean_spot(hass, _TEST_VACUUM)
+    await hass.async_block_till_done()
+
+    # Locate vacuum
+    common.async_locate(hass, _TEST_VACUUM)
+    await hass.async_block_till_done()
+
+    # Set fan's speed
+    common.async_set_fan_speed(hass, 'medium', _TEST_VACUUM)
+    await hass.async_block_till_done()
+
+
 async def test_clean_spot_service(hass, calls):
     """Test clean spot service."""
     await _register_components(hass)
@@ -284,6 +312,41 @@ def _verify(hass, expected_state, expected_battery_level):
     attributes = state.attributes
     assert state.state == expected_state
     assert attributes.get(ATTR_BATTERY_LEVEL) == expected_battery_level
+
+
+async def _register_basic_vacuum(hass):
+    """Register basic vacuum with only required options for testing."""
+    with assert_setup_component(1, 'input_select'):
+        assert await setup.async_setup_component(hass, 'input_select', {
+            'input_select': {
+                'state': {
+                    'name': 'State',
+                    'options': [STATE_CLEANING]
+                }
+            }
+        })
+
+    with assert_setup_component(1, 'vacuum'):
+        assert await setup.async_setup_component(hass, 'vacuum', {
+            'vacuum': {
+                'platform': 'template',
+                'vacuums': {
+                    'test_vacuum': {
+                        'start': {
+                            'service': 'input_select.select_option',
+
+                            'data': {
+                                'entity_id': _STATE_INPUT_SELECT,
+                                'option': STATE_CLEANING
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+    await hass.async_start()
+    await hass.async_block_till_done()
 
 
 async def _register_components(hass):
