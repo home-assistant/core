@@ -36,6 +36,8 @@ DATA_SUMMARY = 'summary_data'
 DEFAULT_ATTRIBUTION = 'Data provided by 17track.net'
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
+ENTITY_ID_TEMPLATE = 'package_{0}_{1}'
+
 NOTIFICATION_DELIVERED_ID_SCAFFOLD = 'package_delivered_{0}'
 NOTIFICATION_DELIVERED_TITLE = 'Package Delivered'
 NOTIFICATION_DELIVERED_URL_SCAFFOLD = 'https://t.17track.net/track#nums={0}'
@@ -211,7 +213,7 @@ class SeventeenTrackPackageSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return 'package_{0}_{1}'.format(
+        return ENTITY_ID_TEMPLATE.format(
             self._data.account_id, self._tracking_number)
 
     async def async_update(self):
@@ -305,7 +307,7 @@ class SeventeenTrackData:
             reg = self._hass.helpers.entity_registry.async_get_registry()
             for package in to_remove:
                 entity_id = reg.async_get_entity_id(
-                    self, DOMAIN, 'sensor', 'package_{0}_{1}'.format(
+                    self, DOMAIN, 'sensor', ENTITY_ID_TEMPLATE.format(
                         self.account_id, package.tracking_number))
                 if not entity_id:
                     continue
