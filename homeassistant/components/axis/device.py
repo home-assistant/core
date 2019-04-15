@@ -184,9 +184,14 @@ async def get_device(hass, config):
         password=config[CONF_PASSWORD],
         port=config[CONF_PORT], web_proto='http')
 
+    device.vapix.initialize_params(preload_data=False)
+
     try:
         with async_timeout.timeout(15):
-            await hass.async_add_executor_job(device.vapix.initialize_params)
+            await hass.async_add_executor_job(
+                device.vapix.params.update_brand)
+            await hass.async_add_executor_job(
+                device.vapix.params.update_properties)
         return device
 
     except axis.Unauthorized:
