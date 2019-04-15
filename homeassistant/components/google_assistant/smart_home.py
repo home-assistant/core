@@ -76,7 +76,7 @@ def deep_update(target, source):
 def get_google_type(domain, device_class):
     """Google type based on domain and device class."""
     typ = DEVICE_CLASS_TO_GOOGLE_TYPES.get((domain, device_class))
-    
+
     return typ if typ is not None else DOMAIN_TO_GOOGLE_TYPES.get(domain)
 
 
