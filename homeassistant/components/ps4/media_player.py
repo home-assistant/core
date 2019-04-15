@@ -9,6 +9,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_GAME, SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON)
+from homeassistant.components.ps4 import format_unique_id
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
     CONF_TOKEN, STATE_IDLE, STATE_OFF, STATE_PLAYING)
@@ -272,9 +273,7 @@ class PS4Device(MediaPlayerDevice):
             'sw_version': sw_version
         }
 
-        # Use last 4 Chars of credential as suffix. Unique ID per PSN user.
-        suffix = self._creds[-4:]
-        self._unique_id = "{}_{}".format(status['host-id'], suffix)
+        self._unique_id = format_unique_id(self._creds, status['host-id'])
 
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
