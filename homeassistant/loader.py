@@ -29,8 +29,6 @@ if TYPE_CHECKING:
 
 CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)  # noqa pylint: disable=invalid-name
 
-PREPARED = False
-
 DEPENDENCY_BLACKLIST = {'config'}
 
 _LOGGER = logging.getLogger(__name__)

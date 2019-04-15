@@ -213,6 +213,14 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant,
         log_error("Integration not found")
         return None
 
+    # Process deps and reqs as soon as possible, so that requirements are
+    # available when we import the platform.
+    try:
+        await async_process_deps_reqs(hass, hass_config, integration)
+    except HomeAssistantError as err:
+        log_error(str(err))
+        return None
+
     try:
         platform = integration.get_platform(domain)
     except ImportError:
@@ -239,12 +247,6 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant,
             ):
                 log_error("Unable to set up component.")
                 return None
-
-    try:
-        await async_process_deps_reqs(hass, hass_config, integration)
-    except HomeAssistantError as err:
-        log_error(str(err))
-        return None
 
     return platform
 
