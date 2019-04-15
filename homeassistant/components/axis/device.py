@@ -159,6 +159,24 @@ class AxisNetworkDevice:
         """Stop the event stream."""
         self.api.stop()
 
+    async def async_reset(self):
+        """Reset this device to default state."""
+        self.api.stop()
+
+        if self.config_entry.options[CONF_CAMERA]:
+            await self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'camera')
+
+        if self.config_entry.options[CONF_EVENTS]:
+            await self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'binary_sensor')
+
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
+
+        return True
+
 
 async def get_device(hass, config):
     """Create a Axis device."""
