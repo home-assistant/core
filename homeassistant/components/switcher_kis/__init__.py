@@ -75,7 +75,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     hass.async_create_task(async_load_platform(
         hass, SWITCH_DOMAIN, DOMAIN, None, config))
 
-    async def device_updates(timestamp: Optional[datetime]) -> None:
+    def device_updates(timestamp: Optional[datetime]) -> None:
         """Use for updating the device data from the queue."""
         if v2bridge.running:
             try:
