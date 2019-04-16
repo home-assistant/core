@@ -6,5 +6,8 @@
     "pyhomematic==0.1.58"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@pvizeli",
+    "@danielperna84"
+  ]
 }

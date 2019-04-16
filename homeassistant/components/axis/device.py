@@ -67,13 +67,9 @@ class AxisNetworkDevice:
 
     async def async_setup(self):
         """Set up the device."""
-        from axis.vapix import VAPIX_FW_VERSION, VAPIX_PROD_TYPE
-
-        hass = self.hass
-
         try:
             self.api = await get_device(
-                hass, self.config_entry.data[CONF_DEVICE])
+                self.hass, self.config_entry.data[CONF_DEVICE])
 
         except CannotConnect:
             raise ConfigEntryNotReady
@@ -83,8 +79,8 @@ class AxisNetworkDevice:
                 'Unknown error connecting with Axis device on %s', self.host)
             return False
 
-        self.fw_version = self.api.vapix.get_param(VAPIX_FW_VERSION)
-        self.product_type = self.api.vapix.get_param(VAPIX_PROD_TYPE)
+        self.fw_version = self.api.vapix.params.firmware_version
+        self.product_type = self.api.vapix.params.prodtype
 
         if self.config_entry.options[CONF_CAMERA]:
             self.hass.async_create_task(
@@ -159,6 +155,24 @@ class AxisNetworkDevice:
         """Stop the event stream."""
         self.api.stop()
 
+    async def async_reset(self):
+        """Reset this device to default state."""
+        self.api.stop()
+
+        if self.config_entry.options[CONF_CAMERA]:
+            await self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'camera')
+
+        if self.config_entry.options[CONF_EVENTS]:
+            await self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'binary_sensor')
+
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
+
+        return True
+
 
 async def get_device(hass, config):
     """Create a Axis device."""
@@ -170,9 +184,14 @@ async def get_device(hass, config):
         password=config[CONF_PASSWORD],
         port=config[CONF_PORT], web_proto='http')
 
+    device.vapix.initialize_params(preload_data=False)
+
     try:
         with async_timeout.timeout(15):
-            await hass.async_add_executor_job(device.vapix.load_params)
+            await hass.async_add_executor_job(
+                device.vapix.params.update_brand)
+            await hass.async_add_executor_job(
+                device.vapix.params.update_properties)
         return device
 
     except axis.Unauthorized:

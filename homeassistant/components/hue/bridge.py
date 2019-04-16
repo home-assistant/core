@@ -1,6 +1,7 @@
 """Code to handle a Hue bridge."""
 import asyncio
 
+import aiohue
 import async_timeout
 import voluptuous as vol
 
@@ -133,8 +134,6 @@ class HueBridge:
 
 async def get_bridge(hass, host, username=None):
     """Create a bridge object and verify authentication."""
-    import aiohue
-
     bridge = aiohue.Bridge(
         host, username=username,
         websession=aiohttp_client.async_get_clientsession(hass)

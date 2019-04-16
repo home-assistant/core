@@ -30,7 +30,6 @@ omit =
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
     homeassistant/components/apcupsd/*
-    homeassistant/components/apiai/*
     homeassistant/components/apple_tv/*
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
@@ -128,7 +127,6 @@ omit =
     homeassistant/components/dlink/switch.py
     homeassistant/components/dlna_dmr/media_player.py
     homeassistant/components/dnsip/sensor.py
-    homeassistant/components/domain_expiry/sensor.py
     homeassistant/components/dominos/*
     homeassistant/components/doorbird/*
     homeassistant/components/dovado/*
@@ -272,13 +270,10 @@ omit =
     homeassistant/components/ifttt/*
     homeassistant/components/iglo/light.py
     homeassistant/components/ihc/*
-    homeassistant/components/iliad_italy/sensor.py
     homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
     homeassistant/components/influxdb/sensor.py
     homeassistant/components/insteon/*
-    homeassistant/components/insteon_local/*
-    homeassistant/components/insteon_plm/*
     homeassistant/components/ios/*
     homeassistant/components/iota/*
     homeassistant/components/iperf3/*
@@ -375,7 +370,6 @@ omit =
     homeassistant/components/mystrom/switch.py
     homeassistant/components/n26/*
     homeassistant/components/nad/media_player.py
-    homeassistant/components/nadtcp/media_player.py
     homeassistant/components/nanoleaf/light.py
     homeassistant/components/neato/*
     homeassistant/components/nederlandse_spoorwegen/sensor.py
@@ -384,7 +378,6 @@ omit =
     homeassistant/components/netatmo/*
     homeassistant/components/netatmo_public/sensor.py
     homeassistant/components/netdata/sensor.py
-    homeassistant/components/netdata_public/sensor.py
     homeassistant/components/netgear/device_tracker.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
@@ -588,7 +581,6 @@ omit =
     homeassistant/components/tellduslive/*
     homeassistant/components/tellstick/*
     homeassistant/components/telnet/switch.py
-    homeassistant/components/telstra/notify.py
     homeassistant/components/temper/sensor.py
     homeassistant/components/tensorflow/image_processing.py
     homeassistant/components/tesla/*
@@ -700,6 +692,7 @@ omit =
     homeassistant/components/zigbee/*
     homeassistant/components/ziggo_mediabox_xl/media_player.py
     homeassistant/components/zoneminder/*
+    homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
 
 [report]

@@ -1114,7 +1114,7 @@ class TestZWaveServices(unittest.TestCase):
 
     def test_set_config_parameter(self):
         """Test zwave set_config_parameter service."""
-        value = MockValue(
+        value_byte = MockValue(
             index=12,
             command_class=const.COMMAND_CLASS_CONFIGURATION,
             type=const.TYPE_BYTE,
@@ -1125,23 +1125,43 @@ class TestZWaveServices(unittest.TestCase):
             type=const.TYPE_LIST,
             data_items=['item1', 'item2', 'item3'],
         )
+        value_button = MockValue(
+            index=14,
+            command_class=const.COMMAND_CLASS_CONFIGURATION,
+            type=const.TYPE_BUTTON,
+        )
         value_list_int = MockValue(
             index=15,
             command_class=const.COMMAND_CLASS_CONFIGURATION,
             type=const.TYPE_LIST,
             data_items=['1', '2', '3'],
         )
-        value_button = MockValue(
-            index=14,
+        value_bool = MockValue(
+            index=16,
             command_class=const.COMMAND_CLASS_CONFIGURATION,
-            type=const.TYPE_BUTTON,
+            type=const.TYPE_BOOL,
         )
         node = MockNode(node_id=14)
-        node.get_values.return_value = {12: value, 13: value_list,
-                                        14: value_button,
-                                        15: value_list_int}
+        node.get_values.return_value = {
+            12: value_byte,
+            13: value_list,
+            14: value_button,
+            15: value_list_int,
+            16: value_bool
+        }
         self.zwave_network.nodes = {14: node}
 
+        # Byte
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 12,
+            const.ATTR_CONFIG_VALUE: 7,
+        })
+        self.hass.block_till_done()
+
+        assert value_byte.data == 7
+
+        # List
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 13,
@@ -1151,24 +1171,7 @@ class TestZWaveServices(unittest.TestCase):
 
         assert value_list.data == 'item3'
 
-        self.hass.services.call('zwave', 'set_config_parameter', {
-            const.ATTR_NODE_ID: 14,
-            const.ATTR_CONFIG_PARAMETER: 15,
-            const.ATTR_CONFIG_VALUE: 3,
-        })
-        self.hass.block_till_done()
-
-        assert value_list_int.data == '3'
-
-        self.hass.services.call('zwave', 'set_config_parameter', {
-            const.ATTR_NODE_ID: 14,
-            const.ATTR_CONFIG_PARAMETER: 12,
-            const.ATTR_CONFIG_VALUE: 7,
-        })
-        self.hass.block_till_done()
-
-        assert value.data == 7
-
+        # Button
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 14,
@@ -1179,6 +1182,37 @@ class TestZWaveServices(unittest.TestCase):
         assert self.zwave_network.manager.pressButton.called
         assert self.zwave_network.manager.releaseButton.called
 
+        # List of Ints
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 15,
+            const.ATTR_CONFIG_VALUE: 3,
+        })
+        self.hass.block_till_done()
+
+        assert value_list_int.data == '3'
+
+        # Boolean Truthy
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 16,
+            const.ATTR_CONFIG_VALUE: 'True',
+        })
+        self.hass.block_till_done()
+
+        assert value_bool.data == 1
+
+        # Boolean Falsy
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 16,
+            const.ATTR_CONFIG_VALUE: 'False',
+        })
+        self.hass.block_till_done()
+
+        assert value_bool.data == 0
+
+        # Different Parameter Size
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 19,
