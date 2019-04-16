@@ -84,7 +84,7 @@ sensor:
 
 # Text to speech
 tts:
-  - platform: google
+  - platform: google_translate
 
 group: !include groups.yaml
 automation: !include automations.yaml
@@ -94,6 +94,15 @@ DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
 # Learn more at https://home-assistant.io/docs/configuration/secrets/
 some_password: welcome
+"""
+TTS_PRE_92 = """
+tts:
+  - platform: google
+"""
+TTS_92 = """
+tts:
+  - platform: google_translate
+    service_name: google_say
 """
 
 
@@ -378,10 +387,24 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
+    if LooseVersion(conf_version) < LooseVersion('0.92'):
+        # 0.92 moved google/tts.py to google_translate/tts.py
+        config_path = find_config_file(hass.config.config_dir)
+        assert config_path is not None
+
+        with open(config_path, 'rt') as config_file:
+            config_raw = config_file.read()
+
+        if TTS_PRE_92 in config_raw:
+            _LOGGER.info("Migrating google tts to google_translate tts")
+            config_raw = config_raw.replace(TTS_PRE_92, TTS_92)
+            with open(config_path, 'wt') as config_file:
+                config_file.write(config_raw)
+
     with open(version_path, 'wt') as outp:
         outp.write(__version__)
 
-    _LOGGER.info("Migrating old system configuration files to new locations")
+    _LOGGER.debug("Migrating old system configuration files to new locations")
     for oldf, newf in FILE_MIGRATION:
         if os.path.isfile(hass.config.path(oldf)):
             _LOGGER.info("Migrating %s to %s", oldf, newf)
