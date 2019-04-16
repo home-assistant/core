@@ -61,7 +61,7 @@ apns2==0.3.0
 av==6.1.2
 
 # homeassistant.components.axis
-axis==20
+axis==21
 
 # homeassistant.components.zha
 bellows-homeassistant==0.7.2
