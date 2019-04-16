@@ -78,9 +78,6 @@ async def async_from_config_dict(config: Dict[str, Any],
                       "Further initialization aborted")
         return None
 
-    await hass.async_add_executor_job(
-        conf_util.process_ha_config_upgrade, hass)
-
     # Make a copy because we are mutating it.
     config = OrderedDict(config)
 
@@ -219,6 +216,9 @@ async def async_from_config_file(config_path: str,
 
     async_enable_logging(hass, verbose, log_rotate_days, log_file,
                          log_no_color)
+
+    await hass.async_add_executor_job(
+        conf_util.process_ha_config_upgrade, hass)
 
     try:
         config_dict = await hass.async_add_executor_job(
