@@ -301,7 +301,8 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
     return domains
 
 
-async def _async_set_up_integrations(hass, config):
+async def _async_set_up_integrations(
+        hass: core.HomeAssistant, config: Dict[str, Any]) -> None:
     """Set up all the integrations."""
     domains = _get_domains(hass, config)
 
@@ -321,7 +322,7 @@ async def _async_set_up_integrations(hass, config):
     ])):
         _LOGGER.error("Home Assistant core failed to initialize. "
                       "Further initialization aborted")
-        return hass
+        return
 
     _LOGGER.debug("Home Assistant core initialized")
 
@@ -358,7 +359,7 @@ async def _async_set_up_integrations(hass, config):
         ])
 
     # Load all integrations
-    after_dependencies = {}  # type: Dict[str, loader.Integration]
+    after_dependencies = {}  # type: Dict[str, Set[str]]
 
     for int_or_exc in await asyncio.gather(*[
             loader.async_get_integration(hass, domain)

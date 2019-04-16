@@ -21,6 +21,8 @@ from typing import (
     TypeVar,
     List,
     Dict,
+    Union,
+    cast,
 )
 
 # Typing imports that create a circular dependency
@@ -152,7 +154,8 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
             raise IntegrationNotFound(domain)
         cache = hass.data[DATA_INTEGRATIONS] = {}
 
-    int_or_evt = cache.get(domain, _UNDEF)  # type: Optional[Integration]
+    int_or_evt = cache.get(
+        domain, _UNDEF)  # type: Optional[Union[Integration, asyncio.Event]]
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
@@ -163,7 +166,7 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
     elif int_or_evt is None:
         raise IntegrationNotFound(domain)
     else:
-        return int_or_evt
+        return cast(Integration, int_or_evt)
 
     event = cache[domain] = asyncio.Event()
 
