@@ -15,8 +15,6 @@ from homeassistant.util import Throttle, slugify
 REQUIREMENTS = ['py17track==2.2.2']
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'seventeentrack'
-
 ATTR_DESTINATION_COUNTRY = 'destination_country'
 ATTR_FRIENDLY_NAME = 'friendly_name'
 ATTR_INFO_TEXT = 'info_text'
@@ -304,10 +302,11 @@ class SeventeenTrackData:
 
             # Remove archived packages from the entity registry:
             to_remove = set(self.packages) - set(packages)
-            reg = self._hass.helpers.entity_registry.async_get_registry()
+            reg = await self._hass.helpers.entity_registry.async_get_registry()
             for package in to_remove:
                 entity_id = reg.async_get_entity_id(
-                    self, DOMAIN, 'sensor', ENTITY_ID_TEMPLATE.format(
+                    self, 'sensor', 'seventeentrack',
+                    ENTITY_ID_TEMPLATE.format(
                         self.account_id, package.tracking_number))
                 if not entity_id:
                     continue
