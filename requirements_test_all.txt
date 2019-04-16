@@ -67,7 +67,7 @@ axis==21
 bellows-homeassistant==0.7.2
 
 # homeassistant.components.caldav
-caldav==0.5.0
+caldav==0.6.1
 
 # homeassistant.components.coinmarketcap
 coinmarketcap==5.0.3
