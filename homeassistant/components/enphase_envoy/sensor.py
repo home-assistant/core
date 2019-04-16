@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS, POWER_WATT)
 
 
-REQUIREMENTS = ['envoy_reader==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {

@@ -9,8 +9,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['skybellpy==0.3.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Skybell.com"

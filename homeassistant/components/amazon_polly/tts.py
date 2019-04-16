@@ -6,8 +6,6 @@ import voluptuous as vol
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['boto3==1.9.16']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_REGION = 'region_name'

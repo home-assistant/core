@@ -4,7 +4,8 @@
   "documentation": "https://www.home-assistant.io/hassio",
   "requirements": [],
   "dependencies": [
-    "http"
+    "http",
+    "panel_custom"
   ],
   "codeowners": [
     "@home-assistant/hass-io"

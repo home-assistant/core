@@ -33,8 +33,6 @@ if TYPE_CHECKING:
         ServiceCall, UserService
 
 DOMAIN = 'esphome'
-REQUIREMENTS = ['aioesphomeapi==2.0.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DISPATCHER_UPDATE_ENTITY = 'esphome_{entry_id}_update_{component_key}_{key}'

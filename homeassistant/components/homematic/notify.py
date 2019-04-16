@@ -13,8 +13,6 @@ from . import (
     SERVICE_SET_DEVICE_VALUE)
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ["homematic"]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),

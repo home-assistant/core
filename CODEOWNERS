@@ -97,11 +97,13 @@ homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/hive/* @Rendili @KJonline
 homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit/* @cdce8p
+homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/html5/* @robbiet480
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
+homeassistant/components/ign_sismologia/* @exxamalte
 homeassistant/components/influxdb/* @fabaff
 homeassistant/components/input_boolean/* @home-assistant/core
 homeassistant/components/input_datetime/* @home-assistant/core
@@ -109,7 +111,6 @@ homeassistant/components/input_number/* @home-assistant/core
 homeassistant/components/input_select/* @home-assistant/core
 homeassistant/components/input_text/* @home-assistant/core
 homeassistant/components/integration/* @dgomes
-homeassistant/components/introduction/* @home-assistant/core
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/ipma/* @dgomes
 homeassistant/components/irish_rail_transport/* @ttroy50
@@ -125,6 +126,7 @@ homeassistant/components/lifx_legacy/* @amelchio
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
+homeassistant/components/logi_circle/* @evanjd
 homeassistant/components/lovelace/* @home-assistant/core
 homeassistant/components/luci/* @fbradyirl
 homeassistant/components/luftdaten/* @fabaff
@@ -194,7 +196,9 @@ homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/sql/* @dgomes
 homeassistant/components/statistics/* @fabaff
+homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/sun/* @home-assistant/core
+homeassistant/components/supla/* @mwegrzynek
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switchbot/* @danielhiversen

@@ -12,8 +12,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, dt
 
-REQUIREMENTS = ['caldav==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEVICE_ID = 'device_id'

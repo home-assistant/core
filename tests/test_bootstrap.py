@@ -52,31 +52,6 @@ def test_home_assistant_core_config_validation(hass):
     assert result is None
 
 
-def test_from_config_dict_not_mount_deps_folder(loop):
-    """Test that we do not mount the deps folder inside from_config_dict."""
-    with patch('homeassistant.bootstrap.is_virtual_env', return_value=False), \
-        patch('homeassistant.core.HomeAssistant',
-              return_value=Mock(loop=loop)), \
-        patch('homeassistant.bootstrap.async_mount_local_lib_path',
-              return_value=mock_coro()) as mock_mount, \
-        patch('homeassistant.bootstrap.async_from_config_dict',
-              return_value=mock_coro()):
-
-        bootstrap.from_config_dict({}, config_dir='.')
-        assert len(mock_mount.mock_calls) == 1
-
-    with patch('homeassistant.bootstrap.is_virtual_env', return_value=True), \
-        patch('homeassistant.core.HomeAssistant',
-              return_value=Mock(loop=loop)), \
-        patch('homeassistant.bootstrap.async_mount_local_lib_path',
-              return_value=mock_coro()) as mock_mount, \
-        patch('homeassistant.bootstrap.async_from_config_dict',
-              return_value=mock_coro()):
-
-        bootstrap.from_config_dict({}, config_dir='.')
-        assert len(mock_mount.mock_calls) == 0
-
-
 async def test_async_from_config_file_not_mount_deps_folder(loop):
     """Test that we not mount the deps folder inside async_from_config_file."""
     hass = Mock(
@@ -108,7 +83,7 @@ async def test_async_from_config_file_not_mount_deps_folder(loop):
 async def test_load_hassio(hass):
     """Test that we load Hass.io component."""
     with patch.dict(os.environ, {}, clear=True):
-        assert bootstrap._get_components(hass, {}) == set()
+        assert bootstrap._get_domains(hass, {}) == set()
 
     with patch.dict(os.environ, {'HASSIO': '1'}):
-        assert bootstrap._get_components(hass, {}) == {'hassio'}
+        assert bootstrap._get_domains(hass, {}) == {'hassio'}

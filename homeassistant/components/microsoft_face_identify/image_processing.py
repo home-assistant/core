@@ -12,8 +12,6 @@ from homeassistant.core import split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['microsoft_face']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_GROUP = 'group'

@@ -9,8 +9,6 @@ from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN as BMW_DOMAIN
 
-DEPENDENCIES = ['bmw_connected_drive']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TO_HA_METRIC = {

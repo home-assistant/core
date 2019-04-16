@@ -3,6 +3,8 @@
   "name": "Telegram",
   "documentation": "https://www.home-assistant.io/components/telegram",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": [
+    "telegram_bot"
+  ],
   "codeowners": []
 }

@@ -11,8 +11,6 @@ from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN as AXIS_DOMAIN, LOGGER
 
-DEPENDENCIES = [AXIS_DOMAIN]
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Axis binary sensor."""
@@ -43,6 +41,11 @@ class AxisBinarySensor(BinarySensorDevice):
         self.event.register_callback(self.update_callback)
         self.unsub_dispatcher = async_dispatcher_connect(
             self.hass, self.device.event_reachable, self.update_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect device object when removed."""
+        self.event.remove_callback(self.update_callback)
+        self.unsub_dispatcher()
 
     @callback
     def update_callback(self, no_delay=False):

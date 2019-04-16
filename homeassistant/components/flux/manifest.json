@@ -3,6 +3,8 @@
   "name": "Flux",
   "documentation": "https://www.home-assistant.io/components/flux",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": [
+    "light"
+  ],
   "codeowners": []
 }

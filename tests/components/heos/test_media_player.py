@@ -116,7 +116,12 @@ async def test_updates_start_from_signals(
     state = hass.states.get('media_player.test_player')
     assert state.state == STATE_PLAYING
 
-    # Test sources event update
+
+async def test_updates_from_sources_updated(
+        hass, config_entry, config, controller, input_sources):
+    """Tests player updates from changes in sources list."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
     event = asyncio.Event()
 
     async def set_signal():
@@ -124,9 +129,32 @@ async def test_updates_start_from_signals(
     hass.helpers.dispatcher.async_dispatcher_connect(
         SIGNAL_HEOS_SOURCES_UPDATED, set_signal)
 
-    favorites.clear()
+    input_sources.clear()
     player.heos.dispatcher.send(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED)
+    await event.wait()
+    source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+    assert len(source_list) == 2
+    state = hass.states.get('media_player.test_player')
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
+
+
+async def test_updates_from_user_changed(
+        hass, config_entry, config, controller):
+    """Tests player updates from changes in user."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    event = asyncio.Event()
+
+    async def set_signal():
+        event.set()
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        SIGNAL_HEOS_SOURCES_UPDATED, set_signal)
+
+    controller.is_signed_in = False
+    controller.signed_in_username = None
+    player.heos.dispatcher.send(
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED)
     await event.wait()
     source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
     assert len(source_list) == 1
@@ -194,6 +222,7 @@ async def test_services(hass, config_entry, config, controller):
         {ATTR_ENTITY_ID: 'media_player.test_player',
          ATTR_MEDIA_VOLUME_LEVEL: 1}, blocking=True)
     player.set_volume.assert_called_once_with(100)
+    assert isinstance(player.set_volume.call_args[0][0], int)
 
 
 async def test_select_favorite(

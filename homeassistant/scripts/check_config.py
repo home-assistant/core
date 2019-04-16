@@ -320,8 +320,8 @@ def check_ha_config_file(hass):
         core_config = {}
 
     # Merge packages
-    merge_packages_config(
-        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
+    hass.loop.run_until_complete(merge_packages_config(
+        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error))
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
@@ -329,8 +329,16 @@ def check_ha_config_file(hass):
 
     # Process and validate config
     for domain in components:
-        component = loader.get_component(hass, domain)
-        if not component:
+        try:
+            integration = hass.loop.run_until_complete(
+                loader.async_get_integration(hass, domain))
+        except loader.IntegrationNotFound:
+            result.add_error("Integration not found: {}".format(domain))
+            continue
+
+        try:
+            component = integration.get_component()
+        except ImportError:
             result.add_error("Component not found: {}".format(domain))
             continue
 
@@ -368,9 +376,18 @@ def check_ha_config_file(hass):
                 platforms.append(p_validated)
                 continue
 
-            platform = loader.get_platform(hass, domain, p_name)
+            try:
+                p_integration = hass.loop.run_until_complete(
+                    loader.async_get_integration(hass, p_name))
+            except loader.IntegrationNotFound:
+                result.add_error(
+                    "Integration {} not found when trying to verify its {} "
+                    "platform.".format(p_name, domain))
+                continue
 
-            if platform is None:
+            try:
+                platform = p_integration.get_platform(domain)
+            except ImportError:
                 result.add_error(
                     "Platform not found: {}.{}".format(domain, p_name))
                 continue

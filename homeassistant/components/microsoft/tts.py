@@ -15,8 +15,6 @@ CONF_VOLUME = 'volume'
 CONF_PITCH = 'pitch'
 CONF_CONTOUR = 'contour'
 
-REQUIREMENTS = ["pycsspeechtts==1.0.2"]
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_LANGUAGES = [

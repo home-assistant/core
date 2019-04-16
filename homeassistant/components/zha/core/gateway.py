@@ -145,14 +145,14 @@ class ZHAGateway:
 
     def device_removed(self, device):
         """Handle device being removed from the network."""
-        device = self._devices.pop(device.ieee, None)
+        zha_device = self._devices.pop(device.ieee, None)
         self._device_registry.pop(device.ieee, None)
-        if device is not None:
-            device_info = async_get_device_info(self._hass, device)
-            self._hass.async_create_task(device.async_unsub_dispatcher())
+        if zha_device is not None:
+            device_info = async_get_device_info(self._hass, zha_device)
+            self._hass.async_create_task(zha_device.async_unsub_dispatcher())
             async_dispatcher_send(
                 self._hass,
-                "{}_{}".format(SIGNAL_REMOVE, str(device.ieee))
+                "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
             )
             if device_info is not None:
                 async_dispatcher_send(

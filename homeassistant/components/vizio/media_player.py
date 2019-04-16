@@ -15,8 +15,6 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pyvizio==0.0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SUPPRESS_WARNING = 'suppress_warning'

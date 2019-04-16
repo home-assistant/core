@@ -9,8 +9,6 @@ from homeassistant.const import CONF_API_KEY, ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylast==3.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_LAST_PLAYED = 'last_played'

@@ -4,6 +4,8 @@ import logging
 from aiohttp.web import HTTPBadRequest, Response, Request
 import voluptuous as vol
 
+from homeassistant.components.cloud import (async_remote_ui_url,
+                                            CloudNotAvailable)
 from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
                                                      ATTR_DEV_ID,
                                                      DOMAIN as DT_DOMAIN,
@@ -31,14 +33,15 @@ from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
                     ATTR_TEMPLATE_VARIABLES, ATTR_VERTICAL_ACCURACY,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
-                    CONF_SECRET, DATA_CONFIG_ENTRIES, DATA_DELETED_IDS,
-                    DATA_STORE, DOMAIN, ERR_ENCRYPTION_REQUIRED,
-                    ERR_SENSOR_DUPLICATE_UNIQUE_ID, ERR_SENSOR_NOT_REGISTERED,
-                    SIGNAL_SENSOR_UPDATE, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPES, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_GET_CONFIG,
-                    WEBHOOK_TYPE_GET_ZONES, WEBHOOK_TYPE_REGISTER_SENSOR,
-                    WEBHOOK_TYPE_RENDER_TEMPLATE, WEBHOOK_TYPE_UPDATE_LOCATION,
+                    CONF_CLOUDHOOK_URL, CONF_REMOTE_UI_URL, CONF_SECRET,
+                    DATA_CONFIG_ENTRIES, DATA_DELETED_IDS, DATA_STORE, DOMAIN,
+                    ERR_ENCRYPTION_REQUIRED, ERR_SENSOR_DUPLICATE_UNIQUE_ID,
+                    ERR_SENSOR_NOT_REGISTERED, SIGNAL_SENSOR_UPDATE,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS, WEBHOOK_TYPES,
+                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                    WEBHOOK_TYPE_GET_CONFIG, WEBHOOK_TYPE_GET_ZONES,
+                    WEBHOOK_TYPE_REGISTER_SENSOR, WEBHOOK_TYPE_RENDER_TEMPLATE,
+                    WEBHOOK_TYPE_UPDATE_LOCATION,
                     WEBHOOK_TYPE_UPDATE_REGISTRATION,
                     WEBHOOK_TYPE_UPDATE_SENSOR_STATES)
 
@@ -95,6 +98,9 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
         return empty_okay_response()
 
     data = webhook_payload
+
+    _LOGGER.debug("Received webhook payload for type %s: %s", webhook_type,
+                  data)
 
     if webhook_type in WEBHOOK_SCHEMAS:
         try:
@@ -286,7 +292,7 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
 
         hass_config = hass.config.as_dict()
 
-        return webhook_response({
+        resp = {
             'latitude': hass_config['latitude'],
             'longitude': hass_config['longitude'],
             'elevation': hass_config['elevation'],
@@ -296,4 +302,15 @@ async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
             'components': hass_config['components'],
             'version': hass_config['version'],
             'theme_color': MANIFEST_JSON['theme_color'],
-        }, registration=registration, headers=headers)
+        }
+
+        if CONF_CLOUDHOOK_URL in registration:
+            resp[CONF_CLOUDHOOK_URL] = registration[CONF_CLOUDHOOK_URL]
+
+        try:
+            resp[CONF_REMOTE_UI_URL] = async_remote_ui_url(hass)
+        except CloudNotAvailable:
+            pass
+
+        return webhook_response(resp, registration=registration,
+                                headers=headers)

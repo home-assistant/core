@@ -168,7 +168,10 @@ def _async_get_connector(hass: HomeAssistantType,
     else:
         ssl_context = False
 
-    connector = aiohttp.TCPConnector(loop=hass.loop, ssl=ssl_context)
+    connector = aiohttp.TCPConnector(loop=hass.loop,
+                                     enable_cleanup_closed=True,
+                                     ssl=ssl_context,
+                                     )
     hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:

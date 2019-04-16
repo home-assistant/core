@@ -10,8 +10,6 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pygatt[GATTTOOL]==3.2.0']
-
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
 

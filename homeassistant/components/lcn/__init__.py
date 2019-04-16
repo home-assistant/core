@@ -20,8 +20,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pypck==0.5.9']
-
 
 def has_unique_connection_names(connections):
     """Validate that all connection names are unique.

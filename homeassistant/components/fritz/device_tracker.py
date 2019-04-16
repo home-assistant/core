@@ -8,8 +8,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-REQUIREMENTS = ['fritzconnection==0.6.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_IP = '169.254.1.1'  # This IP is valid for all FRITZ!Box routers.

@@ -11,16 +11,18 @@ from homeassistant.const import (
     CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PASSWORD,
     CONF_RECIPIENT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN)
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_send, async_dispatcher_connect)
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import sensor_types
-
-REQUIREMENTS = ['eternalegypt==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,8 +49,15 @@ NOTIFY_SCHEMA = vol.Schema({
 })
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=sensor_types.DEFAULT):
-        vol.All(cv.ensure_list, [vol.In(sensor_types.ALL)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=sensor_types.DEFAULT_SENSORS):
+    vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_SENSORS)]),
+})
+
+BINARY_SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=sensor_types.DEFAULT_BINARY_SENSORS):
+    vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_BINARY_SENSORS)]),
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -59,6 +68,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.ensure_list, [NOTIFY_SCHEMA]),
         vol.Optional(SENSOR_DOMAIN, default={}):
             SENSOR_SCHEMA,
+        vol.Optional(BINARY_SENSOR_DOMAIN, default={}):
+            BINARY_SENSOR_SCHEMA,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -160,6 +171,15 @@ async def async_setup(hass, config):
         hass.async_create_task(discovery.async_load_platform(
             hass, SENSOR_DOMAIN, DOMAIN, discovery_info, config))
 
+        # Binary Sensor
+        binary_sensor_conf = lte_conf.get(BINARY_SENSOR_DOMAIN)
+        discovery_info = {
+            CONF_HOST: lte_conf[CONF_HOST],
+            BINARY_SENSOR_DOMAIN: binary_sensor_conf,
+        }
+        hass.async_create_task(discovery.async_load_platform(
+            hass, BINARY_SENSOR_DOMAIN, DOMAIN, discovery_info, config))
+
     return True
 
 
@@ -239,3 +259,48 @@ async def _retry_login(hass, modem_data, password):
             await _login(hass, modem_data, password)
         except eternalegypt.Error:
             delay = min(2*delay, 300)
+
+
+@attr.s
+class LTEEntity(Entity):
+    """Base LTE entity."""
+
+    modem_data = attr.ib()
+    sensor_type = attr.ib()
+
+    _unique_id = attr.ib(init=False)
+
+    @_unique_id.default
+    def _init_unique_id(self):
+        """Register unique_id while we know data is valid."""
+        return "{}_{}".format(
+            self.sensor_type, self.modem_data.data.serial_number)
+
+    async def async_added_to_hass(self):
+        """Register callback."""
+        async_dispatcher_connect(
+            self.hass, DISPATCHER_NETGEAR_LTE, self.async_write_ha_state)
+
+    async def async_update(self):
+        """Force update of state."""
+        await self.modem_data.async_update()
+
+    @property
+    def should_poll(self):
+        """Return that the sensor should not be polled."""
+        return False
+
+    @property
+    def available(self):
+        """Return the availability of the sensor."""
+        return self.modem_data.data is not None
+
+    @property
+    def unique_id(self):
+        """Return a unique ID like 'usage_5TG365AB0078V'."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return "Netgear LTE {}".format(self.sensor_type)

@@ -3,6 +3,8 @@
   "name": "Netatmo public",
   "documentation": "https://www.home-assistant.io/components/netatmo_public",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": [
+    "netatmo"
+  ],
   "codeowners": []
 }

@@ -12,15 +12,15 @@ from homeassistant.config_entries import HANDLERS
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 from homeassistant.components.config import config_entries
-from homeassistant.loader import set_component
 
-from tests.common import MockConfigEntry, MockModule, mock_coro_func
+from tests.common import (
+    MockConfigEntry, MockModule, mock_coro_func, mock_integration)
 
 
 @pytest.fixture(autouse=True)
 def mock_test_component(hass):
     """Ensure a component called 'test' exists."""
-    set_component(hass, 'test', MockModule('test'))
+    mock_integration(hass, MockModule('test'))
 
 
 @pytest.fixture
@@ -244,8 +244,8 @@ def test_abort(hass, client):
 @asyncio.coroutine
 def test_create_account(hass, client):
     """Test a flow that creates an account."""
-    set_component(
-        hass, 'test',
+    mock_integration(
+        hass,
         MockModule('test', async_setup_entry=mock_coro_func(True)))
 
     class TestFlow(core_ce.ConfigFlow):
@@ -283,8 +283,8 @@ def test_create_account(hass, client):
 @asyncio.coroutine
 def test_two_step_flow(hass, client):
     """Test we can finish a two step flow."""
-    set_component(
-        hass, 'test',
+    mock_integration(
+        hass,
         MockModule('test', async_setup_entry=mock_coro_func(True)))
 
     class TestFlow(core_ce.ConfigFlow):
@@ -349,8 +349,8 @@ def test_two_step_flow(hass, client):
 
 async def test_continue_flow_unauth(hass, client, hass_admin_user):
     """Test we can't finish a two step flow."""
-    set_component(
-        hass, 'test',
+    mock_integration(
+        hass,
         MockModule('test', async_setup_entry=mock_coro_func(True)))
 
     class TestFlow(core_ce.ConfigFlow):
@@ -562,8 +562,8 @@ async def test_options_flow(hass, client):
 
 async def test_two_step_options_flow(hass, client):
     """Test we can finish a two step options flow."""
-    set_component(
-        hass, 'test',
+    mock_integration(
+        hass,
         MockModule('test', async_setup_entry=mock_coro_func(True)))
 
     class TestFlow(core_ce.ConfigFlow):

@@ -11,8 +11,6 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_DISPLAY_CURRENCY)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['coinmarketcap==5.0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_VOLUME_24H = 'volume_24h'

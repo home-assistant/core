@@ -11,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['deluge-client==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Deluge Switch'

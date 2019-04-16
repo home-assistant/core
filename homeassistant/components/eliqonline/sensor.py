@@ -10,8 +10,6 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['eliqonline==1.2.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CHANNEL_ID = 'channel_id'

@@ -9,7 +9,6 @@ from . import (
     CONF_ZONE_ID, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES,
     SIGNAL_ZONE_CHANGED, ZoneChangedData)
 
-DEPENDENCIES = ['ness_alarm']
 _LOGGER = logging.getLogger(__name__)
 
 

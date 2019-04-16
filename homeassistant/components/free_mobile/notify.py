@@ -9,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
-REQUIREMENTS = ['freesms==0.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
