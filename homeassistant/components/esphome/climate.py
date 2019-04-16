@@ -1,6 +1,5 @@
 """Support for ESPHome climate devices."""
 import logging
-import math
 from typing import TYPE_CHECKING, List, Optional
 
 from homeassistant.components.climate import ClimateDevice
@@ -13,7 +12,8 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE,
     STATE_OFF, TEMP_CELSIUS)
 
-from . import EsphomeEntity, platform_async_setup_entry
+from . import EsphomeEntity, platform_async_setup_entry, \
+    esphome_state_property, esphome_map_enum
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
@@ -35,18 +35,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-def _ha_climate_mode_to_esphome(mode: str) -> 'ClimateMode':
-    # pylint: disable=redefined-outer-name
-    from aioesphomeapi import ClimateMode  # noqa
-    return {
-        STATE_OFF: ClimateMode.OFF,
-        STATE_AUTO: ClimateMode.AUTO,
-        STATE_COOL: ClimateMode.COOL,
-        STATE_HEAT: ClimateMode.HEAT,
-    }[mode]
-
-
-def _esphome_climate_mode_to_ha(mode: 'ClimateMode') -> str:
+@esphome_map_enum
+def _climate_modes():
     # pylint: disable=redefined-outer-name
     from aioesphomeapi import ClimateMode  # noqa
     return {
@@ -54,7 +44,7 @@ def _esphome_climate_mode_to_ha(mode: 'ClimateMode') -> str:
         ClimateMode.AUTO: STATE_AUTO,
         ClimateMode.COOL: STATE_COOL,
         ClimateMode.HEAT: STATE_HEAT,
-    }[mode]
+    }
 
 
 class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
@@ -87,12 +77,12 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     def operation_list(self) -> List[str]:
         """Return the list of available operation modes."""
         return [
-            _esphome_climate_mode_to_ha(mode)
+            _climate_modes.from_esphome(mode)
             for mode in self._static_info.supported_modes
         ]
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         # Round to one digit because of floating point math
         return round(self._static_info.visual_temperature_step, 1)
@@ -120,61 +110,41 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
             features |= SUPPORT_AWAY_MODE
         return features
 
-    @property
+    @esphome_state_property
     def current_operation(self) -> Optional[str]:
         """Return current operation ie. heat, cool, idle."""
-        if self._state is None:
-            return None
-        return _esphome_climate_mode_to_ha(self._state.mode)
+        return _climate_modes.from_esphome(self._state.mode)
 
-    @property
+    @esphome_state_property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        if self._state is None:
-            return None
-        if math.isnan(self._state.current_temperature):
-            return None
         return self._state.current_temperature
 
-    @property
+    @esphome_state_property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        if self._state is None:
-            return None
-        if math.isnan(self._state.target_temperature):
-            return None
         return self._state.target_temperature
 
-    @property
-    def target_temperature_low(self):
+    @esphome_state_property
+    def target_temperature_low(self) -> Optional[float]:
         """Return the lowbound target temperature we try to reach."""
-        if self._state is None:
-            return None
-        if math.isnan(self._state.target_temperature_low):
-            return None
         return self._state.target_temperature_low
 
-    @property
-    def target_temperature_high(self):
+    @esphome_state_property
+    def target_temperature_high(self) -> Optional[float]:
         """Return the highbound target temperature we try to reach."""
-        if self._state is None:
-            return None
-        if math.isnan(self._state.target_temperature_high):
-            return None
         return self._state.target_temperature_high
 
-    @property
-    def is_away_mode_on(self):
+    @esphome_state_property
+    def is_away_mode_on(self) -> Optional[bool]:
         """Return true if away mode is on."""
-        if self._state is None:
-            return None
         return self._state.away
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature (and operation mode if set)."""
         data = {'key': self._static_info.key}
         if ATTR_OPERATION_MODE in kwargs:
-            data['mode'] = _ha_climate_mode_to_esphome(
+            data['mode'] = _climate_modes.from_hass(
                 kwargs[ATTR_OPERATION_MODE])
         if ATTR_TEMPERATURE in kwargs:
             data['target_temperature'] = kwargs[ATTR_TEMPERATURE]
@@ -184,14 +154,14 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
             data['target_temperature_high'] = kwargs[ATTR_TARGET_TEMP_HIGH]
         await self._client.climate_command(**data)
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode) -> None:
         """Set new target operation mode."""
         await self._client.climate_command(
             key=self._static_info.key,
-            mode=_ha_climate_mode_to_esphome(operation_mode),
+            mode=_climate_modes.from_hass(operation_mode),
         )
 
-    async def async_turn_away_mode_on(self):
+    async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self._client.climate_command(key=self._static_info.key,
                                            away=True)
