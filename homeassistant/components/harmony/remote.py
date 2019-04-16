@@ -23,7 +23,7 @@ from homeassistant.util import slugify
 # copy from github.
 REQUIREMENTS = [
     'https://github.com/ehendrix23/aioharmony/archive/dev.zip'
-    '#aioharmony==0.2.0b3',
+    '#aioharmony==0.2.0b9',
     'https://github.com/ehendrix23/slixmpp/archive/master.zip#slixmpp==1.4.2.2'
 ]
 
