@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
     api = EpsonPrinterAPI(host)
     if not api.available:
-        raise PlatformNotReady("Printer is not available")
+        raise PlatformNotReady()
 
     sensors = [EpsonPrinterCartridge(hass, api, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EpsonPrinterCartridge(Entity):
     """Representation of a cartridge sensor."""
 
-    def __init__(self, hass, api, cartridgeidx):
+    def __init__(self, api, cartridgeidx):
         """Initialize a cartridge sensor."""
         self._api = api
 
