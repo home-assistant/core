@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not api.available:
         raise PlatformNotReady()
 
-    sensors = [EpsonPrinterCartridge(hass, api, condition)
+    sensors = [EpsonPrinterCartridge(api, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
 
     add_devices(sensors, True)
