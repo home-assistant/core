@@ -22,9 +22,15 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) \
     return found
 
 
-# These components will always be set up
 ALLOWED_USED_COMPONENTS = {
+    # This component will always be set up
     'persistent_notification',
+    # These allow to register things without being set up
+    'conversation',
+    'frontend',
+    'hassio',
+    'system_health',
+    'websocket_api',
 }
 
 
