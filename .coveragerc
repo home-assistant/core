@@ -206,6 +206,7 @@ omit =
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
     homeassistant/components/gc100/*
+    homeassistant/components/geniushub/*
     homeassistant/components/gearbest/sensor.py
     homeassistant/components/geizhals/sensor.py
     homeassistant/components/github/sensor.py
