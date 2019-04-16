@@ -1,15 +1,15 @@
 """Support for Minut Point sensors."""
 import logging
 
-from homeassistant.components.point import MinutPointEntity
-from homeassistant.components.point.const import (
-    DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW)
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import parse_datetime
+
+from . import MinutPointEntity
+from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
 

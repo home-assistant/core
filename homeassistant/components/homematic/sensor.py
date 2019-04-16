@@ -1,12 +1,11 @@
 """Support for HomeMatic sensors."""
 import logging
 
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
-from homeassistant.const import STATE_UNKNOWN, POWER_WATT, ENERGY_WATT_HOUR
+from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, STATE_UNKNOWN
+
+from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['homematic']
 
 HM_STATE_HA_CAST = {
     'RotaryHandleSensor': {0: 'closed', 1: 'tilted', 2: 'open'},

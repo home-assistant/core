@@ -1,8 +1,7 @@
 """Support for Wink covers."""
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
-from homeassistant.components.wink import WinkDevice, DOMAIN
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 
-DEPENDENCIES = ['wink']
+from . import DOMAIN, WinkDevice
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

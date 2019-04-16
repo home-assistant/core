@@ -6,13 +6,14 @@ from typing import Callable, Dict, Tuple
 from aiohttp.web import json_response, Response
 
 from homeassistant.core import Context
+from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_NAME,
                     ATTR_APP_VERSION, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
                     ATTR_MODEL, ATTR_OS_VERSION, ATTR_SUPPORTS_ENCRYPTION,
-                    CONF_SECRET, CONF_USER_ID, DATA_DELETED_IDS,
-                    DATA_REGISTRATIONS, DOMAIN)
+                    CONF_SECRET, CONF_USER_ID, DATA_BINARY_SENSOR,
+                    DATA_DELETED_IDS, DATA_SENSOR, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,17 +125,18 @@ def safe_registration(registration: Dict) -> Dict:
 def savable_state(hass: HomeAssistantType) -> Dict:
     """Return a clean object containing things that should be saved."""
     return {
+        DATA_BINARY_SENSOR: hass.data[DOMAIN][DATA_BINARY_SENSOR],
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
-        DATA_REGISTRATIONS: hass.data[DOMAIN][DATA_REGISTRATIONS]
+        DATA_SENSOR: hass.data[DOMAIN][DATA_SENSOR],
     }
 
 
 def webhook_response(data, *, registration: Dict, status: int = 200,
                      headers: Dict = None) -> Response:
     """Return a encrypted response if registration supports it."""
-    data = json.dumps(data)
+    data = json.dumps(data, cls=JSONEncoder)
 
-    if CONF_SECRET in registration:
+    if registration[ATTR_SUPPORTS_ENCRYPTION]:
         keylen, encrypt = setup_encrypt()
 
         key = registration[CONF_SECRET].encode("utf-8")

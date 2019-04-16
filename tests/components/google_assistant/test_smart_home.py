@@ -1,21 +1,23 @@
 """Test Google Smart Home."""
+from unittest.mock import patch, Mock
 import pytest
 
 from homeassistant.core import State, EVENT_CALL_SERVICE
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 from homeassistant.setup import async_setup_component
+from homeassistant.components import camera
 from homeassistant.components.climate.const import (
     ATTR_MIN_TEMP, ATTR_MAX_TEMP, STATE_HEAT, SUPPORT_OPERATION_MODE
 )
 from homeassistant.components.google_assistant import (
     const, trait, helpers, smart_home as sh,
     EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
-from homeassistant.components.light.demo import DemoLight
+from homeassistant.components.demo.light import DemoLight
 
 from homeassistant.helpers import device_registry
 from tests.common import (mock_device_registry, mock_registry,
-                          mock_area_registry)
+                          mock_area_registry, mock_coro)
 
 BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
@@ -91,15 +93,16 @@ async def test_sync_message(hass):
                 'traits': [
                     trait.TRAIT_BRIGHTNESS,
                     trait.TRAIT_ONOFF,
-                    trait.TRAIT_COLOR_SPECTRUM,
-                    trait.TRAIT_COLOR_TEMP,
+                    trait.TRAIT_COLOR_SETTING,
                 ],
                 'type': sh.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
-                    'colorModel': 'rgb',
-                    'temperatureMinK': 2000,
-                    'temperatureMaxK': 6535,
+                    'colorModel': 'hsv',
+                    'colorTemperatureRange': {
+                        'temperatureMinK': 2000,
+                        'temperatureMaxK': 6535,
+                    }
                 },
                 'roomHint': 'Living Room'
             }]
@@ -170,15 +173,16 @@ async def test_sync_in_area(hass, registries):
                 'traits': [
                     trait.TRAIT_BRIGHTNESS,
                     trait.TRAIT_ONOFF,
-                    trait.TRAIT_COLOR_SPECTRUM,
-                    trait.TRAIT_COLOR_TEMP,
+                    trait.TRAIT_COLOR_SETTING,
                 ],
                 'type': sh.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
-                    'colorModel': 'rgb',
-                    'temperatureMinK': 2000,
-                    'temperatureMaxK': 6535,
+                    'colorModel': 'hsv',
+                    'colorTemperatureRange': {
+                        'temperatureMinK': 2000,
+                        'temperatureMaxK': 6535,
+                    }
                 },
                 'roomHint': 'Living Room'
             }]
@@ -252,8 +256,12 @@ async def test_query_message(hass):
                     'online': True,
                     'brightness': 30,
                     'color': {
-                        'spectrumRGB': 4194303,
-                        'temperature': 2500,
+                        'spectrumHsv': {
+                            'hue': 180,
+                            'saturation': 0.75,
+                            'value': 0.3058823529411765,
+                        },
+                        'temperatureK': 2500,
                     }
                 },
             }
@@ -338,8 +346,12 @@ async def test_execute(hass):
                     "online": True,
                     'brightness': 20,
                     'color': {
-                        'spectrumRGB': 16773155,
-                        'temperature': 2631,
+                        'spectrumHsv': {
+                            'hue': 56,
+                            'saturation': 0.86,
+                            'value': 0.2,
+                        },
+                        'temperatureK': 2631,
                     },
                 }
             }]
@@ -557,3 +569,57 @@ async def test_query_disconnect(hass):
         })
 
     assert result is None
+
+
+async def test_trait_execute_adding_query_data(hass):
+    """Test a trait execute influencing query data."""
+    hass.config.api = Mock(base_url='http://1.1.1.1:8123')
+    hass.states.async_set('camera.office', 'idle', {
+        'supported_features': camera.SUPPORT_STREAM
+    })
+
+    with patch('homeassistant.components.camera.async_request_stream',
+               return_value=mock_coro('/api/streams/bla')):
+        result = await sh.async_handle_message(
+            hass, BASIC_CONFIG, None,
+            {
+                "requestId": REQ_ID,
+                "inputs": [{
+                    "intent": "action.devices.EXECUTE",
+                    "payload": {
+                        "commands": [{
+                            "devices": [
+                                {"id": "camera.office"},
+                            ],
+                            "execution": [{
+                                "command":
+                                "action.devices.commands.GetCameraStream",
+                                "params": {
+                                    "StreamToChromecast": True,
+                                    "SupportedStreamProtocols": [
+                                        "progressive_mp4",
+                                        "hls",
+                                        "dash",
+                                        "smooth_stream"
+                                    ]
+                                }
+                            }]
+                        }]
+                    }
+                }]
+            })
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "commands": [{
+                "ids": ['camera.office'],
+                "status": "SUCCESS",
+                "states": {
+                    "online": True,
+                    'cameraStreamAccessUrl':
+                    'http://1.1.1.1:8123/api/streams/bla',
+                }
+            }]
+        }
+    }

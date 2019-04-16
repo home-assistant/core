@@ -1,12 +1,11 @@
 """Support for Blink system camera."""
 import logging
 
-from homeassistant.components.blink import BLINK_DATA, DEFAULT_BRAND
 from homeassistant.components.camera import Camera
 
-_LOGGER = logging.getLogger(__name__)
+from . import BLINK_DATA, DEFAULT_BRAND
 
-DEPENDENCIES = ['blink']
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_VIDEO_CLIP = 'video'
 ATTR_IMAGE = 'image'

@@ -4,9 +4,12 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components.deconz import gateway
+from homeassistant.components.deconz import errors, gateway
 
 from tests.common import mock_coro
+
+import pydeconz
+
 
 ENTRY_CONFIG = {
     "host": "1.2.3.4",
@@ -62,9 +65,23 @@ async def test_gateway_retry():
     deconz_gateway = gateway.DeconzGateway(hass, entry)
 
     with patch.object(
-            gateway, 'get_gateway', return_value=mock_coro(False)
-    ), pytest.raises(ConfigEntryNotReady):
+            gateway, 'get_gateway', side_effect=errors.CannotConnect), \
+            pytest.raises(ConfigEntryNotReady):
         await deconz_gateway.async_setup()
+
+
+async def test_gateway_setup_fails():
+    """Retry setup."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = ENTRY_CONFIG
+
+    deconz_gateway = gateway.DeconzGateway(hass, entry)
+
+    with patch.object(gateway, 'get_gateway', side_effect=Exception):
+        result = await deconz_gateway.async_setup()
+
+    assert not result
 
 
 async def test_connection_status(hass):
@@ -170,10 +187,20 @@ async def test_get_gateway(hass):
         assert await gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())
 
 
-async def test_get_gateway_fails(hass):
+async def test_get_gateway_fails_unauthorized(hass):
     """Failed call."""
     with patch('pydeconz.DeconzSession.async_load_parameters',
-               return_value=mock_coro(False)):
+               side_effect=pydeconz.errors.Unauthorized), \
+            pytest.raises(errors.AuthenticationRequired):
+        assert await gateway.get_gateway(
+            hass, ENTRY_CONFIG, Mock(), Mock()) is False
+
+
+async def test_get_gateway_fails_cannot_connect(hass):
+    """Failed call."""
+    with patch('pydeconz.DeconzSession.async_load_parameters',
+               side_effect=pydeconz.errors.RequestError), \
+            pytest.raises(errors.CannotConnect):
         assert await gateway.get_gateway(
             hass, ENTRY_CONFIG, Mock(), Mock()) is False
 

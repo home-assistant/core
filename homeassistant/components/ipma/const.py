@@ -11,4 +11,4 @@ ENTITY_ID_SENSOR_FORMAT = WEATHER_DOMAIN + ".ipma_{}"
 ENTITY_ID_SENSOR_FORMAT_HOME = ENTITY_ID_SENSOR_FORMAT.format(
     HOME_LOCATION_NAME)
 
-_LOGGER = logging.getLogger('homeassistant.components.ipma')
+_LOGGER = logging.getLogger('.')

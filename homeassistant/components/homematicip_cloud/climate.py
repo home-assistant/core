@@ -4,13 +4,11 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
-STATE_BOOST = 'Boost'
+_LOGGER = logging.getLogger(__name__)
 
 HA_STATE_TO_HMIP = {
     STATE_AUTO: 'AUTOMATIC',

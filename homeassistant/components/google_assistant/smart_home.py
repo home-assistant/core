@@ -9,9 +9,10 @@ from homeassistant.util.decorator import Registry
 from homeassistant.core import callback
 from homeassistant.const import (
     CLOUD_NEVER_EXPOSED_ENTITIES, CONF_NAME, STATE_UNAVAILABLE,
-    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_DEVICE_CLASS,
 )
 from homeassistant.components import (
+    camera,
     climate,
     cover,
     fan,
@@ -30,7 +31,7 @@ from homeassistant.components import (
 from . import trait
 from .const import (
     TYPE_LIGHT, TYPE_LOCK, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
-    TYPE_THERMOSTAT, TYPE_FAN,
+    TYPE_THERMOSTAT, TYPE_FAN, TYPE_CAMERA, TYPE_BLINDS, TYPE_GARAGE,
     CONF_ALIASES, CONF_ROOM_HINT,
     ERR_FUNCTION_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
     ERR_UNKNOWN_ERROR,
@@ -42,8 +43,9 @@ HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN_TO_GOOGLE_TYPES = {
+    camera.DOMAIN: TYPE_CAMERA,
     climate.DOMAIN: TYPE_THERMOSTAT,
-    cover.DOMAIN: TYPE_SWITCH,
+    cover.DOMAIN: TYPE_BLINDS,
     fan.DOMAIN: TYPE_FAN,
     group.DOMAIN: TYPE_SWITCH,
     input_boolean.DOMAIN: TYPE_SWITCH,
@@ -54,6 +56,10 @@ DOMAIN_TO_GOOGLE_TYPES = {
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
+}
+
+DEVICE_CLASS_TO_GOOGLE_TYPES = {
+    (cover.DOMAIN, cover.DEVICE_CLASS_GARAGE): TYPE_GARAGE,
 }
 
 
@@ -67,6 +73,13 @@ def deep_update(target, source):
     return target
 
 
+def get_google_type(domain, device_class):
+    """Google type based on domain and device class."""
+    typ = DEVICE_CLASS_TO_GOOGLE_TYPES.get((domain, device_class))
+
+    return typ if typ is not None else DOMAIN_TO_GOOGLE_TYPES.get(domain)
+
+
 class _GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
 
@@ -74,6 +87,7 @@ class _GoogleEntity:
         self.hass = hass
         self.config = config
         self.state = state
+        self._traits = None
 
     @property
     def entity_id(self):
@@ -83,13 +97,18 @@ class _GoogleEntity:
     @callback
     def traits(self):
         """Return traits for entity."""
+        if self._traits is not None:
+            return self._traits
+
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        return [Trait(self.hass, state, self.config)
-                for Trait in trait.TRAITS
-                if Trait.supported(domain, features)]
+        self._traits = [Trait(self.hass, state, self.config)
+                        for Trait in trait.TRAITS
+                        if Trait.supported(domain, features, device_class)]
+        return self._traits
 
     async def sync_serialize(self):
         """Serialize entity for a SYNC response.
@@ -106,6 +125,8 @@ class _GoogleEntity:
 
         entity_config = self.config.entity_config.get(state.entity_id, {})
         name = (entity_config.get(CONF_NAME) or state.name).strip()
+        domain = state.domain
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         # If an empty string
         if not name:
@@ -125,7 +146,7 @@ class _GoogleEntity:
             'attributes': {},
             'traits': [trait.name for trait in traits],
             'willReportState': False,
-            'type': DOMAIN_TO_GOOGLE_TYPES[state.domain],
+            'type': get_google_type(domain, device_class),
         }
 
         # use aliases
@@ -201,6 +222,12 @@ class _GoogleEntity:
     def async_update(self):
         """Update the entity with latest info from Home Assistant."""
         self.state = self.hass.states.get(self.entity_id)
+
+        if self._traits is None:
+            return
+
+        for trt in self._traits:
+            trt.state = self.state
 
 
 async def async_handle_message(hass, config, user_id, message):

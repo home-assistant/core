@@ -13,7 +13,7 @@
                 "data": {
                     "password": "Mot de passe"
                 },
-                "description": "Veuillez saisir le mot de passe que vous avez d\u00e9fini dans votre configuration.",
+                "description": "Veuillez saisir le mot de passe que vous avez d\u00e9fini dans votre configuration pour {name}",
                 "title": "Entrer votre mot de passe"
             },
             "discovery_confirm": {

@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
+
+from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 

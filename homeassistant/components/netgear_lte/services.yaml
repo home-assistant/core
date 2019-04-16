@@ -1,0 +1,9 @@
+delete_sms:
+  description: Delete messages from the modem inbox.
+  fields:
+    host:
+      description: The modem that should have a message deleted.
+      example: 192.168.5.1
+    sms_id:
+      description: Integer or list of integers with inbox IDs of messages to delete.
+      example: 7

@@ -110,7 +110,7 @@ async def test_stream_ended(hass):
     while await track.recv() is not None:
         segments += 1
 
-    assert segments == 3
+    assert segments > 1
     assert not track.get_segment()
 
     # Stop stream, if it hasn't quit already

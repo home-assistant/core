@@ -1,8 +1,4 @@
-"""
-Support for ClearPass Policy Manager.
-
-Allows tracking devices with CPPM.
-"""
+"""Support for ClearPass Policy Manager."""
 import logging
 from datetime import timedelta
 
@@ -14,8 +10,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_API_KEY
 )
-
-REQUIREMENTS = ['clearpasspy==1.0.2']
 
 SCAN_INTERVAL = timedelta(seconds=120)
 

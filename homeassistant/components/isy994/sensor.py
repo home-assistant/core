@@ -2,12 +2,12 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.isy994 import (
-    ISY994_NODES, ISY994_WEATHER, ISYDevice)
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX, POWER_WATT)
+    POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX)
 from homeassistant.helpers.typing import ConfigType
+
+from . import ISY994_NODES, ISY994_WEATHER, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 

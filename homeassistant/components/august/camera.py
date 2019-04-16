@@ -3,10 +3,9 @@ from datetime import timedelta
 
 import requests
 
-from homeassistant.components.august import DATA_AUGUST, DEFAULT_TIMEOUT
 from homeassistant.components.camera import Camera
 
-DEPENDENCIES = ['august']
+from . import DATA_AUGUST, DEFAULT_TIMEOUT
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

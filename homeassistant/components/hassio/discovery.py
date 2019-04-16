@@ -81,7 +81,7 @@ class HassIODiscovery(HomeAssistantView):
         service = data[ATTR_SERVICE]
         config_data = data[ATTR_CONFIG]
 
-        # Read addinional Add-on info
+        # Read additional Add-on info
         try:
             addon_info = await self.hassio.get_addon_info(data[ATTR_ADDON])
         except HassioAPIError as err:
@@ -98,7 +98,7 @@ class HassIODiscovery(HomeAssistantView):
         service = data[ATTR_SERVICE]
         uuid = data[ATTR_UUID]
 
-        # Check if realy deletet / prevent injections
+        # Check if really deletet / prevent injections
         try:
             data = await self.hassio.get_discovery_message(uuid)
         except HassioAPIError:

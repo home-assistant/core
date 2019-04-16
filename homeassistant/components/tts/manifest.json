@@ -1,0 +1,14 @@
+{
+  "domain": "tts",
+  "name": "Tts",
+  "documentation": "https://www.home-assistant.io/components/tts",
+  "requirements": [
+    "mutagen==1.42.0"
+  ],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@robbiet480"
+  ]
+}

@@ -1,10 +1,10 @@
 """Support for Tellstick lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.tellstick import (
-    DEFAULT_SIGNAL_REPETITIONS, ATTR_DISCOVER_DEVICES, ATTR_DISCOVER_CONFIG,
-    DATA_TELLSTICK, TellstickDevice)
 
+from . import (
+    ATTR_DISCOVER_CONFIG, ATTR_DISCOVER_DEVICES, DATA_TELLSTICK,
+    DEFAULT_SIGNAL_REPETITIONS, TellstickDevice)
 
 SUPPORT_TELLSTICK = SUPPORT_BRIGHTNESS
 

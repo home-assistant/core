@@ -1,13 +1,11 @@
 """Support for Verisure locks."""
 import logging
-from time import sleep
-from time import time
-from homeassistant.components.verisure import HUB as hub
-from homeassistant.components.verisure import (
-    CONF_LOCKS, CONF_DEFAULT_LOCK_CODE, CONF_CODE_DIGITS)
+from time import sleep, time
+
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import (
-    ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
+
+from . import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, HUB as hub
 
 _LOGGER = logging.getLogger(__name__)
 

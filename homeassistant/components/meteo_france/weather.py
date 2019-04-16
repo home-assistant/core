@@ -2,12 +2,12 @@
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.components.meteo_france import (
-    ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE)
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME, WeatherEntity)
 from homeassistant.const import TEMP_CELSIUS
+
+from . import ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE
 
 _LOGGER = logging.getLogger(__name__)
 

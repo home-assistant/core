@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.components.volvooncall import VolvoEntity, DATA_KEY
+
+from . import DATA_KEY, VolvoEntity
 
 _LOGGER = logging.getLogger(__name__)
 

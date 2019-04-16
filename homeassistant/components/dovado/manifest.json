@@ -1,0 +1,10 @@
+{
+  "domain": "dovado",
+  "name": "Dovado",
+  "documentation": "https://www.home-assistant.io/components/dovado",
+  "requirements": [
+    "dovado==0.4.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

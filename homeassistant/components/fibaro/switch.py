@@ -1,12 +1,11 @@
 """Support for Fibaro switches."""
 import logging
 
-from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.fibaro import (
-    FIBARO_DEVICES, FibaroDevice)
+from homeassistant.util import convert
 
-DEPENDENCIES = ['fibaro']
+from . import FIBARO_DEVICES, FibaroDevice
+
 _LOGGER = logging.getLogger(__name__)
 
 

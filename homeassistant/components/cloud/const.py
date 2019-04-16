@@ -7,6 +7,7 @@ PREF_ENABLE_GOOGLE = 'google_enabled'
 PREF_ENABLE_REMOTE = 'remote_enabled'
 PREF_GOOGLE_ALLOW_UNLOCK = 'google_allow_unlock'
 PREF_CLOUDHOOKS = 'cloudhooks'
+PREF_CLOUD_USER = 'cloud_user'
 
 CONF_ALEXA = 'alexa'
 CONF_ALIASES = 'aliases'
@@ -24,3 +25,9 @@ CONF_ACME_DIRECTORY_SERVER = 'acme_directory_server'
 
 MODE_DEV = "development"
 MODE_PROD = "production"
+
+DISPATCHER_REMOTE_UPDATE = 'cloud_remote_update'
+
+
+class InvalidTrustedNetworks(Exception):
+    """Raised when invalid trusted networks config."""

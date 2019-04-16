@@ -1,9 +1,4 @@
-"""
-Component to create an interface to a Pilight daemon.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/pilight/
-"""
+"""Component to create an interface to a Pilight daemon."""
 import logging
 import functools
 import socket
@@ -18,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT,
     CONF_WHITELIST, CONF_PROTOCOL)
-
-REQUIREMENTS = ['pilight==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

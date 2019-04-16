@@ -1,9 +1,4 @@
-"""
-Component to interface with various switches that can be controlled remotely.
-
-For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/switch/
-"""
+"""Component to interface with switches that can be controlled remotely."""
 from datetime import timedelta
 import logging
 
@@ -21,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.components import group
 
 DOMAIN = 'switch'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_SWITCHES = 'all switches'

@@ -20,8 +20,6 @@ DEFAULT_BOUNCETIME = 50
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_PULL_MODE = 'UP'
 
-DEPENDENCIES = ['rpi_gpio']
-
 _SENSORS_SCHEMA = vol.Schema({
     cv.positive_int: cv.string,
 })

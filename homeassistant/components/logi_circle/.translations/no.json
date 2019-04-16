@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "external_error": "Det oppstod et unntak fra en annen flyt."
+        },
+        "create_entry": {
+            "default": "Vellykket autentisering med Logi Circle"
+        },
+        "error": {
+            "auth_error": "API-autorisasjonen mislyktes."
+        },
+        "step": {
+            "auth": {
+                "title": "Godkjenn med Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Tilbyder"
+                },
+                "description": "Velg med hvilken autentiseringsleverand\u00f8r du vil godkjenne Logi Circle.",
+                "title": "Autentiseringsleverand\u00f8r"
+            }
+        },
+        "title": "Logi Circle"
+    }
+}

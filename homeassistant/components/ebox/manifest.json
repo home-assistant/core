@@ -1,0 +1,10 @@
+{
+  "domain": "ebox",
+  "name": "Ebox",
+  "documentation": "https://www.home-assistant.io/components/ebox",
+  "requirements": [
+    "pyebox==1.1.4"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,25 +1,14 @@
-"""
-Integration with the Rachio Iro sprinkler system controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.rachio/
-"""
+"""Integration with the Rachio Iro sprinkler system controller."""
 from abc import abstractmethod
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.rachio import (DOMAIN as DOMAIN_RACHIO,
-                                             KEY_DEVICE_ID,
-                                             KEY_STATUS,
-                                             KEY_SUBTYPE,
-                                             SIGNAL_RACHIO_CONTROLLER_UPDATE,
-                                             STATUS_OFFLINE,
-                                             STATUS_ONLINE,
-                                             SUBTYPE_OFFLINE,
-                                             SUBTYPE_ONLINE,)
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
-DEPENDENCIES = ['rachio']
+from . import (
+    DOMAIN as DOMAIN_RACHIO, KEY_DEVICE_ID, KEY_STATUS, KEY_SUBTYPE,
+    SIGNAL_RACHIO_CONTROLLER_UPDATE, STATUS_OFFLINE, STATUS_ONLINE,
+    SUBTYPE_OFFLINE, SUBTYPE_ONLINE)
 
 _LOGGER = logging.getLogger(__name__)
 

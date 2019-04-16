@@ -333,3 +333,76 @@ async def test_get_states_not_allows_nan(hass, websocket_client):
     msg = await websocket_client.receive_json()
     assert not msg['success']
     assert msg['error']['code'] == const.ERR_UNKNOWN_ERROR
+
+
+async def test_subscribe_unsubscribe_events_whitelist(
+        hass, websocket_client, hass_admin_user):
+    """Test subscribe/unsubscribe events on whitelist."""
+    hass_admin_user.groups = []
+
+    await websocket_client.send_json({
+        'id': 5,
+        'type': 'subscribe_events',
+        'event_type': 'not-in-whitelist'
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == const.TYPE_RESULT
+    assert not msg['success']
+    assert msg['error']['code'] == 'unauthorized'
+
+    await websocket_client.send_json({
+        'id': 6,
+        'type': 'subscribe_events',
+        'event_type': 'themes_updated'
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 6
+    assert msg['type'] == const.TYPE_RESULT
+    assert msg['success']
+
+    hass.bus.async_fire('themes_updated')
+
+    with timeout(3, loop=hass.loop):
+        msg = await websocket_client.receive_json()
+
+    assert msg['id'] == 6
+    assert msg['type'] == 'event'
+    event = msg['event']
+    assert event['event_type'] == 'themes_updated'
+    assert event['origin'] == 'LOCAL'
+
+
+async def test_subscribe_unsubscribe_events_state_changed(
+        hass, websocket_client, hass_admin_user):
+    """Test subscribe/unsubscribe state_changed events."""
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy({
+        'entities': {
+            'entity_ids': {
+                'light.permitted': True
+            }
+        }
+    })
+
+    await websocket_client.send_json({
+        'id': 7,
+        'type': 'subscribe_events',
+        'event_type': 'state_changed'
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 7
+    assert msg['type'] == const.TYPE_RESULT
+    assert msg['success']
+
+    hass.states.async_set('light.not_permitted', 'on')
+    hass.states.async_set('light.permitted', 'on')
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 7
+    assert msg['type'] == 'event'
+    assert msg['event']['event_type'] == 'state_changed'
+    assert msg['event']['data']['entity_id'] == 'light.permitted'

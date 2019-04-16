@@ -10,16 +10,18 @@ import logging
 from homeassistant import const as ha_const
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from . import const as zha_const
 from .channels import (
     AttributeListeningChannel, EventRelayChannel, ZDOChannel
 )
 from .channels.registry import ZIGBEE_CHANNEL_REGISTRY
 from .const import (
     CONF_DEVICE_CONFIG, COMPONENTS, ZHA_DISCOVERY_NEW, DATA_ZHA,
-    SENSOR_TYPE, UNKNOWN, BINARY_SENSOR_TYPES, NO_SENSOR_CLUSTERS,
-    EVENT_RELAY_CLUSTERS, SENSOR_TYPES, GENERIC,
-    POWER_CONFIGURATION_CHANNEL
+    SENSOR_TYPE, UNKNOWN, GENERIC, POWER_CONFIGURATION_CHANNEL
+)
+from .registries import (
+    BINARY_SENSOR_TYPES, NO_SENSOR_CLUSTERS, EVENT_RELAY_CLUSTERS,
+    SENSOR_TYPES, DEVICE_CLASS, COMPONENT_CLUSTERS,
+    SINGLE_INPUT_CLUSTER_DEVICE_CLASS, SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS
 )
 from ..device_entity import ZhaDeviceEntity
 
@@ -53,16 +55,15 @@ def async_process_endpoint(
 
     if endpoint.profile_id in zigpy.profiles.PROFILES:
         profile = zigpy.profiles.PROFILES[endpoint.profile_id]
-        if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
-                                      {}).get(endpoint.device_type,
-                                              None):
+        if DEVICE_CLASS.get(endpoint.profile_id, {}).get(
+                endpoint.device_type, None):
             profile_clusters = profile.CLUSTERS[endpoint.device_type]
-            profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
+            profile_info = DEVICE_CLASS[endpoint.profile_id]
             component = profile_info[endpoint.device_type]
 
     if ha_const.CONF_TYPE in node_config:
         component = node_config[ha_const.CONF_TYPE]
-        profile_clusters = zha_const.COMPONENT_CLUSTERS[component]
+        profile_clusters = COMPONENT_CLUSTERS[component]
 
     if component and component in COMPONENTS:
         profile_match = _async_handle_profile_match(
@@ -179,7 +180,7 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
                 zha_device,
                 cluster,
                 device_key,
-                zha_const.SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
+                SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
                 is_new_join,
             ))
 
@@ -190,7 +191,7 @@ def _async_handle_single_cluster_matches(hass, endpoint, zha_device,
                 zha_device,
                 cluster,
                 device_key,
-                zha_const.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
+                SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
                 is_new_join,
             ))
 

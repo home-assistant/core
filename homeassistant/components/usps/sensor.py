@@ -2,15 +2,14 @@
 from collections import defaultdict
 import logging
 
-from homeassistant.components.usps import DATA_USPS
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DATE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.util.dt import now
 
-_LOGGER = logging.getLogger(__name__)
+from . import DATA_USPS
 
-DEPENDENCIES = ['usps']
+_LOGGER = logging.getLogger(__name__)
 
 STATUS_DELIVERED = 'delivered'
 

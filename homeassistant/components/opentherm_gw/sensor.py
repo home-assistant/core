@@ -1,12 +1,12 @@
 """Support for OpenTherm Gateway sensors."""
 import logging
 
-from homeassistant.components.opentherm_gw import (
-    DATA_GW_VARS, DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE)
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+
+from . import DATA_GW_VARS, DATA_OPENTHERM_GW, SIGNAL_OPENTHERM_GW_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,8 +15,6 @@ UNIT_HOUR = 'h'
 UNIT_KW = 'kW'
 UNIT_L_MIN = 'L/min'
 UNIT_PERCENT = '%'
-
-DEPENDENCIES = ['opentherm_gw']
 
 
 async def async_setup_platform(

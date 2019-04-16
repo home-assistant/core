@@ -1,0 +1,1 @@
+"""The vizio component."""

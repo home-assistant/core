@@ -1,10 +1,9 @@
 """Support for Plum Lightpad lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
-from homeassistant.components.plum_lightpad import PLUM_DATA
 import homeassistant.util.color as color_util
 
-DEPENDENCIES = ['plum_lightpad']
+from . import PLUM_DATA
 
 
 async def async_setup_platform(

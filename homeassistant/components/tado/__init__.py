@@ -10,8 +10,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-tado==0.2.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_TADO = 'tado_data'
@@ -120,4 +118,9 @@ class TadoDataStore:
     def set_zone_overlay(self, zone_id, mode, temperature=None, duration=None):
         """Wrap for setZoneOverlay(..)."""
         self.tado.setZoneOverlay(zone_id, mode, temperature, duration)
+        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
+
+    def set_zone_off(self, zone_id, mode):
+        """Set a zone to off."""
+        self.tado.setZoneOverlay(zone_id, mode, None, None, 'HEATING', 'OFF')
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg

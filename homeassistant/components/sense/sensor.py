@@ -2,10 +2,11 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sense import SENSE_DATA
-from homeassistant.const import POWER_WATT, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+
+from . import SENSE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,8 +14,6 @@ ACTIVE_NAME = 'Energy'
 ACTIVE_TYPE = 'active'
 
 CONSUMPTION_NAME = 'Usage'
-
-DEPENDENCIES = ['sense']
 
 ICON = 'mdi:flash'
 

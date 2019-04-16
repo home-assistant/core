@@ -2,13 +2,11 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.egardia import (
-    ATTR_DISCOVER_DEVICES, EGARDIA_DEVICE)
 from homeassistant.const import STATE_OFF, STATE_ON
 
-_LOGGER = logging.getLogger(__name__)
+from . import ATTR_DISCOVER_DEVICES, EGARDIA_DEVICE
 
-DEPENDENCIES = ['egardia']
+_LOGGER = logging.getLogger(__name__)
 
 EGARDIA_TYPE_TO_DEVICE_CLASS = {
     'IR Sensor': 'motion',

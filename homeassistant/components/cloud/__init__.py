@@ -3,6 +3,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
@@ -22,9 +23,6 @@ from .const import (
     CONF_RELAYER, CONF_REMOTE_API_URL, CONF_SUBSCRIPTION_INFO_URL,
     CONF_USER_POOL_ID, DOMAIN, MODE_DEV, MODE_PROD)
 from .prefs import CloudPreferences
-
-REQUIREMENTS = ['hass-nabucasa==0.5']
-DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,6 +115,16 @@ async def async_delete_cloudhook(hass, webhook_id: str) -> None:
     await hass.data[DOMAIN].cloudhooks.async_delete(webhook_id)
 
 
+@bind_hass
+@callback
+def async_remote_ui_url(hass) -> str:
+    """Get the remote UI URL."""
+    if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    return "https://" + hass.data[DOMAIN].remote.instance_domain
+
+
 def is_cloudhook_request(request):
     """Test if a request came from a cloudhook.
 
@@ -136,12 +144,21 @@ async def async_setup(hass, config):
     else:
         kwargs = {CONF_MODE: DEFAULT_MODE}
 
+    # Alexa/Google custom config
     alexa_conf = kwargs.pop(CONF_ALEXA, None) or ALEXA_SCHEMA({})
     google_conf = kwargs.pop(CONF_GOOGLE_ACTIONS, None) or GACTIONS_SCHEMA({})
 
+    # Cloud settings
     prefs = CloudPreferences(hass)
     await prefs.async_initialize()
 
+    # Cloud user
+    if not prefs.cloud_user:
+        user = await hass.auth.async_create_system_user(
+            'Home Assistant Cloud', [GROUP_ID_ADMIN])
+        await prefs.async_update(cloud_user=user.id)
+
+    # Initialize Cloud
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
@@ -167,10 +184,12 @@ async def async_setup(hass, config):
             await cloud.remote.disconnect()
             await prefs.async_update(remote_enabled=False)
 
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler)
 
     await http_api.async_setup(hass)
+    hass.async_create_task(hass.helpers.discovery.async_load_platform(
+        'binary_sensor', DOMAIN, {}, config))
     return True

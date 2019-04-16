@@ -6,12 +6,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT, \
+    CONF_HOST
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-REQUIREMENTS = ['pyenvisalink==3.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +19,6 @@ DOMAIN = 'envisalink'
 DATA_EVL = 'envisalink'
 
 CONF_CODE = 'code'
-CONF_EVL_HOST = 'host'
 CONF_EVL_KEEPALIVE = 'keepalive_interval'
 CONF_EVL_PORT = 'port'
 CONF_EVL_VERSION = 'evl_version'
@@ -56,7 +54,7 @@ PARTITION_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_EVL_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PANEL_TYPE):
             vol.All(cv.string, vol.In(['HONEYWELL', 'DSC'])),
         vol.Required(CONF_USERNAME): cv.string,
@@ -95,7 +93,7 @@ async def async_setup(hass, config):
 
     conf = config.get(DOMAIN)
 
-    host = conf.get(CONF_EVL_HOST)
+    host = conf.get(CONF_HOST)
     port = conf.get(CONF_EVL_PORT)
     code = conf.get(CONF_CODE)
     panel_type = conf.get(CONF_PANEL_TYPE)

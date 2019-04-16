@@ -1,41 +1,50 @@
 """Webhook handlers for mobile_app."""
-from functools import partial
 import logging
-from typing import Dict
 
 from aiohttp.web import HTTPBadRequest, Response, Request
 import voluptuous as vol
 
+from homeassistant.components.cloud import (async_remote_ui_url,
+                                            CloudNotAvailable)
 from homeassistant.components.device_tracker import (ATTR_ATTRIBUTES,
                                                      ATTR_DEV_ID,
                                                      DOMAIN as DT_DOMAIN,
                                                      SERVICE_SEE as DT_SEE)
-from homeassistant.components.webhook import async_register as webhook_register
+from homeassistant.components.frontend import MANIFEST_JSON
+from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 
 from homeassistant.const import (ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
-                                 CONF_WEBHOOK_ID, HTTP_BAD_REQUEST)
+                                 CONF_WEBHOOK_ID, HTTP_BAD_REQUEST,
+                                 HTTP_CREATED)
 from homeassistant.core import EventOrigin
-from homeassistant.exceptions import (HomeAssistantError, ServiceNotFound,
-                                      TemplateError)
+from homeassistant.exceptions import (HomeAssistantError,
+                                      ServiceNotFound, TemplateError)
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.template import attach
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (ATTR_ALTITUDE, ATTR_APP_COMPONENT, ATTR_BATTERY,
-                    ATTR_COURSE, ATTR_DEVICE_ID, ATTR_DEVICE_NAME,
-                    ATTR_EVENT_DATA, ATTR_EVENT_TYPE, ATTR_GPS,
-                    ATTR_GPS_ACCURACY, ATTR_LOCATION_NAME, ATTR_SPEED,
+from .const import (ATTR_ALTITUDE, ATTR_BATTERY, ATTR_COURSE, ATTR_DEVICE_ID,
+                    ATTR_DEVICE_NAME, ATTR_EVENT_DATA, ATTR_EVENT_TYPE,
+                    ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_LOCATION_NAME,
+                    ATTR_MANUFACTURER, ATTR_MODEL, ATTR_OS_VERSION,
+                    ATTR_SENSOR_TYPE, ATTR_SENSOR_UNIQUE_ID, ATTR_SPEED,
                     ATTR_SUPPORTS_ENCRYPTION, ATTR_TEMPLATE,
                     ATTR_TEMPLATE_VARIABLES, ATTR_VERTICAL_ACCURACY,
                     ATTR_WEBHOOK_DATA, ATTR_WEBHOOK_ENCRYPTED,
                     ATTR_WEBHOOK_ENCRYPTED_DATA, ATTR_WEBHOOK_TYPE,
-                    CONF_SECRET, DATA_DELETED_IDS, DATA_REGISTRATIONS, DOMAIN,
-                    ERR_ENCRYPTION_REQUIRED, WEBHOOK_PAYLOAD_SCHEMA,
-                    WEBHOOK_SCHEMAS, WEBHOOK_TYPE_CALL_SERVICE,
-                    WEBHOOK_TYPE_FIRE_EVENT, WEBHOOK_TYPE_RENDER_TEMPLATE,
+                    CONF_CLOUDHOOK_URL, CONF_REMOTE_UI_URL, CONF_SECRET,
+                    DATA_CONFIG_ENTRIES, DATA_DELETED_IDS, DATA_STORE, DOMAIN,
+                    ERR_ENCRYPTION_REQUIRED, ERR_SENSOR_DUPLICATE_UNIQUE_ID,
+                    ERR_SENSOR_NOT_REGISTERED, SIGNAL_SENSOR_UPDATE,
+                    WEBHOOK_PAYLOAD_SCHEMA, WEBHOOK_SCHEMAS, WEBHOOK_TYPES,
+                    WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
+                    WEBHOOK_TYPE_GET_CONFIG, WEBHOOK_TYPE_GET_ZONES,
+                    WEBHOOK_TYPE_REGISTER_SENSOR, WEBHOOK_TYPE_RENDER_TEMPLATE,
                     WEBHOOK_TYPE_UPDATE_LOCATION,
-                    WEBHOOK_TYPE_UPDATE_REGISTRATION)
+                    WEBHOOK_TYPE_UPDATE_REGISTRATION,
+                    WEBHOOK_TYPE_UPDATE_SENSOR_STATES)
+
 
 from .helpers import (_decrypt_payload, empty_okay_response, error_response,
                       registration_context, safe_registration, savable_state,
@@ -45,38 +54,17 @@ from .helpers import (_decrypt_payload, empty_okay_response, error_response,
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_deleted_webhooks(hass: HomeAssistantType, store: Store):
-    """Register previously deleted webhook IDs so we can return 410."""
-    for deleted_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
-        try:
-            webhook_register(hass, DOMAIN, "Deleted Webhook", deleted_id,
-                             partial(handle_webhook, store))
-        except ValueError:
-            pass
-
-
-def setup_registration(hass: HomeAssistantType, store: Store,
-                       registration: Dict) -> None:
-    """Register the webhook for a registration and loads the app component."""
-    registration_name = 'Mobile App: {}'.format(registration[ATTR_DEVICE_NAME])
-    webhook_id = registration[CONF_WEBHOOK_ID]
-    webhook_register(hass, DOMAIN, registration_name, webhook_id,
-                     partial(handle_webhook, store))
-
-    if ATTR_APP_COMPONENT in registration:
-        load_platform(hass, registration[ATTR_APP_COMPONENT], DOMAIN, {},
-                      {DOMAIN: {}})
-
-
-async def handle_webhook(store: Store, hass: HomeAssistantType,
-                         webhook_id: str, request: Request) -> Response:
+async def handle_webhook(hass: HomeAssistantType, webhook_id: str,
+                         request: Request) -> Response:
     """Handle webhook callback."""
     if webhook_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
         return Response(status=410)
 
     headers = {}
 
-    registration = hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id]
+    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+
+    registration = config_entry.data
 
     try:
         req_data = await request.json()
@@ -105,12 +93,22 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
         enc_data = req_data[ATTR_WEBHOOK_ENCRYPTED_DATA]
         webhook_payload = _decrypt_payload(registration[CONF_SECRET], enc_data)
 
-    try:
-        data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
-    except vol.Invalid as ex:
-        err = vol.humanize.humanize_error(webhook_payload, ex)
-        _LOGGER.error('Received invalid webhook payload: %s', err)
-        return empty_okay_response(headers=headers)
+    if webhook_type not in WEBHOOK_TYPES:
+        _LOGGER.error('Received invalid webhook type: %s', webhook_type)
+        return empty_okay_response()
+
+    data = webhook_payload
+
+    _LOGGER.debug("Received webhook payload for type %s: %s", webhook_type,
+                  data)
+
+    if webhook_type in WEBHOOK_SCHEMAS:
+        try:
+            data = WEBHOOK_SCHEMAS[webhook_type](webhook_payload)
+        except vol.Invalid as ex:
+            err = vol.humanize.humanize_error(webhook_payload, ex)
+            _LOGGER.error('Received invalid webhook payload: %s', err)
+            return empty_okay_response(headers=headers)
 
     context = registration_context(registration)
 
@@ -153,17 +151,25 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
     if webhook_type == WEBHOOK_TYPE_UPDATE_LOCATION:
         see_payload = {
             ATTR_DEV_ID: registration[ATTR_DEVICE_ID],
-            ATTR_LOCATION_NAME: data.get(ATTR_LOCATION_NAME),
-            ATTR_GPS: data.get(ATTR_GPS),
-            ATTR_GPS_ACCURACY: data.get(ATTR_GPS_ACCURACY),
-            ATTR_BATTERY: data.get(ATTR_BATTERY),
-            ATTR_ATTRIBUTES: {
-                ATTR_SPEED: data.get(ATTR_SPEED),
-                ATTR_ALTITUDE: data.get(ATTR_ALTITUDE),
-                ATTR_COURSE: data.get(ATTR_COURSE),
-                ATTR_VERTICAL_ACCURACY: data.get(ATTR_VERTICAL_ACCURACY),
-            }
+            ATTR_GPS: data[ATTR_GPS],
+            ATTR_GPS_ACCURACY: data[ATTR_GPS_ACCURACY],
         }
+
+        for key in (ATTR_LOCATION_NAME, ATTR_BATTERY):
+            value = data.get(key)
+            if value is not None:
+                see_payload[key] = value
+
+        attrs = {}
+
+        for key in (ATTR_ALTITUDE, ATTR_COURSE,
+                    ATTR_SPEED, ATTR_VERTICAL_ACCURACY):
+            value = data.get(key)
+            if value is not None:
+                attrs[key] = value
+
+        if attrs:
+            see_payload[ATTR_ATTRIBUTES] = attrs
 
         try:
             await hass.services.async_call(DT_DOMAIN,
@@ -179,13 +185,132 @@ async def handle_webhook(store: Store, hass: HomeAssistantType,
     if webhook_type == WEBHOOK_TYPE_UPDATE_REGISTRATION:
         new_registration = {**registration, **data}
 
-        hass.data[DOMAIN][DATA_REGISTRATIONS][webhook_id] = new_registration
+        device_registry = await dr.async_get_registry(hass)
 
-        try:
-            await store.async_save(savable_state(hass))
-        except HomeAssistantError as ex:
-            _LOGGER.error("Error updating mobile_app registration: %s", ex)
-            return empty_okay_response()
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={
+                (ATTR_DEVICE_ID, registration[ATTR_DEVICE_ID]),
+                (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID])
+            },
+            manufacturer=new_registration[ATTR_MANUFACTURER],
+            model=new_registration[ATTR_MODEL],
+            name=new_registration[ATTR_DEVICE_NAME],
+            sw_version=new_registration[ATTR_OS_VERSION]
+        )
+
+        hass.config_entries.async_update_entry(config_entry,
+                                               data=new_registration)
 
         return webhook_response(safe_registration(new_registration),
                                 registration=registration, headers=headers)
+
+    if webhook_type == WEBHOOK_TYPE_REGISTER_SENSOR:
+        entity_type = data[ATTR_SENSOR_TYPE]
+
+        unique_id = data[ATTR_SENSOR_UNIQUE_ID]
+
+        unique_store_key = "{}_{}".format(webhook_id, unique_id)
+
+        if unique_store_key in hass.data[DOMAIN][entity_type]:
+            _LOGGER.error("Refusing to re-register existing sensor %s!",
+                          unique_id)
+            return error_response(ERR_SENSOR_DUPLICATE_UNIQUE_ID,
+                                  "{} {} already exists!".format(entity_type,
+                                                                 unique_id),
+                                  status=409)
+
+        data[CONF_WEBHOOK_ID] = webhook_id
+
+        hass.data[DOMAIN][entity_type][unique_store_key] = data
+
+        try:
+            await hass.data[DOMAIN][DATA_STORE].async_save(savable_state(hass))
+        except HomeAssistantError as ex:
+            _LOGGER.error("Error registering sensor: %s", ex)
+            return empty_okay_response()
+
+        register_signal = '{}_{}_register'.format(DOMAIN,
+                                                  data[ATTR_SENSOR_TYPE])
+        async_dispatcher_send(hass, register_signal, data)
+
+        return webhook_response({'success': True},
+                                registration=registration, status=HTTP_CREATED,
+                                headers=headers)
+
+    if webhook_type == WEBHOOK_TYPE_UPDATE_SENSOR_STATES:
+        resp = {}
+        for sensor in data:
+            entity_type = sensor[ATTR_SENSOR_TYPE]
+
+            unique_id = sensor[ATTR_SENSOR_UNIQUE_ID]
+
+            unique_store_key = "{}_{}".format(webhook_id, unique_id)
+
+            if unique_store_key not in hass.data[DOMAIN][entity_type]:
+                _LOGGER.error("Refusing to update non-registered sensor: %s",
+                              unique_store_key)
+                err_msg = '{} {} is not registered'.format(entity_type,
+                                                           unique_id)
+                resp[unique_id] = {
+                    'success': False,
+                    'error': {
+                        'code': ERR_SENSOR_NOT_REGISTERED,
+                        'message': err_msg
+                    }
+                }
+                continue
+
+            entry = hass.data[DOMAIN][entity_type][unique_store_key]
+
+            new_state = {**entry, **sensor}
+
+            hass.data[DOMAIN][entity_type][unique_store_key] = new_state
+
+            safe = savable_state(hass)
+
+            try:
+                await hass.data[DOMAIN][DATA_STORE].async_save(safe)
+            except HomeAssistantError as ex:
+                _LOGGER.error("Error updating mobile_app registration: %s", ex)
+                return empty_okay_response()
+
+            async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
+
+            resp[unique_id] = {'success': True}
+
+        return webhook_response(resp, registration=registration,
+                                headers=headers)
+
+    if webhook_type == WEBHOOK_TYPE_GET_ZONES:
+        zones = (hass.states.get(entity_id) for entity_id
+                 in sorted(hass.states.async_entity_ids(ZONE_DOMAIN)))
+        return webhook_response(list(zones), registration=registration,
+                                headers=headers)
+
+    if webhook_type == WEBHOOK_TYPE_GET_CONFIG:
+
+        hass_config = hass.config.as_dict()
+
+        resp = {
+            'latitude': hass_config['latitude'],
+            'longitude': hass_config['longitude'],
+            'elevation': hass_config['elevation'],
+            'unit_system': hass_config['unit_system'],
+            'location_name': hass_config['location_name'],
+            'time_zone': hass_config['time_zone'],
+            'components': hass_config['components'],
+            'version': hass_config['version'],
+            'theme_color': MANIFEST_JSON['theme_color'],
+        }
+
+        if CONF_CLOUDHOOK_URL in registration:
+            resp[CONF_CLOUDHOOK_URL] = registration[CONF_CLOUDHOOK_URL]
+
+        try:
+            resp[CONF_REMOTE_UI_URL] = async_remote_ui_url(hass)
+        except CloudNotAvailable:
+            pass
+
+        return webhook_response(resp, registration=registration,
+                                headers=headers)

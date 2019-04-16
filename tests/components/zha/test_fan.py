@@ -31,7 +31,7 @@ async def test_fan(hass, config_entry, zha_gateway):
 
     cluster = zigpy_device.endpoints.get(1).fan
     entity_id = make_entity_id(DOMAIN, zigpy_device, cluster)
-    zha_device = zha_gateway.get_device(str(zigpy_device.ieee))
+    zha_device = zha_gateway.get_device(zigpy_device.ieee)
 
     # test that the fan was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

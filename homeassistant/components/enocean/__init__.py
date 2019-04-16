@@ -6,8 +6,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['enocean==0.40']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'enocean'

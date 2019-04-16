@@ -1,16 +1,14 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
-from homeassistant.components.comfoconnect import (
-    DOMAIN, ComfoConnectBridge, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED)
 from homeassistant.components.fan import (
-    FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-    SUPPORT_SET_SPEED)
-from homeassistant.helpers.dispatcher import (dispatcher_connect)
+    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
+    FanEntity)
+from homeassistant.helpers.dispatcher import dispatcher_connect
+
+from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['comfoconnect']
 
 SPEED_MAPPING = {
     0: SPEED_OFF,

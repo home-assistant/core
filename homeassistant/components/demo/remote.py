@@ -1,9 +1,4 @@
-"""
-Demo platform that has two fake remotes.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that has two fake remotes."""
 from homeassistant.components.remote import RemoteDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 

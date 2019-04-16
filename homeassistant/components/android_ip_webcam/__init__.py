@@ -18,10 +18,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
-from homeassistant.components.camera.mjpeg import (
+from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL)
-
-REQUIREMENTS = ['pydroid-ipcam==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 

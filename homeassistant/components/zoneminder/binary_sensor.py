@@ -1,9 +1,7 @@
 """Support for ZoneMinder binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
-
-DEPENDENCIES = ['zoneminder']
+from . import DOMAIN as ZONEMINDER_DOMAIN
 
 
 async def async_setup_platform(

@@ -11,7 +11,9 @@ from concurrent.futures import TimeoutError as Timeout
 from homeassistant.core import callback
 from .const import (
     DEFAULT_BAUDRATE, REPORT_CONFIG_MAX_INT, REPORT_CONFIG_MIN_INT,
-    REPORT_CONFIG_RPT_CHANGE, RadioType, IN, OUT, BINDABLE_CLUSTERS)
+    REPORT_CONFIG_RPT_CHANGE, RadioType, IN, OUT
+)
+from .registries import BINDABLE_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +139,7 @@ async def check_zigpy_connection(usb_path, radio_type, database_path):
         await radio.connect(usb_path, DEFAULT_BAUDRATE)
         controller = ControllerApplication(radio, database_path)
         await asyncio.wait_for(controller.startup(auto_form=True), timeout=30)
-        radio.close()
+        await controller.shutdown()
     except Exception:  # pylint: disable=broad-except
         return False
     return True
@@ -146,6 +148,8 @@ async def check_zigpy_connection(usb_path, radio_type, database_path):
 def convert_ieee(ieee_str):
     """Convert given ieee string to EUI64."""
     from zigpy.types import EUI64, uint8_t
+    if ieee_str is None:
+        return None
     return EUI64([uint8_t(p, base=16) for p in ieee_str.split(':')])
 
 

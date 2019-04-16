@@ -1,10 +1,8 @@
 """Support for control of ElkM1 lighting (X10, UPB, etc)."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.elkm1 import (
-    DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities)
 
-DEPENDENCIES = [ELK_DOMAIN]
+from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 
 async def async_setup_platform(

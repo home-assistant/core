@@ -11,12 +11,10 @@ from . import (ToonEntity, ToonElectricityMeterDeviceEntity,
 from .const import (CURRENCY_EUR, DATA_TOON_CLIENT, DOMAIN, POWER_KWH,
                     POWER_WATT, VOLUME_CM3, VOLUME_M3, RATIO_PERCENT)
 
-DEPENDENCIES = ['toon']
-
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=300)
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,

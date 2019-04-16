@@ -3,13 +3,11 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_HEAT, STATE_COOL, STATE_IDLE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
-from homeassistant.components.homekit_controller import (
-    HomeKitEntity, KNOWN_ACCESSORIES)
-from homeassistant.const import TEMP_CELSIUS, STATE_OFF, ATTR_TEMPERATURE
+    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
 
-DEPENDENCIES = ['homekit_controller']
+from . import KNOWN_DEVICES, HomeKitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +27,7 @@ DEFAULT_VALID_MODES = list(MODE_HOMEKIT_TO_HASS)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit climate."""
     if discovery_info is not None:
-        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
         add_entities([HomeKitClimateDevice(accessory, discovery_info)], True)
 
 
@@ -38,12 +36,12 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
 
     def __init__(self, *args):
         """Initialise the device."""
-        super().__init__(*args)
         self._state = None
         self._current_mode = None
         self._valid_modes = []
         self._current_temp = None
         self._target_temp = None
+        super().__init__(*args)
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
@@ -59,10 +57,26 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def _setup_heating_cooling_target(self, characteristic):
         self._features |= SUPPORT_OPERATION_MODE
 
-        valid_values = characteristic.get(
-            'valid-values', DEFAULT_VALID_MODES)
+        if 'valid-values' in characteristic:
+            valid_values = [
+                val for val in DEFAULT_VALID_MODES
+                if val in characteristic['valid-values']
+            ]
+        else:
+            valid_values = DEFAULT_VALID_MODES
+            if 'minValue' in characteristic:
+                valid_values = [
+                    val for val in valid_values
+                    if val >= characteristic['minValue']
+                ]
+            if 'maxValue' in characteristic:
+                valid_values = [
+                    val for val in valid_values
+                    if val <= characteristic['maxValue']
+                ]
+
         self._valid_modes = [
-            MODE_HOMEKIT_TO_HASS.get(mode) for mode in valid_values
+            MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values
         ]
 
     def _setup_temperature_target(self, characteristic):

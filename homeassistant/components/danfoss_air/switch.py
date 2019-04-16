@@ -1,10 +1,9 @@
 """Support for the for Danfoss Air HRV sswitches."""
 import logging
 
-from homeassistant.components.switch import (
-    SwitchDevice)
-from homeassistant.components.danfoss_air import DOMAIN \
-     as DANFOSS_AIR_DOMAIN
+from homeassistant.components.switch import SwitchDevice
+
+from . import DOMAIN as DANFOSS_AIR_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

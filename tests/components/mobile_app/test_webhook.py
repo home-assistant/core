@@ -1,23 +1,30 @@
 """Webhook tests for mobile_app."""
 # pylint: disable=redefined-outer-name,unused-import
+import logging
 import pytest
 
 from homeassistant.components.mobile_app.const import CONF_SECRET
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
-from . import authed_api_client, webhook_client  # noqa: F401
+from . import (authed_api_client, create_registrations,  # noqa: F401
+               webhook_client)  # noqa: F401
 
 from .const import (CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT,
                     RENDER_TEMPLATE, UPDATE)
 
+_LOGGER = logging.getLogger(__name__)
 
-async def test_webhook_handle_render_template(webhook_client):  # noqa: F811
+
+async def test_webhook_handle_render_template(create_registrations,  # noqa: F401, F811, E501
+                                              webhook_client):  # noqa: F811
     """Test that we render templates properly."""
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test_cleartext',
+        '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
         json=RENDER_TEMPLATE
     )
 
@@ -27,12 +34,13 @@ async def test_webhook_handle_render_template(webhook_client):  # noqa: F811
     assert json == {'one': 'Hello world'}
 
 
-async def test_webhook_handle_call_services(hass, webhook_client):  # noqa: E501 F811
+async def test_webhook_handle_call_services(hass, create_registrations,  # noqa: F401, F811, E501
+                                            webhook_client):  # noqa: E501 F811
     """Test that we call services properly."""
     calls = async_mock_service(hass, 'test', 'mobile_app')
 
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test_cleartext',
+        '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
         json=CALL_SERVICE
     )
 
@@ -41,7 +49,8 @@ async def test_webhook_handle_call_services(hass, webhook_client):  # noqa: E501
     assert len(calls) == 1
 
 
-async def test_webhook_handle_fire_event(hass, webhook_client):  # noqa: F811
+async def test_webhook_handle_fire_event(hass, create_registrations,  # noqa: F401, F811, E501
+                                         webhook_client):  # noqa: F811
     """Test that we can fire events."""
     events = []
 
@@ -53,7 +62,7 @@ async def test_webhook_handle_fire_event(hass, webhook_client):  # noqa: F811
     hass.bus.async_listen('test_event', store_event)
 
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test_cleartext',
+        '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
         json=FIRE_EVENT
     )
 
@@ -93,10 +102,70 @@ async def test_webhook_update_registration(webhook_client, hass_client):  # noqa
     assert CONF_SECRET not in update_json
 
 
-async def test_webhook_returns_error_incorrect_json(webhook_client, caplog):  # noqa: E501 F811
+async def test_webhook_handle_get_zones(hass, create_registrations,  # noqa: F401, F811, E501
+                                        webhook_client):  # noqa: F811
+    """Test that we can get zones properly."""
+    await async_setup_component(hass, ZONE_DOMAIN, {
+        ZONE_DOMAIN: {
+            'name': 'test',
+            'latitude': 32.880837,
+            'longitude': -117.237561,
+            'radius': 250,
+        }
+    })
+
+    resp = await webhook_client.post(
+        '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
+        json={'type': 'get_zones'}
+    )
+
+    assert resp.status == 200
+
+    json = await resp.json()
+    assert len(json) == 1
+    assert json[0]['entity_id'] == 'zone.home'
+
+
+async def test_webhook_handle_get_config(hass, create_registrations,  # noqa: F401, F811, E501
+                                         webhook_client):  # noqa: F811
+    """Test that we can get config properly."""
+    resp = await webhook_client.post(
+        '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
+        json={'type': 'get_config'}
+    )
+
+    assert resp.status == 200
+
+    json = await resp.json()
+    if 'components' in json:
+        json['components'] = set(json['components'])
+    if 'whitelist_external_dirs' in json:
+        json['whitelist_external_dirs'] = \
+            set(json['whitelist_external_dirs'])
+
+    hass_config = hass.config.as_dict()
+
+    expected_dict = {
+        'latitude': hass_config['latitude'],
+        'longitude': hass_config['longitude'],
+        'elevation': hass_config['elevation'],
+        'unit_system': hass_config['unit_system'],
+        'location_name': hass_config['location_name'],
+        'time_zone': hass_config['time_zone'],
+        'components': hass_config['components'],
+        'version': hass_config['version'],
+        'theme_color': '#03A9F4',  # Default frontend theme color
+    }
+
+    assert expected_dict == json
+
+
+async def test_webhook_returns_error_incorrect_json(webhook_client,  # noqa: F401, F811, E501
+                                                    create_registrations,  # noqa: F401, F811, E501
+                                                    caplog):  # noqa: E501 F811
     """Test that an error is returned when JSON is invalid."""
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test_cleartext',
+        '/api/webhook/{}'.format(create_registrations[1]['webhook_id']),
         data='not json'
     )
 
@@ -106,7 +175,8 @@ async def test_webhook_returns_error_incorrect_json(webhook_client, caplog):  # 
     assert 'invalid JSON' in caplog.text
 
 
-async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
+async def test_webhook_handle_decryption(webhook_client,  # noqa: F811
+                                         create_registrations):  # noqa: F401, F811, E501
     """Test that we can encrypt/decrypt properly."""
     try:
         # pylint: disable=unused-import
@@ -119,7 +189,7 @@ async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
     import json
 
     keylen = SecretBox.KEY_SIZE
-    key = "58eb127991594dad934d1584bdee5f27".encode("utf-8")
+    key = create_registrations[0]['secret'].encode("utf-8")
     key = key[:keylen]
     key = key.ljust(keylen, b'\0')
 
@@ -135,7 +205,7 @@ async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
     }
 
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test',
+        '/api/webhook/{}'.format(create_registrations[0]['webhook_id']),
         json=container
     )
 
@@ -151,10 +221,11 @@ async def test_webhook_handle_decryption(webhook_client):  # noqa: F811
     assert json.loads(decrypted_data) == {'one': 'Hello world'}
 
 
-async def test_webhook_requires_encryption(webhook_client):  # noqa: F811
+async def test_webhook_requires_encryption(webhook_client,  # noqa: F811
+                                           create_registrations):  # noqa: F401, F811, E501
     """Test that encrypted registrations only accept encrypted data."""
     resp = await webhook_client.post(
-        '/api/webhook/mobile_app_test',
+        '/api/webhook/{}'.format(create_registrations[0]['webhook_id']),
         json=RENDER_TEMPLATE
     )
 

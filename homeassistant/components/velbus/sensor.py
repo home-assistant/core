@@ -1,12 +1,9 @@
 """Support for Velbus sensors."""
 import logging
 
-from homeassistant.components.velbus import (
-    DOMAIN as VELBUS_DOMAIN, VelbusEntity)
+from . import DOMAIN as VELBUS_DOMAIN, VelbusEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['velbus']
 
 
 async def async_setup_platform(

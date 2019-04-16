@@ -1,14 +1,12 @@
 """Support for toggling Amcrest IP camera settings."""
 import logging
 
-from homeassistant.components.amcrest import DATA_AMCREST, SWITCHES
-from homeassistant.const import (
-    CONF_NAME, CONF_SWITCHES, STATE_OFF, STATE_ON)
+from homeassistant.const import CONF_NAME, CONF_SWITCHES, STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 
-_LOGGER = logging.getLogger(__name__)
+from . import DATA_AMCREST, SWITCHES
 
-DEPENDENCIES = ['amcrest']
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
