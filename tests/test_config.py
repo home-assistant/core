@@ -315,7 +315,7 @@ class TestConfig(unittest.TestCase):
 
     def test_process_config_upgrade(self):
         """Test update of version on upgrade."""
-        ha_version = '0.8.0'
+        ha_version = '0.92.0'
 
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
@@ -342,10 +342,13 @@ class TestConfig(unittest.TestCase):
 
             assert opened_file.write.call_count == 0
 
+    @mock.patch('homeassistant.config.find_config_file', mock.Mock())
     def test_config_upgrade_no_file(self):
         """Test update of version on upgrade, with no version file."""
         mock_open = mock.mock_open()
-        mock_open.side_effect = [FileNotFoundError(), mock.DEFAULT]
+        mock_open.side_effect = [FileNotFoundError(),
+                                 mock.DEFAULT,
+                                 mock.DEFAULT]
         with mock.patch('homeassistant.config.open', mock_open, create=True):
             opened_file = mock_open.return_value
             # pylint: disable=no-member
@@ -355,6 +358,7 @@ class TestConfig(unittest.TestCase):
 
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
+    @mock.patch('homeassistant.config.find_config_file', mock.Mock())
     def test_migrate_file_on_upgrade(self, mock_os, mock_shutil):
         """Test migrate of config files on upgrade."""
         ha_version = '0.7.0'
@@ -381,6 +385,7 @@ class TestConfig(unittest.TestCase):
 
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
+    @mock.patch('homeassistant.config.find_config_file', mock.Mock())
     def test_migrate_no_file_on_upgrade(self, mock_os, mock_shutil):
         """Test not migrating config files on upgrade."""
         ha_version = '0.7.0'
