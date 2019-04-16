@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_SEARCH): cv.string,
             })
-        ]))
+        ])),
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean
 })
 
