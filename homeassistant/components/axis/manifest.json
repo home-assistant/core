@@ -2,11 +2,7 @@
   "domain": "axis",
   "name": "Axis",
   "documentation": "https://www.home-assistant.io/components/axis",
-  "requirements": [
-    "axis==20"
-  ],
+  "requirements": ["axis==21"],
   "dependencies": [],
-  "codeowners": [
-    "@kane610"
-  ]
+  "codeowners": ["@kane610"]
 }
