@@ -152,3 +152,13 @@ def test_integration_properties(hass):
     assert integration.domain == 'hue'
     assert integration.dependencies == ['test-dep']
     assert integration.requirements == ['test-req==1.0.0']
+
+
+async def test_integrations_only_once(hass):
+    """Test that we load integrations only once."""
+    int_1 = hass.async_create_task(
+        loader.async_get_integration(hass, 'hue'))
+    int_2 = hass.async_create_task(
+        loader.async_get_integration(hass, 'hue'))
+
+    assert await int_1 is await int_2

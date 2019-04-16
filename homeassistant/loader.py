@@ -4,6 +4,7 @@ The methods for loading Home Assistant integrations.
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
+import asyncio
 import functools as ft
 import importlib
 import json
@@ -19,7 +20,7 @@ from typing import (
     Any,
     TypeVar,
     List,
-    Dict
+    Dict,
 )
 
 # Typing imports that create a circular dependency
@@ -116,6 +117,7 @@ class Integration:
         self.domain = manifest['domain']  # type: str
         self.dependencies = manifest['dependencies']  # type: List[str]
         self.requirements = manifest['requirements']  # type: List[str]
+        _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     def get_component(self) -> ModuleType:
         """Return the component."""
@@ -148,14 +150,20 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
             raise IntegrationNotFound(domain)
         cache = hass.data[DATA_INTEGRATIONS] = {}
 
-    integration = cache.get(domain, _UNDEF)  # type: Optional[Integration]
+    int_or_evt = cache.get(domain, _UNDEF)  # type: Optional[Integration]
 
-    if integration is _UNDEF:
+    if isinstance(int_or_evt, asyncio.Event):
+        await int_or_evt.wait()
+        int_or_evt = cache.get(domain, _UNDEF)
+
+    if int_or_evt is _UNDEF:
         pass
-    elif integration is None:
+    elif int_or_evt is None:
         raise IntegrationNotFound(domain)
     else:
-        return integration
+        return int_or_evt
+
+    event = cache[domain] = asyncio.Event()
 
     try:
         import custom_components
@@ -165,6 +173,7 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
         if integration is not None:
             _LOGGER.warning(CUSTOM_WARNING, domain)
             cache[domain] = integration
+            event.set()
             return integration
 
     except ImportError:
@@ -179,12 +188,12 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
 
     if integration is not None:
         cache[domain] = integration
+        event.set()
         return integration
 
-    integration = await hass.async_add_executor_job(
-        Integration.resolve_legacy, hass, domain
-    )
+    integration = Integration.resolve_legacy(hass, domain)
     cache[domain] = integration
+    event.set()
 
     if not integration:
         raise IntegrationNotFound(domain)
@@ -253,8 +262,6 @@ def _load_file(hass,  # type: HomeAssistant
             if getattr(module, '__file__', None) is None:
                 continue
 
-            _LOGGER.info("Loaded %s from %s", comp_or_platform, path)
-
             cache[comp_or_platform] = module
 
             if module.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
@@ -318,8 +325,9 @@ class Components:
         # Test integration cache
         integration = self._hass.data.get(DATA_INTEGRATIONS, {}).get(comp_name)
 
-        if integration:
-            component = integration.get_component()
+        if isinstance(integration, Integration):
+            component = integration.get_component(
+            )  # type: Optional[ModuleType]
         else:
             # Fallback to importing old-school
             component = _load_file(self._hass, comp_name, LOOKUP_PATHS)
