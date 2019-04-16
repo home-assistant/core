@@ -88,7 +88,7 @@ async def async_migrate_entry(hass, entry):
                 entry.version = 3
                 _LOGGER.info(
                     "PlayStation 4 identifier for entity: %s \
-                    changed to: %s", entity_id)
+                    has changed", entity_id)
                 config_entries.async_update_entry(entry)
                 return True
 
