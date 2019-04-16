@@ -62,13 +62,17 @@ SUPPORTED_COMMANDS = {
 }
 
 
-def validate_token(conf):
-    if conf[CONF_DEVICE_CLASS] == 'tv' and (conf[CONF_ACCESS_TOKEN] == ''
-        or conf[CONF_ACCESS_TOKEN] is None):
-            raise vol.Invalid("If {CONF_DEVICE_CLASS} is 'tv' then "
-                            "{CONF_ACCESS_TOKEN} is required. Set "
-                            "{CONF_DEVICE_CLASS} to 'soundbar' if "
-                            "target device is soundbar without auth")
+def validate_tokens(conf):
+    """Custom config validator to make access_token required if
+    device_class is tv.
+    """
+
+    if conf[CONF_DEVICE_CLASS] == 'tv' and (conf[CONF_ACCESS_TOKEN] is None or
+                                            conf[CONF_ACCESS_TOKEN] == ''):
+        raise vol.Invalid("If {CONF_DEVICE_CLASS} is 'tv' then "
+                          "{CONF_ACCESS_TOKEN} is required. Set "
+                          "{CONF_DEVICE_CLASS} to 'soundbar' if target device "
+                          "is soundbar without auth")
     return conf
 
 
