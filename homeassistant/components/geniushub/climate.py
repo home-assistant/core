@@ -51,7 +51,7 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
         if hasattr(zone, 'temperature'):
             zones.append(GeniusClimate(client, zone))
 
-    async_add_entities(zones, update_before_add=False)
+    async_add_entities(zones)
 
 
 class GeniusClimate(ClimateDevice):
@@ -77,11 +77,7 @@ class GeniusClimate(ClimateDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the device state attributes of the evohome Climate device.
-
-        This is state data that is not available otherwise, due to the
-        restrictions placed upon ClimateDevice properties, etc. by HA.
-        """
+        """Return the device state attributes."""
         tmp = self._objref.__dict__.items()
         state = {k: v for k, v in tmp if k in GH_DEVICE_STATE_ATTRS}
 
@@ -125,7 +121,7 @@ class GeniusClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
-        return GH_STATE_TO_HA.get(self._objref.mode, None)
+        return GH_STATE_TO_HA.get(self._objref.mode)
 
     @property
     def is_on(self):
@@ -154,6 +150,5 @@ class GeniusClimate(ClimateDevice):
         try:
             await self._objref.update()
         except (AssertionError, asyncio.TimeoutError) as err:
-            _LOGGER.warning("self.(%s).update(): Failed "
-                            "(maybe just an arbitary failure?), message: %s",
+            _LOGGER.warning("Update for %s failed, message: %s",
                             self._id, err)
