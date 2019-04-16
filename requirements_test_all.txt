@@ -205,7 +205,7 @@ pushbullet.py==0.11.0
 py-canary==0.5.0
 
 # homeassistant.components.tplink
-pyHS100==0.3.4
+pyHS100==0.3.5
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
