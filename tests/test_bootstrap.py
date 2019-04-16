@@ -240,4 +240,3 @@ async def test_setup_after_deps_not_present(hass, caplog):
     assert 'first_dep' not in hass.config.components
     assert 'second_dep' in hass.config.components
     assert order == ['root', 'second_dep']
-    assert False
