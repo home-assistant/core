@@ -13,6 +13,7 @@ MANIFEST_SCHEMA = vol.Schema({
     vol.Required('documentation'): str,
     vol.Required('requirements'): [str],
     vol.Required('dependencies'): [str],
+    vol.Optional('after_dependencies'): [str],
     vol.Required('codeowners'): [str],
 })
 
