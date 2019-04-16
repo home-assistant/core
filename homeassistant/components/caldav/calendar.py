@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.calendar import (
     PLATFORM_SCHEMA, CalendarEventDevice, get_date)
 from homeassistant.const import (
-    CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
+    CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, dt
 
