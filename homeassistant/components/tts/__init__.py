@@ -55,19 +55,17 @@ _RE_VOICE_FILE = re.compile(
 KEY_PATTERN = '{0}_{1}_{2}_{3}'
 
 
-def _rename_platform(config):
-    """Rename platform type."""
-    if config[CONF_PLATFORM] == 'google':
-        _LOGGER.warning(
-            'google tts service has been renamed to google_translate tts,'
-            ' please change your configuration.')
-        config[CONF_PLATFORM] = 'google_translate'
-        config[CONF_SERVICE_NAME] = 'google_say'
-
-    return config
+def _deprecated_platform(value):
+    """Validate if platform is deprecated."""
+    if value == 'google':
+        raise vol.Invalid(
+            'google tts service has been renamed to google_translate,'
+            ' please update your configuration.')
+    return value
 
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
     vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
     vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
@@ -75,11 +73,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BASE_URL): cv.string,
     vol.Optional(CONF_SERVICE_NAME): cv.string,
 })
-
-PLATFORM_SCHEMA_BASE = vol.Schema(vol.All(
-    cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema),
-    _rename_platform,
-))
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 SCHEMA_SERVICE_SAY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.string,

@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
     CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_AUTH_MFA_MODULES,
-    CONF_TYPE, CONF_ID, CONF_PLATFORM)
+    CONF_TYPE, CONF_ID)
 from homeassistant.core import callback, DOMAIN as CONF_CORE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import (
@@ -104,6 +104,7 @@ tts:
   - platform: google_translate
     service_name: google_say
 """
+
 
 def _no_duplicate_auth_provider(configs: Sequence[Dict[str, Any]]) \
         -> Sequence[Dict[str, Any]]:
@@ -773,11 +774,6 @@ async def async_process_component_config(
             async_log_exception(ex, domain, p_config, hass)
             continue
 
-        # Allow PLATFORM_SCHEMA_BASE modify or inject platform name
-        # To avoid breaking change when we have to change platform name
-        # For example google/tts => google_translate/tts
-        p_name = p_validated.get(CONF_PLATFORM)
-
         # Not all platform components follow same pattern for platforms
         # So if p_name is None we are not going to validate platform
         # (the automation component is one of them)
@@ -796,7 +792,7 @@ async def async_process_component_config(
             # pylint: disable=no-member
             try:
                 p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                    p_validated)
+                    p_config)
             except vol.Invalid as ex:
                 async_log_exception(ex, '{}.{}'.format(domain, p_name),
                                     p_config, hass)
