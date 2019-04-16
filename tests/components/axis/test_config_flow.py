@@ -6,8 +6,6 @@ from homeassistant.components.axis import config_flow
 
 from tests.common import mock_coro, MockConfigEntry
 
-import axis as axis_lib
-
 
 async def test_configured_devices(hass):
     """Test that configured devices works as expected."""
@@ -37,13 +35,9 @@ async def test_flow_works(hass):
             mock_device.port = port
             return mock_device
 
-        def mock_get_param(param):
-            """Fake get param method."""
-            return param
-
         mock_device.side_effect = mock_constructor
-        mock_device.vapix.load_params.return_value = Mock()
-        mock_device.vapix.get_param.side_effect = mock_get_param
+        mock_device.vapix.params.system_serialnumber = 'serialnumber'
+        mock_device.vapix.params.prodnbr = 'prodnbr'
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -59,23 +53,22 @@ async def test_flow_works(hass):
                 config_flow.CONF_HOST: '1.2.3.4',
                 config_flow.CONF_USERNAME: 'user',
                 config_flow.CONF_PASSWORD: 'pass',
-                config_flow.CONF_PORT: 81
+                config_flow.CONF_PORT: 80
             }
         )
 
     assert result['type'] == 'create_entry'
-    assert result['title'] == '{} - {}'.format(
-        axis_lib.vapix.VAPIX_MODEL_ID, axis_lib.vapix.VAPIX_SERIAL_NUMBER)
+    assert result['title'] == '{} - {}'.format('prodnbr', 'serialnumber')
     assert result['data'] == {
         axis.CONF_DEVICE: {
             config_flow.CONF_HOST: '1.2.3.4',
             config_flow.CONF_USERNAME: 'user',
             config_flow.CONF_PASSWORD: 'pass',
-            config_flow.CONF_PORT: 81
+            config_flow.CONF_PORT: 80
         },
-        config_flow.CONF_MAC: axis_lib.vapix.VAPIX_SERIAL_NUMBER,
-        config_flow.CONF_MODEL: axis_lib.vapix.VAPIX_MODEL_ID,
-        config_flow.CONF_NAME: 'Brand.ProdNbr 0'
+        config_flow.CONF_MAC: 'serialnumber',
+        config_flow.CONF_MODEL: 'prodnbr',
+        config_flow.CONF_NAME: 'prodnbr 0'
     }
 
 
@@ -89,7 +82,7 @@ async def test_flow_fails_already_configured(hass):
     entry.add_to_hass(hass)
 
     mock_device = Mock()
-    mock_device.vapix.get_param.return_value = '1234'
+    mock_device.vapix.params.system_serialnumber = '1234'
 
     with patch('homeassistant.components.axis.config_flow.get_device',
                return_value=mock_coro(mock_device)):
@@ -97,7 +90,7 @@ async def test_flow_fails_already_configured(hass):
             config_flow.CONF_HOST: '1.2.3.4',
             config_flow.CONF_USERNAME: 'user',
             config_flow.CONF_PASSWORD: 'pass',
-            config_flow.CONF_PORT: 81
+            config_flow.CONF_PORT: 80
         })
 
     assert result['errors'] == {'base': 'already_configured'}
@@ -114,7 +107,7 @@ async def test_flow_fails_faulty_credentials(hass):
             config_flow.CONF_HOST: '1.2.3.4',
             config_flow.CONF_USERNAME: 'user',
             config_flow.CONF_PASSWORD: 'pass',
-            config_flow.CONF_PORT: 81
+            config_flow.CONF_PORT: 80
         })
 
     assert result['errors'] == {'base': 'faulty_credentials'}
@@ -131,7 +124,7 @@ async def test_flow_fails_device_unavailable(hass):
             config_flow.CONF_HOST: '1.2.3.4',
             config_flow.CONF_USERNAME: 'user',
             config_flow.CONF_PASSWORD: 'pass',
-            config_flow.CONF_PORT: 81
+            config_flow.CONF_PORT: 80
         })
 
     assert result['errors'] == {'base': 'device_unavailable'}
@@ -207,13 +200,7 @@ async def test_discovery_flow_known_device(hass):
             mock_device.port = port
             return mock_device
 
-        def mock_get_param(param):
-            """Fake get param method."""
-            return param
-
         mock_device.side_effect = mock_constructor
-        mock_device.vapix.load_params.return_value = Mock()
-        mock_device.vapix.get_param.side_effect = mock_get_param
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -303,13 +290,9 @@ async def test_import_flow_works(hass):
             mock_device.port = port
             return mock_device
 
-        def mock_get_param(param):
-            """Fake get param method."""
-            return param
-
         mock_device.side_effect = mock_constructor
-        mock_device.vapix.load_params.return_value = Mock()
-        mock_device.vapix.get_param.side_effect = mock_get_param
+        mock_device.vapix.params.system_serialnumber = 'serialnumber'
+        mock_device.vapix.params.prodnbr = 'prodnbr'
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -324,8 +307,7 @@ async def test_import_flow_works(hass):
         )
 
     assert result['type'] == 'create_entry'
-    assert result['title'] == '{} - {}'.format(
-        axis_lib.vapix.VAPIX_MODEL_ID, axis_lib.vapix.VAPIX_SERIAL_NUMBER)
+    assert result['title'] == '{} - {}'.format('prodnbr', 'serialnumber')
     assert result['data'] == {
         axis.CONF_DEVICE: {
             config_flow.CONF_HOST: '1.2.3.4',
@@ -333,7 +315,7 @@ async def test_import_flow_works(hass):
             config_flow.CONF_PASSWORD: 'pass',
             config_flow.CONF_PORT: 80
         },
-        config_flow.CONF_MAC: axis_lib.vapix.VAPIX_SERIAL_NUMBER,
-        config_flow.CONF_MODEL: axis_lib.vapix.VAPIX_MODEL_ID,
+        config_flow.CONF_MAC: 'serialnumber',
+        config_flow.CONF_MODEL: 'prodnbr',
         config_flow.CONF_NAME: 'name'
     }

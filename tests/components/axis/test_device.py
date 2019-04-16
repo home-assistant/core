@@ -190,8 +190,10 @@ async def test_shutdown():
 
 async def test_get_device(hass):
     """Successful call."""
-    with patch('axis.vapix.Vapix.load_params',
-               return_value=mock_coro()):
+    with patch('axis.param_cgi.Params.update_brand',
+               return_value=mock_coro()), \
+            patch('axis.param_cgi.Params.update_properties',
+                  return_value=mock_coro()):
         assert await device.get_device(hass, DEVICE_DATA)
 
 
@@ -199,7 +201,7 @@ async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
     import axis
 
-    with patch('axis.vapix.Vapix.load_params',
+    with patch('axis.param_cgi.Params.update_brand',
                side_effect=axis.Unauthorized), \
             pytest.raises(errors.AuthenticationRequired):
         await device.get_device(hass, DEVICE_DATA)
@@ -209,7 +211,7 @@ async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
     import axis
 
-    with patch('axis.vapix.Vapix.load_params',
+    with patch('axis.param_cgi.Params.update_brand',
                side_effect=axis.RequestError), \
             pytest.raises(errors.CannotConnect):
         await device.get_device(hass, DEVICE_DATA)
@@ -219,7 +221,7 @@ async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
     import axis
 
-    with patch('axis.vapix.Vapix.load_params',
+    with patch('axis.param_cgi.Params.update_brand',
                side_effect=axis.AxisException), \
             pytest.raises(errors.AuthenticationRequired):
         await device.get_device(hass, DEVICE_DATA)
