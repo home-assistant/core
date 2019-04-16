@@ -35,6 +35,7 @@ def validate_dependencies(integration: Integration):
                           r"hass\.components\.(\w+)")
     referenced -= ALLOWED_USED_COMPONENTS
     referenced -= set(integration.manifest['dependencies'])
+    referenced -= set(integration.manifest.get('after_dependencies', []))
 
     if referenced:
         for domain in sorted(referenced):

@@ -116,6 +116,8 @@ class Integration:
         self.name = manifest['name']  # type: str
         self.domain = manifest['domain']  # type: str
         self.dependencies = manifest['dependencies']  # type: List[str]
+        self.after_dependencies = manifest.get(
+            'after_dependencies')  # type: Optional[List[str]]
         self.requirements = manifest['requirements']  # type: List[str]
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
