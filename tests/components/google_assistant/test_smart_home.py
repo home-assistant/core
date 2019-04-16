@@ -14,7 +14,6 @@ from homeassistant.components.google_assistant import (
     const, trait, helpers, smart_home as sh,
     EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
 from homeassistant.components.demo.light import DemoLight
-from homeassistant.components.demo.cover import DemoCover
 from homeassistant.components.demo.switch import DemoSwitch
 
 from homeassistant.helpers import device_registry
