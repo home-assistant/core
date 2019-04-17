@@ -124,7 +124,7 @@ ha-ffmpeg==2.0
 hangups==0.4.6
 
 # homeassistant.components.cloud
-
+hass-nabucasa==0.12
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.4
