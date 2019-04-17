@@ -154,15 +154,6 @@ def catch_log_exception(
             except Exception:  # pylint: disable=broad-except
                 log_exception(*args)
         wrapper_func = async_wrapper
-    elif inspect.iscoroutine(func):
-        @wraps(func)
-        async def async_wrapper(*args: Any) -> None:
-            """Catch and log exception."""
-            try:
-                return await func
-            except Exception:  # pylint: disable=broad-except
-                log_exception(*args)
-        wrapper_func = async_wrapper()
     else:
         @wraps(func)
         def wrapper(*args: Any) -> None:
@@ -175,8 +166,32 @@ def catch_log_exception(
     return wrapper_func
 
 
+def catch_log_coro_exception(
+        func: Coroutine[Any, Any, Any],
+        format_err: Callable[..., Any],
+        *args: Any) -> Coroutine[Any, Any, Any]:
+    """Decorate a coroutine to catch and log exceptions."""
+    def log_exception(*args: Any) -> None:
+        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
+        # Do not print the wrapper in the traceback
+        frames = len(inspect.trace()) - 1
+        exc_msg = traceback.format_exc(-frames)
+        friendly_msg = format_err(*args)
+        logging.getLogger(module_name).error('%s\n%s', friendly_msg, exc_msg)
+
+    @wraps(func)  # type: ignore
+    async def coro_wrapper(*args: Any) -> Any:
+        """Catch and log exception."""
+        try:
+            return await func
+        except Exception:  # pylint: disable=broad-except
+            log_exception(*args)
+            return None
+    return coro_wrapper()  # type: ignore
+
+
 def async_create_catching_coro(
-        target: Coroutine, catch=False) -> Coroutine:
+        target: Coroutine) -> Coroutine:
     """Wrap a coroutine to catch and log exceptions.
 
     The exception will be logged together with a stacktrace of where the
@@ -185,9 +200,10 @@ def async_create_catching_coro(
     target: target coroutine.
     """
     trace = traceback.extract_stack()
-    wrapped_target = catch_log_exception(
+    wrapped_target = catch_log_coro_exception(
         target, lambda *args:
         "Exception in {} called from\n {}".format(
-            target.__name__, "".join(traceback.format_list(trace))))
+            target.__name__,  # type: ignore
+            "".join(traceback.format_list(trace))))
 
     return wrapped_target
