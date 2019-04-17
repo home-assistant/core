@@ -18,7 +18,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
 })
 
 
@@ -56,26 +55,11 @@ class NikoHomeControlLight(Light):
         self._name = light.name
         self._state = light.is_on
         self._brightness = None
-        _LOGGER.debug("Init new light: %s", light.name)
 
     @property
     def unique_id(self):
         """Return unique ID for light."""
         return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return device info for light."""
-        return {
-            'identifiers': {
-                ('niko_home_control', self.unique_id)
-            },
-            'name': self.name,
-            'manufacturer': 'Niko group nv',
-            'model': 'Niko connected controller',
-            'sw_version': self._data.info_swversion(self._light),
-            'via_hub': ('niko_home_control'),
-        }
 
     @property
     def name(self):
@@ -92,16 +76,16 @@ class NikoHomeControlLight(Light):
         """Return true if light is on."""
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         self._light.brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         _LOGGER.debug('Turn on: %s', self.name)
-        await self._data.hass.async_add_executor_job(self._light.turn_on)
+        self._light.turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         _LOGGER.debug('Turn off: %s', self.name)
-        await self._data.hass.async_add_executor_job(self._light.turn_off)
+        self._light.turn_off()
 
     async def async_update(self):
         """Get the latest data from NikoHomeControl API."""
@@ -134,10 +118,8 @@ class NikoHomeControlData:
 
     def get_state(self, aid):
         """Find and filter state based on action id."""
-        return next(filter(lambda a: a['id'] == aid, self.data))['value1'] != 0
+        for state in self.data:
+            if state['id'] == aid:
+                return state['value1'] != 0
+        _LOGGER.error("Failed to retrieve state off unknown light.")
 
-    def info_swversion(self, light):
-        """Return software version information."""
-        if self._system_info is None:
-            self._system_info = self._nhc.system_info()
-        return self._system_info['swversion']
