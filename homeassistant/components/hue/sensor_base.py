@@ -53,9 +53,8 @@ class SensorManager:
     def __init__(self, hass, bridge):
         """Initialize the sensor manager."""
         import aiohue
-        from homeassistant.components.hue.binary_sensor import (
-            HuePresence, PRESENCE_NAME_FORMAT)
-        from homeassistant.components.hue.sensor import (
+        from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
+        from .sensor import (
             HueLightLevel, HueTemperature, LIGHT_LEVEL_NAME_FORMAT,
             TEMPERATURE_NAME_FORMAT)
 
