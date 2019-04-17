@@ -40,12 +40,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the AfvalwijzerSensor sensors."""
-    zip = config.get(CONF_ZIPCODE)
+    zipcode = config.get(CONF_ZIPCODE)
     housenumber = config.get(CONF_HOUSENUMBER)
     numberaddition = config.get(CONF_HOUSENUMBERADDITION)
 
     from afvalwijzer_pkg.afvalwijzerapi import AfvalwijzerAPI
-    api = AfvalwijzerAPI(zip, housenumber, numberaddition)
+    api = AfvalwijzerAPI(zipcode, housenumber, numberaddition)
     if not api.available:
         raise PlatformNotReady
 
@@ -61,7 +61,7 @@ class AfvalwijzerSensor(Entity):
     def __init__(self, api, index):
         """Initialize an AfvalwijzerSensor sensor."""
         self._api = api
-        self._garbageType = index
+        self._garbage_type = index
         self._name = MONITORED_CONDITIONS[index][0]
         self._icon = MONITORED_CONDITIONS[index][2]
 
@@ -83,7 +83,7 @@ class AfvalwijzerSensor(Entity):
     @property
     def state(self):
         """Return the state of the garbagetype."""
-        return self._api.getPickupDate(self._garbageType)
+        return self._api.getPickupDate(self._garbage_type)
 
     @property
     def available(self):
