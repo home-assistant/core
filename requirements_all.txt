@@ -96,6 +96,9 @@ abodepy==0.15.0
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
 
+# homeassistant.components.afvalwijzer
+afvalwijzerapi==0.0.2
+
 # homeassistant.components.ambient_station
 aioambient==0.3.0
 

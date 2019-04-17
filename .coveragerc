@@ -15,6 +15,7 @@ omit =
     homeassistant/components/actiontec/device_tracker.py
     homeassistant/components/ads/*
     homeassistant/components/aftership/sensor.py
+    homeassistant/components/afvalwijzer/sensor.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/alarm_control_panel/manual_mqtt.py
