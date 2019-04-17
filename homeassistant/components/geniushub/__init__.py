@@ -1,4 +1,4 @@
-"""This module connects to the Genius hub and shares the data."""
+"""This module connects to a Genius hub and shares the data."""
 import logging
 
 import voluptuous as vol
