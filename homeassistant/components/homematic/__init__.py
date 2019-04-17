@@ -123,7 +123,8 @@ HM_ATTRIBUTE_SUPPORT = {
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
     'OPERATING_VOLTAGE': ['voltage', {}],
-    'WORKING': ['working', {0: 'No', 1: 'Yes'}]
+    'WORKING': ['working', {0: 'No', 1: 'Yes'}],
+    'STATE_UNCERTAIN': ['state_uncertain', {}]
 }
 
 HM_PRESS_EVENTS = [
