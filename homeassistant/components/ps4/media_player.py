@@ -115,10 +115,12 @@ class PS4Device(MediaPlayerDevice):
         self._media_content_id = None
         self._media_title = None
         self._media_image = None
+        self._media_type = None
         self._source = None
         self._games = {}
         self._source_list = []
         self._retry = 0
+        self._disconnected = False
         self._info = None
         self._unique_id = None
         self._power_on = False
@@ -147,6 +149,7 @@ class PS4Device(MediaPlayerDevice):
             status = None
         if status is not None:
             self._retry = 0
+            self._disconnected = False
             if status.get('status') == 'Ok':
                 # Check if only 1 device in Hass.
                 if len(self.hass.data[PS4_DATA].devices) == 1:
@@ -189,7 +192,9 @@ class PS4Device(MediaPlayerDevice):
         """Set states for state unknown."""
         self.reset_title()
         self._state = None
-        _LOGGER.warning("PS4 could not be reached")
+        if self._disconnected is False:
+            _LOGGER.warning("PS4 could not be reached")
+        self._disconnected = True
         self._retry = 0
 
     def reset_title(self):
@@ -203,9 +208,11 @@ class PS4Device(MediaPlayerDevice):
         app_name = None
         art = None
         try:
-            app_name, art = self._ps4.get_ps_store_data(
+            title = self._ps4.get_ps_store_data(
                 name, title_id, self._region)
-        except TypeError:
+            app_name = title.name
+            art = title.cover_art
+        except (AttributeError, TypeError):
             _LOGGER.error(
                 "Could not find data in region: %s for PS ID: %s",
                 self._region, title_id)
@@ -213,6 +220,7 @@ class PS4Device(MediaPlayerDevice):
             self._media_title = app_name or name
             self._source = self._media_title
             self._media_image = art
+            self._media_type = MEDIA_TYPE_GAME
             self.update_list()
 
     def update_list(self):
@@ -325,7 +333,7 @@ class PS4Device(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        return MEDIA_TYPE_GAME
+        return self._media_type
 
     @property
     def media_image_url(self):
