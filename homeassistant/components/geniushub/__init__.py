@@ -16,13 +16,11 @@ DOMAIN = 'geniushub'
 _V1_API_SCHEMA = vol.Schema({
     vol.Required(CONF_TOKEN): cv.string,
 })
-
 _V3_API_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
 })
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Any(
         _V3_API_SCHEMA,
@@ -37,18 +35,15 @@ async def async_setup(hass, hass_config):
 
     geniushub_data = hass.data[DOMAIN] = {}
 
-    if hass_config[DOMAIN].get(CONF_HOST):
-        host = hass_config[DOMAIN].get(CONF_HOST)
-        username = hass_config[DOMAIN].get(CONF_USERNAME)
-        password = hass_config[DOMAIN].get(CONF_PASSWORD)
+    kwargs = dict(hass_config[DOMAIN])
+    if CONF_HOST in kwargs:
+        args = (kwargs.pop(CONF_HOST), )
     else:
-        host = hass_config[DOMAIN].get(CONF_TOKEN)
-        username = password = None
+        args = (kwargs.pop(CONF_TOKEN), )
 
     try:
         client = geniushub_data['client'] = GeniusHubClient(
-            host, username, password,
-            session=async_get_clientsession(hass)
+            *args, **kwargs, session=async_get_clientsession(hass)
         )
 
         await client.hub.update()
