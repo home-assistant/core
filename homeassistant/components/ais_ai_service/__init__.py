@@ -2848,7 +2848,9 @@ class AisNext(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         yield from hass.services.async_call(
-            'media_player', 'media_next_track')
+            'media_player', 'media_next_track', {
+                ATTR_ENTITY_ID: "media_player.wbudowany_glosnik",
+            })
         message = 'ok, następny'
         return message, True
 
@@ -2862,7 +2864,9 @@ class AisPrev(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         yield from hass.services.async_call(
-            'media_player', 'media_previous_track')
+            'media_player', 'media_previous_track', {
+                ATTR_ENTITY_ID: "media_player.wbudowany_glosnik",
+            })
         message = 'ok, poprzedni'
         return message, True
 

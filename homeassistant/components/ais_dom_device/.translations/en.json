@@ -1,46 +1,44 @@
 {
     "config": {
-      "title": "AIS Dodanie Nowego Urządzenia",
+      "title": "AIS Add New Device",
       "step": {
         "confirm": {
-          "description": "Czy chcesz dodać nowe urządzenie?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nTen kreator działa z urządzeniami posiadającymi **otwarto źródłowe i darmowe** oprogramowanie, którego rozwój wspieramy.\n\nSzczegóły w dokumentacji [Działa z AI-Speaker](https://sviete.github.io/AIS-docs/docs/en/ais_iot_works_with.html)",
+          "description": "Do you want to add a new device?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nThis wizard works with devices having ** open source and free ** software developed as part of the project [Sonoff-Tasmota] (https://github.com/arendst/Sonoff-Tasmota). The software is installed on devices ** AI-Speaker **, it can also be an alternative software for devices manufactured by many manufacturers.\n\nDetails in the documentation [Works with AI-Speaker] (https://sviete.github.io/AIS-docs/docs/en/ais_iot_works_with.html)",
           "title": "Dodawanie urządzenia AIS"
         },
         "one": {
-          "description": "Krok 1\n\n ![AIS logo](/static/icons/ais_s20_1.jpg)\n\nPodłącz urządzenie do zasilania.\nUpewnij się, że urządzenie znajduje się w zasięgu routera WiFi, do którego sieci ma zostać dołączone oraz blisko bramki **AIS dom**",
-          "title": "Podłącz urządzenie do prądu"
+          "description": "![AIS logo](/static/icons/ais_s20_1.jpg)\n\nMake sure the device is within range of the WiFi router.\nIn the next steps we will attach them to your local WiFi network and to the gate **AIS dom**",
+          "title": "Connect the device to the power supply."
         },
         "two": {
-          "description": "Krok 2\n\n ![AIS logo](/static/icons/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu.\nŻeby wymusić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.\n\nNastępnie rozpocznij wyszukiwanie urządzeia, naciskając **SUBMIT**",
-          "title": "Poczekaj na tryb praowania"
+          "description": "![AIS logo](/static/icons/ais_s20_2.gif)\n\nThe pairing mode is signaled by the blinking of the LED on the device.\nTo start the pairing mode, press the button on the device 4 times quickly and wait for its LED to blink.\n\nThen start searching for the device by pressing **SUBMIT**",
+          "title": "Start the pairing mode"
         },
         "search_iot": {
-          "description": "Szukanie urządzenia w sieci\n\n",
-          "title": "Szukanie urządzenia w sieci"
+          "description": "Searching for a device on the network\n\n",
+          "title": "\n27/5000\nSearching for a device on the network"
         },
         "add_device": {
-          "description": "Krok 3\n\nDodajemy do bramki o identyfikatorze: **{gate_id}**\nnowe urządzenie o identyfikatorze: **{device_id}**",
-          "title": "Podaj nazwę dla urządzenia, sprawdz pozostałe parametry z domyślnymi wartościami",
-          "data": { "name": "Nazwa urządzenia",
-                    "type": "Dodaj do grupy",
-                    "networks": "Sieć WiFi do której dołączyć urządzenie",
-                    "password": "Hasło do sieci WiFi",
-                    "confirm_key": "Potwierdzam, parametry są poprawne."
+          "description": "We add to the gate with the identifier: ** {gate_id} **\nnew device with ID: ** {device_id}**",
+          "title": "Enter the name for the device, check the remaining parameters",
+          "data": { "name": "Device name",
+                    "type": "Add to group",
+                    "networks": "A WiFi network to which to add a device\n",
+                    "password": "Password for WiFi network",
+                    "confirm_key": "I confirm, the parameters are correct."
                 }
-        },
-        "init": {
-          "description": "TODO",
-          "title": "Potwierdzenie dodania"
         }
       },
       "error": {
-        "search_failed": "Nie można znaleźć urządzenia, proszę spróbuj ponownie.",
-        "add_failed": "Nie udało się dodać nowego urządzenia, proszę spróbuj ponownie.",
-        "confirm_error": "Potwierdz proszę, że parametry są poprawne.",
-        "name_error": "Wybrana nazwa może mieć maksymalnie 32 znaki"
+        "search_failed": "The device can not be found, please try again.",
+        "add_failed": "We could not add a new device, please try again.",
+        "confirm_error": "Please confirm that the parameters are correct.",
+        "name_error": "The selected name can have a maximum of 32 characters."
       },
       "abort": {
-        "add_failed": "Nie udało się dodać nowego urządzenia, proszę sprawdz podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}"
+        "add_failed": "We could not add a new device, please check the given parameters and try again.\n\n Error information: {error_info}",
+        "add_not_possible": "The device can not be added.\n\nError information: {error_info}",
+        "add_executed": "We send settings to the device.\n\nDuring this step, it is necessary to disconnect the **AIS dom** gateway from the WiFi network, it will take only a moment.\n\n Once successfully added, the new device will automatically appear in the device list."
       }
     }
 }

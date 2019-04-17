@@ -3,23 +3,23 @@
       "title": "AIS Dodanie Nowego Urządzenia",
       "step": {
         "confirm": {
-          "description": "Czy chcesz dodać nowe urządzenie?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nTen kreator działa z urządzeniami posiadającymi **otwarto źródłowe i darmowe** oprogramowanie, którego rozwój wspieramy.\n\nSzczegóły w dokumentacji [Działa z AI-Speaker](https://sviete.github.io/AIS-docs/docs/en/ais_iot_works_with.html)",
+          "description": "Czy chcesz dodać nowe urządzenie?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nTen kreator działa z urządzeniami posiadającymi **otwarto źródłowe i darmowe** oprogramowanie rozwijane w ramach projektu [Sonoff-Tasmota](https://github.com/arendst/Sonoff-Tasmota). Oprogramowanie to jest instalowane na urządzeniach **AI-Speaker**, może być też alternatywnym oprogramowaniem dla urządzeń produkowanych przez wielu producentów.\n\nSzczegóły w dokumentacji [Działa z AI-Speaker](https://sviete.github.io/AIS-docs/docs/en/ais_iot_works_with.html)",
           "title": "Dodawanie urządzenia AIS"
         },
         "one": {
-          "description": "Krok 1\n\n ![AIS logo](/static/icons/ais_s20_1.jpg)\n\nPodłącz urządzenie do zasilania.\nUpewnij się, że urządzenie znajduje się w zasięgu routera WiFi, do którego sieci ma zostać dołączone oraz blisko bramki **AIS dom**",
-          "title": "Podłącz urządzenie do prądu"
+          "description": "![AIS logo](/static/icons/ais_s20_1.jpg)\n\nUpewnij się, że urządzenie znajduje się w zasięgu routera WiFi.\nW kolejnych krokach dołączymy je do Twojej lokalnej sieci WiFi i do bramki **AIS dom**",
+          "title": "Podłącz urządzenie do zasilania."
         },
         "two": {
-          "description": "Krok 2\n\n ![AIS logo](/static/icons/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu.\nŻeby wymusić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.\n\nNastępnie rozpocznij wyszukiwanie urządzeia, naciskając **SUBMIT**",
-          "title": "Poczekaj na tryb praowania"
+          "description": "![AIS logo](/static/icons/ais_s20_2.gif)\n\nTryb parowania sygnalizowany jest mruganiem diody na urządzeniu.\nŻeby uruchomić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczkaj aż jego dioda zacznie mrugać.\n\nNastępnie rozpocznij wyszukiwanie urządzenia, naciskając **SUBMIT**",
+          "title": "Uruchom tryb parowania"
         },
         "search_iot": {
           "description": "Szukanie urządzenia w sieci\n\n",
           "title": "Szukanie urządzenia w sieci"
         },
         "add_device": {
-          "description": "Krok 3\n\nDodajemy do bramki o identyfikatorze: **{gate_id}**\nnowe urządzenie o identyfikatorze: **{device_id}**",
+          "description": "Dodajemy do bramki o identyfikatorze: **{gate_id}**\nnowe urządzenie o identyfikatorze: **{device_id}**",
           "title": "Podaj nazwę dla urządzenia, sprawdz pozostałe parametry z domyślnymi wartościami",
           "data": { "name": "Nazwa urządzenia",
                     "type": "Dodaj do grupy",
@@ -27,10 +27,6 @@
                     "password": "Hasło do sieci WiFi",
                     "confirm_key": "Potwierdzam, parametry są poprawne."
                 }
-        },
-        "init": {
-          "description": "TODO",
-          "title": "Potwierdzenie dodania"
         }
       },
       "error": {
@@ -40,7 +36,9 @@
         "name_error": "Wybrana nazwa może mieć maksymalnie 32 znaki"
       },
       "abort": {
-        "add_failed": "Nie udało się dodać nowego urządzenia, proszę sprawdz podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}"
+        "add_failed": "Nie udało się dodać nowego urządzenia, proszę sprawdz podane parametry i spróbuj ponownie.\n\n Informacja o błędzie: {error_info}",
+        "add_not_possible": "Nie można dodać urządzenia.\n\n Informacja o błędzie: {error_info}",
+        "add_executed": "Przesyłamy ustawienia do urządzenia.\n\n Podczas tego kroku konieczne jest rozłączenie bramki **AIS dom** z sieci WiFi, zajmie to tylko chwilę.\n\n Po pomyślnym dodaniu, nowe urządzenie pojawi się automatycznie na liście urządzeń."
       }
     }
 }
