@@ -25,7 +25,7 @@ The system is built using a modular approach so support for other devices or act
 components <https://developers.home-assistant.io/docs/en/creating_component_index.html>`__.
 
 If you run into issues while using Home Assistant or during development
-of a component, check the `Home Assistant help section <https://home-assistant.io/help/>`__ of our website for further help and information.
+of a   a component, check the `Home Assistant help section <https://home-assistant.io/help/>`__ of our website for further help and information.
 
 .. |Build Status| image:: https://travis-ci.org/home-assistant/home-assistant.svg?branch=master
    :target: https://travis-ci.org/home-assistant/home-assistant
