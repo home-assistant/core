@@ -48,8 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_KEY_INTERVAL, default=DEFAULT_KEY_INTERVAL):
         cv.small_float,
-    vol.Optional(CONF_SIMULATE_VOLUME_SET, default=DEFAULT_SIMULATE_VOLUME_SET):
-        cv.boolean,
+    vol.Optional(CONF_SIMULATE_VOLUME_SET,
+                 default=DEFAULT_SIMULATE_VOLUME_SET): cv.boolean,
     vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
         vol.All(cv.ensure_list, [SOURCE_SCHEMA])
 })
@@ -104,19 +104,16 @@ class HkAvrDevice(MediaPlayerDevice):
 
     def update(self):
         """Update the state of this media_player."""
+        self._muted = self._avr.muted
+        self._current_source = self._avr.current_source
+
         if self._avr.is_on():
             self._state = STATE_ON
         elif self._avr.is_off():
             self._state = STATE_OFF
         else:
-            try:
-                self._avr.send_command("HEARTBEAT")
-                self._state = None
-            except:
-                self._state = STATE_OFF
-
-        self._muted = self._avr.muted
-        self._current_source = self._avr.current_source
+            self._avr.send_command("HEARTBEAT")
+            self._state = None
 
     @property
     def name(self):
