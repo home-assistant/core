@@ -30,7 +30,8 @@ DEFAULT_NAME = 'Harman Kardon AVR'
 DEFAULT_PORT = 10025
 DEFAULT_KEY_INTERVAL = 0.2
 DEFAULT_SIMULATE_VOLUME_SET = False
-DEFAULT_SOURCES = [{"name":"STB"}, {"name":"Radio"}, {"name":"TV"}, {"name":"Game"}, {"name":"AUX"}]
+DEFAULT_SOURCES = [{"name": "STB"}, {"name": "Radio"}, {"name": "TV"},
+                   {"name": "Game"}, {"name": "AUX"}]
 
 SUPPORT_HARMAN_KARDON_AVR = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
                             SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
@@ -45,8 +46,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_KEY_INTERVAL, default=DEFAULT_KEY_INTERVAL): cv.small_float,
-    vol.Optional(CONF_SIMULATE_VOLUME_SET, default=DEFAULT_SIMULATE_VOLUME_SET): cv.boolean,
+    vol.Optional(CONF_KEY_INTERVAL, default=DEFAULT_KEY_INTERVAL):
+        cv.small_float,
+    vol.Optional(CONF_SIMULATE_VOLUME_SET, default=DEFAULT_SIMULATE_VOLUME_SET):
+        cv.boolean,
     vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
         vol.All(cv.ensure_list, [SOURCE_SCHEMA])
 })
@@ -56,12 +59,12 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up the AVR platform."""
     import hkavr
 
-    name                = config.get(CONF_NAME)
-    host                = config.get(CONF_HOST)
-    port                = config.get(CONF_PORT)
-    key_interval        = config.get(CONF_KEY_INTERVAL)
+    name = config.get(CONF_NAME)
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    key_interval = config.get(CONF_KEY_INTERVAL)
     simulate_volume_set = config.get(CONF_SIMULATE_VOLUME_SET)
-    sources             = config.get(CONF_SOURCES)
+    sources = config.get(CONF_SOURCES)
 
     avr = hkavr.HkAVR(host, port, name)
     avr_device = HkAvrDevice(avr, key_interval, sources, simulate_volume_set)
@@ -82,7 +85,7 @@ class HkAvrDevice(MediaPlayerDevice):
         self._key_interval = key_interval
 
         self._volume = 0.5
-        
+
         self._simulate_volume_set = simulate_volume_set
 
         _sources = []
@@ -101,7 +104,6 @@ class HkAvrDevice(MediaPlayerDevice):
 
     def update(self):
         """Update the state of this media_player."""
-
         if self._avr.is_on():
             self._state = STATE_ON
         elif self._avr.is_off():
@@ -110,7 +112,7 @@ class HkAvrDevice(MediaPlayerDevice):
             try:
                 self._avr.send_command("HEARTBEAT")
                 self._state = None
-            except:
+            except Error:
                 self._state = STATE_OFF
 
         self._muted = self._avr.muted
