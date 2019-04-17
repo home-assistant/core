@@ -25,7 +25,7 @@ from homeassistant.helpers.service import extract_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['onvif-zeep==0.2.12',
+REQUIREMENTS = ['onvif-zeep-async==0.1.0',
                 'zeep[async]==3.0.0']
 DEPENDENCIES = ['ffmpeg']
 DEFAULT_NAME = 'ONVIF Camera'
@@ -147,14 +147,13 @@ class ONVIFHassCamera(Camera):
         loop = asyncio.get_event_loop()
         self._transport = AsyncTransport(loop, cache=None)
 
-        # Note: don't pass in the _transport here to the camera itself, it's
-        # not async aware
         self._camera = ONVIFCamera(self._host,
                                    self._port,
                                    self._username,
                                    self._password,
                                    '{}/wsdl/'
-                                   .format(os.path.dirname(onvif.__file__)))
+                                   .format(os.path.dirname(onvif.__file__)),
+                                   transport=self._transport)
 
     async def async_initialize(self):
         """
@@ -165,7 +164,7 @@ class ONVIFHassCamera(Camera):
         """
         _LOGGER.debug("Setting up the ONVIF device management service")
 
-        devicemgmt = self._camera.create_devicemgmt_service(transport=self._transport)
+        devicemgmt = self._camera.create_devicemgmt_service()
 
         _LOGGER.debug("Retrieving current camera date/time")
 
@@ -198,9 +197,11 @@ class ONVIFHassCamera(Camera):
 
         _LOGGER.debug("Setting up the ONVIF PTZ service")
 
-        self._ptz_service = self._camera.create_ptz_service(transport=self._transport)
-
-        _LOGGER.debug("Completed set up of the ONVIF camera component")
+        if self._camera.get_service('ptz', create=False) is None:
+            _LOGGER.warning("PTZ is not available on this camera")
+        else:
+            self._ptz_service = self._camera.create_ptz_service()
+            _LOGGER.debug("Completed set up of the ONVIF camera component")
 
     async def async_obtain_input_uri(self):
         """Set the input uri for the camera."""
@@ -212,7 +213,7 @@ class ONVIFHassCamera(Camera):
         try:
             _LOGGER.debug("Retrieving profiles")
 
-            media_service = self._camera.create_media_service(transport=self._transport)
+            media_service = self._camera.create_media_service()
 
             profiles = await media_service.GetProfiles()
 
