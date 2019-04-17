@@ -279,28 +279,28 @@ def create_default_config(config_dir: str, detect_location: bool = True)\
                 config_file.write("  {}: {}\n".format(attr, info[attr]))
 
             config_file.write(DEFAULT_CONFIG)
-            
-        if not os.path.isfile(secret_path)
+           
+        if not os.path.isfile(secret_path):
             with open(secret_path, 'wt') as secret_file:
                 secret_file.write(DEFAULT_SECRETS)
 
-        if not os.path.isfile(version_path)
+        if not os.path.isfile(version_path):
             with open(version_path, 'wt') as version_file:
                 version_file.write(__version__)
 
-        if not os.path.isfile(group_yaml_path)
+        if not os.path.isfile(group_yaml_path):
             with open(group_yaml_path, 'wt'):
                 pass
 
-        if not os.path.isfile(automation_yaml_path)
+        if not os.path.isfile(automation_yaml_path):
             with open(automation_yaml_path, 'wt') as fil:
                 fil.write('[]')
 
-        if not os.path.isfile(script_yaml_path)
+        if not os.path.isfile(script_yaml_path):
             with open(script_yaml_path, 'wt'):
                 pass
 
-        if not os.path.isfile(customize_yaml_path)
+        if not os.path.isfile(customize_yaml_path):
             with open(customize_yaml_path, 'wt'):
                 pass
 
