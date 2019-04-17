@@ -9,7 +9,7 @@ jinja2>=2.10
 PyJWT==1.7.1
 cryptography==2.6.1
 pip>=8.0.3
-python-slugify==1.2.6
+python-slugify==3.0.2
 pytz>=2019.01
 pyyaml>=3.13,<4
 requests==2.21.0
@@ -192,7 +192,7 @@ av==6.1.2
 # avion==0.10
 
 # homeassistant.components.axis
-axis==19
+axis==21
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -270,7 +270,7 @@ btsmarthub_devicelist==0.1.3
 buienradar==0.91
 
 # homeassistant.components.caldav
-caldav==0.5.0
+caldav==0.6.1
 
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.1.5
@@ -317,7 +317,7 @@ datapoint==0.4.3
 # decora==0.6
 
 # homeassistant.components.decora_wifi
-# decora_wifi==1.3
+# decora_wifi==1.4
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -449,7 +449,7 @@ freesms==0.1.2
 # homeassistant.components.fritzdect
 fritzhome==1.0.4
 
-# homeassistant.components.google
+# homeassistant.components.google_translate
 gTTS-token==1.1.3
 
 # homeassistant.components.gearbest
@@ -457,6 +457,9 @@ gearbest_parser==1.0.7
 
 # homeassistant.components.geizhals
 geizhals==0.0.9
+
+# homeassistant.components.geniushub
+geniushub-client==0.3.6
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
@@ -740,7 +743,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.niko_home_control
-niko-home-control==0.1.8
+niko-home-control==0.2.0
 
 # homeassistant.components.nilu
 niluclient==0.1.2
@@ -906,7 +909,7 @@ py17track==2.2.2
 pyCEC==0.4.13
 
 # homeassistant.components.tplink
-pyHS100==0.3.4
+pyHS100==0.3.5
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
@@ -946,7 +949,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==1.9
+pyatmo==1.10
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
@@ -1281,8 +1284,14 @@ pysonos==0.0.10
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
+# homeassistant.components.stiebel_eltron
+pystiebeleltron==0.0.1.dev2
+
 # homeassistant.components.stride
 pystride==0.1.7
+
+# homeassistant.components.supla
+pysupla==0.0.3
 
 # homeassistant.components.syncthru
 pysyncthru==0.3.1
@@ -1387,7 +1396,7 @@ python-telegram-bot==11.1.0
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.22
+python-velbus==2.0.24
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
@@ -1534,7 +1543,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.satel_integra
-satel_integra==0.3.2
+satel_integra==0.3.4
 
 # homeassistant.components.deutsche_bahn
 schiene==0.23
@@ -1806,7 +1815,7 @@ yahooweather==0.10
 yalesmartalarmclient==0.1.6
 
 # homeassistant.components.yeelight
-yeelight==0.4.4
+yeelight==0.5.0
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10

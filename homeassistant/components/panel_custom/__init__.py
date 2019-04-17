@@ -124,9 +124,12 @@ async def async_register_panel(
 
 async def async_setup(hass, config):
     """Initialize custom panel."""
+    if DOMAIN not in config:
+        return True
+
     success = False
 
-    for panel in config.get(DOMAIN):
+    for panel in config[DOMAIN]:
         name = panel[CONF_COMPONENT_NAME]
 
         kwargs = {

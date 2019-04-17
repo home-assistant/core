@@ -17,7 +17,8 @@ ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
 ATTR_CURRENT_A = 'current_a'
 
 
-def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
     """Set up the platform.
 
     Deprecated.

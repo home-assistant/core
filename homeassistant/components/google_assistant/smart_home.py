@@ -31,7 +31,8 @@ from homeassistant.components import (
 from . import trait
 from .const import (
     TYPE_LIGHT, TYPE_LOCK, TYPE_SCENE, TYPE_SWITCH, TYPE_VACUUM,
-    TYPE_THERMOSTAT, TYPE_FAN, TYPE_CAMERA, TYPE_BLINDS,
+    TYPE_THERMOSTAT, TYPE_FAN, TYPE_CAMERA, TYPE_BLINDS, TYPE_GARAGE,
+    TYPE_OUTLET,
     CONF_ALIASES, CONF_ROOM_HINT,
     ERR_FUNCTION_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
     ERR_UNKNOWN_ERROR,
@@ -58,6 +59,12 @@ DOMAIN_TO_GOOGLE_TYPES = {
     vacuum.DOMAIN: TYPE_VACUUM,
 }
 
+DEVICE_CLASS_TO_GOOGLE_TYPES = {
+    (cover.DOMAIN, cover.DEVICE_CLASS_GARAGE): TYPE_GARAGE,
+    (switch.DOMAIN, switch.DEVICE_CLASS_SWITCH): TYPE_SWITCH,
+    (switch.DOMAIN, switch.DEVICE_CLASS_OUTLET): TYPE_OUTLET,
+}
+
 
 def deep_update(target, source):
     """Update a nested dictionary with another nested dictionary."""
@@ -67,6 +74,13 @@ def deep_update(target, source):
         else:
             target[key] = value
     return target
+
+
+def get_google_type(domain, device_class):
+    """Google type based on domain and device class."""
+    typ = DEVICE_CLASS_TO_GOOGLE_TYPES.get((domain, device_class))
+
+    return typ if typ is not None else DOMAIN_TO_GOOGLE_TYPES.get(domain)
 
 
 class _GoogleEntity:
@@ -114,6 +128,8 @@ class _GoogleEntity:
 
         entity_config = self.config.entity_config.get(state.entity_id, {})
         name = (entity_config.get(CONF_NAME) or state.name).strip()
+        domain = state.domain
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         # If an empty string
         if not name:
@@ -133,7 +149,7 @@ class _GoogleEntity:
             'attributes': {},
             'traits': [trait.name for trait in traits],
             'willReportState': False,
-            'type': DOMAIN_TO_GOOGLE_TYPES[state.domain],
+            'type': get_google_type(domain, device_class),
         }
 
         # use aliases

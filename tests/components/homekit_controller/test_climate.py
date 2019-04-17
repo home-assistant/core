@@ -2,13 +2,40 @@
 from homeassistant.components.climate.const import (
     DOMAIN, SERVICE_SET_OPERATION_MODE, SERVICE_SET_TEMPERATURE)
 from tests.components.homekit_controller.common import (
-    setup_test_component)
+    FakeService, setup_test_component)
 
 
 HEATING_COOLING_TARGET = ('thermostat', 'heating-cooling.target')
 HEATING_COOLING_CURRENT = ('thermostat', 'heating-cooling.current')
 TEMPERATURE_TARGET = ('thermostat', 'temperature.target')
 TEMPERATURE_CURRENT = ('thermostat', 'temperature.current')
+
+
+async def test_climate_respect_supported_op_modes_1(hass, utcnow):
+    """Test that climate respects minValue/maxValue hints."""
+    service = FakeService('public.hap.service.thermostat')
+    char = service.add_characteristic('heating-cooling.target')
+    char.value = 0
+    char.minValue = 0
+    char.maxValue = 1
+
+    helper = await setup_test_component(hass, [service])
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes['operation_list'] == ['off', 'heat']
+
+
+async def test_climate_respect_supported_op_modes_2(hass, utcnow):
+    """Test that climate respects validValue hints."""
+    service = FakeService('public.hap.service.thermostat')
+    char = service.add_characteristic('heating-cooling.target')
+    char.value = 0
+    char.validValues = [0, 1, 2]
+
+    helper = await setup_test_component(hass, [service])
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes['operation_list'] == ['off', 'heat', 'cool']
 
 
 async def test_climate_change_thermostat_state(hass, utcnow):
