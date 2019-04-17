@@ -397,6 +397,9 @@ ephem==3.7.6.0
 # homeassistant.components.epson
 epson-projector==0.1.3
 
+# homeassistant.components.epsonworkforce
+epsonprinter==0.0.8
+
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.7
 
