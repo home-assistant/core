@@ -62,18 +62,6 @@ SUPPORTED_COMMANDS = {
 }
 
 
-def validate_tokens(conf):
-    """Validate that access_token is provided if device_class is tv."""
-
-    if conf[CONF_DEVICE_CLASS] == 'tv' and (conf[CONF_ACCESS_TOKEN] is None or
-                                            conf[CONF_ACCESS_TOKEN] == ''):
-        raise vol.Invalid("If {CONF_DEVICE_CLASS} is 'tv' then "
-                          "{CONF_ACCESS_TOKEN} is required. Set "
-                          "{CONF_DEVICE_CLASS} to 'soundbar' if target device "
-                          "is soundbar without auth")
-    return conf
-
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_ACCESS_TOKEN, default=''): cv.string,
@@ -96,7 +84,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device = VizioDevice(host, token, name, volume_step, device_type)
     if device.validate_setup() is False:
         _LOGGER.error("Failed to set up Vizio platform, "
-                      "please check if host and API key are correct")
+                      "please check if host is available and auth token is "
+                      "correct (auth token is required for device_type=tv).")
         return
 
     if config[CONF_SUPPRESS_WARNING]:
@@ -224,7 +213,7 @@ class VizioDevice(MediaPlayerDevice):
         self._device.vol_down(num=self._volume_step)
 
     def validate_setup(self):
-        """Validate if host is available and key is correct."""
+        """Validate if host is available and auth token is correct."""
         return self._device.get_current_volume() is not None
 
     def set_volume_level(self, volume):
