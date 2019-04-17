@@ -105,6 +105,8 @@ async def async_setup(hass):
             (400, "User does not exist."),
         auth.UserNotConfirmed:
             (400, 'Email not confirmed.'),
+        auth.UserExists:
+            (400, 'An account with the given email already exists.'),
         auth.Unauthenticated:
             (401, 'Authentication failed.'),
         auth.PasswordChangeRequired:
