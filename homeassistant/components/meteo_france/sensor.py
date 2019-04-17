@@ -93,7 +93,7 @@ class MeteoFranceSensor(Entity):
                 ATTR_ATTRIBUTION: ATTRIBUTION
             }
 
-        # Attributes for all other sensors
+        # Attributes for all other sensors.
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
