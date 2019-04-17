@@ -1,5 +1,22 @@
 """The tests for the EntityFilter component."""
-from homeassistant.helpers.entityfilter import generate_filter, FILTER_SCHEMA
+from homeassistant.helpers.entityfilter import (
+        generate_filter, EntityFilter, FILTER_SCHEMA)
+
+
+def test_identity():
+    """Test filter comparison and hashing."""
+    test_1 = EntityFilter(include_entities=["test.one"])
+    test_1a = EntityFilter(include_entities=["test.one"])
+    test_2 = EntityFilter(exclude_entities=["test.one"])
+    test_3 = EntityFilter(include_entities=["test.one", "test.two"])
+    test_4 = EntityFilter(include_domains=["test"])
+
+    assert test_1 == test_1a
+    assert test_1 != test_2
+    assert test_2 != test_3
+    assert test_3 != test_4
+    assert test_2 != test_4
+    assert test_1 != "pickle"
 
 
 def test_no_filters_case_1():
