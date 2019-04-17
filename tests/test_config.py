@@ -539,7 +539,8 @@ class TestConfig(unittest.TestCase):
         assert len(self.hass.config.whitelist_external_dirs) == 1
         assert "/test/config/www" in self.hass.config.whitelist_external_dirs
 
-    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    @asynctest.mock.patch(
+        'homeassistant.scripts.check_config.check_ha_config_file')
     def test_check_ha_config_file_correct(self, mock_check):
         """Check that restart propagates to stop."""
         mock_check.return_value = check_config.HomeAssistantConfig()
@@ -548,7 +549,8 @@ class TestConfig(unittest.TestCase):
             self.hass.loop
         ).result() is None
 
-    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    @asynctest.mock.patch(
+        'homeassistant.scripts.check_config.check_ha_config_file')
     def test_check_ha_config_file_wrong(self, mock_check):
         """Check that restart with a bad config doesn't propagate to stop."""
         mock_check.return_value = check_config.HomeAssistantConfig()
