@@ -14,7 +14,8 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components import websocket_api
 from homeassistant.config import find_config_file, load_yaml_config_file
-from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import (
+    CONF_NAME, EVENT_THEMES_UPDATED, EVENT_PANELS_UPDATED)
 from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
@@ -173,6 +174,27 @@ async def async_register_built_in_panel(hass, component_name,
         hass.data[DATA_FINALIZE_PANEL](panel)
 
     panels[panel.frontend_url_path] = panel
+    hass.bus.async_fire(EVENT_PANELS_UPDATED, {
+        'action': 'added',
+        'url_path': panel.frontend_url_path
+    })
+
+
+@bind_hass
+@callback
+def remove_built_in_panel(hass, frontend_url_path):
+    """Remove a built-in panel."""
+    panels = hass.data.get(DATA_PANELS, {})
+
+    if frontend_url_path not in panels:
+        _LOGGER.warning("No panel with %s is registered", frontend_url_path)
+        return
+
+    panel = panels.pop(frontend_url_path)
+    hass.bus.async_fire(EVENT_PANELS_UPDATED, {
+        'action': 'removed',
+        'url_path': panel.frontend_url_path
+    })
 
 
 @bind_hass
