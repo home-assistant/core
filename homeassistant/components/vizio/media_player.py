@@ -63,7 +63,7 @@ SUPPORTED_COMMANDS = {
 
 
 def validate_tokens(conf):
-    """Custom config validator to make access_token required if device_class is tv."""
+    """Validate that access_token is provided if device_class is tv."""
 
     if conf[CONF_DEVICE_CLASS] == 'tv' and (conf[CONF_ACCESS_TOKEN] is None or
                                             conf[CONF_ACCESS_TOKEN] == ''):
