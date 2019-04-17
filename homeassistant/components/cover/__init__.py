@@ -16,8 +16,8 @@ from homeassistant.helpers import intent
 from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT,
-    SERVICE_STOP_COVER_TILT, SERVICE_SET_COVER_TILT_POSITION, STATE_OPEN,
-    STATE_CLOSED, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
+    SERVICE_STOP_COVER_TILT, SERVICE_SET_COVER_TILT_POSITION, SERVICE_TOGGLE,
+    STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,6 +136,11 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_SET_COVER_TILT_POSITION, COVER_SET_COVER_TILT_POSITION_SCHEMA,
         'async_set_cover_tilt_position'
+    )
+
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, COVER_SERVICE_SCHEMA,
+        'async_toggle'
     )
 
     hass.helpers.intent.async_register(intent.ServiceIntentHandler(
@@ -258,6 +263,22 @@ class CoverDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(ft.partial(self.close_cover, **kwargs))
+
+    def toggle(self, **kwargs) -> None:
+        """Toggle the entity."""
+        if self.is_closed:
+            self.open_cover(**kwargs)
+        else:
+            self.close_cover(**kwargs)
+
+    def async_toggle(self, **kwargs):
+        """Toggle the entity.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        if self.is_closed:
+            return self.async_open_cover(**kwargs)
+        return self.async_close_cover(**kwargs)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
