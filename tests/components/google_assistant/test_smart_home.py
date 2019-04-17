@@ -14,7 +14,6 @@ from homeassistant.components.google_assistant import (
     const, trait, helpers, smart_home as sh,
     EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
 from homeassistant.components.demo.light import DemoLight
-from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.switch import DemoSwitch
 
 from homeassistant.helpers import device_registry
@@ -97,7 +96,7 @@ async def test_sync_message(hass):
                     trait.TRAIT_ONOFF,
                     trait.TRAIT_COLOR_SETTING,
                 ],
-                'type': sh.TYPE_LIGHT,
+                'type': const.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
                     'colorModel': 'hsv',
@@ -177,7 +176,7 @@ async def test_sync_in_area(hass, registries):
                     trait.TRAIT_ONOFF,
                     trait.TRAIT_COLOR_SETTING,
                 ],
-                'type': sh.TYPE_LIGHT,
+                'type': const.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
                     'colorModel': 'hsv',
@@ -490,7 +489,7 @@ async def test_serialize_input_boolean(hass):
     """Test serializing an input boolean entity."""
     state = State('input_boolean.bla', 'on')
     # pylint: disable=protected-access
-    entity = sh._GoogleEntity(hass, BASIC_CONFIG, state)
+    entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
     result = await entity.sync_serialize()
     assert result == {
         'id': 'input_boolean.bla',
@@ -549,37 +548,6 @@ async def test_empty_name_doesnt_sync(hass):
                 "intent": "action.devices.SYNC"
             }]
         })
-
-    assert result == {
-        'requestId': REQ_ID,
-        'payload': {
-            'agentUserId': 'test-agent',
-            'devices': []
-        }
-    }
-
-
-async def test_missing_device_type_doesnt_sync(hass):
-    """Test that an entity without device class and no default doesn't sync."""
-    light = DemoBinarySensor(
-        'Demo Sensor',
-        state=False,
-        device_class='dummy_class'
-    )
-    light.hass = hass
-    light.entity_id = 'binary_sensor.demo_sensor'
-    await light.async_update_ha_state()
-
-    with patch('homeassistant.components.google_assistant.'
-               'trait.OpenCloseTrait.supported', return_value=True):
-        result = await sh.async_handle_message(
-            hass, BASIC_CONFIG, 'test-agent',
-            {
-                "requestId": REQ_ID,
-                "inputs": [{
-                    "intent": "action.devices.SYNC"
-                }]
-            })
 
     assert result == {
         'requestId': REQ_ID,
