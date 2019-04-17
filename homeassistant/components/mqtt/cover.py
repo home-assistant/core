@@ -310,6 +310,11 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         return self._state
 
     @property
+    def is_tilt_closed(self):
+        """Return if the cover is tilted closed."""
+        return self._tilt_value == self._config[CONF_TILT_CLOSED_POSITION]
+
+    @property
     def current_cover_position(self):
         """Return current position of cover.
 

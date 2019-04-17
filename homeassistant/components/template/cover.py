@@ -222,6 +222,11 @@ class CoverTemplate(CoverDevice):
         return self._position == 0
 
     @property
+    def is_tilt_closed(self):
+        """Return if the cover is closed."""
+        return self._tilt_value == 0
+
+    @property
     def current_cover_position(self):
         """Return current position of cover.
 

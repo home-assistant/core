@@ -71,6 +71,13 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
         return self._state.is_closed(self._client.api_version)
 
     @esphome_state_property
+    def is_tilt_closed(self):
+        """Return if the cover is tilted closed or not."""
+        if not self._static_info.supports_tilt:
+            return None
+        return self._state.tilt == 0
+
+    @esphome_state_property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         from aioesphomeapi import CoverOperation

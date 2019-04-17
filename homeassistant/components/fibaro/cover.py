@@ -64,6 +64,13 @@ class FibaroCover(FibaroDevice, CoverDevice):
             return None
         return self.current_cover_position == 0
 
+    @property
+    def is_tilt_closed(self):
+        """Return if the cover is tilted closed."""
+        if self.current_cover_tilt_position is None:
+            return None
+        return self.current_cover_tilt_position == 0
+
     def open_cover(self, **kwargs):
         """Open the cover."""
         self.action("open")

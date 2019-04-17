@@ -68,6 +68,11 @@ class DemoCover(CoverDevice):
         return self._closed
 
     @property
+    def is_tilt_closed(self):
+        """Return if the cover is tilted closed."""
+        return self._tilt_position == 0
+
+    @property
     def is_closing(self):
         """Return if the cover is closing."""
         return self._is_closing
