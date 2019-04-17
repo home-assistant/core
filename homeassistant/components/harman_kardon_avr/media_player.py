@@ -112,7 +112,7 @@ class HkAvrDevice(MediaPlayerDevice):
             try:
                 self._avr.send_command("HEARTBEAT")
                 self._state = None
-            except Error:
+            except:
                 self._state = STATE_OFF
 
         self._muted = self._avr.muted
