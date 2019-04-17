@@ -1054,7 +1054,7 @@ pyfritzhome==0.4.0
 pyfttt==0.3
 
 # homeassistant.components.bluetooth_le_tracker
-# homeassistant.components.skybeacon.
+# homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.1
 
 # homeassistant.components.gogogate2
