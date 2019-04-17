@@ -6,20 +6,20 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.vacuum import (
-    DOMAIN, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
+    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     VacuumDevice)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import (
-    ATTR_DISCOVERY_HASH, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+from homeassistant.components.mqtt import (
+    CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
     MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+
+from . import MQTT_VACUUM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ DEFAULT_PAYLOAD_TURN_ON = 'turn_on'
 DEFAULT_RETAIN = False
 DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES)
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA_BASIC = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_BATTERY_LEVEL_TEMPLATE, 'battery'): cv.template,
     vol.Inclusive(CONF_BATTERY_LEVEL_TOPIC,
                   'battery'): mqtt.valid_publish_topic,
@@ -137,37 +137,12 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
-    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema).extend(MQTT_VACUUM_SCHEMA.schema)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
-    """Set up MQTT vacuum through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities,
-                              discovery_info)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT vacuum dynamically through MQTT discovery."""
-    async def async_discover(discovery_payload):
-        """Discover and add a MQTT vacuum."""
-        try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(config, async_add_entities, config_entry,
-                                      discovery_hash)
-        except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(DOMAIN, 'mqtt'), async_discover)
-
-
-async def _async_setup_entity(config, async_add_entities, config_entry,
-                              discovery_hash=None):
-    """Set up the MQTT vacuum."""
+async def async_setup_entity_basic(config, async_add_entities,
+                                   config_entry, discovery_hash):
+    """Set up a MQTT Vacuum Legacy."""
     async_add_entities([MqttVacuum(config, config_entry, discovery_hash)])
 
 
@@ -248,7 +223,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
+        config = PLATFORM_SCHEMA_BASIC(discovery_payload)
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
