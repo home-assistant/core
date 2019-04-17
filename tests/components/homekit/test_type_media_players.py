@@ -137,9 +137,9 @@ async def test_media_player_set_state(hass, hk_driver, events):
 async def test_media_player_television_set_state(hass, hk_driver, events):
     """Test if television accessory and HA are updated accordingly."""
     config = {CONF_TYPE: TYPE_TELEVISION, CONF_FEATURE_LIST: {
-            FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
-            FEATURE_SELECT_SOURCE: None, FEATURE_TOGGLE_MUTE: None,
-            FEATURE_VOLUME_STEP: None}}
+        FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
+        FEATURE_SELECT_SOURCE: None, FEATURE_TOGGLE_MUTE: None,
+        FEATURE_VOLUME_STEP: None}}
     entity_id = 'media_player.television'
 
     hass.states.async_set(entity_id, None, {ATTR_SUPPORTED_FEATURES: 20873,

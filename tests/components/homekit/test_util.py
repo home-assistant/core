@@ -32,10 +32,10 @@ def test_validate_entity_config():
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
                {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
                {'media_player.test': {CONF_FEATURE_LIST: [
-                    {CONF_FEATURE: 'invalid_feature'}]}},
+                   {CONF_FEATURE: 'invalid_feature'}]}},
                {'media_player.test': {CONF_FEATURE_LIST: [
-                    {CONF_FEATURE: FEATURE_ON_OFF},
-                    {CONF_FEATURE: FEATURE_ON_OFF}]}},
+                   {CONF_FEATURE: FEATURE_ON_OFF},
+                   {CONF_FEATURE: FEATURE_ON_OFF}]}},
                {'media_player.test': {CONF_TYPE: 'invalid_type'}},
                {'switch.test': {CONF_TYPE: 'invalid_type'}}]
 
@@ -62,17 +62,17 @@ def test_validate_entity_config():
         {'lock.demo': {ATTR_CODE: '1234'}}
 
     assert vec({'media_player.demo': {}}) == \
-        {'media_player.demo': {CONF_FEATURE_LIST: {}}}
+        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH, CONF_FEATURE_LIST: {}}}
     config = {CONF_FEATURE_LIST: [{CONF_FEATURE: FEATURE_ON_OFF},
                                   {CONF_FEATURE: FEATURE_PLAY_PAUSE}]}
     assert vec({'media_player.demo': config}) == \
-        {'media_player.demo': {CONF_FEATURE_LIST:
+        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH, CONF_FEATURE_LIST:
                                {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
-
-    assert vec({'media_player.demo': {CONF_TYPE: TYPE_SWITCH}}) == \
-        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH}}
+    assert vec({'media_player.demo': {}}) == \
+        {'media_player.demo': {CONF_TYPE: TYPE_SWITCH, CONF_FEATURE_LIST: {}}}
     assert vec({'media_player.demo': {CONF_TYPE: TYPE_TELEVISION}}) == \
-        {'media_player.demo': {CONF_TYPE: TYPE_TELEVISION}}
+        {'media_player.demo': {CONF_TYPE: TYPE_TELEVISION,
+         CONF_FEATURE_LIST: {}}}
 
     assert vec({'switch.demo': {CONF_TYPE: TYPE_FAUCET}}) == \
         {'switch.demo': {CONF_TYPE: TYPE_FAUCET}}
