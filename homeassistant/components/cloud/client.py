@@ -150,8 +150,11 @@ class CloudClient(Interface):
         )
 
         # Fix AgentUserId
-        cloud = self._hass.data[DOMAIN]
-        answer['payload']['agentUserId'] = cloud.claims['cognito:username']
+        try:
+            cloud = self._hass.data[DOMAIN]
+            answer['payload']['agentUserId'] = cloud.claims['cognito:username']
+        except (TypeError, KeyError):
+            return ga.turned_off_response(payload)
 
         return answer
 
