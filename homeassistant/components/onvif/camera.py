@@ -293,8 +293,6 @@ class ONVIFHassCamera(Camera):
         ffmpeg = ImageFrame(
             self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
 
-        _LOGGER.debug("Using input: '%s'", self._input)
-
         image = await asyncio.shield(ffmpeg.get_image(
             self._input, output_format=IMAGE_JPEG,
             extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
@@ -309,8 +307,6 @@ class ONVIFHassCamera(Camera):
         ffmpeg_manager = self.hass.data[DATA_FFMPEG]
         stream = CameraMjpeg(ffmpeg_manager.binary,
                              loop=self.hass.loop)
-
-        _LOGGER.debug("Using input: '%s'", self._input)
 
         await stream.open_camera(
             self._input, extra_cmd=self._ffmpeg_arguments)
