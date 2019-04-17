@@ -442,13 +442,16 @@ class MockModule:
                  requirements=None, config_schema=None, platform_schema=None,
                  platform_schema_base=None, async_setup=None,
                  async_setup_entry=None, async_unload_entry=None,
-                 async_migrate_entry=None, async_remove_entry=None):
+                 async_migrate_entry=None, async_remove_entry=None,
+                 partial_manifest=None):
         """Initialize the mock module."""
         self.__name__ = 'homeassistant.components.{}'.format(domain)
         self.__file__ = 'homeassistant/components/{}'.format(domain)
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
+        # Overlay to be used when generating manifest from this module
+        self._partial_manifest = partial_manifest
 
         if config_schema is not None:
             self.CONFIG_SCHEMA = config_schema
@@ -480,6 +483,13 @@ class MockModule:
 
         if async_remove_entry is not None:
             self.async_remove_entry = async_remove_entry
+
+    def mock_manifest(self):
+        """Generate a mock manifest to represent this module."""
+        return {
+            **loader.manifest_from_legacy_module(self),
+            **(self._partial_manifest or {})
+        }
 
 
 class MockPlatform:
@@ -906,7 +916,7 @@ def mock_integration(hass, module):
     """Mock an integration."""
     integration = loader.Integration(
         hass, 'homeassisant.components.{}'.format(module.DOMAIN), None,
-        loader.manifest_from_legacy_module(module))
+        module.mock_manifest())
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(

@@ -162,6 +162,7 @@ omit =
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
     homeassistant/components/epson/media_player.py
+    homeassistant/components/epsonworkforce/sensor.py
     homeassistant/components/eq3btsmart/climate.py
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/binary_sensor.py
@@ -206,6 +207,7 @@ omit =
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
     homeassistant/components/gc100/*
+    homeassistant/components/geniushub/*
     homeassistant/components/gearbest/sensor.py
     homeassistant/components/geizhals/sensor.py
     homeassistant/components/github/sensor.py

@@ -67,6 +67,7 @@ SERVICE_EDIT_CAPTION = 'edit_caption'
 SERVICE_EDIT_REPLYMARKUP = 'edit_replymarkup'
 SERVICE_ANSWER_CALLBACK_QUERY = 'answer_callback_query'
 SERVICE_DELETE_MESSAGE = 'delete_message'
+SERVICE_LEAVE_CHAT = 'leave_chat'
 
 EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
 EVENT_TELEGRAM_COMMAND = 'telegram_command'
@@ -167,6 +168,10 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema({
         vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema({
+    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+})
+
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
@@ -179,6 +184,7 @@ SERVICE_MAP = {
     SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
     SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
+    SERVICE_LEAVE_CHAT: SERVICE_SCHEMA_LEAVE_CHAT,
 }
 
 
@@ -194,7 +200,7 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                     params["auth"] = HTTPDigestAuth(username, password)
                 else:
                     params["auth"] = HTTPBasicAuth(username, password)
-            if verify_ssl:
+            if verify_ssl is not None:
                 params["verify"] = verify_ssl
             retry_num = 0
             while retry_num < num_retries:
@@ -579,6 +585,15 @@ class TelegramNotificationService:
                            "Error sending location",
                            chat_id=chat_id,
                            latitude=latitude, longitude=longitude, **params)
+
+    def leave_chat(self, chat_id=None):
+        """Remove bot from chat."""
+        chat_id = self._get_target_chat_ids(chat_id)[0]
+        _LOGGER.debug("Leave from chat ID %s", chat_id)
+        leaved = self._send_msg(self.bot.leaveChat,
+                                "Error leaving chat",
+                                chat_id)
+        return leaved
 
 
 class BaseTelegramBotEntity:

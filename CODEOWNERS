@@ -67,6 +67,7 @@ homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/emby/* @mezz64
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/ephember/* @ttroy50
+homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/file/* @fabaff
@@ -82,6 +83,7 @@ homeassistant/components/gearbest/* @HerrHofrat
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff
 homeassistant/components/gntp/* @robbiet480
+homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/googlehome/* @ludeeus
 homeassistant/components/gpsd/* @fabaff

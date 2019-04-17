@@ -33,6 +33,16 @@ PROP_TO_ATTR = {
     'today_energy_kwh': ATTR_TODAY_ENERGY_KWH,
 }
 
+DEVICE_CLASS_OUTLET = 'outlet'
+DEVICE_CLASS_SWITCH = 'switch'
+
+DEVICE_CLASSES = [
+    DEVICE_CLASS_OUTLET,
+    DEVICE_CLASS_SWITCH,
+]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+
 SWITCH_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
@@ -113,3 +123,8 @@ class SwitchDevice(ToggleEntity):
                 data[attr] = value
 
         return data
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return None

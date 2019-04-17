@@ -1,6 +1,7 @@
 """Monitors home energy use for the ELIQ Online service."""
 from datetime import timedelta
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -90,6 +91,6 @@ class EliqSensor(Entity):
             _LOGGER.debug("Updated power from server %d W", self._state)
         except KeyError:
             _LOGGER.warning("Invalid response from ELIQ Online API")
-        except OSError as error:
+        except (OSError, asyncio.TimeoutError) as error:
             _LOGGER.warning("Could not connect to the ELIQ Online API: %s",
                             error)

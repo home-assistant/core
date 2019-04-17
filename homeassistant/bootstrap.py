@@ -26,8 +26,8 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
+CORE_INTEGRATIONS = ('homeassistant', 'persistent_notification')
 LOGGING_INTEGRATIONS = {'logger', 'system_log'}
-
 STAGE_1_INTEGRATIONS = {
     # To record data
     'recorder',
@@ -78,9 +78,6 @@ async def async_from_config_dict(config: Dict[str, Any],
                       "Further initialization aborted")
         return None
 
-    await hass.async_add_executor_job(
-        conf_util.process_ha_config_upgrade, hass)
-
     # Make a copy because we are mutating it.
     config = OrderedDict(config)
 
@@ -91,60 +88,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await hass.config_entries.async_initialize()
 
-    domains = _get_domains(hass, config)
-
-    # Resolve all dependencies of all components so we can find the logging
-    # and integrations that need faster initialization.
-    resolved_domains_task = asyncio.gather(*[
-        loader.async_component_dependencies(hass, domain)
-        for domain in domains
-    ], return_exceptions=True)
-
-    # Set up core.
-    if not all(await asyncio.gather(
-            async_setup_component(hass, 'homeassistant', config),
-            async_setup_component(hass, 'persistent_notification', config),
-    )):
-        _LOGGER.error("Home Assistant core failed to initialize. "
-                      "Further initialization aborted")
-        return hass
-
-    _LOGGER.debug("Home Assistant core initialized")
-
-    # Finish resolving domains
-    for dep_domains in await resolved_domains_task:
-        # Result is either a set or an exception. We ignore exceptions
-        # It will be properly handled during setup of the domain.
-        if isinstance(dep_domains, set):
-            domains.update(dep_domains)
-
-    # setup components
-    logging_domains = domains & LOGGING_INTEGRATIONS
-    stage_1_domains = domains & STAGE_1_INTEGRATIONS
-    stage_2_domains = domains - logging_domains - stage_1_domains
-
-    await asyncio.gather(*[
-        async_setup_component(hass, domain, config)
-        for domain in logging_domains
-    ])
-
-    # Kick off loading the registries. They don't need to be awaited.
-    asyncio.gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-        hass.helpers.area_registry.async_get_registry())
-
-    # Continue setting up the components
-    for to_load in (stage_1_domains, stage_2_domains):
-        if not to_load:
-            continue
-
-        await asyncio.gather(*[
-            async_setup_component(hass, domain, config)
-            for domain in to_load
-        ])
-
-    await hass.async_block_till_done()
+    await _async_set_up_integrations(hass, config)
 
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
@@ -219,6 +163,9 @@ async def async_from_config_file(config_path: str,
 
     async_enable_logging(hass, verbose, log_rotate_days, log_file,
                          log_no_color)
+
+    await hass.async_add_executor_job(
+        conf_util.process_ha_config_upgrade, hass)
 
     try:
         config_dict = await hass.async_add_executor_job(
@@ -352,3 +299,113 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
         domains.add('hassio')
 
     return domains
+
+
+async def _async_set_up_integrations(
+        hass: core.HomeAssistant, config: Dict[str, Any]) -> None:
+    """Set up all the integrations."""
+    domains = _get_domains(hass, config)
+
+    # Resolve all dependencies of all components so we can find the logging
+    # and integrations that need faster initialization.
+    resolved_domains_task = asyncio.gather(*[
+        loader.async_component_dependencies(hass, domain)
+        for domain in domains
+    ], return_exceptions=True)
+
+    # Set up core.
+    _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
+
+    if not all(await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in CORE_INTEGRATIONS
+    ])):
+        _LOGGER.error("Home Assistant core failed to initialize. "
+                      "Further initialization aborted")
+        return
+
+    _LOGGER.debug("Home Assistant core initialized")
+
+    # Finish resolving domains
+    for dep_domains in await resolved_domains_task:
+        # Result is either a set or an exception. We ignore exceptions
+        # It will be properly handled during setup of the domain.
+        if isinstance(dep_domains, set):
+            domains.update(dep_domains)
+
+    # setup components
+    logging_domains = domains & LOGGING_INTEGRATIONS
+    stage_1_domains = domains & STAGE_1_INTEGRATIONS
+    stage_2_domains = domains - logging_domains - stage_1_domains
+
+    if logging_domains:
+        _LOGGER.debug("Setting up %s", logging_domains)
+
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in logging_domains
+        ])
+
+    # Kick off loading the registries. They don't need to be awaited.
+    asyncio.gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry(),
+        hass.helpers.area_registry.async_get_registry())
+
+    if stage_1_domains:
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in logging_domains
+        ])
+
+    # Load all integrations
+    after_dependencies = {}  # type: Dict[str, Set[str]]
+
+    for int_or_exc in await asyncio.gather(*[
+            loader.async_get_integration(hass, domain)
+            for domain in stage_2_domains
+    ], return_exceptions=True):
+        # Exceptions are handled in async_setup_component.
+        if (isinstance(int_or_exc, loader.Integration) and
+                int_or_exc.after_dependencies):
+            after_dependencies[int_or_exc.domain] = set(
+                int_or_exc.after_dependencies
+            )
+
+    last_load = None
+    while stage_2_domains:
+        domains_to_load = set()
+
+        for domain in stage_2_domains:
+            after_deps = after_dependencies.get(domain)
+            # Load if integration has no after_dependencies or they are
+            # all loaded
+            if (not after_deps or
+                    not after_deps-hass.config.components):
+                domains_to_load.add(domain)
+
+        if not domains_to_load or domains_to_load == last_load:
+            break
+
+        _LOGGER.debug("Setting up %s", domains_to_load)
+
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in domains_to_load
+        ])
+
+        last_load = domains_to_load
+        stage_2_domains -= domains_to_load
+
+    # These are stage 2 domains that never have their after_dependencies
+    # satisfied.
+    if stage_2_domains:
+        _LOGGER.debug("Final set up: %s", stage_2_domains)
+
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in stage_2_domains
+        ])
+
+    # Wrap up startup
+    await hass.async_block_till_done()
