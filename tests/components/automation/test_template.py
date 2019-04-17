@@ -106,8 +106,8 @@ async def test_if_not_fires_on_change_bool(hass, calls):
     assert 0 == len(calls)
 
 
-async def test_if_not_fires_on_change_str(hass, calls):
-    """Test for not firing on string change."""
+async def test_if_fires_on_change_bare_str(hass, calls):
+    """Test should fire once for a bare string of true."""
     assert await async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
             'trigger': {
@@ -119,10 +119,12 @@ async def test_if_not_fires_on_change_str(hass, calls):
             }
         }
     })
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert 1 == len(calls)
 
 
 async def test_if_not_fires_on_change_str_crazy(hass, calls):
@@ -225,10 +227,11 @@ async def test_if_not_fires_on_change_with_template(hass, calls):
     })
 
     await hass.async_block_till_done()
+    assert len(calls) == 1
 
     hass.states.async_set('test.entity', 'world')
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_template_advanced(hass, calls):
@@ -307,21 +310,6 @@ async def test_if_fires_on_change_with_template_2(hass, calls):
     })
 
     await hass.async_block_till_done()
-
-    hass.states.async_set('test.entity', 'world')
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-
-    hass.states.async_set('test.entity', 'home')
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-
-    hass.states.async_set('test.entity', 'work')
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-
-    hass.states.async_set('test.entity', 'not_home')
-    await hass.async_block_till_done()
     assert len(calls) == 1
 
     hass.states.async_set('test.entity', 'world')
@@ -331,6 +319,22 @@ async def test_if_fires_on_change_with_template_2(hass, calls):
     hass.states.async_set('test.entity', 'home')
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+    hass.states.async_set('test.entity', 'work')
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    hass.states.async_set('test.entity', 'not_home')
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    hass.states.async_set('test.entity', 'world')
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    hass.states.async_set('test.entity', 'home')
+    await hass.async_block_till_done()
+    assert len(calls) == 3
 
 
 async def test_if_action(hass, calls):
@@ -413,7 +417,7 @@ async def test_wait_template_with_trigger(hass, calls):
             },
             'action': [
                 {'wait_template':
-                    "{{ is_state(trigger.entity_id, 'hello') }}"},
+                 "{{ is_state(trigger.entity_id, 'hello') }}"},
                 {'service': 'test.automation',
                  'data_template': {
                     'some':

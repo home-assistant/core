@@ -1,5 +1,6 @@
 """Test the condition helper."""
 from unittest.mock import patch
+from logging import ERROR
 
 from homeassistant.helpers import condition
 from homeassistant.util import dt
@@ -164,3 +165,18 @@ class TestConditionHelper:
             self.hass.states.set('sensor.temperature', 'unknown')
             assert not test(self.hass)
             assert len(logwarn.mock_calls) == 0
+
+
+async def test_condition_template_error(hass, caplog):
+    """Test invalid template."""
+    caplog.set_level(ERROR)
+
+    test = condition.async_from_config({
+        'condition': 'template',
+        'value_template': '{{ undefined.state }}',
+    })
+
+    assert not test(hass)
+    assert len(caplog.records) == 1
+    assert caplog.records[0].message\
+        .startswith("Error during template condition: UndefinedError:")
