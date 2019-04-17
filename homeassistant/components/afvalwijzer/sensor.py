@@ -24,8 +24,8 @@ MONITORED_CONDITIONS = {
     'pmd': ['PMD', None, 'mdi:beer'],
     'gft': ['GFT', None, 'mdi:delete'],
     'papier': ['Papier', None, 'mdi:email-outline'],
-    'takken': ['Snoeiafval', None, 'mdi:tree'],
-    'kerstboom': ['Kerstbomen', None, 'mdi:pine-tree']
+    'snoeiafval': ['Snoeiafval', None, 'mdi:tree'],
+    'kerstbomen': ['Kerstbomen', None, 'mdi:pine-tree']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
