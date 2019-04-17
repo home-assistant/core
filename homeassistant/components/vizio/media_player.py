@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if device.validate_setup() is False:
         _LOGGER.error("Failed to set up Vizio platform, "
                       "please check if host is available and auth token is "
-                      "correct (auth token is required for device_type=tv).")
+                      "correct (auth token is required for 'tv' device class).")
         return
 
     if config[CONF_SUPPRESS_WARNING]:
