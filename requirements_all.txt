@@ -192,7 +192,7 @@ av==6.1.2
 # avion==0.10
 
 # homeassistant.components.axis
-axis==21
+axis==22
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -397,6 +397,9 @@ ephem==3.7.6.0
 # homeassistant.components.epson
 epson-projector==0.1.3
 
+# homeassistant.components.epsonworkforce
+epsonprinter==0.0.8
+
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.7
 
@@ -518,7 +521,7 @@ habitipy==0.2.0
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.11
+hass-nabucasa==0.12
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.4
@@ -548,7 +551,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190331.0
+home-assistant-frontend==20190417.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -1058,7 +1061,7 @@ pyfttt==0.3
 
 # homeassistant.components.bluetooth_le_tracker
 # homeassistant.components.skybeacon
-pygatt[GATTTOOL]==3.2.0
+pygatt[GATTTOOL]==4.0.1
 
 # homeassistant.components.gogogate2
 pygogogate2==0.1.1
