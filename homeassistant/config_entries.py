@@ -706,6 +706,10 @@ class ConfigEntries:
             _LOGGER.error('Cannot find integration %s', handler_key)
             raise data_entry_flow.UnknownHandler
 
+        # Make sure requirements and dependencies of component are resolved
+        await async_process_deps_reqs(
+            self.hass, self._hass_config, integration)
+
         try:
             integration.get_component()
         except ImportError as err:
@@ -720,10 +724,6 @@ class ConfigEntries:
             raise data_entry_flow.UnknownHandler
 
         source = context['source']
-
-        # Make sure requirements and dependencies of component are resolved
-        await async_process_deps_reqs(
-            self.hass, self._hass_config, integration)
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
