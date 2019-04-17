@@ -235,6 +235,7 @@ homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/version/* @fabaff
+homeassistant/components/vizio/* @raman325
 homeassistant/components/waqi/* @andrey-git
 homeassistant/components/weather/* @fabaff
 homeassistant/components/weblink/* @home-assistant/core

@@ -62,30 +62,45 @@ SUPPORTED_COMMANDS = {
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN, default=''): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SUPPRESS_WARNING, default=False): cv.boolean,
-    vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS):
-        vol.All(cv.string, vol.Lower, vol.In(['tv', 'soundbar'])),
-    vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
-})
+def validate_auth(config):
+    """Validate presence of CONF_ACCESS_TOKEN when CONF_DEVICE_CLASS=tv."""
+    token = config.get(CONF_ACCESS_TOKEN)
+    if config[CONF_DEVICE_CLASS] == 'tv' and (token is None or token == ''):
+        raise vol.Invalid("When '" + CONF_DEVICE_CLASS + "' is 'tv' then '" +
+                          CONF_ACCESS_TOKEN + "' is required.",
+                          path=[CONF_ACCESS_TOKEN])
+    return config
+
+
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_ACCESS_TOKEN): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_SUPPRESS_WARNING, default=False): cv.boolean,
+        vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS):
+            vol.All(cv.string, vol.Lower, vol.In(['tv', 'soundbar'])),
+        vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
+    }),
+    validate_auth,
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vizio media player platform."""
     host = config[CONF_HOST]
-    token = config[CONF_ACCESS_TOKEN]
+    token = config.get(CONF_ACCESS_TOKEN)
     name = config[CONF_NAME]
     volume_step = config[CONF_VOLUME_STEP]
     device_type = config[CONF_DEVICE_CLASS]
     device = VizioDevice(host, token, name, volume_step, device_type)
     if device.validate_setup() is False:
+        fail_auth_msg = ""
+        if token is not None and token != '':
+            fail_auth_msg = " and auth token is correct"
         _LOGGER.error("Failed to set up Vizio platform, please check if host "
-                      "is available and auth token is correct (auth token is "
-                      "required for 'tv' device class).")
+                      "is valid and available%s.", fail_auth_msg)
         return
 
     if config[CONF_SUPPRESS_WARNING]:

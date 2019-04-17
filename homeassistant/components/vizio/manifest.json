@@ -6,5 +6,5 @@
     "pyvizio==0.0.7"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@raman325"]
 }
