@@ -121,12 +121,6 @@ class ONVIFHassCamera(Camera):
         from zeep.asyncio import AsyncTransport
         from onvif import ONVIFCamera
 
-        # pylint: disable=no-member
-        # Note: important imports for zeep and onvif-zeep
-        def zeep_pythonvalue(self, xmlvalue):
-            return xmlvalue
-        zeep.xsd.simple.AnySimpleType.pythonvalue = zeep_pythonvalue
-
         _LOGGER.debug("Setting up the ONVIF camera component")
 
         self._username = config.get(CONF_USERNAME)
@@ -136,7 +130,6 @@ class ONVIFHassCamera(Camera):
         self._name = config.get(CONF_NAME)
         self._ffmpeg_arguments = config.get(CONF_EXTRA_ARGUMENTS)
         self._profile_index = config.get(CONF_PROFILE)
-        self._transport = None
         self._ptz_service = None
         self._input = None
 
@@ -144,16 +137,12 @@ class ONVIFHassCamera(Camera):
                       self._host,
                       self._port)
 
-        loop = asyncio.get_event_loop()
-        self._transport = AsyncTransport(loop, cache=None)
-
         self._camera = ONVIFCamera(self._host,
                                    self._port,
                                    self._username,
                                    self._password,
                                    '{}/wsdl/'
-                                   .format(os.path.dirname(onvif.__file__)),
-                                   transport=self._transport)
+                                   .format(os.path.dirname(onvif.__file__)))
 
     async def async_initialize(self):
         """
@@ -162,6 +151,10 @@ class ONVIFHassCamera(Camera):
         Initializes the camera by obtaining the input uri and connecting to
         the camera. Also retrieves the ONVIF profiles.
         """
+        _LOGGER.debug("Updating service addresses")
+
+        await self._camera.update_xaddrs()
+
         _LOGGER.debug("Setting up the ONVIF device management service")
 
         devicemgmt = self._camera.create_devicemgmt_service()
@@ -248,13 +241,19 @@ class ONVIFHassCamera(Camera):
                 "ONVIF Camera Using the following URL for %s: %s",
                 self._name, uri_for_log)
         except exceptions.ONVIFError as err:
-            _LOGGER.debug("Couldn't setup camera '%s'. Error: %s",
+            _LOGGER.error("Couldn't setup camera '%s'. Error: %s",
                           self._name, err)
             return
 
     async def async_perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
         from onvif import exceptions
+
+        if self.self._ptz_service is None:
+            _LOGGER.warning("PTZ actions are not supported on camera '%s'",
+                            self._name)
+            return
+
         if self._ptz_service:
             pan_val = 1 if pan == DIR_RIGHT else -1 if pan == DIR_LEFT else 0
             tilt_val = 1 if tilt == DIR_UP else -1 if tilt == DIR_DOWN else 0
@@ -294,6 +293,8 @@ class ONVIFHassCamera(Camera):
         ffmpeg = ImageFrame(
             self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
 
+        _LOGGER.debug("Using input: '%s'", self._input)
+
         image = await asyncio.shield(ffmpeg.get_image(
             self._input, output_format=IMAGE_JPEG,
             extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
@@ -308,6 +309,9 @@ class ONVIFHassCamera(Camera):
         ffmpeg_manager = self.hass.data[DATA_FFMPEG]
         stream = CameraMjpeg(ffmpeg_manager.binary,
                              loop=self.hass.loop)
+
+        _LOGGER.debug("Using input: '%s'", self._input)
+
         await stream.open_camera(
             self._input, extra_cmd=self._ffmpeg_arguments)
 
