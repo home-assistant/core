@@ -1,28 +1,27 @@
 """Test Home Assistant template helper methods."""
 import asyncio
 from datetime import datetime
-import unittest
-import random
 import math
-import pytz
+import random
+import unittest
 from unittest.mock import patch
 
+import pytest
+import pytz
+
 from homeassistant.components import group
+from homeassistant.const import (
+    LENGTH_METERS, MASS_GRAMS, PRESSURE_PA, TEMP_CELSIUS, VOLUME_LITERS)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
-from homeassistant.util.unit_system import UnitSystem
-from homeassistant.const import (
-    LENGTH_METERS,
-    TEMP_CELSIUS,
-    MASS_GRAMS,
-    PRESSURE_PA,
-    VOLUME_LITERS,
-    MATCH_ALL,
-)
+from homeassistant.helpers.entityfilter import EntityFilter
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import UnitSystem
 
 from tests.common import get_test_home_assistant
-import pytest
+
+# pylint: disable=redefined-outer-name,misplaced-comparison-constant
+# pylint: disable=bad-continuation
 
 
 class TestHelpersTemplate(unittest.TestCase):
@@ -41,12 +40,63 @@ class TestHelpersTemplate(unittest.TestCase):
         """Stop down stuff we started."""
         self.hass.stop()
 
+    def generate_filter(self, template_str, variables=None):
+        """Create filter from template."""
+        tmp = template.Template(template_str, self.hass)
+        (_, filt) = tmp.async_render_with_collect(variables)
+        return filt
+
+    def extract_entities(self, template_str, variables=None):
+        """Extract entities from a template."""
+        filt = self.generate_filter(template_str, variables)
+        assert (
+            not filt.include_domains
+            and not filt.exclude_domains
+            and not filt.exclude_entities)
+        return filt.include_entities
+
+    def test_template_equality(self):
+        """Test template comparison and hashing."""
+        template_one = template.Template("{{ template_one }}")
+        template_one_1 = template.Template("{{ template_" + "one }}")
+        template_two = template.Template("{{ template_two }}")
+
+        assert template_one == template_one_1
+        assert template_one != template_two
+        assert hash(template_one) == hash(template_one_1)
+        assert hash(template_one) != hash(template_two)
+
+        assert str(template_one_1) == 'Template("{{ template_one }}")'
+
+        with pytest.raises(TypeError):
+            template.Template(["{{ template_one }}"])
+
     def test_referring_states_by_entity_id(self):
         """Test referring states by entity id."""
         self.hass.states.set('test.object', 'happy')
         assert 'happy' == \
             template.Template(
                 '{{ states.test.object.state }}', self.hass).render()
+
+        assert 'happy' == \
+            template.Template(
+                '{{ states["test.object"].state }}', self.hass).render()
+
+        assert 'happy' == \
+            template.Template(
+                '{{ states("test.object") }}', self.hass).render()
+
+    def test_invalid_entity_id(self):
+        """Test referring states by entity id."""
+        with pytest.raises(TemplateError):
+            template.Template(
+                '{{ states["big.fat..."] }}', self.hass).render()
+        with pytest.raises(TemplateError):
+            template.Template(
+                '{{ states.test["big.fat..."] }}', self.hass).render()
+        with pytest.raises(TemplateError):
+            template.Template(
+                '{{ states["invalid/domain"] }}', self.hass).render()
 
     def test_iterating_all_states(self):
         """Test iterating all states."""
@@ -81,6 +131,11 @@ class TestHelpersTemplate(unittest.TestCase):
         assert 'True' == \
             template.Template(
                 '{{ float(states.sensor.temperature.state) > 11 }}',
+                self.hass).render()
+
+        assert 'forgiving' == \
+            template.Template(
+                '{{ float(\'forgiving\') }}',
                 self.hass).render()
 
     def test_rounding_value(self):
@@ -157,7 +212,8 @@ class TestHelpersTemplate(unittest.TestCase):
             (math.pi / 2, '1.0'),
             (math.pi, '0.0'),
             (math.pi * 1.5, '-1.0'),
-            (math.pi / 10, '0.309')
+            (math.pi / 10, '0.309'),
+            ('"duck"', 'duck')
         ]
 
         for value, expected in tests:
@@ -173,7 +229,8 @@ class TestHelpersTemplate(unittest.TestCase):
             (math.pi / 2, '0.0'),
             (math.pi, '-1.0'),
             (math.pi * 1.5, '-0.0'),
-            (math.pi / 10, '0.951')
+            (math.pi / 10, '0.951'),
+            ("'error'", 'error')
         ]
 
         for value, expected in tests:
@@ -189,7 +246,8 @@ class TestHelpersTemplate(unittest.TestCase):
             (math.pi, '-0.0'),
             (math.pi / 180 * 45, '1.0'),
             (math.pi / 180 * 90, '1.633123935319537e+16'),
-            (math.pi / 180 * 135, '-1.0')
+            (math.pi / 180 * 135, '-1.0'),
+            ("'error'", 'error')
         ]
 
         for value, expected in tests:
@@ -206,6 +264,7 @@ class TestHelpersTemplate(unittest.TestCase):
             (2, '1.414'),
             (10, '3.162'),
             (100, '10.0'),
+            ("'error'", 'error')
         ]
 
         for value, expected in tests:
@@ -542,6 +601,11 @@ class TestHelpersTemplate(unittest.TestCase):
                         """, self.hass)
         assert 'False' == tpl.render()
 
+        tpl = template.Template("""
+{{ ['home assistant test'] | regex_match('.*assist') }}
+                """, self.hass)
+        assert 'True' == tpl.render()
+
     def test_regex_search(self):
         """Test regex_search method."""
         tpl = template.Template(r"""
@@ -559,12 +623,22 @@ class TestHelpersTemplate(unittest.TestCase):
                         """, self.hass)
         assert 'True' == tpl.render()
 
+        tpl = template.Template("""
+{{ ['home assistant test'] | regex_search('assist') }}
+                """, self.hass)
+        assert 'True' == tpl.render()
+
     def test_regex_replace(self):
         """Test regex_replace method."""
         tpl = template.Template(r"""
 {{ 'Hello World' | regex_replace('(Hello\\s)',) }}
                 """, self.hass)
         assert 'World' == tpl.render()
+
+        tpl = template.Template("""
+{{ ['home hinderant test'] | regex_replace('hinder', 'assist') }}
+                """, self.hass)
+        assert "['home assistant test']" == tpl.render()
 
     def test_regex_findall_index(self):
         """Test regex_findall_index method."""
@@ -575,6 +649,11 @@ class TestHelpersTemplate(unittest.TestCase):
 
         tpl = template.Template("""
 {{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 1) }}
+                """, self.hass)
+        assert 'LHR' == tpl.render()
+
+        tpl = template.Template("""
+{{ ['JFK', 'LHR'] | regex_findall_index('([A-Z]{3})', 1) }}
                 """, self.hass)
         assert 'LHR' == tpl.render()
 
@@ -765,10 +844,17 @@ class TestHelpersTemplate(unittest.TestCase):
         group.Group.create_group(
             self.hass, 'location group', ['test_domain.object'])
 
-        assert 'test_domain.object' == \
-            template.Template(
-                '{{ closest("group.location_group").entity_id }}',
-                self.hass).render()
+        (result, filt) = template.Template(
+            '{{ closest("group.location_group").entity_id }}',
+            self.hass).render_with_collect()
+
+        assert 'test_domain.object' == result
+        assert filt == EntityFilter(
+            include_entities=[
+                'test_domain.object',
+                'group.location_group',
+            ]
+        )
 
     def test_closest_function_home_vs_group_state(self):
         """Test closest function home vs group state."""
@@ -832,10 +918,22 @@ class TestHelpersTemplate(unittest.TestCase):
             'longitude': self.hass.config.longitude + 0.3,
         })
 
-        assert 'test_domain.closest_zone' == \
-            template.Template(
-                '{{ closest("zone.far_away", '
-                'states.test_domain).entity_id }}', self.hass).render()
+        (closest, filt) = template.Template(
+                '{{ closest(zone, '
+                'states.test_domain).entity_id }}',
+                self.hass).render_with_collect({
+                    'zone': 'zone.far_away'
+                })
+
+        assert 'test_domain.closest_zone' == closest
+        assert filt == EntityFilter(
+            include_domains=["test_domain"],
+            include_entities=[
+                'test_domain.closest_home',
+                'test_domain.closest_zone',
+                'zone.far_away',
+            ]
+        )
 
     def test_closest_function_to_state(self):
         """Test closest function to state."""
@@ -902,36 +1000,112 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_extract_entities_none_exclude_stuff(self):
         """Test extract entities function with none or exclude stuff."""
-        assert [] == template.extract_entities(None)
+        assert not self.extract_entities("")
 
-        assert [] == template.extract_entities("mdi:water")
+        assert not self.extract_entities("mdi:water")
 
-        assert MATCH_ALL == \
-            template.extract_entities(
-                '{{ closest(states.zone.far_away, '
-                'states.test_domain).entity_id }}')
+        assert self.extract_entities(
+            '{{ closest(states.zone.far_away, '
+            'states.test_domain).entity_id }}') == {'zone.far_away'}
 
-        assert MATCH_ALL == \
-            template.extract_entities(
-                '{{ distance("123", states.test_object_2) }}')
+        assert {'123'} == self.extract_entities(
+            '{{ distance("123", states.test_object_2) }}')
 
     def test_extract_entities_no_match_entities(self):
         """Test extract entities function with none entities stuff."""
-        assert MATCH_ALL == \
-            template.extract_entities(
-                "{{ value_json.tst | timestamp_custom('%Y' True) }}")
+        assert not self.extract_entities(
+                "{{ value_json is defined }}")
 
-        assert MATCH_ALL == \
-            template.extract_entities("""
+        assert self.generate_filter("""
 {% for state in states.sensor %}
   {{ state.entity_id }}={{ state.state }},d
 {% endfor %}
-            """)
+            """) == EntityFilter(include_domains=['sensor'])
+
+    def test_generate_filter_iterators(self):
+        """Test extract entities function with none entities stuff."""
+        assert self.generate_filter("""
+{% for state in states %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_all=True)
+
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_domains=['sensor'])
+
+        self.hass.states.set('sensor.test_sensor', 'off', {
+            'attr': 'value'})
+
+        # Don't need the entity because the state is not accessed
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_domains=['sensor'])
+
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}={{ state.state }},d
+{% endfor %}
+            """) == EntityFilter(
+                include_domains=['sensor'],
+                include_entities=['sensor.test_sensor'])
+
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}={{ state.attributes.attr }},d
+{% endfor %}
+            """) == EntityFilter(
+                include_domains=['sensor'],
+                include_entities=['sensor.test_sensor'])
+
+        # Don't need the entity because the state is not accessed
+        assert self.generate_filter("""
+{% for state in states.sensor %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_domains=['sensor'])
+
+        assert self.generate_filter("""
+{% for state in states %}
+  {{ state.entity_id }}
+{% endfor %}
+            """) == EntityFilter(include_all=True)
+
+    def test_generate_select(self):
+        """Test extract entities function with none entities stuff."""
+        template_str = """
+{{ states.sensor|selectattr("state","equalto","off")
+    |join(",", attribute="entity_id") }}
+            """
+
+        tmp = template.Template(template_str, self.hass)
+        (result, filt) = tmp.async_render_with_collect()
+
+        assert result == ''
+        assert filt == EntityFilter(
+                include_domains=['sensor'])
+
+        self.hass.states.set('sensor.test_sensor', 'off', {
+            'attr': 'value'})
+        self.hass.states.set('sensor.test_sensor_on', 'on')
+
+        (result, filt) = tmp.async_render_with_collect()
+        assert result == 'sensor.test_sensor'
+        assert filt == EntityFilter(
+                include_domains=['sensor'],
+                include_entities=[
+                    'sensor.test_sensor', 'sensor.test_sensor_on'])
 
     def test_extract_entities_match_entities(self):
         """Test extract entities function with entities stuff."""
-        assert ['device_tracker.phone_1'] == \
-            template.extract_entities("""
+        self.hass.states.set('device_tracker.phone_1', 'home')
+
+        assert {'device_tracker.phone_1'} == \
+            self.extract_entities("""
 {% if is_state('device_tracker.phone_1', 'home') %}
     Ha, Hercules is home!
 {% else %}
@@ -939,80 +1113,95 @@ class TestHelpersTemplate(unittest.TestCase):
 {% endif %}
             """)
 
-        assert ['binary_sensor.garage_door'] == \
-            template.extract_entities("""
+        self.hass.states.set('binary_sensor.garage_door', 'closed')
+
+        assert {'binary_sensor.garage_door'} == \
+            self.extract_entities("""
 {{ as_timestamp(states.binary_sensor.garage_door.last_changed) }}
             """)
 
-        assert ['binary_sensor.garage_door'] == \
-            template.extract_entities("""
-{{ states("binary_sensor.garage_door") }}
+        assert {'binary_sensor.garage_door'} == \
+            self.extract_entities("""
+{{ states("binary_sensor.garage_door").state }}
             """)
 
-        assert ['device_tracker.phone_2'] == \
-            template.extract_entities("""
+        self.hass.states.set('device_tracker.phone_2', 'not_home', {
+            'battery': 20
+        })
+
+        assert {'device_tracker.phone_2'} == \
+            self.extract_entities("""
 {{ is_state_attr('device_tracker.phone_2', 'battery', 40) }}
             """)
 
-        assert sorted([
+        assert sorted({
                 'device_tracker.phone_1',
                 'device_tracker.phone_2',
-            ]) == \
-            sorted(template.extract_entities("""
-{% if is_state('device_tracker.phone_1', 'home') %}
+            }) == \
+            sorted(self.extract_entities("""
+{% if is_state('device_tracker.phone_1', 'away') %}
     Ha, Hercules is home!
 {% elif states.device_tracker.phone_2.attributes.battery < 40 %}
     Hercules you power goes done!.
 {% endif %}
             """))
 
-        assert sorted([
+        self.hass.states.set('sensor.pick_temperature', 10)
+        self.hass.states.set('sensor.pick_humidity', 40)
+
+        assert sorted({
                 'sensor.pick_humidity',
                 'sensor.pick_temperature',
-            ]) == \
-            sorted(template.extract_entities("""
+            }) == \
+            sorted(self.extract_entities("""
 {{
-    states.sensor.pick_temperature.state ~ „°C (“ ~
-    states.sensor.pick_humidity.state ~ „ %“
+    states.sensor.pick_temperature.state ~ '„°C (“' ~
+    states.sensor.pick_humidity.state ~ '„ %“'
 }}
             """))
 
-        assert sorted([
-                'sensor.luftfeuchtigkeit_mean',
-                'input_number.luftfeuchtigkeit',
-            ]) == \
-            sorted(template.extract_entities(
-                "{% if (states('sensor.luftfeuchtigkeit_mean') | int)"
-                " > (states('input_number.luftfeuchtigkeit') | int +1.5)"
+        assert sorted({
+                'sensor.pick_temperature',
+                'sensor.pick_humidity',
+            }) == \
+            sorted(self.extract_entities(
+                "{% if (states('sensor.pick_temperature') | int)"
+                " > (states('sensor.pick_humidity') | int +1.5)"
                 " %}true{% endif %}"
             ))
 
     def test_extract_entities_with_variables(self):
         """Test extract entities function with variables and entities stuff."""
-        assert ['input_boolean.switch'] == \
-            template.extract_entities(
+        self.hass.states.set('input_boolean.switch', 'on')
+        assert {'input_boolean.switch'} == \
+            self.extract_entities(
                 "{{ is_state('input_boolean.switch', 'off') }}", {})
 
-        assert ['trigger.entity_id'] == \
-            template.extract_entities(
-                "{{ is_state(trigger.entity_id, 'off') }}", {})
+        assert {'input_boolean.switch'} == self.extract_entities(
+            "{{ is_state(trigger.entity_id, 'off') }}", {
+                'trigger': {
+                    'entity_id': 'input_boolean.switch'
+                }
+            })
 
-        assert MATCH_ALL == \
-            template.extract_entities(
-                "{{ is_state(data, 'off') }}", {})
+        assert {'no_state'} == self.extract_entities(
+            "{{ is_state(data, 'off') }}", {
+                'data': 'no_state'
+            })
 
-        assert ['input_boolean.switch'] == \
-            template.extract_entities(
+        assert {'input_boolean.switch'} == \
+            self.extract_entities(
                 "{{ is_state(data, 'off') }}",
                 {'data': 'input_boolean.switch'})
 
-        assert ['input_boolean.switch'] == \
-            template.extract_entities(
+        assert {'input_boolean.switch'} == \
+            self.extract_entities(
                 "{{ is_state(trigger.entity_id, 'off') }}",
                 {'trigger': {'entity_id': 'input_boolean.switch'}})
 
-        assert MATCH_ALL == \
-            template.extract_entities(
+        self.hass.states.set('media_player.livingroom', 'off')
+        assert {'media_player.livingroom'} == \
+            self.extract_entities(
                 "{{ is_state('media_player.' ~ where , 'playing') }}",
                 {'where': 'livingroom'})
 

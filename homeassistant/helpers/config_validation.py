@@ -22,7 +22,6 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL, CONF_ENTITY_NAMESPACE, __version__)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 
@@ -461,6 +460,8 @@ unit_system = vol.All(vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC,
 
 def template(value):
     """Validate a jinja2 template."""
+    from homeassistant.helpers import template as template_helper
+
     if value is None:
         raise vol.Invalid('template value is None')
     if isinstance(value, (list, dict, template_helper.Template)):
