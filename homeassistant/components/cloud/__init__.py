@@ -192,8 +192,7 @@ async def async_setup(hass, config):
     async def _on_connect():
         """Discover RemoteUI binary sensor."""
         hass.async_create_task(hass.helpers.discovery.async_load_platform(
-            'binary_sensor', DOMAIN, {}, config)
-        )
+            'binary_sensor', DOMAIN, {}, config))
 
     cloud.iot.register_on_connect(_on_connect)
 
