@@ -90,7 +90,8 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (switch.DOMAIN, switch.DEVICE_CLASS_SWITCH): TYPE_SWITCH,
     (switch.DOMAIN, switch.DEVICE_CLASS_OUTLET): TYPE_OUTLET,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_DOOR): TYPE_SENSOR,
-    (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_GARAGE_DOOR): TYPE_SENSOR,
+    (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_GARAGE_DOOR):
+    TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_LOCK): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
