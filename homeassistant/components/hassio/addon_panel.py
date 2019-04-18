@@ -73,6 +73,7 @@ class HassIOAddonPanel(HomeAssistantView):
             _LOGGER.error("Can't read panel info: %s", err)
         return {}
 
+
 def _register_panel(hass, addon, data):
     """Init coroutine to register the panel.
 
