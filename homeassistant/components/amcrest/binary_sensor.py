@@ -5,11 +5,16 @@ import logging
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASS_MOTION)
 from homeassistant.const import CONF_NAME, CONF_BINARY_SENSORS
-from . import DATA_AMCREST, BINARY_SENSORS
+
+from .const import BINARY_SENSOR_SCAN_INTERVAL_SECS, DATA_AMCREST
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=BINARY_SENSOR_SCAN_INTERVAL_SECS)
+
+BINARY_SENSORS = {
+    'motion_detected': 'Motion Detected'
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities,

@@ -4,9 +4,15 @@ import logging
 from homeassistant.const import CONF_NAME, CONF_SWITCHES
 from homeassistant.helpers.entity import ToggleEntity
 
-from . import DATA_AMCREST, SWITCHES
+from .const import DATA_AMCREST
 
 _LOGGER = logging.getLogger(__name__)
+
+# Switch types are defined like: Name, icon
+SWITCHES = {
+    'motion_detection': ['Motion Detection', 'mdi:run-fast'],
+    'motion_recording': ['Motion Recording', 'mdi:record-rec']
+}
 
 
 async def async_setup_platform(

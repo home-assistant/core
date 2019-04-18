@@ -5,11 +5,19 @@ import logging
 from homeassistant.const import CONF_NAME, CONF_SENSORS
 from homeassistant.helpers.entity import Entity
 
-from . import DATA_AMCREST, SENSORS
+from .const import DATA_AMCREST, SENSOR_SCAN_INTERVAL_SECS
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=SENSOR_SCAN_INTERVAL_SECS)
+
+# Sensor types are defined like: Name, units, icon
+SENSOR_MOTION_DETECTOR = 'motion_detector'
+SENSORS = {
+    SENSOR_MOTION_DETECTOR: ['Motion Detected', None, 'mdi:run'],
+    'sdcard': ['SD Used', '%', 'mdi:sd'],
+    'ptz_preset': ['PTZ Preset', None, 'mdi:camera-iris'],
+}
 
 
 async def async_setup_platform(

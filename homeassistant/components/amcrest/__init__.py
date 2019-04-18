@@ -7,8 +7,7 @@ import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.camera import (
-    CAMERA_SERVICE_SCHEMA, DOMAIN as CAMERA)
+from homeassistant.components.camera import DOMAIN as CAMERA
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
@@ -18,7 +17,15 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import async_extract_entity_ids
+
+from .binary_sensor import BINARY_SENSORS
+from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
+from .const import DOMAIN, DATA_AMCREST
+from .helpers import service_signal
+from .sensor import SENSOR_MOTION_DETECTOR, SENSORS
+from .switch import SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,12 +36,7 @@ CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = 'high'
-DEFAULT_STREAM_SOURCE = 'snapshot'
 DEFAULT_ARGUMENTS = '-pred 1'
-TIMEOUT = 10
-
-DOMAIN = 'amcrest'
-DATA_AMCREST = DOMAIN
 
 NOTIFICATION_ID = 'amcrest_notification'
 NOTIFICATION_TITLE = 'Amcrest Camera Setup'
@@ -48,30 +50,6 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 AUTHENTICATION_LIST = {
     'basic': 'basic'
-}
-
-STREAM_SOURCE_LIST = {
-    'mjpeg': 0,
-    'snapshot': 1,
-    'rtsp': 2,
-}
-
-BINARY_SENSORS = {
-    'motion_detected': 'Motion Detected'
-}
-
-# Sensor types are defined like: Name, units, icon
-SENSOR_MOTION_DETECTOR = 'motion_detector'
-SENSORS = {
-    SENSOR_MOTION_DETECTOR: ['Motion Detected', None, 'mdi:run'],
-    'sdcard': ['SD Used', '%', 'mdi:sd'],
-    'ptz_preset': ['PTZ Preset', None, 'mdi:camera-iris'],
-}
-
-# Switch types are defined like: Name, icon
-SWITCHES = {
-    'motion_detection': ['Motion Detection', 'mdi:run-fast'],
-    'motion_recording': ['Motion Recording', 'mdi:record-rec']
 }
 
 
@@ -112,7 +90,7 @@ AMCREST_SCHEMA = vol.All(
             vol.All(vol.In(AUTHENTICATION_LIST)),
         vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
             vol.All(vol.In(RESOLUTION_LIST)),
-        vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
+        vol.Optional(CONF_STREAM_SOURCE, default=STREAM_SOURCE_LIST[0]):
             vol.All(vol.In(STREAM_SOURCE_LIST)),
         vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS):
             cv.string,
@@ -132,32 +110,6 @@ AMCREST_SCHEMA = vol.All(
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)
 }, extra=vol.ALLOW_EXTRA)
-
-SERVICE_ENABLE_RECORDING = 'enable_recording'
-SERVICE_DISABLE_RECORDING = 'disable_recording'
-SERVICE_ENABLE_AUDIO = 'enable_audio'
-SERVICE_DISABLE_AUDIO = 'disable_audio'
-SERVICE_ENABLE_MOTION_RECORDING = 'enable_motion_recording'
-SERVICE_DISABLE_MOTION_RECORDING = 'disable_motion_recording'
-SERVICE_GOTO_PRESET = 'goto_preset'
-SERVICE_SET_COLOR_BW = 'set_color_bw'
-SERVICE_START_TOUR = 'start_tour'
-SERVICE_STOP_TOUR = 'stop_tour'
-
-ATTR_PRESET = 'preset'
-ATTR_COLOR_BW = 'color_bw'
-
-CBW_COLOR = 'color'
-CBW_AUTO = 'auto'
-CBW_BW = 'bw'
-CBW = [CBW_COLOR, CBW_AUTO, CBW_BW]
-
-SERVICE_GOTO_PRESET_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_PRESET): vol.All(vol.Coerce(int), vol.Range(min=1)),
-})
-SERVICE_SET_COLOR_BW_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_COLOR_BW): vol.In(CBW),
-})
 
 
 def setup(hass, config):
@@ -196,7 +148,7 @@ def setup(hass, config):
         binary_sensors = device.get(CONF_BINARY_SENSORS)
         sensors = device.get(CONF_SENSORS)
         switches = device.get(CONF_SWITCHES)
-        stream_source = STREAM_SOURCE_LIST[device[CONF_STREAM_SOURCE]]
+        stream_source = device[CONF_STREAM_SOURCE]
 
         # currently aiohttp only works with basic authentication
         # only valid for mjpeg streaming
@@ -249,63 +201,39 @@ def setup(hass, config):
                 raise UnknownUser(context=call.context)
         else:
             user = None
-        entity_ids = call.data.get(ATTR_ENTITY_ID)
 
-        if entity_ids == ENTITY_MATCH_ALL:
-            # Return all entities user has permission to control.
-            return [entity for entity in hass.data[DATA_AMCREST]['cameras']
-                    if have_permission(user, entity.entity_id)
-                    and entity.available]
+        if call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
+            # Return all entity_ids user has permission to control.
+            return [
+                entity_id for entity_id in hass.data[DATA_AMCREST]['cameras']
+                if have_permission(user, entity_id)
+            ]
 
-        entity_ids = await async_extract_entity_ids(hass, call)
-        entities = []
-        for entity in hass.data[DATA_AMCREST]['cameras']:
-            if entity.entity_id not in entity_ids:
+        call_ids = await async_extract_entity_ids(hass, call)
+        entity_ids = []
+        for entity_id in hass.data[DATA_AMCREST]['cameras']:
+            if entity_id not in call_ids:
                 continue
-            if not have_permission(user, entity.entity_id):
+            if not have_permission(user, entity_id):
                 raise Unauthorized(
                     context=call.context,
-                    entity_id=entity.entity_id,
+                    entity_id=entity_id,
                     permission=POLICY_CONTROL
                 )
-            if entity.available:
-                entities.append(entity)
-        return entities
+            entity_ids.append(entity_id)
+        return entity_ids
 
     async def async_service_handler(call):
-        for camera in await async_extract_from_service(call):
-            await getattr(camera, handled_services[call.service])()
+        for entity_id in await async_extract_from_service(call):
+            async_dispatcher_send(
+                hass,
+                service_signal(call.service, entity_id),
+                call.data
+            )
 
-    async def async_goto_preset(call):
-        preset = call.data[ATTR_PRESET]
-        for camera in await async_extract_from_service(call):
-            await camera.async_goto_preset(preset)
-
-    async def async_set_color_bw(call):
-        cbw = call.data[ATTR_COLOR_BW]
-        for camera in await async_extract_from_service(call):
-            await camera.async_set_color_bw(cbw)
-
-    handled_services = {
-        SERVICE_ENABLE_RECORDING: 'async_enable_recording',
-        SERVICE_DISABLE_RECORDING: 'async_disable_recording',
-        SERVICE_ENABLE_AUDIO: 'async_enable_audio',
-        SERVICE_DISABLE_AUDIO: 'async_disable_audio',
-        SERVICE_ENABLE_MOTION_RECORDING: 'async_enable_motion_recording',
-        SERVICE_DISABLE_MOTION_RECORDING: 'async_disable_motion_recording',
-        SERVICE_START_TOUR: 'async_start_tour',
-        SERVICE_STOP_TOUR: 'async_stop_tour',
-    }
-
-    for service in handled_services:
+    for service, schema, _ in CAMERA_SERVICES:
         hass.services.async_register(
-            DOMAIN, service, async_service_handler, CAMERA_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_GOTO_PRESET, async_goto_preset,
-        SERVICE_GOTO_PRESET_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_COLOR_BW, async_set_color_bw,
-        SERVICE_SET_COLOR_BW_SCHEMA)
+            DOMAIN, service, async_service_handler, schema)
 
     return True
 

@@ -2,18 +2,67 @@
 import asyncio
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.camera import (
-    Camera, SUPPORT_ON_OFF, SUPPORT_STREAM)
+    Camera, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF, SUPPORT_STREAM)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
     CONF_NAME, STATE_ON, STATE_OFF)
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream, async_aiohttp_proxy_web,
     async_get_clientsession)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import ATTR_COLOR_BW, CBW, DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT
+from .const import CAMERA_WEB_SESSION_TIMEOUT, DATA_AMCREST
+from .helpers import service_signal
 
 _LOGGER = logging.getLogger(__name__)
+
+STREAM_SOURCE_LIST = [
+    'snapshot',
+    'mjpeg',
+    'rtsp',
+]
+
+_SRV_EN_REC = 'enable_recording'
+_SRV_DS_REC = 'disable_recording'
+_SRV_EN_AUD = 'enable_audio'
+_SRV_DS_AUD = 'disable_audio'
+_SRV_EN_MOT_REC = 'enable_motion_recording'
+_SRV_DS_MOT_REC = 'disable_motion_recording'
+_SRV_GOTO = 'goto_preset'
+_SRV_CBW = 'set_color_bw'
+_SRV_TOUR_ON = 'start_tour'
+_SRV_TOUR_OFF = 'stop_tour'
+
+_ATTR_PRESET = 'preset'
+_ATTR_COLOR_BW = 'color_bw'
+
+_CBW_COLOR = 'color'
+_CBW_AUTO = 'auto'
+_CBW_BW = 'bw'
+_CBW = [_CBW_COLOR, _CBW_AUTO, _CBW_BW]
+
+_SRV_GOTO_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(_ATTR_PRESET): vol.All(vol.Coerce(int), vol.Range(min=1)),
+})
+_SRV_CBW_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(_ATTR_COLOR_BW): vol.In(_CBW),
+})
+
+CAMERA_SERVICES = (
+    (_SRV_EN_REC, CAMERA_SERVICE_SCHEMA, 'async_enable_recording'),
+    (_SRV_DS_REC, CAMERA_SERVICE_SCHEMA, 'async_disable_recording'),
+    (_SRV_EN_AUD, CAMERA_SERVICE_SCHEMA, 'async_enable_audio'),
+    (_SRV_DS_AUD, CAMERA_SERVICE_SCHEMA, 'async_disable_audio'),
+    (_SRV_EN_MOT_REC, CAMERA_SERVICE_SCHEMA, 'async_enable_motion_recording'),
+    (_SRV_DS_MOT_REC, CAMERA_SERVICE_SCHEMA, 'async_disable_motion_recording'),
+    (_SRV_GOTO, _SRV_GOTO_SCHEMA, 'async_goto_preset'),
+    (_SRV_CBW, _SRV_CBW_SCHEMA, 'async_set_color_bw'),
+    (_SRV_TOUR_ON, CAMERA_SERVICE_SCHEMA, 'async_start_tour'),
+    (_SRV_TOUR_OFF, CAMERA_SERVICE_SCHEMA, 'async_stop_tour'),
+)
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
@@ -50,6 +99,7 @@ class AmcrestCam(Camera):
         self._motion_recording_enabled = None
         self._color_bw = None
         self._snapshot_lock = asyncio.Lock()
+        self._unsub_dispatcher = []
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
@@ -74,15 +124,16 @@ class AmcrestCam(Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Return an MJPEG stream."""
         # The snapshot implementation is handled by the parent class
-        if self._stream_source == STREAM_SOURCE_LIST['snapshot']:
+        if self._stream_source == 'snapshot':
             return await super().handle_async_mjpeg_stream(request)
 
-        if self._stream_source == STREAM_SOURCE_LIST['mjpeg']:
+        if self._stream_source == 'mjpeg':
             # stream an MJPEG image stream directly from the camera
             websession = async_get_clientsession(self.hass)
             streaming_url = self._api.mjpeg_url(typeno=self._resolution)
             stream_coro = websession.get(
-                streaming_url, auth=self._token, timeout=TIMEOUT)
+                streaming_url, auth=self._token,
+                timeout=CAMERA_WEB_SESSION_TIMEOUT)
 
             return await async_aiohttp_proxy_web(
                 self.hass, request, stream_coro)
@@ -120,7 +171,7 @@ class AmcrestCam(Camera):
             attr['motion_recording'] = _BOOL_TO_STATE.get(
                 self._motion_recording_enabled)
         if self._color_bw is not None:
-            attr[ATTR_COLOR_BW] = self._color_bw
+            attr[_ATTR_COLOR_BW] = self._color_bw
         return attr
 
     @property
@@ -163,8 +214,19 @@ class AmcrestCam(Camera):
     # Other Entity method overrides
 
     async def async_added_to_hass(self):
-        """Add camera to list."""
-        self.hass.data[DATA_AMCREST]['cameras'].append(self)
+        """Subscribe to signals and add camera to list."""
+        for service, _, service_method in CAMERA_SERVICES:
+            self._unsub_dispatcher.append(async_dispatcher_connect(
+                self.hass,
+                service_signal(service, self.entity_id),
+                getattr(self, service_method)))
+        self.hass.data[DATA_AMCREST]['cameras'].append(self.entity_id)
+
+    async def async_will_remove_from_hass(self):
+        """Remove camera from list and disconnect from signals."""
+        self.hass.data[DATA_AMCREST]['cameras'].remove(self.entity_id)
+        for unsub_dispatcher in self._unsub_dispatcher:
+            unsub_dispatcher()
 
     def update(self):
         """Update entity status."""
@@ -187,7 +249,7 @@ class AmcrestCam(Camera):
             self._audio_enabled = self._api.audio_enabled
             self._motion_recording_enabled = (
                 self._api.is_record_on_motion_detection())
-            self._color_bw = CBW[self._api.day_night_color]
+            self._color_bw = _CBW[self._api.day_night_color]
         except AmcrestError as error:
             _LOGGER.error(
                 'Could not get %s camera attributes due to error: %s',
@@ -213,45 +275,47 @@ class AmcrestCam(Camera):
 
     # Additional Amcrest Camera service methods
 
-    async def async_enable_recording(self):
+    async def async_enable_recording(self, call_data):
         """Call the job and enable recording."""
         await self.hass.async_add_executor_job(self._enable_recording, True)
 
-    async def async_disable_recording(self):
+    async def async_disable_recording(self, call_data):
         """Call the job and disable recording."""
         await self.hass.async_add_executor_job(self._enable_recording, False)
 
-    async def async_enable_audio(self):
+    async def async_enable_audio(self, call_data):
         """Call the job and enable audio."""
         await self.hass.async_add_executor_job(self._enable_audio, True)
 
-    async def async_disable_audio(self):
+    async def async_disable_audio(self, call_data):
         """Call the job and disable audio."""
         await self.hass.async_add_executor_job(self._enable_audio, False)
 
-    async def async_enable_motion_recording(self):
+    async def async_enable_motion_recording(self, call_data):
         """Call the job and enable motion recording."""
         await self.hass.async_add_executor_job(self._enable_motion_recording,
                                                True)
 
-    async def async_disable_motion_recording(self):
+    async def async_disable_motion_recording(self, call_data):
         """Call the job and disable motion recording."""
         await self.hass.async_add_executor_job(self._enable_motion_recording,
                                                False)
 
-    async def async_goto_preset(self, preset):
+    async def async_goto_preset(self, call_data):
         """Call the job and move camera to preset position."""
-        await self.hass.async_add_executor_job(self._goto_preset, preset)
+        await self.hass.async_add_executor_job(self._goto_preset,
+                                               call_data[_ATTR_PRESET])
 
-    async def async_set_color_bw(self, cbw):
+    async def async_set_color_bw(self, call_data):
         """Call the job and set camera color mode."""
-        await self.hass.async_add_executor_job(self._set_color_bw, cbw)
+        await self.hass.async_add_executor_job(self._set_color_bw,
+                                               call_data[_ATTR_COLOR_BW])
 
-    async def async_start_tour(self):
+    async def async_start_tour(self, call_data):
         """Call the job and start camera tour."""
         await self.hass.async_add_executor_job(self._start_tour, True)
 
-    async def async_stop_tour(self):
+    async def async_stop_tour(self, call_data):
         """Call the job and stop camera tour."""
         await self.hass.async_add_executor_job(self._start_tour, False)
 
@@ -356,7 +420,7 @@ class AmcrestCam(Camera):
         from amcrest import AmcrestError
 
         try:
-            self._api.day_night_color = CBW.index(cbw)
+            self._api.day_night_color = _CBW.index(cbw)
         except AmcrestError as error:
             _LOGGER.error(
                 'Could not set %s camera color mode to %s due to error: %s',
