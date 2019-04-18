@@ -210,9 +210,8 @@ async def async_get_all_descriptions(hass):
                 domain_yaml = loaded[domain]
                 yaml_description = domain_yaml.get(service, {})
 
-                if not yaml_description:
-                    _LOGGER.warning("Missing service description for %s/%s",
-                                    domain, service)
+                # Don't warn for missing services, because it triggers false
+                # positives for things like scripts, that register as a service
 
                 description = descriptions_cache[cache_key] = {
                     'description': yaml_description.get('description', ''),
