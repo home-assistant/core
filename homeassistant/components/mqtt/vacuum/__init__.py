@@ -30,7 +30,6 @@ def validate_mqtt_vacuum(value):
         'legacy': schema_legacy.PLATFORM_SCHEMA_LEGACY,
         'statevacuum': schema_state.PLATFORM_SCHEMA_STATE,
     }
-    print(value[CONF_COMPONENT])
     return schemas[value[CONF_COMPONENT]](value)
 
 

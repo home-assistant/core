@@ -53,7 +53,7 @@ async def test_default_supported_features(hass, mock_publish):
     entity_features = \
         entity.attributes.get(mqttvacuum.CONF_SUPPORTED_FEATURES, 0)
     assert sorted(services_to_strings(entity_features, SERVICE_TO_STRING)) == \
-        sorted(['start', 'pause', 'stop',
+        sorted(['start', 'stop',
                 'return_home', 'battery', 'status',
                 'clean_spot'])
 
@@ -139,12 +139,6 @@ async def test_all_commands(hass, mock_publish):
         "key": "value"
     }
 
-    # common.send_command(hass, '44 FE 93', entity_id='vacuum.mqtttest')
-    # await hass.async_block_till_done()
-    # await hass.async_block_till_done()
-    # mock_publish.async_publish.assert_called_once_with(
-    #     'vacuum/send_command', '44 FE 93', 0, False)
-
 
 async def test_status(hass, mock_publish):
     """Test status updates from the vacuum."""
@@ -187,6 +181,46 @@ async def test_status(hass, mock_publish):
     assert 'min' == state.attributes.get(ATTR_FAN_SPEED)
     assert ['min', 'medium', 'high',
             'max'] == state.attributes.get(ATTR_FAN_SPEED_LIST)
+
+
+async def test_no_fan_vacuum(hass, mock_publish):
+    """Test status updates from the vacuum."""
+    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+        services_to_strings(mqttvacuum.DEFAULT_SERVICES, SERVICE_TO_STRING)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: default_config,
+    })
+
+    message = """{
+        "battery_level": 54,
+        "state": "cleaning"
+    }"""
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+    assert STATE_CLEANING == state.state
+    assert None == state.attributes.get(ATTR_FAN_SPEED)
+    assert None == state.attributes.get(ATTR_FAN_SPEED_LIST)
+
+    assert 54 == state.attributes.get(ATTR_BATTERY_LEVEL)
+    assert 'mdi:battery-50' == \
+        state.attributes.get(ATTR_BATTERY_ICON)
+
+    message = """{
+        "battery_level": 61,
+        "state": "docked"
+    }"""
+
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+    assert STATE_DOCKED == state.state
+    assert 'mdi:battery-charging-60' == \
+        state.attributes.get(ATTR_BATTERY_ICON)
+    assert 61 == state.attributes.get(ATTR_BATTERY_LEVEL)
 
 
 async def test_status_invalid_json(hass, mock_publish):
@@ -270,7 +304,8 @@ async def test_discovery_removal_vacuum(hass, mock_publish):
 
     data = (
         '{ "name": "Beer",'
-        '  "command_topic": "test_topic" }'
+        '  "command_topic": "test_topic",'
+        '  "component": "statevacuum" }'
     )
 
     async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',
@@ -297,11 +332,13 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
 
     data1 = (
         '{ "name": "Beer",'
-        '  "command_topic": "test_topic#" }'
+        '  "command_topic": "test_topic#",'
+        ' "component": "statevacuum" }'
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "command_topic": "test_topic" }'
+        '  "command_topic": "test_topic",'
+        ' "component": "statevacuum" }'
     )
 
     async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',
@@ -330,11 +367,13 @@ async def test_discovery_update_vacuum(hass, mock_publish):
 
     data1 = (
         '{ "name": "Beer",'
-        '  "command_topic": "test_topic" }'
+        '  "command_topic": "test_topic",'
+        '"component": "statevacuum" }'
     )
     data2 = (
         '{ "name": "Milk",'
-        '  "command_topic": "test_topic" }'
+        '  "command_topic": "test_topic",'
+        '  "component": "statevacuum"}'
     )
 
     async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',

@@ -43,7 +43,7 @@ SERVICE_TO_STRING = {
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
 
 
-DEFAULT_SERVICES = SUPPORT_START | SUPPORT_PAUSE | SUPPORT_STOP |\
+DEFAULT_SERVICES = SUPPORT_START | SUPPORT_STOP |\
                    SUPPORT_RETURN_HOME | SUPPORT_STATUS | SUPPORT_BATTERY |\
                    SUPPORT_CLEAN_SPOT
 ALL_SERVICES = DEFAULT_SERVICES | SUPPORT_PAUSE | SUPPORT_LOCATE |\
@@ -238,36 +238,29 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def fan_speed(self):
         """Return fan speed of the vacuum."""
         if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
+            return None
 
         return self._state_attrs.get(FAN_SPEED, 0)
 
     @property
     def fan_speed_list(self):
         """Return fan speed list of the vacuum."""
+        print("Sprawdzam!")
         if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return []
+            return None
         return self._fan_speed_list
 
     @property
     def battery_level(self):
         """Return battery level of the vacuum."""
         if self.supported_features & SUPPORT_BATTERY == 0:
-            return
+            return None
         return max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
-
-    @property
-    def battery_icon(self):
-        """Return the battery icon for the vacuum cleaner."""
-        charging = bool(self.state == STATE_DOCKED)
-
-        return icon_for_battery_level(
-            battery_level=self.battery_level, charging=charging)
 
     async def async_start(self):
         """Turn the vacuum on."""
