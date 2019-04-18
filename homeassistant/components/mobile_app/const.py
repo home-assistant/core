@@ -85,21 +85,6 @@ WEBHOOK_TYPES = [WEBHOOK_TYPE_CALL_SERVICE, WEBHOOK_TYPE_FIRE_EVENT,
                  WEBHOOK_TYPE_UPDATE_REGISTRATION,
                  WEBHOOK_TYPE_UPDATE_SENSOR_STATES]
 
-
-REGISTRATION_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_APP_DATA, default={}): dict,
-    vol.Required(ATTR_APP_ID): cv.string,
-    vol.Required(ATTR_APP_NAME): cv.string,
-    vol.Required(ATTR_APP_VERSION): cv.string,
-    vol.Required(ATTR_DEVICE_ID): cv.string,
-    vol.Required(ATTR_DEVICE_NAME): cv.string,
-    vol.Required(ATTR_MANUFACTURER): cv.string,
-    vol.Required(ATTR_MODEL): cv.string,
-    vol.Required(ATTR_OS_NAME): cv.string,
-    vol.Optional(ATTR_OS_VERSION): cv.string,
-    vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
-})
-
 UPDATE_REGISTRATION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_APP_DATA, default={}): dict,
     vol.Required(ATTR_APP_VERSION): cv.string,
@@ -108,6 +93,13 @@ UPDATE_REGISTRATION_SCHEMA = vol.Schema({
     vol.Required(ATTR_MANUFACTURER): cv.string,
     vol.Required(ATTR_MODEL): cv.string,
     vol.Optional(ATTR_OS_VERSION): cv.string,
+})
+
+REGISTRATION_SCHEMA = UPDATE_REGISTRATION_SCHEMA.extend({
+    vol.Required(ATTR_APP_ID): cv.string,
+    vol.Required(ATTR_APP_NAME): cv.string,
+    vol.Required(ATTR_OS_NAME): cv.string,
+    vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
 })
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Schema({
