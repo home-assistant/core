@@ -259,6 +259,29 @@ class ZHAGateway:
         """Handle device joined and basic information discovered (async)."""
         zha_device = self._async_get_or_create_device(device, is_new_join)
 
+        if zha_device.status is DeviceStatus.INITIALIZED:
+            _LOGGER.debug(
+                'skipping discovery for previously paired device: %s',
+                zha_device.ieee
+            )
+            # still get fresh state
+            _LOGGER.debug(
+                'refreshing state for previously paired device: %s',
+                zha_device.ieee
+            )
+            await zha_device.async_initialize(from_cache=False)
+            # still push the device details to the front end add device panel
+            device_info = async_get_device_info(self._hass, zha_device)
+            async_dispatcher_send(
+                self._hass,
+                ZHA_GW_MSG,
+                {
+                    TYPE: DEVICE_FULL_INIT,
+                    DEVICE_INFO: device_info
+                }
+            )
+            return None  # Guard against reinitializing an initialized device
+
         discovery_infos = []
         for endpoint_id, endpoint in device.endpoints.items():
             async_process_endpoint(
