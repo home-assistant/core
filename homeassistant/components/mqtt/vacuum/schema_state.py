@@ -14,7 +14,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME, CONF_VALUE_TEMPLATE)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.icon import icon_for_battery_level
 
 from homeassistant.components.mqtt import (
     CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,

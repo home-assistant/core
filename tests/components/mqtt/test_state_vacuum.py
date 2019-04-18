@@ -201,8 +201,8 @@ async def test_no_fan_vacuum(hass, mock_publish):
     await hass.async_block_till_done()
     state = hass.states.get('vacuum.mqtttest')
     assert STATE_CLEANING == state.state
-    assert None == state.attributes.get(ATTR_FAN_SPEED)
-    assert None == state.attributes.get(ATTR_FAN_SPEED_LIST)
+    assert state.attributes.get(ATTR_FAN_SPEED) is None
+    assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
 
     assert 54 == state.attributes.get(ATTR_BATTERY_LEVEL)
     assert 'mdi:battery-50' == \
