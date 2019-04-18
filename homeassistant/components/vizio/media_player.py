@@ -66,8 +66,8 @@ def validate_auth(config):
     """Validate presence of CONF_ACCESS_TOKEN when CONF_DEVICE_CLASS=tv."""
     token = config.get(CONF_ACCESS_TOKEN)
     if config[CONF_DEVICE_CLASS] == 'tv' and (token is None or token == ''):
-        raise vol.Invalid("When '" + CONF_DEVICE_CLASS + "' is 'tv' then '" +
-                          CONF_ACCESS_TOKEN + "' is required.",
+        raise vol.Invalid("When '{}' is 'tv' then '{}' is required.".format(
+                          CONF_DEVICE_CLASS, CONF_ACCESS_TOKEN),
                           path=[CONF_ACCESS_TOKEN])
     return config
 
@@ -100,7 +100,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if token is not None and token != '':
             fail_auth_msg = " and auth token is correct"
         _LOGGER.error("Failed to set up Vizio platform, please check if host "
-                      "is valid and available%s.", fail_auth_msg)
+                      "is valid and available%s", fail_auth_msg)
         return
 
     if config[CONF_SUPPRESS_WARNING]:
