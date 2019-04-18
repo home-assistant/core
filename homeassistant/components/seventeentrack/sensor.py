@@ -305,7 +305,7 @@ class SeventeenTrackData:
             reg = await self._hass.helpers.entity_registry.async_get_registry()
             for package in to_remove:
                 entity_id = reg.async_get_entity_id(
-                    self, 'sensor', 'seventeentrack',
+                    'sensor', 'seventeentrack',
                     ENTITY_ID_TEMPLATE.format(
                         self.account_id, package.tracking_number))
                 if not entity_id:
