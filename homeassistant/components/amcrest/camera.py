@@ -7,7 +7,6 @@ from homeassistant.components.camera import (
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
     CONF_NAME, STATE_ON, STATE_OFF)
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream, async_aiohttp_proxy_web,
     async_get_clientsession)
@@ -27,18 +26,19 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     name = discovery_info[CONF_NAME]
     device = hass.data[DATA_AMCREST]['devices'][name]
-    async_add_entities([AmcrestCam(name, device, hass)], True)
+    async_add_entities([
+        AmcrestCam(name, device, hass.data[DATA_FFMPEG])], True)
 
 
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
-    def __init__(self, name, device, hass):
+    def __init__(self, name, device, ffmpeg):
         """Initialize an Amcrest camera."""
         super().__init__()
         self._name = name
         self._api = device.api
-        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device.ffmpeg_arguments
         self._stream_source = device.stream_source
         self._resolution = device.resolution
@@ -112,11 +112,8 @@ class AmcrestCam(Camera):
 
     @property
     def device_state_attributes(self):
-        """Return the Amcrest-spectific camera state attributes."""
+        """Return the Amcrest-specific camera state attributes."""
         attr = {}
-        if self.motion_detection_enabled is not None:
-            attr['motion_detection'] = _BOOL_TO_STATE.get(
-                self.motion_detection_enabled)
         if self._audio_enabled is not None:
             attr['audio'] = _BOOL_TO_STATE.get(self._audio_enabled)
         if self._motion_recording_enabled is not None:
@@ -216,55 +213,47 @@ class AmcrestCam(Camera):
 
     # Additional Amcrest Camera service methods
 
-    @callback
-    def async_enable_recording(self):
+    async def async_enable_recording(self):
         """Call the job and enable recording."""
-        return self.hass.async_add_job(self._enable_recording, True)
+        await self.hass.async_add_executor_job(self._enable_recording, True)
 
-    @callback
-    def async_disable_recording(self):
+    async def async_disable_recording(self):
         """Call the job and disable recording."""
-        return self.hass.async_add_job(self._enable_recording, False)
+        await self.hass.async_add_executor_job(self._enable_recording, False)
 
-    @callback
-    def async_enable_audio(self):
+    async def async_enable_audio(self):
         """Call the job and enable audio."""
-        return self.hass.async_add_job(self._enable_audio, True)
+        await self.hass.async_add_executor_job(self._enable_audio, True)
 
-    @callback
-    def async_disable_audio(self):
+    async def async_disable_audio(self):
         """Call the job and disable audio."""
-        return self.hass.async_add_job(self._enable_audio, False)
+        await self.hass.async_add_executor_job(self._enable_audio, False)
 
-    @callback
-    def async_enable_motion_recording(self):
+    async def async_enable_motion_recording(self):
         """Call the job and enable motion recording."""
-        return self.hass.async_add_job(self._enable_motion_recording, True)
+        await self.hass.async_add_executor_job(self._enable_motion_recording,
+                                               True)
 
-    @callback
-    def async_disable_motion_recording(self):
+    async def async_disable_motion_recording(self):
         """Call the job and disable motion recording."""
-        return self.hass.async_add_job(self._enable_motion_recording, False)
+        await self.hass.async_add_executor_job(self._enable_motion_recording,
+                                               False)
 
-    @callback
-    def async_goto_preset(self, preset):
+    async def async_goto_preset(self, preset):
         """Call the job and move camera to preset position."""
-        return self.hass.async_add_job(self._goto_preset, preset)
+        await self.hass.async_add_executor_job(self._goto_preset, preset)
 
-    @callback
-    def async_set_color_bw(self, cbw):
+    async def async_set_color_bw(self, cbw):
         """Call the job and set camera color mode."""
-        return self.hass.async_add_job(self._set_color_bw, cbw)
+        await self.hass.async_add_executor_job(self._set_color_bw, cbw)
 
-    @callback
-    def async_start_tour(self):
+    async def async_start_tour(self):
         """Call the job and start camera tour."""
-        return self.hass.async_add_job(self._start_tour, True)
+        await self.hass.async_add_executor_job(self._start_tour, True)
 
-    @callback
-    def async_stop_tour(self):
+    async def async_stop_tour(self):
         """Call the job and stop camera tour."""
-        return self.hass.async_add_job(self._start_tour, False)
+        await self.hass.async_add_executor_job(self._start_tour, False)
 
     # Methods to send commands to Amcrest camera and handle errors
 

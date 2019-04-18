@@ -5,6 +5,7 @@ from datetime import timedelta
 import aiohttp
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.camera import (
     CAMERA_SERVICE_SCHEMA, DOMAIN as CAMERA)
@@ -14,6 +15,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_AUTHENTICATION, CONF_BINARY_SENSORS, CONF_HOST,
     CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SENSORS,
     CONF_SWITCHES, CONF_USERNAME, ENTITY_MATCH_ALL, HTTP_BASIC_AUTHENTICATION)
+from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_entity_ids
@@ -117,12 +119,12 @@ AMCREST_SCHEMA = vol.All(
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
             cv.time_period,
         vol.Optional(CONF_BINARY_SENSORS):
-            vol.All(cv.ensure_list_csv, [vol.In(BINARY_SENSORS)]),
+            vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
         vol.Optional(CONF_SENSORS):
-            vol.All(cv.ensure_list_csv, [vol.In(SENSORS)],
+            vol.All(cv.ensure_list, [vol.In(SENSORS)],
                     _deprecated_sensor_values),
         vol.Optional(CONF_SWITCHES):
-            vol.All(cv.ensure_list_csv, [vol.In(SWITCHES)]),
+            vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
     }),
     _deprecated_switches
 )
@@ -176,6 +178,7 @@ def setup(hass, config):
                                 username,
                                 password).camera
             # pylint: disable=pointless-statement
+            # Test camera communications.
             api.current_time
 
         except AmcrestError as ex:
@@ -235,30 +238,55 @@ def setup(hass, config):
     if not hass.data[DATA_AMCREST]['devices']:
         return False
 
-    async def async_extract_from_service(service):
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+    def have_permission(user, entity_id):
+        return not user or user.permissions.check_entity(
+            entity_id, POLICY_CONTROL)
+
+    async def async_extract_from_service(call):
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+            if user is None:
+                raise UnknownUser(context=call.context)
+        else:
+            user = None
+        entity_ids = call.data.get(ATTR_ENTITY_ID)
+
         if entity_ids == ENTITY_MATCH_ALL:
+            # Return all entities user has permission to control.
             return [entity for entity in hass.data[DATA_AMCREST]['cameras']
-                    if entity.available]
-        entity_ids = await async_extract_entity_ids(hass, service)
-        return [entity for entity in hass.data[DATA_AMCREST]['cameras']
-                if entity.available and entity.entity_id in entity_ids]
+                    if have_permission(user, entity.entity_id)
+                    and entity.available]
 
-    async def async_service_handler(service):
-        for camera in await async_extract_from_service(service):
-            await getattr(camera, handler_services[service.service])()
+        entity_ids = await async_extract_entity_ids(hass, call)
+        entities = []
+        for entity in hass.data[DATA_AMCREST]['cameras']:
+            if entity.entity_id not in entity_ids:
+                continue
+            if not have_permission(user, entity.entity_id):
+                raise Unauthorized(
+                    context=call.context,
+                    entity_id=entity.entity_id,
+                    permission=POLICY_CONTROL
+                )
+            if entity.available:
+                entities.append(entity)
+        return entities
 
-    async def async_goto_preset(service):
-        preset = service.data[ATTR_PRESET]
-        for camera in await async_extract_from_service(service):
+    async def async_service_handler(call):
+        for camera in await async_extract_from_service(call):
+            await getattr(camera, handled_services[call.service])()
+
+    async def async_goto_preset(call):
+        preset = call.data[ATTR_PRESET]
+        for camera in await async_extract_from_service(call):
             await camera.async_goto_preset(preset)
 
-    async def async_set_color_bw(service):
-        cbw = service.data[ATTR_COLOR_BW]
-        for camera in await async_extract_from_service(service):
+    async def async_set_color_bw(call):
+        cbw = call.data[ATTR_COLOR_BW]
+        for camera in await async_extract_from_service(call):
             await camera.async_set_color_bw(cbw)
 
-    handler_services = {
+    handled_services = {
         SERVICE_ENABLE_RECORDING: 'async_enable_recording',
         SERVICE_DISABLE_RECORDING: 'async_disable_recording',
         SERVICE_ENABLE_AUDIO: 'async_enable_audio',
@@ -269,16 +297,15 @@ def setup(hass, config):
         SERVICE_STOP_TOUR: 'async_stop_tour',
     }
 
-    if not hass.services.has_service(DOMAIN, SERVICE_ENABLE_RECORDING):
-        for service in handler_services:
-            hass.services.async_register(
-                DOMAIN, service, async_service_handler, CAMERA_SERVICE_SCHEMA)
+    for service in handled_services:
         hass.services.async_register(
-            DOMAIN, SERVICE_GOTO_PRESET, async_goto_preset,
-            SERVICE_GOTO_PRESET_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, SERVICE_SET_COLOR_BW, async_set_color_bw,
-            SERVICE_SET_COLOR_BW_SCHEMA)
+            DOMAIN, service, async_service_handler, CAMERA_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_GOTO_PRESET, async_goto_preset,
+        SERVICE_GOTO_PRESET_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_COLOR_BW, async_set_color_bw,
+        SERVICE_SET_COLOR_BW_SCHEMA)
 
     return True
 
