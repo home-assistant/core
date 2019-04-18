@@ -249,6 +249,7 @@ async def device_config_changed(hass, accessories):
 
     # Wait for services to reconfigure
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def setup_test_component(hass, services, capitalize=False, suffix=None):
