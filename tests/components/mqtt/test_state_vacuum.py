@@ -2,6 +2,7 @@
 import json
 
 import pytest
+from copy import deepcopy
 
 from homeassistant.components import mqtt, vacuum
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
@@ -26,7 +27,7 @@ COMMAND_TOPIC = 'vacuum/command'
 SEND_COMMAND_TOPIC = 'vacuum/send_command'
 STATE_TOPIC = 'vacuum/state'
 
-default_config = {
+DEFAULT_CONFIG = {
     CONF_PLATFORM: 'mqtt',
     CONF_COMPONENT: 'statevacuum',
     CONF_NAME: 'mqtttest',
@@ -47,7 +48,7 @@ def mock_publish(hass):
 async def test_default_supported_features(hass, mock_publish):
     """Test that the correct supported features."""
     assert await async_setup_component(hass, vacuum.DOMAIN, {
-        vacuum.DOMAIN: default_config,
+        vacuum.DOMAIN: DEFAULT_CONFIG,
     })
     entity = hass.states.get('vacuum.mqtttest')
     entity_features = \
@@ -60,12 +61,13 @@ async def test_default_supported_features(hass, mock_publish):
 
 async def test_all_commands(hass, mock_publish):
     """Test simple commands to the vacuum."""
-    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+    config = deepcopy(DEFAULT_CONFIG)
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
         services_to_strings(
             mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
-        vacuum.DOMAIN: default_config,
+        vacuum.DOMAIN: config,
     })
 
     await hass.services.async_call(
@@ -140,13 +142,80 @@ async def test_all_commands(hass, mock_publish):
     }
 
 
+async def test_commands_without_supported_features(hass, mock_publish):
+    """Test commands which are not supported by the vacuum."""
+    config = deepcopy(DEFAULT_CONFIG)
+    services = mqttvacuum.STRING_TO_SERVICE["status"]
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+        services_to_strings(
+            services, SERVICE_TO_STRING)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: config,
+    })
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, blocking=True)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_not_called()
+    mock_publish.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PAUSE, blocking=True)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_not_called()
+    mock_publish.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_STOP, blocking=True)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_not_called()
+    mock_publish.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_RETURN_TO_BASE, blocking=True)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_not_called()
+    mock_publish.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_LOCATE, blocking=True)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_not_called()
+    mock_publish.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_CLEAN_SPOT, blocking=True)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_not_called()
+    mock_publish.async_publish.reset_mock()
+
+    common.set_fan_speed(hass, 'medium', 'vacuum.mqtttest')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_not_called()
+    mock_publish.async_publish.reset_mock()
+
+    common.send_command(hass, '44 FE 93', {"key": "value"},
+                        entity_id='vacuum.mqtttest')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_not_called()
+
 async def test_status(hass, mock_publish):
     """Test status updates from the vacuum."""
-    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+    config = deepcopy(DEFAULT_CONFIG)
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
         services_to_strings(mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
-        vacuum.DOMAIN: default_config,
+        vacuum.DOMAIN: config,
     })
 
     message = """{
@@ -185,11 +254,13 @@ async def test_status(hass, mock_publish):
 
 async def test_no_fan_vacuum(hass, mock_publish):
     """Test status updates from the vacuum."""
-    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+    config = deepcopy(DEFAULT_CONFIG)
+    del(config[mqttvacuum.CONF_FAN_SPEED_LIST])
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
         services_to_strings(mqttvacuum.DEFAULT_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
-        vacuum.DOMAIN: default_config,
+        vacuum.DOMAIN: config,
     })
 
     message = """{
@@ -242,12 +313,13 @@ async def test_no_fan_vacuum(hass, mock_publish):
 
 async def test_status_invalid_json(hass, mock_publish):
     """Test to make sure nothing breaks if the vacuum sends bad JSON."""
-    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+    config = deepcopy(DEFAULT_CONFIG)
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
         mqttvacuum.services_to_strings(
             mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
-        vacuum.DOMAIN: default_config,
+        vacuum.DOMAIN: config,
     })
 
     async_fire_mqtt_message(hass, 'vacuum/state', '{"asdfasas false}')
@@ -258,12 +330,13 @@ async def test_status_invalid_json(hass, mock_publish):
 
 async def test_default_availability_payload(hass, mock_publish):
     """Test availability by default payload with defined topic."""
-    default_config.update({
+    config = deepcopy(DEFAULT_CONFIG)
+    config.update({
         'availability_topic': 'availability-topic'
     })
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
-        vacuum.DOMAIN: default_config,
+        vacuum.DOMAIN: config,
     })
 
     state = hass.states.get('vacuum.mqtttest')
@@ -286,14 +359,15 @@ async def test_default_availability_payload(hass, mock_publish):
 
 async def test_custom_availability_payload(hass, mock_publish):
     """Test availability by custom payload with defined topic."""
-    default_config.update({
+    config = deepcopy(DEFAULT_CONFIG)
+    config.update({
         'availability_topic': 'availability-topic',
         'payload_available': 'good',
         'payload_not_available': 'nogood'
     })
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
-        vacuum.DOMAIN: default_config,
+        vacuum.DOMAIN: config,
     })
 
     state = hass.states.get('vacuum.mqtttest')

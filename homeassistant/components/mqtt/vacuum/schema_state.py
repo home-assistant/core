@@ -264,7 +264,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_start(self):
         """Turn the vacuum on."""
         if self.supported_features & SUPPORT_START == 0:
-            return
+            return None
         mqtt.async_publish(self.hass, self._command_topic,
                            self._config[CONF_PAYLOAD_START],
                            self._config[CONF_QOS],
@@ -273,7 +273,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_pause(self):
         """Turn the vacuum off."""
         if self.supported_features & SUPPORT_PAUSE == 0:
-            return
+            return None
         mqtt.async_publish(self.hass, self._command_topic,
                            self._config[CONF_PAYLOAD_PAUSE],
                            self._config[CONF_QOS],
@@ -282,7 +282,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_stop(self, **kwargs):
         """Stop the vacuum."""
         if self.supported_features & SUPPORT_STOP == 0:
-            return
+            return None
         mqtt.async_publish(self.hass, self._command_topic,
                            self._config[CONF_PAYLOAD_STOP],
                            self._config[CONF_QOS],
@@ -290,10 +290,9 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
-        if not self._fan_speed_list or fan_speed not in self._fan_speed_list:
-            return
+        if ((self.supported_features & SUPPORT_FAN_SPEED == 0) or
+                (fan_speed not in self._fan_speed_list)):
+            return None
         mqtt.async_publish(self.hass, self._set_fan_speed_topic,
                            fan_speed,
                            self._config[CONF_QOS],
@@ -302,7 +301,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_return_to_base(self, **kwargs):
         """Tell the vacuum to return to its dock."""
         if self.supported_features & SUPPORT_RETURN_HOME == 0:
-            return
+            return None
         mqtt.async_publish(self.hass, self._command_topic,
                            self._config[CONF_PAYLOAD_RETURN_TO_BASE],
                            self._config[CONF_QOS],
@@ -311,7 +310,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
         if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
-            return
+            return None
         mqtt.async_publish(self.hass, self._command_topic,
                            self._config[CONF_PAYLOAD_CLEAN_SPOT],
                            self._config[CONF_QOS],
@@ -320,7 +319,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_locate(self, **kwargs):
         """Locate the vacuum (usually by playing a song)."""
         if self.supported_features & SUPPORT_LOCATE == 0:
-            return
+            return None
         mqtt.async_publish(self.hass, self._command_topic,
                            self._config[CONF_PAYLOAD_LOCATE],
                            self._config[CONF_QOS],
@@ -329,7 +328,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
-            return
+            return None
         if params:
             message = {"command": command}
             message.update(params)
