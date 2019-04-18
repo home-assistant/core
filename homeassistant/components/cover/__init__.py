@@ -15,8 +15,9 @@ from homeassistant.components import group
 from homeassistant.helpers import intent
 from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT,
-    SERVICE_STOP_COVER_TILT, SERVICE_SET_COVER_TILT_POSITION, SERVICE_TOGGLE,
+    SERVICE_STOP_COVER, SERVICE_TOGGLE, SERVICE_OPEN_COVER_TILT, 
+    SERVICE_CLOSE_COVER_TILT, SERVICE_STOP_COVER_TILT, 
+    SERVICE_SET_COVER_TILT_POSITION, SERVICE_TOGGLE_COVER_TILT,
     STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,6 +120,11 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
+        SERVICE_TOGGLE, COVER_SERVICE_SCHEMA,
+        'async_toggle'
+    )
+
+    component.async_register_entity_service(
         SERVICE_OPEN_COVER_TILT, COVER_SERVICE_SCHEMA,
         'async_open_cover_tilt'
     )
@@ -139,8 +145,8 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE, COVER_SERVICE_SCHEMA,
-        'async_toggle'
+        SERVICE_TOGGLE_COVER_TILT, COVER_SERVICE_SCHEMA,
+        'async_toggle_tilt'
     )
 
     hass.helpers.intent.async_register(intent.ServiceIntentHandler(
