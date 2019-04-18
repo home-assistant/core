@@ -4,7 +4,6 @@ from unittest.mock import patch, Mock
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
 from tests.common import mock_coro
