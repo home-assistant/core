@@ -269,8 +269,9 @@ class ZHADevice:
         for channel in channels:
             if channel.name == ZDO_CHANNEL:
                 # pylint: disable=E1111
-                zdo_task = self._async_create_task(
-                    semaphore, channel, task_name, *args)
+                if zdo_task is None:  # We only want to do this once
+                    zdo_task = self._async_create_task(
+                        semaphore, channel, task_name, *args)
             else:
                 channel_tasks.append(
                     self._async_create_task(
