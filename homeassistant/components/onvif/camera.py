@@ -117,8 +117,6 @@ class ONVIFHassCamera(Camera):
         _LOGGER.debug("Importing dependencies")
 
         import onvif
-        import zeep
-        from zeep.asyncio import AsyncTransport
         from onvif import ONVIFCamera
 
         _LOGGER.debug("Setting up the ONVIF camera component")
@@ -229,8 +227,8 @@ class ONVIFHassCamera(Camera):
             req.StreamSetup = {'Stream': 'RTP-Unicast',
                                'Transport': {'Protocol': 'RTSP'}}
 
-            streamUri = await media_service.GetStreamUri(req)
-            uri_no_auth = streamUri.Uri
+            stream_uri = await media_service.GetStreamUri(req)
+            uri_no_auth = stream_uri.Uri
             uri_for_log = uri_no_auth.replace(
                 'rtsp://', 'rtsp://<user>:<password>@', 1)
             self._input = uri_no_auth.replace(
