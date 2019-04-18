@@ -8,19 +8,6 @@ from homeassistant.components.hue import light as hue_light
 from tests.common import MockModule, async_mock_service, mock_integration
 
 
-def test_set_component(hass):
-    """Test if set_component works."""
-    comp = object()
-    loader.set_component(hass, 'switch.test_set', comp)
-
-    assert loader.get_component(hass, 'switch.test_set') is comp
-
-
-def test_get_component(hass):
-    """Test if get_component works."""
-    assert http == loader.get_component(hass, 'http')
-
-
 async def test_component_dependencies(hass):
     """Test if we can get the proper load order of components."""
     mock_integration(hass, MockModule('mod1'))
@@ -84,7 +71,7 @@ async def test_helpers_wrapper(hass):
 
     helpers.discovery.async_listen('service_name', discovery_callback)
 
-    await helpers.discovery.async_discover('service_name', 'hello')
+    await helpers.discovery.async_discover('service_name', 'hello', None, {})
     await hass.async_block_till_done()
 
     assert result == ['hello']
@@ -92,17 +79,28 @@ async def test_helpers_wrapper(hass):
 
 async def test_custom_component_name(hass):
     """Test the name attribte of custom components."""
-    comp = loader.get_component(hass, 'test_standalone')
+    integration = await loader.async_get_integration(hass, 'test_standalone')
+    int_comp = integration.get_component()
+    assert int_comp.__name__ == 'custom_components.test_standalone'
+    assert int_comp.__package__ == 'custom_components'
+
+    comp = hass.components.test_standalone
     assert comp.__name__ == 'custom_components.test_standalone'
     assert comp.__package__ == 'custom_components'
 
-    comp = loader.get_component(hass, 'test_package')
+    integration = await loader.async_get_integration(hass, 'test_package')
+    int_comp = integration.get_component()
+    assert int_comp.__name__ == 'custom_components.test_package'
+    assert int_comp.__package__ == 'custom_components.test_package'
+
+    comp = hass.components.test_package
     assert comp.__name__ == 'custom_components.test_package'
     assert comp.__package__ == 'custom_components.test_package'
 
-    comp = loader.get_component(hass, 'test.light')
-    assert comp.__name__ == 'custom_components.test.light'
-    assert comp.__package__ == 'custom_components.test'
+    integration = await loader.async_get_integration(hass, 'test')
+    platform = integration.get_platform('light')
+    assert platform.__name__ == 'custom_components.test.light'
+    assert platform.__package__ == 'custom_components.test'
 
     # Test custom components is mounted
     from custom_components.test_package import TEST
@@ -111,33 +109,12 @@ async def test_custom_component_name(hass):
 
 async def test_log_warning_custom_component(hass, caplog):
     """Test that we log a warning when loading a custom component."""
-    loader.get_component(hass, 'test_standalone')
-    assert \
-        'You are using a custom component for test_standalone' in caplog.text
+    hass.components.test_standalone
+    assert 'You are using a custom integration for test_standalone' \
+        in caplog.text
 
-    loader.get_component(hass, 'test.light')
-    assert 'You are using a custom component for test.light' in caplog.text
-
-
-async def test_get_platform(hass, caplog):
-    """Test get_platform."""
-    # Test we prefer embedded over normal platforms."""
-    embedded_platform = loader.get_platform(hass, 'switch', 'test_embedded')
-    assert embedded_platform.__name__ == \
-        'custom_components.test_embedded.switch'
-
-    caplog.clear()
-
-    legacy_platform = loader.get_platform(hass, 'switch', 'test_legacy')
-    assert legacy_platform.__name__ == 'custom_components.switch.test_legacy'
-    assert 'Integrations need to be in their own folder.' in caplog.text
-
-
-async def test_get_platform_enforces_component_path(hass, caplog):
-    """Test that existence of a component limits lookup path of platforms."""
-    assert loader.get_platform(hass, 'comp_path_test', 'hue') is None
-    assert ('Search path was limited to path of component: '
-            'homeassistant.components') in caplog.text
+    await loader.async_get_integration(hass, 'test')
+    assert 'You are using a custom integration for test ' in caplog.text
 
 
 async def test_get_integration(hass):
@@ -175,3 +152,13 @@ def test_integration_properties(hass):
     assert integration.domain == 'hue'
     assert integration.dependencies == ['test-dep']
     assert integration.requirements == ['test-req==1.0.0']
+
+
+async def test_integrations_only_once(hass):
+    """Test that we load integrations only once."""
+    int_1 = hass.async_create_task(
+        loader.async_get_integration(hass, 'hue'))
+    int_2 = hass.async_create_task(
+        loader.async_get_integration(hass, 'hue'))
+
+    assert await int_1 is await int_2

@@ -192,7 +192,7 @@ av==6.1.2
 # avion==0.10
 
 # homeassistant.components.axis
-axis==19
+axis==22
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -270,7 +270,7 @@ btsmarthub_devicelist==0.1.3
 buienradar==0.91
 
 # homeassistant.components.caldav
-caldav==0.5.0
+caldav==0.6.1
 
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.1.5
@@ -317,7 +317,7 @@ datapoint==0.4.3
 # decora==0.6
 
 # homeassistant.components.decora_wifi
-# decora_wifi==1.3
+# decora_wifi==1.4
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -397,6 +397,9 @@ ephem==3.7.6.0
 # homeassistant.components.epson
 epson-projector==0.1.3
 
+# homeassistant.components.epsonworkforce
+epsonprinter==0.0.8
+
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.7
 
@@ -449,7 +452,7 @@ freesms==0.1.2
 # homeassistant.components.fritzdect
 fritzhome==1.0.4
 
-# homeassistant.components.google
+# homeassistant.components.google_translate
 gTTS-token==1.1.3
 
 # homeassistant.components.gearbest
@@ -457,6 +460,9 @@ gearbest_parser==1.0.7
 
 # homeassistant.components.geizhals
 geizhals==0.0.9
+
+# homeassistant.components.geniushub
+geniushub-client==0.3.6
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
@@ -515,7 +521,7 @@ habitipy==0.2.0
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.11
+hass-nabucasa==0.12
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.4
@@ -545,7 +551,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190331.0
+home-assistant-frontend==20190417.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -740,7 +746,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.niko_home_control
-niko-home-control==0.1.8
+niko-home-control==0.2.0
 
 # homeassistant.components.nilu
 niluclient==0.1.2
@@ -906,7 +912,7 @@ py17track==2.2.2
 pyCEC==0.4.13
 
 # homeassistant.components.tplink
-pyHS100==0.3.4
+pyHS100==0.3.5
 
 # homeassistant.components.met
 # homeassistant.components.norway_air
@@ -946,7 +952,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==1.9
+pyatmo==1.10
 
 # homeassistant.components.apple_tv
 pyatv==0.3.12
@@ -1055,7 +1061,7 @@ pyfttt==0.3
 
 # homeassistant.components.bluetooth_le_tracker
 # homeassistant.components.skybeacon
-pygatt[GATTTOOL]==3.2.0
+pygatt[GATTTOOL]==4.0.1
 
 # homeassistant.components.gogogate2
 pygogogate2==0.1.1
@@ -1287,6 +1293,9 @@ pystiebeleltron==0.0.1.dev2
 # homeassistant.components.stride
 pystride==0.1.7
 
+# homeassistant.components.supla
+pysupla==0.0.3
+
 # homeassistant.components.syncthru
 pysyncthru==0.3.1
 
@@ -1390,7 +1399,7 @@ python-telegram-bot==11.1.0
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.22
+python-velbus==2.0.24
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
@@ -1809,7 +1818,7 @@ yahooweather==0.10
 yalesmartalarmclient==0.1.6
 
 # homeassistant.components.yeelight
-yeelight==0.4.4
+yeelight==0.5.0
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10

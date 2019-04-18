@@ -10,7 +10,7 @@ import pytest
 
 # To prevent circular import when running just this file
 import homeassistant.components  # noqa
-from homeassistant import core as ha, loader, exceptions
+from homeassistant import core as ha, exceptions
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 import homeassistant.helpers.config_validation as cv
@@ -177,7 +177,7 @@ async def test_extract_entity_ids(hass):
     hass.states.async_set('light.Ceiling', STATE_OFF)
     hass.states.async_set('light.Kitchen', STATE_OFF)
 
-    await loader.get_component(hass, 'group').Group.async_create_group(
+    await hass.components.group.Group.async_create_group(
         hass, 'test', ['light.Ceiling', 'light.Kitchen'])
 
     call = ha.ServiceCall('light', 'turn_on',
@@ -252,7 +252,7 @@ async def test_extract_entity_ids_from_area(hass):
 @asyncio.coroutine
 def test_async_get_all_descriptions(hass):
     """Test async_get_all_descriptions."""
-    group = loader.get_component(hass, 'group')
+    group = hass.components.group
     group_config = {group.DOMAIN: {}}
     yield from async_setup_component(hass, group.DOMAIN, group_config)
     descriptions = yield from service.async_get_all_descriptions(hass)
@@ -262,7 +262,7 @@ def test_async_get_all_descriptions(hass):
     assert 'description' in descriptions['group']['reload']
     assert 'fields' in descriptions['group']['reload']
 
-    logger = loader.get_component(hass, 'logger')
+    logger = hass.components.logger
     logger_config = {logger.DOMAIN: {}}
     yield from async_setup_component(hass, logger.DOMAIN, logger_config)
     descriptions = yield from service.async_get_all_descriptions(hass)

@@ -65,6 +65,8 @@ class HassIOIngress(HomeAssistantView):
     post = _handle
     put = _handle
     delete = _handle
+    patch = _handle
+    options = _handle
 
     async def _handle_websocket(
             self, request: web.Request, token: str, path: str
@@ -209,8 +211,8 @@ def _is_websocket(request: web.Request) -> bool:
     """Return True if request is a websocket."""
     headers = request.headers
 
-    if headers.get(hdrs.CONNECTION) == "Upgrade" and \
-            headers.get(hdrs.UPGRADE) == "websocket":
+    if "upgrade" in headers.get(hdrs.CONNECTION, "").lower() and \
+            headers.get(hdrs.UPGRADE, "").lower() == "websocket":
         return True
     return False
 
