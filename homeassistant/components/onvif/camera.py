@@ -244,7 +244,7 @@ class ONVIFHassCamera(Camera):
         """Perform a PTZ action on the camera."""
         from onvif import exceptions
 
-        if self.self._ptz_service is None:
+        if self._ptz_service is None:
             _LOGGER.warning("PTZ actions are not supported on camera '%s'",
                             self._name)
             return
