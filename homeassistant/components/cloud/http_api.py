@@ -15,7 +15,7 @@ from homeassistant.components.http.data_validator import (
 from homeassistant.components import websocket_api
 from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import (
-    smart_home as google_sh, const as google_const)
+    const as google_const)
 
 from .const import (
     DOMAIN, REQUEST_TIMEOUT, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
