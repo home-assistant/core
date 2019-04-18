@@ -6,8 +6,6 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import CoreState, callback
 
 from .const import (
     ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_NAME, ATTR_SERVICE,
@@ -17,32 +15,22 @@ from .handler import HassioAPIError
 _LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def async_setup_discovery(hass, hassio, config):
+async def async_setup_discovery(hass, hassio):
     """Discovery setup."""
-    hassio_discovery = HassIODiscovery(hass, hassio, config)
+    hassio_discovery = HassIODiscovery(hass, hassio)
+    hass.http.register_view(hassio_discovery)
 
     # Handle exists discovery messages
-    async def async_discovery_start_handler(event):
-        """Process all exists discovery on startup."""
-        try:
-            data = await hassio.retrieve_discovery_messages()
-        except HassioAPIError as err:
-            _LOGGER.error("Can't read discover info: %s", err)
-            return
+    try:
+        data = await hassio.retrieve_discovery_messages()
+    except HassioAPIError as err:
+        _LOGGER.error("Can't read discover info: %s", err)
+        return
 
-        jobs = [hassio_discovery.async_process_new(discovery)
-                for discovery in data[ATTR_DISCOVERY]]
-        if jobs:
-            await asyncio.wait(jobs)
-
-    if hass.state == CoreState.running:
-        hass.async_create_task(async_discovery_start_handler(None))
-    else:
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_discovery_start_handler)
-
-    hass.http.register_view(hassio_discovery)
+    jobs = [hassio_discovery.async_process_new(discovery)
+            for discovery in data[ATTR_DISCOVERY]]
+    if jobs:
+        await asyncio.wait(jobs)
 
 
 class HassIODiscovery(HomeAssistantView):
@@ -51,11 +39,10 @@ class HassIODiscovery(HomeAssistantView):
     name = "api:hassio_push:discovery"
     url = "/api/hassio_push/discovery/{uuid}"
 
-    def __init__(self, hass, hassio, config):
+    def __init__(self, hass, hassio):
         """Initialize WebView."""
         self.hass = hass
         self.hassio = hassio
-        self.config = config
 
     async def post(self, request, uuid):
         """Handle new discovery requests."""
