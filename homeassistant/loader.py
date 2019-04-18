@@ -51,11 +51,11 @@ CUSTOM_WARNING = (
 _UNDEF = object()
 
 
-def manifest_from_legacy_module(module: ModuleType) -> Dict:
+def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
     """Generate a manifest from a legacy module."""
     return {
-        'domain': module.DOMAIN,  # type: ignore
-        'name': module.DOMAIN,  # type: ignore
+        'domain': domain,
+        'name': domain,
         'documentation': None,
         'requirements': getattr(module, 'REQUIREMENTS', []),
         'dependencies': getattr(module, 'DEPENDENCIES', []),
@@ -106,7 +106,7 @@ class Integration:
 
         return cls(
             hass, comp.__name__, pathlib.Path(comp.__file__).parent,
-            manifest_from_legacy_module(comp)
+            manifest_from_legacy_module(domain, comp)
         )
 
     def __init__(self, hass: 'HomeAssistant', pkg_path: str,
