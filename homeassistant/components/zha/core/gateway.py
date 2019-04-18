@@ -259,40 +259,25 @@ class ZHAGateway:
         """Handle device joined and basic information discovered (async)."""
         zha_device = self._async_get_or_create_device(device, is_new_join)
 
-        if zha_device.status is DeviceStatus.INITIALIZED:
+        is_rejoin = False
+        if zha_device.status is not DeviceStatus.INITIALIZED:
+            discovery_infos = []
+            for endpoint_id, endpoint in device.endpoints.items():
+                async_process_endpoint(
+                    self._hass, self._config, endpoint_id, endpoint,
+                    discovery_infos, device, zha_device, is_new_join
+                )
+                if endpoint_id != 0:
+                    for cluster in endpoint.in_clusters.values():
+                        cluster.bind_only = False
+                    for cluster in endpoint.out_clusters.values():
+                        cluster.bind_only = True
+        else:
+            is_rejoin = is_new_join is True
             _LOGGER.debug(
-                'skipping discovery for previously paired device: %s',
-                zha_device.ieee
+                'skipping discovery for previously discovered device: %s',
+                "{} - is rejoin: {}".format(zha_device.ieee, is_rejoin)
             )
-            # still get fresh state
-            _LOGGER.debug(
-                'refreshing state for previously paired device: %s',
-                zha_device.ieee
-            )
-            await zha_device.async_initialize(from_cache=False)
-            # still push the device details to the front end add device panel
-            device_info = async_get_device_info(self._hass, zha_device)
-            async_dispatcher_send(
-                self._hass,
-                ZHA_GW_MSG,
-                {
-                    TYPE: DEVICE_FULL_INIT,
-                    DEVICE_INFO: device_info
-                }
-            )
-            return None  # Guard against reinitializing an initialized device
-
-        discovery_infos = []
-        for endpoint_id, endpoint in device.endpoints.items():
-            async_process_endpoint(
-                self._hass, self._config, endpoint_id, endpoint,
-                discovery_infos, device, zha_device, is_new_join
-            )
-            if endpoint_id != 0:
-                for cluster in endpoint.in_clusters.values():
-                    cluster.bind_only = False
-                for cluster in endpoint.out_clusters.values():
-                    cluster.bind_only = True
 
         if is_new_join:
             # configure the device
@@ -313,15 +298,16 @@ class ZHAGateway:
         else:
             await zha_device.async_initialize(from_cache=True)
 
-        for discovery_info in discovery_infos:
-            async_dispatch_discovery_info(
-                self._hass,
-                is_new_join,
-                discovery_info
-            )
+        if not is_rejoin:
+            for discovery_info in discovery_infos:
+                async_dispatch_discovery_info(
+                    self._hass,
+                    is_new_join,
+                    discovery_info
+                )
 
-        device_entity = async_create_device_entity(zha_device)
-        await self._component.async_add_entities([device_entity])
+            device_entity = async_create_device_entity(zha_device)
+            await self._component.async_add_entities([device_entity])
 
         if is_new_join:
             device_info = async_get_device_info(self._hass, zha_device)
