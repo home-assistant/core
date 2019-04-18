@@ -96,7 +96,7 @@ async def test_sync_message(hass):
                     trait.TRAIT_ONOFF,
                     trait.TRAIT_COLOR_SETTING,
                 ],
-                'type': sh.TYPE_LIGHT,
+                'type': const.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
                     'colorModel': 'hsv',
@@ -176,7 +176,7 @@ async def test_sync_in_area(hass, registries):
                     trait.TRAIT_ONOFF,
                     trait.TRAIT_COLOR_SETTING,
                 ],
-                'type': sh.TYPE_LIGHT,
+                'type': const.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
                     'colorModel': 'hsv',
@@ -489,7 +489,7 @@ async def test_serialize_input_boolean(hass):
     """Test serializing an input boolean entity."""
     state = State('input_boolean.bla', 'on')
     # pylint: disable=protected-access
-    entity = sh._GoogleEntity(hass, BASIC_CONFIG, state)
+    entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
     result = await entity.sync_serialize()
     assert result == {
         'id': 'input_boolean.bla',

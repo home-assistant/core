@@ -49,6 +49,7 @@ UNSAFE_CONFIG = helpers.Config(
 
 async def test_brightness_light(hass):
     """Test brightness trait support for light domain."""
+    assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert trait.BrightnessTrait.supported(light.DOMAIN,
                                            light.SUPPORT_BRIGHTNESS, None)
 
@@ -87,6 +88,7 @@ async def test_brightness_light(hass):
 
 async def test_brightness_media_player(hass):
     """Test brightness trait support for media player domain."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.BrightnessTrait.supported(media_player.DOMAIN,
                                            media_player.SUPPORT_VOLUME_SET,
                                            None)
@@ -117,6 +119,7 @@ async def test_brightness_media_player(hass):
 async def test_camera_stream(hass):
     """Test camera stream trait support for camera domain."""
     hass.config.api = Mock(base_url='http://1.1.1.1:8123')
+    assert helpers.get_google_type(camera.DOMAIN, None) is not None
     assert trait.CameraStreamTrait.supported(camera.DOMAIN,
                                              camera.SUPPORT_STREAM, None)
 
@@ -145,6 +148,7 @@ async def test_camera_stream(hass):
 
 async def test_onoff_group(hass):
     """Test OnOff trait support for group domain."""
+    assert helpers.get_google_type(group.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(group.DOMAIN, 0, None)
 
     trt_on = trait.OnOffTrait(hass, State('group.bla', STATE_ON), BASIC_CONFIG)
@@ -183,6 +187,7 @@ async def test_onoff_group(hass):
 
 async def test_onoff_input_boolean(hass):
     """Test OnOff trait support for input_boolean domain."""
+    assert helpers.get_google_type(input_boolean.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(input_boolean.DOMAIN, 0, None)
 
     trt_on = trait.OnOffTrait(hass, State('input_boolean.bla', STATE_ON),
@@ -223,6 +228,7 @@ async def test_onoff_input_boolean(hass):
 
 async def test_onoff_switch(hass):
     """Test OnOff trait support for switch domain."""
+    assert helpers.get_google_type(switch.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(switch.DOMAIN, 0, None)
 
     trt_on = trait.OnOffTrait(hass, State('switch.bla', STATE_ON),
@@ -262,6 +268,7 @@ async def test_onoff_switch(hass):
 
 async def test_onoff_fan(hass):
     """Test OnOff trait support for fan domain."""
+    assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(fan.DOMAIN, 0, None)
 
     trt_on = trait.OnOffTrait(hass, State('fan.bla', STATE_ON), BASIC_CONFIG)
@@ -298,6 +305,7 @@ async def test_onoff_fan(hass):
 
 async def test_onoff_light(hass):
     """Test OnOff trait support for light domain."""
+    assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(light.DOMAIN, 0, None)
 
     trt_on = trait.OnOffTrait(hass, State('light.bla', STATE_ON), BASIC_CONFIG)
@@ -336,6 +344,7 @@ async def test_onoff_light(hass):
 
 async def test_onoff_media_player(hass):
     """Test OnOff trait support for media_player domain."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.OnOffTrait.supported(media_player.DOMAIN, 0, None)
 
     trt_on = trait.OnOffTrait(hass, State('media_player.bla', STATE_ON),
@@ -377,12 +386,14 @@ async def test_onoff_media_player(hass):
 
 async def test_onoff_climate(hass):
     """Test OnOff trait not supported for climate domain."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert not trait.OnOffTrait.supported(
         climate.DOMAIN, climate.SUPPORT_ON_OFF, None)
 
 
 async def test_dock_vacuum(hass):
     """Test dock trait support for vacuum domain."""
+    assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.DockTrait.supported(vacuum.DOMAIN, 0, None)
 
     trt = trait.DockTrait(hass, State('vacuum.bla', vacuum.STATE_IDLE),
@@ -406,6 +417,7 @@ async def test_dock_vacuum(hass):
 
 async def test_startstop_vacuum(hass):
     """Test startStop trait support for vacuum domain."""
+    assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.StartStopTrait.supported(vacuum.DOMAIN, 0, None)
 
     trt = trait.StartStopTrait(hass, State('vacuum.bla', vacuum.STATE_PAUSED, {
@@ -454,6 +466,7 @@ async def test_startstop_vacuum(hass):
 
 async def test_color_setting_color_light(hass):
     """Test ColorSpectrum trait support for light domain."""
+    assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None)
     assert trait.ColorSettingTrait.supported(light.DOMAIN,
                                              light.SUPPORT_COLOR, None)
@@ -515,6 +528,7 @@ async def test_color_setting_color_light(hass):
 
 async def test_color_setting_temperature_light(hass):
     """Test ColorTemperature trait support for light domain."""
+    assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None)
     assert trait.ColorSettingTrait.supported(light.DOMAIN,
                                              light.SUPPORT_COLOR_TEMP, None)
@@ -568,6 +582,7 @@ async def test_color_setting_temperature_light(hass):
 
 async def test_color_light_temperature_light_bad_temp(hass):
     """Test ColorTemperature trait support for light domain."""
+    assert helpers.get_google_type(light.DOMAIN, None) is not None
     assert not trait.ColorSettingTrait.supported(light.DOMAIN, 0, None)
     assert trait.ColorSettingTrait.supported(light.DOMAIN,
                                              light.SUPPORT_COLOR_TEMP, None)
@@ -584,6 +599,7 @@ async def test_color_light_temperature_light_bad_temp(hass):
 
 async def test_scene_scene(hass):
     """Test Scene trait support for scene domain."""
+    assert helpers.get_google_type(scene.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(scene.DOMAIN, 0, None)
 
     trt = trait.SceneTrait(hass, State('scene.bla', scene.STATE), BASIC_CONFIG)
@@ -601,6 +617,7 @@ async def test_scene_scene(hass):
 
 async def test_scene_script(hass):
     """Test Scene trait support for script domain."""
+    assert helpers.get_google_type(script.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(script.DOMAIN, 0, None)
 
     trt = trait.SceneTrait(hass, State('script.bla', STATE_OFF), BASIC_CONFIG)
@@ -622,6 +639,7 @@ async def test_scene_script(hass):
 
 async def test_temperature_setting_climate_onoff(hass):
     """Test TemperatureSetting trait support for climate domain - range."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert not trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None)
     assert trait.TemperatureSettingTrait.supported(
         climate.DOMAIN, climate.SUPPORT_OPERATION_MODE, None)
@@ -666,6 +684,7 @@ async def test_temperature_setting_climate_onoff(hass):
 
 async def test_temperature_setting_climate_range(hass):
     """Test TemperatureSetting trait support for climate domain - range."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert not trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None)
     assert trait.TemperatureSettingTrait.supported(
         climate.DOMAIN, climate.SUPPORT_OPERATION_MODE, None)
@@ -741,6 +760,7 @@ async def test_temperature_setting_climate_range(hass):
 
 async def test_temperature_setting_climate_setpoint(hass):
     """Test TemperatureSetting trait support for climate domain - setpoint."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
     assert not trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None)
     assert trait.TemperatureSettingTrait.supported(
         climate.DOMAIN, climate.SUPPORT_OPERATION_MODE, None)
@@ -841,6 +861,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
 
 async def test_lock_unlock_lock(hass):
     """Test LockUnlock trait locking support for lock domain."""
+    assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN,
                                            None)
 
@@ -867,6 +888,7 @@ async def test_lock_unlock_lock(hass):
 
 async def test_lock_unlock_unlock(hass):
     """Test LockUnlock trait unlocking support for lock domain."""
+    assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN,
                                            None)
 
@@ -905,6 +927,7 @@ async def test_lock_unlock_unlock(hass):
 
 async def test_fan_speed(hass):
     """Test FanSpeed trait speed control support for fan domain."""
+    assert helpers.get_google_type(fan.DOMAIN, None) is not None
     assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED,
                                          None)
 
@@ -988,6 +1011,7 @@ async def test_fan_speed(hass):
 
 async def test_modes(hass):
     """Test Mode trait."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ModesTrait.supported(
         media_player.DOMAIN, media_player.SUPPORT_SELECT_SOURCE, None)
 
@@ -1076,6 +1100,7 @@ async def test_modes(hass):
 
 async def test_openclose_cover(hass):
     """Test OpenClose trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
     assert trait.OpenCloseTrait.supported(cover.DOMAIN,
                                           cover.SUPPORT_SET_POSITION, None)
 
@@ -1137,6 +1162,8 @@ async def test_openclose_cover(hass):
 ))
 async def test_openclose_binary_sensor(hass, device_class):
     """Test OpenClose trait support for binary_sensor domain."""
+    assert helpers.get_google_type(
+        binary_sensor.DOMAIN, device_class) is not None
     assert trait.OpenCloseTrait.supported(binary_sensor.DOMAIN,
                                           0, device_class)
 
