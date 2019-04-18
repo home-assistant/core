@@ -1,0 +1,12 @@
+{
+  "domain": "qfes_bushfire",
+  "name": "Queensland Fire and Emergency Services Bushfire Alert",
+  "documentation": "https://www.home-assistant.io/components/qfes_bushfire",
+  "requirements": [
+    "georss_qfes_bushfire_alert_client==0.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@exxamalte"
+  ]
+}

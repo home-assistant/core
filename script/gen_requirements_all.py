@@ -68,6 +68,7 @@ TEST_REQUIREMENTS = (
     'geojson_client',
     'georss_generic_client',
     'georss_ign_sismologia_client',
+    'georss_qfes_bushfire_alert_client',
     'google-api-python-client',
     'gTTS-token',
     'ha-ffmpeg',
