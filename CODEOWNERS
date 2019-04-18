@@ -154,7 +154,7 @@ homeassistant/components/netdata/* @fabaff
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
-homeassistant/components/notify/* @flowolf
+homeassistant/components/notify/* @home-assistant/core
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nuki/* @pschmitt
 homeassistant/components/ohmconnect/* @robbiet480
@@ -247,7 +247,7 @@ homeassistant/components/xfinity/* @cisasteelersfan
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
 homeassistant/components/xiaomi_miio/* @rytilahti @syssi
 homeassistant/components/xiaomi_tv/* @fattdev
-homeassistant/components/xmpp/* @fabaff
+homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yamaha_musiccast/* @jalmeroth
 homeassistant/components/yeelight/* @rytilahti @zewelor
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
