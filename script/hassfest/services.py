@@ -65,7 +65,7 @@ def validate_services(integration: Integration):
         return
 
     try:
-        data = load_yaml(integration.path / 'services.yaml')
+        data = load_yaml(str(integration.path / 'services.yaml'))
     except FileNotFoundError:
         print(
             "Warning: {} registeres services but has no services.yaml".format(
