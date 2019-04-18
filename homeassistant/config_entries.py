@@ -142,11 +142,10 @@ SOURCE_IMPORT = 'import'
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
-    'ais_google_assistant',
+    'ais_dom_device',
     'ais_drives_service',
     'ais_spotify_service',
     'ais_host',
-    'ais_dom_device',
     'ambient_station',
     'axis',
     'cast',

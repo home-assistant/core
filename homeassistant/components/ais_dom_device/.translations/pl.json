@@ -3,11 +3,11 @@
       "title": "AIS Dodanie Nowego Urządzenia",
       "step": {
         "confirm": {
-          "description": "Czy chcesz dodać nowe urządzenie?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nTen kreator działa z urządzeniami posiadającymi **otwarto źródłowe i darmowe** oprogramowanie rozwijane w ramach projektu [Sonoff-Tasmota](https://github.com/arendst/Sonoff-Tasmota). Oprogramowanie to jest instalowane na urządzeniach **AI-Speaker**, może być też alternatywnym oprogramowaniem dla urządzeń produkowanych przez wielu producentów.\n\nSzczegóły w dokumentacji [Działa z AI-Speaker](https://sviete.github.io/AIS-docs/docs/en/ais_iot_works_with.html)",
+          "description": "Czy chcesz dodać nowe urządzenie?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nTen kreator działa z urządzeniami posiadającymi **otwarto-źródłowe i darmowe** oprogramowanie rozwijane w ramach projektu [Sonoff-Tasmota](https://github.com/arendst/Sonoff-Tasmota). Oprogramowanie to jest instalowane na urządzeniach **AI-Speaker**, może być też alternatywnym oprogramowaniem dla urządzeń produkowanych przez wielu producentów.\n\nSzczegóły w dokumentacji [Działa z AI-Speaker](https://sviete.github.io/AIS-docs/docs/en/ais_iot_works_with.html)",
           "title": "Dodawanie urządzenia AIS"
         },
         "one": {
-          "description": "![AIS logo](/static/icons/ais_s20_1.jpg)\n\nUpewnij się, że urządzenie znajduje się w zasięgu routera WiFi.\nW kolejnych krokach dołączymy je do Twojej lokalnej sieci WiFi i do bramki **AIS dom**",
+          "description": "![AIS logo](/static/icons/ais_s20_1.jpg)\n\nUpewnij się, że urządzenie znajduje się **w zasięgu routera WiFi oraz bramki AIS dom**.\nW kolejnych krokach dołączymy je do Twojej lokalnej sieci WiFi i do bramki **AIS dom**",
           "title": "Podłącz urządzenie do zasilania."
         },
         "two": {
