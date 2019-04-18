@@ -12,7 +12,7 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER_TILT, SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION, SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER, STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE,
-    STATE_UNKNOWN)
+    SERVICE_TOGGLE, SERVICE_TOGGLE_COVER_TILT, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import (
@@ -192,6 +192,27 @@ class TestCoverMQTT(unittest.TestCase):
 
         self.hass.services.call(
             cover.DOMAIN, SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'CLOSE', 0, False)
+        state = self.hass.states.get('cover.test')
+        assert STATE_CLOSED == state.state
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_TOGGLE,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'OPEN', 0, False)
+        self.mock_publish.async_publish.reset_mock()
+        state = self.hass.states.get('cover.test')
+        assert STATE_OPEN == state.state
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_TOGGLE,
             {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
@@ -564,6 +585,22 @@ class TestCoverMQTT(unittest.TestCase):
         self.mock_publish.async_publish.assert_called_once_with(
             'tilt-command-topic', 0, 0, False)
 
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 100, 0, False)
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 0, 0, False)
+
     def test_tilt_given_value(self):
         """Test tilting to a given value."""
         assert setup_component(self.hass, cover.DOMAIN, {
@@ -594,6 +631,22 @@ class TestCoverMQTT(unittest.TestCase):
 
         self.hass.services.call(
             cover.DOMAIN, SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 125, 0, False)
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 400, 0, False)
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
             {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 

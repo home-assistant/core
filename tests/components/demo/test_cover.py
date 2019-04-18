@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION, SERVICE_STOP_COVER,
+    SERVICE_TOGGLE, SERVICE_TOGGLE_COVER_TILT,
     SERVICE_STOP_COVER_TILT)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -79,6 +80,46 @@ async def test_open_cover(hass, setup_comp):
     assert 100 == state.attributes.get('current_position')
 
 
+async def test_toggle_cover(hass, setup_comp):
+    """Test toggling the cover."""
+    # Start open
+    await hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == 'open'
+    assert 100 == state.attributes.get('current_position')
+    # Toggle closed
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == 'closed'
+    assert 0 == state.attributes.get('current_position')
+    # Toggle open
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == 'open'
+    assert 100 == state.attributes.get('current_position')
+
+
 async def test_set_cover_position(hass, setup_comp):
     """Test moving the cover to a specific position."""
     state = hass.states.get(ENTITY_COVER)
@@ -136,6 +177,43 @@ async def test_open_cover_tilt(hass, setup_comp):
     assert 50 == state.attributes.get('current_tilt_position')
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert 100 == state.attributes.get('current_tilt_position')
+
+
+async def test_toggle_cover_tilt(hass, setup_comp):
+    """Test toggling the cover tilt."""
+    # Start open
+    await hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert 100 == state.attributes.get('current_tilt_position')
+    # Toggle closed
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    for _ in range(7):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert 0 == state.attributes.get('current_tilt_position')
+    # Toggle Open
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE_COVER_TILT,
         {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
     for _ in range(7):
         future = dt_util.utcnow() + timedelta(seconds=1)

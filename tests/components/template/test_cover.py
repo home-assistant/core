@@ -7,6 +7,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT,
+    SERVICE_TOGGLE, SERVICE_TOGGLE_COVER_TILT,
     SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION, SERVICE_STOP_COVER,
     STATE_CLOSED, STATE_OPEN)
@@ -465,6 +466,20 @@ async def test_set_position(hass, calls):
     assert state.attributes.get('current_position') == 0.0
 
     await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.test_template_cover')
+    assert state.attributes.get('current_position') == 100.0
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.test_template_cover')
+    assert state.attributes.get('current_position') == 0.0
+
+    await hass.services.async_call(
         DOMAIN, SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 25}, blocking=True)
     await hass.async_block_till_done()
@@ -626,6 +641,20 @@ async def test_set_position_optimistic(hass, calls):
     state = hass.states.get('cover.test_template_cover')
     assert state.state == STATE_OPEN
 
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.test_template_cover')
+    assert state.state == STATE_CLOSED
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.test_template_cover')
+    assert state.state == STATE_OPEN
+
 
 async def test_set_tilt_position_optimistic(hass, calls):
     """Test the optimistic tilt_position mode."""
@@ -670,6 +699,20 @@ async def test_set_tilt_position_optimistic(hass, calls):
 
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.test_template_cover')
+    assert state.attributes.get('current_tilt_position') == 100.0
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+        {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.test_template_cover')
+    assert state.attributes.get('current_tilt_position') == 0.0
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE_COVER_TILT,
         {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
     await hass.async_block_till_done()
     state = hass.states.get('cover.test_template_cover')
