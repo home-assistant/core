@@ -12,7 +12,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2019.04.01']
+REQUIREMENTS = ['youtube_dl==2019.04.17']
 
 _LOGGER = logging.getLogger(__name__)
 
