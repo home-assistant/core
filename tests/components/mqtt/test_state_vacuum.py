@@ -203,6 +203,23 @@ async def test_no_fan_vacuum(hass, mock_publish):
     assert STATE_CLEANING == state.state
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
+    assert 54 == state.attributes.get(ATTR_BATTERY_LEVEL)
+    assert 'mdi:battery-50' == \
+        state.attributes.get(ATTR_BATTERY_ICON)
+
+    message = """{
+        "battery_level": 54,
+        "state": "cleaning",
+        "fan_speed": "max"
+    }"""
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+
+    assert STATE_CLEANING == state.state
+    assert state.attributes.get(ATTR_FAN_SPEED) is None
+    assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
 
     assert 54 == state.attributes.get(ATTR_BATTERY_LEVEL)
     assert 'mdi:battery-50' == \

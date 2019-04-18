@@ -207,6 +207,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 payload = json.loads(payload)
             if STATE in payload and payload[STATE] in POSSIBLE_STATES:
                 self._state = POSSIBLE_STATES[payload[STATE]]
+                del payload[STATE]
             self._state_attrs.update(payload)
             self.async_write_ha_state()
 
@@ -244,7 +245,6 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def fan_speed_list(self):
         """Return fan speed list of the vacuum."""
-        print("Sprawdzam!")
         if self.supported_features & SUPPORT_FAN_SPEED == 0:
             return None
         return self._fan_speed_list
