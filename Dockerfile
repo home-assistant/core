@@ -32,4 +32,4 @@ RUN pip3 install --no-cache-dir -r requirements_all.txt && \
 # Copy source
 COPY . .
 
-CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
+CMD [ "python", "-m", "homeassistant", "--config", "/config", "--skip-pip" ]
