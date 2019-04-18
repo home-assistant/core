@@ -15,8 +15,8 @@ from homeassistant.components import group
 from homeassistant.helpers import intent
 from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER, SERVICE_TOGGLE, SERVICE_OPEN_COVER_TILT, 
-    SERVICE_CLOSE_COVER_TILT, SERVICE_STOP_COVER_TILT, 
+    SERVICE_STOP_COVER, SERVICE_TOGGLE, SERVICE_OPEN_COVER_TILT,
+    SERVICE_CLOSE_COVER_TILT, SERVICE_STOP_COVER_TILT,
     SERVICE_SET_COVER_TILT_POSITION, SERVICE_TOGGLE_COVER_TILT,
     STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, ATTR_ENTITY_ID)
 
@@ -247,7 +247,7 @@ class CoverDevice(Entity):
     def is_closed(self):
         """Return if the cover is closed or not."""
         raise NotImplementedError()
-        
+
     @property
     def is_tilt_closed(self):
         """Return if the cover is tilted closed or not."""
