@@ -3,8 +3,9 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.cover import SUPPORT_OPEN, SUPPORT_CLOSE
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
-from homeassistant.const import CONF_NAME, STATE_OPEN
+from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_OPEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -15,6 +16,8 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
+TYPE_NORMAL = 'normal'
+TYPE_INVERTED = 'inverted'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
@@ -22,6 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_TYPE):
+                vol.Any(TYPE_NORMAL, TYPE_INVERTED),
             vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_GROUP_ALIASES, default=[]):
@@ -36,12 +41,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def entity_class_for_type(entity_type):
+    """Translate entity type to entity class.
+
+    Async friendly.
+    """
+    entity_device_mapping = {
+        # default cover implementation
+        TYPE_NORMAL: RflinkCover,
+        # cover with open/close commands inverted
+        # like KAKU/COCO ASUN-650
+        TYPE_INVERTED: InvertedRflinkCover,
+    }
+
+    return entity_device_mapping.get(entity_type, RflinkCover)
+
+
 def devices_from_config(domain_config):
     """Parse configuration and add Rflink cover devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
+        # Determine what kind of entity to create, RflinkCover
+		# or InvertedRflinkCover
+        if CONF_TYPE in config:
+            # Remove type from config to not pass it as and argument
+            # to entity instantiation
+            entity_type = config.pop(CONF_TYPE)
+        else:
+            entity_type = TYPE_NORMAL
+
+        entity_class = entity_class_for_type(entity_type)
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-        device = RflinkCover(device_id, **device_config)
+        device = entity_class(device_id, **device_config)
         devices.append(device)
 
     return devices
@@ -100,3 +131,21 @@ class RflinkCover(RflinkCommand, CoverDevice, RestoreEntity):
     def async_stop_cover(self, **kwargs):
         """Turn the device stop."""
         return self._async_handle_command("stop_cover")
+
+
+class InvertedRflinkCover(RflinkCover):
+    """Rflink cover that has inverted open/close commands."""
+
+    async def _async_send_command(self, cmd, repetitions):
+        """Will invert only the UP/DOWN commands."""
+        _LOGGER.debug(
+            "Getting command: %s for Rflink device: %s", cmd, self._device_id)
+        if cmd == 'DOWN':
+            cmmnd = 'UP'
+        elif cmd == 'UP':
+            cmmnd = 'DOWN'
+        else:
+            cmmnd = cmd
+
+        await super()._async_send_command(cmmnd, repetitions)
+
