@@ -38,7 +38,7 @@ from .const import (
     ERR_NOT_SUPPORTED,
     ERR_FUNCTION_NOT_SUPPORTED,
 )
-from .helpers import SmartHomeError
+from .error import SmartHomeError
 
 _LOGGER = logging.getLogger(__name__)
 
