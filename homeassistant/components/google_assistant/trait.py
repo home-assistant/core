@@ -29,11 +29,16 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_ASSUMED_STATE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
-from .const import ERR_VALUE_OUT_OF_RANGE
-from .helpers import SmartHomeError
+from .const import (
+    ERR_VALUE_OUT_OF_RANGE,
+    ERR_NOT_SUPPORTED,
+    ERR_FUNCTION_NOT_SUPPORTED,
+)
+from .error import SmartHomeError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -300,17 +305,19 @@ class ColorSettingTrait(_Trait):
         response = {}
 
         if features & light.SUPPORT_COLOR:
-            response['colorModel'] = 'rgb'
+            response['colorModel'] = 'hsv'
 
         if features & light.SUPPORT_COLOR_TEMP:
             # Max Kelvin is Min Mireds K = 1000000 / mireds
             # Min Kevin is Max Mireds K = 1000000 / mireds
-            response['temperatureMaxK'] = \
+            response['colorTemperatureRange'] = {
+                'temperatureMaxK':
                 color_util.color_temperature_mired_to_kelvin(
-                    attrs.get(light.ATTR_MIN_MIREDS))
-            response['temperatureMinK'] = \
+                    attrs.get(light.ATTR_MIN_MIREDS)),
+                'temperatureMinK':
                 color_util.color_temperature_mired_to_kelvin(
-                    attrs.get(light.ATTR_MAX_MIREDS))
+                    attrs.get(light.ATTR_MAX_MIREDS)),
+            }
 
         return response
 
@@ -321,12 +328,13 @@ class ColorSettingTrait(_Trait):
 
         if features & light.SUPPORT_COLOR:
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
+            brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
             if color_hs is not None:
-                color['spectrumRGB'] = int(
-                    color_util.color_rgb_to_hex(
-                        *color_util.color_hs_to_RGB(*color_hs)),
-                    16
-                )
+                color['spectrumHsv'] = {
+                    'hue': color_hs[0],
+                    'saturation': color_hs[1]/100,
+                    'value': brightness/255,
+                }
 
         if features & light.SUPPORT_COLOR_TEMP:
             temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
@@ -335,7 +343,7 @@ class ColorSettingTrait(_Trait):
                 _LOGGER.warning('Entity %s has incorrect color temperature %s',
                                 self.state.entity_id, temp)
             elif temp is not None:
-                color['temperature'] = \
+                color['temperatureK'] = \
                     color_util.color_temperature_mired_to_kelvin(temp)
 
         response = {}
@@ -375,6 +383,18 @@ class ColorSettingTrait(_Trait):
                 light.DOMAIN, SERVICE_TURN_ON, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_HS_COLOR: color
+                }, blocking=True, context=data.context)
+
+        elif 'spectrumHSV' in params['color']:
+            color = params['color']['spectrumHSV']
+            saturation = color['saturation'] * 100
+            brightness = color['value'] * 255
+
+            await self.hass.services.async_call(
+                light.DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    light.ATTR_HS_COLOR: [color['hue'], saturation],
+                    light.ATTR_BRIGHTNESS: brightness
                 }, blocking=True, context=data.context)
 
 
@@ -1049,18 +1069,25 @@ class OpenCloseTrait(_Trait):
             # Google will not issue an open command if the assumed state is
             # open, even if that is currently incorrect.
             if self.state.attributes.get(ATTR_ASSUMED_STATE):
-                response['openPercent'] = 50
-            else:
-                position = self.state.attributes.get(
-                    cover.ATTR_CURRENT_POSITION
-                )
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    'Querying state is not supported')
 
-                if position is not None:
-                    response['openPercent'] = position
-                elif self.state.state != cover.STATE_CLOSED:
-                    response['openPercent'] = 100
-                else:
-                    response['openPercent'] = 0
+            if self.state.state == STATE_UNKNOWN:
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    'Querying state is not supported')
+
+            position = self.state.attributes.get(
+                cover.ATTR_CURRENT_POSITION
+            )
+
+            if position is not None:
+                response['openPercent'] = position
+            elif self.state.state != cover.STATE_CLOSED:
+                response['openPercent'] = 100
+            else:
+                response['openPercent'] = 0
 
         elif domain == binary_sensor.DOMAIN:
             if self.state.state == STATE_ON:
@@ -1076,22 +1103,23 @@ class OpenCloseTrait(_Trait):
 
         if domain == cover.DOMAIN:
             position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
-            if position is not None:
+            if params['openPercent'] == 0:
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True, context=data.context)
+            elif params['openPercent'] == 100:
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True, context=data.context)
+            elif position is not None:
                 await self.hass.services.async_call(
                     cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                         ATTR_ENTITY_ID: self.state.entity_id,
                         cover.ATTR_POSITION: params['openPercent']
                     }, blocking=True, context=data.context)
             else:
-                if self.state.state != cover.STATE_CLOSED:
-                    if params['openPercent'] < 100:
-                        await self.hass.services.async_call(
-                            cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
-                                ATTR_ENTITY_ID: self.state.entity_id
-                            }, blocking=True, context=data.context)
-                else:
-                    if params['openPercent'] > 0:
-                        await self.hass.services.async_call(
-                            cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
-                                ATTR_ENTITY_ID: self.state.entity_id
-                            }, blocking=True, context=data.context)
+                raise SmartHomeError(
+                    ERR_FUNCTION_NOT_SUPPORTED,
+                    'Setting a position is not supported')

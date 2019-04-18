@@ -9,7 +9,7 @@
     "suds-py3==1.3.3.0"
   ],
   "dependencies": [
-      "ffmpeg"
+    "ffmpeg"
   ],
   "codeowners": []
 }

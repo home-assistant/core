@@ -35,8 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt_json'
 
-DEPENDENCIES = ['mqtt']
-
 DEFAULT_BRIGHTNESS = False
 DEFAULT_COLOR_TEMP = False
 DEFAULT_EFFECT = False

@@ -14,8 +14,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyads==3.0.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_ADS = 'data_ads'

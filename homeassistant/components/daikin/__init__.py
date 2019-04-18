@@ -17,8 +17,6 @@ from homeassistant.util import Throttle
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
-REQUIREMENTS = ['pydaikin==1.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'daikin'

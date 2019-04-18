@@ -14,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['solaredge==0.0.2', 'stringcase==1.2.0']
-
 # Config for solaredge monitoring api requests.
 CONF_SITE_ID = "site_id"
 

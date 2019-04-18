@@ -83,8 +83,6 @@ def _state_schema(state):
     return vol.Schema(schema)
 
 
-DEPENDENCIES = ['mqtt']
-
 PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): 'manual_mqtt',
     vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,

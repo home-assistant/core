@@ -12,8 +12,6 @@ from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TYPE_BINARY_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['ambient_station']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

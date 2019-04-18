@@ -9,8 +9,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tapsaff==0.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_LOCATION = 'location'

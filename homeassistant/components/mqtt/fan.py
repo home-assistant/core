@@ -23,8 +23,6 @@ from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
-
 CONF_STATE_VALUE_TEMPLATE = 'state_value_template'
 CONF_SPEED_STATE_TOPIC = 'speed_state_topic'
 CONF_SPEED_COMMAND_TOPIC = 'speed_command_topic'

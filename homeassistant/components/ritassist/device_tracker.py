@@ -9,8 +9,6 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.event import track_utc_time_change
 
-REQUIREMENTS = ['ritassist==0.9.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CLIENT_ID = 'client_id'

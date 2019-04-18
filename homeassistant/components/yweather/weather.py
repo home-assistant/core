@@ -10,8 +10,6 @@ from homeassistant.components.weather import (
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["yahooweather==0.10"]
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CONDITION = 'yahoo_condition'

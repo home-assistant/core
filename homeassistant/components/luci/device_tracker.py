@@ -9,8 +9,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['openwrt-luci-rpc==1.0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSL = False

@@ -8,8 +8,6 @@ from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['pycfdns==0.0.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_RECORDS = 'records'

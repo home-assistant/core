@@ -11,8 +11,6 @@ from homeassistant.util.dt import as_local
 from .const import (
     ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LOGI_SENSORS as SENSOR_TYPES)
 
-DEPENDENCIES = ['logi_circle']
-
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -1,4 +1,20 @@
 """Constants for Google Assistant."""
+from homeassistant.components import (
+    binary_sensor,
+    camera,
+    climate,
+    cover,
+    fan,
+    group,
+    input_boolean,
+    light,
+    lock,
+    media_player,
+    scene,
+    script,
+    switch,
+    vacuum,
+)
 DOMAIN = 'google_assistant'
 
 GOOGLE_ASSISTANT_API_ENDPOINT = '/api/google_assistant'
@@ -30,6 +46,9 @@ TYPE_FAN = PREFIX_TYPES + 'FAN'
 TYPE_THERMOSTAT = PREFIX_TYPES + 'THERMOSTAT'
 TYPE_LOCK = PREFIX_TYPES + 'LOCK'
 TYPE_BLINDS = PREFIX_TYPES + 'BLINDS'
+TYPE_GARAGE = PREFIX_TYPES + 'GARAGE'
+TYPE_OUTLET = PREFIX_TYPES + 'OUTLET'
+TYPE_SENSOR = PREFIX_TYPES + 'SENSOR'
 
 SERVICE_REQUEST_SYNC = 'request_sync'
 HOMEGRAPH_URL = 'https://homegraph.googleapis.com/'
@@ -49,3 +68,32 @@ ERR_FUNCTION_NOT_SUPPORTED = 'functionNotSupported'
 EVENT_COMMAND_RECEIVED = 'google_assistant_command'
 EVENT_QUERY_RECEIVED = 'google_assistant_query'
 EVENT_SYNC_RECEIVED = 'google_assistant_sync'
+
+DOMAIN_TO_GOOGLE_TYPES = {
+    camera.DOMAIN: TYPE_CAMERA,
+    climate.DOMAIN: TYPE_THERMOSTAT,
+    cover.DOMAIN: TYPE_BLINDS,
+    fan.DOMAIN: TYPE_FAN,
+    group.DOMAIN: TYPE_SWITCH,
+    input_boolean.DOMAIN: TYPE_SWITCH,
+    light.DOMAIN: TYPE_LIGHT,
+    lock.DOMAIN: TYPE_LOCK,
+    media_player.DOMAIN: TYPE_SWITCH,
+    scene.DOMAIN: TYPE_SCENE,
+    script.DOMAIN: TYPE_SCENE,
+    switch.DOMAIN: TYPE_SWITCH,
+    vacuum.DOMAIN: TYPE_VACUUM,
+}
+
+DEVICE_CLASS_TO_GOOGLE_TYPES = {
+    (cover.DOMAIN, cover.DEVICE_CLASS_GARAGE): TYPE_GARAGE,
+    (switch.DOMAIN, switch.DEVICE_CLASS_SWITCH): TYPE_SWITCH,
+    (switch.DOMAIN, switch.DEVICE_CLASS_OUTLET): TYPE_OUTLET,
+    (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_DOOR): TYPE_SENSOR,
+    (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_GARAGE_DOOR):
+    TYPE_SENSOR,
+    (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_LOCK): TYPE_SENSOR,
+    (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
+    (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
+
+}

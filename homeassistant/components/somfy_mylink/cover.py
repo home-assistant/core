@@ -7,7 +7,6 @@ from homeassistant.util import slugify
 from . import CONF_DEFAULT_REVERSE, DATA_SOMFY_MYLINK
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['somfy_mylink']
 
 
 async def async_setup_platform(hass,

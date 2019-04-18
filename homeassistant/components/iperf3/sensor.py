@@ -6,8 +6,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import ATTR_VERSION, DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES
 
-DEPENDENCIES = ['iperf3']
-
 ATTRIBUTION = 'Data retrieved using Iperf3'
 
 ICON = 'mdi:speedometer'

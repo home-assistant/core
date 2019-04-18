@@ -7,8 +7,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_NAME, CONF_BINARY_SENSORS
 from . import DATA_AMCREST, BINARY_SENSORS
 
-DEPENDENCIES = ['amcrest']
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)

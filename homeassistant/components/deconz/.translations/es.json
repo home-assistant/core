@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "El puente ya esta configurado",
             "no_bridges": "No se han descubierto puentes deCONZ",
-            "one_instance_only": "El componente s\u00f3lo soporta una instancia deCONZ"
+            "one_instance_only": "El componente s\u00f3lo soporta una instancia deCONZ",
+            "updated_instance": "Instancia deCONZ actualizada con nueva direcci\u00f3n de host"
         },
         "error": {
             "no_key": "No se pudo obtener una clave API"

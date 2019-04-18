@@ -12,8 +12,6 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, ATTR_TITLE, PLATFORM_SCHEMA,
     BaseNotificationService)
 
-REQUIREMENTS = ['slacker==0.12.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CHANNEL = 'default_channel'

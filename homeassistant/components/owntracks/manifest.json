@@ -8,5 +8,8 @@
   "dependencies": [
     "webhook"
   ],
+  "after_dependencies": [
+    "mqtt"
+  ],
   "codeowners": []
 }

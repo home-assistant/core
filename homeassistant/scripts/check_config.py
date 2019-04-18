@@ -201,7 +201,8 @@ def check(config_dir, secrets=False):
         hass = core.HomeAssistant()
         hass.config.config_dir = config_dir
 
-        res['components'] = check_ha_config_file(hass)
+        res['components'] = hass.loop.run_until_complete(
+            check_ha_config_file(hass))
         res['secret_cache'] = OrderedDict(yaml.__SECRET_CACHE)
 
         for err in res['components'].errors:
@@ -280,7 +281,7 @@ class HomeAssistantConfig(OrderedDict):
         return self
 
 
-def check_ha_config_file(hass):
+async def check_ha_config_file(hass):
     """Check if Home Assistant configuration file is valid."""
     config_dir = hass.config.config_dir
     result = HomeAssistantConfig()
@@ -300,10 +301,12 @@ def check_ha_config_file(hass):
 
     # Load configuration.yaml
     try:
-        config_path = find_config_file(config_dir)
+        config_path = await hass.async_add_executor_job(
+            find_config_file, config_dir)
         if not config_path:
             return result.add_error("File configuration.yaml not found.")
-        config = load_yaml_config_file(config_path)
+        config = await hass.async_add_executor_job(
+            load_yaml_config_file, config_path)
     except HomeAssistantError as err:
         return result.add_error(
             "Error loading {}: {}".format(config_path, err))
@@ -320,7 +323,7 @@ def check_ha_config_file(hass):
         core_config = {}
 
     # Merge packages
-    merge_packages_config(
+    await merge_packages_config(
         hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
     core_config.pop(CONF_PACKAGES, None)
 
@@ -329,8 +332,15 @@ def check_ha_config_file(hass):
 
     # Process and validate config
     for domain in components:
-        component = loader.get_component(hass, domain)
-        if not component:
+        try:
+            integration = await loader.async_get_integration(hass, domain)
+        except loader.IntegrationNotFound:
+            result.add_error("Integration not found: {}".format(domain))
+            continue
+
+        try:
+            component = integration.get_component()
+        except ImportError:
             result.add_error("Component not found: {}".format(domain))
             continue
 
@@ -342,21 +352,19 @@ def check_ha_config_file(hass):
                 _comp_error(ex, domain, config)
                 continue
 
-        if (not hasattr(component, 'PLATFORM_SCHEMA') and
-                not hasattr(component, 'PLATFORM_SCHEMA_BASE')):
+        component_platform_schema = getattr(
+            component, 'PLATFORM_SCHEMA_BASE',
+            getattr(component, 'PLATFORM_SCHEMA', None))
+
+        if component_platform_schema is None:
             continue
 
         platforms = []
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                if hasattr(component, 'PLATFORM_SCHEMA_BASE'):
-                    p_validated = \
-                        component.PLATFORM_SCHEMA_BASE(  # type: ignore
-                            p_config)
-                else:
-                    p_validated = component.PLATFORM_SCHEMA(  # type: ignore
-                        p_config)
+                p_validated = component_platform_schema(  # type: ignore
+                    p_config)
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
                 continue
@@ -368,9 +376,18 @@ def check_ha_config_file(hass):
                 platforms.append(p_validated)
                 continue
 
-            platform = loader.get_platform(hass, domain, p_name)
+            try:
+                p_integration = await loader.async_get_integration(hass,
+                                                                   p_name)
+            except loader.IntegrationNotFound:
+                result.add_error(
+                    "Integration {} not found when trying to verify its {} "
+                    "platform.".format(p_name, domain))
+                continue
 
-            if platform is None:
+            try:
+                platform = p_integration.get_platform(domain)
+            except ImportError:
                 result.add_error(
                     "Platform not found: {}.{}".format(domain, p_name))
                 continue

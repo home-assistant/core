@@ -11,8 +11,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['niluclient==0.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AREA = 'area'

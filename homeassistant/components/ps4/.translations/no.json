@@ -4,8 +4,8 @@
             "credential_error": "Feil ved henting av legitimasjon.",
             "devices_configured": "Alle enheter som ble funnet er allerede konfigurert.",
             "no_devices_found": "Ingen PlayStation 4 enheter funnet p\u00e5 nettverket.",
-            "port_987_bind_error": "Kunne ikke binde til port 987.",
-            "port_997_bind_error": "Kunne ikke binde til port 997."
+            "port_987_bind_error": "Kunne ikke binde til port 987. Se [dokumentasjonen](https://www.home-assistant.io/components/ps4/) for mer info.",
+            "port_997_bind_error": "Kunne ikke binde til port 997. Se [dokumentasjonen] (https://www.home-assistant.io/components/ps4/) for videre informasjon."
         },
         "error": {
             "login_failed": "Klarte ikke \u00e5 koble til PlayStation 4. Bekreft at PIN koden er riktig.",
@@ -14,7 +14,7 @@
         },
         "step": {
             "creds": {
-                "description": "Legitimasjon n\u00f8dvendig. Trykk \"Send\" og deretter i PS4-ens andre skjerm app, kan du oppdatere enheter, og velg \"Home-Assistent' enheten for \u00e5 fortsette.",
+                "description": "Legitimasjon n\u00f8dvendig. Trykk \"Send\" og deretter i PS4-ens andre skjerm app, kan du oppdatere enheter, og velg \"Home-Assistant' enheten for \u00e5 fortsette.",
                 "title": "PlayStation 4"
             },
             "link": {

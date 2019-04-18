@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['dweepy==0.3.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'dweet'

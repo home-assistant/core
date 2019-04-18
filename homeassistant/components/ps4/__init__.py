@@ -9,8 +9,6 @@ from .const import DOMAIN  # noqa: pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyps4-homeassistant==0.5.2']
-
 
 async def async_setup(hass, config):
     """Set up the PS4 Component."""

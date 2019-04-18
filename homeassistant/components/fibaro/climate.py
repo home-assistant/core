@@ -44,8 +44,6 @@ FAN_LEFT_RIGHT = 'left_right'
 FAN_UP_DOWN = 'up_down'
 FAN_QUIET = 'quiet'
 
-DEPENDENCIES = ['fibaro']
-
 _LOGGER = logging.getLogger(__name__)
 
 # SDS13781-10 Z-Wave Application Command Class Specification 2019-01-04

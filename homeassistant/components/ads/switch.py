@@ -11,8 +11,6 @@ from . import CONF_ADS_VAR, DATA_ADS, AdsEntity, STATE_KEY_STATE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['ads']
-
 DEFAULT_NAME = 'ADS Switch'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

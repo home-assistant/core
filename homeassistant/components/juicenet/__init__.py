@@ -8,8 +8,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-juicenet==0.0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'juicenet'

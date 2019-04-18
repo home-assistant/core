@@ -12,7 +12,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['oasatelematics==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_STOP_ID = 'stop_id'
