@@ -67,11 +67,8 @@ def validate_services(integration: Integration):
     try:
         data = load_yaml(str(integration.path / 'services.yaml'))
     except FileNotFoundError:
-        print(
-            "Warning: {} registeres services but has no services.yaml".format(
-                integration.domain))
-        # integration.add_error(
-        #     'services', 'Registers services but has no services.yaml')
+        integration.add_error(
+            'services', 'Registers services but has no services.yaml')
         return
     except HomeAssistantError:
         integration.add_error(
