@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_discovery_view(hass, hassio):
+def async_setup_discovery_view(hass: HomeAssistantView, hassio):
     """Discovery setup."""
     hassio_discovery = HassIODiscovery(hass, hassio)
     hass.http.register_view(hassio_discovery)
@@ -38,7 +38,7 @@ def async_setup_discovery_view(hass, hassio):
             await asyncio.wait(jobs)
 
     hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, _async_discovery_start_handler)
+        EVENT_HOMEASSISTANT_START, _async_discovery_start_handler)
 
 
 class HassIODiscovery(HomeAssistantView):
@@ -47,7 +47,7 @@ class HassIODiscovery(HomeAssistantView):
     name = "api:hassio_push:discovery"
     url = "/api/hassio_push/discovery/{uuid}"
 
-    def __init__(self, hass, hassio):
+    def __init__(self, hass: HomeAssistantView, hassio):
         """Initialize WebView."""
         self.hass = hass
         self.hassio = hassio
