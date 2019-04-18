@@ -5,6 +5,8 @@ import logging
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 
 from .const import (
@@ -15,22 +17,28 @@ from .handler import HassioAPIError
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_discovery(hass, hassio):
+@callback
+def async_setup_discovery_view(hass, hassio):
     """Discovery setup."""
     hassio_discovery = HassIODiscovery(hass, hassio)
     hass.http.register_view(hassio_discovery)
 
     # Handle exists discovery messages
-    try:
-        data = await hassio.retrieve_discovery_messages()
-    except HassioAPIError as err:
-        _LOGGER.error("Can't read discover info: %s", err)
-        return
+    async def _async_discovery_start_handler(event):
+        """Process all exists discovery on startup."""
+        try:
+            data = await hassio.retrieve_discovery_messages()
+        except HassioAPIError as err:
+            _LOGGER.error("Can't read discover info: %s", err)
+            return
 
-    jobs = [hassio_discovery.async_process_new(discovery)
-            for discovery in data[ATTR_DISCOVERY]]
-    if jobs:
-        await asyncio.wait(jobs)
+        jobs = [hassio_discovery.async_process_new(discovery)
+                for discovery in data[ATTR_DISCOVERY]]
+        if jobs:
+            await asyncio.wait(jobs)
+
+    hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, _async_discovery_start_handler)
 
 
 class HassIODiscovery(HomeAssistantView):

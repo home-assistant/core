@@ -18,7 +18,7 @@ from homeassistant.util.dt import utcnow
 
 from .auth import async_setup_auth_view
 from .addon_panel import async_setup_addon_panel
-from .discovery import async_setup_discovery
+from .discovery import async_setup_discovery_view
 from .handler import HassIO, HassioAPIError
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -266,7 +266,7 @@ async def async_setup(hass, config):
             HASS_DOMAIN, service, async_handle_core_service)
 
     # Init discovery Hass.io feature
-    await async_setup_discovery(hass, hassio)
+    async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
     async_setup_auth_view(hass)
