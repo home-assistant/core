@@ -31,6 +31,6 @@ async def async_trigger(hass, config, action, automation_info):
                 'from_state': from_s,
                 'to_state': to_s,
             },
-        }, context=to_s.context))
+        }, context=(to_s.context if to_s else None)))
 
     return async_track_template(hass, value_template, template_listener)
