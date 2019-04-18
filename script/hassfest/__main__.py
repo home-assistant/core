@@ -3,12 +3,13 @@ import pathlib
 import sys
 
 from .model import Integration, Config
-from . import dependencies, manifest, codeowners
+from . import dependencies, manifest, codeowners, services
 
 PLUGINS = [
     manifest,
     dependencies,
     codeowners,
+    services,
 ]
 
 
@@ -37,6 +38,7 @@ def main():
     manifest.validate(integrations, config)
     dependencies.validate(integrations, config)
     codeowners.validate(integrations, config)
+    services.validate(integrations, config)
 
     # When we generate, all errors that are fixable will be ignored,
     # as generating them will be fixed.
