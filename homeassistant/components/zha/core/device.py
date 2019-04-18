@@ -200,10 +200,50 @@ class ZHADevice:
             self.cluster_channels[cluster_channel.name] = cluster_channel
             self._all_channels.append(cluster_channel)
 
+    def get_channels_to_configure(self):
+        """Get a deduped list of channels for configuration.
+
+        This goes through all channels and gets a unique list of channels to
+        configure. It first assembles a unique list of channels that are part
+        of entities while stashing relay channels off to the side. It then
+        takse the stashed relay channels and adds them to the list of channels
+        that will be returned if there isn't a channel in the list for that
+        cluster already. This is done to ensure each cluster is only configured
+        once.
+        """
+        channel_keys = []
+        channels = []
+        relay_channels = self._relay_channels.values()
+
+        def get_key(channel):
+            channel_key = "ZDO"
+            if hasattr(channel.cluster, 'cluster_id'):
+                channel_key = "{}_{}".format(
+                    channel.cluster.endpoint.endpoint_id,
+                    channel.cluster.cluster_id
+                )
+            return channel_key
+
+        # first we get all unique non event channels
+        for channel in self.all_channels:
+            c_key = get_key(channel)
+            if c_key not in channel_keys and channel not in relay_channels:
+                channel_keys.append(c_key)
+                channels.append(channel)
+
+        # now we get event channels that still need their cluster configured
+        for channel in relay_channels:
+            channel_key = get_key(channel)
+            if channel_key not in channel_keys:
+                channel_keys.append(channel_key)
+                channels.append(channel)
+        return channels
+
     async def async_configure(self):
         """Configure the device."""
         _LOGGER.debug('%s: started configuration', self.name)
-        await self._execute_channel_tasks('async_configure')
+        await self._execute_channel_tasks(
+            self.get_channels_to_configure(), 'async_configure')
         _LOGGER.debug('%s: completed configuration', self.name)
         entry = self.gateway.zha_storage.async_create_or_update(self)
         _LOGGER.debug('%s: stored in registry: %s', self.name, entry)
@@ -211,7 +251,8 @@ class ZHADevice:
     async def async_initialize(self, from_cache=False):
         """Initialize channels."""
         _LOGGER.debug('%s: started initialization', self.name)
-        await self._execute_channel_tasks('async_initialize', from_cache)
+        await self._execute_channel_tasks(
+            self.all_channels, 'async_initialize', from_cache)
         _LOGGER.debug(
             '%s: power source: %s',
             self.name,
@@ -220,16 +261,17 @@ class ZHADevice:
         self.status = DeviceStatus.INITIALIZED
         _LOGGER.debug('%s: completed initialization', self.name)
 
-    async def _execute_channel_tasks(self, task_name, *args):
+    async def _execute_channel_tasks(self, channels, task_name, *args):
         """Gather and execute a set of CHANNEL tasks."""
         channel_tasks = []
         semaphore = asyncio.Semaphore(3)
         zdo_task = None
-        for channel in self.all_channels:
+        for channel in channels:
             if channel.name == ZDO_CHANNEL:
                 # pylint: disable=E1111
-                zdo_task = self._async_create_task(
-                    semaphore, channel, task_name, *args)
+                if zdo_task is None:  # We only want to do this once
+                    zdo_task = self._async_create_task(
+                        semaphore, channel, task_name, *args)
             else:
                 channel_tasks.append(
                     self._async_create_task(
