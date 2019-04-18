@@ -69,6 +69,10 @@ class HueBridge:
 
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             self.config_entry, 'light'))
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'binary_sensor'))
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'sensor'))
 
         hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,
@@ -94,8 +98,16 @@ class HueBridge:
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
-        return await self.hass.config_entries.async_forward_entry_unload(
-            self.config_entry, 'light')
+        results = await asyncio.gather(
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'light'),
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'binary_sensor'),
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'sensor')
+            )
+        # None and True are OK
+        return False not in results
 
     async def hue_activate_scene(self, call, updated=False):
         """Service to call directly into bridge to set scenes."""
