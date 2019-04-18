@@ -35,12 +35,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         unique_id = sensor_id(data[CONF_WEBHOOK_ID],
                               data[ATTR_SENSOR_UNIQUE_ID])
 
-        entity = hass.data[DOMAIN][ENTITY_TYPE][unique_id]
+        entity_config = hass.data[DOMAIN][ENTITY_TYPE][unique_id]
 
-        if entity in hass.data[DOMAIN][DATA_LOADED_ENTITIES]:
+        if entity_config in hass.data[DOMAIN][DATA_LOADED_ENTITIES]:
             return
 
-        hass.data[DOMAIN][DATA_LOADED_ENTITIES].append(entity)
+        hass.data[DOMAIN][DATA_LOADED_ENTITIES].append(entity_config)
 
         async_add_entities([MobileAppBinarySensor(data)])
 
