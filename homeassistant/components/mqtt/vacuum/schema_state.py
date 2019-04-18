@@ -1,4 +1,4 @@
-"""Support for a generic MQTT vacuum."""
+"""Support for a State MQTT vacuum."""
 import logging
 import json
 
@@ -21,7 +21,7 @@ from homeassistant.components.mqtt import (
     MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription,
     CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC, CONF_QOS)
 
-from . import MQTT_VACUUM_SCHEMA
+from . import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,23 +43,6 @@ SERVICE_TO_STRING = {
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
 
 
-def services_to_strings(services):
-    """Convert SUPPORT_* service bitmask to list of service strings."""
-    strings = []
-    for service in SERVICE_TO_STRING:
-        if service & services:
-            strings.append(SERVICE_TO_STRING[service])
-    return strings
-
-
-def strings_to_services(strings):
-    """Convert service strings to SUPPORT_* service bitmask."""
-    services = 0
-    for string in strings:
-        services |= STRING_TO_SERVICE[string]
-    return services
-
-
 DEFAULT_SERVICES = SUPPORT_START | SUPPORT_PAUSE | SUPPORT_STOP |\
                    SUPPORT_RETURN_HOME | SUPPORT_STATUS | SUPPORT_BATTERY |\
                    SUPPORT_CLEAN_SPOT
@@ -68,6 +51,17 @@ ALL_SERVICES = DEFAULT_SERVICES | SUPPORT_PAUSE | SUPPORT_LOCATE |\
 
 BATTERY = 'battery_level'
 FAN_SPEED = 'fan_speed'
+STATE = "state"
+
+POSSIBLE_STATES = {
+    STATE_IDLE: STATE_IDLE,
+    STATE_DOCKED: STATE_DOCKED,
+    STATE_ERROR: STATE_ERROR,
+    STATE_PAUSED: STATE_PAUSED,
+    STATE_RETURNING: STATE_RETURNING,
+    STATE_CLEANING: STATE_CLEANING,
+}
+
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
 CONF_PAYLOAD_TURN_ON = 'payload_turn_on'
 CONF_PAYLOAD_TURN_OFF = 'payload_turn_off'
@@ -84,23 +78,14 @@ CONF_SEND_COMMAND_TOPIC = 'send_command_topic'
 
 DEFAULT_NAME = 'MQTT State Vacuum'
 DEFAULT_RETAIN = False
-DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES)
+DEFAULT_SERVICE_STRINGS = services_to_strings(
+    DEFAULT_SERVICES, SERVICE_TO_STRING)
 DEFAULT_PAYLOAD_RETURN_TO_BASE = 'return_to_base'
 DEFAULT_PAYLOAD_STOP = 'stop'
 DEFAULT_PAYLOAD_CLEAN_SPOT = 'clean_spot'
 DEFAULT_PAYLOAD_LOCATE = 'locate'
 DEFAULT_PAYLOAD_START = 'start'
 DEFAULT_PAYLOAD_PAUSE = 'pause'
-
-STATE = "state"
-POSSIBLE_STATES = {
-    STATE_IDLE: STATE_IDLE,
-    STATE_DOCKED: STATE_DOCKED,
-    STATE_ERROR: STATE_ERROR,
-    STATE_PAUSED: STATE_PAUSED,
-    STATE_RETURNING: STATE_RETURNING,
-    STATE_CLEANING: STATE_CLEANING,
-}
 
 PLATFORM_SCHEMA_STATE = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
@@ -166,7 +151,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._name = config[CONF_NAME]
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
         self._supported_features = strings_to_services(
-            supported_feature_strings
+            supported_feature_strings, STRING_TO_SERVICE
         )
         self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
         self._command_topic = config.get(mqtt.CONF_COMMAND_TOPIC)
@@ -269,7 +254,6 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """Return battery level of the vacuum."""
         if self.supported_features & SUPPORT_BATTERY == 0:
             return
-        print("mamy baterie")
         return max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
     @property
@@ -287,10 +271,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def async_start(self):
         """Turn the vacuum on."""
-        print(self._config[CONF_PAYLOAD_START])
-        print("shit")
         if self.supported_features & SUPPORT_START == 0:
-            print("nie mamy startu")
             return
         mqtt.async_publish(self.hass, self._command_topic,
                            self._config[CONF_PAYLOAD_START],

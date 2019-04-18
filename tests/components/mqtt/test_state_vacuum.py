@@ -4,39 +4,35 @@ import json
 import pytest
 
 from homeassistant.components import mqtt, vacuum
-from homeassistant.components.mqtt import (
-    CONF_COMMAND_TOPIC, CONF_STATE_TOPIC)
-from homeassistant.components.mqtt.vacuum import (
-    schema_state as mqttvacuum, CONF_SCHEMA)
+from homeassistant.components.mqtt import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components.mqtt.vacuum import (
+    CONF_COMPONENT, schema_state as mqttvacuum, services_to_strings)
+from homeassistant.components.mqtt.vacuum.schema_state import SERVICE_TO_STRING
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_ICON, ATTR_BATTERY_LEVEL, ATTR_FAN_SPEED, ATTR_STATUS)
+    ATTR_BATTERY_ICON, ATTR_BATTERY_LEVEL, ATTR_FAN_SPEED, ATTR_FAN_SPEED_LIST,
+    DOMAIN, SERVICE_CLEAN_SPOT, SERVICE_LOCATE, SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE, SERVICE_START, SERVICE_STOP, STATE_CLEANING,
+    STATE_DOCKED)
 from homeassistant.const import (
-    CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON, STATE_UNKNOWN, 
-    STATE_UNAVAILABLE)
+    CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
-
-from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED, ATTR_FAN_SPEED_LIST, DOMAIN,
-    SERVICE_CLEAN_SPOT, SERVICE_LOCATE, SERVICE_RETURN_TO_BASE,
-    SERVICE_SEND_COMMAND, SERVICE_SET_FAN_SPEED, SERVICE_START,
-    SERVICE_STOP, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_PAUSE, 
-    SERVICE_TURN_ON,
-    STATE_CLEANING, STATE_DOCKED)
 
 from tests.common import (
     MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component)
 from tests.components.vacuum import common
 
 COMMAND_TOPIC = 'vacuum/command'
+SEND_COMMAND_TOPIC = 'vacuum/send_command'
+STATE_TOPIC = 'vacuum/state'
 
 default_config = {
     CONF_PLATFORM: 'mqtt',
-    CONF_SCHEMA: 'state',
+    CONF_COMPONENT: 'statevacuum',
     CONF_NAME: 'mqtttest',
     CONF_COMMAND_TOPIC: COMMAND_TOPIC,
-    mqttvacuum.CONF_SEND_COMMAND_TOPIC: 'vacuum/send_command',
-    CONF_STATE_TOPIC: 'vacuum/state',
+    mqttvacuum.CONF_SEND_COMMAND_TOPIC: SEND_COMMAND_TOPIC,
+    CONF_STATE_TOPIC: STATE_TOPIC,
     mqttvacuum.CONF_SET_FAN_SPEED_TOPIC: 'vacuum/set_fan_speed',
     mqttvacuum.CONF_FAN_SPEED_LIST: ['min', 'medium', 'high', 'max'],
 }
@@ -56,7 +52,7 @@ async def test_default_supported_features(hass, mock_publish):
     entity = hass.states.get('vacuum.mqtttest')
     entity_features = \
         entity.attributes.get(mqttvacuum.CONF_SUPPORTED_FEATURES, 0)
-    assert sorted(mqttvacuum.services_to_strings(entity_features)) == \
+    assert sorted(services_to_strings(entity_features, SERVICE_TO_STRING)) == \
         sorted(['start', 'pause', 'stop',
                 'return_home', 'battery', 'status',
                 'clean_spot'])
@@ -65,7 +61,8 @@ async def test_default_supported_features(hass, mock_publish):
 async def test_all_commands(hass, mock_publish):
     """Test simple commands to the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        services_to_strings(
+            mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -119,12 +116,28 @@ async def test_all_commands(hass, mock_publish):
         COMMAND_TOPIC, 'return_to_base', 0, False)
     mock_publish.async_publish.reset_mock()
 
-    # common.set_fan_speed(hass, 'high', 'vacuum.mqtttest')
-    # await hass.async_block_till_done()
-    # await hass.async_block_till_done()
-    # mock_publish.async_publish.assert_called_once_with(
-    #     'vacuum/set_fan_speed', 'high', 0, False)
-    # mock_publish.async_publish.reset_mock()
+    common.set_fan_speed(hass, 'medium', 'vacuum.mqtttest')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_called_once_with(
+        'vacuum/set_fan_speed', 'medium', 0, False)
+    mock_publish.async_publish.reset_mock()
+
+    common.send_command(hass, '44 FE 93', entity_id='vacuum.mqtttest')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mock_publish.async_publish.assert_called_once_with(
+            'vacuum/send_command', '44 FE 93', 0, False)
+    mock_publish.async_publish.reset_mock()
+
+    common.send_command(hass, '44 FE 93', {"key": "value"},
+                        entity_id='vacuum.mqtttest')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert json.loads(mock_publish.async_publish.mock_calls[-1][1][1]) == {
+        "command": "44 FE 93",
+        "key": "value"
+    }
 
     # common.send_command(hass, '44 FE 93', entity_id='vacuum.mqtttest')
     # await hass.async_block_till_done()
@@ -136,7 +149,7 @@ async def test_all_commands(hass, mock_publish):
 async def test_status(hass, mock_publish):
     """Test status updates from the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        services_to_strings(mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -172,12 +185,15 @@ async def test_status(hass, mock_publish):
         state.attributes.get(ATTR_BATTERY_ICON)
     assert 61 == state.attributes.get(ATTR_BATTERY_LEVEL)
     assert 'min' == state.attributes.get(ATTR_FAN_SPEED)
+    assert ['min', 'medium', 'high',
+            'max'] == state.attributes.get(ATTR_FAN_SPEED_LIST)
 
 
 async def test_status_invalid_json(hass, mock_publish):
     """Test to make sure nothing breaks if the vacuum sends bad JSON."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(
+            mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,

@@ -1,12 +1,16 @@
 """The tests for the Mqtt vacuum platform."""
 import copy
 import json
+
 import pytest
 
 from homeassistant.components import mqtt, vacuum
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
-from homeassistant.components.mqtt.vacuum import (schema_basic as mqttvacuum)
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components.mqtt.vacuum import (
+    schema_legacy as mqttvacuum, services_to_strings)
+from homeassistant.components.mqtt.vacuum.schema_legacy import (
+    ALL_SERVICES, SERVICE_TO_STRING)
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON, ATTR_BATTERY_LEVEL, ATTR_FAN_SPEED, ATTR_STATUS)
 from homeassistant.const import (
@@ -54,7 +58,7 @@ async def test_default_supported_features(hass, mock_publish):
     entity = hass.states.get('vacuum.mqtttest')
     entity_features = \
         entity.attributes.get(mqttvacuum.CONF_SUPPORTED_FEATURES, 0)
-    assert sorted(mqttvacuum.services_to_strings(entity_features)) == \
+    assert sorted(services_to_strings(entity_features, SERVICE_TO_STRING)) == \
         sorted(['turn_on', 'turn_off', 'stop',
                 'return_home', 'battery', 'status',
                 'clean_spot'])
@@ -63,7 +67,7 @@ async def test_default_supported_features(hass, mock_publish):
 async def test_all_commands(hass, mock_publish):
     """Test simple commands to the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -154,7 +158,7 @@ async def test_all_commands(hass, mock_publish):
 async def test_status(hass, mock_publish):
     """Test status updates from the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -199,7 +203,7 @@ async def test_status(hass, mock_publish):
 async def test_status_battery(hass, mock_publish):
     """Test status updates from the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -219,7 +223,7 @@ async def test_status_battery(hass, mock_publish):
 async def test_status_cleaning(hass, mock_publish):
     """Test status updates from the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -238,7 +242,7 @@ async def test_status_cleaning(hass, mock_publish):
 async def test_status_docked(hass, mock_publish):
     """Test status updates from the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -257,7 +261,7 @@ async def test_status_docked(hass, mock_publish):
 async def test_status_charging(hass, mock_publish):
     """Test status updates from the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -277,7 +281,7 @@ async def test_status_charging(hass, mock_publish):
 async def test_status_fan_speed(hass, mock_publish):
     """Test status updates from the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -296,7 +300,7 @@ async def test_status_fan_speed(hass, mock_publish):
 async def test_status_error(hass, mock_publish):
     """Test status updates from the vacuum."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,
@@ -323,7 +327,7 @@ async def test_battery_template(hass, mock_publish):
     """Test that you can use non-default templates for battery_level."""
     default_config.update({
         mqttvacuum.CONF_SUPPORTED_FEATURES:
-            mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES),
+            mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING),
         mqttvacuum.CONF_BATTERY_LEVEL_TOPIC: "retroroomba/battery_level",
         mqttvacuum.CONF_BATTERY_LEVEL_TEMPLATE: "{{ value }}"
     })
@@ -343,7 +347,7 @@ async def test_battery_template(hass, mock_publish):
 async def test_status_invalid_json(hass, mock_publish):
     """Test to make sure nothing breaks if the vacuum sends bad JSON."""
     default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
-        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+        mqttvacuum.services_to_strings(ALL_SERVICES, SERVICE_TO_STRING)
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {
         vacuum.DOMAIN: default_config,

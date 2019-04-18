@@ -1,4 +1,4 @@
-"""Support for a generic MQTT vacuum."""
+"""Support for basic MQTT vacuum."""
 import logging
 import json
 
@@ -19,7 +19,7 @@ from homeassistant.components.mqtt import (
     CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
     MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
 
-from . import MQTT_VACUUM_SCHEMA
+from . import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,24 +38,6 @@ SERVICE_TO_STRING = {
 }
 
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
-
-
-def services_to_strings(services):
-    """Convert SUPPORT_* service bitmask to list of service strings."""
-    strings = []
-    for service in SERVICE_TO_STRING:
-        if service & services:
-            strings.append(SERVICE_TO_STRING[service])
-    return strings
-
-
-def strings_to_services(strings):
-    """Convert service strings to SUPPORT_* service bitmask."""
-    services = 0
-    for string in strings:
-        services |= STRING_TO_SERVICE[string]
-    return services
-
 
 DEFAULT_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP |\
                    SUPPORT_RETURN_HOME | SUPPORT_STATUS | SUPPORT_BATTERY |\
@@ -96,9 +78,10 @@ DEFAULT_PAYLOAD_STOP = 'stop'
 DEFAULT_PAYLOAD_TURN_OFF = 'turn_off'
 DEFAULT_PAYLOAD_TURN_ON = 'turn_on'
 DEFAULT_RETAIN = False
-DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES)
+DEFAULT_SERVICE_STRINGS = services_to_strings(
+    DEFAULT_SERVICES, SERVICE_TO_STRING)
 
-PLATFORM_SCHEMA_BASIC = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA_LEGACY = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_BATTERY_LEVEL_TEMPLATE, 'battery'): cv.template,
     vol.Inclusive(CONF_BATTERY_LEVEL_TOPIC,
                   'battery'): mqtt.valid_publish_topic,
@@ -140,8 +123,8 @@ PLATFORM_SCHEMA_BASIC = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema).extend(MQTT_VACUUM_SCHEMA.schema)
 
 
-async def async_setup_entity_basic(config, async_add_entities,
-                                   config_entry, discovery_hash):
+async def async_setup_entity_legacy(config, async_add_entities,
+                                    config_entry, discovery_hash):
     """Set up a MQTT Vacuum Legacy."""
     async_add_entities([MqttVacuum(config, config_entry, discovery_hash)])
 
@@ -179,7 +162,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._name = config[CONF_NAME]
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
         self._supported_features = strings_to_services(
-            supported_feature_strings
+            supported_feature_strings, STRING_TO_SERVICE
         )
         self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
         self._qos = config[mqtt.CONF_QOS]
@@ -223,7 +206,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA_BASIC(discovery_payload)
+        config = PLATFORM_SCHEMA_LEGACY(discovery_payload)
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)

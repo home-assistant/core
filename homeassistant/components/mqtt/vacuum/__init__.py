@@ -18,25 +18,42 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-CONF_SCHEMA = 'schema'
+CONF_COMPONENT = 'component'
 
 
 def validate_mqtt_vacuum(value):
     """Validate MQTT vacuum schema."""
-    from . import schema_basic
+    from . import schema_legacy
     from . import schema_state
 
     schemas = {
-        'basic': schema_basic.PLATFORM_SCHEMA_BASIC,
-        'state': schema_state.PLATFORM_SCHEMA_STATE,
+        'legacy': schema_legacy.PLATFORM_SCHEMA_LEGACY,
+        'statevacuum': schema_state.PLATFORM_SCHEMA_STATE,
     }
-    print(value[CONF_SCHEMA])
-    return schemas[value[CONF_SCHEMA]](value)
+    print(value[CONF_COMPONENT])
+    return schemas[value[CONF_COMPONENT]](value)
+
+
+def services_to_strings(services, service_to_string):
+    """Convert SUPPORT_* service bitmask to list of service strings."""
+    strings = []
+    for service in service_to_string:
+        if service & services:
+            strings.append(service_to_string[service])
+    return strings
+
+
+def strings_to_services(strings, string_to_service):
+    """Convert service strings to SUPPORT_* service bitmask."""
+    services = 0
+    for string in strings:
+        services |= string_to_service[string]
+    return services
 
 
 MQTT_VACUUM_SCHEMA = vol.Schema({
-    vol.Optional(CONF_SCHEMA, default='basic'): vol.All(
-        vol.Lower, vol.Any('basic', 'state'))
+    vol.Optional(CONF_COMPONENT, default='legacy'): vol.All(
+        vol.Lower, vol.Any('legacy', 'statevacuum'))
 })
 
 PLATFORM_SCHEMA = vol.All(MQTT_VACUUM_SCHEMA.extend({
@@ -71,11 +88,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def _async_setup_entity(config, async_add_entities, config_entry,
                               discovery_hash=None):
     """Set up the MQTT vacuum."""
-    from . import schema_basic
+    from . import schema_legacy
     from . import schema_state
     setup_entity = {
-        'basic': schema_basic.async_setup_entity_basic,
-        'state': schema_state.async_setup_entity_state,
+        'legacy': schema_legacy.async_setup_entity_legacy,
+        'statevacuum': schema_state.async_setup_entity_state,
     }
-    await setup_entity[config[CONF_SCHEMA]](
+    await setup_entity[config[CONF_COMPONENT]](
         config, async_add_entities, config_entry, discovery_hash)
