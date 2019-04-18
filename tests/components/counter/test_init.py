@@ -309,8 +309,8 @@ async def test_counter_max(hass, hass_admin_user):
     assert state2.state == '-1'
 
 
-async def test_setup(hass, hass_admin_user):
-    """Test that setting values through setup works."""
+async def test_configure(hass, hass_admin_user):
+    """Test that setting values through configure works."""
     assert await async_setup_component(hass, 'counter', {
         'counter': {
             'test': {
@@ -326,7 +326,7 @@ async def test_setup(hass, hass_admin_user):
     assert 10 == state.attributes.get('maximum')
 
     # update max
-    await hass.services.async_call('counter', 'setup', {
+    await hass.services.async_call('counter', 'configure', {
         'entity_id': state.entity_id,
         'maximum': 0,
     }, True, Context(user_id=hass_admin_user.id))
@@ -337,7 +337,7 @@ async def test_setup(hass, hass_admin_user):
     assert 0 == state.attributes.get('maximum')
 
     # disable max
-    await hass.services.async_call('counter', 'setup', {
+    await hass.services.async_call('counter', 'configure', {
         'entity_id': state.entity_id,
         'maximum': None,
     }, True, Context(user_id=hass_admin_user.id))
@@ -349,7 +349,7 @@ async def test_setup(hass, hass_admin_user):
 
     # update min
     assert state.attributes.get('minimum') is None
-    await hass.services.async_call('counter', 'setup', {
+    await hass.services.async_call('counter', 'configure', {
         'entity_id': state.entity_id,
         'minimum': 5,
     }, True, Context(user_id=hass_admin_user.id))
@@ -360,7 +360,7 @@ async def test_setup(hass, hass_admin_user):
     assert 5 == state.attributes.get('minimum')
 
     # disable min
-    await hass.services.async_call('counter', 'setup', {
+    await hass.services.async_call('counter', 'configure', {
         'entity_id': state.entity_id,
         'minimum': None,
     }, True, Context(user_id=hass_admin_user.id))
@@ -372,7 +372,7 @@ async def test_setup(hass, hass_admin_user):
 
     # update step
     assert 1 == state.attributes.get('step')
-    await hass.services.async_call('counter', 'setup', {
+    await hass.services.async_call('counter', 'configure', {
         'entity_id': state.entity_id,
         'step': 3,
     }, True, Context(user_id=hass_admin_user.id))
@@ -383,7 +383,7 @@ async def test_setup(hass, hass_admin_user):
     assert 3 == state.attributes.get('step')
 
     # update all
-    await hass.services.async_call('counter', 'setup', {
+    await hass.services.async_call('counter', 'configure', {
         'entity_id': state.entity_id,
         'step': 5,
         'minimum': 0,
