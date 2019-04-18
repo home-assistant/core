@@ -230,12 +230,13 @@ class SeventeenTrackPackageSensor(Entity):
             # delete this entity:
             _LOGGER.info(
                 'Deleting entity for stale package: %s', self._tracking_number)
+            reg = await self.hass.helpers.entity_registry.async_get_registry()
+            self.hass.async_create_task(reg.async_remove(self.entity_id))
             self.hass.async_create_task(self.async_remove())
             return
 
         # If the user has elected to not see delivered packages and one gets
-        # delivered, post a notification, remove the entity from the UI, and
-        # delete it from the entity registry:
+        # delivered, post a notification:
         if package.status == VALUE_DELIVERED and not self._data.show_delivered:
             _LOGGER.info('Package delivered: %s', self._tracking_number)
             self.hass.components.persistent_notification.create(
@@ -248,10 +249,6 @@ class SeventeenTrackPackageSensor(Entity):
                 title=NOTIFICATION_DELIVERED_TITLE,
                 notification_id=NOTIFICATION_DELIVERED_ID_SCAFFOLD.format(
                     self._tracking_number))
-
-            reg = self.hass.helpers.entity_registry.async_get_registry()
-            self.hass.async_create_task(reg.async_remove(self.entity_id))
-            self.hass.async_create_task(self.async_remove())
             return
 
         self._attrs.update({
