@@ -4,8 +4,6 @@ import logging
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['OPi.GPIO==0.3.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PINMODE = 'pinmode'

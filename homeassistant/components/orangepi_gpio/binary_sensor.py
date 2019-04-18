@@ -11,8 +11,6 @@ from .const import CONF_INVERT_LOGIC, CONF_PORTS, PORT_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['orangepi_gpio']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(PORT_SCHEMA)
 
 
