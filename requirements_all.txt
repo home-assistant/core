@@ -770,7 +770,7 @@ oemthermostat==1.1
 onkyo-eiscp==1.2.4
 
 # homeassistant.components.onvif
-onvif-zeep==0.2.12
+onvif-zeep-async==0.1.1
 
 # homeassistant.components.openevse
 openevsewifi==0.4

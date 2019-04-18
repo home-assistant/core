@@ -25,7 +25,7 @@ from homeassistant.helpers.service import extract_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['onvif-zeep-async==0.1.0',
+REQUIREMENTS = ['onvif-zeep-async==0.1.1',
                 'zeep[async]==3.0.0']
 DEPENDENCIES = ['ffmpeg']
 DEFAULT_NAME = 'ONVIF Camera'
