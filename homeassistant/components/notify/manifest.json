@@ -5,6 +5,6 @@
   "requirements": [],
   "dependencies": [],
   "codeowners": [
-    "@flowolf"
+    "@home-assistant/core"
   ]
 }
