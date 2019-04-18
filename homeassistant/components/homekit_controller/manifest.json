@@ -6,5 +6,7 @@
     "homekit[IP]==0.13.0"
   ],
   "dependencies": ["configurator"],
-  "codeowners": []
+  "codeowners": [
+    "@Jc2k"
+  ]
 }
