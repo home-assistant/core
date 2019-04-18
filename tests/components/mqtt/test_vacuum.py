@@ -298,7 +298,6 @@ async def test_status_error(hass, mock_publish):
     }"""
     async_fire_mqtt_message(hass, 'vacuum/state', message)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('vacuum.mqtttest')
     assert 'Error: Error1' == state.attributes.get(ATTR_STATUS)
 
@@ -306,7 +305,6 @@ async def test_status_error(hass, mock_publish):
         "error": ""
     }"""
     async_fire_mqtt_message(hass, 'vacuum/state', message)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('vacuum.mqtttest')
     assert 'Stopped' == state.attributes.get(ATTR_STATUS)
