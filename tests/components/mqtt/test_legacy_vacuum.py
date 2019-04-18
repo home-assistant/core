@@ -240,6 +240,7 @@ async def test_attributes_without_supported_features(hass, mock_publish):
     assert state.attributes.get(ATTR_BATTERY_LEVEL) is None
     assert state.attributes.get(ATTR_BATTERY_ICON) is None
 
+
 async def test_status(hass, mock_publish):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)

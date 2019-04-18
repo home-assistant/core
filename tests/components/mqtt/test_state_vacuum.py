@@ -208,6 +208,7 @@ async def test_commands_without_supported_features(hass, mock_publish):
     await hass.async_block_till_done()
     mock_publish.async_publish.assert_not_called()
 
+
 async def test_status(hass, mock_publish):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
