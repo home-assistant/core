@@ -23,6 +23,7 @@ DEFAULT_NAME = 'RepetierServer'
 DOMAIN = 'repetier'
 REPETIER_API = 'repetier_api'
 
+
 def has_all_unique_names(value):
     """Validate that printers have an unique name."""
     names = [util_slugify(printer['name']) for printer in value]
@@ -64,7 +65,6 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Repetier Server component."""
     import pyrepetier
-    success = False
 
     for repetier in config[DOMAIN]:
         _LOGGER.debug("Repetier server config %s", repetier[CONF_HOST])
@@ -86,18 +86,18 @@ def setup(hass, config):
         hass.data[REPETIER_API] = printers
 
         sensor_info = []
-        monitored_conditions = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
+        sensors = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
         for pidx, _ in enumerate(printers):
             printer = printers[pidx]
             printer.get_data()
-            for sensor_type in monitored_conditions:
+            for sensor_type in sensors:
                 sensvar = {}
                 sensvar['sensor_type'] = sensor_type
                 sensvar['pidx'] = pidx
                 name = printer.slug
                 sensvar['name'] = name
                 sensor_info.append(sensvar)
-                
+
         load_platform(hass, 'sensor', DOMAIN, sensor_info, config)
 
     return True

@@ -132,17 +132,6 @@ class RepetierSensor(Entity):
         async_dispatcher_connect(
             self.hass, UPDATE_SIGNAL, self.update_callback)
 
-    def _get_data(self):
-        """Return new data from the api cache."""
-        self._printer.get_data()
-        if data is None:
-            _LOGGER.debug(
-                "Data not found for %s and %s",
-                self._sensor_type, self._data_key)
-            self._available = False
-            return None
-        self._available = True
-
 
 class RepetierBedSensor(RepetierSensor):
     """Class to create and populate a Repetier Bed Sensor."""
