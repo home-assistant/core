@@ -1,5 +1,5 @@
 {
-  "domain": "device_tracker",
+  "domain": "fortios",
   "name": "Home Assistant Device Tracker to support FortiOS",
   "documentation": "https://www.home-assistant.io/components/fortios/",
   "requirements": [
@@ -8,7 +8,5 @@
   "dependencies": [
     "device_tracker"
   ],
-  "codeowners": [
-    "@kimfrellsen"
-  ]
+  "codeowners": []
 }
