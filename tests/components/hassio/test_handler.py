@@ -105,3 +105,23 @@ async def test_api_retrieve_discovery(hassio_handler, aioclient_mock):
     data = await hassio_handler.retrieve_discovery_messages()
     assert data['discovery'][-1]['service'] == "mqtt"
     assert aioclient_mock.call_count == 1
+
+
+async def test_api_ingress_panels(hassio_handler, aioclient_mock):
+    """Test setup with API Ingress panels."""
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/panels", json={'result': 'ok', 'data': {
+            "panels": {
+                "slug": {
+                    "enable": True,
+                    "title": "Test",
+                    "icon": "mdi:test",
+                    "admin": False
+                }
+            }
+        }})
+
+    data = await hassio_handler.get_ingress_panels()
+    assert aioclient_mock.call_count == 1
+    assert data['panels']
+    assert "slug" in data['panels']
