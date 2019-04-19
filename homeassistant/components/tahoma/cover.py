@@ -161,9 +161,9 @@ class TahomaCover(TahomaDevice, CoverDevice):
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
-            self.apply_action('setPosition', kwargs.get(ATTR_POSITION))
+            self.apply_action('setPosition', kwargs.get(ATTR_POSITION, 0))
         else:
-            self.apply_action('setPosition', 100 - kwargs.get(ATTR_POSITION))
+            self.apply_action('setPosition', 100 - kwargs.get(ATTR_POSITION, 0))
 
     @property
     def is_closed(self):
@@ -173,7 +173,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
     @property
     def device_class(self):
         """Return the class of the device."""
-        return TAHOMA_DEVICE_CLASSES.get(self.tahoma_device.type, None)
+        return TAHOMA_DEVICE_CLASSES.get(self.tahoma_device.type)
 
     @property
     def device_state_attributes(self):
