@@ -44,7 +44,7 @@ def config_fixture():
 @pytest.fixture(name="players")
 def player_fixture(dispatcher):
     """Create a mock HeosPlayer."""
-    player = Mock(HeosPlayer, autospec=True)
+    player = Mock(HeosPlayer)
     player.heos.dispatcher = dispatcher
     player.player_id = 1
     player.name = "Test Player"
@@ -77,11 +77,11 @@ def player_fixture(dispatcher):
 @pytest.fixture(name="favorites")
 def favorites_fixture() -> Dict[int, HeosSource]:
     """Create favorites fixture."""
-    station = Mock(HeosSource, autospec=True)
+    station = Mock(HeosSource)
     station.type = const.TYPE_STATION
     station.name = "Today's Hits Radio"
     station.media_id = '123456789'
-    radio = Mock(HeosSource, autospec=True)
+    radio = Mock(HeosSource)
     radio.type = const.TYPE_STATION
     radio.name = "Classical MPR (Classical Music)"
     radio.media_id = 's1234'
@@ -94,7 +94,7 @@ def favorites_fixture() -> Dict[int, HeosSource]:
 @pytest.fixture(name="input_sources")
 def input_sources_fixture() -> Sequence[InputSource]:
     """Create a set of input sources for testing."""
-    source = Mock(InputSource, autospec=True)
+    source = Mock(InputSource)
     source.player_id = 1
     source.input_name = const.INPUT_AUX_IN_1
     source.name = "HEOS Drive - Line In 1"

@@ -269,7 +269,7 @@ async def test_volume_mute(hass, config_entry, config, controller, caplog):
 
 
 async def test_shuffle_set(hass, config_entry, config, controller, caplog):
-    """Test the shuttle set service."""
+    """Test the shuffle set service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     # First pass completes successfully, second pass raises command error
