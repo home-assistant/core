@@ -8,9 +8,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
     BINARY_SENSORS, DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN,
     OPERATION_RESTRICTIONS_CURRENT, OPERATION_RESTRICTIONS_UNIVERSAL,
-    SENSOR_UPDATE_TOPIC, TYPE_FREEZE, TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS,
-    TYPE_HOURLY, TYPE_MONTH, TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY,
-    RainMachineEntity)
+    SENSOR_UPDATE_TOPIC, TYPE_FLOW_SENSOR, TYPE_FREEZE, TYPE_FREEZE_PROTECTION,
+    TYPE_HOT_DAYS, TYPE_HOURLY, TYPE_MONTH, TYPE_RAINDELAY, TYPE_RAINSENSOR,
+    TYPE_WEEKDAY, RainMachineEntity)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +79,9 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
 
     async def async_update(self):
         """Update the state."""
+        if self._sensor_type == TYPE_FREEZE:
+            self._state = self.rainmachine.data[
+                OPERATION_RESTRICTIONS_CURRENT]['freeze']
         if self._sensor_type == TYPE_FREEZE:
             self._state = self.rainmachine.data[
                 OPERATION_RESTRICTIONS_CURRENT]['freeze']
