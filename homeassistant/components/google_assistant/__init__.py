@@ -20,7 +20,7 @@ from .const import (
     CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS, CONF_API_KEY,
     SERVICE_REQUEST_SYNC, REQUEST_SYNC_BASE_URL, CONF_ENTITY_CONFIG,
     CONF_EXPOSE, CONF_ALIASES, CONF_ROOM_HINT, CONF_ALLOW_UNLOCK,
-    DEFAULT_ALLOW_UNLOCK
+    CONF_SECURE_DEVICES_PIN
 )
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
 from .const import EVENT_QUERY_RECEIVED  # noqa: F401
@@ -43,8 +43,10 @@ GOOGLE_ASSISTANT_SCHEMA = vol.Schema({
                  default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
     vol.Optional(CONF_API_KEY): cv.string,
     vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
-    vol.Optional(CONF_ALLOW_UNLOCK,
-                 default=DEFAULT_ALLOW_UNLOCK): cv.boolean,
+    # No longer used since 0.92
+    vol.Optional(CONF_ALLOW_UNLOCK): cv.boolean,
+    # str on purpose, makes sure it is configured correctly.
+    vol.Optional(CONF_SECURE_DEVICES_PIN): str,
 }, extra=vol.PREVENT_EXTRA)
 
 CONFIG_SCHEMA = vol.Schema({
