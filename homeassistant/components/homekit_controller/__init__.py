@@ -161,7 +161,11 @@ async def async_setup(hass, config):
 
     hass.data[CONTROLLER] = controller = homekit.Controller()
 
-    for hkid, pairing_data in load_old_pairings(hass).items():
+    old_pairings = await hass.async_add_executor_job(
+        load_old_pairings,
+        hass
+    )
+    for hkid, pairing_data in old_pairings.items():
         controller.pairings[hkid] = IpPairing(pairing_data)
 
     def discovery_dispatch(service, discovery_info):
