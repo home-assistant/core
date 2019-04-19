@@ -6,7 +6,5 @@
     "fortiosapi==0.10.5"
   ],
   "dependencies": [],
-  "codeowners": [
-    "@kimfrellsen"
-  ]
+  "codeowners": []
 }
