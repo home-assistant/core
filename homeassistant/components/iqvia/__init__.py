@@ -20,11 +20,10 @@ from homeassistant.util.decorator import Registry
 
 from .const import (
     DATA_CLIENT, DATA_LISTENER, DOMAIN, SENSORS, TOPIC_DATA_UPDATE,
-    TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_HISTORIC, TYPE_ALLERGY_INDEX,
-    TYPE_ALLERGY_OUTLOOK, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-    TYPE_ALLERGY_YESTERDAY, TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_HISTORIC,
-    TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-    TYPE_ASTHMA_YESTERDAY, TYPE_DISEASE_FORECAST)
+    TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_INDEX, TYPE_ALLERGY_OUTLOOK,
+    TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW, TYPE_ALLERGY_YESTERDAY,
+    TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
+    TYPE_ASTHMA_TOMORROW, TYPE_ASTHMA_YESTERDAY, TYPE_DISEASE_FORECAST)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,11 +37,9 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 FETCHER_MAPPING = {
     (TYPE_ALLERGY_FORECAST,): (TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK),
-    (TYPE_ALLERGY_HISTORIC,): (TYPE_ALLERGY_HISTORIC,),
     (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW, TYPE_ALLERGY_YESTERDAY): (
         TYPE_ALLERGY_INDEX,),
     (TYPE_ASTHMA_FORECAST,): (TYPE_ASTHMA_FORECAST,),
-    (TYPE_ASTHMA_HISTORIC,): (TYPE_ASTHMA_HISTORIC,),
     (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW, TYPE_ASTHMA_YESTERDAY): (
         TYPE_ASTHMA_INDEX,),
     (TYPE_DISEASE_FORECAST,): (TYPE_DISEASE_FORECAST,),
@@ -108,16 +105,12 @@ class IQVIAData:
         self.fetchers = Registry()
         self.fetchers.register(TYPE_ALLERGY_FORECAST)(
             self._client.allergens.extended)
-        self.fetchers.register(TYPE_ALLERGY_HISTORIC)(
-            self._client.allergens.historic)
         self.fetchers.register(TYPE_ALLERGY_OUTLOOK)(
             self._client.allergens.outlook)
         self.fetchers.register(TYPE_ALLERGY_INDEX)(
             self._client.allergens.current)
         self.fetchers.register(TYPE_ASTHMA_FORECAST)(
             self._client.asthma.extended)
-        self.fetchers.register(TYPE_ASTHMA_HISTORIC)(
-            self._client.asthma.historic)
         self.fetchers.register(TYPE_ASTHMA_INDEX)(self._client.asthma.current)
         self.fetchers.register(TYPE_DISEASE_FORECAST)(
             self._client.disease.extended)

@@ -59,12 +59,10 @@ async def async_setup_platform(
 
     sensor_class_mapping = {
         TYPE_ALLERGY_FORECAST: ForecastSensor,
-        TYPE_ALLERGY_HISTORIC: HistoricalSensor,
         TYPE_ALLERGY_TODAY: IndexSensor,
         TYPE_ALLERGY_TOMORROW: IndexSensor,
         TYPE_ALLERGY_YESTERDAY: IndexSensor,
         TYPE_ASTHMA_FORECAST: ForecastSensor,
-        TYPE_ASTHMA_HISTORIC: HistoricalSensor,
         TYPE_ASTHMA_TODAY: IndexSensor,
         TYPE_ASTHMA_TOMORROW: IndexSensor,
         TYPE_ASTHMA_YESTERDAY: IndexSensor,
@@ -78,14 +76,6 @@ async def async_setup_platform(
         sensors.append(klass(iqvia, sensor_type, name, icon, iqvia.zip_code))
 
     async_add_entities(sensors, True)
-
-
-def calculate_average_rating(indices):
-    """Calculate the human-friendly historical allergy average."""
-    ratings = list(
-        r['label'] for n in indices for r in RATING_MAPPING
-        if r['minimum'] <= n <= r['maximum'])
-    return max(set(ratings), key=ratings.count)
 
 
 def calculate_trend(indices):
@@ -134,32 +124,6 @@ class ForecastSensor(IQVIAEntity):
             outlook = self._iqvia.data[TYPE_ALLERGY_OUTLOOK]
             self._attrs[ATTR_OUTLOOK] = outlook.get('Outlook')
             self._attrs[ATTR_SEASON] = outlook.get('Season')
-
-        self._state = average
-
-
-class HistoricalSensor(IQVIAEntity):
-    """Define sensor related to historical data."""
-
-    async def async_update(self):
-        """Update the sensor."""
-        if not self._iqvia.data:
-            return
-
-        data = self._iqvia.data[self._type].get('Location')
-        if not data:
-            return
-
-        indices = [p['Index'] for p in data['periods']]
-        average = round(mean(indices), 1)
-
-        self._attrs.update({
-            ATTR_CITY: data['City'].title(),
-            ATTR_RATING: calculate_average_rating(indices),
-            ATTR_STATE: data['State'],
-            ATTR_TREND: calculate_trend(indices),
-            ATTR_ZIP_CODE: data['ZIP']
-        })
 
         self._state = average
 
