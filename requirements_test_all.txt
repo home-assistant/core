@@ -51,6 +51,9 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==1.9.1
 
+# homeassistant.components.switcher_kis
+aioswitcher==2019.3.21
+
 # homeassistant.components.unifi
 aiounifi==4
 
