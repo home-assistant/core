@@ -19,6 +19,24 @@ ATTR_LOCK_END_TS = 'lock_end_ts'
 ATTR_LOCK_LEVEL = 'lock_level'
 ATTR_LOCK_ORIG = 'lock_originator'
 
+TAHOMA_DEVICE_CLASSES = {
+    'io:ExteriorVenetianBlindIOComponent': DEVICE_CLASS_BLIND,
+    'io:HorizontalAwningIOComponent': DEVICE_CLASS_AWNING,
+    'io:RollerShutterGenericIOComponent': DEVICE_CLASS_SHUTTER,
+    'io:RollerShutterUnoIOComponent': DEVICE_CLASS_SHUTTER,
+    'io:RollerShutterVeluxIOComponent': DEVICE_CLASS_SHUTTER,
+    'io:RollerShutterWithLowSpeedManagementIOComponent': DEVICE_CLASS_SHUTTER,
+    'io:VerticalExteriorAwningIOComponent': DEVICE_CLASS_AWNING,
+    'io:WindowOpenerVeluxIOComponent': DEVICE_CLASS_WINDOW,
+    'io:GarageOpenerIOComponent': DEVICE_CLASS_GARAGE,
+    'rts:BlindRTSComponent': DEVICE_CLASS_BLIND,
+    'rts:CurtainRTSComponent': DEVICE_CLASS_CURTAIN,
+    'rts:DualCurtainRTSComponent': DEVICE_CLASS_CURTAIN,
+    'rts:ExteriorVenetianBlindRTSComponent': DEVICE_CLASS_BLIND,
+    'rts:RollerShutterRTSComponent': DEVICE_CLASS_SHUTTER,
+    'rts:VenetianBlindRTSComponent': DEVICE_CLASS_BLIND
+}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tahoma covers."""
@@ -155,37 +173,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
     @property
     def device_class(self):
         """Return the class of the device."""
-        if self.tahoma_device.type == 'io:ExteriorVenetianBlindIOComponent':
-            return DEVICE_CLASS_BLIND
-        elif self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
-            return DEVICE_CLASS_AWNING
-        elif self.tahoma_device.type == 'io:RollerShutterGenericIOComponent':
-            return DEVICE_CLASS_SHUTTER
-        elif self.tahoma_device.type == 'io:RollerShutterUnoIOComponent':
-            return DEVICE_CLASS_SHUTTER
-        elif self.tahoma_device.type == 'io:RollerShutterVeluxIOComponent':
-            return DEVICE_CLASS_SHUTTER
-        elif self.tahoma_device.type == 'io:RollerShutterWithLowSpeedManagementIOComponent':
-            return DEVICE_CLASS_SHUTTER
-        elif self.tahoma_device.type == 'io:VerticalExteriorAwningIOComponent':
-            return DEVICE_CLASS_AWNING
-        elif self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
-            return DEVICE_CLASS_WINDOW
-        elif self.tahoma_device.type == 'io:GarageOpenerIOComponent':
-            return DEVICE_CLASS_GARAGE
-        elif self.tahoma_device.type == 'rts:BlindRTSComponent':
-            return DEVICE_CLASS_BLIND
-        elif self.tahoma_device.type == 'rts:CurtainRTSComponent':
-            return DEVICE_CLASS_CURTAIN
-        elif self.tahoma_device.type == 'rts:DualCurtainRTSComponent':
-            return DEVICE_CLASS_CURTAIN
-        elif self.tahoma_device.type == 'rts:ExteriorVenetianBlindRTSComponent':
-            return DEVICE_CLASS_BLIND
-        elif self.tahoma_device.type == 'rts:RollerShutterRTSComponent':
-            return DEVICE_CLASS_SHUTTER
-        elif self.tahoma_device.type == 'rts:VenetianBlindRTSComponent':
-            return DEVICE_CLASS_BLIND
-        return None
+        return TAHOMA_DEVICE_CLASSES.get(self.tahoma_device.type, None)
 
     @property
     def device_state_attributes(self):
