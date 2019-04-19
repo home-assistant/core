@@ -101,25 +101,27 @@ class HKDevice():
 
         return True
 
-    async def async_refresh_entity_map(self, config_num):
+    def refresh_entity_map(self, config_num):
         """
         Handle setup of a HomeKit accessory.
 
         The sync version will be removed when homekit_controller migrates to
         config flow.
         """
-        return await self.hass.async_add_executor_job(
-            self.refresh_entity_map,
+        self.hass.add_job(
+            self.async_refresh_entity_map,
             config_num,
         )
 
-    def refresh_entity_map(self, config_num):
+    async def async_refresh_entity_map(self, config_num):
         """Handle setup of a HomeKit accessory."""
         # pylint: disable=import-error
         from homekit.exceptions import AccessoryDisconnectedError
 
         try:
-            accessories = self.pairing.list_accessories_and_characteristics()
+            self.accessories = await self.hass.async_add_executor_job(
+                self.pairing.list_accessories_and_characteristics,
+            )
         except AccessoryDisconnectedError:
             # If we fail to refresh this data then we will naturally retry
             # later when Bonjour spots c# is still not up to date.
@@ -128,18 +130,17 @@ class HKDevice():
         self.hass.data[ENTITY_MAP].async_create_or_update_map(
             self.unique_id,
             config_num,
-            accessories,
+            self.accessories,
         )
 
-        self.accessories = accessories
         self.config_num = config_num
 
         # For BLE, the Pairing instance relies on the entity map to map
         # aid/iid to GATT characteristics. So push it to there as well.
-        self.pairing.pairing_data['accessories'] = accessories
+        self.pairing.pairing_data['accessories'] = self.accessories
 
         # Register add new entities that are available
-        self.add_entities()
+        await self.hass.async_add_executor_job(self.add_entities)
 
         return True
 
