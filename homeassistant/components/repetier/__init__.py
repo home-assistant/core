@@ -36,6 +36,8 @@ SENSOR_TYPES = {
                         '_bed_'],
     'extruder_temperature': ['temperature', TEMP_CELSIUS, 'mdi:thermometer',
                              '_extruder_'],
+    'chamber_temperature': ['temperature', TEMP_CELSIUS, 'mdi:thermometer',
+                             '_chamber_'],
     'current_state': ['state', None, 'mdi:printer-3d', None],
     'current_job': ['progress', '%', 'mdi:file-percent', '_current_job'],
     'time_remaining': ['progress', None, 'mdi:clock-end', '_remaining'],
@@ -117,6 +119,7 @@ def setup(hass, config):
                         name = name + str(idx)
                         sensvar['name'] = name
                         sensvar['data_key'] = idx
+                        sensvar['bed'] = bed
                         idx += 1
                         load_platform(hass, 'sensor', DOMAIN, sensvar,
                                       repetier)
@@ -129,6 +132,20 @@ def setup(hass, config):
                         name = name + str(idx)
                         sensvar['name'] = name
                         sensvar['data_key'] = idx
+                        sensvar['extruder'] = extruder
+                        idx += 1
+                        load_platform(hass, 'sensor', DOMAIN, sensvar,
+                                      repetier)
+                elif sensor_type == 'chamber_temperature':
+                    if printer.heatedchambers is None:
+                        continue
+                    name = name + SENSOR_TYPES[sensor_type][3]
+                    idx = 0
+                    for chamber in printer.heatedchambers:
+                        name = name + str(idx)
+                        sensvar['name'] = name
+                        sensvar['data_key'] = idx
+                        sensvar['chamber'] = chamber
                         idx += 1
                         load_platform(hass, 'sensor', DOMAIN, sensvar,
                                       repetier)

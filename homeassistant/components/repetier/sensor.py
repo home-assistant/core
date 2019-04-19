@@ -3,10 +3,11 @@ import logging
 import time
 from datetime import timedelta, datetime
 
-from . import SENSOR_TYPES
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor_map = {
         'bed_temperature': RepetierBedSensor,
         'extruder_temperature': RepetierExtruderSensor,
+        'chamber_temperature': RepetierChamberSensor,
         'current_state': RepetierStateSensor,
         'current_job': RepetierJobSensor,
         'time_remaining': RepetierRemainingSensor,
@@ -146,6 +148,38 @@ class RepetierExtruderSensor(RepetierSensor):
         temp = self._printer.extruder[self._data_key].tempread
         output = self._printer.extruder[self._data_key].output
         _LOGGER.debug("Extruder %s Setpoint: %s, Temp: %s",
+                      self._data_key,
+                      temp_set,
+                      temp)
+        self._attributes['setpoint'] = temp_set
+        self._attributes['output'] = output
+        self._state = temp
+
+
+class RepetierChamberSensor(RepetierSensor):
+    """Class to create and populate a Repetier Nozzle Sensor."""
+
+    @property
+    def state(self):
+        """Return sensor state."""
+        if self._state is None:
+            return None
+        return round(self._state, 2)
+
+    def update(self):
+        """Update the sensor."""
+        self._printer.get_data()
+        if self._printer.chamber is None:
+            self._available = False
+            return
+        if self._printer.state == "off":
+            self._available = False
+            return
+        self._available = True
+        temp_set = self._printer.chamber[self._data_key].tempset
+        temp = self._printer.chamber[self._data_key].tempread
+        output = self._printer.chamber[self._data_key].output
+        _LOGGER.debug("Chamber %s Setpoint: %s, Temp: %s",
                       self._data_key,
                       temp_set,
                       temp)
