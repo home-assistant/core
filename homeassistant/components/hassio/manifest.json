@@ -5,6 +5,7 @@
   "requirements": [],
   "dependencies": [
     "http",
+    "frontend",
     "panel_custom"
   ],
   "codeowners": [
