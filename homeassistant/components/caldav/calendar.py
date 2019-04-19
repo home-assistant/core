@@ -51,7 +51,8 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    if config.get(CONF_VERIFY_SSL):
+    client = caldav.DAVClient(url, None, username, password,
+                              ssl_verify_cert=config[CONF_VERIFY_SSL])
         client = caldav.DAVClient(url, None, username, password)
     else:
         client = caldav.DAVClient(url, None, username, password, None, False)
