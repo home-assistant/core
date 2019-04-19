@@ -4,14 +4,15 @@ Support for getting statistical data from a DWD Weather Warnings.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dwd_weather_warnings/
 
-Data is fetched from DWD:
-https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html
+Data is fetched from DWD using WFS 2.0 services
+https://www.dwd.de/DE/leistungen/opendata/help/warnungen/cap_dwd_profile_de_pdf.pdf?__blob=publicationFile&v=7
 
 Warnungen vor extremem Unwetter (Stufe 4)
 Unwetterwarnungen (Stufe 3)
 Warnungen vor markantem Wetter (Stufe 2)
 Wetterwarnungen (Stufe 1)
 """
+
 import logging
 import json
 from datetime import timedelta
@@ -114,12 +115,9 @@ class DwdWeatherWarningsSensor(Entity):
         if self._api.region_id is not None:
             data['region_id'] = self._api.region_id
 
-        if self._api.region_state is not None:
-            data['region_state'] = self._api.region_state
-
-        if self._api.data['time'] is not None:
+        if self._api.data is not None:
             data['last_update'] = dt_util.as_local(
-                dt_util.utc_from_timestamp(self._api.data['time'] / 1000))
+                dt_util.parse_datetime(self._api.data['timeStamp']))
 
         if self._var_id == 'current_warning_level':
             prefix = 'current'
@@ -133,23 +131,25 @@ class DwdWeatherWarningsSensor(Entity):
         for event in self._api.data[prefix + '_warnings']:
             i = i + 1
 
-            data['warning_{}_name'.format(i)] = event['event']
-            data['warning_{}_level'.format(i)] = event['level']
-            data['warning_{}_type'.format(i)] = event['type']
-            if event['headline']:
-                data['warning_{}_headline'.format(i)] = event['headline']
-            if event['description']:
-                data['warning_{}_description'.format(i)] = event['description']
-            if event['instruction']:
-                data['warning_{}_instruction'.format(i)] = event['instruction']
+            data['warning_{}_name'.format(i)] = event['EVENT']
+            data['warning_{}_level'.format(i)] = \
+                self._api.warning_category_dict[event["SEVERITY"]]
 
-            if event['start'] is not None:
-                data['warning_{}_start'.format(i)] = dt_util.as_local(
-                    dt_util.utc_from_timestamp(event['start'] / 1000))
-
-            if event['end'] is not None:
-                data['warning_{}_end'.format(i)] = dt_util.as_local(
-                    dt_util.utc_from_timestamp(event['end'] / 1000))
+            if event['HEADLINE']:
+                data['warning_{}_headline'.format(i)] = event['HEADLINE']
+            if event['DESCRIPTION']:
+                data['warning_{}_description'.format(i)] = event['DESCRIPTION']
+            if event['INSTRUCTION']:
+                data['warning_{}_instruction'.format(i)] = event['INSTRUCTION']
+            if event['CERTAINTY']:
+                data['warning_{}_certainty'.format(i)] = event['CERTAINTY']
+            if event['PARAMETERNAME']:
+                data['warning_{}_{}'.format(i, event['PARAMETERNAME'])] = \
+                    event['PARAMETERVALUE']
+            if event['EFFECTIVE']:
+                data['warning_{}_start'.format(i)] = event["EFFECTIVE"]
+            if event['EXPIRES']:
+                data['warning_{}_end'.format(i)] = event["EXPIRES"]
 
         return data
 
@@ -166,77 +166,115 @@ class DwdWeatherWarningsSensor(Entity):
 class DwdWeatherWarningsAPI:
     """Get the latest data and update the states."""
 
+    warning_category_dict = {
+        "Minor": 1,
+        "Moderate": 2,
+        "Severe": 3,
+        "Extreme": 4
+    }
+
     def __init__(self, region_name):
         """Initialize the data object."""
-        resource = "{}{}{}?{}".format(
+        self.region_name = region_name
+
+        if not self.region_name:
+            _LOGGER.error('No region configured!')
+            self.available = False
+            return
+
+        if not self.regioncheck():
+            return
+
+        resource = "{}{}{}{}{}{}{}".format(
             'https://',
-            'www.dwd.de',
-            '/DWD/warnungen/warnapp_landkreise/json/warnings.json',
-            'jsonp=loadWarnings'
+            'maps.dwd.de',
+            '/geoserver/dwd/',
+            'ows?service=WFS&version=2.0.0&request=GetFeature&typeName=',
+            'dwd:Warnungen_Landkreise&CQL_FILTER=GC_WARNCELLID=%27',
+            self.region_id,
+            '%27&OutputFormat=application/json',
         )
 
         self._rest = RestData('GET', resource, None, None, None, True)
-        self.region_name = region_name
+
         self.region_id = None
-        self.region_state = None
         self.data = None
         self.available = True
         self.update()
 
+    def regioncheck(self):
+        """Check if the region exists and get warncell id."""
+        regioncheck_resource = "{}{}{}{}{}{}{}".format(
+            'https://',
+            'maps.dwd.de',
+            '/geoserver/dwd/',
+            'ows?service=WFS&version=2.0.0&request=GetFeature&typeName=',
+            'dwd:Warngebiete_Kreise&CQL_FILTER=NAME=%27',
+            self.region_name,
+            '%27&OutputFormat=application/json',
+        )
+
+        regioncheck_rest = RestData('GET', regioncheck_resource,
+                                    None, None, None, True)
+        regioncheck_rest.update()
+
+        json_obj = json.loads(regioncheck_rest.data)
+
+        if not json_obj["numberReturned"]:
+            _LOGGER.error('Configured region %s is not known!',
+                          self.region_name)
+            self.available = False
+            return False
+
+        self.region_id = json_obj["features"][0]["properties"]["WARNCELLID"]
+
+        return True
+
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from the DWD-Weather-Warnings."""
+        if not self.available:
+            return
         try:
             self._rest.update()
 
-            json_string = self._rest.data[24:len(self._rest.data) - 2]
-            json_obj = json.loads(json_string)
+            json_obj = json.loads(self._rest.data)
 
-            data = {'time': json_obj['time']}
+            data = {"timeStamp": json_obj["timeStamp"]}
 
-            for mykey, myvalue in {
-                    'current': 'warnings',
-                    'advance': 'vorabInformation'
-            }.items():
+            immediate_maxlevel = 0
+            future_maxlevel = 0
+            immediate_warnings = []
+            future_warnings = []
 
-                _LOGGER.debug("Found %d %s global DWD warnings",
-                              len(json_obj[myvalue]), mykey)
+            if json_obj["numberReturned"]:
 
-                data['{}_warning_level'.format(mykey)] = 0
-                my_warnings = []
+                for feature in json_obj["features"]:
+                    warning = feature["properties"]
 
-                if self.region_id is not None:
-                    # get a specific region_id
-                    if self.region_id in json_obj[myvalue]:
-                        my_warnings = json_obj[myvalue][self.region_id]
+                    if warning["URGENCY"] == "Immediate":
+                        immediate_warnings.append(warning)
+                        immediate_maxlevel = max(self.warning_category_dict[
+                            warning["SEVERITY"]],
+                                                 immediate_maxlevel)
+                    # Future warnings
+                    else:
+                        future_warnings.append(warning)
+                        future_maxlevel = max(self.warning_category_dict[
+                            warning["SEVERITY"]],
+                                              future_maxlevel)
 
-                else:
-                    # loop through all items to find warnings, region_id
-                    # and region_state for region_name
-                    for key in json_obj[myvalue]:
-                        my_region = json_obj[myvalue][key][0]['regionName']
-                        if my_region != self.region_name:
-                            continue
-                        my_warnings = json_obj[myvalue][key]
-                        my_state = json_obj[myvalue][key][0]['stateShort']
-                        self.region_id = key
-                        self.region_state = my_state
-                        break
+            data['current_warning_level'] = immediate_maxlevel
+            data['current_warning_count'] = len(immediate_warnings)
+            data['current_warnings'] = immediate_warnings
 
-                # Get max warning level
-                maxlevel = data['{}_warning_level'.format(mykey)]
-                for event in my_warnings:
-                    if event['level'] >= maxlevel:
-                        data['{}_warning_level'.format(mykey)] = event['level']
-
-                data['{}_warning_count'.format(mykey)] = len(my_warnings)
-                data['{}_warnings'.format(mykey)] = my_warnings
-
-                _LOGGER.debug("Found %d %s local DWD warnings",
-                              len(my_warnings), mykey)
+            data['advance_warning_level'] = future_maxlevel
+            data['advance_warning_count'] = len(future_warnings)
+            data['advance_warnings'] = future_warnings
 
             self.data = data
             self.available = True
+
         except TypeError:
             _LOGGER.error("Unable to fetch data from DWD-Weather-Warnings")
             self.available = False
