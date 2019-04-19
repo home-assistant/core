@@ -53,52 +53,37 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'state-topic', 'StAtE_On')
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert state.state is STATE_ON
 
     async_fire_mqtt_message(hass, 'state-topic', 'StAtE_OfF')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert state.state is STATE_OFF
     assert state.attributes.get('oscillating') is False
 
     async_fire_mqtt_message(hass, 'oscillation-state-topic', 'OsC_On')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert state.attributes.get('oscillating') is True
 
     async_fire_mqtt_message(hass, 'oscillation-state-topic', 'OsC_OfF')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert state.attributes.get('oscillating') is False
 
     assert fan.SPEED_OFF == state.attributes.get('speed')
 
     async_fire_mqtt_message(hass, 'speed-state-topic', 'speed_lOw')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert fan.SPEED_LOW == state.attributes.get('speed')
 
     async_fire_mqtt_message(hass, 'speed-state-topic', 'speed_mEdium')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert fan.SPEED_MEDIUM == state.attributes.get('speed')
 
     async_fire_mqtt_message(hass, 'speed-state-topic', 'speed_High')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert fan.SPEED_HIGH == state.attributes.get('speed')
 
     async_fire_mqtt_message(hass, 'speed-state-topic', 'speed_OfF')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert fan.SPEED_OFF == state.attributes.get('speed')
 
@@ -126,54 +111,39 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'state-topic', '{"val":"ON"}')
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert state.state is STATE_ON
 
     async_fire_mqtt_message(hass, 'state-topic', '{"val":"OFF"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert state.state is STATE_OFF
     assert state.attributes.get('oscillating') is False
 
     async_fire_mqtt_message(
         hass, 'oscillation-state-topic', '{"val":"oscillate_on"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert state.attributes.get('oscillating') is True
 
     async_fire_mqtt_message(
         hass, 'oscillation-state-topic', '{"val":"oscillate_off"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert state.attributes.get('oscillating') is False
 
     assert fan.SPEED_OFF == state.attributes.get('speed')
 
     async_fire_mqtt_message(hass, 'speed-state-topic', '{"val":"low"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert fan.SPEED_LOW == state.attributes.get('speed')
 
     async_fire_mqtt_message(hass, 'speed-state-topic', '{"val":"medium"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert fan.SPEED_MEDIUM == state.attributes.get('speed')
 
     async_fire_mqtt_message(hass, 'speed-state-topic', '{"val":"high"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert fan.SPEED_HIGH == state.attributes.get('speed')
 
     async_fire_mqtt_message(hass, 'speed-state-topic', '{"val":"off"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
     assert fan.SPEED_OFF == state.attributes.get('speed')
 
@@ -384,28 +354,22 @@ async def test_default_availability_payload(hass, mqtt_mock):
     assert state.state is STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability_topic', 'online')
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.state is not STATE_UNAVAILABLE
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'availability_topic', 'offline')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.state is STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'state-topic', '1')
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.state is STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability_topic', 'online')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.state is not STATE_UNAVAILABLE
@@ -429,28 +393,22 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     assert state.state is STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability_topic', 'good')
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.state is not STATE_UNAVAILABLE
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'availability_topic', 'nogood')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.state is STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'state-topic', '1')
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.state is STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability_topic', 'good')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.state is not STATE_UNAVAILABLE
@@ -472,7 +430,6 @@ async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
     assert state.name == 'Beer'
     async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
                             '')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('fan.beer')
     assert state is None
@@ -500,7 +457,6 @@ async def test_discovery_update_fan(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
                             data2)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('fan.beer')
@@ -533,7 +489,6 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
                             data2)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.milk')
     assert state is not None
@@ -554,7 +509,6 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
 
     assert '100' == state.attributes.get('val')
@@ -572,7 +526,6 @@ async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', '[ "list", "of", "things"]')
-    await hass.async_block_till_done()
     state = hass.states.get('fan.test')
 
     assert state.attributes.get('val') is None
@@ -591,7 +544,6 @@ async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', 'This is not JSON')
-    await hass.async_block_till_done()
 
     state = hass.states.get('fan.test')
     assert state.attributes.get('val') is None
@@ -616,8 +568,6 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
                             data1)
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.beer')
     assert '100' == state.attributes.get('val')
 
@@ -625,19 +575,14 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
                             data2)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.beer')
     assert '100' == state.attributes.get('val')
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('fan.beer')
     assert '75' == state.attributes.get('val')
 
@@ -662,7 +607,6 @@ async def test_unique_id(hass):
     })
 
     async_fire_mqtt_message(hass, 'test-topic', 'payload')
-    await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(fan.DOMAIN)) == 1
 
@@ -693,7 +637,6 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     })
     async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
                             data)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
@@ -735,7 +678,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
                             data)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
     assert device is not None
@@ -745,7 +687,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     data = json.dumps(config)
     async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
                             data)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
@@ -776,7 +717,6 @@ async def test_entity_id_update(hass, mqtt_mock):
     mock_mqtt.async_subscribe.reset_mock()
 
     registry.async_update_entity('fan.beer', new_entity_id='fan.milk')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('fan.beer')
