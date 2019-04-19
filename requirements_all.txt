@@ -1429,7 +1429,7 @@ pytile==2.0.6
 pytouchline==0.7
 
 # homeassistant.components.traccar
-pytraccar==0.5.0
+pytraccar==0.7.0
 
 # homeassistant.components.trackr
 pytrackr==0.0.5
