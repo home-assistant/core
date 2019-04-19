@@ -60,6 +60,7 @@ TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
 TRAIT_FANSPEED = PREFIX_TRAITS + 'FanSpeed'
 TRAIT_MODES = PREFIX_TRAITS + 'Modes'
 TRAIT_OPENCLOSE = PREFIX_TRAITS + 'OpenClose'
+TRAIT_VOLUME = PREFIX_TRAITS + 'Volume'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
@@ -79,6 +80,8 @@ COMMAND_LOCKUNLOCK = PREFIX_COMMANDS + 'LockUnlock'
 COMMAND_FANSPEED = PREFIX_COMMANDS + 'SetFanSpeed'
 COMMAND_MODES = PREFIX_COMMANDS + 'SetModes'
 COMMAND_OPENCLOSE = PREFIX_COMMANDS + 'OpenClose'
+COMMAND_SET_VOLUME = PREFIX_COMMANDS + 'setVolume'
+COMMAND_VOLUME_RELATIVE = PREFIX_COMMANDS + 'volumeRelative'
 
 TRAITS = []
 
@@ -186,6 +189,7 @@ class BrightnessTrait(_Trait):
                     media_player.ATTR_MEDIA_VOLUME_LEVEL:
                     params['brightness'] / 100
                 }, blocking=True, context=data.context)
+
 
 
 @register_trait
@@ -1130,6 +1134,92 @@ class OpenCloseTrait(_Trait):
                 raise SmartHomeError(
                     ERR_FUNCTION_NOT_SUPPORTED,
                     'Setting a position is not supported')
+
+
+@register_trait
+class VolumeTrait(_Trait):
+    """Trait to control brightness of a device.
+
+    https://developers.google.com/actions/smarthome/traits/volume
+    """
+
+    name = TRAIT_VOLUME
+    commands = [
+        COMMAND_SET_VOLUME,
+        COMMAND_VOLUME_RELATIVE,
+    ]
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        if domain == media_player.DOMAIN:
+            return ((features & media_player.SUPPORT_VOLUME_SET) and
+                    (features & media_player.SUPPORT_VOLUME_MUTE))
+
+        return False
+
+    def sync_attributes(self):
+        """Return brightness attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return brightness query attributes."""
+        response = {}
+
+        level = self.state.attributes.get(
+            media_player.ATTR_MEDIA_VOLUME_LEVEL)
+        muted = self.state.attributes.get(
+            media_player.ATTR_MEDIA_VOLUME_MUTED)
+        if level is not None:
+            # Convert 0.0-1.0 to 0-100
+            response['currentVolume'] = int(level * 100)
+            response['isMuted'] = bool(muted)
+
+        return response
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a brightness command."""
+        if command == COMMAND_SET_VOLUME:
+            level = params['volumeLevel']
+            if level == 0:
+                await self.hass.services.async_call(
+                    media_player.DOMAIN,
+                    media_player.SERVICE_VOLUME_MUTE, {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        media_player.ATTR_MEDIA_VOLUME_MUTED:
+                        True
+                    }, blocking=True, context=data.context)
+            else:
+                await self.hass.services.async_call(
+                    media_player.DOMAIN,
+                    media_player.SERVICE_VOLUME_SET, {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        media_player.ATTR_MEDIA_VOLUME_LEVEL:
+                        level / 100
+                    }, blocking=True, context=data.context)
+
+                if self.state.attributes.get(
+                        media_player.ATTR_MEDIA_VOLUME_MUTED):
+                    await self.hass.services.async_call(
+                        media_player.DOMAIN,
+                        media_player.SERVICE_VOLUME_MUTE, {
+                            ATTR_ENTITY_ID: self.state.entity_id,
+                            media_player.ATTR_MEDIA_VOLUME_MUTED:
+                            False
+                        }, blocking=True, context=data.context)
+
+        elif command == COMMAND_VOLUME_RELATIVE:
+            # This could also support up/down commands using relativeSteps
+            relative = params['volumeRelativeLevel']
+            current = self.state.attributes.get(
+                media_player.ATTR_MEDIA_VOLUME_LEVEL)
+
+            await self.hass.services.async_call(
+                media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_MEDIA_VOLUME_LEVEL:
+                    current + relative / 100
+                }, blocking=True, context=data.context)
 
 
 def _verify_pin_challenge(data, challenge):
