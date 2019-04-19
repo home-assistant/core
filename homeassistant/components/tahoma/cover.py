@@ -2,10 +2,10 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.cover import (ATTR_POSITION,
-    DEVICE_CLASS_AWNING, DEVICE_CLASS_BLIND, DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_GARAGE, DEVICE_CLASS_SHUTTER, DEVICE_CLASS_WINDOW,
-    CoverDevice)
+from homeassistant.components.cover import (
+    ATTR_POSITION, DEVICE_CLASS_AWNING, DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_CURTAIN, DEVICE_CLASS_GARAGE, DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASS_WINDOW, CoverDevice)
 from homeassistant.util.dt import utcnow
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
