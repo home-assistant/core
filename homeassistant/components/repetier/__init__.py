@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'RepetierServer'
 DOMAIN = 'repetier'
-
+REPETIER_API = 'repetier_api'
 
 def has_all_unique_names(value):
     """Validate that printers have an unique name."""
@@ -38,7 +38,7 @@ SENSOR_TYPES = {
                              '_extruder_'],
     'chamber_temperature': ['temperature', TEMP_CELSIUS, 'mdi:thermometer',
                             '_chamber_'],
-    'current_state': ['state', None, 'mdi:printer-3d', None],
+    'current_state': ['state', None, 'mdi:printer-3d', ''],
     'current_job': ['progress', '%', 'mdi:file-percent', '_current_job'],
     'time_remaining': ['progress', None, 'mdi:clock-end', '_remaining'],
     'time_elapsed': ['progress', None, 'mdi:clock-start', '_elapsed'],
@@ -69,7 +69,7 @@ def setup(hass, config):
     for repetier in config[DOMAIN]:
         _LOGGER.debug("Repetier server config %s", repetier[CONF_HOST])
 
-        url = 'http://' + repetier[CONF_HOST]
+        url = "http://{}".format(repetier[CONF_HOST])
         port = repetier[CONF_PORT]
         api_key = repetier[CONF_API_KEY]
 
@@ -83,73 +83,21 @@ def setup(hass, config):
         if printers is False:
             return False
 
-        sensors = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
-        for printer in printers:
+        hass.data[REPETIER_API] = printers
+
+        sensor_info = []
+        monitored_conditions = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
+        for pidx, _ in enumerate(printers):
+            printer = printers[pidx]
             printer.get_data()
-            for sensor_type in sensors:
+            for sensor_type in monitored_conditions:
                 sensvar = {}
                 sensvar['sensor_type'] = sensor_type
-                sensvar['printer'] = printer
+                sensvar['pidx'] = pidx
                 name = printer.slug
-                if sensor_type == 'current_state':
-                    sensvar['name'] = name
-                    sensvar['data_key'] = '0'
-                    load_platform(hass, 'sensor', DOMAIN, sensvar, repetier)
-                elif sensor_type == 'current_job':
-                    name = name + SENSOR_TYPES[sensor_type][3]
-                    sensvar['name'] = name
-                    sensvar['data_key'] = '0'
-                    load_platform(hass, 'sensor', DOMAIN, sensvar, repetier)
-                elif sensor_type == 'time_remaining':
-                    name = name + SENSOR_TYPES[sensor_type][3]
-                    sensvar['name'] = name
-                    sensvar['data_key'] = '0'
-                    load_platform(hass, 'sensor', DOMAIN, sensvar, repetier)
-                elif sensor_type == 'time_elapsed':
-                    name = name + SENSOR_TYPES[sensor_type][3]
-                    sensvar['name'] = name
-                    sensvar['data_key'] = '0'
-                    load_platform(hass, 'sensor', DOMAIN, sensvar, repetier)
-                elif sensor_type == 'bed_temperature':
-                    if printer.heatedbeds is None:
-                        continue
-                    name = name + SENSOR_TYPES[sensor_type][3]
-                    idx = 0
-                    for bed in printer.heatedbeds:
-                        name = name + str(idx)
-                        sensvar['name'] = name
-                        sensvar['data_key'] = idx
-                        sensvar['bed'] = bed
-                        idx += 1
-                        load_platform(hass, 'sensor', DOMAIN, sensvar,
-                                      repetier)
-                elif sensor_type == 'extruder_temperature':
-                    if printer.extruder is None:
-                        continue
-                    name = name + SENSOR_TYPES[sensor_type][3]
-                    idx = 0
-                    for extruder in printer.extruder:
-                        name = name + str(idx)
-                        sensvar['name'] = name
-                        sensvar['data_key'] = idx
-                        sensvar['extruder'] = extruder
-                        idx += 1
-                        load_platform(hass, 'sensor', DOMAIN, sensvar,
-                                      repetier)
-                elif sensor_type == 'chamber_temperature':
-                    if printer.heatedchambers is None:
-                        continue
-                    name = name + SENSOR_TYPES[sensor_type][3]
-                    idx = 0
-                    for chamber in printer.heatedchambers:
-                        name = name + str(idx)
-                        sensvar['name'] = name
-                        sensvar['data_key'] = idx
-                        sensvar['chamber'] = chamber
-                        idx += 1
-                        load_platform(hass, 'sensor', DOMAIN, sensvar,
-                                      repetier)
+                sensvar['name'] = name
+                sensor_info.append(sensvar)
+                
+        load_platform(hass, 'sensor', DOMAIN, sensor_info, config)
 
-            success = True
-
-    return success
+    return True

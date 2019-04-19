@@ -1,7 +1,7 @@
 """Support for monitoring Repetier Server Sensors."""
 import logging
 import time
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
@@ -13,9 +13,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['repetier']
 
-SCAN_INTERVAL = timedelta(seconds=5)
-
 UPDATE_SIGNAL = 'repetier_update_signal'
+REPETIER_API = 'repetier_api'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -23,10 +22,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    printer = discovery_info['printer']
-    sensor_type = discovery_info['sensor_type']
-    name = discovery_info['name']
-    data_key = discovery_info['data_key']
+    printers = hass.data[REPETIER_API]
 
     sensor_map = {
         'bed_temperature': RepetierBedSensor,
@@ -38,9 +34,54 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         'time_elapsed': RepetierElapsedSensor,
     }
 
-    sensor_class = sensor_map[sensor_type]
-    entity = sensor_class(printer, name, sensor_type, data_key)
-    add_entities([entity], True)
+    entities = []
+    for info in discovery_info:
+        pidx = info['pidx']
+        sensor_type = info['sensor_type']
+        name = info['name']
+        printer = printers[pidx]
+        data_key = 0
+
+        if sensor_type == 'bed_temperature':
+            if printer.heatedbeds is None:
+                continue
+            sensor_class = sensor_map[sensor_type]
+            for idx, _ in enumerate(printer.heatedbeds):
+                name = '{}{}{}'.format(name,
+                                       SENSOR_TYPES[sensor_type][3],
+                                       idx)
+                data_key = idx
+                entity = sensor_class(printer, name, sensor_type, data_key)
+                entities.append(entity)
+        elif sensor_type == 'extruder_temperature':
+            if printer.extruder is None:
+                continue
+            sensor_class = sensor_map[sensor_type]
+            for idx, _ in enumerate(printer.extruder):
+                name = '{}{}{}'.format(name,
+                                       SENSOR_TYPES[sensor_type][3],
+                                       idx)
+                data_key = idx
+                entity = sensor_class(printer, name, sensor_type, data_key)
+                entities.append(entity)
+        elif sensor_type == 'chamber_temperature':
+            if printer.heatedchambers is None:
+                continue
+            sensor_class = sensor_map[sensor_type]
+            for idx, _ in enumerate(printer.heatedchambers):
+                name = '{}{}{}'.format(name,
+                                       SENSOR_TYPES[sensor_type][3],
+                                       idx)
+                data_key = idx
+                entity = sensor_class(printer, name, sensor_type, data_key)
+                entities.append(entity)
+        else:
+            sensor_class = sensor_map[sensor_type]
+            name = '{}{}'.format(name, SENSOR_TYPES[sensor_type][3])
+            entity = sensor_class(printer, name, sensor_type, data_key)
+            entities.append(entity)
+
+    add_entities(entities, True)
 
 
 class RepetierSensor(Entity):
@@ -90,6 +131,17 @@ class RepetierSensor(Entity):
         """Connect update callbacks."""
         async_dispatcher_connect(
             self.hass, UPDATE_SIGNAL, self.update_callback)
+
+    def _get_data(self):
+        """Return new data from the api cache."""
+        self._printer.get_data()
+        if data is None:
+            _LOGGER.debug(
+                "Data not found for %s and %s",
+                self._sensor_type, self._data_key)
+            self._available = False
+            return None
+        self._available = True
 
 
 class RepetierBedSensor(RepetierSensor):
@@ -169,7 +221,7 @@ class RepetierChamberSensor(RepetierSensor):
     def update(self):
         """Update the sensor."""
         self._printer.get_data()
-        if self._printer.chamber is None:
+        if self._printer.heatedchambers is None:
             self._available = False
             return
         if self._printer.state == "off":
