@@ -98,7 +98,7 @@ async def test_toggle_cover(hass, setup_comp):
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
-    for _ in range(7):
+    for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -110,7 +110,7 @@ async def test_toggle_cover(hass, setup_comp):
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
-    for _ in range(7):
+    for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -204,7 +204,7 @@ async def test_toggle_cover_tilt(hass, setup_comp):
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE_COVER_TILT,
         {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
-    for _ in range(7):
+    for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -215,7 +215,7 @@ async def test_toggle_cover_tilt(hass, setup_comp):
     await hass.services.async_call(
         DOMAIN, SERVICE_TOGGLE_COVER_TILT,
         {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True)
-    for _ in range(7):
+    for _ in range(10):
         future = dt_util.utcnow() + timedelta(seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()

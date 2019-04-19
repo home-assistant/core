@@ -197,6 +197,7 @@ class TestCoverMQTT(unittest.TestCase):
 
         self.mock_publish.async_publish.assert_called_once_with(
             'command-topic', 'CLOSE', 0, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('cover.test')
         assert STATE_CLOSED == state.state
 
@@ -584,6 +585,7 @@ class TestCoverMQTT(unittest.TestCase):
 
         self.mock_publish.async_publish.assert_called_once_with(
             'tilt-command-topic', 0, 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         self.hass.services.call(
             cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
@@ -592,6 +594,7 @@ class TestCoverMQTT(unittest.TestCase):
 
         self.mock_publish.async_publish.assert_called_once_with(
             'tilt-command-topic', 100, 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         self.hass.services.call(
             cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
@@ -636,6 +639,7 @@ class TestCoverMQTT(unittest.TestCase):
 
         self.mock_publish.async_publish.assert_called_once_with(
             'tilt-command-topic', 125, 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         self.hass.services.call(
             cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
@@ -644,6 +648,7 @@ class TestCoverMQTT(unittest.TestCase):
 
         self.mock_publish.async_publish.assert_called_once_with(
             'tilt-command-topic', 400, 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         self.hass.services.call(
             cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
