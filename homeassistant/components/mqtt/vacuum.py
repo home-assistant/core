@@ -313,7 +313,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 error = self._templates[CONF_ERROR_TEMPLATE]\
                     .async_render_with_possible_json_value(
                         msg.payload, error_value=None)
-                if error:
+                if error is not None:
                     self._error = cv.string(error)
 
             if self._docked:
