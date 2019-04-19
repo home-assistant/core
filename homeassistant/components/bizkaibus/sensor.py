@@ -32,9 +32,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bizkaibus public transport sensor."""
-    name = config.get(CONF_NAME)
-    stop = config.get(CONF_STOP_ID)
-    route = config.get(CONF_ROUTE)
+    name = config[CONF_NAME]
+    stop = config[CONF_STOP_ID]
+    route = config[CONF_ROUTE]
 
     data = Bizkaibus(stop, route)
     add_entities([BizkaibusSensor(data, stop, route, name)], True)
@@ -64,7 +64,7 @@ class BizkaibusSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
-        return 'min'
+        return 'minutes'
 
     def update(self):
         """Get the latest data from the webservice."""
