@@ -76,9 +76,9 @@ ATTR_ACTIONS = 'actions'
 ATTR_TYPE = 'type'
 ATTR_URL = 'url'
 ATTR_DISMISS = 'dismiss'
-ATTR_PRIORITY = "priority"
-DEFAULT_PRIORITY = "normal"
-ATTR_TTL = "ttl"
+ATTR_PRIORITY = 'priority'
+DEFAULT_PRIORITY = 'normal'
+ATTR_TTL = 'ttl'
 DEFAULT_TTL = 86400
 
 ATTR_JWT = 'jwt'
@@ -477,7 +477,9 @@ class HTML5NotificationService(BaseNotificationService):
 
         for target in list(targets):
             info = self.registrations.get(target)
-            if info is None:
+            if (info is None or
+                    ATTR_SUBSCRIPTION not in info or
+                    ATTR_ENDPOINT not in info[ATTR_SUBSCRIPTION]):
                 _LOGGER.error("%s is not a valid HTML5 push notification"
                               " target", target)
                 continue
@@ -547,8 +549,9 @@ def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):
         from urllib.parse import urlparse
     except ImportError:  # pragma nocover
         from urlparse import urlparse
-    if vapid_email and vapid_private_key:
-        url = urlparse(subscription_info.get('endpoint'))
+    if (vapid_email and vapid_private_key and
+            ATTR_ENDPOINT in subscription_info):
+        url = urlparse(subscription_info.get(ATTR_ENDPOINT))
         vapid_claims = {
             'sub': 'mailto:{}'.format(vapid_email),
             'aud': "{}://{}".format(url.scheme, url.netloc)
