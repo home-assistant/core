@@ -28,13 +28,13 @@ CONF_ALIASES = 'aliases'
 CONF_API_KEY = 'api_key'
 CONF_ROOM_HINT = 'room'
 CONF_ALLOW_UNLOCK = 'allow_unlock'
+CONF_SECURE_DEVICES_PIN = 'secure_devices_pin'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     'climate', 'cover', 'fan', 'group', 'input_boolean', 'light',
     'media_player', 'scene', 'script', 'switch', 'vacuum', 'lock',
 ]
-DEFAULT_ALLOW_UNLOCK = False
 
 PREFIX_TYPES = 'action.devices.types.'
 TYPE_CAMERA = PREFIX_TYPES + 'CAMERA'
@@ -55,7 +55,7 @@ HOMEGRAPH_URL = 'https://homegraph.googleapis.com/'
 REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + 'v1/devices:requestSync'
 
 # Error codes used for SmartHomeError class
-# https://developers.google.com/actions/smarthome/create-app#error_responses
+# https://developers.google.com/actions/reference/smarthome/errors-exceptions
 ERR_DEVICE_OFFLINE = "deviceOffline"
 ERR_DEVICE_NOT_FOUND = "deviceNotFound"
 ERR_VALUE_OUT_OF_RANGE = "valueOutOfRange"
@@ -63,6 +63,12 @@ ERR_NOT_SUPPORTED = "notSupported"
 ERR_PROTOCOL_ERROR = 'protocolError'
 ERR_UNKNOWN_ERROR = 'unknownError'
 ERR_FUNCTION_NOT_SUPPORTED = 'functionNotSupported'
+
+ERR_CHALLENGE_NEEDED = 'challengeNeeded'
+ERR_CHALLENGE_NOT_SETUP = 'challengeFailedNotSetup'
+ERR_TOO_MANY_FAILED_ATTEMPTS = 'tooManyFailedAttempts'
+ERR_PIN_INCORRECT = 'pinIncorrect'
+ERR_USER_CANCELLED = 'userCancelled'
 
 # Event types
 EVENT_COMMAND_RECEIVED = 'google_assistant_command'
@@ -95,5 +101,8 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_LOCK): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
-
 }
+
+CHALLENGE_ACK_NEEDED = 'ackNeeded'
+CHALLENGE_PIN_NEEDED = 'pinNeeded'
+CHALLENGE_FAILED_PIN_NEEDED = 'challengeFailedPinNeeded'
