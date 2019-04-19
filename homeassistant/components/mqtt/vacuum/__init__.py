@@ -16,10 +16,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
-
 CONF_COMPONENT = 'component'
-
+LEGACY = 'legacy'
+STATE= 'state'
 
 def validate_mqtt_vacuum(value):
     """Validate MQTT vacuum schema."""
@@ -27,8 +26,8 @@ def validate_mqtt_vacuum(value):
     from . import schema_state
 
     schemas = {
-        'legacy': schema_legacy.PLATFORM_SCHEMA_LEGACY,
-        'statevacuum': schema_state.PLATFORM_SCHEMA_STATE,
+        LEGACY: schema_legacy.PLATFORM_SCHEMA_LEGACY,
+        STATE: schema_state.PLATFORM_SCHEMA_STATE,
     }
     return schemas[value[CONF_COMPONENT]](value)
 
@@ -90,8 +89,8 @@ async def _async_setup_entity(config, async_add_entities, config_entry,
     from . import schema_legacy
     from . import schema_state
     setup_entity = {
-        'legacy': schema_legacy.async_setup_entity_legacy,
-        'statevacuum': schema_state.async_setup_entity_state,
+        LEGACY: schema_legacy.async_setup_entity_legacy,
+        STATE: schema_state.async_setup_entity_state,
     }
     await setup_entity[config[CONF_COMPONENT]](
         config, async_add_entities, config_entry, discovery_hash)

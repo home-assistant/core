@@ -1,4 +1,4 @@
-"""Support for basic MQTT vacuum."""
+"""Support for Legacy MQTT vacuum."""
 import logging
 import json
 

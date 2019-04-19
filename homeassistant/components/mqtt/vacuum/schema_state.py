@@ -24,8 +24,6 @@ from . import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
-
 SERVICE_TO_STRING = {
     SUPPORT_START: 'start',
     SUPPORT_PAUSE: 'pause',
