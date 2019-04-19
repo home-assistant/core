@@ -5,8 +5,8 @@
   "requirements": [
     "fortiosapi==0.10.5"
   ],
-  "dependencies": [
-    "device_tracker"
-  ],
-  "codeowners": []
+  "dependencies": [],
+  "codeowners": [
+    "@kimfrellsen"
+  ]
 }
