@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
-from . import CONF_PINMODE
+from . import CONF_PIN_MODE
 from .const import CONF_INVERT_LOGIC, CONF_PORTS, PORT_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,8 +16,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(PORT_SCHEMA)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Orange Pi GPIO devices."""
-    pinmode = config[CONF_PINMODE]
-    orangepi_gpio.setup_mode(pinmode)
+    pin_mode = config[CONF_PIN_MODE]
+    orangepi_gpio.setup_mode(pin_mode)
 
     invert_logic = config[CONF_INVERT_LOGIC]
 
