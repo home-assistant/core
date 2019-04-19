@@ -120,7 +120,6 @@ async def test_state_change_via_topic(hass, mqtt_mock):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on')
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.test')
     assert STATE_ON == state.state
@@ -177,7 +176,6 @@ async def test_state_brightness_color_effect_temp_white_change_via_topic(
     # turn on the light, full white
     async_fire_mqtt_message(hass, 'test_light_rgb',
                             'on,255,145,123,255-128-64,')
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.test')
     assert STATE_ON == state.state
@@ -189,32 +187,24 @@ async def test_state_brightness_color_effect_temp_white_change_via_topic(
 
     # turn the light off
     async_fire_mqtt_message(hass, 'test_light_rgb', 'off')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.test')
     assert STATE_OFF == state.state
 
     # lower the brightness
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on,100')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     light_state = hass.states.get('light.test')
     assert 100 == light_state.attributes['brightness']
 
     # change the color temp
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on,,195')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     light_state = hass.states.get('light.test')
     assert 195 == light_state.attributes['color_temp']
 
     # change the color
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on,,,,41-42-43')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     light_state = hass.states.get('light.test')
     assert (243, 249, 255) == \
@@ -222,8 +212,6 @@ async def test_state_brightness_color_effect_temp_white_change_via_topic(
 
     # change the white value
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on,,,134')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     light_state = hass.states.get('light.test')
     assert 134 == light_state.attributes['white_value']
@@ -231,8 +219,6 @@ async def test_state_brightness_color_effect_temp_white_change_via_topic(
     # change the effect
     async_fire_mqtt_message(hass, 'test_light_rgb',
                             'on,,,,41-42-43,rainbow')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     light_state = hass.states.get('light.test')
     assert 'rainbow' == light_state.attributes.get('effect')
@@ -361,7 +347,6 @@ async def test_invalid_values(hass, mqtt_mock):
     # turn on the light, full white
     async_fire_mqtt_message(hass, 'test_light_rgb',
                             'on,255,215,222,255-255-255,rainbow')
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.test')
     assert STATE_ON == state.state
@@ -373,7 +358,6 @@ async def test_invalid_values(hass, mqtt_mock):
 
     # bad state value
     async_fire_mqtt_message(hass, 'test_light_rgb', 'offf')
-    await hass.async_block_till_done()
 
     # state should not have changed
     state = hass.states.get('light.test')
@@ -381,7 +365,6 @@ async def test_invalid_values(hass, mqtt_mock):
 
     # bad brightness values
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on,off,255-255-255')
-    await hass.async_block_till_done()
 
     # brightness should not have changed
     state = hass.states.get('light.test')
@@ -389,7 +372,6 @@ async def test_invalid_values(hass, mqtt_mock):
 
     # bad color temp values
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on,,off,255-255-255')
-    await hass.async_block_till_done()
 
     # color temp should not have changed
     state = hass.states.get('light.test')
@@ -397,7 +379,6 @@ async def test_invalid_values(hass, mqtt_mock):
 
     # bad color values
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on,255,a-b-c')
-    await hass.async_block_till_done()
 
     # color should not have changed
     state = hass.states.get('light.test')
@@ -405,7 +386,6 @@ async def test_invalid_values(hass, mqtt_mock):
 
     # bad white value values
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on,,,off,255-255-255')
-    await hass.async_block_till_done()
 
     # white value should not have changed
     state = hass.states.get('light.test')
@@ -413,7 +393,6 @@ async def test_invalid_values(hass, mqtt_mock):
 
     # bad effect value
     async_fire_mqtt_message(hass, 'test_light_rgb', 'on,255,a-b-c,white')
-    await hass.async_block_till_done()
 
     # effect should not have changed
     state = hass.states.get('light.test')
@@ -438,14 +417,11 @@ async def test_default_availability_payload(hass, mqtt_mock):
     assert STATE_UNAVAILABLE == state.state
 
     async_fire_mqtt_message(hass, 'availability-topic', 'online')
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.test')
     assert STATE_UNAVAILABLE != state.state
 
     async_fire_mqtt_message(hass, 'availability-topic', 'offline')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.test')
     assert STATE_UNAVAILABLE == state.state
@@ -471,14 +447,11 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     assert STATE_UNAVAILABLE == state.state
 
     async_fire_mqtt_message(hass, 'availability-topic', 'good')
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.test')
     assert STATE_UNAVAILABLE != state.state
 
     async_fire_mqtt_message(hass, 'availability-topic', 'nogood')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.test')
     assert STATE_UNAVAILABLE == state.state
@@ -499,7 +472,6 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
-    await hass.async_block_till_done()
     state = hass.states.get('light.test')
 
     assert '100' == state.attributes.get('val')
@@ -520,7 +492,6 @@ async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', '[ "list", "of", "things"]')
-    await hass.async_block_till_done()
     state = hass.states.get('light.test')
 
     assert state.attributes.get('val') is None
@@ -542,7 +513,6 @@ async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', 'This is not JSON')
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.test')
     assert state.attributes.get('val') is None
@@ -573,8 +543,6 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
                             data1)
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('light.beer')
     assert '100' == state.attributes.get('val')
 
@@ -582,19 +550,14 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
                             data2)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('light.beer')
     assert '100' == state.attributes.get('val')
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('light.beer')
     assert '75' == state.attributes.get('val')
 
@@ -622,7 +585,6 @@ async def test_unique_id(hass):
         }]
     })
     async_fire_mqtt_message(hass, 'test-topic', 'payload')
-    await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(light.DOMAIN)) == 1
 
 
@@ -645,7 +607,6 @@ async def test_discovery_removal(hass, mqtt_mock, caplog):
     assert state.name == 'Beer'
     async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
                             '')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get('light.beer')
     assert state is None
@@ -703,7 +664,6 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
                             data2)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('light.beer')
     assert state is not None
@@ -738,7 +698,6 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
                             data2)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('light.milk')
@@ -777,7 +736,6 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     })
     async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
                             data)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
@@ -822,7 +780,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
                             data)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
     assert device is not None
@@ -832,7 +789,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     data = json.dumps(config)
     async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
                             data)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
@@ -866,7 +822,6 @@ async def test_entity_id_update(hass, mqtt_mock):
     mock_mqtt.async_subscribe.reset_mock()
 
     registry.async_update_entity('light.beer', new_entity_id='light.milk')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('light.beer')
