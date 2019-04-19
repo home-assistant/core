@@ -37,7 +37,7 @@ SENSOR_TYPES = {
     'extruder_temperature': ['temperature', TEMP_CELSIUS, 'mdi:thermometer',
                              '_extruder_'],
     'chamber_temperature': ['temperature', TEMP_CELSIUS, 'mdi:thermometer',
-                             '_chamber_'],
+                            '_chamber_'],
     'current_state': ['state', None, 'mdi:printer-3d', None],
     'current_job': ['progress', '%', 'mdi:file-percent', '_current_job'],
     'time_remaining': ['progress', None, 'mdi:clock-end', '_remaining'],
