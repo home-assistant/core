@@ -2,7 +2,10 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.components.cover import (ATTR_POSITION,
+    DEVICE_CLASS_AWNING, DEVICE_CLASS_BLIND, DEVICE_CLASS_CURTAIN,
+    DEVICE_CLASS_GARAGE, DEVICE_CLASS_SHUTTER, DEVICE_CLASS_WINDOW,
+    CoverDevice)
 from homeassistant.util.dt import utcnow
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -109,12 +112,18 @@ class TahomaCover(TahomaDevice, CoverDevice):
         #   _position: 0 is closed, 100 is fully open.
         #   'core:ClosureState': 100 is closed, 0 is fully open.
         if self._closure is not None:
-            self._position = 100 - self._closure
+            if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
+                self._position = self._closure
+            else:
+                self._position = 100 - self._closure
             if self._position <= 5:
                 self._position = 0
             if self._position >= 95:
                 self._position = 100
-            self._closed = self._position == 0
+            if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
+                self._closed = self._position == 0
+            else:
+                self._closed = self._position == 100
         else:
             self._position = None
             if 'core:OpenClosedState' in self.tahoma_device.active_states:
@@ -133,7 +142,10 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.apply_action('setPosition', 100 - kwargs.get(ATTR_POSITION))
+        if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
+            self.apply_action('setPosition', kwargs.get(ATTR_POSITION))
+        else:
+            self.apply_action('setPosition', 100 - kwargs.get(ATTR_POSITION))
 
     @property
     def is_closed(self):
@@ -143,8 +155,36 @@ class TahomaCover(TahomaDevice, CoverDevice):
     @property
     def device_class(self):
         """Return the class of the device."""
-        if self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
-            return 'window'
+        if self.tahoma_device.type == 'io:ExteriorVenetianBlindIOComponent':
+            return DEVICE_CLASS_BLIND
+        elif self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
+            return DEVICE_CLASS_AWNING
+        elif self.tahoma_device.type == 'io:RollerShutterGenericIOComponent':
+            return DEVICE_CLASS_SHUTTER
+        elif self.tahoma_device.type == 'io:RollerShutterUnoIOComponent':
+            return DEVICE_CLASS_SHUTTER
+        elif self.tahoma_device.type == 'io:RollerShutterVeluxIOComponent':
+            return DEVICE_CLASS_SHUTTER
+        elif self.tahoma_device.type == 'io:RollerShutterWithLowSpeedManagementIOComponent':
+            return DEVICE_CLASS_SHUTTER
+        elif self.tahoma_device.type == 'io:VerticalExteriorAwningIOComponent':
+            return DEVICE_CLASS_AWNING
+        elif self.tahoma_device.type == 'io:WindowOpenerVeluxIOComponent':
+            return DEVICE_CLASS_WINDOW
+        elif self.tahoma_device.type == 'io:GarageOpenerIOComponent':
+            return DEVICE_CLASS_GARAGE
+        elif self.tahoma_device.type == 'rts:BlindRTSComponent':
+            return DEVICE_CLASS_BLIND
+        elif self.tahoma_device.type == 'rts:CurtainRTSComponent':
+            return DEVICE_CLASS_CURTAIN
+        elif self.tahoma_device.type == 'rts:DualCurtainRTSComponent':
+            return DEVICE_CLASS_CURTAIN
+        elif self.tahoma_device.type == 'rts:ExteriorVenetianBlindRTSComponent':
+            return DEVICE_CLASS_BLIND
+        elif self.tahoma_device.type == 'rts:RollerShutterRTSComponent':
+            return DEVICE_CLASS_SHUTTER
+        elif self.tahoma_device.type == 'rts:VenetianBlindRTSComponent':
+            return DEVICE_CLASS_BLIND
         return None
 
     @property
