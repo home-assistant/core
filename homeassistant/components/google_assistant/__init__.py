@@ -35,19 +35,20 @@ ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ROOM_HINT): cv.string,
 })
 
-GOOGLE_ASSISTANT_SCHEMA = vol.Schema({
-    vol.Required(CONF_PROJECT_ID): cv.string,
-    vol.Optional(CONF_EXPOSE_BY_DEFAULT,
-                 default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
-    vol.Optional(CONF_EXPOSED_DOMAINS,
-                 default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
-    vol.Optional(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
-    # No longer used since 0.92
-    vol.Optional(CONF_ALLOW_UNLOCK): cv.boolean,
-    # str on purpose, makes sure it is configured correctly.
-    vol.Optional(CONF_SECURE_DEVICES_PIN): str,
-}, extra=vol.PREVENT_EXTRA)
+GOOGLE_ASSISTANT_SCHEMA = vol.All(
+    cv.deprecated(CONF_ALLOW_UNLOCK, invalidation_version='0.95'),
+    vol.Schema({
+        vol.Required(CONF_PROJECT_ID): cv.string,
+        vol.Optional(CONF_EXPOSE_BY_DEFAULT,
+                     default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
+        vol.Optional(CONF_EXPOSED_DOMAINS,
+                     default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
+        vol.Optional(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
+        vol.Optional(CONF_ALLOW_UNLOCK): cv.boolean,
+        # str on purpose, makes sure it is configured correctly.
+        vol.Optional(CONF_SECURE_DEVICES_PIN): str,
+    }, extra=vol.PREVENT_EXTRA))
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: GOOGLE_ASSISTANT_SCHEMA
