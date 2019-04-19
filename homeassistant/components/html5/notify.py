@@ -477,9 +477,9 @@ class HTML5NotificationService(BaseNotificationService):
 
         for target in list(targets):
             info = self.registrations.get(target)
-            if (info is None or
-                    ATTR_SUBSCRIPTION not in info or
-                    ATTR_ENDPOINT not in info[ATTR_SUBSCRIPTION]):
+            try:
+                info = REGISTER_SCHEMA(info)
+            except vol.Invalid:
                 _LOGGER.error("%s is not a valid HTML5 push notification"
                               " target", target)
                 continue
