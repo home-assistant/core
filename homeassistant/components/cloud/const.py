@@ -5,7 +5,7 @@ REQUEST_TIMEOUT = 10
 PREF_ENABLE_ALEXA = 'alexa_enabled'
 PREF_ENABLE_GOOGLE = 'google_enabled'
 PREF_ENABLE_REMOTE = 'remote_enabled'
-PREF_GOOGLE_ALLOW_UNLOCK = 'google_allow_unlock'
+PREF_GOOGLE_SECURE_DEVICES_PIN = 'google_secure_devices_pin'
 PREF_CLOUDHOOKS = 'cloudhooks'
 PREF_CLOUD_USER = 'cloud_user'
 
