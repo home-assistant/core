@@ -236,8 +236,6 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'test_topic/some/base/topic',
                             'ON')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.DiscoveryExpansionTest1')
     assert state.state == STATE_ON
@@ -271,8 +269,6 @@ async def test_implicit_state_topic_alarm(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(
         hass, 'homeassistant/alarm_control_panel/bla/state', 'armed_away')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('alarm_control_panel.Test1')
     assert state.state == 'armed_away'
@@ -305,8 +301,6 @@ async def test_implicit_state_topic_binary_sensor(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/state',
                             'ON')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('binary_sensor.Test1')
     assert state.state == 'on'
@@ -339,8 +333,6 @@ async def test_implicit_state_topic_sensor(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/state',
                             '1234')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('sensor.Test1')
     assert state.state == '1234'
@@ -374,8 +366,6 @@ async def test_no_implicit_state_topic_switch(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/switch/bla/state',
                             'ON')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.Test1')
     assert state.state == 'off'
