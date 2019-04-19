@@ -99,6 +99,23 @@ def boolean(value: Any) -> bool:
     return bool(value)
 
 
+def boolean_true(value: Any) -> bool:
+    """Coerce a boolean value to true, or return false."""
+    if isinstance(value, str):
+        value = value.lower()
+        return value in ('1', 'true', 'yes', 'on', 'enable')
+    return bool(value)
+
+
+_WS = re.compile('\\s*')
+
+
+@vol.truth
+def whitespace(value: Any) -> str:
+    """Validate result contains only whitespace."""
+    return isinstance(value, str) and _WS.fullmatch(value)
+
+
 def isdevice(value):
     """Validate that value is a real device."""
     try:
