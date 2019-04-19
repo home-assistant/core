@@ -5,7 +5,7 @@ from homeassistant.components.hue.sensor_base import (
     GenericZLLSensor, async_setup_entry as shared_async_setup_entry)
 
 
-PRESENCE_NAME_FORMAT = "{} presence"
+PRESENCE_NAME_FORMAT = "{} motion"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
