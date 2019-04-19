@@ -177,14 +177,12 @@ async def handle_devices_execute(hass, data, payload):
                 entities[entity_id] = GoogleEntity(hass, data.config, state)
 
             try:
-                await entities[entity_id].execute(execution['command'],
-                                                  data,
-                                                  execution.get('params', {}))
+                await entities[entity_id].execute(data, execution)
             except SmartHomeError as err:
                 results[entity_id] = {
                     'ids': [entity_id],
                     'status': 'ERROR',
-                    'errorCode': err.code
+                    **err.to_response()
                 }
 
     final_results = list(results.values())
