@@ -4,9 +4,7 @@
   "documentation": "https://www.home-assistant.io/components/onvif",
   "requirements": [
     "onvif-zeep-async==0.1.1",
-    "zeep[async]==3.0.0",
-    "suds-passworddigest-homeassistant==0.1.2a0.dev0",
-    "suds-py3==1.3.3.0"
+    "zeep[async]==3.0.0"
   ],
   "dependencies": [
     "ffmpeg"
