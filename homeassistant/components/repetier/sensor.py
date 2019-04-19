@@ -1,10 +1,10 @@
 """Support for monitoring Repetier Server Sensors."""
 import logging
+import time
 from datetime import timedelta, datetime
 
 from . import SENSOR_TYPES
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_time_interval
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -13,9 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['repetier']
 
 SCAN_INTERVAL = timedelta(seconds=5)
-#TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
-# REPETIER_API = 'repetier_api'
 UPDATE_SIGNAL = 'repetier_update_signal'
 
 
@@ -188,12 +186,13 @@ class RepetierStateSensor(RepetierSensor):
 
 class RepetierJobSensor(RepetierSensor):
     """Class to create and populate a Repetier Job Sensor."""
+
     @property
     def state(self):
         """Return sensor state."""
         if self._state is None:
             return None
-        return round(self._state, 0)
+        return round(self._state, 2)
 
     def update(self):
         """Update the sensor."""
@@ -292,7 +291,7 @@ class RepetierElapsedSensor(RepetierSensor):
         self._available = True
         dtime = datetime.utcfromtimestamp(start).isoformat()
         starttime = dtime
-        secs = int(round(remaining, 0))
+        secs = int(round(printtime, 0))
         state = time.strftime('%H:%M:%S', time.gmtime(secs))
 
         _LOGGER.debug("Job %s elapsed %s",

@@ -1,7 +1,4 @@
-"""
-Support for Repetier-Server sensors.
-"""
-from datetime import timedelta
+"""Support for Repetier-Server sensors."""
 import logging
 
 import voluptuous as vol
@@ -12,7 +9,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_NAME,
     CONF_SENSORS,
-    CONF_BINARY_SENSORS,
     CONF_MONITORED_CONDITIONS,
     TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
@@ -84,7 +80,7 @@ def setup(hass, config):
 
         if printers is False:
             return False
-        
+
         sensors = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
         for printer in printers:
             printer.get_data()
