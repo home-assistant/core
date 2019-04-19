@@ -452,8 +452,8 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
-        if ((self.supported_features & SUPPORT_FAN_SPEED == 0)
-                or fan_speed not in self._fan_speed_list):
+        if ((self.supported_features & SUPPORT_FAN_SPEED == 0) or
+                fan_speed not in self._fan_speed_list):
             return None
 
         mqtt.async_publish(self.hass, self._set_fan_speed_topic,

@@ -18,7 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_COMPONENT = 'component'
 LEGACY = 'legacy'
-STATE= 'state'
+STATE = 'state'
+
 
 def validate_mqtt_vacuum(value):
     """Validate MQTT vacuum schema."""
