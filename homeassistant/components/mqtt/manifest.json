@@ -6,7 +6,9 @@
     "hbmqtt==0.9.4",
     "paho-mqtt==1.4.0"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "http"
+  ],
   "codeowners": [
     "@home-assistant/core"
   ]

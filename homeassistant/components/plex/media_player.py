@@ -20,8 +20,6 @@ from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['plexapi==3.0.6']
-
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 

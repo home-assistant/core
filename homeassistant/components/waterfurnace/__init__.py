@@ -13,8 +13,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['waterfurnace==1.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'waterfurnace'

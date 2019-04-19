@@ -13,8 +13,6 @@ from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['WazeRouteCalculator==0.9']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DURATION = 'duration'

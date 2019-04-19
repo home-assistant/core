@@ -21,8 +21,6 @@ from .const import (
     DATA_SESSIONS,
 )
 
-DEPENDENCIES = ["aws"]
-
 _LOGGER = logging.getLogger(__name__)
 
 

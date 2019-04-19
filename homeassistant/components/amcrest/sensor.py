@@ -7,8 +7,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import DATA_AMCREST, SENSORS
 
-DEPENDENCIES = ['amcrest']
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -30,7 +28,6 @@ async def async_setup_platform(
             AmcrestSensor(amcrest.name, amcrest.device, sensor_type))
 
     async_add_entities(amcrest_sensors, True)
-    return True
 
 
 class AmcrestSensor(Entity):

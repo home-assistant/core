@@ -13,8 +13,6 @@ from homeassistant.const import (
     STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['anthemav==1.1.10']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'anthemav'

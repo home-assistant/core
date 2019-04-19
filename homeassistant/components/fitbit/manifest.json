@@ -5,7 +5,10 @@
   "requirements": [
     "fitbit==0.3.0"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "configurator",
+    "http"
+  ],
   "codeowners": [
     "@robbiet480"
   ]

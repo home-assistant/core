@@ -12,8 +12,6 @@ from homeassistant.components.notify import (ATTR_DATA, ATTR_TARGET,
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['discord.py==0.16.12']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string
 })

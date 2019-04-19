@@ -19,11 +19,7 @@ from .worker import stream_worker
 from .hls import async_setup_hls
 from .recorder import async_setup_recorder
 
-REQUIREMENTS = ['av==6.1.2']
-
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['http']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({}),

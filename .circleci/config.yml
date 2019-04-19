@@ -57,6 +57,7 @@ commands:
             <<# parameters.all >>pip install -q --progress-bar off -r requirements_all.txt -c homeassistant/package_constraints.txt<</ parameters.all>>
             <<# parameters.test >>pip install -q --progress-bar off -r requirements_test.txt -c homeassistant/package_constraints.txt<</ parameters.test>>
             <<# parameters.test_all >>pip install -q --progress-bar off -r requirements_test_all.txt -c homeassistant/package_constraints.txt<</ parameters.test_all>>
+          no_output_timeout: 15m  
       - save_cache:
           paths:
             - ./venv
@@ -92,12 +93,6 @@ jobs:
             flake8
 
       - run:
-          name: validate CODEOWNERS
-          command: |
-            . venv/bin/activate
-            python script/manifest/codeowners.py validate
-
-      - run:
           name: run static type check
           command: |
             . venv/bin/activate
@@ -110,7 +105,7 @@ jobs:
           name: validate manifests
           command: |
             . venv/bin/activate
-            python script/manifest/validate.py
+            python -m script.hassfest validate
 
       - run:
           name: run gen_requirements_all
@@ -152,6 +147,7 @@ jobs:
             . venv/bin/activate
             PYFILES=$(circleci tests glob "homeassistant/**/*.py" | circleci tests split)
             pylint ${PYFILES}
+          no_output_timeout: 15m
 
   pre-test:
     parameters:

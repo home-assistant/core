@@ -5,6 +5,6 @@
   "requirements": [
     "pysabnzbd==1.1.0"
   ],
-  "dependencies": [],
+  "dependencies": ["configurator"],
   "codeowners": []
 }

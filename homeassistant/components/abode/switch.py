@@ -7,8 +7,6 @@ from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['abode']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Abode switch devices."""

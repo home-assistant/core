@@ -29,11 +29,16 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_ASSUMED_STATE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
-from .const import ERR_VALUE_OUT_OF_RANGE
-from .helpers import SmartHomeError
+from .const import (
+    ERR_VALUE_OUT_OF_RANGE,
+    ERR_NOT_SUPPORTED,
+    ERR_FUNCTION_NOT_SUPPORTED,
+)
+from .error import SmartHomeError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +48,7 @@ TRAIT_ONOFF = PREFIX_TRAITS + 'OnOff'
 TRAIT_DOCK = PREFIX_TRAITS + 'Dock'
 TRAIT_STARTSTOP = PREFIX_TRAITS + 'StartStop'
 TRAIT_BRIGHTNESS = PREFIX_TRAITS + 'Brightness'
-TRAIT_COLOR_SPECTRUM = PREFIX_TRAITS + 'ColorSpectrum'
-TRAIT_COLOR_TEMP = PREFIX_TRAITS + 'ColorTemperature'
+TRAIT_COLOR_SETTING = PREFIX_TRAITS + 'ColorSetting'
 TRAIT_SCENE = PREFIX_TRAITS + 'Scene'
 TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
 TRAIT_LOCKUNLOCK = PREFIX_TRAITS + 'LockUnlock'
@@ -274,69 +278,13 @@ class OnOffTrait(_Trait):
 
 
 @register_trait
-class ColorSpectrumTrait(_Trait):
-    """Trait to offer color spectrum functionality.
-
-    https://developers.google.com/actions/smarthome/traits/colorspectrum
-    """
-
-    name = TRAIT_COLOR_SPECTRUM
-    commands = [
-        COMMAND_COLOR_ABSOLUTE
-    ]
-
-    @staticmethod
-    def supported(domain, features, device_class):
-        """Test if state is supported."""
-        if domain != light.DOMAIN:
-            return False
-
-        return features & light.SUPPORT_COLOR
-
-    def sync_attributes(self):
-        """Return color spectrum attributes for a sync request."""
-        # Other colorModel is hsv
-        return {'colorModel': 'rgb'}
-
-    def query_attributes(self):
-        """Return color spectrum query attributes."""
-        response = {}
-
-        color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
-        if color_hs is not None:
-            response['color'] = {
-                'spectrumRGB': int(color_util.color_rgb_to_hex(
-                    *color_util.color_hs_to_RGB(*color_hs)), 16),
-            }
-
-        return response
-
-    def can_execute(self, command, params):
-        """Test if command can be executed."""
-        return (command in self.commands and
-                'spectrumRGB' in params.get('color', {}))
-
-    async def execute(self, command, data, params):
-        """Execute a color spectrum command."""
-        # Convert integer to hex format and left pad with 0's till length 6
-        hex_value = "{0:06x}".format(params['color']['spectrumRGB'])
-        color = color_util.color_RGB_to_hs(
-            *color_util.rgb_hex_to_rgb_list(hex_value))
-
-        await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: self.state.entity_id,
-            light.ATTR_HS_COLOR: color
-        }, blocking=True, context=data.context)
-
-
-@register_trait
-class ColorTemperatureTrait(_Trait):
+class ColorSettingTrait(_Trait):
     """Trait to offer color temperature functionality.
 
     https://developers.google.com/actions/smarthome/traits/colortemperature
     """
 
-    name = TRAIT_COLOR_TEMP
+    name = TRAIT_COLOR_SETTING
     commands = [
         COMMAND_COLOR_ABSOLUTE
     ]
@@ -347,59 +295,107 @@ class ColorTemperatureTrait(_Trait):
         if domain != light.DOMAIN:
             return False
 
-        return features & light.SUPPORT_COLOR_TEMP
+        return (features & light.SUPPORT_COLOR_TEMP or
+                features & light.SUPPORT_COLOR)
 
     def sync_attributes(self):
         """Return color temperature attributes for a sync request."""
         attrs = self.state.attributes
-        # Max Kelvin is Min Mireds K = 1000000 / mireds
-        # Min Kevin is Max Mireds K = 1000000 / mireds
-        return {
-            'temperatureMaxK': color_util.color_temperature_mired_to_kelvin(
-                attrs.get(light.ATTR_MIN_MIREDS)),
-            'temperatureMinK': color_util.color_temperature_mired_to_kelvin(
-                attrs.get(light.ATTR_MAX_MIREDS)),
-        }
-
-    def query_attributes(self):
-        """Return color temperature query attributes."""
+        features = attrs.get(ATTR_SUPPORTED_FEATURES, 0)
         response = {}
 
-        temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
-        # Some faulty integrations might put 0 in here, raising exception.
-        if temp == 0:
-            _LOGGER.warning('Entity %s has incorrect color temperature %s',
-                            self.state.entity_id, temp)
-        elif temp is not None:
-            response['color'] = {
-                'temperature':
-                    color_util.color_temperature_mired_to_kelvin(temp)
+        if features & light.SUPPORT_COLOR:
+            response['colorModel'] = 'hsv'
+
+        if features & light.SUPPORT_COLOR_TEMP:
+            # Max Kelvin is Min Mireds K = 1000000 / mireds
+            # Min Kevin is Max Mireds K = 1000000 / mireds
+            response['colorTemperatureRange'] = {
+                'temperatureMaxK':
+                color_util.color_temperature_mired_to_kelvin(
+                    attrs.get(light.ATTR_MIN_MIREDS)),
+                'temperatureMinK':
+                color_util.color_temperature_mired_to_kelvin(
+                    attrs.get(light.ATTR_MAX_MIREDS)),
             }
 
         return response
 
-    def can_execute(self, command, params):
-        """Test if command can be executed."""
-        return (command in self.commands and
-                'temperature' in params.get('color', {}))
+    def query_attributes(self):
+        """Return color temperature query attributes."""
+        features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        color = {}
+
+        if features & light.SUPPORT_COLOR:
+            color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
+            brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
+            if color_hs is not None:
+                color['spectrumHsv'] = {
+                    'hue': color_hs[0],
+                    'saturation': color_hs[1]/100,
+                    'value': brightness/255,
+                }
+
+        if features & light.SUPPORT_COLOR_TEMP:
+            temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
+            # Some faulty integrations might put 0 in here, raising exception.
+            if temp == 0:
+                _LOGGER.warning('Entity %s has incorrect color temperature %s',
+                                self.state.entity_id, temp)
+            elif temp is not None:
+                color['temperatureK'] = \
+                    color_util.color_temperature_mired_to_kelvin(temp)
+
+        response = {}
+
+        if color:
+            response['color'] = color
+
+        return response
 
     async def execute(self, command, data, params):
         """Execute a color temperature command."""
-        temp = color_util.color_temperature_kelvin_to_mired(
-            params['color']['temperature'])
-        min_temp = self.state.attributes[light.ATTR_MIN_MIREDS]
-        max_temp = self.state.attributes[light.ATTR_MAX_MIREDS]
+        if 'temperature' in params['color']:
+            temp = color_util.color_temperature_kelvin_to_mired(
+                params['color']['temperature'])
+            min_temp = self.state.attributes[light.ATTR_MIN_MIREDS]
+            max_temp = self.state.attributes[light.ATTR_MAX_MIREDS]
 
-        if temp < min_temp or temp > max_temp:
-            raise SmartHomeError(
-                ERR_VALUE_OUT_OF_RANGE,
-                "Temperature should be between {} and {}".format(min_temp,
-                                                                 max_temp))
+            if temp < min_temp or temp > max_temp:
+                raise SmartHomeError(
+                    ERR_VALUE_OUT_OF_RANGE,
+                    "Temperature should be between {} and {}".format(min_temp,
+                                                                     max_temp))
 
-        await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: self.state.entity_id,
-            light.ATTR_COLOR_TEMP: temp,
-        }, blocking=True, context=data.context)
+            await self.hass.services.async_call(
+                light.DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    light.ATTR_COLOR_TEMP: temp,
+                }, blocking=True, context=data.context)
+
+        elif 'spectrumRGB' in params['color']:
+            # Convert integer to hex format and left pad with 0's till length 6
+            hex_value = "{0:06x}".format(params['color']['spectrumRGB'])
+            color = color_util.color_RGB_to_hs(
+                *color_util.rgb_hex_to_rgb_list(hex_value))
+
+            await self.hass.services.async_call(
+                light.DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    light.ATTR_HS_COLOR: color
+                }, blocking=True, context=data.context)
+
+        elif 'spectrumHSV' in params['color']:
+            color = params['color']['spectrumHSV']
+            saturation = color['saturation'] * 100
+            brightness = color['value'] * 255
+
+            await self.hass.services.async_call(
+                light.DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    light.ATTR_HS_COLOR: [color['hue'], saturation],
+                    light.ATTR_BRIGHTNESS: brightness
+                }, blocking=True, context=data.context)
 
 
 @register_trait
@@ -1073,18 +1069,25 @@ class OpenCloseTrait(_Trait):
             # Google will not issue an open command if the assumed state is
             # open, even if that is currently incorrect.
             if self.state.attributes.get(ATTR_ASSUMED_STATE):
-                response['openPercent'] = 50
-            else:
-                position = self.state.attributes.get(
-                    cover.ATTR_CURRENT_POSITION
-                )
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    'Querying state is not supported')
 
-                if position is not None:
-                    response['openPercent'] = position
-                elif self.state.state != cover.STATE_CLOSED:
-                    response['openPercent'] = 100
-                else:
-                    response['openPercent'] = 0
+            if self.state.state == STATE_UNKNOWN:
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    'Querying state is not supported')
+
+            position = self.state.attributes.get(
+                cover.ATTR_CURRENT_POSITION
+            )
+
+            if position is not None:
+                response['openPercent'] = position
+            elif self.state.state != cover.STATE_CLOSED:
+                response['openPercent'] = 100
+            else:
+                response['openPercent'] = 0
 
         elif domain == binary_sensor.DOMAIN:
             if self.state.state == STATE_ON:
@@ -1100,22 +1103,23 @@ class OpenCloseTrait(_Trait):
 
         if domain == cover.DOMAIN:
             position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
-            if position is not None:
+            if params['openPercent'] == 0:
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True, context=data.context)
+            elif params['openPercent'] == 100:
+                await self.hass.services.async_call(
+                    cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
+                        ATTR_ENTITY_ID: self.state.entity_id
+                    }, blocking=True, context=data.context)
+            elif position is not None:
                 await self.hass.services.async_call(
                     cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                         ATTR_ENTITY_ID: self.state.entity_id,
                         cover.ATTR_POSITION: params['openPercent']
                     }, blocking=True, context=data.context)
             else:
-                if self.state.state != cover.STATE_CLOSED:
-                    if params['openPercent'] < 100:
-                        await self.hass.services.async_call(
-                            cover.DOMAIN, cover.SERVICE_CLOSE_COVER, {
-                                ATTR_ENTITY_ID: self.state.entity_id
-                            }, blocking=True, context=data.context)
-                else:
-                    if params['openPercent'] > 0:
-                        await self.hass.services.async_call(
-                            cover.DOMAIN, cover.SERVICE_OPEN_COVER, {
-                                ATTR_ENTITY_ID: self.state.entity_id
-                            }, blocking=True, context=data.context)
+                raise SmartHomeError(
+                    ERR_FUNCTION_NOT_SUPPORTED,
+                    'Setting a position is not supported')

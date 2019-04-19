@@ -15,8 +15,6 @@ from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.components.notify import (ATTR_DATA, PLATFORM_SCHEMA,
                                              BaseNotificationService)
 
-REQUIREMENTS = ['TwitterAPI==2.5.9']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CONSUMER_KEY = 'consumer_key'

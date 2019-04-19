@@ -5,6 +5,8 @@
   "requirements": [
     "py-canary==0.5.0"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "ffmpeg"
+  ],
   "codeowners": []
 }

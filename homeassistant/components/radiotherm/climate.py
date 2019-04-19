@@ -14,8 +14,6 @@ from homeassistant.const import (
     STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['radiotherm==2.0.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FAN = 'fan'

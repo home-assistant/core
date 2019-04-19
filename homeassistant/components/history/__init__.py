@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'history'
-DEPENDENCIES = ['recorder', 'http']
-
 CONF_ORDER = 'use_include_order'
 
 CONFIG_SCHEMA = vol.Schema({

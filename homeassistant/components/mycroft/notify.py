@@ -3,8 +3,6 @@ import logging
 
 from homeassistant.components.notify import BaseNotificationService
 
-DEPENDENCIES = ['mycroft']
-
 
 _LOGGER = logging.getLogger(__name__)
 

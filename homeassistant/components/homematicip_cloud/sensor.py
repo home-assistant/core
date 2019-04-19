@@ -9,8 +9,6 @@ from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['homematicip_cloud']
-
 ATTR_TEMPERATURE_OFFSET = 'temperature_offset'
 ATTR_WIND_DIRECTION = 'wind_direction'
 ATTR_WIND_DIRECTION_VARIATION = 'wind_direction_variation_in_degree'
@@ -28,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         AsyncHeatingThermostat, AsyncHeatingThermostatCompact,
         AsyncTemperatureHumiditySensorWithoutDisplay,
         AsyncTemperatureHumiditySensorDisplay, AsyncMotionDetectorIndoor,
-        AsyncTemperatureHumiditySensorOutdoor,
+        AsyncMotionDetectorOutdoor, AsyncTemperatureHumiditySensorOutdoor,
         AsyncMotionDetectorPushButton, AsyncLightSensor,
         AsyncPlugableSwitchMeasuring, AsyncBrandSwitchMeasuring,
         AsyncFullFlushSwitchMeasuring, AsyncWeatherSensor,
@@ -49,6 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
         if isinstance(device, (AsyncMotionDetectorIndoor,
+                               AsyncMotionDetectorOutdoor,
                                AsyncMotionDetectorPushButton,
                                AsyncWeatherSensor,
                                AsyncWeatherSensorPlus,

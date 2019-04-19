@@ -27,8 +27,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['async-upnp-client==0.14.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 DLNA_DMR_DATA = 'dlna_dmr'

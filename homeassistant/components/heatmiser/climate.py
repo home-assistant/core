@@ -10,8 +10,6 @@ from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_PORT, CONF_NAME, CONF_ID)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['heatmiserV3==0.9.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IPADDRESS = 'ipaddress'

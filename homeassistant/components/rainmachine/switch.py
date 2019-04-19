@@ -12,8 +12,6 @@ from . import (
     DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, PROGRAM_UPDATE_TOPIC,
     ZONE_UPDATE_TOPIC, RainMachineEntity)
 
-DEPENDENCIES = ['rainmachine']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_NEXT_RUN = 'next_run'

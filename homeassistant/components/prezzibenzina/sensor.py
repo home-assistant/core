@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['prezzibenzina-py==1.1.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FUEL = 'fuel'

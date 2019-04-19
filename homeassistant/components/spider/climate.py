@@ -10,8 +10,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DOMAIN as SPIDER_DOMAIN
 
-DEPENDENCIES = ['spider']
-
 FAN_LIST = [
     'Auto',
     'Low',

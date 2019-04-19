@@ -8,7 +8,7 @@ import requests
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.exceptions import PlatformNotReady
 
-DEPENDENCIES = ['wemo']
+from . import SUBSCRIPTION_REGISTRY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class WemoBinarySensor(BinarySensorDevice):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = self.hass.components.wemo.SUBSCRIPTION_REGISTRY
+        registry = SUBSCRIPTION_REGISTRY
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 

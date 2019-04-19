@@ -14,7 +14,8 @@ from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.components import websocket_api
 from homeassistant.components.alexa import smart_home as alexa_sh
-from homeassistant.components.google_assistant import smart_home as google_sh
+from homeassistant.components.google_assistant import (
+    const as google_const)
 
 from .const import (
     DOMAIN, REQUEST_TIMEOUT, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
@@ -105,6 +106,8 @@ async def async_setup(hass):
             (400, "User does not exist."),
         auth.UserNotConfirmed:
             (400, 'Email not confirmed.'),
+        auth.UserExists:
+            (400, 'An account with the given email already exists.'),
         auth.Unauthenticated:
             (401, 'Authentication failed.'),
         auth.PasswordChangeRequired:
@@ -413,7 +416,7 @@ def _account_data(cloud):
         'cloud': cloud.iot.state,
         'prefs': client.prefs.as_dict(),
         'google_entities': client.google_user_config['filter'].config,
-        'google_domains': list(google_sh.DOMAIN_TO_GOOGLE_TYPES),
+        'google_domains': list(google_const.DOMAIN_TO_GOOGLE_TYPES),
         'alexa_entities': client.alexa_config.should_expose.config,
         'alexa_domains': list(alexa_sh.ENTITY_ADAPTERS),
         'remote_domain': remote.instance_domain,

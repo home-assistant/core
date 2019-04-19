@@ -25,7 +25,6 @@ from .ingress import async_setup_ingress
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'hassio'
-DEPENDENCIES = ['http']
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
