@@ -91,11 +91,3 @@ def validate(integrations: Dict[str, Integration], config):
             continue
 
         validate_services(integration)
-
-        # check that all referenced dependencies exist
-        for dep in integration.manifest['dependencies']:
-            if dep not in integrations:
-                integration.add_error(
-                    'dependencies',
-                    "Dependency {} does not exist"
-                )
