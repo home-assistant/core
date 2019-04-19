@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -75,6 +76,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     hass.async_create_task(async_load_platform(
         hass, SWITCH_DOMAIN, DOMAIN, None, config))
 
+    @callback
     def device_updates(timestamp: Optional[datetime]) -> None:
         """Use for updating the device data from the queue."""
         if v2bridge.running:
