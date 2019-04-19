@@ -6,9 +6,9 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PINMODE = 'pinmode'
+CONF_PIN_MODE = 'pin_mode'
 DOMAIN = 'orangepi_gpio'
-PINMODES = ['pc', 'zeroplus', 'zeroplus2', 'deo', 'neocore2']
+PIN_MODES = ['pc', 'zeroplus', 'zeroplus2', 'deo', 'neocore2']
 
 
 def setup(hass, config):
