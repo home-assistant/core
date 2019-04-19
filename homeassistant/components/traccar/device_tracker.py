@@ -132,8 +132,8 @@ class TraccarScanner:
 
     async def import_device_data(self):
         """Import device data from Traccar."""
-        for device_uniqueId in self._api.device_info:
-            device_info = self._api.device_info[device_uniqueId]
+        for device_unique_id in self._api.device_info:
+            device_info = self._api.device_info[device_unique_id]
             device = None
             attr = {}
             attr[ATTR_TRACKER] = 'traccar'
