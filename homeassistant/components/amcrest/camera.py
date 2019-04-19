@@ -51,18 +51,20 @@ _SRV_CBW_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(_ATTR_COLOR_BW): vol.In(_CBW),
 })
 
-CAMERA_SERVICES = (
-    (_SRV_EN_REC, CAMERA_SERVICE_SCHEMA, 'async_enable_recording'),
-    (_SRV_DS_REC, CAMERA_SERVICE_SCHEMA, 'async_disable_recording'),
-    (_SRV_EN_AUD, CAMERA_SERVICE_SCHEMA, 'async_enable_audio'),
-    (_SRV_DS_AUD, CAMERA_SERVICE_SCHEMA, 'async_disable_audio'),
-    (_SRV_EN_MOT_REC, CAMERA_SERVICE_SCHEMA, 'async_enable_motion_recording'),
-    (_SRV_DS_MOT_REC, CAMERA_SERVICE_SCHEMA, 'async_disable_motion_recording'),
-    (_SRV_GOTO, _SRV_GOTO_SCHEMA, 'async_goto_preset'),
-    (_SRV_CBW, _SRV_CBW_SCHEMA, 'async_set_color_bw'),
-    (_SRV_TOUR_ON, CAMERA_SERVICE_SCHEMA, 'async_start_tour'),
-    (_SRV_TOUR_OFF, CAMERA_SERVICE_SCHEMA, 'async_stop_tour'),
-)
+CAMERA_SERVICES = {
+    _SRV_EN_REC: (CAMERA_SERVICE_SCHEMA, 'async_enable_recording', ()),
+    _SRV_DS_REC: (CAMERA_SERVICE_SCHEMA, 'async_disable_recording', ()),
+    _SRV_EN_AUD: (CAMERA_SERVICE_SCHEMA, 'async_enable_audio', ()),
+    _SRV_DS_AUD: (CAMERA_SERVICE_SCHEMA, 'async_disable_audio', ()),
+    _SRV_EN_MOT_REC: (
+        CAMERA_SERVICE_SCHEMA, 'async_enable_motion_recording', ()),
+    _SRV_DS_MOT_REC: (
+        CAMERA_SERVICE_SCHEMA, 'async_disable_motion_recording', ()),
+    _SRV_GOTO: (_SRV_GOTO_SCHEMA, 'async_goto_preset', (_ATTR_PRESET,)),
+    _SRV_CBW: (_SRV_CBW_SCHEMA, 'async_set_color_bw', (_ATTR_COLOR_BW,)),
+    _SRV_TOUR_ON: (CAMERA_SERVICE_SCHEMA, 'async_start_tour', ()),
+    _SRV_TOUR_OFF: (CAMERA_SERVICE_SCHEMA, 'async_stop_tour', ()),
+}
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
@@ -215,11 +217,11 @@ class AmcrestCam(Camera):
 
     async def async_added_to_hass(self):
         """Subscribe to signals and add camera to list."""
-        for service, _, service_method in CAMERA_SERVICES:
+        for service, params in CAMERA_SERVICES.items():
             self._unsub_dispatcher.append(async_dispatcher_connect(
                 self.hass,
                 service_signal(service, self.entity_id),
-                getattr(self, service_method)))
+                getattr(self, params[1])))
         self.hass.data[DATA_AMCREST]['cameras'].append(self.entity_id)
 
     async def async_will_remove_from_hass(self):
@@ -275,47 +277,45 @@ class AmcrestCam(Camera):
 
     # Additional Amcrest Camera service methods
 
-    async def async_enable_recording(self, call_data):
+    async def async_enable_recording(self):
         """Call the job and enable recording."""
         await self.hass.async_add_executor_job(self._enable_recording, True)
 
-    async def async_disable_recording(self, call_data):
+    async def async_disable_recording(self):
         """Call the job and disable recording."""
         await self.hass.async_add_executor_job(self._enable_recording, False)
 
-    async def async_enable_audio(self, call_data):
+    async def async_enable_audio(self):
         """Call the job and enable audio."""
         await self.hass.async_add_executor_job(self._enable_audio, True)
 
-    async def async_disable_audio(self, call_data):
+    async def async_disable_audio(self):
         """Call the job and disable audio."""
         await self.hass.async_add_executor_job(self._enable_audio, False)
 
-    async def async_enable_motion_recording(self, call_data):
+    async def async_enable_motion_recording(self):
         """Call the job and enable motion recording."""
         await self.hass.async_add_executor_job(self._enable_motion_recording,
                                                True)
 
-    async def async_disable_motion_recording(self, call_data):
+    async def async_disable_motion_recording(self):
         """Call the job and disable motion recording."""
         await self.hass.async_add_executor_job(self._enable_motion_recording,
                                                False)
 
-    async def async_goto_preset(self, call_data):
+    async def async_goto_preset(self, preset):
         """Call the job and move camera to preset position."""
-        await self.hass.async_add_executor_job(self._goto_preset,
-                                               call_data[_ATTR_PRESET])
+        await self.hass.async_add_executor_job(self._goto_preset, preset)
 
-    async def async_set_color_bw(self, call_data):
+    async def async_set_color_bw(self, color_bw):
         """Call the job and set camera color mode."""
-        await self.hass.async_add_executor_job(self._set_color_bw,
-                                               call_data[_ATTR_COLOR_BW])
+        await self.hass.async_add_executor_job(self._set_color_bw, color_bw)
 
-    async def async_start_tour(self, call_data):
+    async def async_start_tour(self):
         """Call the job and start camera tour."""
         await self.hass.async_add_executor_job(self._start_tour, True)
 
-    async def async_stop_tour(self, call_data):
+    async def async_stop_tour(self):
         """Call the job and stop camera tour."""
         await self.hass.async_add_executor_job(self._start_tour, False)
 
