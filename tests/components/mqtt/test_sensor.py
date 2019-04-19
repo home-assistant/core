@@ -384,6 +384,27 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     assert '100' == state.attributes.get('val')
 
 
+async def test_setting_attribute_with_template(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    assert await async_setup_component(hass, sensor.DOMAIN, {
+        sensor.DOMAIN: {
+            'platform': 'mqtt',
+            'name': 'test',
+            'state_topic': 'test-topic',
+            'json_attributes_topic': 'attr-topic',
+            'json_attributes_template': "{{ value_json['Timer1'] | tojson }}"
+        }
+    })
+
+    async_fire_mqtt_message(hass, 'attr-topic', json.dumps(
+        {"Timer1": {"Arm": 0, "Time": "22:18"}}))
+    await hass.async_block_till_done()
+    state = hass.states.get('sensor.test')
+
+    assert 0 == state.attributes.get('Arm')
+    assert '22:18' == state.attributes.get('Time')
+
+
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
     assert await async_setup_component(hass, sensor.DOMAIN, {
