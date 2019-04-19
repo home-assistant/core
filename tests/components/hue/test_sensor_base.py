@@ -391,7 +391,7 @@ async def test_sensors(hass, mock_bridge):
     assert len(hass.states.async_all()) == 6
 
     presence_sensor_1 = hass.states.get(
-        'binary_sensor.living_room_sensor_presence')
+        'binary_sensor.living_room_sensor_motion')
     light_level_sensor_1 = hass.states.get(
         'sensor.living_room_sensor_light_level')
     temperature_sensor_1 = hass.states.get(
@@ -406,7 +406,7 @@ async def test_sensors(hass, mock_bridge):
     assert temperature_sensor_1.name == 'Living room sensor temperature'
 
     presence_sensor_2 = hass.states.get(
-        'binary_sensor.kitchen_sensor_presence')
+        'binary_sensor.kitchen_sensor_motion')
     light_level_sensor_2 = hass.states.get(
         'sensor.kitchen_sensor_light_level')
     temperature_sensor_2 = hass.states.get(
@@ -459,7 +459,7 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     assert len(mock_bridge.mock_requests) == 2
     assert len(hass.states.async_all()) == 9
 
-    presence = hass.states.get('binary_sensor.bedroom_sensor_presence')
+    presence = hass.states.get('binary_sensor.bedroom_sensor_motion')
     assert presence is not None
     assert presence.state == 'on'
     temperature = hass.states.get('sensor.bedroom_sensor_temperature')
