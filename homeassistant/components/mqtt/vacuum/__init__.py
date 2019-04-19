@@ -2,7 +2,7 @@
 Support for MQTT vacuums.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mqtt/
+https://www.home-assistant.io/components/vacuum.mqtt/
 """
 import logging
 

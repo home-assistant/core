@@ -1,4 +1,4 @@
-"""The tests for the Mqtt vacuum platform."""
+"""The tests for the Legacy Mqtt vacuum platform."""
 import json
 
 import pytest
@@ -224,7 +224,7 @@ async def test_commands_without_supported_features(hass, mock_publish):
 
 
 async def test_attributes_without_supported_features(hass, mock_publish):
-    """Test commands which are not supported by the vacuum."""
+    """Test attributes which are not supported by the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
     services = mqttvacuum.STRING_TO_SERVICE["turn_on"]
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \

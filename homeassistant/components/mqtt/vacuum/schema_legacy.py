@@ -132,7 +132,7 @@ async def async_setup_entity_legacy(config, async_add_entities,
 # pylint: disable=too-many-ancestors
 class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                  MqttEntityDeviceInfo, VacuumDevice):
-    """Representation of a MQTT-controlled vacuum."""
+    """Representation of a MQTT-controlled legacy vacuum."""
 
     def __init__(self, config, config_entry, discovery_info):
         """Initialize the vacuum."""

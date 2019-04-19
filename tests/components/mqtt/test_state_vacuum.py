@@ -1,4 +1,4 @@
-"""The tests for the Mqtt vacuum platform."""
+"""The tests for the State vacuum Mqtt platform."""
 import json
 
 import pytest
@@ -60,7 +60,7 @@ async def test_default_supported_features(hass, mock_publish):
 
 
 async def test_all_commands(hass, mock_publish):
-    """Test simple commands to the vacuum."""
+    """Test simple commands send to the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
         services_to_strings(
@@ -254,7 +254,7 @@ async def test_status(hass, mock_publish):
 
 
 async def test_no_fan_vacuum(hass, mock_publish):
-    """Test status updates from the vacuum."""
+    """Test status updates from the vacuum when fan is not supported."""
     config = deepcopy(DEFAULT_CONFIG)
     del(config[mqttvacuum.CONF_FAN_SPEED_LIST])
     config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \

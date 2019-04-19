@@ -124,7 +124,7 @@ async def async_setup_entity_state(config, async_add_entities,
 # pylint: disable=too-many-ancestors
 class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                       MqttEntityDeviceInfo, StateVacuumDevice):
-    """Representation of a MQTT-controlled vacuum."""
+    """Representation of a MQTT-controlled state vacuum."""
 
     def __init__(self, config, config_entry, discovery_info):
         """Initialize the vacuum."""
@@ -198,7 +198,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         @callback
         def state_message_received(msg):
-            """Handle new MQTT message."""
+            """Handle state MQTT message."""
             payload = msg.payload
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
@@ -262,7 +262,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         return self._supported_features
 
     async def async_start(self):
-        """Turn the vacuum on."""
+        """Start the vacuum."""
         if self.supported_features & SUPPORT_START == 0:
             return None
         mqtt.async_publish(self.hass, self._command_topic,
@@ -271,7 +271,7 @@ class MqttStateVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                            self._config[CONF_RETAIN])
 
     async def async_pause(self):
-        """Turn the vacuum off."""
+        """Pause the vacuum."""
         if self.supported_features & SUPPORT_PAUSE == 0:
             return None
         mqtt.async_publish(self.hass, self._command_topic,
