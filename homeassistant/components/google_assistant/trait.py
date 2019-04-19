@@ -144,8 +144,6 @@ class BrightnessTrait(_Trait):
         """Test if state is supported."""
         if domain == light.DOMAIN:
             return features & light.SUPPORT_BRIGHTNESS
-        if domain == media_player.DOMAIN:
-            return features & media_player.SUPPORT_VOLUME_SET
 
         return False
 
@@ -163,13 +161,6 @@ class BrightnessTrait(_Trait):
             if brightness is not None:
                 response['brightness'] = int(100 * (brightness / 255))
 
-        elif domain == media_player.DOMAIN:
-            level = self.state.attributes.get(
-                media_player.ATTR_MEDIA_VOLUME_LEVEL)
-            if level is not None:
-                # Convert 0.0-1.0 to 0-255
-                response['brightness'] = int(level * 100)
-
         return response
 
     async def execute(self, command, data, params, challenge):
@@ -182,14 +173,6 @@ class BrightnessTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
                 }, blocking=True, context=data.context)
-        elif domain == media_player.DOMAIN:
-            await self.hass.services.async_call(
-                media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_MEDIA_VOLUME_LEVEL:
-                    params['brightness'] / 100
-                }, blocking=True, context=data.context)
-
 
 
 @register_trait
