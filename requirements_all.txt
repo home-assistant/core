@@ -139,6 +139,8 @@ aiolifx==0.6.7
 # homeassistant.components.lifx
 aiolifx_effects==0.2.1
 
+
+
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
 
@@ -1761,6 +1763,9 @@ waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
 watchdog==0.8.3
+
+# homeassistant.components.fortios
+fortiosapi==0.10.5
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
