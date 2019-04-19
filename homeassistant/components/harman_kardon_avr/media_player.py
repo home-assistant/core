@@ -208,7 +208,7 @@ class HkAvrDevice(MediaPlayerDevice):
         else:
             _steps = 5
 
-        for i in range(_steps):
+        for _ in range(_steps):
             _func()
             time.sleep(self._key_interval)
 
