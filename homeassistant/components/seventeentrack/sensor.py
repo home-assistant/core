@@ -74,7 +74,7 @@ async def async_setup_platform(
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     data = SeventeenTrackData(
-        client, hass, async_add_entities, scan_interval,
+        hass, client, async_add_entities, scan_interval,
         config[CONF_SHOW_ARCHIVED], config[CONF_SHOW_DELIVERED])
     await data.async_update()
 
@@ -262,7 +262,7 @@ class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
     def __init__(
-            self, client, hass, async_add_entities, scan_interval,
+            self, hass, client, async_add_entities, scan_interval,
             show_archived, show_delivered):
         """Initialize."""
         self._async_add_entities = async_add_entities
