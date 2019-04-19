@@ -24,7 +24,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     new_devices = {}
     hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})
 
-    async def async_stop(event):
+    def handle_stop(event):
         """Try to shut down the bluetooth child process nicely."""
         # These should never be unset at the point this runs, but just for
         # safety's sake, use `get`.
@@ -32,7 +32,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         if adapter is not None:
             adapter.kill()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
     def see_device(address, name, new_device=False):
         """Mark a device as seen."""
