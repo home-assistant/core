@@ -463,7 +463,7 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self.is_tilt_closed():
             return self.async_open_cover_tilt(**kwargs)
         return self.async_close_cover_tilt(**kwargs)
-                
+
     def is_tilt_closed(self):
         """Return if the cover is tilted closed."""
         return self._tilt_value == \
