@@ -46,12 +46,12 @@ def get_scanner(hass, config):
 
     try:
         fgt.tokenlogin(host, token, verify_ssl)
-    except Exception as ex: # pylint: disable=broad-except
+    except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error("Unable login to fgt Exception : %s", ex)
 
     try:
         scanner = FortiOSDeviceScanner(fgt)
-    except Exception as ex: # pylint: disable=broad-except
+    except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error("FortiOS get_scanner Initialize failed: %s", ex)
         return False
 
@@ -115,7 +115,7 @@ class FortiOSDeviceScanner(DeviceScanner):
                     name = client['host']['name']
                     _LOGGER.debug("get_device_name name=%s", name)
                     return name
-                except Exception as ex: # pylint: disable=broad-except
+                except Exception as ex:  # pylint: disable=broad-except
                     _LOGGER.error("No name found in clients_json: %s", ex)
                     return None
 
