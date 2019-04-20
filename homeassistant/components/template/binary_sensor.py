@@ -1,4 +1,9 @@
-"""Support for exposing a templated binary sensor."""
+"""
+Support for exposing a templated binary sensor.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor.template/
+"""
 import logging
 
 import voluptuous as vol
@@ -8,14 +13,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
     DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
+    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START, MATCH_ALL)
-from homeassistant.exceptions import TemplateError
+    CONF_SENSORS, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import (
-    async_track_state_change, async_track_same_state)
+from homeassistant.helpers.event import async_call_later
+from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +31,6 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DELAY_ON):
         vol.All(cv.time_period, cv.positive_timedelta),
@@ -47,46 +50,14 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     for device, device_config in config[CONF_SENSORS].items():
         value_template = device_config[CONF_VALUE_TEMPLATE]
+        value_template.hass = hass
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        if icon_template:
+            icon_template.hass = hass
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
-        entity_ids = set()
-        manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
-
-        invalid_templates = []
-
-        for tpl_name, template in (
-                (CONF_VALUE_TEMPLATE, value_template),
-                (CONF_ICON_TEMPLATE, icon_template),
-                (CONF_ENTITY_PICTURE_TEMPLATE, entity_picture_template),
-        ):
-            if template is None:
-                continue
-            template.hass = hass
-
-            if manual_entity_ids is not None:
-                continue
-
-            template_entity_ids = template.extract_entities()
-            if template_entity_ids == MATCH_ALL:
-                entity_ids = MATCH_ALL
-                # Cut off _template from name
-                invalid_templates.append(tpl_name[:-9])
-            elif entity_ids != MATCH_ALL:
-                entity_ids |= set(template_entity_ids)
-
-        if manual_entity_ids is not None:
-            entity_ids = manual_entity_ids
-        elif entity_ids != MATCH_ALL:
-            entity_ids = list(entity_ids)
-
-        if invalid_templates:
-            _LOGGER.warning(
-                'Template binary sensor %s has no entity ids configured to'
-                ' track nor were we able to extract the entities to track'
-                ' from the %s template(s). This entity will only be able'
-                ' to be updated manually.',
-                device, ', '.join(invalid_templates))
+        if entity_picture_template:
+            entity_picture_template.hass = hass
 
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
@@ -96,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         sensors.append(
             BinarySensorTemplate(
                 hass, device, friendly_name, device_class, value_template,
-                icon_template, entity_picture_template, entity_ids,
+                icon_template, entity_picture_template,
                 delay_on, delay_off)
             )
     if not sensors:
@@ -107,47 +78,64 @@ async def async_setup_platform(hass, config, async_add_entities,
     return True
 
 
-class BinarySensorTemplate(BinarySensorDevice):
+class BinarySensorTemplate(BinarySensorDevice, TemplateEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
     def __init__(self, hass, device, friendly_name, device_class,
                  value_template, icon_template, entity_picture_template,
-                 entity_ids, delay_on, delay_off):
+                 delay_on, delay_off):
         """Initialize the Template binary sensor."""
+        super().__init__()
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device, hass=hass)
         self._name = friendly_name
         self._device_class = device_class
-        self._template = value_template
         self._state = None
-        self._icon_template = icon_template
-        self._entity_picture_template = entity_picture_template
         self._icon = None
         self._entity_picture = None
-        self._entities = entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
+        self._delay_cancel = None
 
-    async def async_added_to_hass(self):
-        """Register callbacks."""
+        self.add_template_attribute(
+            '_state', value_template,
+            cv.boolean_true,
+            self._update_state)
+        if icon_template is not None:
+            self.add_template_attribute(
+                '_icon', icon_template,
+                vol.Or(cv.whitespace, cv.icon))
+        if entity_picture_template is not None:
+            self.add_template_attribute(
+                '_entity_picture', entity_picture_template)
+
+    def _update_state(self, state):
+        if self._delay_cancel:
+            self._delay_cancel()
+            self._delay_cancel = None
+
+        if state == self._state:
+            return
+
         @callback
-        def template_bsensor_state_listener(entity, old_state, new_state):
-            """Handle the target device state changes."""
-            self.async_check_state()
+        def set_state(now):
+            """Set state of template binary sensor."""
+            self._state = state
+            self.async_schedule_update_ha_state()
 
-        @callback
-        def template_bsensor_startup(event):
-            """Update template on startup."""
-            if self._entities != MATCH_ALL:
-                # Track state change only for valid templates
-                async_track_state_change(
-                    self.hass, self._entities, template_bsensor_state_listener)
+        # state without delay
+        if (state is None or
+                (state and not self._delay_on) or
+                (not state and not self._delay_off)):
+            set_state(None)
+            return
 
-            self.async_check_state()
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_bsensor_startup)
+        delay = (self._delay_on if state else self._delay_off).seconds
+        # state with delay. Cancelled if template result changes.
+        self._delay_cancel = async_call_later(
+            self.hass, delay,
+            set_state)
 
     @property
     def name(self):
@@ -178,71 +166,3 @@ class BinarySensorTemplate(BinarySensorDevice):
     def should_poll(self):
         """No polling needed."""
         return False
-
-    @callback
-    def _async_render(self):
-        """Get the state of template."""
-        state = None
-        try:
-            state = (self._template.async_render().lower() == 'true')
-        except TemplateError as ex:
-            if ex.args and ex.args[0].startswith(
-                    "UndefinedError: 'None' has no attribute"):
-                # Common during HA startup - so just a warning
-                _LOGGER.warning("Could not render template %s, "
-                                "the state is unknown", self._name)
-                return
-            _LOGGER.error("Could not render template %s: %s", self._name, ex)
-
-        for property_name, template in (
-                ('_icon', self._icon_template),
-                ('_entity_picture', self._entity_picture_template)):
-            if template is None:
-                continue
-
-            try:
-                setattr(self, property_name, template.async_render())
-            except TemplateError as ex:
-                friendly_property_name = property_name[1:].replace('_', ' ')
-                if ex.args and ex.args[0].startswith(
-                        "UndefinedError: 'None' has no attribute"):
-                    # Common during HA startup - so just a warning
-                    _LOGGER.warning('Could not render %s template %s,'
-                                    ' the state is unknown.',
-                                    friendly_property_name, self._name)
-                else:
-                    _LOGGER.error('Could not render %s template %s: %s',
-                                  friendly_property_name, self._name, ex)
-                return state
-
-        return state
-
-    @callback
-    def async_check_state(self):
-        """Update the state from the template."""
-        state = self._async_render()
-
-        # return if the state don't change or is invalid
-        if state is None or state == self.state:
-            return
-
-        @callback
-        def set_state():
-            """Set state of template binary sensor."""
-            self._state = state
-            self.async_schedule_update_ha_state()
-
-        # state without delay
-        if (state and not self._delay_on) or \
-                (not state and not self._delay_off):
-            set_state()
-            return
-
-        period = self._delay_on if state else self._delay_off
-        async_track_same_state(
-            self.hass, period, set_state, entity_ids=self._entities,
-            async_check_same_func=lambda *args: self._async_render() == state)
-
-    async def async_update(self):
-        """Force update of the state from the template."""
-        self.async_check_state()
