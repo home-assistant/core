@@ -93,7 +93,6 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-
         _LOGGER.debug("get_device_name device=%s", device)
 
         device = device.lower()
