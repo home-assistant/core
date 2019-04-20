@@ -23,6 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_UPDATED = 'updated'
 ATTR_STATION = 'station'
+ATTR_DETAIL = 'alert detail'
+ATTR_TIME = 'alert time'
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = 'station'
@@ -143,9 +145,18 @@ class ECSensor(Entity):
         self.ec_data.update()
         self.ec_data.conditions.update(self.ec_data.alerts)
 
+        self._attr = {}
+
         sensor_data = self.ec_data.conditions.get(self.sensor_type)
         if isinstance(sensor_data, list):
-            self._state = ', '.join(sensor_data)
+            self._state = ' | '.join([str(s.get('title'))
+                                      for s in sensor_data])
+            self._attr.update({
+                ATTR_DETAIL: ' | '.join([str(s.get('detail'))
+                                         for s in sensor_data]),
+                ATTR_TIME: ' | '.join([str(s.get('date'))
+                                       for s in sensor_data])
+            })
         else:
             self._state = sensor_data
 
@@ -158,10 +169,10 @@ class ECSensor(Entity):
 
         hidden = bool(self._state is None or self._state == '')
 
-        self._attr = {
+        self._attr.update({
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_UPDATED: updated_local,
             ATTR_LOCATION: self.ec_data.conditions.get('location'),
             ATTR_STATION: self.ec_data.conditions.get('station'),
             ATTR_HIDDEN: hidden
-        }
+        })
