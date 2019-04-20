@@ -36,9 +36,9 @@ def get_scanner(hass, config):
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
     token = config[DOMAIN].get(CONF_TOKEN)
 
-    _LOGGER.debug("host : " + str(host))
-    _LOGGER.debug("verify_ssl : " + str(verify_ssl))
-    _LOGGER.debug("token : " + str(token))
+    _LOGGER.debug("host : %s", host)
+    _LOGGER.debug("verify_ssl : %s", verify_ssl)
+    _LOGGER.debug("token : %s", token)
 
     _LOGGER.debug('fortios, get_scanner')
 
@@ -85,9 +85,9 @@ class FortiOSDeviceScanner(DeviceScanner):
         self._clients = []
 
         if clients_json:
-            for p in clients_json['results']:
-                if p['last_seen'] < 180:
-                    self._clients.append(p['mac'].upper())
+            for client in clients_json['results']:
+                if client['last_seen'] < 180:
+                    self._clients.append(client['mac'].upper())
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -109,10 +109,10 @@ class FortiOSDeviceScanner(DeviceScanner):
             _LOGGER.error('get_device_name no json results')
             return None
 
-        for p in data['results']:
-            if p['mac'] == device:
+        for client in data['results']:
+            if client['mac'] == device:
                 try:
-                    name = p['host']['name']
+                    name = client['host']['name']
                     _LOGGER.debug("get_device_name name=%s", name)
                     return name
                 except Exception as e:
