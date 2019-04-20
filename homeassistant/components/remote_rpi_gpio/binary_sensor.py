@@ -1,54 +1,34 @@
 """Support for binary sensor using RPi GPIO."""
 import logging
 
-import voluptuous as vol
+import requests
 
 from homeassistant.components import remote_rpi_gpio
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import DEVICE_DEFAULT_NAME
-import homeassistant.helpers.config_validation as cv
+    BinarySensorDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ADDRESS = 'address'
-CONF_BOUNCETIME = 'bouncetime'
-CONF_INVERT_LOGIC = 'invert_logic'
-CONF_PORTS = 'ports'
-CONF_PULL_MODE = 'pull_mode'
-
-DEFAULT_BOUNCETIME = 50
-DEFAULT_INVERT_LOGIC = False
-DEFAULT_PULL_MODE = "UP"
-
 DEPENDENCIES = ['remote_rpi_gpio']
-
-_SENSORS_SCHEMA = vol.Schema({
-    cv.positive_int: cv.string,
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ADDRESS): cv.string,
-    vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
-    vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
-    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-    vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
-})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
-    address = config.get(CONF_ADDRESS)
-    pull_mode = config.get(CONF_PULL_MODE)
-    bouncetime = config.get(CONF_BOUNCETIME)
-    invert_logic = config.get(CONF_INVERT_LOGIC)
+    if discovery_info is None:
+        return
 
-    binary_sensors = []
-    ports = config.get('ports')
+    address = discovery_info['address']
+    pull_mode = discovery_info['pull_mode']
+    invert_logic = discovery_info['invert_logic']
+    bouncetime = discovery_info['bouncetime']
+
+    devices = []
+    ports = discovery_info['binary_sensors']
     for port_num, port_name in ports.items():
-        binary_sensors.append(RemoteRPiGPIOBinarySensor(
-            port_name, address, port_num, pull_mode, bouncetime, invert_logic))
-    add_entities(binary_sensors, False)
+        new_sensor = RemoteRPiGPIOBinarySensor(
+            port_name, address, port_num, pull_mode, bouncetime, invert_logic)
+        devices.append(new_sensor)
+    add_entities(devices, True)
 
 
 class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
@@ -57,13 +37,13 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
     def __init__(self, name, address, port, pull_mode,
                  bouncetime, invert_logic):
         """Initialize the RPi binary sensor."""
-        self._name = name or DEVICE_DEFAULT_NAME
+        self._name = name
         self._address = address
         self._port = port
         self._pull_mode = pull_mode
         self._bouncetime = bouncetime
         self._invert_logic = invert_logic
-        self._state = None
+        self._state = False
         self._button = None
 
         try:
@@ -78,7 +58,7 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
             self._state = remote_rpi_gpio.read_input(self._button)
             self.schedule_update_ha_state()
 
-        self._state = remote_rpi_gpio.read_input(self._button)
+#        self._state = remote_rpi_gpio.read_input(self._button)
 
         self._button.when_released = read_gpio
         self._button.when_pressed = read_gpio
@@ -98,7 +78,14 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
         """Return the state of the entity."""
         return self._state != self._invert_logic
 
+    @property
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
+        return None
+
     def update(self):
         """Update the GPIO state."""
-        self._state = remote_rpi_gpio.read_input(self._button)
-        self.schedule_update_ha_state()
+        try:
+            self._state = remote_rpi_gpio.read_input(self._button)
+        except requests.exceptions.ConnectionError:
+            return
