@@ -55,8 +55,6 @@ def get_scanner(hass, config):
         _LOGGER.error("FortiOS get_scanner Initialize failed: %s", ex)
         return False
 
-    _LOGGER.debug('fortios, get_scanner, scanner created')
-
     return scanner
 
 
@@ -77,7 +75,6 @@ class FortiOSDeviceScanner(DeviceScanner):
         Ensure the information from the FortiOS is up to date.
         Retrieve data from FortiOS and return parsed result.
         """
-        _LOGGER.debug('_update(self)')
 
         clients_json = self._fgt.monitor('user/device/select', '')
         self._clients_json = clients_json
@@ -91,13 +88,11 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
-        _LOGGER.debug('scan_devices(self)')
         self._update()
         return self._clients
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        _LOGGER.debug('get_device_name(self, device)')
 
         _LOGGER.debug("get_device_name device=%s", device)
 
