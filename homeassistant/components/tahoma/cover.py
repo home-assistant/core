@@ -163,7 +163,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
             self.apply_action('setPosition', kwargs.get(ATTR_POSITION, 0))
         else:
-            self.apply_action('setPosition', 
+            self.apply_action('setPosition',
                               100 - kwargs.get(ATTR_POSITION, 0))
 
     @property
