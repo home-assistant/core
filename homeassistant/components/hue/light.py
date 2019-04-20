@@ -341,34 +341,23 @@ class HueLight(Light):
         """Turn the specified or all lights on."""
         command = {'on': True}
 
-        def get_xy_color(attr_hs_color, command):
-            if self.is_osram:
-                command['hue'] = int(attr_hs_color[0] / 360 * 65535)
-                command['sat'] = int(attr_hs_color[1] / 100 * 255)
-            else:
-                # Philips hue bulb models respond differently to hue/sat
-                # requests, so we convert to XY first to ensure a consistent
-                # color.
-                xy_color = color.color_hs_to_xy(*attr_hs_color, self.gamut)
-                command['xy'] = xy_color
-            return command
-
         if ATTR_TRANSITION in kwargs:
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_HS_COLOR in kwargs:
-            command = get_xy_color(kwargs[ATTR_HS_COLOR], command)
-
+            if self.is_osram:
+                command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+                command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            else:
+                # Philips hue bulb models respond differently to hue/sat
+                # requests, so we convert to XY first to ensure a consistent
+                # color.
+                xy_color = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR],
+                                                self.gamut)
+                command['xy'] = xy_color
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
-            support = SUPPORT_HUE.get(self.light.type, SUPPORT_HUE_EXTENDED)
-            ct_supported = support & SUPPORT_COLOR_TEMP != 0
-            if ct_supported:
-                command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
-            else:
-                # Default white value based off of Hue default.
-                default_white_xy = (0.308, 0.3274)
-                command = get_xy_color(default_white_xy, command)
+            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         if ATTR_BRIGHTNESS in kwargs:
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
