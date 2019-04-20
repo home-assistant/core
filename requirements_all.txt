@@ -139,8 +139,6 @@ aiolifx==0.6.7
 # homeassistant.components.lifx
 aiolifx_effects==0.2.1
 
-
-
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
 
@@ -439,6 +437,9 @@ flux_led==0.22
 
 # homeassistant.components.foobot
 foobot_async==0.3.1
+
+# homeassistant.components.fortios
+fortiosapi==0.10.5
 
 # homeassistant.components.free_mobile
 freesms==0.1.2
@@ -1763,9 +1764,6 @@ waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
 watchdog==0.8.3
-
-# homeassistant.components.fortios
-fortiosapi==0.10.5
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
