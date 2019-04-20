@@ -164,11 +164,12 @@ class LightGroup(light.Light):
             data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
             for entity_id in list(self._entity_ids):
                 state = self.hass.states.get(entity_id)
-                support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
-                # Only pass color temperature to supported entity_id's
-                if support & SUPPORT_COLOR_TEMP == 0:
-                    emulate_color_temp_entity_ids.append(entity_id)
-                    data[ATTR_ENTITY_ID].remove(entity_id)
+                if state:
+                    support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+                    # Only pass color temperature to supported entity_id's
+                    if support & SUPPORT_COLOR_TEMP == 0:
+                        emulate_color_temp_entity_ids.append(entity_id)
+                        data[ATTR_ENTITY_ID].remove(entity_id)
 
         if ATTR_WHITE_VALUE in kwargs:
             data[ATTR_WHITE_VALUE] = kwargs[ATTR_WHITE_VALUE]
@@ -182,7 +183,7 @@ class LightGroup(light.Light):
         if ATTR_FLASH in kwargs:
             data[ATTR_FLASH] = kwargs[ATTR_FLASH]
 
-        if len(emulate_color_temp_entity_ids) > 0:
+        if emulate_color_temp_entity_ids:
             emulate_color_temp_data = data.copy()
             temp_k = color_util.color_temperature_mired_to_kelvin(
                 emulate_color_temp_data[ATTR_COLOR_TEMP])
