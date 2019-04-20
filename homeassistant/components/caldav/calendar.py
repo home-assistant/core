@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     password = config.get(CONF_PASSWORD)
 
     client = caldav.DAVClient(url, None, username, password,
-                              ssl_verify_cert=config[CONF_VERIFY_SSL])
+                              ssl_verify_cert=config.get(CONF_VERIFY_SSL))
 
     calendars = client.principal().calendars()
 
