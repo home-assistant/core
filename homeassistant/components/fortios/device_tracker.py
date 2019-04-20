@@ -63,7 +63,6 @@ class FortiOSDeviceScanner(DeviceScanner):
 
     def __init__(self, fgt) -> None:
         """Initialize the scanner."""
-        _LOGGER.debug('__init__')
         self._clients = {}
         self._clients_json = {}
         self._fgt = fgt
@@ -75,7 +74,6 @@ class FortiOSDeviceScanner(DeviceScanner):
         Ensure the information from the FortiOS is up to date.
         Retrieve data from FortiOS and return parsed result.
         """
-
         clients_json = self._fgt.monitor('user/device/select', '')
         self._clients_json = clients_json
 
