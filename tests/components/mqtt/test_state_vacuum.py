@@ -29,7 +29,7 @@ STATE_TOPIC = 'vacuum/state'
 
 DEFAULT_CONFIG = {
     CONF_PLATFORM: 'mqtt',
-    CONF_COMPONENT: 'statevacuum',
+    CONF_COMPONENT: 'state',
     CONF_NAME: 'mqtttest',
     CONF_COMMAND_TOPIC: COMMAND_TOPIC,
     mqttvacuum.CONF_SEND_COMMAND_TOPIC: SEND_COMMAND_TOPIC,
@@ -397,7 +397,7 @@ async def test_discovery_removal_vacuum(hass, mock_publish):
     data = (
         '{ "name": "Beer",'
         '  "command_topic": "test_topic",'
-        '  "component": "statevacuum" }'
+        '  "component": "state" }'
     )
 
     async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',
@@ -425,12 +425,12 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     data1 = (
         '{ "name": "Beer",'
         '  "command_topic": "test_topic#",'
-        ' "component": "statevacuum" }'
+        ' "component": "state" }'
     )
     data2 = (
         '{ "name": "Milk",'
         '  "command_topic": "test_topic",'
-        ' "component": "statevacuum" }'
+        ' "component": "state" }'
     )
 
     async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',
@@ -460,12 +460,12 @@ async def test_discovery_update_vacuum(hass, mock_publish):
     data1 = (
         '{ "name": "Beer",'
         '  "command_topic": "test_topic",'
-        '"component": "statevacuum" }'
+        '"component": "state" }'
     )
     data2 = (
         '{ "name": "Milk",'
         '  "command_topic": "test_topic",'
-        '  "component": "statevacuum"}'
+        '  "component": "state"}'
     )
 
     async_fire_mqtt_message(hass, 'homeassistant/vacuum/bla/config',

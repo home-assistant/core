@@ -51,8 +51,8 @@ def strings_to_services(strings, string_to_service):
 
 
 MQTT_VACUUM_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMPONENT, default='legacy'): vol.All(
-        vol.Lower, vol.Any('legacy', 'statevacuum'))
+    vol.Optional(CONF_COMPONENT, default=LEGACY): vol.All(
+        vol.Lower, vol.Any(LEGACY, STATE))
 })
 
 PLATFORM_SCHEMA = vol.All(MQTT_VACUUM_SCHEMA.extend({
