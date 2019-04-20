@@ -205,6 +205,7 @@ class PS4Device(MediaPlayerDevice):
 
     def get_title_data(self, title_id, name):
         """Get PS Store Data."""
+        from pyps4_homeassistant.errors import PSDataIncomplete
         app_name = None
         art = None
         try:
@@ -212,7 +213,7 @@ class PS4Device(MediaPlayerDevice):
                 name, title_id, self._region)
             app_name = title.name
             art = title.cover_art
-        except (AttributeError, TypeError):
+        except PSDataIncomplete:
             _LOGGER.error(
                 "Could not find data in region: %s for PS ID: %s",
                 self._region, title_id)
