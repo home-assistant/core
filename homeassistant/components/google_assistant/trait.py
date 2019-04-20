@@ -314,7 +314,7 @@ class ColorSettingTrait(_Trait):
 
         if features & light.SUPPORT_COLOR_TEMP:
             # Max Kelvin is Min Mireds K = 1000000 / mireds
-            # Min Kevin is Max Mireds K = 1000000 / mireds
+            # Min Kelvin is Max Mireds K = 1000000 / mireds
             response['colorTemperatureRange'] = {
                 'temperatureMaxK':
                 color_util.color_temperature_mired_to_kelvin(
