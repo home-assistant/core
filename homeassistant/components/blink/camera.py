@@ -7,8 +7,6 @@ from . import BLINK_DATA, DEFAULT_BRAND
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['blink']
-
 ATTR_VIDEO_CLIP = 'video'
 ATTR_IMAGE = 'image'
 

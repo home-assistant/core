@@ -28,8 +28,7 @@ def mock_MQTT():
         yield mock_MQTT
 
 
-@asyncio.coroutine
-def async_mock_mqtt_client(hass, config=None):
+async def async_mock_mqtt_client(hass, config=None):
     """Mock the MQTT paho client."""
     if config is None:
         config = {mqtt.CONF_BROKER: 'mock-broker'}
@@ -39,10 +38,11 @@ def async_mock_mqtt_client(hass, config=None):
         mock_client().subscribe.return_value = (0, 0)
         mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
-        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
+        result = await async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: config
         })
         assert result
+        await hass.async_block_till_done()
         return mock_client()
 
 

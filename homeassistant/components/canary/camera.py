@@ -13,8 +13,6 @@ from homeassistant.util import Throttle
 
 from . import DATA_CANARY, DEFAULT_TIMEOUT
 
-DEPENDENCIES = ['canary', 'ffmpeg']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'

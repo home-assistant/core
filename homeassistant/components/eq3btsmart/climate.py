@@ -13,8 +13,6 @@ from homeassistant.const import (
     TEMP_CELSIUS, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-eq3bt==0.1.9', 'construct==2.9.45']
-
 _LOGGER = logging.getLogger(__name__)
 
 STATE_BOOST = 'boost'

@@ -4,8 +4,6 @@ from homeassistant.loader import bind_hass
 
 from .const import DOMAIN, STEP_USER, STEPS
 
-DEPENDENCIES = ['auth', 'http']
-
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 

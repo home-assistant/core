@@ -18,8 +18,6 @@ import homeassistant.helpers.config_validation as cv
 
 ANDROIDTV_DOMAIN = 'androidtv'
 
-REQUIREMENTS = ['androidtv==0.0.14']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_ANDROIDTV = SUPPORT_PAUSE | SUPPORT_PLAY | \
@@ -294,12 +292,12 @@ class ADBDevice(MediaPlayerDevice):
     @adb_decorator()
     def media_previous_track(self):
         """Send previous track command (results in rewind)."""
-        self.aftv.media_previous()
+        self.aftv.media_previous_track()
 
     @adb_decorator()
     def media_next_track(self):
         """Send next track command (results in fast-forward)."""
-        self.aftv.media_next()
+        self.aftv.media_next_track()
 
     @adb_decorator()
     def adb_command(self, cmd):
@@ -324,11 +322,10 @@ class AndroidTVDevice(ADBDevice):
                          turn_off_command)
 
         self._device = None
-        self._muted = None
         self._device_properties = self.aftv.device_properties
-        self._unique_id = 'androidtv-{}-{}'.format(
-            name, self._device_properties['serialno'])
-        self._volume = None
+        self._is_volume_muted = None
+        self._unique_id = self._device_properties.get('serialno')
+        self._volume_level = None
 
     @adb_decorator(override_available=True)
     def update(self):
@@ -345,16 +342,16 @@ class AndroidTVDevice(ADBDevice):
         if not self._available:
             return
 
-        # Get the `state`, `current_app`, and `running_apps`.
-        state, self._current_app, self._device, self._muted, self._volume = \
-            self.aftv.update()
+        # Get the updated state and attributes.
+        state, self._current_app, self._device, self._is_volume_muted, \
+            self._volume_level = self.aftv.update()
 
         self._state = ANDROIDTV_STATES[state]
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._muted
+        return self._is_volume_muted
 
     @property
     def source(self):
@@ -374,7 +371,7 @@ class AndroidTVDevice(ADBDevice):
     @property
     def volume_level(self):
         """Return the volume level."""
-        return self._volume
+        return self._volume_level
 
     @adb_decorator()
     def media_stop(self):
@@ -389,12 +386,12 @@ class AndroidTVDevice(ADBDevice):
     @adb_decorator()
     def volume_down(self):
         """Send volume down command."""
-        self.aftv.volume_down()
+        self._volume_level = self.aftv.volume_down(self._volume_level)
 
     @adb_decorator()
     def volume_up(self):
         """Send volume up command."""
-        self.aftv.volume_up()
+        self._volume_level = self.aftv.volume_up(self._volume_level)
 
 
 class FireTVDevice(ADBDevice):

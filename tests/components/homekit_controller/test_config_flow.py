@@ -295,7 +295,7 @@ async def test_discovery_already_configured_config_change(hass):
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
 
-    assert conn.async_config_num_changed.call_args == mock.call(2)
+    assert conn.async_refresh_entity_map.call_args == mock.call(2)
 
 
 async def test_pair_unable_to_pair(hass):

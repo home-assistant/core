@@ -1,6 +1,6 @@
 """The tests for the Mqtt vacuum platform."""
+import copy
 import json
-
 import pytest
 
 from homeassistant.components import mqtt, vacuum
@@ -31,8 +31,8 @@ default_config = {
     mqttvacuum.CONF_CLEANING_TEMPLATE: '{{ value_json.cleaning }}',
     mqttvacuum.CONF_DOCKED_TOPIC: 'vacuum/state',
     mqttvacuum.CONF_DOCKED_TEMPLATE: '{{ value_json.docked }}',
-    mqttvacuum.CONF_STATE_TOPIC: 'vacuum/state',
-    mqttvacuum.CONF_STATE_TEMPLATE: '{{ value_json.state }}',
+    mqttvacuum.CONF_ERROR_TOPIC: 'vacuum/state',
+    mqttvacuum.CONF_ERROR_TEMPLATE: '{{ value_json.error }}',
     mqttvacuum.CONF_FAN_SPEED_TOPIC: 'vacuum/state',
     mqttvacuum.CONF_FAN_SPEED_TEMPLATE: '{{ value_json.fan_speed }}',
     mqttvacuum.CONF_SET_FAN_SPEED_TOPIC: 'vacuum/set_fan_speed',
@@ -130,6 +130,16 @@ async def test_all_commands(hass, mock_publish):
     await hass.async_block_till_done()
     mock_publish.async_publish.assert_called_once_with(
         'vacuum/send_command', '44 FE 93', 0, False)
+    mock_publish.async_publish.reset_mock()
+
+    common.send_command(hass, '44 FE 93', {"key": "value"},
+                        entity_id='vacuum.mqtttest')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert json.loads(mock_publish.async_publish.mock_calls[-1][1][1]) == {
+        "command": "44 FE 93",
+        "key": "value"
+    }
 
 
 async def test_status(hass, mock_publish):
@@ -177,6 +187,129 @@ async def test_status(hass, mock_publish):
     assert 'min' == state.attributes.get(ATTR_FAN_SPEED)
 
 
+async def test_status_battery(hass, mock_publish):
+    """Test status updates from the vacuum."""
+    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: default_config,
+    })
+
+    message = """{
+        "battery_level": 54
+    }"""
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+    assert 'mdi:battery-50' == \
+        state.attributes.get(ATTR_BATTERY_ICON)
+
+
+async def test_status_cleaning(hass, mock_publish):
+    """Test status updates from the vacuum."""
+    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: default_config,
+    })
+
+    message = """{
+        "cleaning": true
+    }"""
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+    assert STATE_ON == state.state
+
+
+async def test_status_docked(hass, mock_publish):
+    """Test status updates from the vacuum."""
+    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: default_config,
+    })
+
+    message = """{
+        "docked": true
+    }"""
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+    assert STATE_OFF == state.state
+
+
+async def test_status_charging(hass, mock_publish):
+    """Test status updates from the vacuum."""
+    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: default_config,
+    })
+
+    message = """{
+        "charging": true
+    }"""
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+    assert 'mdi:battery-outline' == \
+        state.attributes.get(ATTR_BATTERY_ICON)
+
+
+async def test_status_fan_speed(hass, mock_publish):
+    """Test status updates from the vacuum."""
+    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: default_config,
+    })
+
+    message = """{
+        "fan_speed": "max"
+    }"""
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+    assert 'max' == state.attributes.get(ATTR_FAN_SPEED)
+
+
+async def test_status_error(hass, mock_publish):
+    """Test status updates from the vacuum."""
+    default_config[mqttvacuum.CONF_SUPPORTED_FEATURES] = \
+        mqttvacuum.services_to_strings(mqttvacuum.ALL_SERVICES)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: default_config,
+    })
+
+    message = """{
+        "error": "Error1"
+    }"""
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+    assert 'Error: Error1' == state.attributes.get(ATTR_STATUS)
+
+    message = """{
+        "error": ""
+    }"""
+    async_fire_mqtt_message(hass, 'vacuum/state', message)
+    await hass.async_block_till_done()
+    state = hass.states.get('vacuum.mqtttest')
+    assert 'Stopped' == state.attributes.get(ATTR_STATUS)
+
+
 async def test_battery_template(hass, mock_publish):
     """Test that you can use non-default templates for battery_level."""
     default_config.update({
@@ -212,6 +345,84 @@ async def test_status_invalid_json(hass, mock_publish):
     state = hass.states.get('vacuum.mqtttest')
     assert STATE_OFF == state.state
     assert "Stopped" == state.attributes.get(ATTR_STATUS)
+
+
+async def test_missing_battery_template(hass, mock_publish):
+    """Test to make sure missing template is not allowed."""
+    config = copy.deepcopy(default_config)
+    config.pop(mqttvacuum.CONF_BATTERY_LEVEL_TEMPLATE)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: config,
+    })
+
+    state = hass.states.get('vacuum.mqtttest')
+    assert state is None
+
+
+async def test_missing_charging_template(hass, mock_publish):
+    """Test to make sure missing template is not allowed."""
+    config = copy.deepcopy(default_config)
+    config.pop(mqttvacuum.CONF_CHARGING_TEMPLATE)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: config,
+    })
+
+    state = hass.states.get('vacuum.mqtttest')
+    assert state is None
+
+
+async def test_missing_cleaning_template(hass, mock_publish):
+    """Test to make sure missing template is not allowed."""
+    config = copy.deepcopy(default_config)
+    config.pop(mqttvacuum.CONF_CLEANING_TEMPLATE)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: config,
+    })
+
+    state = hass.states.get('vacuum.mqtttest')
+    assert state is None
+
+
+async def test_missing_docked_template(hass, mock_publish):
+    """Test to make sure missing template is not allowed."""
+    config = copy.deepcopy(default_config)
+    config.pop(mqttvacuum.CONF_DOCKED_TEMPLATE)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: config,
+    })
+
+    state = hass.states.get('vacuum.mqtttest')
+    assert state is None
+
+
+async def test_missing_error_template(hass, mock_publish):
+    """Test to make sure missing template is not allowed."""
+    config = copy.deepcopy(default_config)
+    config.pop(mqttvacuum.CONF_ERROR_TEMPLATE)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: config,
+    })
+
+    state = hass.states.get('vacuum.mqtttest')
+    assert state is None
+
+
+async def test_missing_fan_speed_template(hass, mock_publish):
+    """Test to make sure missing template is not allowed."""
+    config = copy.deepcopy(default_config)
+    config.pop(mqttvacuum.CONF_FAN_SPEED_TEMPLATE)
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {
+        vacuum.DOMAIN: config,
+    })
+
+    state = hass.states.get('vacuum.mqtttest')
+    assert state is None
 
 
 async def test_default_availability_payload(hass, mock_publish):

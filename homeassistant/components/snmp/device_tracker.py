@@ -9,8 +9,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
-REQUIREMENTS = ['pysnmp==4.4.8']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AUTHKEY = 'authkey'

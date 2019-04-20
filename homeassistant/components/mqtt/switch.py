@@ -22,8 +22,6 @@ from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mqtt']
-
 DEFAULT_NAME = 'MQTT Switch'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
@@ -32,15 +30,15 @@ CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-    vol.Optional(CONF_STATE_ON): cv.string,
-    vol.Optional(CONF_STATE_OFF): cv.string,
-    vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_STATE_OFF): cv.string,
+    vol.Optional(CONF_STATE_ON): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
@@ -123,13 +121,13 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._config = config
 
         state_on = config.get(CONF_STATE_ON)
-        self._state_on = state_on if state_on else config.get(CONF_PAYLOAD_ON)
+        self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
 
         state_off = config.get(CONF_STATE_OFF)
         self._state_off = state_off if state_off else \
-            config.get(CONF_PAYLOAD_OFF)
+            config[CONF_PAYLOAD_OFF]
 
-        self._optimistic = config.get(CONF_OPTIMISTIC)
+        self._optimistic = config[CONF_OPTIMISTIC]
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -160,7 +158,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 {CONF_STATE_TOPIC:
                  {'topic': self._config.get(CONF_STATE_TOPIC),
                   'msg_callback': state_message_received,
-                  'qos': self._config.get(CONF_QOS)}})
+                  'qos': self._config[CONF_QOS]}})
 
         if self._optimistic:
             last_state = await self.async_get_last_state()
@@ -182,7 +180,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self):
         """Return the name of the switch."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def is_on(self):
@@ -211,10 +209,10 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         mqtt.async_publish(
             self.hass,
-            self._config.get(CONF_COMMAND_TOPIC),
-            self._config.get(CONF_PAYLOAD_ON),
-            self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            self._config[CONF_COMMAND_TOPIC],
+            self._config[CONF_PAYLOAD_ON],
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
@@ -227,10 +225,10 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         """
         mqtt.async_publish(
             self.hass,
-            self._config.get(CONF_COMMAND_TOPIC),
-            self._config.get(CONF_PAYLOAD_OFF),
-            self._config.get(CONF_QOS),
-            self._config.get(CONF_RETAIN))
+            self._config[CONF_COMMAND_TOPIC],
+            self._config[CONF_PAYLOAD_OFF],
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN])
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False

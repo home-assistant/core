@@ -15,10 +15,6 @@ from .http_api import RegistrationsView
 from .webhook import handle_webhook
 from .websocket_api import register_websocket_handlers
 
-DEPENDENCIES = ['device_tracker', 'http', 'webhook']
-
-REQUIREMENTS = ['PyNaCl==1.3.0']
-
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the mobile app component."""

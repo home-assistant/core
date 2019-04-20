@@ -14,8 +14,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['broadlink==0.9.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_DEFAULT_NAME = 'Broadlink sensor'

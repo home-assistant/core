@@ -13,8 +13,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['python-vlc==1.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ARGUMENTS = 'arguments'

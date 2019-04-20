@@ -9,8 +9,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pyruter==1.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_STOP_ID = 'stop_id'

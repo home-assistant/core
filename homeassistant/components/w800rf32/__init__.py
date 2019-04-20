@@ -10,8 +10,6 @@ from homeassistant.const import (CONF_DEVICE,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (dispatcher_send)
 
-REQUIREMENTS = ['pyW800rf32==0.1']
-
 DATA_W800RF32 = 'data_w800rf32'
 DOMAIN = 'w800rf32'
 

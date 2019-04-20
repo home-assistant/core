@@ -5,7 +5,9 @@
   "requirements": [
     "braviarc-homeassistant==0.3.7.dev0"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "configurator"
+  ],
   "codeowners": [
     "@robbiet480"
   ]

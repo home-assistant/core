@@ -5,8 +5,7 @@ from asynctest import patch
 from pyheos import CommandError, const
 import pytest
 
-from homeassistant.components.heos import (
-    SourceManager, async_setup_entry, async_unload_entry)
+from homeassistant.components.heos import async_setup_entry, async_unload_entry
 from homeassistant.components.heos.const import (
     DATA_CONTROLLER, DATA_SOURCE_MANAGER, DOMAIN)
 from homeassistant.components.media_player.const import (
@@ -61,7 +60,7 @@ async def test_async_setup_no_config_returns_true(hass, config_entry):
 
 
 async def test_async_setup_entry_loads_platforms(
-        hass, config_entry, controller):
+        hass, config_entry, controller, input_sources, favorites):
     """Test load connects to heos, retrieves players, and loads platforms."""
     config_entry.add_to_hass(hass)
     with patch.object(
@@ -71,10 +70,39 @@ async def test_async_setup_entry_loads_platforms(
         await hass.async_block_till_done()
         assert forward_mock.call_count == 1
         assert controller.connect.call_count == 1
+        assert controller.get_players.call_count == 1
+        assert controller.get_favorites.call_count == 1
+        assert controller.get_input_sources.call_count == 1
         controller.disconnect.assert_not_called()
     assert hass.data[DOMAIN][DATA_CONTROLLER] == controller
     assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
-    assert isinstance(hass.data[DOMAIN][DATA_SOURCE_MANAGER], SourceManager)
+    assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == favorites
+    assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
+
+
+async def test_async_setup_entry_not_signed_in_loads_platforms(
+        hass, config_entry, controller, input_sources, caplog):
+    """Test setup does not retrieve favorites when not logged in."""
+    config_entry.add_to_hass(hass)
+    controller.is_signed_in = False
+    controller.signed_in_username = None
+    with patch.object(
+            hass.config_entries, 'async_forward_entry_setup') as forward_mock:
+        assert await async_setup_entry(hass, config_entry)
+        # Assert platforms loaded
+        await hass.async_block_till_done()
+        assert forward_mock.call_count == 1
+        assert controller.connect.call_count == 1
+        assert controller.get_players.call_count == 1
+        assert controller.get_favorites.call_count == 0
+        assert controller.get_input_sources.call_count == 1
+        controller.disconnect.assert_not_called()
+    assert hass.data[DOMAIN][DATA_CONTROLLER] == controller
+    assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
+    assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == {}
+    assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
+    assert "127.0.0.1 is not logged in to your HEOS account and will be " \
+           "unable to retrieve your favorites" in caplog.text
 
 
 async def test_async_setup_entry_connect_failure(
@@ -138,4 +166,3 @@ async def test_update_sources_retry(hass, config_entry, config, controller,
     while "Unable to update sources" not in caplog.text:
         await asyncio.sleep(0.1)
     assert controller.get_favorites.call_count == 2
-    assert controller.get_input_sources.call_count == 2

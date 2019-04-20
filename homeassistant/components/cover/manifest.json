@@ -7,6 +7,6 @@
     "group"
   ],
   "codeowners": [
-    "@cdce8p"
+    "@home-assistant/core"
   ]
 }

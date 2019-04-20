@@ -23,8 +23,6 @@ from ..greeneye_monitor import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['greeneye_monitor']
-
 DATA_PULSES = 'pulses'
 DATA_WATT_SECONDS = 'watt_seconds'
 

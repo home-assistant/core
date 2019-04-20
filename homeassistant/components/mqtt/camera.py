@@ -14,8 +14,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
-    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttDiscoveryUpdate,
-    subscription)
+    ATTR_DISCOVERY_HASH, CONF_UNIQUE_ID, MqttDiscoveryUpdate, subscription)
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,12 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 CONF_TOPIC = 'topic'
 DEFAULT_NAME = 'MQTT Camera'
 
-DEPENDENCIES = ['mqtt']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
@@ -44,8 +41,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Discover and add a MQTT camera."""
         try:
             discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
-            # state_topic is implicitly set by MQTT discovery, remove it
-            discovery_payload.pop(CONF_STATE_TOPIC, None)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(config, async_add_entities,
                                       discovery_hash)
@@ -87,8 +82,6 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
-        # state_topic is implicitly set by MQTT discovery, remove it
-        discovery_payload.pop(CONF_STATE_TOPIC, None)
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
         await self._subscribe_topics()
@@ -103,7 +96,7 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
-            {'state_topic': {'topic': self._config.get(CONF_TOPIC),
+            {'state_topic': {'topic': self._config[CONF_TOPIC],
                              'msg_callback': message_received,
                              'qos': self._qos,
                              'encoding': None}})
@@ -121,7 +114,7 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
     @property
     def name(self):
         """Return the name of this camera."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def unique_id(self):

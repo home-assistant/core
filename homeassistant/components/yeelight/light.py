@@ -15,14 +15,12 @@ from homeassistant.components.light import (
     SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
     SUPPORT_EFFECT, Light)
 import homeassistant.util.color as color_util
-from homeassistant.components.yeelight import (
+from . import (
     CONF_TRANSITION, DATA_YEELIGHT, CONF_MODE_MUSIC,
     CONF_SAVE_ON_CHANGE, CONF_CUSTOM_EFFECTS, DATA_UPDATED,
     YEELIGHT_SERVICE_SCHEMA, DOMAIN, ATTR_TRANSITIONS,
     YEELIGHT_FLOW_TRANSITION_SCHEMA, ACTION_RECOVER, CONF_FLOW_PARAMS,
     ATTR_ACTION, ATTR_COUNT)
-
-DEPENDENCIES = ['yeelight']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,12 +92,12 @@ def _transitions_config_parser(transitions):
 
 
 def _parse_custom_effects(effects_config):
-    import yeelight
+    from yeelight import Flow
 
     effects = {}
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
-        action = yeelight.Flow.actions[params[ATTR_ACTION]]
+        action = Flow.actions[params[ATTR_ACTION]]
         transitions = _transitions_config_parser(
             params[ATTR_TRANSITIONS])
 
@@ -115,11 +113,11 @@ def _parse_custom_effects(effects_config):
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
-        import yeelight
+        from yeelight import BulbException
         try:
             _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
             return func(self, *args, **kwargs)
-        except yeelight.BulbException as ex:
+        except BulbException as ex:
             _LOGGER.error("Error when calling %s: %s", func, ex)
 
     return _wrap
@@ -189,6 +187,8 @@ class YeelightLight(Light):
 
     def __init__(self, device, custom_effects=None):
         """Initialize the Yeelight light."""
+        from yeelight.enums import LightType
+
         self.config = device.config
         self._device = device
 
@@ -202,20 +202,23 @@ class YeelightLight(Light):
         self._min_mireds = None
         self._max_mireds = None
 
+        self._light_type = LightType.Main
+
         if custom_effects:
             self._custom_effects = custom_effects
         else:
             self._custom_effects = {}
 
     @callback
-    def _schedule_immediate_update(self, ipaddr):
-        if ipaddr == self.device.ipaddr:
-            self.async_schedule_update_ha_state(True)
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
+            self.hass,
+            DATA_UPDATED.format(self._device.ipaddr),
+            self._schedule_immediate_update
         )
 
     @property
@@ -281,8 +284,7 @@ class YeelightLight(Light):
     @property
     def light_type(self):
         """Return light type."""
-        import yeelight
-        return yeelight.enums.LightType.Main
+        return self._light_type
 
     def _get_hs_from_properties(self):
         rgb = self._get_property('rgb')
@@ -345,15 +347,14 @@ class YeelightLight(Light):
 
     def update(self) -> None:
         """Update properties from the bulb."""
-        import yeelight
+        from yeelight import BulbType, enums
         bulb_type = self._bulb.bulb_type
 
-        if bulb_type == yeelight.BulbType.Color:
+        if bulb_type == BulbType.Color:
             self._supported_features = SUPPORT_YEELIGHT_RGB
-        elif self.light_type == yeelight.enums.LightType.Ambient:
+        elif self.light_type == enums.LightType.Ambient:
             self._supported_features = SUPPORT_YEELIGHT_RGB
-        elif bulb_type in (yeelight.BulbType.WhiteTemp,
-                           yeelight.BulbType.WhiteTempMood):
+        elif bulb_type in (BulbType.WhiteTemp, BulbType.WhiteTempMood):
             if self._is_nightlight_enabled:
                 self._supported_features = SUPPORT_YEELIGHT
             else:
@@ -366,7 +367,7 @@ class YeelightLight(Light):
             self._max_mireds = \
                 kelvin_to_mired(model_specs['color_temp']['min'])
 
-        if bulb_type == yeelight.BulbType.WhiteTempMood:
+        if bulb_type == BulbType.WhiteTempMood:
             self._is_on = self._get_property('main_power') == 'on'
         else:
             self._is_on = self._get_property('power') == 'on'
@@ -589,20 +590,18 @@ class YeelightAmbientLight(YeelightLight):
 
     def __init__(self, *args, **kwargs):
         """Initialize the Yeelight Ambient light."""
+        from yeelight.enums import LightType
+
         super().__init__(*args, **kwargs)
         self._min_mireds = kelvin_to_mired(6500)
         self._max_mireds = kelvin_to_mired(1700)
+
+        self._light_type = LightType.Ambient
 
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
         return "{} ambilight".format(self.device.name)
-
-    @property
-    def light_type(self):
-        """Return light type."""
-        import yeelight
-        return yeelight.enums.LightType.Ambient
 
     @property
     def _is_nightlight_enabled(self):

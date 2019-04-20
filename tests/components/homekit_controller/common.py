@@ -11,11 +11,11 @@ from homekit.model import Accessory, get_id
 from homekit.exceptions import AccessoryNotFoundError
 from homeassistant.components.homekit_controller import SERVICE_HOMEKIT
 from homeassistant.components.homekit_controller.const import (
-    DOMAIN, HOMEKIT_ACCESSORY_DISPATCH)
+    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from tests.common import (
-    async_fire_time_changed, fire_service_discovered, load_fixture)
+    async_fire_time_changed, async_fire_service_discovered, load_fixture)
 
 
 class FakePairing:
@@ -221,10 +221,35 @@ async def setup_test_accessories(hass, accessories, capitalize=False):
         }
     }
 
-    fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
+    async_fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
     await hass.async_block_till_done()
 
     return pairing
+
+
+async def device_config_changed(hass, accessories):
+    """Discover new devices added to HomeAssistant at runtime."""
+    # Update the accessories our FakePairing knows about
+    controller = hass.data[CONTROLLER]
+    pairing = controller.pairings['00:00:00:00:00:00']
+    pairing.accessories = accessories
+
+    discovery_info = {
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': '2',
+            'sf': '0',
+        }
+    }
+
+    async_fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
+
+    # Wait for services to reconfigure
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def setup_test_component(hass, services, capitalize=False, suffix=None):

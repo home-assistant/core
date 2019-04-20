@@ -4,12 +4,10 @@ import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
 
 from . import KNOWN_DEVICES, HomeKitEntity
-
-DEPENDENCIES = ['homekit_controller']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +36,14 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
 
     def __init__(self, *args):
         """Initialise the device."""
-        super().__init__(*args)
         self._state = None
         self._current_mode = None
         self._valid_modes = []
         self._current_temp = None
         self._target_temp = None
+        self._current_humidity = None
+        self._target_humidity = None
+        super().__init__(*args)
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
@@ -54,19 +54,40 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
             CharacteristicsTypes.HEATING_COOLING_TARGET,
             CharacteristicsTypes.TEMPERATURE_CURRENT,
             CharacteristicsTypes.TEMPERATURE_TARGET,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET,
         ]
 
     def _setup_heating_cooling_target(self, characteristic):
         self._features |= SUPPORT_OPERATION_MODE
 
-        valid_values = characteristic.get(
-            'valid-values', DEFAULT_VALID_MODES)
+        if 'valid-values' in characteristic:
+            valid_values = [
+                val for val in DEFAULT_VALID_MODES
+                if val in characteristic['valid-values']
+            ]
+        else:
+            valid_values = DEFAULT_VALID_MODES
+            if 'minValue' in characteristic:
+                valid_values = [
+                    val for val in valid_values
+                    if val >= characteristic['minValue']
+                ]
+            if 'maxValue' in characteristic:
+                valid_values = [
+                    val for val in valid_values
+                    if val <= characteristic['maxValue']
+                ]
+
         self._valid_modes = [
-            MODE_HOMEKIT_TO_HASS.get(mode) for mode in valid_values
+            MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values
         ]
 
     def _setup_temperature_target(self, characteristic):
         self._features |= SUPPORT_TARGET_TEMPERATURE
+
+    def _setup_relative_humidity_target(self, characteristic):
+        self._features |= SUPPORT_TARGET_HUMIDITY
 
     def _update_heating_cooling_current(self, value):
         self._state = MODE_HOMEKIT_TO_HASS.get(value)
@@ -80,6 +101,12 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def _update_temperature_target(self, value):
         self._target_temp = value
 
+    def _update_relative_humidity_current(self, value):
+        self._current_humidity = value
+
+    def _update_relative_humidity_target(self, value):
+        self._target_humidity = value
+
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -87,6 +114,13 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['temperature.target'],
                             'value': temp}]
+        await self._accessory.put_characteristics(characteristics)
+
+    async def async_set_humidity(self, humidity):
+        """Set new target humidity."""
+        characteristics = [{'aid': self._aid,
+                            'iid': self._chars['relative-humidity.target'],
+                            'value': humidity}]
         await self._accessory.put_characteristics(characteristics)
 
     async def async_set_operation_mode(self, operation_mode):
@@ -117,6 +151,16 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temp
+
+    @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return self._current_humidity
+
+    @property
+    def target_humidity(self):
+        """Return the humidity we try to reach."""
+        return self._target_humidity
 
     @property
     def current_operation(self):

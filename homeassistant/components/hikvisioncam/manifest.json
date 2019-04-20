@@ -6,5 +6,5 @@
     "hikvision==0.4"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@fbradyirl"]
 }

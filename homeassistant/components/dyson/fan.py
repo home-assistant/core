@@ -27,7 +27,6 @@ ATTR_CARBON_FILTER = 'carbon_filter'
 ATTR_DYSON_SPEED = 'dyson_speed'
 ATTR_DYSON_SPEED_LIST = 'dyson_speed_list'
 
-DEPENDENCIES = ['dyson']
 DYSON_DOMAIN = 'dyson'
 DYSON_FAN_DEVICES = 'dyson_fan_devices'
 

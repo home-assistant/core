@@ -174,8 +174,12 @@ def test_query_request(hass_fixture, assistant_client, auth_header):
     assert devices['light.bed_light']['on'] is False
     assert devices['light.ceiling_lights']['on'] is True
     assert devices['light.ceiling_lights']['brightness'] == 70
-    assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727919
-    assert devices['light.kitchen_lights']['color']['temperature'] == 4166
+    assert devices['light.kitchen_lights']['color']['spectrumHsv'] == {
+        'hue': 345,
+        'saturation': 0.75,
+        'value': 0.7058823529411765,
+    }
+    assert devices['light.kitchen_lights']['color']['temperatureK'] == 4166
     assert devices['media_player.lounge_room']['on'] is True
 
 

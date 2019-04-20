@@ -8,8 +8,6 @@ from homeassistant.helpers import config_entry_flow
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
 DOMAIN = 'lifx'
-REQUIREMENTS = ['aiolifx==0.6.7']
-
 CONF_SERVER = 'server'
 CONF_BROADCAST = 'broadcast'
 

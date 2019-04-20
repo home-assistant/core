@@ -61,6 +61,7 @@ async def mock_client(hass, hass_client, registrations=None):
                 'platform': 'html5'
             }
         })
+        await hass.async_block_till_done()
 
     return await hass_client()
 

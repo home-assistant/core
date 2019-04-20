@@ -5,6 +5,6 @@
   "requirements": [
     "py-august==0.7.0"
   ],
-  "dependencies": [],
+  "dependencies": ["configurator"],
   "codeowners": []
 }

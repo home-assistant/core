@@ -9,8 +9,6 @@ from . import DOMAIN as GEOFENCY_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['geofency']
-
 DATA_KEY = '{}.{}'.format(GEOFENCY_DOMAIN, DEVICE_TRACKER_DOMAIN)
 
 

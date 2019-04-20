@@ -10,8 +10,6 @@ from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DATA_RAINCLOUD, ICON_MAP, SENSORS, RainCloudEntity
 
-DEPENDENCIES = ['raincloud']
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

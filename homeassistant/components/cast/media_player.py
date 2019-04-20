@@ -406,13 +406,10 @@ class CastStatusListener:
         """Handle the cast removed from a group."""
         if self._valid:
             self._cast_device.multizone_new_media_status(group_uuid, None)
-            self._cast_device.multizone_new_cast_status(group_uuid, None)
 
     def multizone_new_cast_status(self, group_uuid, cast_status):
-        """Handle reception of a new MediaStatus for a group."""
-        if self._valid:
-            self._cast_device.multizone_new_cast_status(
-                group_uuid, cast_status)
+        """Handle reception of a new CastStatus for a group."""
+        pass
 
     def multizone_new_media_status(self, group_uuid, media_status):
         """Handle reception of a new MediaStatus for a group."""
@@ -456,8 +453,7 @@ class DynamicGroupCastStatusListener:
 
     def new_cast_status(self, cast_status):
         """Handle reception of a new CastStatus."""
-        if self._valid:
-            self._cast_device.new_dynamic_group_cast_status(cast_status)
+        pass
 
     def new_media_status(self, media_status):
         """Handle reception of a new MediaStatus."""
@@ -502,10 +498,8 @@ class CastDevice(MediaPlayerDevice):
         self._dynamic_group_cast_info = None  # type: ChromecastInfo
         self._dynamic_group_cast = None \
             # type: Optional[pychromecast.Chromecast]
-        self.dynamic_group_cast_status = None
         self.dynamic_group_media_status = None
         self.dynamic_group_media_status_received = None
-        self.mz_cast_status = {}
         self.mz_media_status = {}
         self.mz_media_status_received = {}
         self.mz_mgr = None
@@ -685,7 +679,6 @@ class CastDevice(MediaPlayerDevice):
         self._dynamic_group_status_listener = DynamicGroupCastStatusListener(
             self, chromecast, mz_mgr)
         self._dynamic_group_available = False
-        self.dynamic_group_cast_status = chromecast.status
         self.dynamic_group_media_status = chromecast.media_controller.status
         self._dynamic_group_cast.start()
         self.async_schedule_update_ha_state()
@@ -734,7 +727,6 @@ class CastDevice(MediaPlayerDevice):
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
-        self.mz_cast_status = {}
         self.mz_media_status = {}
         self.mz_media_status_received = {}
         self.mz_mgr = None
@@ -745,7 +737,6 @@ class CastDevice(MediaPlayerDevice):
     def _dynamic_group_invalidate(self):
         """Invalidate some attributes."""
         self._dynamic_group_cast = None
-        self.dynamic_group_cast_status = None
         self.dynamic_group_media_status = None
         self.dynamic_group_media_status_received = None
         if self._dynamic_group_status_listener is not None:
@@ -797,11 +788,6 @@ class CastDevice(MediaPlayerDevice):
             self._available = new_available
             self.schedule_update_ha_state()
 
-    def new_dynamic_group_cast_status(self, cast_status):
-        """Handle updates of the cast status."""
-        self.dynamic_group_cast_status = cast_status
-        self.schedule_update_ha_state()
-
     def new_dynamic_group_media_status(self, media_status):
         """Handle updates of the media status."""
         self.dynamic_group_media_status = media_status
@@ -846,16 +832,6 @@ class CastDevice(MediaPlayerDevice):
             group_uuid, media_status)
         self.mz_media_status[group_uuid] = media_status
         self.mz_media_status_received[group_uuid] = dt_util.utcnow()
-        self.schedule_update_ha_state()
-
-    def multizone_new_cast_status(self, group_uuid, cast_status):
-        """Handle updates of audio group status."""
-        _LOGGER.debug(
-            "[%s %s (%s:%s)] Multizone %s cast status: %s",
-            self.entity_id, self._cast_info.friendly_name,
-            self._cast_info.host, self._cast_info.port,
-            group_uuid, cast_status)
-        self.mz_cast_status[group_uuid] = cast_status
         self.schedule_update_ha_state()
 
     # ========== Service Calls ==========

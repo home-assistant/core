@@ -6,6 +6,6 @@
     "pubnubsub-handler==1.0.3",
     "python-wink==1.10.3"
   ],
-  "dependencies": [],
+  "dependencies": ["configurator"],
   "codeowners": []
 }

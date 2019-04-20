@@ -7,8 +7,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME, ATTR_FORECAST_WIND_SPEED, WeatherEntity)
 from homeassistant.const import TEMP_FAHRENHEIT
 
-DEPENDENCIES = ['ecobee']
-
 ATTR_FORECAST_TEMP_HIGH = 'temphigh'
 ATTR_FORECAST_PRESSURE = 'pressure'
 ATTR_FORECAST_VISIBILITY = 'visibility'

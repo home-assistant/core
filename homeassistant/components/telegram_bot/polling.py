@@ -5,13 +5,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 
-from . import (
-    CONF_ALLOWED_CHAT_IDS, PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA,
-    BaseTelegramBotEntity, initialize_bot)
+from . import (CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, initialize_bot)
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
 
 
 async def async_setup_platform(hass, config):

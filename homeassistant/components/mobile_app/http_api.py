@@ -12,15 +12,11 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import (HTTP_CREATED, CONF_WEBHOOK_ID)
 
-from homeassistant.loader import get_component
+from .const import (ATTR_DEVICE_ID, ATTR_SUPPORTS_ENCRYPTION,
+                    CONF_CLOUDHOOK_URL, CONF_REMOTE_UI_URL, CONF_SECRET,
+                    CONF_USER_ID, DOMAIN, REGISTRATION_SCHEMA)
 
-from .const import (ATTR_APP_COMPONENT, ATTR_DEVICE_ID,
-                    ATTR_SUPPORTS_ENCRYPTION, CONF_CLOUDHOOK_URL,
-                    CONF_REMOTE_UI_URL, CONF_SECRET,
-                    CONF_USER_ID, DOMAIN, ERR_INVALID_COMPONENT,
-                    REGISTRATION_SCHEMA)
-
-from .helpers import error_response, supports_encryption
+from .helpers import supports_encryption
 
 
 class RegistrationsView(HomeAssistantView):
@@ -33,20 +29,6 @@ class RegistrationsView(HomeAssistantView):
     async def post(self, request: Request, data: Dict) -> Response:
         """Handle the POST request for registration."""
         hass = request.app['hass']
-
-        if ATTR_APP_COMPONENT in data:
-            component = get_component(hass, data[ATTR_APP_COMPONENT])
-            if component is None:
-                fmt_str = "{} is not a valid component."
-                msg = fmt_str.format(data[ATTR_APP_COMPONENT])
-                return error_response(ERR_INVALID_COMPONENT, msg)
-
-            if (hasattr(component, 'DEPENDENCIES') is False or
-                    (hasattr(component, 'DEPENDENCIES') and
-                     DOMAIN not in component.DEPENDENCIES)):
-                fmt_str = "{} is not compatible with mobile_app."
-                msg = fmt_str.format(data[ATTR_APP_COMPONENT])
-                return error_response(ERR_INVALID_COMPONENT, msg)
 
         webhook_id = generate_secret()
 

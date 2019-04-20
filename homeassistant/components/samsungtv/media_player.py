@@ -18,8 +18,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['samsungctl[websocket]==0.7.1', 'wakeonlan==1.1.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Samsung TV Remote'

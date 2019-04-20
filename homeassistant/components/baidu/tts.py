@@ -7,8 +7,6 @@ from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["baidu-aip==1.6.6"]
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_LANGUAGES = ['zh']

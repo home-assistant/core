@@ -25,7 +25,9 @@ from homeassistant.const import (
     CONF_TYPE, CONF_ID)
 from homeassistant.core import callback, DOMAIN as CONF_CORE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import get_component, get_platform
+from homeassistant.loader import (
+    Integration, async_get_integration, IntegrationNotFound
+)
 from homeassistant.util.yaml import load_yaml, SECRET_YAML
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
@@ -68,9 +70,6 @@ DEFAULT_CONFIG = """
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
 
-# Show the introduction message on startup.
-introduction:
-
 # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
 # http:
 #   base_url: example.duckdns.org:8123
@@ -85,7 +84,7 @@ sensor:
 
 # Text to speech
 tts:
-  - platform: google
+  - platform: google_translate
 
 group: !include groups.yaml
 automation: !include automations.yaml
@@ -95,6 +94,15 @@ DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
 # Learn more at https://home-assistant.io/docs/configuration/secrets/
 some_password: welcome
+"""
+TTS_PRE_92 = """
+tts:
+  - platform: google
+"""
+TTS_92 = """
+tts:
+  - platform: google_translate
+    service_name: google_say
 """
 
 
@@ -311,11 +319,14 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
             raise HomeAssistantError(
                 "Config file not found in: {}".format(hass.config.config_dir))
         config = load_yaml_config_file(path)
-        core_config = config.get(CONF_CORE, {})
-        merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
         return config
 
-    return await hass.async_add_executor_job(_load_hass_yaml_config)
+    config = await hass.async_add_executor_job(_load_hass_yaml_config)
+    core_config = config.get(CONF_CORE, {})
+    await merge_packages_config(
+        hass, config, core_config.get(CONF_PACKAGES, {})
+    )
+    return config
 
 
 def find_config_file(config_dir: Optional[str]) -> Optional[str]:
@@ -376,10 +387,24 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
+    if LooseVersion(conf_version) < LooseVersion('0.92'):
+        # 0.92 moved google/tts.py to google_translate/tts.py
+        config_path = find_config_file(hass.config.config_dir)
+        assert config_path is not None
+
+        with open(config_path, 'rt') as config_file:
+            config_raw = config_file.read()
+
+        if TTS_PRE_92 in config_raw:
+            _LOGGER.info("Migrating google tts to google_translate tts")
+            config_raw = config_raw.replace(TTS_PRE_92, TTS_92)
+            with open(config_path, 'wt') as config_file:
+                config_file.write(config_raw)
+
     with open(version_path, 'wt') as outp:
         outp.write(__version__)
 
-    _LOGGER.info("Migrating old system configuration files to new locations")
+    _LOGGER.debug("Migrating old system configuration files to new locations")
     for oldf, newf in FILE_MIGRATION:
         if os.path.isfile(hass.config.path(oldf)):
             _LOGGER.info("Migrating %s to %s", oldf, newf)
@@ -637,8 +662,10 @@ def _recursive_merge(
     return error
 
 
-def merge_packages_config(hass: HomeAssistant, config: Dict, packages: Dict,
-                          _log_pkg_error: Callable = _log_pkg_error) -> Dict:
+async def merge_packages_config(hass: HomeAssistant, config: Dict,
+                                packages: Dict,
+                                _log_pkg_error: Callable = _log_pkg_error) \
+        -> Dict:
     """Merge packages into the top-level configuration. Mutate config."""
     # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -649,10 +676,18 @@ def merge_packages_config(hass: HomeAssistant, config: Dict, packages: Dict,
             # If component name is given with a trailing description, remove it
             # when looking for component
             domain = comp_name.split(' ')[0]
-            component = get_component(hass, domain)
 
-            if component is None:
+            try:
+                integration = await async_get_integration(hass, domain)
+            except IntegrationNotFound:
                 _log_pkg_error(pack_name, comp_name, config, "does not exist")
+                continue
+
+            try:
+                component = integration.get_component()
+            except ImportError:
+                _log_pkg_error(pack_name, comp_name, config,
+                               "unable to import")
                 continue
 
             if hasattr(component, 'PLATFORM_SCHEMA'):
@@ -704,72 +739,73 @@ def merge_packages_config(hass: HomeAssistant, config: Dict, packages: Dict,
     return config
 
 
-@callback
-def async_process_component_config(
-        hass: HomeAssistant, config: Dict, domain: str) -> Optional[Dict]:
+async def async_process_component_config(
+        hass: HomeAssistant, config: Dict, integration: Integration) \
+            -> Optional[Dict]:
     """Check component configuration and return processed configuration.
 
     Returns None on error.
 
     This method must be run in the event loop.
     """
-    component = get_component(hass, domain)
+    domain = integration.domain
+    component = integration.get_component()
 
     if hasattr(component, 'CONFIG_SCHEMA'):
         try:
-            config = component.CONFIG_SCHEMA(config)  # type: ignore
+            return component.CONFIG_SCHEMA(config)  # type: ignore
         except vol.Invalid as ex:
             async_log_exception(ex, domain, config, hass)
             return None
 
-    elif (hasattr(component, 'PLATFORM_SCHEMA') or
-          hasattr(component, 'PLATFORM_SCHEMA_BASE')):
-        platforms = []
-        for p_name, p_config in config_per_platform(config, domain):
-            # Validate component specific platform schema
-            try:
-                if hasattr(component, 'PLATFORM_SCHEMA_BASE'):
-                    p_validated = \
-                        component.PLATFORM_SCHEMA_BASE(  # type: ignore
-                            p_config)
-                else:
-                    p_validated = component.PLATFORM_SCHEMA(  # type: ignore
-                        p_config)
-            except vol.Invalid as ex:
-                async_log_exception(ex, domain, p_config, hass)
-                continue
+    component_platform_schema = getattr(
+        component, 'PLATFORM_SCHEMA_BASE',
+        getattr(component, 'PLATFORM_SCHEMA', None))
 
-            # Not all platform components follow same pattern for platforms
-            # So if p_name is None we are not going to validate platform
-            # (the automation component is one of them)
-            if p_name is None:
-                platforms.append(p_validated)
-                continue
+    if component_platform_schema is None:
+        return config
 
-            platform = get_platform(hass, domain, p_name)
+    platforms = []
+    for p_name, p_config in config_per_platform(config, domain):
+        # Validate component specific platform schema
+        try:
+            p_validated = component_platform_schema(p_config)
+        except vol.Invalid as ex:
+            async_log_exception(ex, domain, p_config, hass)
+            continue
 
-            if platform is None:
-                continue
-
-            # Validate platform specific schema
-            if hasattr(platform, 'PLATFORM_SCHEMA'):
-                # pylint: disable=no-member
-                try:
-                    p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                        p_config)
-                except vol.Invalid as ex:
-                    async_log_exception(ex, '{}.{}'.format(domain, p_name),
-                                        p_config, hass)
-                    continue
-
+        # Not all platform components follow same pattern for platforms
+        # So if p_name is None we are not going to validate platform
+        # (the automation component is one of them)
+        if p_name is None:
             platforms.append(p_validated)
+            continue
 
-        # Create a copy of the configuration with all config for current
-        # component removed and add validated config back in.
-        filter_keys = extract_domain_configs(config, domain)
-        config = {key: value for key, value in config.items()
-                  if key not in filter_keys}
-        config[domain] = platforms
+        try:
+            p_integration = await async_get_integration(hass, p_name)
+            platform = p_integration.get_platform(domain)
+        except (IntegrationNotFound, ImportError):
+            continue
+
+        # Validate platform specific schema
+        if hasattr(platform, 'PLATFORM_SCHEMA'):
+            # pylint: disable=no-member
+            try:
+                p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
+                    p_config)
+            except vol.Invalid as ex:
+                async_log_exception(ex, '{}.{}'.format(domain, p_name),
+                                    p_config, hass)
+                continue
+
+        platforms.append(p_validated)
+
+    # Create a copy of the configuration with all config for current
+    # component removed and add validated config back in.
+    filter_keys = extract_domain_configs(config, domain)
+    config = {key: value for key, value in config.items()
+              if key not in filter_keys}
+    config[domain] = platforms
 
     return config
 
@@ -781,8 +817,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> Optional[str]:
     """
     from homeassistant.scripts.check_config import check_ha_config_file
 
-    res = await hass.async_add_executor_job(
-        check_ha_config_file, hass)
+    res = await check_ha_config_file(hass)  # type: ignore
 
     if not res.errors:
         return None

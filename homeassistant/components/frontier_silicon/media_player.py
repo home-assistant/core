@@ -15,8 +15,6 @@ from homeassistant.const import (
     STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['afsapi==0.0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FRONTIER_SILICON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \

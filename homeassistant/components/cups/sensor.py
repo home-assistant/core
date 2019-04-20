@@ -10,8 +10,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pycups==1.9.73']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE_URI = 'device_uri'

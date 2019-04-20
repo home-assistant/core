@@ -8,8 +8,6 @@ from homeassistant.components.image_processing import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.image_processing import (
     ImageProcessingFaceEntity, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
 
-REQUIREMENTS = ['face_recognition==1.2.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_LOCATION = 'location'

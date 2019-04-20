@@ -12,8 +12,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
 
-REQUIREMENTS = ['hkavr==0.0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Harman Kardon AVR'

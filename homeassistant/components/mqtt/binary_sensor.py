@@ -29,20 +29,16 @@ DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_FORCE_UPDATE = False
 
-DEPENDENCIES = ['mqtt']
-
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OFF_DELAY):
         vol.All(vol.Coerce(int), vol.Range(min=0)),
-    # Integrations should never expose unique_id through configuration.
-    # This is an exception because MQTT is a message transport, not a protocol
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
     mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 
@@ -135,15 +131,15 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(
                     payload, variables={'entity_id': self.entity_id})
-            if payload == self._config.get(CONF_PAYLOAD_ON):
+            if payload == self._config[CONF_PAYLOAD_ON]:
                 self._state = True
-            elif payload == self._config.get(CONF_PAYLOAD_OFF):
+            elif payload == self._config[CONF_PAYLOAD_OFF]:
                 self._state = False
             else:  # Payload is not for this entity
                 _LOGGER.warning('No matching payload found'
                                 ' for entity: %s with state_topic: %s',
-                                self._config.get(CONF_NAME),
-                                self._config.get(CONF_STATE_TOPIC))
+                                self._config[CONF_NAME],
+                                self._config[CONF_STATE_TOPIC])
                 return
 
             if self._delay_listener is not None:
@@ -159,9 +155,9 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state,
-            {'state_topic': {'topic': self._config.get(CONF_STATE_TOPIC),
+            {'state_topic': {'topic': self._config[CONF_STATE_TOPIC],
                              'msg_callback': state_message_received,
-                             'qos': self._config.get(CONF_QOS)}})
+                             'qos': self._config[CONF_QOS]}})
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
@@ -178,7 +174,7 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def is_on(self):
@@ -193,7 +189,7 @@ class MqttBinarySensor(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     @property
     def force_update(self):
         """Force update."""
-        return self._config.get(CONF_FORCE_UPDATE)
+        return self._config[CONF_FORCE_UPDATE]
 
     @property
     def unique_id(self):

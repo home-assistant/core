@@ -6,6 +6,6 @@
     "RtmAPI==0.7.0",
     "httplib2==0.10.3"
   ],
-  "dependencies": [],
+  "dependencies": ["configurator"],
   "codeowners": []
 }
