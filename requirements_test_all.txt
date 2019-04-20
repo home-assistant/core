@@ -240,7 +240,7 @@ pyopenuv==1.0.9
 pyotp==2.2.6
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.7.1
+pyps4-homeassistant==0.7.2
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
