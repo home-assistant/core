@@ -248,11 +248,6 @@ class CoverDevice(Entity):
         """Return if the cover is closed or not."""
         raise NotImplementedError()
 
-    @property
-    def is_tilt_closed(self):
-        """Return if the cover is tilted closed or not."""
-        raise NotImplementedError()
-
     def open_cover(self, **kwargs):
         """Open the cover."""
         raise NotImplementedError()
@@ -364,7 +359,7 @@ class CoverDevice(Entity):
 
     def toggle_tilt(self, **kwargs) -> None:
         """Toggle the entity."""
-        if self.is_tilt_closed:
+        if self.current_cover_tilt_position == 0:
             self.open_cover_tilt(**kwargs)
         else:
             self.close_cover_tilt(**kwargs)
@@ -374,6 +369,6 @@ class CoverDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if self.is_tilt_closed:
+        if self.current_cover_tilt_position == 0:
             return self.async_open_cover_tilt(**kwargs)
         return self.async_close_cover_tilt(**kwargs)

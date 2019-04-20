@@ -48,7 +48,6 @@ class CoverGroup(CoverDevice):
         """Initialize a CoverGroup entity."""
         self._name = name
         self._is_closed = False
-        self._is_tilt_closed = False
         self._cover_position = 100
         self._tilt_position = None
         self._supported_features = 0
@@ -138,11 +137,6 @@ class CoverGroup(CoverDevice):
     def is_closed(self):
         """Return if all covers in group are closed."""
         return self._is_closed
-
-    @property
-    def is_tilt_closed(self):
-        """Return if all covers in group are tilted closed."""
-        return self._is_tilt_closed
 
     @property
     def current_cover_position(self):
@@ -248,8 +242,6 @@ class CoverGroup(CoverDevice):
             else:
                 if position != -1:
                     self._tilt_position = position
-
-        self._is_tilt_closed = self._tilt_position == 0
 
         supported_features = 0
         supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE \

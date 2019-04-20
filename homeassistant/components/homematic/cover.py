@@ -50,13 +50,6 @@ class HMCover(HMDevice, CoverDevice):
             return self.current_cover_position == 0
         return None
 
-    @property
-    def is_tilt_closed(self):
-        """Return if the cover is closed."""
-        if self.current_cover_tilt_position is not None:
-            return self.current_cover_tilt_position == 0
-        return None
-
     def open_cover(self, **kwargs):
         """Open the cover."""
         self._hmdevice.move_up(self._channel)
