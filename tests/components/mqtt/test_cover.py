@@ -618,8 +618,8 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
                 'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': 400,
-                'tilt_closed_value': 125
+                'tilt_opened_value': 80,
+                'tilt_closed_value': 25
             }
         })
 
@@ -629,7 +629,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
-            'tilt-command-topic', 400, 0, False)
+            'tilt-command-topic', 80, 0, False)
         self.mock_publish.async_publish.reset_mock()
 
         self.hass.services.call(
@@ -638,7 +638,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
-            'tilt-command-topic', 125, 0, False)
+            'tilt-command-topic', 25, 0, False)
         self.mock_publish.async_publish.reset_mock()
 
         self.hass.services.call(
@@ -647,7 +647,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
-            'tilt-command-topic', 400, 0, False)
+            'tilt-command-topic', 80, 0, False)
         self.mock_publish.async_publish.reset_mock()
 
         self.hass.services.call(
@@ -656,7 +656,99 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
-            'tilt-command-topic', 125, 0, False)
+            'tilt-command-topic', 25, 0, False)
+
+    def test_tilt_given_value_optimistic(self):
+        """Test tilting to a given value."""
+        assert setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP',
+                'tilt_command_topic': 'tilt-command-topic',
+                'tilt_status_topic': 'tilt-status-topic',
+                'tilt_opened_value': 80,
+                'tilt_closed_value': 25,
+                'tilt_status_optimistic': True
+            }
+        })
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        assert 80 == current_cover_tilt_position
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 80, 0, False)
+        self.mock_publish.async_publish.reset_mock()
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        assert 25 == current_cover_tilt_position
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 25, 0, False)
+
+    def test_tilt_given_value_altered_range(self):
+        """Test tilting to a given value."""
+        assert setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP',
+                'tilt_command_topic': 'tilt-command-topic',
+                'tilt_status_topic': 'tilt-status-topic',
+                'tilt_opened_value': 25,
+                'tilt_closed_value': 0,
+                'tilt_min': 0,
+                'tilt_max': 50,
+                'tilt_status_optimistic': True
+            }
+        })
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        assert 50 == current_cover_tilt_position
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 25, 0, False)
+        self.mock_publish.async_publish.reset_mock()
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        assert 0 == current_cover_tilt_position
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 0, 0, False)
 
     def test_tilt_via_topic(self):
         """Test tilt by updating status via MQTT."""
@@ -671,9 +763,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_close': 'CLOSE',
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
-                'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': 400,
-                'tilt_closed_value': 125
+                'tilt_status_topic': 'tilt-status-topic'
             }
         })
 
@@ -705,8 +795,6 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
                 'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': 400,
-                'tilt_closed_value': 125,
                 'tilt_min': 0,
                 'tilt_max': 50
             }
@@ -746,9 +834,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_close': 'CLOSE',
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
-                'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': 400,
-                'tilt_closed_value': 125
+                'tilt_status_topic': 'tilt-status-topic'
             }
         })
 
@@ -775,8 +861,6 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
                 'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': 400,
-                'tilt_closed_value': 125,
                 'tilt_min': 0,
                 'tilt_max': 50
             }
