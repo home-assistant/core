@@ -364,8 +364,7 @@ class HueLight(Light):
             support = SUPPORT_HUE.get(self.light.type, SUPPORT_HUE_EXTENDED)
             ct_supported = support & SUPPORT_COLOR_TEMP != 0
             if ct_supported:
-                command['ct'] = max(self.min_mireds, min(temp,
-                    self.max_mireds))
+                command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
             else:
                 # Default white value based off of Hue default.
                 default_white_xy = (0.308, 0.3274)
