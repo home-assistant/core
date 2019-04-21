@@ -93,7 +93,8 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
         config[CONF_MONITORED_CONDITIONS], config[CONF_EVENT])
 
-    return await scanner.async_init()
+    await scanner.async_init()
+    return True
 
 
 class TraccarScanner:
@@ -109,26 +110,38 @@ class TraccarScanner:
         self._scan_interval = scan_interval
         self._async_see = async_see
         self._api = api
+        self.connected = None
         self._hass = hass
 
     async def async_init(self):
         """Further initialize connection to Traccar."""
-        await self._api.test_connection()
-        if self._api.authenticated:
-            await self._async_update()
-            async_track_time_interval(self._hass,
-                                      self._async_update,
-                                      self._scan_interval)
-
-        return self._api.authenticated
+        await self._async_update()
+        async_track_time_interval(self._hass,
+                                    self._async_update,
+                                    self._scan_interval)
 
     async def _async_update(self, now=None):
         """Update info from Traccar."""
-        _LOGGER.debug('Updating device data.')
-        await self._api.get_device_info(self._custom_attributes)
-        self._hass.async_create_task(self.import_device_data())
-        if self._event_types:
-            self._hass.async_create_task(self.import_events())
+        if self.connected is None:
+            # We should only get here on the first run.
+            await self._api.test_connection()
+            self.connected = self._api.connected
+            if not self._api.connected:
+                _LOGGER.error("Not connected to Traccar.")
+
+        if not self.connected:
+            _LOGGER.debug('Testing connection to Traccar.')
+            await self._api.test_connection()
+            self.connected = self._api.connected
+            if self.connected:
+                _LOGGER.info("Connection to Traccar restored.")
+        else:
+            _LOGGER.debug('Updating device data.')
+            await self._api.get_device_info(self._custom_attributes)
+            self._hass.async_create_task(self.import_device_data())
+            if self._event_types:
+                self._hass.async_create_task(self.import_events())
+            self.connected = self._api.connected
 
     async def import_device_data(self):
         """Import device data from Traccar."""
