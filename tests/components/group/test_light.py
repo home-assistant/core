@@ -172,6 +172,7 @@ async def test_emulated_color_temp_group(hass):
                                            'light.kitchen_lights']}
     ]})
     await hass.async_block_till_done()
+
     hass.states.async_set(
         'light.bed_light', 'on', {'supported_features': 2})
     hass.states.async_set(
