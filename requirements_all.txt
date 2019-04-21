@@ -1216,7 +1216,7 @@ pyotgw==0.4b3
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.2.6
+pyotp==2.2.7
 
 # homeassistant.components.owlet
 pyowlet==1.0.2
