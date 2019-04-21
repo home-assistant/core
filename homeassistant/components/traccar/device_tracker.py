@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
-    CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL, 
+    CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL,
     CONF_MONITORED_CONDITIONS, CONF_EVENT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
