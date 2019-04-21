@@ -21,8 +21,8 @@ homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarm_control_panel/* @colinodell
 homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/amazon_polly/* @robbiet480
+homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
-homeassistant/components/ambiclimate/* @daniel
 homeassistant/components/api/* @home-assistant/core
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
