@@ -1,8 +1,9 @@
 """Support for Wink sensors."""
 import logging
 
-from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import TEMP_CELSIUS
+
+from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aioasuswrt==1.1.20']
+REQUIREMENTS = ['aioasuswrt==1.1.21']
 
 _LOGGER = logging.getLogger(__name__)
 

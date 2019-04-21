@@ -1,13 +1,14 @@
 """Support for Zigbee sensors."""
-import logging
 from binascii import hexlify
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components import zigbee
-from homeassistant.components.zigbee import PLATFORM_SCHEMA
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+from . import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 

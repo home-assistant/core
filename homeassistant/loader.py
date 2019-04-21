@@ -15,7 +15,7 @@ import importlib
 import logging
 import sys
 from types import ModuleType
-from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar  # noqa pylint: disable=unused-import
+from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar, List  # noqa pylint: disable=unused-import
 
 from homeassistant.const import PLATFORM_FORMAT
 
@@ -34,8 +34,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 DATA_KEY = 'components'
-PATH_CUSTOM_COMPONENTS = 'custom_components'
-PACKAGE_COMPONENTS = 'homeassistant.components'
+PACKAGE_CUSTOM_COMPONENTS = 'custom_components'
+PACKAGE_BUILTIN = 'homeassistant.components'
+LOOKUP_PATHS = [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+COMPONENTS_WITH_BAD_PLATFORMS = ['automation', 'mqtt', 'telegram_bot']
 
 
 class LoaderError(Exception):
@@ -76,24 +78,60 @@ def get_platform(hass,  # type: HomeAssistant
                  domain: str, platform_name: str) -> Optional[ModuleType]:
     """Try to load specified platform.
 
+    Example invocation: get_platform(hass, 'light', 'hue')
+
     Async friendly.
     """
-    platform = _load_file(hass, PLATFORM_FORMAT.format(
-        domain=domain, platform=platform_name))
+    # If the platform has a component, we will limit the platform loading path
+    # to be the same source (custom/built-in).
+    if domain not in COMPONENTS_WITH_BAD_PLATFORMS:
+        component = _load_file(hass, platform_name, LOOKUP_PATHS)
+    else:
+        # avoid load component for legacy platform
+        component = None
+
+    # Until we have moved all platforms under their component/own folder, it
+    # can be that the component is None.
+    if component is not None:
+        base_paths = [component.__name__.rsplit('.', 1)[0]]
+    else:
+        base_paths = LOOKUP_PATHS
+
+    platform = _load_file(
+        hass, PLATFORM_FORMAT.format(domain=domain, platform=platform_name),
+        base_paths)
 
     if platform is not None:
         return platform
 
-    # Legacy platform check: light/hue.py
-    platform = _load_file(hass, PLATFORM_FORMAT.format(
-        domain=platform_name, platform=domain))
+    # Legacy platform check for automation: components/automation/event.py
+    if component is None and domain in COMPONENTS_WITH_BAD_PLATFORMS:
+        platform = _load_file(
+            hass,
+            PLATFORM_FORMAT.format(domain=platform_name, platform=domain),
+            base_paths
+        )
+
+    # Legacy platform check for custom: custom_components/light/hue.py
+    # Only check if the component was also in custom components.
+    if component is None or base_paths[0] == PACKAGE_CUSTOM_COMPONENTS:
+        platform = _load_file(
+            hass,
+            PLATFORM_FORMAT.format(domain=platform_name, platform=domain),
+            [PACKAGE_CUSTOM_COMPONENTS]
+        )
 
     if platform is None:
-        _LOGGER.error("Unable to find platform %s", platform_name)
+        if component is None:
+            extra = ""
+        else:
+            extra = " Search path was limited to path of component: {}".format(
+                base_paths[0])
+        _LOGGER.error("Unable to find platform %s.%s", platform_name, extra)
         return None
 
-    if platform.__name__.startswith(PATH_CUSTOM_COMPONENTS):
-        _LOGGER.warning(
+    if domain not in COMPONENTS_WITH_BAD_PLATFORMS:
+        _LOGGER.error(
             "Integrations need to be in their own folder. Change %s/%s.py to "
             "%s/%s.py. This will stop working soon.",
             domain, platform_name, platform_name, domain)
@@ -107,7 +145,7 @@ def get_component(hass,  # type: HomeAssistant
 
     Async friendly.
     """
-    comp = _load_file(hass, comp_or_platform)
+    comp = _load_file(hass, comp_or_platform, LOOKUP_PATHS)
 
     if comp is None:
         _LOGGER.error("Unable to find component %s", comp_or_platform)
@@ -116,7 +154,8 @@ def get_component(hass,  # type: HomeAssistant
 
 
 def _load_file(hass,  # type: HomeAssistant
-               comp_or_platform: str) -> Optional[ModuleType]:
+               comp_or_platform: str,
+               base_paths: List[str]) -> Optional[ModuleType]:
     """Try to load specified file.
 
     Looks in config dir first, then built-in components.
@@ -138,11 +177,8 @@ def _load_file(hass,  # type: HomeAssistant
             sys.path.insert(0, hass.config.config_dir)
         cache = hass.data[DATA_KEY] = {}
 
-    # First check custom, then built-in
-    potential_paths = ['custom_components.{}'.format(comp_or_platform),
-                       'homeassistant.components.{}'.format(comp_or_platform)]
-
-    for index, path in enumerate(potential_paths):
+    for path in ('{}.{}'.format(base, comp_or_platform)
+                 for base in base_paths):
         try:
             module = importlib.import_module(path)
 
@@ -162,7 +198,7 @@ def _load_file(hass,  # type: HomeAssistant
 
             cache[comp_or_platform] = module
 
-            if index == 0:
+            if module.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
                 _LOGGER.warning(
                     'You are using a custom component for %s which has not '
                     'been tested by Home Assistant. This component might '

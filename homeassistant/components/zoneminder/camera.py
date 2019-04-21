@@ -1,10 +1,11 @@
 """Support for ZoneMinder camera streaming."""
 import logging
 
-from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
-from homeassistant.components.camera.mjpeg import (
+from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera, filter_urllib3_logging)
-from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
+from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
+
+from . import DOMAIN as ZONEMINDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

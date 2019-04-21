@@ -7,10 +7,10 @@ from homeassistant.components.climate.const import (
     DOMAIN, STATE_AUTO, STATE_COOL, STATE_HEAT,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE)
-from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from . import ZWaveDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 

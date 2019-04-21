@@ -2,8 +2,9 @@
 import datetime
 import logging
 
-from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
 from homeassistant.components.switch import SwitchDevice
+
+from . import DOMAIN as DOORBIRD_DOMAIN
 
 DEPENDENCIES = ['doorbird']
 

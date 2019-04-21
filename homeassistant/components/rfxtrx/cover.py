@@ -2,12 +2,13 @@
 import voluptuous as vol
 
 from homeassistant.components import rfxtrx
-from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import CONF_NAME
-from homeassistant.components.rfxtrx import (
-    CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT, DEFAULT_SIGNAL_REPETITIONS,
-    CONF_SIGNAL_REPETITIONS, CONF_DEVICES)
 from homeassistant.helpers import config_validation as cv
+
+from . import (
+    CONF_AUTOMATIC_ADD, CONF_DEVICES, CONF_FIRE_EVENT, CONF_SIGNAL_REPETITIONS,
+    DEFAULT_SIGNAL_REPETITIONS)
 
 DEPENDENCIES = ['rfxtrx']
 

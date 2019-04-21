@@ -8,16 +8,12 @@ from abc import abstractmethod
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.rachio import (DOMAIN as DOMAIN_RACHIO,
-                                             KEY_DEVICE_ID,
-                                             KEY_STATUS,
-                                             KEY_SUBTYPE,
-                                             SIGNAL_RACHIO_CONTROLLER_UPDATE,
-                                             STATUS_OFFLINE,
-                                             STATUS_ONLINE,
-                                             SUBTYPE_OFFLINE,
-                                             SUBTYPE_ONLINE,)
 from homeassistant.helpers.dispatcher import dispatcher_connect
+
+from . import (
+    DOMAIN as DOMAIN_RACHIO, KEY_DEVICE_ID, KEY_STATUS, KEY_SUBTYPE,
+    SIGNAL_RACHIO_CONTROLLER_UPDATE, STATUS_OFFLINE, STATUS_ONLINE,
+    SUBTYPE_OFFLINE, SUBTYPE_ONLINE)
 
 DEPENDENCIES = ['rachio']
 

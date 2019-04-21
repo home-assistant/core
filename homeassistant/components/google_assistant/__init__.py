@@ -22,6 +22,8 @@ from .const import (
     CONF_EXPOSE, CONF_ALIASES, CONF_ROOM_HINT, CONF_ALLOW_UNLOCK,
     DEFAULT_ALLOW_UNLOCK
 )
+from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
+from .const import EVENT_QUERY_RECEIVED  # noqa: F401
 from .http import async_register_http
 
 _LOGGER = logging.getLogger(__name__)

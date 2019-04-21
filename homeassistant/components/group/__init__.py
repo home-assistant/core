@@ -300,8 +300,8 @@ async def async_setup(hass, config):
         visible = service.data.get(ATTR_VISIBLE)
 
         tasks = []
-        for group in component.async_extract_from_service(service,
-                                                          expand_group=False):
+        for group in await component.async_extract_from_service(
+                service, expand_group=False):
             group.visible = visible
             tasks.append(group.async_update_ha_state())
 

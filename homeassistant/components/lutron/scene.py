@@ -1,9 +1,9 @@
 """Support for Lutron scenes."""
 import logging
 
-from homeassistant.components.lutron import (
-    LutronDevice, LUTRON_DEVICES, LUTRON_CONTROLLER)
 from homeassistant.components.scene import Scene
+
+from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 

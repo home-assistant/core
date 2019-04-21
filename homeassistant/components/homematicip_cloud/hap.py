@@ -39,8 +39,7 @@ class HomematicipAuth:
         from homematicip.base.base_connection import HmipConnectionError
 
         try:
-            await self.auth.isRequestAcknowledged()
-            return True
+            return await self.auth.isRequestAcknowledged()
         except HmipConnectionError:
             return False
 

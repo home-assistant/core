@@ -1,11 +1,12 @@
 """Support for the Asterisk Voicemail interface."""
 import logging
 
-from homeassistant.components.asterisk_mbox import DOMAIN as ASTERISK_DOMAIN
 from homeassistant.components.mailbox import (
     CONTENT_TYPE_MPEG, Mailbox, StreamError)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DOMAIN as ASTERISK_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

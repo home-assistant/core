@@ -2,8 +2,8 @@
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.zigbee import (
-    ZigBeeDigitalOut, ZigBeeDigitalOutConfig, PLATFORM_SCHEMA)
+
+from . import PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
 
 DEPENDENCIES = ['zigbee']
 

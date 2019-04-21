@@ -9,10 +9,12 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CONF_APP_ID, CONF_INSTALLED_APP_ID, CONF_LOCATION_ID, DOMAIN,
+    APP_OAUTH_CLIENT_NAME, APP_OAUTH_SCOPES, CONF_APP_ID, CONF_INSTALLED_APPS,
+    CONF_LOCATION_ID, CONF_OAUTH_CLIENT_ID, CONF_OAUTH_CLIENT_SECRET, DOMAIN,
     VAL_UID_MATCHER)
 from .smartapp import (
-    create_app, find_app, setup_smartapp, setup_smartapp_endpoint, update_app)
+    create_app, find_app, setup_smartapp, setup_smartapp_endpoint, update_app,
+    validate_webhook_requirements)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         b) Config entries setup for all installations
     """
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
@@ -43,6 +45,8 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         self.access_token = None
         self.app_id = None
         self.api = None
+        self.oauth_client_secret = None
+        self.oauth_client_id = None
 
     async def async_step_import(self, user_input=None):
         """Occurs when a previously entry setup fails and is re-initiated."""
@@ -50,13 +54,9 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Get access token and validate it."""
-        from pysmartthings import APIResponseError, SmartThings
+        from pysmartthings import APIResponseError, AppOAuth, SmartThings
 
         errors = {}
-        if not self.hass.config.api.base_url.lower().startswith('https://'):
-            errors['base'] = "base_url_not_https"
-            return self._show_step_user(errors)
-
         if user_input is None or CONF_ACCESS_TOKEN not in user_input:
             return self._show_step_user(errors)
 
@@ -78,15 +78,27 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         # Setup end-point
         await setup_smartapp_endpoint(self.hass)
 
+        if not validate_webhook_requirements(self.hass):
+            errors['base'] = "base_url_not_https"
+            return self._show_step_user(errors)
+
         try:
             app = await find_app(self.hass, self.api)
             if app:
                 await app.refresh()  # load all attributes
                 await update_app(self.hass, app)
+                # Get oauth client id/secret by regenerating it
+                app_oauth = AppOAuth(app.app_id)
+                app_oauth.client_name = APP_OAUTH_CLIENT_NAME
+                app_oauth.scope.extend(APP_OAUTH_SCOPES)
+                client = await self.api.generate_app_oauth(app_oauth)
             else:
-                app = await create_app(self.hass, self.api)
+                app, client = await create_app(self.hass, self.api)
             setup_smartapp(self.hass, app)
             self.app_id = app.app_id
+            self.oauth_client_secret = client.client_secret
+            self.oauth_client_id = client.client_id
+
         except APIResponseError as ex:
             if ex.is_target_error():
                 errors['base'] = 'webhook_error'
@@ -113,19 +125,23 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_wait_install(self, user_input=None):
         """Wait for SmartApp installation."""
-        from pysmartthings import InstalledAppStatus
-
         errors = {}
         if user_input is None:
             return self._show_step_wait_install(errors)
 
         # Find installed apps that were authorized
-        installed_apps = [app for app in await self.api.installed_apps(
-            installed_app_status=InstalledAppStatus.AUTHORIZED)
-                          if app.app_id == self.app_id]
+        installed_apps = self.hass.data[DOMAIN][CONF_INSTALLED_APPS].copy()
         if not installed_apps:
             errors['base'] = 'app_not_installed'
             return self._show_step_wait_install(errors)
+        self.hass.data[DOMAIN][CONF_INSTALLED_APPS].clear()
+
+        # Enrich the data
+        for installed_app in installed_apps:
+            installed_app[CONF_APP_ID] = self.app_id
+            installed_app[CONF_ACCESS_TOKEN] = self.access_token
+            installed_app[CONF_OAUTH_CLIENT_ID] = self.oauth_client_id
+            installed_app[CONF_OAUTH_CLIENT_SECRET] = self.oauth_client_secret
 
         # User may have installed the SmartApp in more than one SmartThings
         # location. Config flows are created for the additional installations
@@ -133,21 +149,10 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
                     DOMAIN, context={'source': 'install'},
-                    data={
-                        CONF_APP_ID: installed_app.app_id,
-                        CONF_INSTALLED_APP_ID: installed_app.installed_app_id,
-                        CONF_LOCATION_ID: installed_app.location_id,
-                        CONF_ACCESS_TOKEN: self.access_token
-                    }))
+                    data=installed_app))
 
-        # return entity for the first one.
-        installed_app = installed_apps[0]
-        return await self.async_step_install({
-            CONF_APP_ID: installed_app.app_id,
-            CONF_INSTALLED_APP_ID: installed_app.installed_app_id,
-            CONF_LOCATION_ID: installed_app.location_id,
-            CONF_ACCESS_TOKEN: self.access_token
-        })
+        # Create config entity for the first one.
+        return await self.async_step_install(installed_apps[0])
 
     def _show_step_user(self, errors):
         return self.async_show_form(

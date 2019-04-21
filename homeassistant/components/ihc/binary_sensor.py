@@ -1,9 +1,10 @@
 """Support for IHC binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.ihc import IHC_CONTROLLER, IHC_DATA, IHC_INFO
-from homeassistant.components.ihc.const import CONF_INVERTING
-from homeassistant.components.ihc.ihcdevice import IHCDevice
 from homeassistant.const import CONF_TYPE
+
+from . import IHC_CONTROLLER, IHC_DATA, IHC_INFO
+from .const import CONF_INVERTING
+from .ihcdevice import IHCDevice
 
 DEPENDENCIES = ['ihc']
 

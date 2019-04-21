@@ -1,10 +1,10 @@
 """Support for Meteo-France raining forecast sensor."""
 import logging
 
-from homeassistant.components.meteo_france import (
-    ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES)
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
+
+from . import ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 

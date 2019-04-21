@@ -8,47 +8,52 @@ import sys
 import fnmatch
 
 COMMENT_REQUIREMENTS = (
-    'RPi.GPIO',
-    'raspihats',
-    'rpi-rf',
     'Adafruit-DHT',
     'Adafruit_BBIO',
-    'fritzconnection',
-    'pybluez',
+    'avion',
     'beacontools',
+    'blinkt',
     'bluepy',
+    'bme680',
+    'credstash',
+    'decora',
+    'envirophat',
+    'evdev',
+    'face_recognition',
+    'fritzconnection',
+    'i2csense',
     'opencv-python',
+    'py_noaa',
+    'VL53L1X2',
+    'pybluez',
+    'pycups',
+    'PySwitchbot',
+    'pySwitchmate',
+    'python-eq3bt',
     'python-lirc',
     'pyuserinput',
-    'evdev',
-    'pycups',
-    'python-eq3bt',
-    'avion',
-    'decora',
-    'face_recognition',
-    'blinkt',
+    'raspihats',
+    'rpi-rf',
+    'RPi.GPIO',
     'smbus-cffi',
-    'envirophat',
-    'i2csense',
-    'credstash',
-    'bme680',
-    'py_noaa',
 )
 
 TEST_REQUIREMENTS = (
     'aioambient',
     'aioautomatic',
+    'aiobotocore',
     'aiohttp_cors',
     'aiohue',
     'aiounifi',
     'apns2',
+    'av',
+    'axis',
     'caldav',
     'coinmarketcap',
     'defusedxml',
     'dsmr_parser',
     'eebrightbox',
     'emulated_roku',
-    'enturclient',
     'ephem',
     'evohomeclient',
     'feedparser-homeassistant',
@@ -59,12 +64,13 @@ TEST_REQUIREMENTS = (
     'ha-ffmpeg',
     'hangups',
     'HAP-python',
+    'hass-nabucasa',
     'haversine',
     'hbmqtt',
     'hdate',
     'holidays',
     'home-assistant-frontend',
-    'homekit',
+    'homekit[IP]',
     'homematicip',
     'influxdb',
     'jsonpath',
@@ -101,10 +107,12 @@ TEST_REQUIREMENTS = (
     'python-forecastio',
     'python-nest',
     'python_awair',
-    'pytradfri\\[async\\]',
+    'pytradfri[async]',
     'pyunifi',
     'pyupnp-async',
     'pywebpush',
+    'pyHS100',
+    'PyNaCl',
     'regenmaschine',
     'restrictedpython',
     'rflink',
@@ -117,6 +125,7 @@ TEST_REQUIREMENTS = (
     'sqlalchemy',
     'srpenergy',
     'statsd',
+    'toonapilib',
     'uvcclient',
     'vsure',
     'warrant',
@@ -125,14 +134,15 @@ TEST_REQUIREMENTS = (
     'vultr',
     'YesssSMS',
     'ruamel.yaml',
-    'zigpy',
-    'bellows',
+    'zigpy-homeassistant',
+    'bellows-homeassistant',
 )
 
 IGNORE_PACKAGES = (
-    'homeassistant.components.recorder.models',
+    'homeassistant.components.hangouts.hangups_utils',
+    'homeassistant.components.cloud.client',
     'homeassistant.components.homekit.*',
-    'homeassistant.components.hangouts.hangups_utils'
+    'homeassistant.components.recorder.models',
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
@@ -158,6 +168,10 @@ pycrypto==1000000000.0.0
 
 # Contains code to modify Home Assistant to work around our rules
 python-systemair-savecair==1000000000.0.0
+
+# Newer version causes pylint to take forever
+# https://github.com/timothycrosley/isort/issues/848
+isort==4.3.4
 """
 
 
@@ -204,11 +218,12 @@ def gather_modules():
             explore_module('homeassistant.auth', True)):
         try:
             module = importlib.import_module(package)
-        except ImportError:
+        except ImportError as err:
             for pattern in IGNORE_PACKAGES:
                 if fnmatch.fnmatch(package, pattern):
                     break
             else:
+                print("{}: {}".format(package.replace('.', '/') + '.py', err))
                 errors.append(package)
             continue
 
@@ -278,7 +293,7 @@ def requirements_test_output(reqs):
     output.append('\n')
     filtered = {key: value for key, value in reqs.items()
                 if any(
-                    re.search(r'(^|#){}($|[=><])'.format(ign),
+                    re.search(r'(^|#){}($|[=><])'.format(re.escape(ign)),
                               key) is not None for ign in TEST_REQUIREMENTS)}
     output.append(generate_requirements_list(filtered))
 

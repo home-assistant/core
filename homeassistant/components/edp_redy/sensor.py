@@ -1,9 +1,10 @@
 """Support for EDP re:dy sensors."""
 import logging
 
+from homeassistant.const import POWER_WATT
 from homeassistant.helpers.entity import Entity
 
-from homeassistant.components.edp_redy import EdpRedyDevice, EDP_REDY
+from . import EDP_REDY, EdpRedyDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ async def async_setup_platform(
 
     # Create a sensor for global active power
     devices.append(EdpRedySensor(session, ACTIVE_POWER_ID, "Power Home",
-                                 'mdi:flash', 'W'))
+                                 'mdi:flash', POWER_WATT))
 
     async_add_entities(devices, True)
 
@@ -89,7 +90,7 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
-        return 'W'
+        return POWER_WATT
 
     async def async_update(self):
         """Parse the data for this sensor."""

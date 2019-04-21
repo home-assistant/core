@@ -19,7 +19,7 @@ from .config_flow import configured_instances
 from .const import (
     DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
 
-REQUIREMENTS = ['regenmaschine==1.1.0']
+REQUIREMENTS = ['regenmaschine==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ ZONE_UPDATE_TOPIC = '{0}_zone_update'.format(DOMAIN)
 
 CONF_CONTROLLERS = 'controllers'
 CONF_PROGRAM_ID = 'program_id'
+CONF_SECONDS = 'seconds'
 CONF_ZONE_ID = 'zone_id'
 CONF_ZONE_RUN_TIME = 'zone_run_time'
 
@@ -71,6 +72,18 @@ BINARY_SENSOR_SCHEMA = vol.Schema({
 SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
         vol.All(cv.ensure_list, [vol.In(SENSORS)])
+})
+
+SERVICE_ALTER_PROGRAM = vol.Schema({
+    vol.Required(CONF_PROGRAM_ID): cv.positive_int,
+})
+
+SERVICE_ALTER_ZONE = vol.Schema({
+    vol.Required(CONF_ZONE_ID): cv.positive_int,
+})
+
+SERVICE_PAUSE_WATERING = vol.Schema({
+    vol.Required(CONF_SECONDS): cv.positive_int,
 })
 
 SERVICE_START_PROGRAM_SCHEMA = vol.Schema({
@@ -184,6 +197,32 @@ async def async_setup_entry(hass, config_entry):
             refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
+    async def disable_program(service):
+        """Disable a program."""
+        await rainmachine.client.programs.disable(
+            service.data[CONF_PROGRAM_ID])
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+
+    async def disable_zone(service):
+        """Disable a zone."""
+        await rainmachine.client.zones.disable(service.data[CONF_ZONE_ID])
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
+
+    async def enable_program(service):
+        """Enable a program."""
+        await rainmachine.client.programs.enable(service.data[CONF_PROGRAM_ID])
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+
+    async def enable_zone(service):
+        """Enable a zone."""
+        await rainmachine.client.zones.enable(service.data[CONF_ZONE_ID])
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
+
+    async def pause_watering(service):
+        """Pause watering for a set number of seconds."""
+        await rainmachine.client.watering.pause_all(service.data[CONF_SECONDS])
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+
     async def start_program(service):
         """Start a particular program."""
         await rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
@@ -210,12 +249,23 @@ async def async_setup_entry(hass, config_entry):
         await rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
+    async def unpause_watering(service):
+        """Unpause watering."""
+        await rainmachine.client.watering.unpause_all()
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+
     for service, method, schema in [
+            ('disable_program', disable_program, SERVICE_ALTER_PROGRAM),
+            ('disable_zone', disable_zone, SERVICE_ALTER_ZONE),
+            ('enable_program', enable_program, SERVICE_ALTER_PROGRAM),
+            ('enable_zone', enable_zone, SERVICE_ALTER_ZONE),
+            ('pause_watering', pause_watering, SERVICE_PAUSE_WATERING),
             ('start_program', start_program, SERVICE_START_PROGRAM_SCHEMA),
             ('start_zone', start_zone, SERVICE_START_ZONE_SCHEMA),
             ('stop_all', stop_all, {}),
             ('stop_program', stop_program, SERVICE_STOP_PROGRAM_SCHEMA),
-            ('stop_zone', stop_zone, SERVICE_STOP_ZONE_SCHEMA)
+            ('stop_zone', stop_zone, SERVICE_STOP_ZONE_SCHEMA),
+            ('unpause_watering', unpause_watering, {}),
     ]:
         hass.services.async_register(DOMAIN, service, method, schema=schema)
 

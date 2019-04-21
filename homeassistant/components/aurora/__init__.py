@@ -1,0 +1,1 @@
+"""The aurora component."""

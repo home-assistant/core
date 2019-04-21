@@ -1,25 +1,27 @@
 """Support for Modbus Coil sensors."""
 import logging
+
 import voluptuous as vol
 
-from homeassistant.components.modbus import (
-    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
-from homeassistant.const import CONF_NAME, CONF_SLAVE
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, CONF_SLAVE
+from homeassistant.helpers import config_validation as cv
+
+from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['modbus']
 
 CONF_COIL = 'coil'
 CONF_COILS = 'coils'
 
+DEPENDENCIES = ['modbus']
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COILS): [{
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_COIL): cv.positive_int,
         vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_SLAVE): cv.positive_int,
     }]
 })
@@ -33,6 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensors.append(ModbusCoilSensor(
             hub, coil.get(CONF_NAME), coil.get(CONF_SLAVE),
             coil.get(CONF_COIL)))
+
     add_entities(sensors)
 
 
@@ -40,7 +43,7 @@ class ModbusCoilSensor(BinarySensorDevice):
     """Modbus coil sensor."""
 
     def __init__(self, hub, name, slave, coil):
-        """Initialize the modbus coil sensor."""
+        """Initialize the Modbus coil sensor."""
         self._hub = hub
         self._name = name
         self._slave = int(slave) if slave else None

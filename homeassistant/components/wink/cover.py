@@ -1,6 +1,7 @@
 """Support for Wink covers."""
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
-from homeassistant.components.wink import WinkDevice, DOMAIN
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+
+from . import DOMAIN, WinkDevice
 
 DEPENDENCIES = ['wink']
 

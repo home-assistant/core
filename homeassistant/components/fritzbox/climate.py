@@ -3,19 +3,19 @@ import logging
 
 import requests
 
-from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
-from homeassistant.components.fritzbox import (
-    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_BATTERY_LOW, ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_LOCKED, ATTR_STATE_SUMMER_MODE,
-    ATTR_STATE_WINDOW_OPEN)
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_OPERATION_MODE, STATE_ECO, STATE_HEAT, STATE_MANUAL,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS,
-    STATE_OFF, STATE_ON)
+    ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, PRECISION_HALVES, STATE_OFF,
+    STATE_ON, TEMP_CELSIUS)
+
+from . import (
+    ATTR_STATE_BATTERY_LOW, ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_HOLIDAY_MODE,
+    ATTR_STATE_LOCKED, ATTR_STATE_SUMMER_MODE, ATTR_STATE_WINDOW_OPEN,
+    DOMAIN as FRITZBOX_DOMAIN)
+
 DEPENDENCIES = ['fritzbox']
 
 _LOGGER = logging.getLogger(__name__)

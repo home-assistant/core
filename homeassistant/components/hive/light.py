@@ -1,9 +1,10 @@
 """Support for the Hive lights."""
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 import homeassistant.util.color as color_util
+
+from . import DATA_HIVE, DOMAIN
 
 DEPENDENCIES = ['hive']
 

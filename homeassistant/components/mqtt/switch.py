@@ -9,12 +9,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt, switch
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
-    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
-    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_DEVICE, CONF_ICON, CONF_NAME, CONF_OPTIMISTIC, CONF_PAYLOAD_OFF,
@@ -24,6 +18,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN,
+    CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+    MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,7 +121,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -143,8 +143,9 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             template.hass = self.hass
 
         @callback
-        def state_message_received(topic, payload, qos):
+        def state_message_received(msg):
             """Handle new MQTT state messages."""
+            payload = msg.payload
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
                     payload)
@@ -153,7 +154,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
             elif payload == self._state_off:
                 self._state = False
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -222,7 +223,7 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off.
@@ -238,4 +239,4 @@ class MqttSwitch(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

@@ -4,12 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.hangouts.intents import HelpIntent
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import dispatcher, intent
 import homeassistant.helpers.config_validation as cv
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
+from .intents import HelpIntent
 from .config_flow import HangoutsFlowHandler  # noqa: F401
 from .const import (
     CONF_BOT, CONF_DEFAULT_CONVERSATIONS, CONF_ERROR_SUPPRESSED_CONVERSATIONS,

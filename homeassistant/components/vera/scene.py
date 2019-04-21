@@ -1,10 +1,10 @@
 """Support for Vera scenes."""
 import logging
 
-from homeassistant.util import slugify
 from homeassistant.components.scene import Scene
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_SCENES, VERA_ID_FORMAT)
+from homeassistant.util import slugify
+
+from . import VERA_CONTROLLER, VERA_ID_FORMAT, VERA_SCENES
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,8 +1,9 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 
-from homeassistant.components.freebox import DATA_FREEBOX
 from homeassistant.helpers.entity import Entity
+
+from . import DATA_FREEBOX
 
 DEPENDENCIES = ['freebox']
 

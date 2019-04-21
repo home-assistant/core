@@ -3,8 +3,11 @@ import logging
 import time
 from homeassistant.core import callback
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.components import zwave
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from . import (
+    ZWaveDeviceEntity,
+    workaround,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,15 +33,15 @@ def get_device(values, **kwargs):
     return ZwaveSwitch(values)
 
 
-class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
+class ZwaveSwitch(ZWaveDeviceEntity, SwitchDevice):
     """Representation of a Z-Wave switch."""
 
     def __init__(self, values):
         """Initialize the Z-Wave switch device."""
-        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self.refresh_on_update = (
-            zwave.workaround.get_device_mapping(values.primary) ==
-            zwave.workaround.WORKAROUND_REFRESH_NODE_ON_UPDATE)
+            workaround.get_device_mapping(values.primary) ==
+            workaround.WORKAROUND_REFRESH_NODE_ON_UPDATE)
         self.last_update = time.perf_counter()
         self._state = self.values.primary.data
 

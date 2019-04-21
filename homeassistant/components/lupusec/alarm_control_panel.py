@@ -2,12 +2,11 @@
 from datetime import timedelta
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.lupusec import DOMAIN as LUPUSEC_DOMAIN
-from homeassistant.components.lupusec import LupusecDevice
-from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
-                                 STATE_ALARM_ARMED_HOME,
-                                 STATE_ALARM_DISARMED,
-                                 STATE_ALARM_TRIGGERED)
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED)
+
+from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
 DEPENDENCIES = ['lupusec']
 

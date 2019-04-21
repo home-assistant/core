@@ -6,8 +6,13 @@ from aiohttp import ClientResponseError
 from pysmartthings import APIResponseError
 
 from homeassistant import data_entry_flow
+from homeassistant.components import cloud
+from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.config_flow import (
     SmartThingsFlowHandler)
+from homeassistant.components.smartthings.const import (
+    CONF_INSTALLED_APP_ID, CONF_INSTALLED_APPS, CONF_LOCATION_ID,
+    CONF_REFRESH_TOKEN, DOMAIN)
 from homeassistant.config_entries import ConfigEntry
 
 from tests.common import mock_coro
@@ -38,7 +43,7 @@ async def test_base_url_not_https(hass):
     hass.config.api.base_url = 'http://0.0.0.0'
     flow = SmartThingsFlowHandler()
     flow.hass = hass
-    result = await flow.async_step_import()
+    result = await flow.async_step_user({'access_token': str(uuid4())})
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'user'
@@ -171,14 +176,16 @@ async def test_unknown_error(hass, smartthings_mock):
     assert result['errors'] == {'base': 'app_setup_error'}
 
 
-async def test_app_created_then_show_wait_form(hass, app, smartthings_mock):
+async def test_app_created_then_show_wait_form(
+        hass, app, app_oauth_client, smartthings_mock):
     """Test SmartApp is created when one does not exist and shows wait form."""
     flow = SmartThingsFlowHandler()
     flow.hass = hass
 
     smartthings = smartthings_mock.return_value
     smartthings.apps.return_value = mock_coro(return_value=[])
-    smartthings.create_app.return_value = mock_coro(return_value=(app, None))
+    smartthings.create_app.return_value = \
+        mock_coro(return_value=(app, app_oauth_client))
     smartthings.update_app_settings.return_value = mock_coro()
     smartthings.update_app_oauth.return_value = mock_coro()
 
@@ -188,14 +195,48 @@ async def test_app_created_then_show_wait_form(hass, app, smartthings_mock):
     assert result['step_id'] == 'wait_install'
 
 
+async def test_cloudhook_app_created_then_show_wait_form(
+        hass, app, app_oauth_client, smartthings_mock):
+    """Test SmartApp is created with a cloudhoko and shows wait form."""
+    # Unload the endpoint so we can reload it under the cloud.
+    await smartapp.unload_smartapp_endpoint(hass)
+
+    mock_async_active_subscription = Mock(return_value=True)
+    mock_create_cloudhook = Mock(return_value=mock_coro(
+        return_value="http://cloud.test"))
+    with patch.object(cloud, 'async_active_subscription',
+                      new=mock_async_active_subscription), \
+        patch.object(cloud, 'async_create_cloudhook',
+                     new=mock_create_cloudhook):
+
+        await smartapp.setup_smartapp_endpoint(hass)
+
+        flow = SmartThingsFlowHandler()
+        flow.hass = hass
+        smartthings = smartthings_mock.return_value
+        smartthings.apps.return_value = mock_coro(return_value=[])
+        smartthings.create_app.return_value = \
+            mock_coro(return_value=(app, app_oauth_client))
+        smartthings.update_app_settings.return_value = mock_coro()
+        smartthings.update_app_oauth.return_value = mock_coro()
+
+        result = await flow.async_step_user({'access_token': str(uuid4())})
+
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+        assert result['step_id'] == 'wait_install'
+        assert mock_create_cloudhook.call_count == 1
+
+
 async def test_app_updated_then_show_wait_form(
-        hass, app, smartthings_mock):
+        hass, app, app_oauth_client, smartthings_mock):
     """Test SmartApp is updated when an existing is already created."""
     flow = SmartThingsFlowHandler()
     flow.hass = hass
 
     api = smartthings_mock.return_value
     api.apps.return_value = mock_coro(return_value=[app])
+    api.generate_app_oauth.return_value = \
+        mock_coro(return_value=app_oauth_client)
 
     result = await flow.async_step_user({'access_token': str(uuid4())})
 
@@ -219,8 +260,6 @@ async def test_wait_form_displayed_after_checking(hass, smartthings_mock):
     flow = SmartThingsFlowHandler()
     flow.hass = hass
     flow.access_token = str(uuid4())
-    flow.api = smartthings_mock.return_value
-    flow.api.installed_apps.return_value = mock_coro(return_value=[])
 
     result = await flow.async_step_wait_install({})
 
@@ -235,19 +274,29 @@ async def test_config_entry_created_when_installed(
     flow = SmartThingsFlowHandler()
     flow.hass = hass
     flow.access_token = str(uuid4())
-    flow.api = smartthings_mock.return_value
     flow.app_id = installed_app.app_id
-    flow.api.installed_apps.return_value = \
-        mock_coro(return_value=[installed_app])
+    flow.api = smartthings_mock.return_value
+    flow.oauth_client_id = str(uuid4())
+    flow.oauth_client_secret = str(uuid4())
+    data = {
+        CONF_REFRESH_TOKEN: str(uuid4()),
+        CONF_LOCATION_ID: installed_app.location_id,
+        CONF_INSTALLED_APP_ID: installed_app.installed_app_id
+    }
+    hass.data[DOMAIN][CONF_INSTALLED_APPS].append(data)
 
     result = await flow.async_step_wait_install({})
 
+    assert not hass.data[DOMAIN][CONF_INSTALLED_APPS]
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['data']['app_id'] == installed_app.app_id
     assert result['data']['installed_app_id'] == \
         installed_app.installed_app_id
     assert result['data']['location_id'] == installed_app.location_id
     assert result['data']['access_token'] == flow.access_token
+    assert result['data']['refresh_token'] == data[CONF_REFRESH_TOKEN]
+    assert result['data']['client_secret'] == flow.oauth_client_secret
+    assert result['data']['client_id'] == flow.oauth_client_id
     assert result['title'] == location.name
 
 
@@ -259,10 +308,20 @@ async def test_multiple_config_entry_created_when_installed(
     flow.access_token = str(uuid4())
     flow.app_id = app.app_id
     flow.api = smartthings_mock.return_value
-    flow.api.installed_apps.return_value = \
-        mock_coro(return_value=installed_apps)
+    flow.oauth_client_id = str(uuid4())
+    flow.oauth_client_secret = str(uuid4())
+    for installed_app in installed_apps:
+        data = {
+            CONF_REFRESH_TOKEN: str(uuid4()),
+            CONF_LOCATION_ID: installed_app.location_id,
+            CONF_INSTALLED_APP_ID: installed_app.installed_app_id
+        }
+        hass.data[DOMAIN][CONF_INSTALLED_APPS].append(data)
+    install_data = hass.data[DOMAIN][CONF_INSTALLED_APPS].copy()
 
     result = await flow.async_step_wait_install({})
+
+    assert not hass.data[DOMAIN][CONF_INSTALLED_APPS]
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['data']['app_id'] == installed_apps[0].app_id
@@ -270,6 +329,10 @@ async def test_multiple_config_entry_created_when_installed(
         installed_apps[0].installed_app_id
     assert result['data']['location_id'] == installed_apps[0].location_id
     assert result['data']['access_token'] == flow.access_token
+    assert result['data']['refresh_token'] == \
+        install_data[0][CONF_REFRESH_TOKEN]
+    assert result['data']['client_secret'] == flow.oauth_client_secret
+    assert result['data']['client_id'] == flow.oauth_client_id
     assert result['title'] == locations[0].name
 
     await hass.async_block_till_done()
@@ -280,4 +343,6 @@ async def test_multiple_config_entry_created_when_installed(
         installed_apps[1].installed_app_id
     assert entries[0].data['location_id'] == installed_apps[1].location_id
     assert entries[0].data['access_token'] == flow.access_token
+    assert entries[0].data['client_secret'] == flow.oauth_client_secret
+    assert entries[0].data['client_id'] == flow.oauth_client_id
     assert entries[0].title == locations[1].name

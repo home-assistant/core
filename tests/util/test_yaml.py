@@ -95,7 +95,7 @@ class TestYaml(unittest.TestCase):
     def test_include_dir_list(self, mock_walk):
         """Test include dir list yaml."""
         mock_walk.return_value = [
-            ['/tmp', [], ['one.yaml', 'two.yaml']],
+            ['/tmp', [], ['two.yaml', 'one.yaml']],
         ]
 
         with patch_yaml_files({
@@ -105,7 +105,7 @@ class TestYaml(unittest.TestCase):
             conf = "key: !include_dir_list /tmp"
             with io.StringIO(conf) as file:
                 doc = yaml.yaml.safe_load(file)
-                assert sorted(doc["key"]) == sorted(["one", "two"])
+                assert doc["key"] == sorted(["one", "two"])
 
     @patch('homeassistant.util.yaml.os.walk')
     def test_include_dir_list_recursive(self, mock_walk):

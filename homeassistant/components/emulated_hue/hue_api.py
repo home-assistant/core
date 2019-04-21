@@ -5,12 +5,15 @@ from aiohttp import web
 
 from homeassistant import core
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_SET,
-    SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, STATE_ON, STATE_OFF,
-    HTTP_BAD_REQUEST, HTTP_NOT_FOUND, ATTR_SUPPORTED_FEATURES,
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_VOLUME_SET, SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, STATE_ON,
+    STATE_OFF, HTTP_BAD_REQUEST, HTTP_NOT_FOUND, ATTR_SUPPORTED_FEATURES
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS
+)
+from homeassistant.components.climate.const import (
+    SERVICE_SET_TEMPERATURE, SUPPORT_TARGET_TEMPERATURE
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL, SUPPORT_VOLUME_SET,
@@ -26,7 +29,7 @@ from homeassistant.components.cover import (
 )
 
 from homeassistant.components import (
-    cover, fan, media_player, light, script, scene
+    climate, cover, fan, media_player, light, script, scene
 )
 
 from homeassistant.components.http import HomeAssistantView
@@ -262,6 +265,18 @@ class HueOneLightChangeView(HomeAssistantView):
             if brightness is not None:
                 data['variables']['requested_level'] = brightness
 
+        # If the requested entity is a climate, set the temperature
+        elif entity.domain == climate.DOMAIN:
+            # We don't support turning climate devices on or off,
+            # only setting the temperature
+            service = None
+
+            if entity_features & SUPPORT_TARGET_TEMPERATURE:
+                if brightness is not None:
+                    domain = entity.domain
+                    service = SERVICE_SET_TEMPERATURE
+                    data[ATTR_TEMPERATURE] = brightness
+
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
             if entity_features & SUPPORT_VOLUME_SET:
@@ -318,8 +333,9 @@ class HueOneLightChangeView(HomeAssistantView):
                 core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id},
                 blocking=True))
 
-        hass.async_create_task(hass.services.async_call(
-            domain, service, data, blocking=True))
+        if service is not None:
+            hass.async_create_task(hass.services.async_call(
+                domain, service, data, blocking=True))
 
         json_response = \
             [create_hue_success_response(entity_id, HUE_API_STATE_ON, result)]
@@ -371,7 +387,7 @@ def parse_hue_api_put_light_body(request_json, entity):
 
         elif entity.domain in [
                 script.DOMAIN, media_player.DOMAIN,
-                fan.DOMAIN, cover.DOMAIN]:
+                fan.DOMAIN, cover.DOMAIN, climate.DOMAIN]:
             # Convert 0-255 to 0-100
             level = brightness / 255 * 100
             brightness = round(level)
@@ -397,6 +413,10 @@ def get_entity_state(config, entity):
             if entity_features & SUPPORT_BRIGHTNESS:
                 pass
 
+        elif entity.domain == climate.DOMAIN:
+            temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
+            # Convert 0-100 to 0-255
+            final_brightness = round(temperature * 255 / 100)
         elif entity.domain == media_player.DOMAIN:
             level = entity.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL, 1.0 if final_state else 0.0)

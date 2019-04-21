@@ -1,17 +1,16 @@
 """Sensor support for Wireless Sensor Tags platform."""
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS)
-from homeassistant.components.wirelesstag import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    SIGNAL_TAG_UPDATE,
-    WirelessTagBaseSensor)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
+    DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_TAG_UPDATE, WirelessTagBaseSensor)
 
 DEPENDENCIES = ['wirelesstag']
 

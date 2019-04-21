@@ -8,12 +8,12 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.thethingsnetwork import (
-    DATA_TTN, TTN_APP_ID, TTN_ACCESS_KEY, TTN_DATA_STORAGE_URL)
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from . import DATA_TTN, TTN_ACCESS_KEY, TTN_APP_ID, TTN_DATA_STORAGE_URL
 
 _LOGGER = logging.getLogger(__name__)
 

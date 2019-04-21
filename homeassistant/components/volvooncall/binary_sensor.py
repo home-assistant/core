@@ -1,9 +1,10 @@
 """Support for VOC."""
 import logging
 
-from homeassistant.components.volvooncall import VolvoEntity, DATA_KEY
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASSES)
+    DEVICE_CLASSES, BinarySensorDevice)
+
+from . import DATA_KEY, VolvoEntity
 
 _LOGGER = logging.getLogger(__name__)
 

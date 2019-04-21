@@ -1,54 +1,54 @@
 """Support for Modbus switches."""
 import logging
+
 import voluptuous as vol
 
-from homeassistant.components.modbus import (
-    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_SLAVE, CONF_COMMAND_ON, CONF_COMMAND_OFF, STATE_ON)
+    CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_NAME, CONF_SLAVE, STATE_ON)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers import config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+
+from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['modbus']
+CONF_COIL = 'coil'
+CONF_COILS = 'coils'
+CONF_REGISTER = 'register'
+CONF_REGISTER_TYPE = 'register_type'
+CONF_REGISTERS = 'registers'
+CONF_STATE_OFF = 'state_off'
+CONF_STATE_ON = 'state_on'
+CONF_VERIFY_REGISTER = 'verify_register'
+CONF_VERIFY_STATE = 'verify_state'
 
-CONF_COIL = "coil"
-CONF_COILS = "coils"
-CONF_REGISTER = "register"
-CONF_REGISTERS = "registers"
-CONF_VERIFY_STATE = "verify_state"
-CONF_VERIFY_REGISTER = "verify_register"
-CONF_REGISTER_TYPE = "register_type"
-CONF_STATE_ON = "state_on"
-CONF_STATE_OFF = "state_off"
+DEPENDENCIES = ['modbus']
 
 REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
 
 REGISTERS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_SLAVE): cv.positive_int,
-    vol.Required(CONF_REGISTER): cv.positive_int,
-    vol.Required(CONF_COMMAND_ON): cv.positive_int,
     vol.Required(CONF_COMMAND_OFF): cv.positive_int,
-    vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
-    vol.Optional(CONF_VERIFY_REGISTER):
-        cv.positive_int,
+    vol.Required(CONF_COMMAND_ON): cv.positive_int,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_REGISTER): cv.positive_int,
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):
         vol.In([REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]),
-    vol.Optional(CONF_STATE_ON): cv.positive_int,
+    vol.Optional(CONF_SLAVE): cv.positive_int,
     vol.Optional(CONF_STATE_OFF): cv.positive_int,
+    vol.Optional(CONF_STATE_ON): cv.positive_int,
+    vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
+    vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
 })
 
 COILS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_COIL): cv.positive_int,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SLAVE): cv.positive_int,
+    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
 })
 
 PLATFORM_SCHEMA = vol.All(
@@ -141,9 +141,9 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
     """Representation of a Modbus register switch."""
 
     # pylint: disable=super-init-not-called
-    def __init__(self, hub, name, slave, register, command_on,
-                 command_off, verify_state, verify_register,
-                 register_type, state_on, state_off):
+    def __init__(self, hub, name, slave, register, command_on, command_off,
+                 verify_state, verify_register, register_type, state_on,
+                 state_off):
         """Initialize the register switch."""
         self._hub = hub
         self._name = name

@@ -2,13 +2,13 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.konnected import (
-    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, SIGNAL_SENSOR_UPDATE)
 from homeassistant.const import (
-    CONF_DEVICES, CONF_TYPE, CONF_NAME, CONF_BINARY_SENSORS, ATTR_ENTITY_ID,
-    ATTR_STATE)
+    ATTR_ENTITY_ID, ATTR_STATE, CONF_BINARY_SENSORS, CONF_DEVICES, CONF_NAME,
+    CONF_TYPE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, SIGNAL_SENSOR_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +39,13 @@ class KonnectedBinarySensor(BinarySensorDevice):
         self._pin_num = pin_num
         self._state = self._data.get(ATTR_STATE)
         self._device_class = self._data.get(CONF_TYPE)
-        self._name = self._data.get(CONF_NAME, 'Konnected {} Zone {}'.format(
-            device_id, PIN_TO_ZONE[pin_num]))
-        _LOGGER.debug("Created new Konnected sensor: %s", self._name)
+        self._unique_id = '{}-{}'.format(device_id, PIN_TO_ZONE[pin_num])
+        self._name = self._data.get(CONF_NAME)
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def name(self):

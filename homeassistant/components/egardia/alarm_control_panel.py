@@ -4,13 +4,14 @@ import logging
 import requests
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.egardia import (
-    CONF_REPORT_SERVER_CODES, CONF_REPORT_SERVER_ENABLED,
-    CONF_REPORT_SERVER_PORT, EGARDIA_DEVICE, EGARDIA_SERVER,
-    REPORT_SERVER_CODES_IGNORE)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+
+from . import (
+    CONF_REPORT_SERVER_CODES, CONF_REPORT_SERVER_ENABLED,
+    CONF_REPORT_SERVER_PORT, EGARDIA_DEVICE, EGARDIA_SERVER,
+    REPORT_SERVER_CODES_IGNORE)
 
 DEPENDENCIES = ['egardia']
 

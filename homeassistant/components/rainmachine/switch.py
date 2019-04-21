@@ -4,21 +4,24 @@ This component provides support for RainMachine programs and zones.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.rainmachine/
 """
+from datetime import datetime
 import logging
 
-from homeassistant.components.rainmachine import (
-    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, PROGRAM_UPDATE_TOPIC,
-    ZONE_UPDATE_TOPIC, RainMachineEntity)
-from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
+
+from . import (
+    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, PROGRAM_UPDATE_TOPIC,
+    ZONE_UPDATE_TOPIC, RainMachineEntity)
 
 DEPENDENCIES = ['rainmachine']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_NEXT_RUN = 'next_run'
 ATTR_AREA = 'area'
 ATTR_CS_ON = 'cs_on'
 ATTR_CURRENT_CYCLE = 'current_cycle'
@@ -111,20 +114,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
 
-    programs = await rainmachine.client.programs.all()
+    programs = await rainmachine.client.programs.all(include_inactive=True)
     for program in programs:
-        if not program.get('active'):
-            continue
-
-        _LOGGER.debug('Adding program: %s', program)
         entities.append(RainMachineProgram(rainmachine, program))
 
-    zones = await rainmachine.client.zones.all()
+    zones = await rainmachine.client.zones.all(include_inactive=True)
     for zone in zones:
-        if not zone.get('active'):
-            continue
-
-        _LOGGER.debug('Adding zone: %s', zone)
         entities.append(
             RainMachineZone(
                 rainmachine, zone, rainmachine.default_zone_runtime))
@@ -145,14 +140,14 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
         self._switch_type = switch_type
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self._obj.get('active'))
+
+    @property
     def icon(self) -> str:
         """Return the icon."""
         return 'mdi:water'
-
-    @property
-    def is_enabled(self) -> bool:
-        """Return whether the entity is enabled."""
-        return self._obj.get('active')
 
     @property
     def unique_id(self) -> str:
@@ -222,8 +217,17 @@ class RainMachineProgram(RainMachineSwitch):
             self._obj = await self.rainmachine.client.programs.get(
                 self._rainmachine_entity_id)
 
+            try:
+                next_run = datetime.strptime(
+                    '{0} {1}'.format(
+                        self._obj['nextRun'], self._obj['startTime']),
+                    '%Y-%m-%d %H:%M').isoformat()
+            except ValueError:
+                next_run = None
+
             self._attrs.update({
                 ATTR_ID: self._obj['uid'],
+                ATTR_NEXT_RUN: next_run,
                 ATTR_SOAK: self._obj.get('soak'),
                 ATTR_STATUS: PROGRAM_STATUS_MAP[self._obj.get('status')],
                 ATTR_ZONES: ', '.join(z['name'] for z in self.zones)
@@ -297,13 +301,13 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_CURRENT_CYCLE:
                     self._obj.get('cycle'),
                 ATTR_FIELD_CAPACITY:
-                    self._properties_json.get('waterSense')
-                    .get('fieldCapacity'),
+                    self._properties_json.get('waterSense').get(
+                        'fieldCapacity'),
                 ATTR_NO_CYCLES:
                     self._obj.get('noOfCycles'),
                 ATTR_PRECIP_RATE:
-                    self._properties_json.get('waterSense')
-                    .get('precipitationRate'),
+                    self._properties_json.get('waterSense').get(
+                        'precipitationRate'),
                 ATTR_RESTRICTIONS:
                     self._obj.get('restriction'),
                 ATTR_SLOPE:

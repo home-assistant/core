@@ -7,7 +7,8 @@
             "token_already_setup": "Token er allerede konfigureret.",
             "token_forbidden": "Adgangstoken er ikke indenfor OAuth",
             "token_invalid_format": "Adgangstoken skal v\u00e6re i UID/GUID format",
-            "token_unauthorized": "Adgangstoken er ugyldigt eller ikke l\u00e6ngere godkendt."
+            "token_unauthorized": "Adgangstoken er ugyldigt eller ikke l\u00e6ngere godkendt.",
+            "webhook_error": "SmartThings kunne ikke validere slutpunktet konfigureret i `base_url`. Gennemg\u00e5 venligst komponentkravene."
         },
         "step": {
             "user": {

@@ -3,9 +3,10 @@ from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.nest import (
-    DATA_NEST, DATA_NEST_CONFIG, CONF_BINARY_SENSORS, NestSensorDevice)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+
+from . import (
+    CONF_BINARY_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice)
 
 _LOGGER = logging.getLogger(__name__)
 

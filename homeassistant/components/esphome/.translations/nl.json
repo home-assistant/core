@@ -13,8 +13,12 @@
                 "data": {
                     "password": "Wachtwoord"
                 },
-                "description": "Voer het wachtwoord in dat u in uw configuratie hebt ingesteld.",
+                "description": "Voer het wachtwoord in dat u in uw configuratie heeft ingesteld voor {name}.",
                 "title": "Voer wachtwoord in"
+            },
+            "discovery_confirm": {
+                "description": "Wil je de ESPHome-node `{name}` toevoegen aan de Home Assistant?",
+                "title": "ESPHome node ontdekt"
             },
             "user": {
                 "data": {

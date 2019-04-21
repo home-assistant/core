@@ -3,11 +3,11 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import STATE_OFF
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.components.upcloud import (
-    UpCloudServerEntity, CONF_SERVERS, DATA_UPCLOUD)
+
+from . import CONF_SERVERS, DATA_UPCLOUD, UpCloudServerEntity
 
 _LOGGER = logging.getLogger(__name__)
 

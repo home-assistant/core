@@ -3,12 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.linode import (
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+import homeassistant.helpers.config_validation as cv
+
+from . import (
     ATTR_CREATED, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
     ATTR_NODE_ID, ATTR_NODE_NAME, ATTR_REGION, ATTR_VCPUS, CONF_NODES,
     DATA_LINODE)
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 

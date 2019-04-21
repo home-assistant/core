@@ -1,8 +1,9 @@
 """Support for Blink system camera."""
 import logging
 
-from homeassistant.components.blink import BLINK_DATA, DEFAULT_BRAND
 from homeassistant.components.camera import Camera
+
+from . import BLINK_DATA, DEFAULT_BRAND
 
 _LOGGER = logging.getLogger(__name__)
 

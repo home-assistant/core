@@ -1,11 +1,13 @@
 """Support for LCN lights."""
-from homeassistant.components.lcn import (
-    CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
-    OUTPUT_PORTS, LcnDevice, get_connection)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION,
     Light)
 from homeassistant.const import CONF_ADDRESS
+
+from . import LcnDevice, get_connection
+from .const import (
+    CONF_CONNECTIONS, CONF_DIMMABLE, CONF_OUTPUT, CONF_TRANSITION, DATA_LCN,
+    OUTPUT_PORTS)
 
 DEPENDENCIES = ['lcn']
 

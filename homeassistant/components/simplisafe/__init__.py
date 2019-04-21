@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
 
-REQUIREMENTS = ['simplisafe-python==3.1.14']
+REQUIREMENTS = ['simplisafe-python==3.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +109,14 @@ async def async_setup_entry(hass, config_entry):
         """Refresh data from the SimpliSafe account."""
         for system in systems:
             _LOGGER.debug('Updating system data: %s', system.system_id)
-            await system.update()
+
+            try:
+                await system.update()
+            except SimplipyError as err:
+                _LOGGER.error(
+                    'There was error updating "%s": %s', system.address, err)
+                continue
+
             async_dispatcher_send(hass, TOPIC_UPDATE.format(system.system_id))
 
             if system.api.refresh_token_dirty:

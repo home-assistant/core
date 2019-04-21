@@ -1,12 +1,14 @@
 """Support for ADS light sources."""
 import logging
+
 import voluptuous as vol
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS, \
-    SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import CONF_NAME
-from homeassistant.components.ads import DATA_ADS, CONF_ADS_VAR, \
-    CONF_ADS_VAR_BRIGHTNESS
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_ADS_VAR, CONF_ADS_VAR_BRIGHTNESS, DATA_ADS
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['ads']

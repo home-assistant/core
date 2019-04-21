@@ -1,17 +1,16 @@
 """Support for Fibaro lights."""
-import logging
 import asyncio
 from functools import partial
+import logging
 
-from homeassistant.const import (
-    CONF_WHITE_VALUE)
-from homeassistant.components.fibaro import (
-    FIBARO_DEVICES, FibaroDevice,
-    CONF_DIMMING, CONF_COLOR, CONF_RESET_COLOR)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
+from homeassistant.const import CONF_WHITE_VALUE
 import homeassistant.util.color as color_util
+
+from . import (
+    CONF_COLOR, CONF_DIMMING, CONF_RESET_COLOR, FIBARO_DEVICES, FibaroDevice)
 
 _LOGGER = logging.getLogger(__name__)
 

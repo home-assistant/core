@@ -3,14 +3,12 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.components.knx import (
-    ATTR_DISCOVER_DEVICES, DATA_KNX, KNXAutomation)
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-CONF_ADDRESS = 'address'
-CONF_DEVICE_CLASS = 'device_class'
+from . import ATTR_DISCOVER_DEVICES, DATA_KNX, KNXAutomation
+
 CONF_SIGNIFICANT_BIT = 'significant_bit'
 CONF_DEFAULT_SIGNIFICANT_BIT = 1
 CONF_AUTOMATION = 'automation'
@@ -32,10 +30,7 @@ AUTOMATION_SCHEMA = vol.Schema({
     vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
 })
 
-AUTOMATIONS_SCHEMA = vol.All(
-    cv.ensure_list,
-    [AUTOMATION_SCHEMA]
-)
+AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADDRESS): cv.string,
@@ -48,8 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up binary sensor(s) for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)

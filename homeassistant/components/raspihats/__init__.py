@@ -14,7 +14,6 @@ DOMAIN = 'raspihats'
 
 CONF_I2C_HATS = 'i2c_hats'
 CONF_BOARD = 'board'
-CONF_ADDRESS = 'address'
 CONF_CHANNELS = 'channels'
 CONF_INDEX = 'index'
 CONF_INVERT_LOGIC = 'invert_logic'

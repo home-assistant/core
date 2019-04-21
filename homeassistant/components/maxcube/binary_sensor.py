@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.maxcube import DATA_KEY
+
+from . import DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 

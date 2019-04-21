@@ -4,8 +4,9 @@ import logging
 from homeassistant.components import light, tellduslive
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
     def changed(self):
         """Define a property of the device that might have changed."""
         self._last_brightness = self.brightness
+        self._update_callback()
 
     @property
     def brightness(self):

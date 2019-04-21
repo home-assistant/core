@@ -1,9 +1,10 @@
 """Support for SMS notifications from the Dovado router."""
 import logging
 
-from homeassistant.components.dovado import DOMAIN as DOVADO_DOMAIN
-from homeassistant.components.notify import BaseNotificationService, \
-    ATTR_TARGET
+from homeassistant.components.notify import (
+    ATTR_TARGET, BaseNotificationService)
+
+from . import DOMAIN as DOVADO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

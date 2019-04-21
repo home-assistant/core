@@ -124,7 +124,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -188,10 +188,10 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         last_state = await self.async_get_last_state()
 
         @callback
-        def state_received(topic, payload, qos):
+        def state_received(msg):
             """Handle new MQTT messages."""
             state = self._templates[CONF_STATE_TEMPLATE].\
-                async_render_with_possible_json_value(payload)
+                async_render_with_possible_json_value(msg.payload)
             if state == STATE_ON:
                 self._state = True
             elif state == STATE_OFF:
@@ -203,7 +203,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 try:
                     self._brightness = int(
                         self._templates[CONF_BRIGHTNESS_TEMPLATE].
-                        async_render_with_possible_json_value(payload)
+                        async_render_with_possible_json_value(msg.payload)
                     )
                 except ValueError:
                     _LOGGER.warning("Invalid brightness value received")
@@ -212,7 +212,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 try:
                     self._color_temp = int(
                         self._templates[CONF_COLOR_TEMP_TEMPLATE].
-                        async_render_with_possible_json_value(payload)
+                        async_render_with_possible_json_value(msg.payload)
                     )
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
@@ -221,13 +221,13 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 try:
                     red = int(
                         self._templates[CONF_RED_TEMPLATE].
-                        async_render_with_possible_json_value(payload))
+                        async_render_with_possible_json_value(msg.payload))
                     green = int(
                         self._templates[CONF_GREEN_TEMPLATE].
-                        async_render_with_possible_json_value(payload))
+                        async_render_with_possible_json_value(msg.payload))
                     blue = int(
                         self._templates[CONF_BLUE_TEMPLATE].
-                        async_render_with_possible_json_value(payload))
+                        async_render_with_possible_json_value(msg.payload))
                     self._hs = color_util.color_RGB_to_hs(red, green, blue)
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
@@ -236,21 +236,21 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 try:
                     self._white_value = int(
                         self._templates[CONF_WHITE_VALUE_TEMPLATE].
-                        async_render_with_possible_json_value(payload)
+                        async_render_with_possible_json_value(msg.payload)
                     )
                 except ValueError:
                     _LOGGER.warning('Invalid white value received')
 
             if self._templates[CONF_EFFECT_TEMPLATE] is not None:
                 effect = self._templates[CONF_EFFECT_TEMPLATE].\
-                    async_render_with_possible_json_value(payload)
+                    async_render_with_possible_json_value(msg.payload)
 
                 if effect in self._config.get(CONF_EFFECT_LIST):
                     self._effect = effect
                 else:
                     _LOGGER.warning("Unsupported effect value received")
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._topics[CONF_STATE_TOPIC] is not None:
             self._sub_state = await subscription.async_subscribe_topics(
@@ -400,7 +400,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         )
 
         if self._optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off.
@@ -421,7 +421,7 @@ class MqttTemplate(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         )
 
         if self._optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def supported_features(self):

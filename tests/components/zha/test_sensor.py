@@ -114,8 +114,7 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
             1).in_clusters[cluster_id]
         device_info["entity_id"] = make_entity_id(
             DOMAIN, zigpy_device, device_info["cluster"])
-        device_info["zha_device"] = zha_gateway.get_device(
-            str(zigpy_device.ieee))
+        device_info["zha_device"] = zha_gateway.get_device(zigpy_device.ieee)
     return device_infos
 
 

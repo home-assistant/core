@@ -1,13 +1,13 @@
 """Support for Xiaomi Gateway Light."""
+import binascii
 import logging
 import struct
-import binascii
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_HS_COLOR,
-                                            SUPPORT_BRIGHTNESS,
-                                            SUPPORT_COLOR, Light)
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 import homeassistant.util.color as color_util
+
+from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,8 +99,10 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
 
         if self._write_to_hub(self._sid, **{self._data_key: rgbhex}):
             self._state = True
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         if self._write_to_hub(self._sid, **{self._data_key: 0}):
             self._state = False
+            self.schedule_update_ha_state()

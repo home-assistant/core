@@ -4,18 +4,16 @@ Device tracker platform that adds support for OwnTracks over MQTT.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks/
 """
-import base64
 import json
 import logging
 
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import (
-    ATTR_SOURCE_TYPE, SOURCE_TYPE_BLUETOOTH_LE, SOURCE_TYPE_GPS
-)
-from homeassistant.components.owntracks import DOMAIN as OT_DOMAIN
+    ATTR_SOURCE_TYPE, SOURCE_TYPE_BLUETOOTH_LE, SOURCE_TYPE_GPS)
 from homeassistant.const import STATE_HOME
-from homeassistant.util import slugify, decorator
+from homeassistant.util import decorator, slugify
 
+from . import DOMAIN as OT_DOMAIN
 
 DEPENDENCIES = ['owntracks']
 
@@ -37,13 +35,13 @@ def get_cipher():
 
     Async friendly.
     """
-    from libnacl import crypto_secretbox_KEYBYTES as KEYLEN
-    from libnacl.secret import SecretBox
+    from nacl.secret import SecretBox
+    from nacl.encoding import Base64Encoder
 
     def decrypt(ciphertext, key):
         """Decrypt ciphertext using key."""
-        return SecretBox(key).decrypt(ciphertext)
-    return (KEYLEN, decrypt)
+        return SecretBox(key).decrypt(ciphertext, encoder=Base64Encoder)
+    return (SecretBox.KEY_SIZE, decrypt)
 
 
 def _parse_topic(topic, subscribe_topic):
@@ -141,7 +139,6 @@ def _decrypt_payload(secret, topic, ciphertext):
     key = key.ljust(keylen, b'\0')
 
     try:
-        ciphertext = base64.b64decode(ciphertext)
         message = decrypt(ciphertext, key)
         message = message.decode("utf-8")
         _LOGGER.debug("Decrypted payload: %s", message)

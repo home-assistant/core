@@ -24,24 +24,6 @@ class TestMQTT:
     @patch('hbmqtt.broker.Broker', Mock(return_value=MagicMock()))
     @patch('hbmqtt.broker.Broker.start', Mock(return_value=mock_coro()))
     @patch('homeassistant.components.mqtt.MQTT')
-    def test_creating_config_with_http_pass_only(self, mock_mqtt):
-        """Test if the MQTT server failed starts.
-
-        Since 0.77, MQTT server has to set up its own password.
-        If user has api_password but don't have mqtt.password, MQTT component
-         will fail to start
-        """
-        mock_mqtt().async_connect.return_value = mock_coro(True)
-        self.hass.bus.listen_once = MagicMock()
-        assert not setup_component(self.hass, mqtt.DOMAIN, {
-            'http': {'api_password': 'http_secret'}
-        })
-
-    @patch('passlib.apps.custom_app_context', Mock(return_value=''))
-    @patch('tempfile.NamedTemporaryFile', Mock(return_value=MagicMock()))
-    @patch('hbmqtt.broker.Broker', Mock(return_value=MagicMock()))
-    @patch('hbmqtt.broker.Broker.start', Mock(return_value=mock_coro()))
-    @patch('homeassistant.components.mqtt.MQTT')
     def test_creating_config_with_pass_and_no_http_pass(self, mock_mqtt):
         """Test if the MQTT server gets started with password.
 

@@ -1,8 +1,6 @@
 """Support for Apple TV media player."""
 import logging
 
-from homeassistant.components.apple_tv import (
-    ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES)
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
@@ -13,6 +11,8 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
+
+from . import ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES
 
 DEPENDENCIES = ['apple_tv']
 

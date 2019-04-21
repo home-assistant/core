@@ -1,12 +1,11 @@
 """Support for IKEA Tradfri switches."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.tradfri import (
-    KEY_GATEWAY, KEY_API, DOMAIN as TRADFRI_DOMAIN)
-from homeassistant.components.tradfri.const import (
-    CONF_GATEWAY_ID)
+from homeassistant.core import callback
+
+from . import DOMAIN as TRADFRI_DOMAIN, KEY_API, KEY_GATEWAY
+from .const import CONF_GATEWAY_ID
 
 _LOGGER = logging.getLogger(__name__)
 

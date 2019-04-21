@@ -3,8 +3,9 @@ from datetime import timedelta
 
 import requests
 
-from homeassistant.components.august import DATA_AUGUST, DEFAULT_TIMEOUT
 from homeassistant.components.camera import Camera
+
+from . import DATA_AUGUST, DEFAULT_TIMEOUT
 
 DEPENDENCIES = ['august']
 

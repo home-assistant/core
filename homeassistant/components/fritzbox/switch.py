@@ -3,11 +3,12 @@ import logging
 
 import requests
 
-from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
-from homeassistant.components.fritzbox import (
-    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED)
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE, ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS)
+
+from . import (
+    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED, DOMAIN as FRITZBOX_DOMAIN)
 
 DEPENDENCIES = ['fritzbox']
 
@@ -15,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_TOTAL_CONSUMPTION_UNIT = 'total_consumption_unit'
-ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = 'kWh'
+ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 
 ATTR_TEMPERATURE_UNIT = 'temperature_unit'
 

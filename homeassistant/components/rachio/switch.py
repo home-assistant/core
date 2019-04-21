@@ -9,25 +9,14 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.rachio import (CONF_MANUAL_RUN_MINS,
-                                             DOMAIN as DOMAIN_RACHIO,
-                                             KEY_DEVICE_ID,
-                                             KEY_ENABLED,
-                                             KEY_ID,
-                                             KEY_NAME,
-                                             KEY_ON,
-                                             KEY_SUBTYPE,
-                                             KEY_SUMMARY,
-                                             KEY_ZONE_ID,
-                                             KEY_ZONE_NUMBER,
-                                             SIGNAL_RACHIO_CONTROLLER_UPDATE,
-                                             SIGNAL_RACHIO_ZONE_UPDATE,
-                                             SUBTYPE_ZONE_STARTED,
-                                             SUBTYPE_ZONE_STOPPED,
-                                             SUBTYPE_ZONE_COMPLETED,
-                                             SUBTYPE_SLEEP_MODE_ON,
-                                             SUBTYPE_SLEEP_MODE_OFF)
 from homeassistant.helpers.dispatcher import dispatcher_connect
+
+from . import (
+    CONF_MANUAL_RUN_MINS, DOMAIN as DOMAIN_RACHIO, KEY_DEVICE_ID, KEY_ENABLED,
+    KEY_ID, KEY_NAME, KEY_ON, KEY_SUBTYPE, KEY_SUMMARY, KEY_ZONE_ID,
+    KEY_ZONE_NUMBER, SIGNAL_RACHIO_CONTROLLER_UPDATE,
+    SIGNAL_RACHIO_ZONE_UPDATE, SUBTYPE_SLEEP_MODE_OFF, SUBTYPE_SLEEP_MODE_ON,
+    SUBTYPE_ZONE_COMPLETED, SUBTYPE_ZONE_STARTED, SUBTYPE_ZONE_STOPPED)
 
 DEPENDENCIES = ['rachio']
 

@@ -16,16 +16,17 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
-from homeassistant.components.lifx import (
-    DOMAIN as LIFX_DOMAIN, DATA_LIFX_MANAGER, CONF_SERVER, CONF_PORT,
-    CONF_BROADCAST)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.helpers.service import async_extract_entity_ids
 import homeassistant.util.color as color_util
+
+from . import (
+    CONF_BROADCAST, CONF_PORT, CONF_SERVER, DATA_LIFX_MANAGER,
+    DOMAIN as LIFX_DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -250,7 +251,7 @@ class LIFXManager:
         async def service_handler(service):
             """Apply a service."""
             tasks = []
-            for light in self.service_to_entities(service):
+            for light in await self.async_service_to_entities(service):
                 if service.service == SERVICE_LIFX_SET_STATE:
                     task = light.set_state(**service.data)
                 tasks.append(self.hass.async_create_task(task))
@@ -265,7 +266,7 @@ class LIFXManager:
         """Register the LIFX effects as hass service calls."""
         async def service_handler(service):
             """Apply a service, i.e. start an effect."""
-            entities = self.service_to_entities(service)
+            entities = await self.async_service_to_entities(service)
             if entities:
                 await self.start_effect(
                     entities, service.service, **service.data)
@@ -314,9 +315,9 @@ class LIFXManager:
         elif service == SERVICE_EFFECT_STOP:
             await self.effects_conductor.stop(bulbs)
 
-    def service_to_entities(self, service):
+    async def async_service_to_entities(self, service):
         """Return the known entities that a service call mentions."""
-        entity_ids = extract_entity_ids(self.hass, service)
+        entity_ids = await async_extract_entity_ids(self.hass, service)
         if entity_ids:
             entities = [entity for entity in self.entities.values()
                         if entity.entity_id in entity_ids]

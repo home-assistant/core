@@ -1,6 +1,9 @@
 """Representation of a deCONZ gateway."""
+import asyncio
+import async_timeout
+
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_EVENT, CONF_ID
+from homeassistant.const import CONF_EVENT, CONF_HOST, CONF_ID
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
@@ -10,6 +13,7 @@ from homeassistant.util import slugify
 from .const import (
     _LOGGER, DECONZ_REACHABLE, CONF_ALLOW_CLIP_SENSOR, NEW_DEVICE, NEW_SENSOR,
     SUPPORTED_PLATFORMS)
+from .errors import AuthenticationRequired, CannotConnect
 
 
 class DeconzGateway:
@@ -26,17 +30,22 @@ class DeconzGateway:
         self.events = []
         self.listeners = []
 
-    async def async_setup(self, tries=0):
+    async def async_setup(self):
         """Set up a deCONZ gateway."""
         hass = self.hass
 
-        self.api = await get_gateway(
-            hass, self.config_entry.data, self.async_add_device_callback,
-            self.async_connection_status_callback
-        )
+        try:
+            self.api = await get_gateway(
+                hass, self.config_entry.data, self.async_add_device_callback,
+                self.async_connection_status_callback
+            )
 
-        if not self.api:
+        except CannotConnect:
             raise ConfigEntryNotReady
+
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error('Error connecting with deCONZ gateway')
+            return False
 
         for component in SUPPORTED_PLATFORMS:
             hass.async_create_task(
@@ -113,17 +122,26 @@ class DeconzGateway:
 async def get_gateway(hass, config, async_add_device_callback,
                       async_connection_status_callback):
     """Create a gateway object and verify configuration."""
-    from pydeconz import DeconzSession
+    from pydeconz import DeconzSession, errors
 
     session = aiohttp_client.async_get_clientsession(hass)
+
     deconz = DeconzSession(hass.loop, session, **config,
                            async_add_device=async_add_device_callback,
                            connection_status=async_connection_status_callback)
-    result = await deconz.async_load_parameters()
-
-    if result:
+    try:
+        with async_timeout.timeout(10):
+            await deconz.async_load_parameters()
         return deconz
-    return result
+
+    except errors.Unauthorized:
+        _LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
+        raise AuthenticationRequired
+
+    except (asyncio.TimeoutError, errors.RequestError):
+        _LOGGER.error(
+            "Error connecting to deCONZ gateway at %s", config[CONF_HOST])
+        raise CannotConnect
 
 
 class DeconzEvent:

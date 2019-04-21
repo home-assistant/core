@@ -3,11 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.ads import CONF_ADS_VAR, DATA_ADS
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_ADS_VAR, DATA_ADS
 
 _LOGGER = logging.getLogger(__name__)
 

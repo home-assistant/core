@@ -5,13 +5,13 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
-from homeassistant.components.w800rf32 import (W800RF32_DEVICE)
-from homeassistant.const import (CONF_DEVICE_CLASS, CONF_NAME, CONF_DEVICES)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_DEVICES, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import event as evt
+from homeassistant.helpers import config_validation as cv, event as evt
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
-from homeassistant.helpers.dispatcher import (async_dispatcher_connect)
+
+from . import W800RF32_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 

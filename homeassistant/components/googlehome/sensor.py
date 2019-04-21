@@ -1,12 +1,12 @@
 """Support for Google Home alarm sensor."""
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.components.googlehome import (
-    CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME)
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
+
+from . import CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME
 
 DEPENDENCIES = ['googlehome']
 

@@ -16,7 +16,7 @@ from homeassistant.setup import async_when_setup
 
 from .config_flow import CONF_SECRET
 
-REQUIREMENTS = ['libnacl==1.6.1']
+REQUIREMENTS = ['PyNaCl==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,16 +99,16 @@ async def async_connect_mqtt(hass, component):
     """Subscribe to MQTT topic."""
     context = hass.data[DOMAIN]['context']
 
-    async def async_handle_mqtt_message(topic, payload, qos):
+    async def async_handle_mqtt_message(msg):
         """Handle incoming OwnTracks message."""
         try:
-            message = json.loads(payload)
+            message = json.loads(msg.payload)
         except ValueError:
             # If invalid JSON
-            _LOGGER.error("Unable to parse payload as JSON: %s", payload)
+            _LOGGER.error("Unable to parse payload as JSON: %s", msg.payload)
             return
 
-        message['topic'] = topic
+        message['topic'] = msg.topic
         hass.helpers.dispatcher.async_dispatcher_send(
             DOMAIN, hass, context, message)
 

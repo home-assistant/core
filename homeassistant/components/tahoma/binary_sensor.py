@@ -1,12 +1,11 @@
 """Support for Tahoma binary sensors."""
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice)
-from homeassistant.components.tahoma import (
-    DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
-from homeassistant.const import (STATE_OFF, STATE_ON, ATTR_BATTERY_LEVEL)
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
+
+from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
 DEPENDENCIES = ['tahoma']
 

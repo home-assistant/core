@@ -1,8 +1,8 @@
 """Define constants for the SimpliSafe component."""
-import logging
 from datetime import timedelta
+import logging
 
-LOGGER = logging.getLogger('homeassistant.components.rainmachine')
+LOGGER = logging.getLogger('.')
 
 DOMAIN = 'rainmachine'
 

@@ -2,10 +2,12 @@
 import logging
 from homeassistant.core import callback
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.components import zwave
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
+from . import (
+    const,
+    ZWaveDeviceEntity,
+)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -28,23 +30,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def get_device(node, values, **kwargs):
     """Create Z-Wave entity device."""
     # Generic Device mappings
-    if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
+    if node.has_command_class(const.COMMAND_CLASS_SENSOR_MULTILEVEL):
         return ZWaveMultilevelSensor(values)
-    if node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
-            values.primary.type == zwave.const.TYPE_DECIMAL:
+    if node.has_command_class(const.COMMAND_CLASS_METER) and \
+            values.primary.type == const.TYPE_DECIMAL:
         return ZWaveMultilevelSensor(values)
-    if node.has_command_class(zwave.const.COMMAND_CLASS_ALARM) or \
-            node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_ALARM):
+    if node.has_command_class(const.COMMAND_CLASS_ALARM) or \
+            node.has_command_class(const.COMMAND_CLASS_SENSOR_ALARM):
         return ZWaveAlarmSensor(values)
     return None
 
 
-class ZWaveSensor(zwave.ZWaveDeviceEntity):
+class ZWaveSensor(ZWaveDeviceEntity):
     """Representation of a Z-Wave sensor."""
 
     def __init__(self, values):
         """Initialize the sensor."""
-        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self.update_properties()
 
     def update_properties(self):

@@ -8,10 +8,9 @@ from aiohttp.hdrs import CONTENT_TYPE
 import pytest
 from tests.common import get_test_instance_port
 
-from homeassistant import core, const, setup
-import homeassistant.components as core_components
+from homeassistant import const, setup
 from homeassistant.components import (
-    fan, http, light, script, emulated_hue, media_player, cover)
+    fan, http, light, script, emulated_hue, media_player, cover, climate)
 from homeassistant.components.emulated_hue import Config
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView, HueOneLightStateView,
@@ -33,8 +32,8 @@ JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 def hass_hue(loop, hass):
     """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
-    loop.run_until_complete(
-        core_components.async_setup(hass, {core.DOMAIN: {}}))
+    loop.run_until_complete(setup.async_setup_component(
+        hass, 'homeassistant', {}))
 
     loop.run_until_complete(setup.async_setup_component(
         hass, http.DOMAIN,
@@ -75,6 +74,15 @@ def hass_hue(loop, hass):
                     ]
                 }
             }
+        }))
+
+    loop.run_until_complete(
+        setup.async_setup_component(hass, climate.DOMAIN, {
+            'climate': [
+                {
+                    'platform': 'demo',
+                }
+            ]
         }))
 
     loop.run_until_complete(
@@ -136,6 +144,22 @@ def hass_hue(loop, hass):
         cover_entity.entity_id, cover_entity.state, attributes=attrs
     )
 
+    # Expose Hvac
+    hvac_entity = hass.states.get('climate.hvac')
+    attrs = dict(hvac_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
+    hass.states.async_set(
+        hvac_entity.entity_id, hvac_entity.state, attributes=attrs
+    )
+
+    # Expose HeatPump
+    hp_entity = hass.states.get('climate.heatpump')
+    attrs = dict(hp_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
+    hass.states.async_set(
+        hp_entity.entity_id, hp_entity.state, attributes=attrs
+    )
+
     return hass
 
 
@@ -189,6 +213,9 @@ def test_discover_lights(hue_client):
     assert 'fan.living_room_fan' in devices
     assert 'fan.ceiling_fan' not in devices
     assert 'cover.living_room_window' in devices
+    assert 'climate.hvac' in devices
+    assert 'climate.heatpump' in devices
+    assert 'climate.ecobee' not in devices
 
 
 @asyncio.coroutine
@@ -314,6 +341,84 @@ def test_put_light_state_script(hass_hue, hue_client):
     kitchen_light = hass_hue.states.get('light.kitchen_lights')
     assert kitchen_light.state == 'on'
     assert kitchen_light.attributes[light.ATTR_BRIGHTNESS] == level
+
+
+@asyncio.coroutine
+def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
+    """Test setting climate temperature."""
+    brightness = 19
+    temperature = round(brightness / 255 * 100)
+
+    hvac_result = yield from perform_put_light_state(
+        hass_hue, hue_client,
+        'climate.hvac', True, brightness)
+
+    hvac_result_json = yield from hvac_result.json()
+
+    assert hvac_result.status == 200
+    assert len(hvac_result_json) == 2
+
+    hvac = hass_hue.states.get('climate.hvac')
+    assert hvac.state == climate.const.STATE_COOL
+    assert hvac.attributes[climate.ATTR_TEMPERATURE] == temperature
+    assert hvac.attributes[climate.ATTR_OPERATION_MODE] == \
+        climate.const.STATE_COOL
+
+    # Make sure we can't change the ecobee temperature since it's not exposed
+    ecobee_result = yield from perform_put_light_state(
+        hass_hue, hue_client,
+        'climate.ecobee', True)
+    assert ecobee_result.status == 404
+
+
+@asyncio.coroutine
+def test_put_light_state_climate_turn_on(hass_hue, hue_client):
+    """Test inability to turn climate on."""
+    yield from hass_hue.services.async_call(
+        climate.DOMAIN, const.SERVICE_TURN_OFF,
+        {const.ATTR_ENTITY_ID: 'climate.heatpump'},
+        blocking=True)
+
+    # Somehow after calling the above service the device gets unexposed,
+    # so we need to expose it again
+    hp_entity = hass_hue.states.get('climate.heatpump')
+    attrs = dict(hp_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
+    hass_hue.states.async_set(
+        hp_entity.entity_id, hp_entity.state, attributes=attrs
+    )
+
+    hp_result = yield from perform_put_light_state(
+        hass_hue, hue_client,
+        'climate.heatpump', True)
+
+    hp_result_json = yield from hp_result.json()
+
+    assert hp_result.status == 200
+    assert len(hp_result_json) == 1
+
+    hp = hass_hue.states.get('climate.heatpump')
+    assert hp.state == STATE_OFF
+    assert hp.attributes[climate.ATTR_OPERATION_MODE] == \
+        climate.const.STATE_HEAT
+
+
+@asyncio.coroutine
+def test_put_light_state_climate_turn_off(hass_hue, hue_client):
+    """Test inability to turn climate off."""
+    hp_result = yield from perform_put_light_state(
+        hass_hue, hue_client,
+        'climate.heatpump', False)
+
+    hp_result_json = yield from hp_result.json()
+
+    assert hp_result.status == 200
+    assert len(hp_result_json) == 1
+
+    hp = hass_hue.states.get('climate.heatpump')
+    assert hp.state == climate.const.STATE_HEAT
+    assert hp.attributes[climate.ATTR_OPERATION_MODE] == \
+        climate.const.STATE_HEAT
 
 
 @asyncio.coroutine

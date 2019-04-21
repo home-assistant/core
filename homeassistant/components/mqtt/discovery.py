@@ -10,11 +10,12 @@ import logging
 import re
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,8 +201,10 @@ def clear_discovery_hash(hass, discovery_hash):
 async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                       config_entry=None) -> bool:
     """Initialize of MQTT Discovery."""
-    async def async_device_message_received(topic, payload, qos):
+    async def async_device_message_received(msg):
         """Process the received message."""
+        payload = msg.payload
+        topic = msg.topic
         match = TOPIC_MATCHER.match(topic)
 
         if not match:
@@ -235,8 +238,8 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                 key = DEVICE_ABBREVIATIONS.get(key, key)
                 device[key] = device.pop(abbreviated_key)
 
-        base = payload.pop(TOPIC_BASE, None)
-        if base:
+        if TOPIC_BASE in payload:
+            base = payload.pop(TOPIC_BASE)
             for key, value in payload.items():
                 if isinstance(value, str) and value:
                     if value[0] == TOPIC_BASE and key.endswith('_topic'):

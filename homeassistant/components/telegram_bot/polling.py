@@ -1,13 +1,13 @@
 """Support for Telegram bot using polling."""
 import logging
 
-from homeassistant.components.telegram_bot import (
-    initialize_bot,
-    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity,
-    PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
+
+from . import (
+    CONF_ALLOWED_CHAT_IDS, PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA,
+    BaseTelegramBotEntity, initialize_bot)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def message_handler(handler):
             """Initialize the messages handler instance."""
             super().__init__(handler)
 
-        def check_update(self, update):
+        def check_update(self, update):  # pylint: disable=no-self-use
             """Check is update valid."""
             return isinstance(update, Update)
 

@@ -4,8 +4,6 @@ from datetime import timedelta
 
 import aiohttp
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectTimeout
-from requests.exceptions import ConnectionError as ConnectError
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
@@ -13,7 +11,8 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['amcrest==1.2.3']
+
+REQUIREMENTS = ['amcrest==1.2.7']
 DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +26,7 @@ DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = 'high'
 DEFAULT_STREAM_SOURCE = 'snapshot'
+DEFAULT_ARGUMENTS = '-pred 1'
 TIMEOUT = 10
 
 DATA_AMCREST = 'amcrest'
@@ -78,7 +78,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(vol.In(RESOLUTION_LIST)),
         vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
             vol.All(vol.In(STREAM_SOURCE_LIST)),
-        vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
+        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS):
+            cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
             cv.time_period,
         vol.Optional(CONF_SENSORS):
@@ -91,7 +92,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
-    from amcrest import AmcrestCamera
+    from amcrest import AmcrestCamera, AmcrestError
 
     hass.data[DATA_AMCREST] = {}
     amcrest_cams = config[DOMAIN]
@@ -105,7 +106,7 @@ def setup(hass, config):
             # pylint: disable=pointless-statement
             camera.current_time
 
-        except (ConnectError, ConnectTimeout, HTTPError) as ex:
+        except AmcrestError as ex:
             _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
             hass.components.persistent_notification.create(
                 'Error: {}<br />'

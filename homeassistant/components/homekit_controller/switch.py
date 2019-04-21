@@ -1,9 +1,9 @@
 """Support for Homekit switches."""
 import logging
 
-from homeassistant.components.homekit_controller import (
-    KNOWN_ACCESSORIES, HomeKitEntity)
 from homeassistant.components.switch import SwitchDevice
+
+from . import KNOWN_DEVICES, HomeKitEntity
 
 DEPENDENCIES = ['homekit_controller']
 
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit switch support."""
     if discovery_info is not None:
-        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
         add_entities([HomeKitSwitch(accessory, discovery_info)], True)
 
 
@@ -48,20 +48,20 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
         """Return true if device is on."""
         return self._on
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the specified switch on."""
         self._on = True
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['on'],
                             'value': True}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the specified switch off."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['on'],
                             'value': False}]
-        self.put_characteristics(characteristics)
+        await self._accessory.put_characteristics(characteristics)
 
     @property
     def device_state_attributes(self):

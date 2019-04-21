@@ -8,11 +8,12 @@ from datetime import datetime
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.upnp.const import DOMAIN as DOMAIN_UPNP
-from homeassistant.components.upnp.const import SIGNAL_REMOVE_SENSOR
+from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import DOMAIN as DOMAIN_UPNP, SIGNAL_REMOVE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,9 @@ OUT = 'sent'
 KBYTE = 1024
 
 
-async def async_setup_platform(hass, config, async_add_entities,
+async def async_setup_platform(hass: HomeAssistantType,
+                               config,
+                               async_add_entities,
                                discovery_info=None):
     """Old way of setting up UPnP/IGD sensors."""
     _LOGGER.debug('async_setup_platform: config: %s, discovery: %s',
@@ -112,8 +115,11 @@ class UpnpSensor(Entity):
             'identifiers': {
                 (DOMAIN_UPNP, self.unique_id)
             },
+            'connections': {
+                (dr.CONNECTION_UPNP, self._device.udn)
+            },
             'name': self.name,
-            'via_hub': (DOMAIN_UPNP, self._device.udn),
+            'manufacturer': self._device.manufacturer,
         }
 
 

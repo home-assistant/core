@@ -6,28 +6,33 @@ https://home-assistant.io/components/zha/
 """
 
 import logging
+import time
 
+from homeassistant.core import callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .core.const import (
     DOMAIN, ATTR_MANUFACTURER, DATA_ZHA, DATA_ZHA_BRIDGE_ID, MODEL, NAME,
     SIGNAL_REMOVE
 )
+from .core.channels import MAINS_POWERED
 
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = 'entity_suffix'
+RESTART_GRACE_PERIOD = 7200  # 2 hours
 
 
-class ZhaEntity(entity.Entity):
+class ZhaEntity(RestoreEntity, entity.Entity):
     """A base class for ZHA entities."""
 
     _domain = None  # Must be overridden by subclasses
 
-    def __init__(self, unique_id, zha_device, listeners,
+    def __init__(self, unique_id, zha_device, channels,
                  skip_entity_id=False, **kwargs):
         """Init ZHA entity."""
         self._force_update = False
@@ -48,25 +53,25 @@ class ZhaEntity(entity.Entity):
                     slugify(zha_device.manufacturer),
                     slugify(zha_device.model),
                     ieeetail,
-                    listeners[0].cluster.endpoint.endpoint_id,
+                    channels[0].cluster.endpoint.endpoint_id,
                     kwargs.get(ENTITY_SUFFIX, ''),
                 )
             else:
                 self.entity_id = "{}.zha_{}_{}{}".format(
                     self._domain,
                     ieeetail,
-                    listeners[0].cluster.endpoint.endpoint_id,
+                    channels[0].cluster.endpoint.endpoint_id,
                     kwargs.get(ENTITY_SUFFIX, ''),
                 )
         self._state = None
         self._device_state_attributes = {}
         self._zha_device = zha_device
-        self.cluster_listeners = {}
+        self.cluster_channels = {}
         self._available = False
         self._component = kwargs['component']
         self._unsubs = []
-        for listener in listeners:
-            self.cluster_listeners[listener.name] = listener
+        for channel in channels:
+            self.cluster_channels[channel.name] = channel
 
     @property
     def name(self):
@@ -136,6 +141,7 @@ class ZhaEntity(entity.Entity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
+        await self.async_check_recently_seen()
         await self.async_accept_signal(
             None, "{}_{}".format(self.zha_device.available_signal, 'entity'),
             self.async_set_available,
@@ -147,22 +153,39 @@ class ZhaEntity(entity.Entity):
         )
         self._zha_device.gateway.register_entity_reference(
             self._zha_device.ieee, self.entity_id, self._zha_device,
-            self.cluster_listeners, self.device_info)
+            self.cluster_channels, self.device_info)
+
+    async def async_check_recently_seen(self):
+        """Check if the device was seen within the last 2 hours."""
+        last_state = await self.async_get_last_state()
+        if last_state and self._zha_device.last_seen and (
+                time.time() - self._zha_device.last_seen <
+                RESTART_GRACE_PERIOD):
+            self.async_set_available(True)
+            if self.zha_device.power_source != MAINS_POWERED:
+                # mains powered devices will get real time state
+                self.async_restore_last_state(last_state)
+            self._zha_device.set_available(True)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         for unsub in self._unsubs:
             unsub()
 
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        pass
+
     async def async_update(self):
         """Retrieve latest state."""
-        for listener in self.cluster_listeners:
-            if hasattr(listener, 'async_update'):
-                await listener.async_update()
+        for channel in self.cluster_channels.values():
+            if hasattr(channel, 'async_update'):
+                await channel.async_update()
 
-    async def async_accept_signal(self, listener, signal, func,
+    async def async_accept_signal(self, channel, signal, func,
                                   signal_override=False):
-        """Accept a signal from a listener."""
+        """Accept a signal from a channel."""
         unsub = None
         if signal_override:
             unsub = async_dispatcher_connect(
@@ -173,7 +196,7 @@ class ZhaEntity(entity.Entity):
         else:
             unsub = async_dispatcher_connect(
                 self.hass,
-                "{}_{}".format(listener.unique_id, signal),
+                "{}_{}".format(channel.unique_id, signal),
                 func
             )
         self._unsubs.append(unsub)

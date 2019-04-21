@@ -5,7 +5,7 @@ from collections import namedtuple
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, CONF_ID, CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -20,15 +20,18 @@ CONF_ONLY_NAMED = 'only_named'
 CONF_TEMPERATURE_SCALE = 'temperature_scale'
 
 DEFAULT_DATATYPE_MASK = 127
-DEFAULT_ONLY_NAMED = False
 DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ONLY_NAMED, default=DEFAULT_ONLY_NAMED): cv.boolean,
     vol.Optional(CONF_TEMPERATURE_SCALE, default=DEFAULT_TEMPERATURE_SCALE):
         cv.string,
     vol.Optional(CONF_DATATYPE_MASK, default=DEFAULT_DATATYPE_MASK):
         cv.positive_int,
+    vol.Optional(CONF_ONLY_NAMED, default=[]):
+        vol.All(cv.ensure_list, [vol.Schema({
+            vol.Required(CONF_ID): cv.positive_int,
+            vol.Required(CONF_NAME): cv.string,
+            })])
 })
 
 
@@ -69,20 +72,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     datatype_mask = config.get(CONF_DATATYPE_MASK)
 
+    if config[CONF_ONLY_NAMED]:
+        named_sensors = {
+            named_sensor[CONF_ID]: named_sensor[CONF_NAME]
+            for named_sensor in config[CONF_ONLY_NAMED]}
+
     for tellcore_sensor in tellcore_lib.sensors():
-        try:
-            sensor_name = config[tellcore_sensor.id]
-        except KeyError:
-            if config.get(CONF_ONLY_NAMED):
-                continue
+        if not config[CONF_ONLY_NAMED]:
             sensor_name = str(tellcore_sensor.id)
+        else:
+            if tellcore_sensor.id not in named_sensors:
+                continue
+            sensor_name = named_sensors[tellcore_sensor.id]
 
         for datatype in sensor_value_descriptions:
-            if datatype & datatype_mask:
-                if tellcore_sensor.has_value(datatype):
-                    sensor_info = sensor_value_descriptions[datatype]
-                    sensors.append(TellstickSensor(
-                        sensor_name, tellcore_sensor, datatype, sensor_info))
+            if datatype & datatype_mask and \
+               tellcore_sensor.has_value(datatype):
+                sensor_info = sensor_value_descriptions[datatype]
+                sensors.append(TellstickSensor(
+                    sensor_name, tellcore_sensor,
+                    datatype, sensor_info))
 
     add_entities(sensors)
 

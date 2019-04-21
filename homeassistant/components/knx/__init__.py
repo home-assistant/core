@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.9.4']
+REQUIREMENTS = ['xknx==0.10.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ CONF_KNX_LOCAL_IP = "local_ip"
 CONF_KNX_FIRE_EVENT = "fire_event"
 CONF_KNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_KNX_STATE_UPDATER = "state_updater"
+CONF_KNX_RATE_LIMIT = "rate_limit"
 CONF_KNX_EXPOSE = "expose"
 CONF_KNX_EXPOSE_TYPE = "type"
 CONF_KNX_EXPOSE_ADDRESS = "address"
@@ -62,6 +63,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_KNX_FIRE_EVENT_FILTER, 'fire_ev'):
             vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
+        vol.Optional(CONF_KNX_RATE_LIMIT, default=20):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
         vol.Optional(CONF_KNX_EXPOSE):
             vol.All(
                 cv.ensure_list,
@@ -138,7 +141,8 @@ class KNXModule:
     def init_xknx(self):
         """Initialize of KNX object."""
         from xknx import XKNX
-        self.xknx = XKNX(config=self.config_file(), loop=self.hass.loop)
+        self.xknx = XKNX(config=self.config_file(), loop=self.hass.loop,
+                         rate_limit=self.config[DOMAIN][CONF_KNX_RATE_LIMIT])
 
     async def start(self):
         """Start KNX object. Connect to tunneling or Routing device."""
