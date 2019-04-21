@@ -468,3 +468,149 @@ async def test_restore_state(hass, monkeypatch):
     assert state
     assert state.state == STATE_CLOSED
     assert state.attributes['assumed_state']
+
+
+async def test_inverted_cover(hass, monkeypatch):
+    """Ensure states are restored on startup."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'test_inverted_1': {
+                    'name': 'standard',
+                    'type': 'standard'
+                },
+                'test_inverted_2': {
+                    'name': 'inverted',
+                    'type': 'inverted'
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, protocol, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    # test default state of cover loaded from config
+    standard_cover = hass.states.get(DOMAIN + '.standard')
+    assert standard_cover.state == STATE_CLOSED
+    assert standard_cover.attributes['assumed_state']
+
+    # mock incoming up command event for all devices
+    event_callback({
+        'id': 'test_inverted_1',
+        'command': 'up'
+    })
+    await hass.async_block_till_done()
+
+    standard_cover = hass.states.get(DOMAIN + '.standard')
+    assert standard_cover.state == STATE_OPEN
+    assert standard_cover.attributes.get('assumed_state')
+
+    # mock incoming up command event for all devices
+    event_callback({
+        'id': 'test_inverted_2',
+        'command': 'up'
+    })
+
+    await hass.async_block_till_done()
+
+    inverted_cover = hass.states.get(DOMAIN + '.inverted')
+    assert inverted_cover.state == STATE_OPEN
+    assert inverted_cover.attributes.get('assumed_state')
+
+    # mock incoming up command event for all devices
+    event_callback({
+        'id': 'test_inverted_1',
+        'command': 'down'
+    })
+
+    await hass.async_block_till_done()
+
+    standard_cover = hass.states.get(DOMAIN + '.standard')
+    assert standard_cover.state == STATE_CLOSED
+    assert standard_cover.attributes.get('assumed_state')
+
+    event_callback({
+        'id': 'test_inverted_2',
+        'command': 'down'
+    })
+
+    await hass.async_block_till_done()
+
+    inverted_cover = hass.states.get(DOMAIN + '.inverted')
+    assert inverted_cover.state == STATE_CLOSED
+    assert inverted_cover.attributes.get('assumed_state')
+
+    # We are only testing the inverted device, the 'standard' device
+    # is already covered by other test cases.
+
+    # should respond to group command
+    event_callback({
+        'id': 'test_inverted_2',
+        'command': 'alloff',
+    })
+
+    await hass.async_block_till_done()
+
+    inverted_cover = hass.states.get(DOMAIN + '.inverted')
+    assert inverted_cover.state == STATE_CLOSED
+
+    # should respond to group command
+    event_callback({
+        'id': 'test_inverted_2',
+        'command': 'allon',
+    })
+
+    await hass.async_block_till_done()
+
+    inverted_cover = hass.states.get(DOMAIN + '.inverted')
+    assert inverted_cover.state == STATE_OPEN
+
+    # Sending the close command from HA should result
+    # in an 'UP' command sent to the inverted device.
+    hass.async_create_task(hass.services.async_call(
+        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + '.inverted'}))
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.inverted').state == STATE_CLOSED
+    assert protocol.send_command_ack.call_args_list[0][0][0] == 'test_inverted_2'
+    assert protocol.send_command_ack.call_args_list[0][0][1] == 'UP'
+
+    # Sending the open command from HA should result
+    # in an 'DOWN' command sent to the inverted device.
+    hass.async_create_task(hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + '.inverted'}))
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.inverted').state == STATE_OPEN
+    assert protocol.send_command_ack.call_args_list[1][0][0] == 'test_inverted_2'
+    assert protocol.send_command_ack.call_args_list[1][0][1] == 'DOWN'
+
+    # Sending the close command from HA should result
+    # in an 'UP' command sent to the standard device.
+    hass.async_create_task(hass.services.async_call(
+        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: DOMAIN + '.standard'}))
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.standard').state == STATE_CLOSED
+    assert protocol.send_command_ack.call_args_list[2][0][0] == 'test_inverted_1'
+    assert protocol.send_command_ack.call_args_list[2][0][1] == 'DOWN'
+
+    # Sending the open command from HA should result
+    # in an 'DOWN' command sent to the standard device.
+    hass.async_create_task(hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: DOMAIN + '.standard'}))
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.standard').state == STATE_OPEN
+    assert protocol.send_command_ack.call_args_list[3][0][0] == 'test_inverted_1'
+    assert protocol.send_command_ack.call_args_list[3][0][1] == 'UP'
