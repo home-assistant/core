@@ -40,6 +40,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def entity_type_for_device_id(device_id):
+    """Return entity class for protocol of a given device_id.
+
+    Async friendly.
+    """
+    entity_type_mapping = {
+        # KlikAanKlikUit cover have the controls inverted
+        'newkaku': TYPE_INVERTED,
+    }
+    protocol = device_id.split('_')[0]
+    return entity_type_mapping.get(protocol, None)
+
+
 def entity_class_for_type(entity_type):
     """Translate entity type to entity class.
 
@@ -67,7 +80,7 @@ def devices_from_config(domain_config):
             # to entity instantiation
             entity_type = config.pop(CONF_TYPE)
         else:
-            entity_type = TYPE_STANDARD
+            entity_type = entity_type_for_device_id(device_id)
 
         entity_class = entity_class_for_type(entity_type)
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
