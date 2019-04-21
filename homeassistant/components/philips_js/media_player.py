@@ -182,6 +182,7 @@ class PhilipsTV(MediaPlayerDevice):
     def turn_off(self):
         """Turn off the device."""
         self._tv.sendKey('Standby')
+        self._tv.on = False
         self._update_soon(DELAY_ACTION_DEFAULT)
 
     def volume_up(self):
