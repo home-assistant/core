@@ -160,12 +160,9 @@ alarmdecoder==1.13.2
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.1.0
 
-<<<<<<< HEAD
-=======
 # homeassistant.components.ambiclimate
 ambiclimate==0.1.1
 
->>>>>>> update requirements_all.txt
 # homeassistant.components.amcrest
 amcrest==1.3.0
 
