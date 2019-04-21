@@ -139,11 +139,8 @@ class InvertedRflinkCover(RflinkCover):
         """Will invert only the UP/DOWN commands."""
         _LOGGER.debug(
             "Getting command: %s for Rflink device: %s", cmd, self._device_id)
-        if cmd == 'DOWN':
-            cmmnd = 'UP'
-        elif cmd == 'UP':
-            cmmnd = 'DOWN'
-        else:
-            cmmnd = cmd
-
-        await super()._async_send_command(cmmnd, repetitions)
+        cmd_inv = {
+            'UP': 'DOWN',
+            'DOWN': 'UP',
+        }
+        await super()._async_send_command(cmd_inv.get(cmd, cmd), repetitions)
