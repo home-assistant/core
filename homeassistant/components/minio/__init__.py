@@ -69,6 +69,7 @@ class QueueListener(threading.Thread):
         self.__q = Queue()
 
     def run(self):
+        """Liste to queue events, and forward them to HASS event bus"""
         _LOGGER.info('Running QueueListener')
         while True:
             event = self.__q.get()
@@ -90,34 +91,41 @@ class QueueListener(threading.Thread):
 
     @property
     def q(self):
+        """Return wrapped queue"""
         return self.__q
 
     def stop(self):
+        """Stop run by putting None into queue and join the thread"""
         _LOGGER.info('Stopping QueueListener')
         self.__q.put(None)
         self.join()
         _LOGGER.info('Stopped QueueListener')
 
     def start_handler(self, _):
+        """Start handler helper method"""
         self.start()
 
     def stop_handler(self, _):
+        """Stop handler helper method"""
         self.stop()
 
 
 class MinioListener:
     """MinioEventThread wrapper with helper methods"""
     def __init__(self, *args):
+        """Create Listener"""
         self.__args = args
         self.__minio_event_thread = None
 
     def start_handler(self, _):
+        """Create and start the event thread"""
         from .minio_helper import MinioEventThread
 
         self.__minio_event_thread = MinioEventThread(*self.__args)
         self.__minio_event_thread.start()
 
     def stop_handler(self, _):
+        """Issue stop and wait for thread to join"""
         if self.__minio_event_thread is not None:
             self.__minio_event_thread.stop()
 
@@ -152,7 +160,7 @@ def setup(hass, config):
 
         minio_listener = MinioListener(
             q,
-            f'{host}:{str(port)}',
+            host + ':' + str(port),
             access_key,
             secret_key,
             secure,
@@ -184,6 +192,7 @@ def setup(hass, config):
         return value.async_render()
 
     def put_file(service):
+        """Upload file service"""
         bucket = _render_service_value(service, 'bucket')
         key = _render_service_value(service, 'key')
         file_path = _render_service_value(service, 'file_path')
@@ -195,6 +204,7 @@ def setup(hass, config):
         mc.fput_object(bucket, key, file_path)
 
     def get_file(service):
+        """Download file service"""
         bucket = _render_service_value(service, 'bucket')
         key = _render_service_value(service, 'key')
         file_path = _render_service_value(service, 'file_path')
@@ -206,6 +216,7 @@ def setup(hass, config):
         mc.fget_object(bucket, key, file_path)
 
     def remove_file(service):
+        """Delete file service"""
         bucket = _render_service_value(service, 'bucket')
         key = _render_service_value(service, 'key')
 
