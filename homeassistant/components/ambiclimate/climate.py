@@ -62,8 +62,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         raise
 
     if _token_info:
-            await store.async_save(token_info)
-            token_info = _token_info
+        await store.async_save(token_info)
+        token_info = _token_info
 
     data_connection = ambiclimate.AmbiclimateConnection(oauth,
                                                         token_info=token_info,
