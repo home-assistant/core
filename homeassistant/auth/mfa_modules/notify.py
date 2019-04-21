@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from . import MultiFactorAuthModule, MULTI_FACTOR_AUTH_MODULES, \
     MULTI_FACTOR_AUTH_MODULE_SCHEMA, SetupFlow
 
-REQUIREMENTS = ['pyotp==2.2.6']
+REQUIREMENTS = ['pyotp==2.2.7']
 
 CONF_MESSAGE = 'message'
 
