@@ -1,4 +1,4 @@
-"""Tests for the Point config flow."""
+"""Tests for the Ambiclimate config flow."""
 from unittest.mock import Mock, patch
 
 from homeassistant import data_entry_flow

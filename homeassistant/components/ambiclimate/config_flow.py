@@ -1,4 +1,5 @@
 """Config flow for Ambiclimate."""
+import ambiclimate
 import logging
 
 from homeassistant import config_entries
@@ -17,13 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 def register_flow_implementation(hass, client_id, client_secret):
     """Register a ambiclimate implementation.
 
-    domain: Domain of the component responsible for the implementation.
-    name: Name of the component.
     client_id: Client id.
     client_secret: Client secret.
     """
-    if DATA_AMBICLIMATE_IMPL not in hass.data:
-        hass.data[DATA_AMBICLIMATE_IMPL] = {}
+    hass.data.setdefault(DATA_AMBICLIMATE_IMPL, {})
 
     hass.data[DATA_AMBICLIMATE_IMPL] = {
         CONF_CLIENT_ID: client_id,
@@ -51,7 +49,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         config = self.hass.data.get(DATA_AMBICLIMATE_IMPL, {})
 
         if not config:
-            _LOGGER.debug("no config")
+            _LOGGER.debug("No config")
             return self.async_abort(reason='no_config')
 
         return await self.async_step_auth()
@@ -114,7 +112,6 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         self._registered_view = True
 
     async def _generate_oauth(self):
-        import ambiclimate
         config = self.hass.data[DATA_AMBICLIMATE_IMPL]
         clientsession = async_get_clientsession(self.hass)
         callback_url = self._cb_url()

@@ -1,5 +1,5 @@
 """Support for Ambiclimate ac."""
-
+import ambiclimate
 import asyncio
 import logging
 
@@ -20,10 +20,8 @@ from .const import (ATTR_VALUE, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
 
 _LOGGER = logging.getLogger(__name__)
 
-
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_ON_OFF)
-
 
 SEND_COMFORT_FEEDBACK_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
@@ -47,7 +45,6 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Ambicliamte device from config entry."""
-    import ambiclimate
     config = entry.data
     websession = async_get_clientsession(hass)
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
@@ -60,17 +57,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     try:
         _token_info = await oauth.refresh_access_token(token_info)
-        if _token_info:
-            await store.async_save(token_info)
-            token_info = _token_info
     except ambiclimate.AmbiclimateOauthError:
         _LOGGER.error("Failed to refresh access token")
+        raise
+
+    if _token_info:
+            await store.async_save(token_info)
+            token_info = _token_info
 
     data_connection = ambiclimate.AmbiclimateConnection(oauth,
                                                         token_info=token_info,
                                                         websession=websession)
-
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     if not await data_connection.find_devices():
         _LOGGER.error("No devices found")
@@ -101,7 +98,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async def set_comfort_mode(service):
         """Set comfort mode."""
-        device_name = service.data.get(ATTR_NAME)
+        device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)
         if device:
             await device.set_comfort_mode()
@@ -113,10 +110,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async def set_temperature_mode(service):
         """Set temperature mode."""
-        device_name = service.data.get(ATTR_NAME)
+        device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)
         if device:
-            await device.set_temperature_mode(service.data.get(ATTR_VALUE))
+            await device.set_temperature_mode(service.data[ATTR_VALUE])
 
     hass.services.async_register(DOMAIN,
                                  SERVICE_TEMPERATURE_MODE,
@@ -221,11 +218,12 @@ class AmbiclimateEntity(ClimateDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
-        import ambiclimate
         try:
             token_info = await self._heater.control.refresh_access_token()
-            if token_info:
-                await self._store.async_save(token_info)
         except ambiclimate.AmbiclimateOauthError:
             _LOGGER.error("Failed to refresh access token")
+        else:
+            if token_info:
+                await self._store.async_save(token_info)
+
         self._data = await self._heater.update_device()
