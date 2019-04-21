@@ -3,6 +3,7 @@ import inspect
 import logging
 import os
 import re
+from numbers import Number
 from datetime import (timedelta, datetime as datetime_sys,
                       time as time_sys, date as date_sys)
 from socket import _GLOBAL_DEFAULT_TIMEOUT
@@ -22,7 +23,6 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL, CONF_ENTITY_NAMESPACE, __version__)
 from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 
@@ -89,6 +89,8 @@ def has_at_most_one_key(*keys: str) -> Callable:
 
 def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
+    if isinstance(value, bool):
+        return value
     if isinstance(value, str):
         value = value.lower()
         if value in ('1', 'true', 'yes', 'on', 'enable'):
@@ -96,7 +98,31 @@ def boolean(value: Any) -> bool:
         if value in ('0', 'false', 'no', 'off', 'disable'):
             return False
         raise vol.Invalid('invalid boolean value {}'.format(value))
-    return bool(value)
+    if isinstance(value, Number):
+        return value != 0
+    raise vol.Invalid('invalid boolean value {}'.format(value))
+
+
+def boolean_true(value: Any) -> bool:
+    """Coerce a boolean value to true, or return false."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        value = value.lower()
+        return value in ('1', 'true', 'yes', 'on', 'enable')
+    if isinstance(value, Number):
+        return value != 0
+    return False
+
+
+_WS = re.compile('\\s*')
+
+
+def whitespace(value: Any) -> str:
+    """Validate result contains only whitespace."""
+    if isinstance(value, str) and _WS.fullmatch(value):
+        return ''
+    raise vol.Invalid('invalid whitespace string "{}"'.format(value))
 
 
 def isdevice(value):
@@ -444,6 +470,8 @@ unit_system = vol.All(vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC,
 
 def template(value):
     """Validate a jinja2 template."""
+    from homeassistant.helpers import template as template_helper
+
     if value is None:
         raise vol.Invalid('template value is None')
     if isinstance(value, (list, dict, template_helper.Template)):
