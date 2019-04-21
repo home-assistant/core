@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.cover import SUPPORT_OPEN, SUPPORT_CLOSE
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_OPEN
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +61,7 @@ def devices_from_config(domain_config):
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         # Determine what kind of entity to create, RflinkCover
-		# or InvertedRflinkCover
+        # or InvertedRflinkCover
         if CONF_TYPE in config:
             # Remove type from config to not pass it as and argument
             # to entity instantiation
@@ -148,4 +147,3 @@ class InvertedRflinkCover(RflinkCover):
             cmmnd = cmd
 
         await super()._async_send_command(cmmnd, repetitions)
-
