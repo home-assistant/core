@@ -14,8 +14,6 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ROUTE = 'Route'
-ATTR_ROUTE_NAME = 'Route name'
 ATTR_DUE_IN = 'Due in'
 
 CONF_STOP_ID = 'stopid'
@@ -82,9 +80,7 @@ class Bizkaibus:
         """Initialize the data object."""
         self.stop = stop
         self.route = route
-        self.info = [{ATTR_ROUTE_NAME: 'n/a',
-                      ATTR_ROUTE: self.route,
-                      ATTR_DUE_IN: 'n/a'}]
+        self.info = None
 
     def update(self):
         """Retrieve the information from API."""
