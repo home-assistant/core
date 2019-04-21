@@ -739,7 +739,7 @@ niko-home-control==0.1.8
 # homeassistant.components.air_quality.nilu
 niluclient==0.1.2
 
-# homeassistant.components.withings.sensor
+# homeassistant.components.withings
 nokia==1.2.0
 
 # homeassistant.components.sensor.nederlandse_spoorwegen

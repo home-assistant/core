@@ -177,6 +177,7 @@ FLOWS = [
     'twilio',
     'unifi',
     'upnp',
+    'withings',
     'zha',
     'zone',
     'zwave',

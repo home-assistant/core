@@ -148,7 +148,7 @@ mbddns==0.1.2
 # homeassistant.components.switch.mfi
 mficlient==0.3.0
 
-# homeassistant.components.withings.sensor
+# homeassistant.components.withings
 nokia==1.2.0
 
 # homeassistant.components.binary_sensor.trend

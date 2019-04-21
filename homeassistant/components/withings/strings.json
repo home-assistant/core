@@ -1,0 +1,30 @@
+{
+  "config": {
+    "title": "Withings",
+    "step": {
+      "profile": {
+        "title": "User Profile.",
+        "description": "Select a user profile to you want home assistant to access.",
+        "data": {
+          "profile": "Profile"
+        }
+      },
+      "auth": {
+        "title": "Authenticate Withings",
+        "description": "Follow the link below and <b>Authorize</b> access to your Withings account. Be certain to select the <b>{profile}</b> profile.\n\n[Authorize Link]({authorization_url})"
+      }
+    },
+    "create_entry": {
+      "default": "Successfully authenticated with Withings for the selected profile."
+    },
+    "errors": {
+      "follow_link": "Please follow the link and authenticate before pressing Submit."
+    },
+    "abort": {
+      "no_flows": "You need to configure Withings before authenticating with it.",
+      "api_no_data": "No data provided to Withings callback.",
+      "api_no_profile_data": "Profile was not provided with code.",
+      "api_no_code_data": "Code was not provided."
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "domain": "withings",
+  "name": "Withings",
+  "documentation": "https://www.home-assistant.io/components/withings",
+  "requirements": [
+    "nokia==1.2.0"
+  ],
+  "dependencies": [
+    "api",
+    "http"
+  ],
+  "codeowners": [
+    "@vangorra"
+  ]
+}
