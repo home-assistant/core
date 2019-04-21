@@ -27,14 +27,25 @@ def normalize_metadata(metadata: dict) -> dict:
     return new_metadata
 
 
-def get_minio_notification_response(mc, bucket_name: str, prefix: str, suffix: str, events: List[str]):
+def get_minio_notification_response(
+    mc,
+    bucket_name: str,
+    prefix: str,
+    suffix: str,
+    events: List[str]
+):
     query = {
         'prefix': prefix,
         'suffix': suffix,
         'events': events,
     }
     # noinspection PyProtectedMember
-    return mc._url_open('GET', bucket_name=bucket_name, query=query, preload_content=False)
+    return mc._url_open(
+        'GET',
+        bucket_name=bucket_name,
+        query=query,
+        preload_content=False
+    )
 
 
 class MinioEventStreamIterator(collections.Iterable):
@@ -58,7 +69,18 @@ class MinioEventStreamIterator(collections.Iterable):
 
 
 class MinioEventThread(threading.Thread):
-    def __init__(self, q: Queue, endpoint: str, access_key: str, secret_key: str, secure: bool, bucket_name: str, prefix: str, suffix: str, events: List[str]):
+    def __init__(
+        self,
+        q: Queue,
+        endpoint: str,
+        access_key: str,
+        secret_key: str,
+        secure: bool,
+        bucket_name: str,
+        prefix: str,
+        suffix: str,
+        events: List[str]
+    ):
         super().__init__()
         self.__q = q
         self.__endpoint = endpoint
@@ -80,35 +102,55 @@ class MinioEventThread(threading.Thread):
     def run(self):
         _LOGGER.info('Running MinioEventThread')
 
-        mc = Minio(self.__endpoint, self.__access_key, self.__secret_key, self.__secure)
+        mc = Minio(
+            self.__endpoint,
+            self.__access_key,
+            self.__secret_key,
+            self.__secure
+        )
 
         while True:
-            _LOGGER.info('Connecting to minio event stream')
-            response = get_minio_notification_response(mc, self.__bucket_name, self.__prefix, self.__suffix, self.__events)
-            self.__event_stream_it = MinioEventStreamIterator(response)
-
             try:
-                for event in self.__event_stream_it:
-                    for event_name, bucket, key, metadata in iterate_objects(event):
-                        presigned_url = ''
-                        try:
-                            presigned_url = mc.presigned_get_object(bucket, key)
-                        except Exception as error:
-                            _LOGGER.error('Failed to generate presigned url: %s', error)
-
-                        queue_entry = {
-                            "event_name": event_name,
-                            "bucket": bucket,
-                            "key": key,
-                            "presigned_url": presigned_url,
-                            "metadata": metadata,
-                        }
-                        _LOGGER.debug('Queue entry, %s', queue_entry)
-                        self.__q.put(queue_entry)
-            except json.JSONDecodeError:
-                response.close()
+                self._run_loop(mc)
             except AttributeError:
                 break
+
+
+    def _run_loop(self, mc):
+        _LOGGER.info('Connecting to minio event stream')
+        response = get_minio_notification_response(
+            mc,
+            self.__bucket_name,
+            self.__prefix,
+            self.__suffix,
+            self.__events
+        )
+        self.__event_stream_it = MinioEventStreamIterator(response)
+
+        try:
+            for event in self.__event_stream_it:
+                for event_name, bucket, key, metadata in iterate_objects(event):
+                    presigned_url = ''
+                    try:
+                        presigned_url = mc.presigned_get_object(bucket, key)
+                    except Exception as error:
+                        _LOGGER.error(
+                            'Failed to generate presigned url: %s',
+                            error
+                        )
+
+                    queue_entry = {
+                        "event_name": event_name,
+                        "bucket": bucket,
+                        "key": key,
+                        "presigned_url": presigned_url,
+                        "metadata": metadata,
+                    }
+                    _LOGGER.debug('Queue entry, %s', queue_entry)
+                    self.__q.put(queue_entry)
+        except json.JSONDecodeError:
+            response.close()
+
 
     def stop(self):
         _LOGGER.info('Stopping event thread')
@@ -128,7 +170,9 @@ def iterate_objects(event):
         event_name = record.get('eventName')
         bucket = record.get('s3', {}).get('bucket', {}).get('name')
         key = record.get('s3', {}).get('object', {}).get('key')
-        metadata = normalize_metadata(record.get('s3', {}).get('object', {}).get('userMetadata', {}))
+        metadata = normalize_metadata(
+            record.get('s3', {}).get('object', {}).get('userMetadata', {})
+        )
 
         if not bucket or not key:
             _LOGGER.info('Invalid bucket and/or key', bucket, key)

@@ -4,7 +4,8 @@ import threading
 from queue import Queue
 
 import voluptuous as vol
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_START, \
+    EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,9 +35,18 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_SECURE): cv.boolean,
         vol.Optional(CONF_LISTEN): vol.All(cv.ensure_list, [vol.Schema({
             vol.Required(CONF_LISTEN_BUCKET): cv.string,
-            vol.Optional(CONF_LISTEN_PREFIX, default=CONF_LISTEN_PREFIX_DEFAULT): cv.string,
-            vol.Optional(CONF_LISTEN_SUFFIX, default=CONF_LISTEN_SUFFIX_DEFAULT): cv.string,
-            vol.Optional(CONF_LISTEN_EVENTS, default=CONF_LISTEN_EVENTS_DEFAULT): cv.string,
+            vol.Optional(
+                CONF_LISTEN_PREFIX,
+                default=CONF_LISTEN_PREFIX_DEFAULT
+            ): cv.string,
+            vol.Optional(
+                CONF_LISTEN_SUFFIX,
+                default=CONF_LISTEN_SUFFIX_DEFAULT
+            ): cv.string,
+            vol.Optional(
+                CONF_LISTEN_EVENTS,
+                default=CONF_LISTEN_EVENTS_DEFAULT
+            ): cv.string,
         })])
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -52,6 +62,7 @@ BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend({
 
 
 class QueueListener(threading.Thread):
+    """Forwards events from queue into HASS event bus"""
     def __init__(self, hass):
         super().__init__()
         self.__hass = hass
@@ -66,7 +77,12 @@ class QueueListener(threading.Thread):
 
             _, file_name = os.path.split(event['key'])
 
-            _LOGGER.debug('Sending event %s, %s, %s', event['event_name'], event['bucket'], event['key'])
+            _LOGGER.debug(
+                'Sending event %s, %s, %s',
+                event['event_name'],
+                event['bucket'],
+                event['key']
+            )
             self.__hass.bus.fire(DOMAIN, {
                 'file_name': file_name,
                 **event,
@@ -90,6 +106,7 @@ class QueueListener(threading.Thread):
 
 
 class MinioListener:
+    """MinioEventThread wrapper with helper methods"""
     def __init__(self, *args):
         self.__args = args
         self.__minio_event_thread = None
@@ -106,6 +123,7 @@ class MinioListener:
 
 
 def setup(hass, config):
+    """Setup MinioClient and all the configured event listeners"""
     conf = config[DOMAIN]
 
     host = conf[CONF_HOST]
@@ -117,8 +135,14 @@ def setup(hass, config):
     queue_listener = QueueListener(hass)
     q = queue_listener.q
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, queue_listener.start_handler)
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, queue_listener.stop_handler)
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_START,
+        queue_listener.start_handler
+    )
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_STOP,
+        queue_listener.stop_handler
+    )
 
     def _setup_listener(c):
         bucket = c[CONF_LISTEN_BUCKET]
@@ -126,10 +150,26 @@ def setup(hass, config):
         suffix = c[CONF_LISTEN_SUFFIX]
         events = c[CONF_LISTEN_EVENTS]
 
-        minio_listener = MinioListener(q, f'{host}:{str(port)}', access_key, secret_key, secure, bucket, prefix, suffix, events)
+        minio_listener = MinioListener(
+            q,
+            f'{host}:{str(port)}',
+            access_key,
+            secret_key,
+            secure,
+            bucket,
+            prefix,
+            suffix,
+            events
+        )
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, minio_listener.start_handler)
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, minio_listener.stop_handler)
+        hass.bus.listen_once(
+            EVENT_HOMEASSISTANT_START,
+            minio_listener.start_handler
+        )
+        hass.bus.listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            minio_listener.stop_handler
+        )
 
     for listen_conf in conf.get(CONF_LISTEN, []):
         _setup_listener(listen_conf)
@@ -171,8 +211,14 @@ def setup(hass, config):
 
         mc.remove_object(bucket, key)
 
-    hass.services.register(DOMAIN, 'put', put_file, schema=BUCKET_KEY_FILE_SCHEMA)
-    hass.services.register(DOMAIN, 'get', get_file, schema=BUCKET_KEY_FILE_SCHEMA)
-    hass.services.register(DOMAIN, 'remove', remove_file, schema=BUCKET_KEY_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'put', put_file, schema=BUCKET_KEY_FILE_SCHEMA
+    )
+    hass.services.register(
+        DOMAIN, 'get', get_file, schema=BUCKET_KEY_FILE_SCHEMA
+    )
+    hass.services.register(
+        DOMAIN, 'remove', remove_file, schema=BUCKET_KEY_SCHEMA
+    )
 
     return True
