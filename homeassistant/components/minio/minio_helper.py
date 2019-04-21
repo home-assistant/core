@@ -1,4 +1,4 @@
-"""Minio helper methods"""
+"""Minio helper methods."""
 
 import collections
 import json
@@ -18,7 +18,7 @@ _METADATA_RE = re.compile('x-amz-meta-(.*)', re.IGNORECASE)
 
 
 def normalize_metadata(metadata: dict) -> dict:
-    """Normalize object metadata by stripping the prefix"""
+    """Normalize object metadata by stripping the prefix."""
     new_metadata = {}
     for meta_key in metadata.keys():
         m = _METADATA_RE.match(meta_key)
@@ -39,7 +39,7 @@ def get_minio_notification_response(
 ):
     """
     Copied from minio-py implementation to send request to start listening
-    to minio events
+    to minio events.
     """
     query = {
         'prefix': prefix,
@@ -56,7 +56,7 @@ def get_minio_notification_response(
 
 
 class MinioEventStreamIterator(collections.Iterable):
-    """Iterator wrapper over notification http response stream"""
+    """Iterator wrapper over notification http response stream."""
     def __iter__(self) -> Iterator:
         return self
 
@@ -78,7 +78,7 @@ class MinioEventStreamIterator(collections.Iterable):
 
 class MinioEventThread(threading.Thread):
     """
-    Thread wrapper around minio notification stream as it is a blocking call
+    Thread wrapper around minio notification stream as it is a blocking call.
     """
     def __init__(
         self,
@@ -112,7 +112,7 @@ class MinioEventThread(threading.Thread):
         self.stop()
 
     def run(self):
-        """Create MinioClient and run the loop"""
+        """Create MinioClient and run the loop."""
         _LOGGER.info('Running MinioEventThread')
 
         mc = Minio(
@@ -166,7 +166,7 @@ class MinioEventThread(threading.Thread):
 
 
     def stop(self):
-        """Cancel event stream and join the thread"""
+        """Cancel event stream and join the thread."""
         _LOGGER.info('Stopping event thread')
         if self.__event_stream_it is not None:
             self.__event_stream_it.close()
@@ -179,8 +179,8 @@ class MinioEventThread(threading.Thread):
 
 def iterate_objects(event):
     """
-    Iterate over file records of notification event
-    Most of the time it should still be only one record
+    Iterate over file records of notification event.
+    Most of the time it should still be only one record.
     """
     records = event.get('Records', [])
 
