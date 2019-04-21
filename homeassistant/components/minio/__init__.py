@@ -1,3 +1,5 @@
+"""Minio component"""
+
 import logging
 import os
 import threading
@@ -66,14 +68,16 @@ def get_minio_endpoint(host: str, port: int) -> str:
 
 
 class QueueListener(threading.Thread):
-    """Forwards events from queue into HASS event bus."""
+    """Forward events from queue into HASS event bus."""
+
     def __init__(self, hass):
+        """Create queue."""
         super().__init__()
         self.__hass = hass
         self.__q = Queue()
 
     def run(self):
-        """Liste to queue events, and forward them to HASS event bus."""
+        """Listen to queue events, and forward them to HASS event bus."""
         _LOGGER.info('Running QueueListener')
         while True:
             event = self.__q.get()
@@ -116,6 +120,7 @@ class QueueListener(threading.Thread):
 
 class MinioListener:
     """MinioEventThread wrapper with helper methods."""
+
     def __init__(self, *args):
         """Create Listener"""
         self.__args = args

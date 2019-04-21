@@ -13,7 +13,6 @@ from minio import Minio
 
 _LOGGER = logging.getLogger(__name__)
 
-
 _METADATA_RE = re.compile('x-amz-meta-(.*)', re.IGNORECASE)
 
 
@@ -29,7 +28,6 @@ def normalize_metadata(metadata: dict) -> dict:
 
     return new_metadata
 
-
 def get_minio_notification_response(
     mc,
     bucket_name: str,
@@ -37,10 +35,7 @@ def get_minio_notification_response(
     suffix: str,
     events: List[str]
 ):
-    """
-    Copied from minio-py implementation to send request to start listening
-    to minio events.
-    """
+    """Start listening to minio events. Copied from minio-py."""
     query = {
         'prefix': prefix,
         'suffix': suffix,
@@ -57,6 +52,7 @@ def get_minio_notification_response(
 
 class MinioEventStreamIterator(collections.Iterable):
     """Iterator wrapper over notification http response stream."""
+
     def __iter__(self) -> Iterator:
         return self
 
@@ -77,9 +73,8 @@ class MinioEventStreamIterator(collections.Iterable):
 
 
 class MinioEventThread(threading.Thread):
-    """
-    Thread wrapper around minio notification stream as it is a blocking call.
-    """
+    """Thread wrapper around minio notification blocking stream."""
+
     def __init__(
         self,
         q: Queue,
@@ -92,7 +87,7 @@ class MinioEventThread(threading.Thread):
         suffix: str,
         events: List[str]
     ):
-        """Copy over all Minio client options"""
+        """Copy over all Minio client options."""
         super().__init__()
         self.__q = q
         self.__endpoint = endpoint
@@ -127,7 +122,6 @@ class MinioEventThread(threading.Thread):
                 self._run_loop(mc)
             except AttributeError:
                 break
-
 
     def _run_loop(self, mc):
         _LOGGER.info('Connecting to minio event stream')
@@ -164,7 +158,6 @@ class MinioEventThread(threading.Thread):
         except json.JSONDecodeError:
             response.close()
 
-
     def stop(self):
         """Cancel event stream and join the thread."""
         _LOGGER.info('Stopping event thread')
@@ -175,7 +168,6 @@ class MinioEventThread(threading.Thread):
         _LOGGER.info('Joining event thread')
         self.join()
         _LOGGER.info('Event thread joined')
-
 
 def iterate_objects(event):
     """
