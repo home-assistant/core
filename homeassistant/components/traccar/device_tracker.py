@@ -7,9 +7,8 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL,
-    CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_LEVEL,
-    CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS,
-    CONF_EVENT)
+    CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL, 
+    CONF_MONITORED_CONDITIONS, CONF_EVENT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -157,8 +156,6 @@ class TraccarScanner:
                 attr[ATTR_CATEGORY] = device_info['category']
             if device_info.get('speed') is not None:
                 attr[ATTR_SPEED] = device_info['speed']
-            if device_info.get('battery') is not None:
-                attr[ATTR_BATTERY_LEVEL] = device_info['battery']
             if device_info.get('motion') is not None:
                 attr[ATTR_MOTION] = device_info['motion']
             if device_info.get('traccar_id') is not None:
@@ -177,6 +174,7 @@ class TraccarScanner:
                 gps=(device_info.get('latitude'),
                      device_info.get('longitude')),
                 gps_accuracy=(device_info.get('accuracy')),
+                battery=device_info.get('battery'),
                 attributes=attr)
 
     async def import_events(self):
