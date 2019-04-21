@@ -16,7 +16,7 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-TYPE_NORMAL = 'normal'
+TYPE_STANDARD = 'standard'
 TYPE_INVERTED = 'inverted'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_TYPE):
-                vol.Any(TYPE_NORMAL, TYPE_INVERTED),
+                vol.Any(TYPE_STANDARD, TYPE_INVERTED),
             vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_GROUP_ALIASES, default=[]):
@@ -48,7 +48,7 @@ def entity_class_for_type(entity_type):
     """
     entity_device_mapping = {
         # default cover implementation
-        TYPE_NORMAL: RflinkCover,
+        TYPE_STANDARD: RflinkCover,
         # cover with open/close commands inverted
         # like KAKU/COCO ASUN-650
         TYPE_INVERTED: InvertedRflinkCover,
@@ -68,7 +68,7 @@ def devices_from_config(domain_config):
             # to entity instantiation
             entity_type = config.pop(CONF_TYPE)
         else:
-            entity_type = TYPE_NORMAL
+            entity_type = TYPE_STANDARD
 
         entity_class = entity_class_for_type(entity_type)
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
