@@ -13,36 +13,18 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
+from .const import (
+    ATTR_ADDRESS, ATTR_CATEGORY, ATTR_GEOFENCE,
+    ATTR_MOTION, ATTR_SPEED, ATTR_TRACKER, ATTR_TRACCAR_ID, ATTR_STATUS,
+    EVENT_DEVICE_MOVING, EVENT_COMMAND_RESULT, EVENT_DEVICE_FUEL_DROP,
+    EVENT_GEOFENCE_ENTER, EVENT_DEVICE_OFFLINE, EVENT_DRIVER_CHANGED,
+    EVENT_GEOFENCE_EXIT, EVENT_DEVICE_OVERSPEED, EVENT_DEVICE_ONLINE,
+    EVENT_DEVICE_STOPPED, EVENT_MAINTENANCE, EVENT_ALARM, EVENT_TEXT_MESSAGE,
+    EVENT_DEVICE_UNKNOWN, EVENT_IGNITION_OFF, EVENT_IGNITION_ON,
+    EVENT_ALL_EVENTS)
 
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_ADDRESS = 'address'
-ATTR_CATEGORY = 'category'
-ATTR_GEOFENCE = 'geofence'
-ATTR_MOTION = 'motion'
-ATTR_SPEED = 'speed'
-ATTR_TRACKER = 'tracker'
-ATTR_TRACCAR_ID = 'traccar_id'
-ATTR_STATUS = 'status'
-
-EVENT_DEVICE_MOVING = 'device_moving'
-EVENT_COMMAND_RESULT = 'command_result'
-EVENT_DEVICE_FUEL_DROP = 'device_fuel_drop'
-EVENT_GEOFENCE_ENTER = 'geofence_enter'
-EVENT_DEVICE_OFFLINE = 'device_offline'
-EVENT_DRIVER_CHANGED = 'driver_changed'
-EVENT_GEOFENCE_EXIT = 'geofence_exit'
-EVENT_DEVICE_OVERSPEED = 'device_overspeed'
-EVENT_DEVICE_ONLINE = 'device_online'
-EVENT_DEVICE_STOPPED = 'device_stopped'
-EVENT_MAINTENANCE = 'maintenance'
-EVENT_ALARM = 'alarm'
-EVENT_TEXT_MESSAGE = 'text_message'
-EVENT_DEVICE_UNKNOWN = 'device_unknown'
-EVENT_IGNITION_OFF = 'ignition_off'
-EVENT_IGNITION_ON = 'ignition_on'
-EVENT_ALL_EVENTS = 'all_events'
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
