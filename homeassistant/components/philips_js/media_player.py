@@ -101,7 +101,7 @@ class PhilipsTV(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Start running updates once we are added to hass."""
-        self.hass.add_job(
+        await self.hass.async_add_executor_job(
             self._update_soon, 0)
 
     @property
