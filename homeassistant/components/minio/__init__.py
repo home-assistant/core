@@ -4,6 +4,7 @@ import logging
 import os
 import threading
 from queue import Queue
+from typing import List
 
 import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
@@ -99,7 +100,7 @@ class QueueListener(threading.Thread):
             })
 
     @property
-    def q(self):
+    def queue(self):
         """Return wrapped queue."""
         return self.__q
 
@@ -122,16 +123,45 @@ class QueueListener(threading.Thread):
 class MinioListener:
     """MinioEventThread wrapper with helper methods."""
 
-    def __init__(self, *args):
+    def __init__(
+            self,
+            queue: Queue,
+            endpoint: str,
+            access_key: str,
+            secret_key: str,
+            secure: bool,
+            bucket_name: str,
+            prefix: str,
+            suffix: str,
+            events: List[str]
+    ):
         """Create Listener."""
-        self.__args = args
+        self.__queue = queue
+        self.__endpoint = endpoint
+        self.__access_key = access_key
+        self.__secret_key = secret_key
+        self.__secure = secure
+        self.__bucket_name = bucket_name
+        self.__prefix = prefix
+        self.__suffix = suffix
+        self.__events = events
         self.__minio_event_thread = None
 
     def start_handler(self, _):
         """Create and start the event thread."""
         from .minio_helper import MinioEventThread
 
-        self.__minio_event_thread = MinioEventThread(*self.__args)
+        self.__minio_event_thread = MinioEventThread(
+            self.__queue,
+            self.__endpoint,
+            self.__access_key,
+            self.__secret_key,
+            self.__secure,
+            self.__bucket_name,
+            self.__prefix,
+            self.__suffix,
+            self.__events
+        )
         self.__minio_event_thread.start()
 
     def stop_handler(self, _):
@@ -151,7 +181,7 @@ def setup(hass, config):
     secure = conf[CONF_SECURE]
 
     queue_listener = QueueListener(hass)
-    q = queue_listener.q
+    queue = queue_listener.queue
 
     hass.bus.listen_once(
         EVENT_HOMEASSISTANT_START,
@@ -162,14 +192,14 @@ def setup(hass, config):
         queue_listener.stop_handler
     )
 
-    def _setup_listener(c):
-        bucket = c[CONF_LISTEN_BUCKET]
-        prefix = c[CONF_LISTEN_PREFIX]
-        suffix = c[CONF_LISTEN_SUFFIX]
-        events = c[CONF_LISTEN_EVENTS]
+    def _setup_listener(listener_conf):
+        bucket = listener_conf[CONF_LISTEN_BUCKET]
+        prefix = listener_conf[CONF_LISTEN_PREFIX]
+        suffix = listener_conf[CONF_LISTEN_SUFFIX]
+        events = listener_conf[CONF_LISTEN_EVENTS]
 
         minio_listener = MinioListener(
-            q,
+            queue,
             get_minio_endpoint(host, port),
             access_key,
             secret_key,
@@ -194,7 +224,12 @@ def setup(hass, config):
 
     from minio import Minio
 
-    mc = Minio(get_minio_endpoint(host, port), access_key, secret_key, secure)
+    minio_client = Minio(
+        get_minio_endpoint(host, port),
+        access_key,
+        secret_key,
+        secure
+    )
 
     def _render_service_value(service, key):
         value = service.data.get(key)
@@ -211,7 +246,7 @@ def setup(hass, config):
             _LOGGER.error('Invalid file_path %s', file_path)
             return
 
-        mc.fput_object(bucket, key, file_path)
+        minio_client.fput_object(bucket, key, file_path)
 
     def get_file(service):
         """Download file service."""
@@ -223,14 +258,14 @@ def setup(hass, config):
             _LOGGER.error('Invalid file_path %s', file_path)
             return
 
-        mc.fget_object(bucket, key, file_path)
+        minio_client.fget_object(bucket, key, file_path)
 
     def remove_file(service):
         """Delete file service."""
         bucket = _render_service_value(service, 'bucket')
         key = _render_service_value(service, 'key')
 
-        mc.remove_object(bucket, key)
+        minio_client.remove_object(bucket, key)
 
     hass.services.register(
         DOMAIN, 'put', put_file, schema=BUCKET_KEY_FILE_SCHEMA

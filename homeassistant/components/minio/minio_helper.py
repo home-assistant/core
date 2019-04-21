@@ -20,21 +20,21 @@ def normalize_metadata(metadata: dict) -> dict:
     """Normalize object metadata by stripping the prefix."""
     new_metadata = {}
     for meta_key in metadata.keys():
-        m = _METADATA_RE.match(meta_key)
-        if not m:
+        match = _METADATA_RE.match(meta_key)
+        if not match:
             continue
 
-        new_metadata[m.group(1).lower()] = metadata[meta_key]
+        new_metadata[match.group(1).lower()] = metadata[meta_key]
 
     return new_metadata
 
 
 def get_minio_notification_response(
-    mc,
-    bucket_name: str,
-    prefix: str,
-    suffix: str,
-    events: List[str]
+        minio_client,
+        bucket_name: str,
+        prefix: str,
+        suffix: str,
+        events: List[str]
 ):
     """Start listening to minio events. Copied from minio-py."""
     query = {
@@ -43,7 +43,8 @@ def get_minio_notification_response(
         'events': events,
     }
     # noinspection PyProtectedMember
-    return mc._url_open(
+    # pylint: disable=W0212
+    return minio_client._url_open(
         'GET',
         bucket_name=bucket_name,
         query=query,
@@ -81,20 +82,20 @@ class MinioEventThread(threading.Thread):
     """Thread wrapper around minio notification blocking stream."""
 
     def __init__(
-        self,
-        q: Queue,
-        endpoint: str,
-        access_key: str,
-        secret_key: str,
-        secure: bool,
-        bucket_name: str,
-        prefix: str,
-        suffix: str,
-        events: List[str]
+            self,
+            queue: Queue,
+            endpoint: str,
+            access_key: str,
+            secret_key: str,
+            secure: bool,
+            bucket_name: str,
+            prefix: str,
+            suffix: str,
+            events: List[str]
     ):
         """Copy over all Minio client options."""
         super().__init__()
-        self.__q = q
+        self.__queue = queue
         self.__endpoint = endpoint
         self.__access_key = access_key
         self.__secret_key = secret_key
@@ -117,7 +118,7 @@ class MinioEventThread(threading.Thread):
         """Create MinioClient and run the loop."""
         _LOGGER.info('Running MinioEventThread')
 
-        mc = Minio(
+        minio_client = Minio(
             self.__endpoint,
             self.__access_key,
             self.__secret_key,
@@ -127,7 +128,7 @@ class MinioEventThread(threading.Thread):
         while True:
             _LOGGER.info('Connecting to minio event stream')
             response = get_minio_notification_response(
-                mc,
+                minio_client,
                 self.__bucket_name,
                 self.__prefix,
                 self.__suffix,
@@ -136,18 +137,24 @@ class MinioEventThread(threading.Thread):
             try:
                 self.__event_stream_it = MinioEventStreamIterator(response)
 
-                self._iterate_event_stream(self.__event_stream_it, mc)
+                self._iterate_event_stream(
+                    self.__event_stream_it,
+                    minio_client
+                )
             except json.JSONDecodeError:
                 response.close()
             except AttributeError:
                 break
 
-    def _iterate_event_stream(self, event_stream_it, mc):
+    def _iterate_event_stream(self, event_stream_it, minio_client):
         for event in event_stream_it:
             for event_name, bucket, key, metadata in iterate_objects(event):
                 presigned_url = ''
                 try:
-                    presigned_url = mc.presigned_get_object(bucket, key)
+                    presigned_url = minio_client.presigned_get_object(
+                        bucket, key
+                    )
+                # pylint: disable=W0703
                 except Exception as error:
                     _LOGGER.error(
                         'Failed to generate presigned url: %s',
@@ -162,7 +169,7 @@ class MinioEventThread(threading.Thread):
                     "metadata": metadata,
                 }
                 _LOGGER.debug('Queue entry, %s', queue_entry)
-                self.__q.put(queue_entry)
+                self.__queue.put(queue_entry)
 
     def stop(self):
         """Cancel event stream and join the thread."""
@@ -193,7 +200,7 @@ def iterate_objects(event):
         )
 
         if not bucket or not key:
-            _LOGGER.info('Invalid bucket and/or key', bucket, key)
+            _LOGGER.info('Invalid bucket and/or key, %s, %s', bucket, key)
             continue
 
         key = unquote(key)

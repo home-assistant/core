@@ -1,7 +1,7 @@
 {
   "domain": "minio",
   "name": "Minio",
-  "documentation": "",
+  "documentation": "https://www.home-assistant.io/components/minio",
   "requirements": [
     "minio==4.0.9"
   ],
