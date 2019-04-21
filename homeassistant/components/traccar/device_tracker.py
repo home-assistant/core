@@ -117,8 +117,8 @@ class TraccarScanner:
         """Further initialize connection to Traccar."""
         await self._async_update()
         async_track_time_interval(self._hass,
-                                    self._async_update,
-                                    self._scan_interval)
+                                  self._async_update,
+                                  self._scan_interval)
 
     async def _async_update(self, now=None):
         """Update info from Traccar."""
