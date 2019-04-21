@@ -1,4 +1,4 @@
-"""Minio component"""
+"""Minio component."""
 
 import logging
 import os
@@ -123,7 +123,7 @@ class MinioListener:
     """MinioEventThread wrapper with helper methods."""
 
     def __init__(self, *args):
-        """Create Listener"""
+        """Create Listener."""
         self.__args = args
         self.__minio_event_thread = None
 
@@ -141,7 +141,7 @@ class MinioListener:
 
 
 def setup(hass, config):
-    """Setup MinioClient and all the configured event listeners."""
+    """Set up MinioClient and event listeners."""
     conf = config[DOMAIN]
 
     host = conf[CONF_HOST]

@@ -55,13 +55,16 @@ class MinioEventStreamIterator(collections.Iterable):
     """Iterator wrapper over notification http response stream."""
 
     def __iter__(self) -> Iterator:
+        """Return self."""
         return self
 
     def __init__(self, response):
+        """Init."""
         self.__response = response
         self.__stream = response.stream()
 
     def __next__(self):
+        """Get next not empty line."""
         while True:
             line = next(self.__stream)
             if line.strip():
@@ -70,6 +73,7 @@ class MinioEventStreamIterator(collections.Iterable):
                     return event
 
     def close(self):
+        """Close the response."""
         self.__response.close()
 
 
@@ -102,9 +106,11 @@ class MinioEventThread(threading.Thread):
         self.__event_stream_it = None
 
     def __enter__(self):
+        """Start the thread."""
         self.start()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Stop and join the thread."""
         self.stop()
 
     def run(self):
@@ -173,6 +179,7 @@ class MinioEventThread(threading.Thread):
 def iterate_objects(event):
     """
     Iterate over file records of notification event.
+
     Most of the time it should still be only one record.
     """
     records = event.get('Records', [])
