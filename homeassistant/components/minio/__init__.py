@@ -62,6 +62,7 @@ BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend({
     vol.Required('file_path'): cv.template,
 })
 
+
 def get_minio_endpoint(host: str, port: int) -> str:
     """Create minio endpoint from host and port."""
     return host + ':' + str(port)

@@ -28,6 +28,7 @@ def normalize_metadata(metadata: dict) -> dict:
 
     return new_metadata
 
+
 def get_minio_notification_response(
     mc,
     bucket_name: str,
@@ -118,45 +119,44 @@ class MinioEventThread(threading.Thread):
         )
 
         while True:
+            _LOGGER.info('Connecting to minio event stream')
+            response = get_minio_notification_response(
+                mc,
+                self.__bucket_name,
+                self.__prefix,
+                self.__suffix,
+                self.__events
+            )
             try:
-                self._run_loop(mc)
+                self.__event_stream_it = MinioEventStreamIterator(response)
+
+                self._iterate_event_stream(self.__event_stream_it, mc)
+            except json.JSONDecodeError:
+                response.close()
             except AttributeError:
                 break
 
-    def _run_loop(self, mc):
-        _LOGGER.info('Connecting to minio event stream')
-        response = get_minio_notification_response(
-            mc,
-            self.__bucket_name,
-            self.__prefix,
-            self.__suffix,
-            self.__events
-        )
-        self.__event_stream_it = MinioEventStreamIterator(response)
+    def _iterate_event_stream(self, event_stream_it, mc):
+        for event in event_stream_it:
+            for event_name, bucket, key, metadata in iterate_objects(event):
+                presigned_url = ''
+                try:
+                    presigned_url = mc.presigned_get_object(bucket, key)
+                except Exception as error:
+                    _LOGGER.error(
+                        'Failed to generate presigned url: %s',
+                        error
+                    )
 
-        try:
-            for event in self.__event_stream_it:
-                for event_name, bucket, key, metadata in iterate_objects(event):
-                    presigned_url = ''
-                    try:
-                        presigned_url = mc.presigned_get_object(bucket, key)
-                    except Exception as error:
-                        _LOGGER.error(
-                            'Failed to generate presigned url: %s',
-                            error
-                        )
-
-                    queue_entry = {
-                        "event_name": event_name,
-                        "bucket": bucket,
-                        "key": key,
-                        "presigned_url": presigned_url,
-                        "metadata": metadata,
-                    }
-                    _LOGGER.debug('Queue entry, %s', queue_entry)
-                    self.__q.put(queue_entry)
-        except json.JSONDecodeError:
-            response.close()
+                queue_entry = {
+                    "event_name": event_name,
+                    "bucket": bucket,
+                    "key": key,
+                    "presigned_url": presigned_url,
+                    "metadata": metadata,
+                }
+                _LOGGER.debug('Queue entry, %s', queue_entry)
+                self.__q.put(queue_entry)
 
     def stop(self):
         """Cancel event stream and join the thread."""
@@ -168,6 +168,7 @@ class MinioEventThread(threading.Thread):
         _LOGGER.info('Joining event thread')
         self.join()
         _LOGGER.info('Event thread joined')
+
 
 def iterate_objects(event):
     """
