@@ -69,23 +69,23 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     state = hass.states.get('fan.test')
     assert state.attributes.get('oscillating') is False
 
-    assert fan.SPEED_OFF == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_OFF
 
     async_fire_mqtt_message(hass, 'speed-state-topic', 'speed_lOw')
     state = hass.states.get('fan.test')
-    assert fan.SPEED_LOW == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_LOW
 
     async_fire_mqtt_message(hass, 'speed-state-topic', 'speed_mEdium')
     state = hass.states.get('fan.test')
-    assert fan.SPEED_MEDIUM == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_MEDIUM
 
     async_fire_mqtt_message(hass, 'speed-state-topic', 'speed_High')
     state = hass.states.get('fan.test')
-    assert fan.SPEED_HIGH == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_HIGH
 
     async_fire_mqtt_message(hass, 'speed-state-topic', 'speed_OfF')
     state = hass.states.get('fan.test')
-    assert fan.SPEED_OFF == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_OFF
 
 
 async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
@@ -129,23 +129,23 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     state = hass.states.get('fan.test')
     assert state.attributes.get('oscillating') is False
 
-    assert fan.SPEED_OFF == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_OFF
 
     async_fire_mqtt_message(hass, 'speed-state-topic', '{"val":"low"}')
     state = hass.states.get('fan.test')
-    assert fan.SPEED_LOW == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_LOW
 
     async_fire_mqtt_message(hass, 'speed-state-topic', '{"val":"medium"}')
     state = hass.states.get('fan.test')
-    assert fan.SPEED_MEDIUM == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_MEDIUM
 
     async_fire_mqtt_message(hass, 'speed-state-topic', '{"val":"high"}')
     state = hass.states.get('fan.test')
-    assert fan.SPEED_HIGH == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_HIGH
 
     async_fire_mqtt_message(hass, 'speed-state-topic', '{"val":"off"}')
     state = hass.states.get('fan.test')
-    assert fan.SPEED_OFF == state.attributes.get('speed')
+    assert state.attributes.get('speed') == fan.SPEED_OFF
 
 
 async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
@@ -511,7 +511,7 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
     state = hass.states.get('fan.test')
 
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
@@ -569,7 +569,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
     state = hass.states.get('fan.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Change json_attributes_topic
     async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
@@ -579,12 +579,12 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
     state = hass.states.get('fan.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
     state = hass.states.get('fan.beer')
-    assert '75' == state.attributes.get('val')
+    assert state.attributes.get('val') == '75'
 
 
 async def test_unique_id(hass):

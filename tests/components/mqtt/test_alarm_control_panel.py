@@ -53,14 +53,13 @@ async def test_update_state_via_state_topic(hass, mqtt_mock):
 
     entity_id = 'alarm_control_panel.test'
 
-    assert STATE_UNKNOWN == \
-        hass.states.get(entity_id).state
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     for state in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
                   STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_NIGHT,
                   STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED):
         async_fire_mqtt_message(hass, 'alarm/state', state)
-        assert state == hass.states.get(entity_id).state
+        assert hass.states.get(entity_id).state == state
 
 
 async def test_ignore_update_state_if_unknown_via_state_topic(hass, mqtt_mock):
@@ -76,11 +75,10 @@ async def test_ignore_update_state_if_unknown_via_state_topic(hass, mqtt_mock):
 
     entity_id = 'alarm_control_panel.test'
 
-    assert STATE_UNKNOWN == \
-        hass.states.get(entity_id).state
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, 'alarm/state', 'unsupported state')
-    assert STATE_UNKNOWN == hass.states.get(entity_id).state
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_arm_home_publishes_mqtt(hass, mqtt_mock):
@@ -120,7 +118,7 @@ async def test_arm_home_not_publishes_mqtt_with_invalid_code_when_req(
     call_count = mqtt_mock.async_publish.call_count
     common.async_alarm_arm_home(hass, 'abcd')
     await hass.async_block_till_done()
-    assert call_count == mqtt_mock.async_publish.call_count
+    assert mqtt_mock.async_publish.call_count == call_count
 
 
 async def test_arm_home_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
@@ -182,7 +180,7 @@ async def test_arm_away_not_publishes_mqtt_with_invalid_code_when_req(
     call_count = mqtt_mock.async_publish.call_count
     common.async_alarm_arm_away(hass, 'abcd')
     await hass.async_block_till_done()
-    assert call_count == mqtt_mock.async_publish.call_count
+    assert mqtt_mock.async_publish.call_count == call_count
 
 
 async def test_arm_away_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
@@ -244,7 +242,7 @@ async def test_arm_night_not_publishes_mqtt_with_invalid_code_when_req(
     call_count = mqtt_mock.async_publish.call_count
     common.async_alarm_arm_night(hass, 'abcd')
     await hass.async_block_till_done()
-    assert call_count == mqtt_mock.async_publish.call_count
+    assert mqtt_mock.async_publish.call_count == call_count
 
 
 async def test_arm_night_publishes_mqtt_when_code_not_req(hass, mqtt_mock):
@@ -353,7 +351,7 @@ async def test_disarm_not_publishes_mqtt_with_invalid_code_when_req(
     call_count = mqtt_mock.async_publish.call_count
     common.async_alarm_disarm(hass, 'abcd')
     await hass.async_block_till_done()
-    assert call_count == mqtt_mock.async_publish.call_count
+    assert mqtt_mock.async_publish.call_count == call_count
 
 
 async def test_default_availability_payload(hass, mqtt_mock):
@@ -370,17 +368,17 @@ async def test_default_availability_payload(hass, mqtt_mock):
     })
 
     state = hass.states.get('alarm_control_panel.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'online')
 
     state = hass.states.get('alarm_control_panel.test')
-    assert STATE_UNAVAILABLE != state.state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'offline')
 
     state = hass.states.get('alarm_control_panel.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_custom_availability_payload(hass, mqtt_mock):
@@ -399,17 +397,17 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     })
 
     state = hass.states.get('alarm_control_panel.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'good')
 
     state = hass.states.get('alarm_control_panel.test')
-    assert STATE_UNAVAILABLE != state.state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'nogood')
 
     state = hass.states.get('alarm_control_panel.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
@@ -427,7 +425,7 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
     state = hass.states.get('alarm_control_panel.test')
 
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
 
 async def test_update_state_via_state_topic_template(hass, mqtt_mock):
@@ -448,12 +446,12 @@ async def test_update_state_via_state_topic_template(hass, mqtt_mock):
     })
 
     state = hass.states.get('alarm_control_panel.test')
-    assert STATE_UNKNOWN == state.state
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, 'test-topic', '100')
 
     state = hass.states.get('alarm_control_panel.test')
-    assert STATE_ALARM_ARMED_AWAY == state.state
+    assert state.state == STATE_ALARM_ARMED_AWAY
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
@@ -513,7 +511,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
     state = hass.states.get('alarm_control_panel.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Change json_attributes_topic
     async_fire_mqtt_message(
@@ -523,12 +521,12 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
     state = hass.states.get('alarm_control_panel.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
     state = hass.states.get('alarm_control_panel.beer')
-    assert '75' == state.attributes.get('val')
+    assert state.attributes.get('val') == '75'
 
 
 async def test_unique_id(hass):

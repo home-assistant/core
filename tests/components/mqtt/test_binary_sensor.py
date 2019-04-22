@@ -29,15 +29,15 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     })
 
     state = hass.states.get('binary_sensor.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     async_fire_mqtt_message(hass, 'test-topic', 'ON')
     state = hass.states.get('binary_sensor.test')
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, 'test-topic', 'OFF')
     state = hass.states.get('binary_sensor.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
 
 async def test_setting_sensor_value_via_mqtt_message_and_template(
@@ -56,15 +56,15 @@ async def test_setting_sensor_value_via_mqtt_message_and_template(
     })
 
     state = hass.states.get('binary_sensor.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     async_fire_mqtt_message(hass, 'test-topic', '')
     state = hass.states.get('binary_sensor.test')
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, 'test-topic', '')
     state = hass.states.get('binary_sensor.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
 
 async def test_valid_device_class(hass, mqtt_mock):
@@ -79,7 +79,7 @@ async def test_valid_device_class(hass, mqtt_mock):
     })
 
     state = hass.states.get('binary_sensor.test')
-    assert 'motion' == state.attributes.get('device_class')
+    assert state.attributes.get('device_class') == 'motion'
 
 
 async def test_invalid_device_class(hass, mqtt_mock):
@@ -108,7 +108,7 @@ async def test_availability_without_topic(hass, mqtt_mock):
     })
 
     state = hass.states.get('binary_sensor.test')
-    assert STATE_UNAVAILABLE != state.state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_availability_by_defaults(hass, mqtt_mock):
@@ -123,17 +123,17 @@ async def test_availability_by_defaults(hass, mqtt_mock):
     })
 
     state = hass.states.get('binary_sensor.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'online')
 
     state = hass.states.get('binary_sensor.test')
-    assert STATE_UNAVAILABLE != state.state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'offline')
 
     state = hass.states.get('binary_sensor.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_availability_by_custom_payload(hass, mqtt_mock):
@@ -150,17 +150,17 @@ async def test_availability_by_custom_payload(hass, mqtt_mock):
     })
 
     state = hass.states.get('binary_sensor.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'good')
 
     state = hass.states.get('binary_sensor.test')
-    assert STATE_UNAVAILABLE != state.state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'nogood')
 
     state = hass.states.get('binary_sensor.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_force_update_disabled(hass, mqtt_mock):
@@ -186,11 +186,11 @@ async def test_force_update_disabled(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, 'test-topic', 'ON')
     await hass.async_block_till_done()
-    assert 1 == len(events)
+    assert len(events) == 1
 
     async_fire_mqtt_message(hass, 'test-topic', 'ON')
     await hass.async_block_till_done()
-    assert 1 == len(events)
+    assert len(events) == 1
 
 
 async def test_force_update_enabled(hass, mqtt_mock):
@@ -217,11 +217,11 @@ async def test_force_update_enabled(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, 'test-topic', 'ON')
     await hass.async_block_till_done()
-    assert 1 == len(events)
+    assert len(events) == 1
 
     async_fire_mqtt_message(hass, 'test-topic', 'ON')
     await hass.async_block_till_done()
-    assert 2 == len(events)
+    assert len(events) == 2
 
 
 async def test_off_delay(hass, mqtt_mock):
@@ -250,20 +250,20 @@ async def test_off_delay(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'test-topic', 'ON')
     await hass.async_block_till_done()
     state = hass.states.get('binary_sensor.test')
-    assert STATE_ON == state.state
-    assert 1 == len(events)
+    assert state.state == STATE_ON
+    assert len(events) == 1
 
     async_fire_mqtt_message(hass, 'test-topic', 'ON')
     await hass.async_block_till_done()
     state = hass.states.get('binary_sensor.test')
-    assert STATE_ON == state.state
-    assert 2 == len(events)
+    assert state.state == STATE_ON
+    assert len(events) == 2
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     state = hass.states.get('binary_sensor.test')
-    assert STATE_OFF == state.state
-    assert 3 == len(events)
+    assert state.state == STATE_OFF
+    assert len(events) == 3
 
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
@@ -280,7 +280,7 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
     state = hass.states.get('binary_sensor.test')
 
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
@@ -338,7 +338,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
     state = hass.states.get('binary_sensor.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Change json_attributes_topic
     async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
@@ -348,12 +348,12 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
     state = hass.states.get('binary_sensor.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
     state = hass.states.get('binary_sensor.beer')
-    assert '75' == state.attributes.get('val')
+    assert state.attributes.get('val') == '75'
 
 
 async def test_unique_id(hass):
