@@ -113,12 +113,16 @@ class ZestimateDataSensor(Entity):
             return
         data = data_dict['response'][NAME]
         details = {}
-        details[ATTR_AMOUNT] = data['amount']['#text']
-        details[ATTR_CURRENCY] = data['amount']['@currency']
-        details[ATTR_LAST_UPDATED] = data['last-updated']
-        details[ATTR_CHANGE] = int(data['valueChange']['#text'])
-        details[ATTR_VAL_HI] = int(data['valuationRange']['high']['#text'])
-        details[ATTR_VAL_LOW] = int(data['valuationRange']['low']['#text'])
+        if 'amount' in data and data['amount'] is not None:
+            details[ATTR_AMOUNT] = data['amount']['#text']
+            details[ATTR_CURRENCY] = data['amount']['@currency']
+        if 'last-updated' in data and data['last-updated'] is not None:
+            details[ATTR_LAST_UPDATED] = data['last-updated']
+        if 'valueChange' in data and data['valueChange'] is not None:
+            details[ATTR_CHANGE] = int(data['valueChange']['#text'])
+        if 'valuationRange' in data and data['valuationRange'] is not None:
+            details[ATTR_VAL_HI] = int(data['valuationRange']['high']['#text'])
+            details[ATTR_VAL_LOW] = int(data['valuationRange']['low']['#text'])
         self.address = data_dict['response']['address']['street']
         self.data = details
         if self.data is not None:
