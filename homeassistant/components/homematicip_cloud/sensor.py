@@ -38,6 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if isinstance(device, (AsyncHeatingThermostat,
                                AsyncHeatingThermostatCompact)):
             devices.append(HomematicipHeatingThermostat(home, device))
+            devices.append(HomematicipTemperatureSensor(home, device))
         if isinstance(device, (AsyncTemperatureHumiditySensorDisplay,
                                AsyncTemperatureHumiditySensorWithoutDisplay,
                                AsyncTemperatureHumiditySensorOutdoor,
@@ -46,15 +47,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                                AsyncWeatherSensorPro)):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
-        if isinstance(device, (AsyncMotionDetectorIndoor,
+        if isinstance(device, (AsyncLightSensor, AsyncMotionDetectorIndoor,
                                AsyncMotionDetectorOutdoor,
                                AsyncMotionDetectorPushButton,
                                AsyncWeatherSensor,
                                AsyncWeatherSensorPlus,
                                AsyncWeatherSensorPro)):
             devices.append(HomematicipIlluminanceSensor(home, device))
-        if isinstance(device, AsyncLightSensor):
-            devices.append(HomematicipLightSensor(home, device))
         if isinstance(device, (AsyncPlugableSwitchMeasuring,
                                AsyncBrandSwitchMeasuring,
                                AsyncFullFlushSwitchMeasuring)):
@@ -181,6 +180,9 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
     @property
     def state(self):
         """Return the state."""
+        if hasattr(self._device, 'valveActualTemperature'):
+            return self._device.valveActualTemperature
+
         return self._device.actualTemperature
 
     @property
@@ -213,21 +215,15 @@ class HomematicipIlluminanceSensor(HomematicipGenericDevice):
     @property
     def state(self):
         """Return the state."""
+        if hasattr(self._device, 'averageIllumination'):
+            return self._device.averageIllumination
+
         return self._device.illumination
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return 'lx'
-
-
-class HomematicipLightSensor(HomematicipIlluminanceSensor):
-    """Represenation of a HomematicIP Illuminance device."""
-
-    @property
-    def state(self):
-        """Return the state."""
-        return self._device.averageIllumination
 
 
 class HomematicipPowerSensor(HomematicipGenericDevice):
