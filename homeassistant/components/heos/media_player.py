@@ -86,6 +86,9 @@ class HeosMediaPlayer(MediaPlayerDevice):
         """Handle controller event."""
         from pyheos import const
         if event == const.EVENT_PLAYERS_CHANGED:
+            registry = self.hass.data[HEOS_DOMAIN][DATA_REGISTRY]
+            registry.update_entry(self._player.player_id, self._player.name,
+                                  self._player.version)
             await self.async_update_ha_state(True)
 
     async def _heos_event(self, event):

@@ -267,3 +267,13 @@ class HeosRegistry:
         entry['version'] = version
         self._schedule_save()
         return entry['unique_id']
+
+    @callback
+    def update_entry(self, heos_id: int, name: str, version: str):
+        """Update the entry with the specified id."""
+        entry = next((entry for entry in self.entries
+                      if entry['heos_id'] == heos_id), None)
+        if entry and (entry['name'] != name or entry['version'] != version):
+            entry['name'] = name
+            entry['version'] = version
+            self._schedule_save()

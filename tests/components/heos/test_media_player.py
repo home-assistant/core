@@ -5,7 +5,7 @@ from pyheos import CommandError, const
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
-    DATA_SOURCE_MANAGER, DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
+    DATA_REGISTRY, DATA_SOURCE_MANAGER, DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE, ATTR_INPUT_SOURCE_LIST, ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
@@ -84,7 +84,7 @@ async def test_entity_and_device_attributes(
 
 
 async def test_updates_start_from_signals(
-        hass, config_entry, config, controller, favorites):
+        hass, config_entry, config, controller, favorites, registry_data):
     """Tests dispatched signals update player."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
@@ -120,12 +120,14 @@ async def test_updates_start_from_signals(
     assert state.attributes[ATTR_MEDIA_POSITION] == 1
 
     # Test controller player change updates
+    player.name = "New Name"
     player.available = False
     player.heos.dispatcher.send(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED)
     await hass.async_block_till_done()
     state = hass.states.get('media_player.test_player')
     assert state.state == STATE_UNAVAILABLE
+    assert hass.data[DOMAIN][DATA_REGISTRY].entries[0]['name'] == 'New Name'
 
     # Test heos events update
     player.available = True
