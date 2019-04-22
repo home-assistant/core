@@ -47,10 +47,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Zestimate sensor."""
     name = config.get(CONF_NAME)
     properties = config[CONF_ZPID]
-    params = {'zws-id': config[CONF_API_KEY]}
 
     sensors = []
     for zpid in properties:
+        params = {'zws-id': config[CONF_API_KEY]}
         params['zpid'] = zpid
         sensors.append(ZestimateDataSensor(name, params))
     add_entities(sensors, True)
