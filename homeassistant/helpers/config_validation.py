@@ -89,6 +89,8 @@ def has_at_most_one_key(*keys: str) -> Callable:
 
 def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
+    if value is None:
+        return False
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
