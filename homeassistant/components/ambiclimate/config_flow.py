@@ -96,7 +96,6 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
 
     async def _get_token_info(self, code):
         oauth = await self._generate_oauth()
-        import ambiclimate
         try:
             token_info = await oauth.get_access_token(code)
         except ambiclimate.AmbiclimateOauthError:
