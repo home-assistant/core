@@ -42,6 +42,7 @@ COMMENT_REQUIREMENTS = (
 )
 
 TEST_REQUIREMENTS = (
+    'ambiclimate',
     'aioambient',
     'aioautomatic',
     'aiobotocore',
