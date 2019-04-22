@@ -1,6 +1,7 @@
 """Config flow for Ambiclimate."""
-import ambiclimate
 import logging
+
+import ambiclimate
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView

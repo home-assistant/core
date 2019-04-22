@@ -1,8 +1,8 @@
 """Support for Ambiclimate ac."""
-import ambiclimate
 import asyncio
 import logging
 
+import ambiclimate
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
@@ -59,7 +59,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _token_info = await oauth.refresh_access_token(token_info)
     except ambiclimate.AmbiclimateOauthError:
         _LOGGER.error("Failed to refresh access token")
-        raise
+        return
 
     if _token_info:
         await store.async_save(token_info)
@@ -222,8 +222,9 @@ class AmbiclimateEntity(ClimateDevice):
             token_info = await self._heater.control.refresh_access_token()
         except ambiclimate.AmbiclimateOauthError:
             _LOGGER.error("Failed to refresh access token")
-        else:
-            if token_info:
-                await self._store.async_save(token_info)
+            return
+
+        if token_info:
+            await self._store.async_save(token_info)
 
         self._data = await self._heater.update_device()
