@@ -5,9 +5,10 @@ from asynctest import patch
 from pyheos import CommandError, const
 import pytest
 
-from homeassistant.components.heos import async_setup_entry, async_unload_entry
+from homeassistant.components.heos import (
+    HeosRegistry, async_setup_entry, async_unload_entry)
 from homeassistant.components.heos.const import (
-    DATA_CONTROLLER, DATA_SOURCE_MANAGER, DOMAIN)
+    DATA_CONTROLLER, DATA_REGISTRY, DATA_SOURCE_MANAGER, DOMAIN)
 from homeassistant.components.media_player.const import (
     DOMAIN as MEDIA_PLAYER_DOMAIN)
 from homeassistant.const import CONF_HOST
@@ -60,7 +61,8 @@ async def test_async_setup_no_config_returns_true(hass, config_entry):
 
 
 async def test_async_setup_entry_loads_platforms(
-        hass, config_entry, controller, input_sources, favorites):
+        hass, config_entry, controller, input_sources, favorites,
+        registry_data):
     """Test load connects to heos, retrieves players, and loads platforms."""
     config_entry.add_to_hass(hass)
     with patch.object(
@@ -78,10 +80,12 @@ async def test_async_setup_entry_loads_platforms(
     assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == favorites
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
+    assert hass.data[DOMAIN][DATA_REGISTRY].entries == registry_data['entries']
 
 
 async def test_async_setup_entry_not_signed_in_loads_platforms(
-        hass, config_entry, controller, input_sources, caplog):
+        hass, config_entry, controller, input_sources, caplog,
+        registry_data):
     """Test setup does not retrieve favorites when not logged in."""
     config_entry.add_to_hass(hass)
     controller.is_signed_in = False
@@ -101,6 +105,7 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
     assert hass.data[DOMAIN][MEDIA_PLAYER_DOMAIN] == controller.players
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == {}
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
+    assert hass.data[DOMAIN][DATA_REGISTRY].entries == registry_data['entries']
     assert "127.0.0.1 is not logged in to your HEOS account and will be " \
            "unable to retrieve your favorites" in caplog.text
 
@@ -166,3 +171,11 @@ async def test_update_sources_retry(hass, config_entry, config, controller,
     while "Unable to update sources" not in caplog.text:
         await asyncio.sleep(0.1)
     assert controller.get_favorites.call_count == 2
+
+
+async def test_registry_updates_after_firmware_upgrade(hass, registry_data):
+    """Test the registry returns same ID after a firmware upgrade."""
+    registry = HeosRegistry(hass)
+    await registry.load()
+    unique_id = registry.get_unique_id(2, "Test Player", "1.5.0")
+    assert registry_data['entries'][0]['unique_id'] == unique_id

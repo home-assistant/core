@@ -1,7 +1,7 @@
 """Tests for the Heos Media Player platform."""
 import asyncio
 
-from pyheos import const, CommandError
+from pyheos import CommandError, const
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
@@ -62,6 +62,25 @@ async def test_state_attributes(hass, config_entry, config, controller):
     assert ATTR_INPUT_SOURCE not in state.attributes
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == \
         hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+
+
+async def test_entity_and_device_attributes(
+        hass, config_entry, config, controller, registry_data):
+    """Test the attributes of the entity are correct."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # Device registry attributes
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_id = registry_data['entries'][0]['unique_id']
+    entry = device_registry.async_get_device({(DOMAIN, device_id)}, [])
+    assert entry.name == player.name
+    assert entry.model == player.model
+    assert entry.manufacturer == 'HEOS'
+    assert entry.sw_version == player.version
+    # Entity registry attributes
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = entity_registry.async_get("media_player.test_player")
+    assert entry.unique_id == device_id + "_player"
 
 
 async def test_updates_start_from_signals(

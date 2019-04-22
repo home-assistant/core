@@ -1,7 +1,7 @@
 """Denon HEOS Media Player."""
 import asyncio
-from datetime import timedelta
 import logging
+import uuid
 
 import voluptuous as vol
 
@@ -9,6 +9,7 @@ from homeassistant.components.media_player.const import (
     DOMAIN as MEDIA_PLAYER_DOMAIN)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -17,15 +18,14 @@ from homeassistant.util import Throttle
 from .config_flow import format_title
 from .const import (
     COMMAND_RETRY_ATTEMPTS, COMMAND_RETRY_DELAY, DATA_CONTROLLER,
-    DATA_SOURCE_MANAGER, DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
+    DATA_REGISTRY, DATA_SOURCE_MANAGER, DOMAIN, MIN_UPDATE_SOURCES, SAVE_DELAY,
+    SIGNAL_HEOS_SOURCES_UPDATED, STORAGE_KEY, STORAGE_VERSION)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
-
-MIN_UPDATE_SOURCES = timedelta(seconds=1)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,10 +92,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     source_manager = SourceManager(favorites, inputs)
     source_manager.connect_update(hass, controller)
 
+    heos_registry = HeosRegistry(hass)
+    await heos_registry.load()
+
     hass.data[DOMAIN] = {
         DATA_CONTROLLER: controller,
         DATA_SOURCE_MANAGER: source_manager,
-        MEDIA_PLAYER_DOMAIN: players
+        MEDIA_PLAYER_DOMAIN: players,
+        DATA_REGISTRY: heos_registry
     }
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, MEDIA_PLAYER_DOMAIN))
@@ -210,3 +214,56 @@ class SourceManager:
 
         controller.dispatcher.connect(
             const.SIGNAL_CONTROLLER_EVENT, update_sources)
+
+
+class HeosRegistry:
+    """
+    Registry of unique IDs for HEOS devices.
+
+    HEOS issues IDs (int32) to players and groups which remain static until
+    a firmware upgrade, during wich all players and groups are randomly
+    renumbered. This registry maintains a mapping of a unique ID to the
+    underlying HEOS device so that after a firmware upgrade HA will not
+    think the devices are new.
+    """
+
+    def __init__(self, hass: HomeAssistantType):
+        """Init the registry."""
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self.entries = []
+
+    async def load(self):
+        """Load the registry."""
+        data = await self._store.async_load()
+        if data:
+            self.entries = data.get('entries', [])
+
+    @callback
+    def _schedule_save(self):
+        """Schedule saving the device registry."""
+        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
+
+    @callback
+    def _data_to_save(self):
+        """Return data of device registry to store in a file."""
+        data = {'entries': self.entries.copy()}
+        return data
+
+    @callback
+    def get_unique_id(self, heos_id: int, name: str, version: str) -> str:
+        """Return unique ID given the HEOS id, name, and firmware version."""
+        # Find existing entry by ID or match name only if firmware version is
+        # different. Name is used as an anchor to find the device again after
+        # a firmware upgrade because the heos_id will have changed.
+        entry = next((
+            entry for entry in self.entries if entry['heos_id'] == heos_id
+            or (entry['name'] == name and entry['version'] != version)), None)
+        if entry is None:
+            entry = {'unique_id': uuid.uuid4().hex}
+            self.entries.append(entry)
+        # Update tracked attributes
+        entry['heos_id'] = heos_id
+        entry['name'] = name
+        entry['version'] = version
+        self._schedule_save()
+        return entry['unique_id']

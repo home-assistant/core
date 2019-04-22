@@ -16,7 +16,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_SOURCES_UPDATED)
+    DATA_REGISTRY, DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN,
+    SIGNAL_HEOS_SOURCES_UPDATED)
 
 BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                           SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \
@@ -35,8 +36,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
                             async_add_entities):
     """Add media players for a config entry."""
     players = hass.data[HEOS_DOMAIN][DOMAIN]
-    devices = [HeosMediaPlayer(player) for player in players.values()]
-    async_add_entities(devices, True)
+    registry = hass.data[HEOS_DOMAIN][DATA_REGISTRY]
+    entities = [HeosMediaPlayer(player, registry.get_unique_id(
+        player.player_id, player.name, player.version))
+                for player in players.values()]
+    async_add_entities(entities, True)
 
 
 def log_command_error(command: str):
@@ -56,9 +60,10 @@ def log_command_error(command: str):
 class HeosMediaPlayer(MediaPlayerDevice):
     """The HEOS player."""
 
-    def __init__(self, player):
+    def __init__(self, player, device_id: str):
         """Initialize."""
         from pyheos import const
+        self._device_id = device_id
         self._media_position_updated_at = None
         self._player = player
         self._signals = []
@@ -192,7 +197,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
         """Get attributes about the device."""
         return {
             'identifiers': {
-                (DOMAIN, self._player.player_id)
+                (HEOS_DOMAIN, self._device_id)
             },
             'name': self._player.name,
             'model': self._player.model,
@@ -311,7 +316,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return str(self._player.player_id)
+        return self._device_id + "_player"
 
     @property
     def volume_level(self) -> float:

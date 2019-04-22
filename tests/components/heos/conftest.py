@@ -5,7 +5,8 @@ from asynctest.mock import Mock, patch as patch
 from pyheos import Dispatcher, HeosPlayer, HeosSource, InputSource, const
 import pytest
 
-from homeassistant.components.heos import DOMAIN
+from homeassistant.components.heos.const import (
+    DOMAIN, STORAGE_KEY, STORAGE_VERSION)
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
@@ -123,3 +124,16 @@ def discovery_data_fixture() -> dict:
         'udn': 'uuid:e61de70c-2250-1c22-0080-0005cdf512be',
         'upnp_device_type': 'urn:schemas-denon-com:device:AiosDevice:1'
     }
+
+
+@pytest.fixture(name="registry_data")
+def registry_data_fixture(hass_storage) -> dict:
+    """Return mock heos registry storage data for testing."""
+    data = {'entries': [{
+        'heos_id': 1,
+        'name': 'Test Player',
+        'version': '1.0.0',
+        'unique_id': '0aa1e574a9ca4cbe84b9ebb3677bbdef'
+    }]}
+    hass_storage[STORAGE_KEY] = {'data': data, "version": STORAGE_VERSION}
+    return data
