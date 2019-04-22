@@ -14,8 +14,6 @@ from homeassistant.const import (
     CONF_NAME, CONF_DEVICE, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pypca==0.0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
