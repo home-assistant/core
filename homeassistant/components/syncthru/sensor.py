@@ -171,9 +171,11 @@ class SyncThruMainSensor(SyncThruSensor):
             await self.syncthru.update()
         except ValueError:
             # if an exception is thrown, printer does not support syncthru
-            _LOGGER.info("Samsung printer at %s does not support SyncThru."
-                         "Consider changing your configuration.",
-                         self.syncthru.url)
+            _LOGGER.warning(
+                "Configured printer at %s does not support SyncThru. "
+                "Consider changing your configuration.",
+                self.syncthru.url
+            )
             self._active = False
         self._state = self.syncthru.device_status()
 
