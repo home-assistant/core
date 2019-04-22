@@ -9,8 +9,6 @@ import homeassistant.helpers.device_registry as dr
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
 
-DEPENDENCIES = ['tplink']
-
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +17,8 @@ ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
 ATTR_CURRENT_A = 'current_a'
 
 
-def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
     """Set up the platform.
 
     Deprecated.

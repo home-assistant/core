@@ -15,8 +15,6 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_hs_to_RGB)
 from homeassistant.helpers.restore_state import RestoreEntity
 
-REQUIREMENTS = ['limitlessled==1.1.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BRIDGES = 'bridges'

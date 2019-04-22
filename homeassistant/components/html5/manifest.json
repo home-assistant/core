@@ -5,7 +5,7 @@
   "requirements": [
     "pywebpush==1.9.2"
   ],
-  "dependencies": [],
+  "dependencies": ["frontend"],
   "codeowners": [
     "@robbiet480"
   ]

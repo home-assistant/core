@@ -18,8 +18,6 @@ import homeassistant.helpers.config_validation as cv
 
 ANDROIDTV_DOMAIN = 'androidtv'
 
-REQUIREMENTS = ['androidtv==0.0.15']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_ANDROIDTV = SUPPORT_PAUSE | SUPPORT_PLAY | \
@@ -326,8 +324,7 @@ class AndroidTVDevice(ADBDevice):
         self._device = None
         self._device_properties = self.aftv.device_properties
         self._is_volume_muted = None
-        self._unique_id = 'androidtv-{}-{}'.format(
-            name, self._device_properties['serialno'])
+        self._unique_id = self._device_properties.get('serialno')
         self._volume_level = None
 
     @adb_decorator(override_available=True)

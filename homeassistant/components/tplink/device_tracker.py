@@ -17,8 +17,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_HEADER_X_REQUESTED_WITH)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tplink==0.2.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 HTTP_HEADER_NO_CACHE = 'no-cache'

@@ -13,8 +13,6 @@ from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import ATTRIBUTION, DATA_RING, DEFAULT_ENTITY_NAMESPACE
 
-DEPENDENCIES = ['ring']
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)

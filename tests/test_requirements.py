@@ -2,13 +2,14 @@
 import os
 from unittest.mock import patch, call
 
-from homeassistant import loader, setup
+from homeassistant import setup
 from homeassistant.requirements import (
     CONSTRAINT_FILE, PackageLoadable, async_process_requirements)
 
 import pkg_resources
 
-from tests.common import get_test_home_assistant, MockModule, mock_coro
+from tests.common import (
+    get_test_home_assistant, MockModule, mock_coro, mock_integration)
 
 RESOURCE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..', 'resources'))
@@ -43,10 +44,10 @@ class TestRequirements:
         mock_venv.return_value = True
         mock_dirname.return_value = 'ha_package_path'
         self.hass.config.skip_pip = False
-        loader.set_component(
-            self.hass, 'comp',
+        mock_integration(
+            self.hass,
             MockModule('comp', requirements=['package==0.0.1']))
-        assert setup.setup_component(self.hass, 'comp')
+        assert setup.setup_component(self.hass, 'comp', {})
         assert 'comp' in self.hass.config.components
         assert mock_install.call_args == call(
             'package==0.0.1',
@@ -60,10 +61,10 @@ class TestRequirements:
         """Test requirement installed in deps directory."""
         mock_dirname.return_value = 'ha_package_path'
         self.hass.config.skip_pip = False
-        loader.set_component(
-            self.hass, 'comp',
+        mock_integration(
+            self.hass,
             MockModule('comp', requirements=['package==0.0.1']))
-        assert setup.setup_component(self.hass, 'comp')
+        assert setup.setup_component(self.hass, 'comp', {})
         assert 'comp' in self.hass.config.components
         assert mock_install.call_args == call(
             'package==0.0.1', target=self.hass.config.path('deps'),

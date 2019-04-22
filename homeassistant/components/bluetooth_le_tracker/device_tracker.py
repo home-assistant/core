@@ -6,12 +6,13 @@ from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
     load_config, SOURCE_TYPE_BLUETOOTH_LE
 )
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pygatt[GATTTOOL]==3.2.0']
-
+DATA_BLE = 'BLE'
+DATA_BLE_ADAPTER = 'ADAPTER'
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
 
@@ -21,6 +22,17 @@ def setup_scanner(hass, config, see, discovery_info=None):
     # pylint: disable=import-error
     import pygatt
     new_devices = {}
+    hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})
+
+    def handle_stop(event):
+        """Try to shut down the bluetooth child process nicely."""
+        # These should never be unset at the point this runs, but just for
+        # safety's sake, use `get`.
+        adapter = hass.data.get(DATA_BLE, {}).get(DATA_BLE_ADAPTER)
+        if adapter is not None:
+            adapter.kill()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
     def see_device(address, name, new_device=False):
         """Mark a device as seen."""
@@ -50,6 +62,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         _LOGGER.debug("Discovering Bluetooth LE devices")
         try:
             adapter = pygatt.GATTToolBackend()
+            hass.data[DATA_BLE][DATA_BLE_ADAPTER] = adapter
             devs = adapter.scan()
 
             devices = {x['address']: x['name'] for x in devs}

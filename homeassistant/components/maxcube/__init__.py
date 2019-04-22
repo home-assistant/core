@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
-REQUIREMENTS = ['maxcube-api==0.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 62910

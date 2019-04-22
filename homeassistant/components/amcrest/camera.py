@@ -12,8 +12,6 @@ from homeassistant.helpers.aiohttp_client import (
 
 from . import DATA_AMCREST, STREAM_SOURCE_LIST, TIMEOUT
 
-DEPENDENCIES = ['amcrest', 'ffmpeg']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -27,8 +25,6 @@ async def async_setup_platform(hass, config, async_add_entities,
     amcrest = hass.data[DATA_AMCREST][device_name]
 
     async_add_entities([AmcrestCam(hass, amcrest)], True)
-
-    return True
 
 
 class AmcrestCam(Camera):

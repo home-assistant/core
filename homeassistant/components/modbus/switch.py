@@ -24,8 +24,6 @@ CONF_STATE_ON = 'state_on'
 CONF_VERIFY_REGISTER = 'verify_register'
 CONF_VERIFY_STATE = 'verify_state'
 
-DEPENDENCIES = ['modbus']
-
 REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
 

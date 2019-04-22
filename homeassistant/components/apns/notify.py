@@ -13,8 +13,6 @@ from homeassistant.helpers.event import track_state_change
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, DOMAIN, PLATFORM_SCHEMA, BaseNotificationService)
 
-REQUIREMENTS = ['apns2==0.3.0']
-
 APNS_DEVICES = 'apns.yaml'
 CONF_CERTFILE = 'cert_file'
 CONF_TOPIC = 'topic'

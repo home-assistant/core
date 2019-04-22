@@ -5,6 +5,9 @@
   "requirements": [
     "spotipy-homeassistant==2.4.4.dev1"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "configurator",
+    "http"
+  ],
   "codeowners": []
 }

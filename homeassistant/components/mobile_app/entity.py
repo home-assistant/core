@@ -13,6 +13,11 @@ from .const import (ATTR_DEVICE_ID, ATTR_DEVICE_NAME, ATTR_MANUFACTURER,
                     DOMAIN, SIGNAL_SENSOR_UPDATE)
 
 
+def sensor_id(webhook_id, unique_id):
+    """Return a unique sensor ID."""
+    return "{}_{}".format(webhook_id, unique_id)
+
+
 class MobileAppEntity(Entity):
     """Representation of an mobile app entity."""
 
@@ -22,8 +27,8 @@ class MobileAppEntity(Entity):
         self._device = device
         self._entry = entry
         self._registration = entry.data
-        self._sensor_id = "{}_{}".format(self._registration[CONF_WEBHOOK_ID],
-                                         config[ATTR_SENSOR_UNIQUE_ID])
+        self._sensor_id = sensor_id(self._registration[CONF_WEBHOOK_ID],
+                                    config[ATTR_SENSOR_UNIQUE_ID])
         self._entity_type = config[ATTR_SENSOR_TYPE]
         self.unsub_dispatcher = None
 
@@ -94,5 +99,10 @@ class MobileAppEntity(Entity):
     @callback
     def _handle_update(self, data):
         """Handle async event updates."""
+        incoming_id = sensor_id(data[CONF_WEBHOOK_ID],
+                                data[ATTR_SENSOR_UNIQUE_ID])
+        if incoming_id != self._sensor_id:
+            return
+
         self._config = data
         self.async_schedule_update_ha_state()

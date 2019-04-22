@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['swisshydrodata==0.0.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by the Swiss Federal Office for the " \

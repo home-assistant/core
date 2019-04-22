@@ -17,8 +17,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pygtfs==0.1.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ARRIVAL = 'arrival'

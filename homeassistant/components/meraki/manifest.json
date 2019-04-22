@@ -3,6 +3,6 @@
   "name": "Meraki",
   "documentation": "https://www.home-assistant.io/components/meraki",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": ["http"],
   "codeowners": []
 }

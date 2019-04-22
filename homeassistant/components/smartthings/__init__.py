@@ -28,9 +28,6 @@ from .smartapp import (
     unload_smartapp_endpoint, validate_installed_app,
     validate_webhook_requirements)
 
-REQUIREMENTS = ['pysmartapp==0.3.2', 'pysmartthings==0.6.7']
-DEPENDENCIES = ['webhook']
-
 _LOGGER = logging.getLogger(__name__)
 
 

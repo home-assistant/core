@@ -10,8 +10,6 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['fastdotcom==0.0.3']
-
 DOMAIN = 'fastdotcom'
 DATA_UPDATED = '{}_data_updated'.format(DOMAIN)
 

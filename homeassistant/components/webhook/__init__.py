@@ -12,8 +12,6 @@ from homeassistant.components.http.view import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['http']
-
 DOMAIN = 'webhook'
 
 URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"

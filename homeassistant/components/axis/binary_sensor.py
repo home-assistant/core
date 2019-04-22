@@ -11,8 +11,6 @@ from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN as AXIS_DOMAIN, LOGGER
 
-DEPENDENCIES = [AXIS_DOMAIN]
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Axis binary sensor."""
@@ -20,8 +18,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device = hass.data[AXIS_DOMAIN][serial_number]
 
     @callback
-    def async_add_sensor(event):
+    def async_add_sensor(event_id):
         """Add binary sensor from Axis device."""
+        event = device.api.event.events[event_id]
         async_add_entities([AxisBinarySensor(event, device)], True)
 
     device.listeners.append(async_dispatcher_connect(
@@ -43,6 +42,11 @@ class AxisBinarySensor(BinarySensorDevice):
         self.event.register_callback(self.update_callback)
         self.unsub_dispatcher = async_dispatcher_connect(
             self.hass, self.device.event_reachable, self.update_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect device object when removed."""
+        self.event.remove_callback(self.update_callback)
+        self.unsub_dispatcher()
 
     @callback
     def update_callback(self, no_delay=False):
@@ -80,12 +84,12 @@ class AxisBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the event."""
         return '{} {} {}'.format(
-            self.device.name, self.event.event_type, self.event.id)
+            self.device.name, self.event.TYPE, self.event.id)
 
     @property
     def device_class(self):
         """Return the class of the event."""
-        return self.event.event_class
+        return self.event.CLASS
 
     @property
     def unique_id(self):

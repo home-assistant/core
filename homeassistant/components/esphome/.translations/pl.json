@@ -18,7 +18,7 @@
             },
             "discovery_confirm": {
                 "description": "Czy chcesz doda\u0107 w\u0119ze\u0142 ESPHome `{name}` do Home Assistant?",
-                "title": "Znaleziono w\u0119ze\u0142 ESPHome "
+                "title": "Znaleziono w\u0119ze\u0142 ESPHome"
             },
             "user": {
                 "data": {

@@ -14,8 +14,6 @@ from . import (
     DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_BINARY_EVENT_UPDATE,
     WirelessTagBaseSensor)
 
-DEPENDENCIES = ['wirelesstag']
-
 _LOGGER = logging.getLogger(__name__)
 
 # On means in range, Off means out of range

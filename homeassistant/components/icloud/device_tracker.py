@@ -17,8 +17,6 @@ from homeassistant.util.location import distance
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyicloud==0.9.1']
-
 CONF_ACCOUNTNAME = 'account_name'
 CONF_MAX_INTERVAL = 'max_interval'
 CONF_GPS_ACCURACY_THRESHOLD = 'gps_accuracy_threshold'

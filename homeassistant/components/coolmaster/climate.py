@@ -13,8 +13,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_HOST, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pycoolmasternet==0.0.4']
-
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE |
                  SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
 

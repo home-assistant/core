@@ -1,7 +1,7 @@
 """Tests for the Heos Media Player platform."""
 import asyncio
 
-from pyheos import const
+from pyheos import const, CommandError
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
@@ -116,7 +116,12 @@ async def test_updates_start_from_signals(
     state = hass.states.get('media_player.test_player')
     assert state.state == STATE_PLAYING
 
-    # Test sources event update
+
+async def test_updates_from_sources_updated(
+        hass, config_entry, config, controller, input_sources):
+    """Tests player updates from changes in sources list."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
     event = asyncio.Event()
 
     async def set_signal():
@@ -124,9 +129,32 @@ async def test_updates_start_from_signals(
     hass.helpers.dispatcher.async_dispatcher_connect(
         SIGNAL_HEOS_SOURCES_UPDATED, set_signal)
 
-    favorites.clear()
+    input_sources.clear()
     player.heos.dispatcher.send(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED)
+    await event.wait()
+    source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+    assert len(source_list) == 2
+    state = hass.states.get('media_player.test_player')
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
+
+
+async def test_updates_from_user_changed(
+        hass, config_entry, config, controller):
+    """Tests player updates from changes in user."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    event = asyncio.Event()
+
+    async def set_signal():
+        event.set()
+    hass.helpers.dispatcher.async_dispatcher_connect(
+        SIGNAL_HEOS_SOURCES_UPDATED, set_signal)
+
+    controller.is_signed_in = False
+    controller.signed_in_username = None
+    player.heos.dispatcher.send(
+        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED)
     await event.wait()
     source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
     assert len(source_list) == 1
@@ -134,66 +162,142 @@ async def test_updates_start_from_signals(
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
 
 
-async def test_services(hass, config_entry, config, controller):
-    """Tests player commands."""
+async def test_clear_playlist(hass, config_entry, config, controller, caplog):
+    """Test the clear playlist service."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_CLEAR_PLAYLIST,
+            {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
+        assert player.clear_queue.call_count == 1
+        player.clear_queue.reset_mock()
+        player.clear_queue.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to clear playlist: Failure (1)" in caplog.text
 
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_CLEAR_PLAYLIST,
-        {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    assert player.clear_queue.call_count == 1
 
-    player.reset_mock()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    assert player.pause.call_count == 1
+async def test_pause(hass, config_entry, config, controller, caplog):
+    """Test the pause service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PAUSE,
+            {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
+        assert player.pause.call_count == 1
+        player.pause.reset_mock()
+        player.pause.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to pause: Failure (1)" in caplog.text
 
-    player.reset_mock()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    assert player.play.call_count == 1
 
-    player.reset_mock()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    assert player.play_previous.call_count == 1
+async def test_play(hass, config_entry, config, controller, caplog):
+    """Test the play service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PLAY,
+            {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
+        assert player.play.call_count == 1
+        player.play.reset_mock()
+        player.play.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to play: Failure (1)" in caplog.text
 
-    player.reset_mock()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    assert player.play_next.call_count == 1
 
-    player.reset_mock()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_STOP,
-        {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
-    assert player.stop.call_count == 1
+async def test_previous_track(hass, config_entry, config, controller, caplog):
+    """Test the previous track service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK,
+            {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
+        assert player.play_previous.call_count == 1
+        player.play_previous.reset_mock()
+        player.play_previous.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to move to previous track: Failure (1)" in caplog.text
 
-    player.reset_mock()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: 'media_player.test_player',
-         ATTR_MEDIA_VOLUME_MUTED: True}, blocking=True)
-    player.set_mute.assert_called_once_with(True)
 
-    player.reset_mock()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: 'media_player.test_player',
-         ATTR_MEDIA_SHUFFLE: True}, blocking=True)
-    player.set_play_mode.assert_called_once_with(player.repeat, True)
+async def test_next_track(hass, config_entry, config, controller, caplog):
+    """Test the next track service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_NEXT_TRACK,
+            {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
+        assert player.play_next.call_count == 1
+        player.play_next.reset_mock()
+        player.play_next.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to move to next track: Failure (1)" in caplog.text
 
-    player.reset_mock()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: 'media_player.test_player',
-         ATTR_MEDIA_VOLUME_LEVEL: 1}, blocking=True)
-    player.set_volume.assert_called_once_with(100)
+
+async def test_stop(hass, config_entry, config, controller, caplog):
+    """Test the stop service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_MEDIA_STOP,
+            {ATTR_ENTITY_ID: 'media_player.test_player'}, blocking=True)
+        assert player.stop.call_count == 1
+        player.stop.reset_mock()
+        player.stop.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to stop: Failure (1)" in caplog.text
+
+
+async def test_volume_mute(hass, config_entry, config, controller, caplog):
+    """Test the volume mute service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_MUTE,
+            {ATTR_ENTITY_ID: 'media_player.test_player',
+             ATTR_MEDIA_VOLUME_MUTED: True}, blocking=True)
+        assert player.set_mute.call_count == 1
+        player.set_mute.reset_mock()
+        player.set_mute.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to set mute: Failure (1)" in caplog.text
+
+
+async def test_shuffle_set(hass, config_entry, config, controller, caplog):
+    """Test the shuffle set service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_SHUFFLE_SET,
+            {ATTR_ENTITY_ID: 'media_player.test_player',
+             ATTR_MEDIA_SHUFFLE: True}, blocking=True)
+        player.set_play_mode.assert_called_once_with(player.repeat, True)
+        player.set_play_mode.reset_mock()
+        player.set_play_mode.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to set shuffle: Failure (1)" in caplog.text
+
+
+async def test_volume_set(hass, config_entry, config, controller, caplog):
+    """Test the volume set service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # First pass completes successfully, second pass raises command error
+    for _ in range(2):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: 'media_player.test_player',
+             ATTR_MEDIA_VOLUME_LEVEL: 1}, blocking=True)
+        player.set_volume.assert_called_once_with(100)
+        player.set_volume.reset_mock()
+        player.set_volume.side_effect = CommandError(None, "Failure", 1)
+    assert "Unable to set volume level: Failure (1)" in caplog.text
 
 
 async def test_select_favorite(
@@ -241,6 +345,22 @@ async def test_select_radio_favorite(
     assert state.attributes[ATTR_INPUT_SOURCE] == favorite.name
 
 
+async def test_select_radio_favorite_command_error(
+        hass, config_entry, config, controller, favorites, caplog):
+    """Tests command error loged when playing favorite."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    # Test set radio preset
+    favorite = favorites[2]
+    player.play_favorite.side_effect = CommandError(None, "Failure", 1)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_INPUT_SOURCE: favorite.name}, blocking=True)
+    player.play_favorite.assert_called_once_with(2)
+    assert "Unable to select source: Failure (1)" in caplog.text
+
+
 async def test_select_input_source(
         hass, config_entry, config, controller, input_sources):
     """Tests selecting input source and state."""
@@ -273,6 +393,21 @@ async def test_select_input_unknown(
         {ATTR_ENTITY_ID: 'media_player.test_player',
          ATTR_INPUT_SOURCE: "Unknown"}, blocking=True)
     assert "Unknown source: Unknown" in caplog.text
+
+
+async def test_select_input_command_error(
+        hass, config_entry, config, controller, caplog, input_sources):
+    """Tests selecting an unknown input."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+    input_source = input_sources[0]
+    player.play_input_source.side_effect = CommandError(None, "Failure", 1)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: 'media_player.test_player',
+         ATTR_INPUT_SOURCE: input_source.name}, blocking=True)
+    player.play_input_source.assert_called_once_with(input_source)
+    assert "Unable to select source: Failure (1)" in caplog.text
 
 
 async def test_unload_config_entry(hass, config_entry, config, controller):

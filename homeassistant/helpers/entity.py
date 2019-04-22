@@ -241,9 +241,9 @@ class Entity:
         """Write the state to the state machine."""
         start = timer()
 
+        attr = {}
         if not self.available:
             state = STATE_UNAVAILABLE
-            attr = {}
         else:
             state = self.state
 
@@ -252,10 +252,8 @@ class Entity:
             else:
                 state = str(state)
 
-            attr = self.state_attributes or {}
-            device_attr = self.device_state_attributes
-            if device_attr is not None:
-                attr.update(device_attr)
+            attr.update(self.state_attributes or {})
+            attr.update(self.device_state_attributes or {})
 
         unit_of_measurement = self.unit_of_measurement
         if unit_of_measurement is not None:

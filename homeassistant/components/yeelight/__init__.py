@@ -16,8 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['yeelight==0.4.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "yeelight"
@@ -186,15 +184,14 @@ class YeelightDevice:
     def bulb(self):
         """Return bulb device."""
         if self._bulb_device is None:
-            import yeelight
+            from yeelight import Bulb, BulbException
             try:
-                self._bulb_device = yeelight.Bulb(self._ipaddr,
-                                                  model=self._model)
+                self._bulb_device = Bulb(self._ipaddr, model=self._model)
                 # force init for type
                 self.update()
 
                 self._available = True
-            except yeelight.BulbException as ex:
+            except BulbException as ex:
                 self._available = False
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)

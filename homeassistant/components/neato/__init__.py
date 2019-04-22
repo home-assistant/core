@@ -10,8 +10,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pybotvac==0.0.13']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'neato'

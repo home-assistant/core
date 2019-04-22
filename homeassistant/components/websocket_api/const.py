@@ -24,3 +24,6 @@ CANCELLATION_ERRORS = (asyncio.CancelledError, futures.CancelledError)
 # Event types
 SIGNAL_WEBSOCKET_CONNECTED = 'websocket_connected'
 SIGNAL_WEBSOCKET_DISCONNECTED = 'websocket_disconnected'
+
+# Data used to store the current connection list
+DATA_CONNECTIONS = DOMAIN + '.connections'

@@ -167,6 +167,11 @@ class ZigbeeChannel:
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
+        _LOGGER.debug(
+            'initializing channel: %s from_cache: %s',
+            self._channel_name,
+            from_cache
+        )
         self._status = ChannelStatus.INITIALIZED
 
     @callback
