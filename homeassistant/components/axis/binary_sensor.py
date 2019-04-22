@@ -9,6 +9,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+from axis.event_stream import CLASS_INPUT, CLASS_OUTPUT
+
 from .const import DOMAIN as AXIS_DOMAIN, LOGGER
 
 
@@ -21,7 +23,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_add_sensor(event_id):
         """Add binary sensor from Axis device."""
         event = device.api.event.events[event_id]
-        async_add_entities([AxisBinarySensor(event, device)], True)
+
+        if event.CLASS != CLASS_OUTPUT:
+            async_add_entities([AxisBinarySensor(event, device)], True)
 
     device.listeners.append(async_dispatcher_connect(
         hass, device.event_new_sensor, async_add_sensor))
@@ -83,6 +87,10 @@ class AxisBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the event."""
+        if self.event.CLASS == CLASS_INPUT and \
+            self.event.id and self.device.api.vapix.ports[self.event.id].name:
+            return self.device.api.vapix.ports[self.event.id].name
+
         return '{} {} {}'.format(
             self.device.name, self.event.TYPE, self.event.id)
 

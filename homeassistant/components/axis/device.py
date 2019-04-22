@@ -92,9 +92,14 @@ class AxisNetworkDevice:
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, 'binary_sensor'))
 
+            task = self.hass.async_create_task(
+                self.hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, 'switch'))
+
             self.api.stream.connection_status_callback = \
                 self.async_connection_status_callback
             self.api.enable_events(event_callback=self.async_event_callback)
+            # queue???
             task.add_done_callback(self.start)
 
         self.config_entry.add_update_listener(self.async_new_address_callback)
@@ -185,6 +190,7 @@ async def get_device(hass, config):
         port=config[CONF_PORT], web_proto='http')
 
     device.vapix.initialize_params(preload_data=False)
+    device.vapix.initialize_ports()
 
     try:
         with async_timeout.timeout(15):
@@ -192,6 +198,8 @@ async def get_device(hass, config):
                 device.vapix.params.update_brand)
             await hass.async_add_executor_job(
                 device.vapix.params.update_properties)
+            await hass.async_add_executor_job(
+                device.vapix.ports.update)
         return device
 
     except axis.Unauthorized:
