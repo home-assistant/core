@@ -5,6 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/withings/
 """
 import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.withings import (
     config_flow,  # noqa  pylint_disable=unused-import
@@ -31,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistantType, config):
     """Set up the Withings component."""
     if DOMAIN not in config:
         return True
@@ -62,11 +64,35 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Withings from a config entry."""
-    _LOGGER.debug("Forwarding config entry setup for '%s' to the sensor platform.", entry.data[const.PROFILE])
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-        entry,
-        'sensor'
-    ))
+    _LOGGER.debug(
+        "Forwarding setup config entry for '%s' to the sensor platform.",
+        entry.data[const.PROFILE]
+    )
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(
+            entry,
+            'sensor'
+        )
+    )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Unload Withings config entry."""
+    _LOGGER.debug(
+        "Forwarding unload of config entry for '%s' to the sensor platform.",
+        entry.data[const.PROFILE]
+    )
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_unload(
+            entry,
+            'sensor'
+        )
+    )
+
     return True

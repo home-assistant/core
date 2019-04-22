@@ -62,7 +62,15 @@ async def async_setup_entry(
     entities = []
 
     for attribute in WITHINGS_ATTRIBUTES:
-        _LOGGER.debug('Creating entity for %s', attribute.friendly_name)
+        if attribute.measurement != const.MEAS_BODY_TEMP_F:
+            continue
+        _LOGGER.debug(
+            'Creating entity for measurement: %s, measure_type: %s, friendly_name: %s, unit_of_measurement: %s',  # pylint: disable=line-too-long  # noqa: E501
+            attribute.measurement,
+            attribute.measure_type,
+            attribute.friendly_name,
+            attribute.unit_of_measurement
+        )
 
         entity = WithingsHealthSensor(data_manager, attribute)
 
@@ -361,6 +369,7 @@ class WithingsHealthSensor(Entity):
         self._data_manager = data_manager
         self._attribute = attribute
         self._state = None
+        _LOGGER.debug('ATTRIBUTES: %s', self._attribute.__dict__)
 
         self._slug = self._data_manager.get_slug()
         self._user_id = self._data_manager.get_api().get_credentials().user_id
@@ -393,9 +402,9 @@ class WithingsHealthSensor(Entity):
         return self._attribute.icon
 
     @property
-    def attribute(self) -> WithingsAttribute:
+    def state_attributes(self):
         """Get withings attribute."""
-        return self._attribute
+        return self._attribute.__dict__
 
     async def async_update(self) -> None:
         """Update the data."""
@@ -461,8 +470,7 @@ class WithingsHealthSensor(Entity):
         value = measure_groups[0].get_measure(measure_type)
 
         _LOGGER.debug(
-            # pylint: disable=line-too-long
-            'Determining state for measurement: %s, measure_type: %s, unit_of_measurement: %s, value: %s',  # noqa: E501
+            'Determining state for measurement: %s, measure_type: %s, unit_of_measurement: %s, value: %s',  # pylint: disable=line-too-long  # noqa: E501
             measurement, measure_type, unit_of_measurement, value
         )
 
