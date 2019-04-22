@@ -27,12 +27,17 @@ TRAYS = range(1, 6)
 OUTPUT_TRAYS = range(0, 6)
 DEFAULT_MONITORED_CONDITIONS = []
 DEFAULT_MONITORED_CONDITIONS.extend(
-    ['toner_{}'.format(key) for key in TONER_COLORS])
+    ['toner_{}'.format(key) for key in TONER_COLORS]
+)
 DEFAULT_MONITORED_CONDITIONS.extend(
-    ['drum_{}'.format(key) for key in DRUM_COLORS])
-DEFAULT_MONITORED_CONDITIONS.extend(['trays_{}'.format(key) for key in TRAYS])
+    ['drum_{}'.format(key) for key in DRUM_COLORS]
+)
 DEFAULT_MONITORED_CONDITIONS.extend(
-    ['output_trays_{}'.format(key) for key in OUTPUT_TRAYS])
+    ['trays_{}'.format(key) for key in TRAYS]
+)
+DEFAULT_MONITORED_CONDITIONS.extend(
+    ['output_trays_{}'.format(key) for key in OUTPUT_TRAYS]
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE):
@@ -163,15 +168,20 @@ class SyncThruMainSensor(SyncThruSensor):
         """Initialize the sensor."""
         super().__init__(syncthru, name)
         self._id_suffix = '_main'
+        self._active = True
 
     async def async_update(self):
         """Get the latest data from SyncThru and update the state."""
+        if not self._active:
+            return
         try:
             await self.syncthru.update()
         except ValueError:
             # if an exception is thrown, printer does not support syncthru
-            _LOGGER.info("Samsung printer at %s does not support SyncThru",
+            _LOGGER.info("Samsung printer at %s does not support SyncThru."
+                         "Consider changing your configuration.",
                          self.syncthru.url)
+            self._active = False
         self._state = self.syncthru.device_status()
 
 
