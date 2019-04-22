@@ -30,9 +30,8 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'test-topic', '100')
     state = hass.states.get('sensor.test')
 
-    assert '100' == state.state
-    assert 'fav unit' == \
-        state.attributes.get('unit_of_measurement')
+    assert state.state == '100'
+    assert state.attributes.get('unit_of_measurement') == 'fav unit'
 
 
 async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
@@ -49,7 +48,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     })
 
     state = hass.states.get('sensor.test')
-    assert 'unknown' == state.state
+    assert state.state == 'unknown'
 
     now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(('homeassistant.helpers.event.'
@@ -60,7 +59,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
 
     # Value was set correctly.
     state = hass.states.get('sensor.test')
-    assert '100' == state.state
+    assert state.state == '100'
 
     # Time jump +3s
     now = now + timedelta(seconds=3)
@@ -69,7 +68,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
 
     # Value is not yet expired
     state = hass.states.get('sensor.test')
-    assert '100' == state.state
+    assert state.state == '100'
 
     # Next message resets timer
     with patch(('homeassistant.helpers.event.'
@@ -80,7 +79,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
 
     # Value was updated correctly.
     state = hass.states.get('sensor.test')
-    assert '101' == state.state
+    assert state.state == '101'
 
     # Time jump +3s
     now = now + timedelta(seconds=3)
@@ -89,7 +88,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
 
     # Value is not yet expired
     state = hass.states.get('sensor.test')
-    assert '101' == state.state
+    assert state.state == '101'
 
     # Time jump +2s
     now = now + timedelta(seconds=2)
@@ -98,7 +97,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
 
     # Value is expired now
     state = hass.states.get('sensor.test')
-    assert 'unknown' == state.state
+    assert state.state == 'unknown'
 
 
 async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
@@ -116,7 +115,7 @@ async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'test-topic', '{ "val": "100" }')
     state = hass.states.get('sensor.test')
 
-    assert '100' == state.state
+    assert state.state == '100'
 
 
 async def test_force_update_disabled(hass, mqtt_mock):
@@ -140,11 +139,11 @@ async def test_force_update_disabled(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, 'test-topic', '100')
     await hass.async_block_till_done()
-    assert 1 == len(events)
+    assert len(events) == 1
 
     async_fire_mqtt_message(hass, 'test-topic', '100')
     await hass.async_block_till_done()
-    assert 1 == len(events)
+    assert len(events) == 1
 
 
 async def test_force_update_enabled(hass, mqtt_mock):
@@ -169,11 +168,11 @@ async def test_force_update_enabled(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, 'test-topic', '100')
     await hass.async_block_till_done()
-    assert 1 == len(events)
+    assert len(events) == 1
 
     async_fire_mqtt_message(hass, 'test-topic', '100')
     await hass.async_block_till_done()
-    assert 2 == len(events)
+    assert len(events) == 2
 
 
 async def test_default_availability_payload(hass, mqtt_mock):
@@ -188,17 +187,17 @@ async def test_default_availability_payload(hass, mqtt_mock):
     })
 
     state = hass.states.get('sensor.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'online')
 
     state = hass.states.get('sensor.test')
-    assert STATE_UNAVAILABLE != state.state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'offline')
 
     state = hass.states.get('sensor.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_custom_availability_payload(hass, mqtt_mock):
@@ -215,17 +214,17 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     })
 
     state = hass.states.get('sensor.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'good')
 
     state = hass.states.get('sensor.test')
-    assert STATE_UNAVAILABLE != state.state
+    assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability-topic', 'nogood')
 
     state = hass.states.get('sensor.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_setting_sensor_attribute_via_legacy_mqtt_json_message(
@@ -244,8 +243,7 @@ async def test_setting_sensor_attribute_via_legacy_mqtt_json_message(
     async_fire_mqtt_message(hass, 'test-topic', '{ "val": "100" }')
     state = hass.states.get('sensor.test')
 
-    assert '100' == \
-        state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
 
 async def test_update_with_legacy_json_attrs_not_dict(hass, mqtt_mock, caplog):
@@ -302,9 +300,8 @@ async def test_update_with_legacy_json_attrs_and_template(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'test-topic', '{ "val": "100" }')
     state = hass.states.get('sensor.test')
 
-    assert '100' == \
-        state.attributes.get('val')
-    assert '100' == state.state
+    assert state.attributes.get('val') == '100'
+    assert state.state == '100'
 
 
 async def test_invalid_device_class(hass, mqtt_mock):
@@ -358,7 +355,7 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
     state = hass.states.get('sensor.test')
 
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
 
 async def test_setting_attribute_with_template(hass, mqtt_mock):
@@ -377,8 +374,8 @@ async def test_setting_attribute_with_template(hass, mqtt_mock):
         {"Timer1": {"Arm": 0, "Time": "22:18"}}))
     state = hass.states.get('sensor.test')
 
-    assert 0 == state.attributes.get('Arm')
-    assert '22:18' == state.attributes.get('Time')
+    assert state.attributes.get('Arm') == 0
+    assert state.attributes.get('Time') == '22:18'
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
@@ -436,7 +433,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
     state = hass.states.get('sensor.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Change json_attributes_topic
     async_fire_mqtt_message(hass, 'homeassistant/sensor/bla/config',
@@ -446,12 +443,12 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
     state = hass.states.get('sensor.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
     state = hass.states.get('sensor.beer')
-    assert '75' == state.attributes.get('val')
+    assert state.attributes.get('val') == '75'
 
 
 async def test_unique_id(hass):
