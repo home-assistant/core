@@ -115,12 +115,12 @@ class ZestimateDataSensor(Entity):
             return
         data = data_dict['response'][NAME]
         details = {}
-        if data['amount'] is not None: 
+        if data['amount'] is not None:
             details[ATTR_AMOUNT] = data['amount']['#text']
             details[ATTR_CURRENCY] = data['amount']['@currency']
-        if data['last-updated'] is not None: 
+        if data['last-updated'] is not None:
             details[ATTR_LAST_UPDATED] = data['last-updated']
-        if data['valueChange'] is not None: 
+        if data['valueChange'] is not None:
             details[ATTR_CHANGE] = int(data['valueChange']['#text'])
         if data['valuationRange'] is not None:
             details[ATTR_VAL_HI] = int(data['valuationRange']['high']['#text'])
