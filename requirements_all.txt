@@ -1579,7 +1579,7 @@ simplisafe-python==3.4.1
 sisyphus-control==2.1
 
 # homeassistant.components.skybell
-skybellpy==0.3.0
+skybellpy==0.4.0
 
 # homeassistant.components.slack
 slacker==0.12.0
