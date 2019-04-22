@@ -2,7 +2,7 @@
   "config": {
     "title": "Withings",
     "step": {
-      "profile": {
+      "user": {
         "title": "User Profile.",
         "description": "Select a user profile to you want home assistant to access.",
         "data": {
@@ -17,7 +17,7 @@
     "create_entry": {
       "default": "Successfully authenticated with Withings for the selected profile."
     },
-    "errors": {
+    "error": {
       "follow_link": "Please follow the link and authenticate before pressing Submit."
     },
     "abort": {

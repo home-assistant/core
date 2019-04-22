@@ -3,14 +3,14 @@ from collections import OrderedDict
 import logging
 from typing import Optional
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.util import slugify
-
-from . import const
+from homeassistant.components.withings import (
+    const
+)
 
 DATA_FLOW_IMPL = 'withings_flow_implementation'
 
@@ -82,11 +82,19 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
         flow = self.hass.data[DATA_FLOW_IMPL][profile]
         client_id = flow[const.CLIENT_ID]
         client_secret = flow[const.CLIENT_SECRET]
-        base_url = flow[const.BASE_URL]
+        base_url = flow[const.BASE_URL].rstrip('/')
+        callback_path = auth_callback_path(profile).lstrip('/')
+        auth_callback_path_str = const.AUTH_CALLBACK_PATH.lstrip('/')
 
-        callback_uri = '{}{}'.format(
+        # Clean up the base url in case the user configured a bit too much.
+        if base_url.endswith(callback_path):
+            base_url = base_url[:-len(callback_path)]
+        if base_url.endswith(auth_callback_path_str):
+            base_url = base_url[:-len(auth_callback_path_str)]
+
+        callback_uri = '{}/{}'.format(
             base_url.rstrip('/'),
-            auth_callback_path(profile)
+            callback_path.lstrip('/')
         )
 
         return nokia.NokiaAuth(
@@ -96,7 +104,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
             scope=','.join(['user.info', 'user.metrics', 'user.activity'])
         )
 
-    async def async_step_profile(self, user_input=None):
+    async def async_step_user(self, user_input=None):
         """Create an entry for selecting a profile."""
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
@@ -108,7 +116,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
             return await self.async_step_auth(user_input)
 
         return self.async_show_form(
-            step_id='auth',
+            step_id='user',
             data_schema=vol.Schema({
                 vol.Required('profile'):
                     vol.In(list(flows))
@@ -174,7 +182,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
             title=profile,
             data={
                 const.PROFILE: profile,
-                const.CREDENTIALS: credentials,
+                const.CREDENTIALS: credentials.__dict__,
             }
         )
 

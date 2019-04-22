@@ -5,18 +5,18 @@ from asynctest import patch, MagicMock
 from aiohttp.web_request import BaseRequest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant import data_entry_flow, setup
+from tests.common import get_test_home_assistant
 from homeassistant.components.withings.config_flow import (
     register_flow_implementation,
     WithingsFlowHandler,
     WithingsAuthCallbackView,
     DATA_FLOW_IMPL
 )
-import homeassistant.components.withings.const as const
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (CONF_PLATFORM)
+from homeassistant.components.withings import (
+    const
+)
 import homeassistant.components.http as http
 import homeassistant.components.api as api
-from tests.common import get_test_home_assistant
 
 
 class TestWithingsFlowHandler:
@@ -29,17 +29,14 @@ class TestWithingsFlowHandler:
             api.DOMAIN: {
                 'base_url': 'http://localhost/'
             },
-            SENSOR_DOMAIN: [
-                {
-                    CONF_PLATFORM: const.DOMAIN,
-                    const.CLIENT_ID: 'my_client_id',
-                    const.CLIENT_SECRET: 'my_secret',
-                    const.PROFILES: [
-                        'Person 1',
-                        'Person 2',
-                    ]
-                }
-            ]
+            const.DOMAIN: {
+                const.CLIENT_ID: 'my_client_id',
+                const.CLIENT_SECRET: 'my_secret',
+                const.PROFILES: [
+                    'Person 1',
+                    'Person 2',
+                ]
+            }
         }
 
         self.hass = get_test_home_assistant()
@@ -103,11 +100,29 @@ class TestWithingsFlowHandler:
         assert client.callback_uri == 'http://localhost/api/withings/callback/person_1'  # pylint: disable=line-too-long  # noqa: E501
         assert client.scope == 'user.info,user.metrics,user.activity'
 
+        # Test the base url gets path stripped and corrected.
+        base_urls = [
+            'https://vghome.duckdns.org/api/withings/callback/person_1',
+            'https://vghome.duckdns.org/api/withings/callback/person_1/',
+            'https://vghome.duckdns.org/api/withings/callback',
+            'https://vghome.duckdns.org/api/withings/callback/',
+        ]
+        for base_url in base_urls:
+            register_flow_implementation(
+                self.hass,
+                'my_client_id',
+                'my_client_secret',
+                base_url,
+                'Person 1'
+            )
+            client = self.flow_handler.get_auth_client('Person 1')
+            assert client.callback_uri == 'https://vghome.duckdns.org/api/withings/callback/person_1'  # pylint: disable=line-too-long  # noqa: E501
+
     async def test_async_step_profile(self):
         """Test the profile step."""
         self.hass.data[DATA_FLOW_IMPL] = {}
 
-        result = await self.flow_handler.async_step_profile()
+        result = await self.flow_handler.async_step_user()
         assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
         assert result['reason'] == 'no_flows'
 
@@ -126,7 +141,7 @@ class TestWithingsFlowHandler:
             'Person 1'
         )
 
-        result = await self.flow_handler.async_step_profile({
+        result = await self.flow_handler.async_step_user({
             const.PROFILE: 'Person 1',
         })
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
@@ -139,15 +154,23 @@ class TestWithingsFlowHandler:
             'base': 'follow_link',
         }
 
-        result = await self.flow_handler.async_step_profile()
+        result = await self.flow_handler.async_step_user()
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-        assert result['step_id'] == 'auth'
+        assert result['step_id'] == 'user'
         assert result['data_schema'] is not None
 
     async def test_async_step_code(self):
         """Test the code step."""
         auth_client = MagicMock(spec=nokia.NokiaAuth)
-        auth_client.get_credentials = MagicMock(return_value='MY_CREDENTIALS')
+        auth_client.get_credentials = MagicMock(return_value=nokia.NokiaCredentials(
+            access_token='my_access_token',
+            token_expiry='my_token_expiry',
+            token_type='my_token_type',
+            refresh_token='my_refresh_token',
+            user_id='my_user_id',
+            client_id='my_client_id',
+            consumer_secret='my_consumer_secret'
+        ))
 
         get_auth_client_patch = patch.object(
             self.flow_handler,
@@ -191,12 +214,20 @@ class TestWithingsFlowHandler:
             assert result['title'] == 'Person 1'
             assert result['data'] == {
                 const.PROFILE: 'Person 1',
-                const.CREDENTIALS: 'MY_CREDENTIALS',
+                const.CREDENTIALS: {
+                    'access_token': 'my_access_token',
+                    'token_expiry': 'my_token_expiry',
+                    'token_type': 'my_token_type',
+                    'refresh_token': 'my_refresh_token',
+                    'user_id': 'my_user_id',
+                    'client_id': 'my_client_id',
+                    'consumer_secret': 'my_consumer_secret'
+                },
             }
 
     async def test_full_flow(self):
         """Run a test on the full config flow."""
-        result = await self.flow_handler.async_step_profile()
+        result = await self.flow_handler.async_step_user()
         assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
         assert result['reason'] == 'no_flows'
 
@@ -208,9 +239,9 @@ class TestWithingsFlowHandler:
             'Person 0'
         )
 
-        result = await self.flow_handler.async_step_profile()
+        result = await self.flow_handler.async_step_user()
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-        assert result['step_id'] == 'auth'
+        assert result['step_id'] == 'user'
         assert result['data_schema'] is not None
 
         register_flow_implementation(
@@ -248,7 +279,15 @@ class TestWithingsFlowHandler:
             assert callback_view.name == 'api:withings:callback:person_1'
 
         auth_client = MagicMock(spec=nokia.NokiaAuth)
-        auth_client.get_credentials = MagicMock(return_value='MY_CREDENTIALS')
+        auth_client.get_credentials = MagicMock(return_value=nokia.NokiaCredentials(
+            access_token='my_access_token',
+            token_expiry='my_token_expiry',
+            token_type='my_token_type',
+            refresh_token='my_refresh_token',
+            user_id='my_user_id',
+            client_id='my_client_id',
+            consumer_secret='my_consumer_secret'
+        ))
 
         get_auth_client_patch = patch.object(
             self.flow_handler,
@@ -273,7 +312,15 @@ class TestWithingsFlowHandler:
                 title='Person 1',
                 data={
                     const.PROFILE: 'Person 1',
-                    const.CREDENTIALS: 'MY_CREDENTIALS',
+                    const.CREDENTIALS: {
+                        'access_token': 'my_access_token',
+                        'token_expiry': 'my_token_expiry',
+                        'token_type': 'my_token_type',
+                        'refresh_token': 'my_refresh_token',
+                        'user_id': 'my_user_id',
+                        'client_id': 'my_client_id',
+                        'consumer_secret': 'my_consumer_secret'
+                    },
                 }
             )
 

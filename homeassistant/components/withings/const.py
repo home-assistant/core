@@ -2,8 +2,9 @@
 import datetime
 import homeassistant.const as const
 
-SOURCE_PROFILE = 'profile'
+SOURCE_USER = 'user'
 
+LOG_NAMESPACE = 'homeassistant.components.withings'
 DOMAIN = 'withings'
 CLIENT_ID = 'client_id'
 CLIENT_SECRET = 'client_secret'
