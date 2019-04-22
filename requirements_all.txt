@@ -1303,7 +1303,7 @@ pystride==0.1.7
 pysupla==0.0.3
 
 # homeassistant.components.syncthru
-pysyncthru==0.3.1
+pysyncthru==0.4.2
 
 # homeassistant.components.tautulli
 pytautulli==0.5.0

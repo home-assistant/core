@@ -6,5 +6,5 @@
     "pysyncthru==0.4.2"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@nielstron"]
 }
