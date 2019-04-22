@@ -221,10 +221,10 @@ class HeosRegistry:
     Registry of unique IDs for HEOS devices.
 
     HEOS issues IDs (int32) to players and groups which remain static until
-    a firmware upgrade, during wich all players and groups are randomly
-    renumbered. This registry maintains a mapping of a unique ID to the
-    underlying HEOS device so that after a firmware upgrade HA will not
-    think the devices are new.
+    a firmware upgrade, during which all players and groups are renumbered.
+    This registry maintains a mapping of a unique ID to the underlying HEOS
+    device so after a firmware upgrade it will map to the proper HA devices and
+    entities.
     """
 
     def __init__(self, hass: HomeAssistantType):
@@ -240,18 +240,18 @@ class HeosRegistry:
 
     @callback
     def _schedule_save(self):
-        """Schedule saving the device registry."""
+        """Schedule saving the registry."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self):
-        """Return data of device registry to store in a file."""
+        """Return data of registry to store in a file."""
         data = {'entries': self.entries.copy()}
         return data
 
     @callback
     def get_unique_id(self, heos_id: int, name: str, version: str) -> str:
-        """Return unique ID given the HEOS id, name, and firmware version."""
+        """Return unique ID given the HEOS id, name and firmware version."""
         # Find existing entry by ID or match name only if firmware version is
         # different. Name is used as an anchor to find the device again after
         # a firmware upgrade because the heos_id will have changed.
@@ -270,7 +270,7 @@ class HeosRegistry:
 
     @callback
     def update_entry(self, heos_id: int, name: str, version: str):
-        """Update the entry with the specified id."""
+        """Update the entry name and version."""
         entry = next((entry for entry in self.entries
                       if entry['heos_id'] == heos_id), None)
         if entry and (entry['name'] != name or entry['version'] != version):

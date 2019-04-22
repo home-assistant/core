@@ -66,7 +66,7 @@ async def test_state_attributes(hass, config_entry, config, controller):
 
 async def test_entity_and_device_attributes(
         hass, config_entry, config, controller, registry_data):
-    """Test the attributes of the entity are correct."""
+    """Test the attributes of the device and entity are correct."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     # Device registry attributes

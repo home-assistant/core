@@ -179,3 +179,4 @@ async def test_registry_updates_after_firmware_upgrade(hass, registry_data):
     await registry.load()
     unique_id = registry.get_unique_id(2, "Test Player", "1.5.0")
     assert registry_data['entries'][0]['unique_id'] == unique_id
+    assert registry.entries[0]['heos_id'] == 2
