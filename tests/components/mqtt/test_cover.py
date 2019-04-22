@@ -161,8 +161,8 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: 'cover.test'})
-    await hass.async_block_till_done()
+        cover.DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'OPEN', 0, False)
@@ -171,8 +171,8 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     assert state.state == STATE_OPEN
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: 'cover.test'})
-    await hass.async_block_till_done()
+        cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'CLOSE', 0, False)
@@ -196,8 +196,8 @@ async def test_send_open_cover_command(hass, mqtt_mock):
     assert state.state == STATE_UNKNOWN
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: 'cover.test'})
-    await hass.async_block_till_done()
+        cover.DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'OPEN', 2, False)
@@ -221,8 +221,8 @@ async def test_send_close_cover_command(hass, mqtt_mock):
     assert state.state == STATE_UNKNOWN
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: 'cover.test'})
-    await hass.async_block_till_done()
+        cover.DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'CLOSE', 2, False)
@@ -246,8 +246,8 @@ async def test_send_stop__cover_command(hass, mqtt_mock):
     assert state.state == STATE_UNKNOWN
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: 'cover.test'})
-    await hass.async_block_till_done()
+        cover.DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'command-topic', 'STOP', 2, False)
@@ -407,8 +407,8 @@ async def test_set_position_templated(hass, mqtt_mock):
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: 'cover.test', ATTR_POSITION: 100})
-    await hass.async_block_till_done()
+        {ATTR_ENTITY_ID: 'cover.test', ATTR_POSITION: 100},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'set-position-topic', '38', 0, False)
@@ -431,8 +431,8 @@ async def test_set_position_untemplated(hass, mqtt_mock):
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: 'cover.test', ATTR_POSITION: 62})
-    await hass.async_block_till_done()
+        {ATTR_ENTITY_ID: 'cover.test', ATTR_POSITION: 62},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'position-topic', 62, 0, False)
@@ -521,16 +521,16 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
     })
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'})
-    await hass.async_block_till_done()
+        cover.DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'tilt-command-topic', 100, 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'})
-    await hass.async_block_till_done()
+        cover.DOMAIN, SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'tilt-command-topic', 0, 0, False)
@@ -556,16 +556,16 @@ async def test_tilt_given_value(hass, mqtt_mock):
     })
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'})
-    await hass.async_block_till_done()
+        cover.DOMAIN, SERVICE_OPEN_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'tilt-command-topic', 400, 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        cover.DOMAIN, SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'})
-    await hass.async_block_till_done()
+        cover.DOMAIN, SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: 'cover.test'},
+        blocking=True)
 
     mqtt_mock.async_publish.assert_called_once_with(
         'tilt-command-topic', 125, 0, False)
@@ -666,7 +666,6 @@ async def test_tilt_position(hass, mqtt_mock):
         cover.DOMAIN, SERVICE_SET_COVER_TILT_POSITION,
         {ATTR_ENTITY_ID: 'cover.test', ATTR_TILT_POSITION: 50},
         blocking=True)
-    await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_once_with(
         'tilt-command-topic', 50, 0, False)
@@ -697,7 +696,6 @@ async def test_tilt_position_altered_range(hass, mqtt_mock):
         cover.DOMAIN, SERVICE_SET_COVER_TILT_POSITION,
         {ATTR_ENTITY_ID: 'cover.test', ATTR_TILT_POSITION: 50},
         blocking=True)
-    await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_once_with(
         'tilt-command-topic', 25, 0, False)
