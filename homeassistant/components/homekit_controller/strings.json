@@ -1,6 +1,7 @@
 {
     "config": {
         "title": "HomeKit Accessory",
+        "flow_title": "HomeKit Accessory: {name}",
         "step": {
             "user": {
                 "title": "Pair with HomeKit Accessory",
