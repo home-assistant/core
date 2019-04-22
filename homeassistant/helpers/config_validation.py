@@ -94,7 +94,7 @@ def boolean(value: Any) -> bool:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        value = value.lower()
+        value = value.lower().strip()
         if value in ('1', 'true', 'yes', 'on', 'enable'):
             return True
         if value in ('0', 'false', 'no', 'off', 'disable'):
@@ -110,7 +110,7 @@ def boolean_true(value: Any) -> bool:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        value = value.lower()
+        value = value.lower().strip()
         return value in ('1', 'true', 'yes', 'on', 'enable')
     if isinstance(value, Number):
         return value != 0
