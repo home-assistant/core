@@ -6,12 +6,10 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import apcupsd
-from homeassistant.const import (TEMP_CELSIUS, CONF_RESOURCES)
+from homeassistant.const import (TEMP_CELSIUS, CONF_RESOURCES, POWER_WATT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = [apcupsd.DOMAIN]
 
 SENSOR_PREFIX = 'UPS '
 SENSOR_TYPES = {
@@ -57,7 +55,7 @@ SENSOR_TYPES = {
     'nombattv': ['Battery Nominal Voltage', 'V', 'mdi:flash'],
     'nominv': ['Nominal Input Voltage', 'V', 'mdi:flash'],
     'nomoutv': ['Nominal Output Voltage', 'V', 'mdi:flash'],
-    'nompower': ['Nominal Output Power', 'W', 'mdi:flash'],
+    'nompower': ['Nominal Output Power', POWER_WATT, 'mdi:flash'],
     'nomapnt': ['Nominal Apparent Power', 'VA', 'mdi:flash'],
     'numxfers': ['Transfer Count', '', 'mdi:counter'],
     'outcurnt': ['Output Current', 'A', 'mdi:flash'],
@@ -93,7 +91,7 @@ INFERRED_UNITS = {
     ' Volts': 'V',
     ' Ampere': 'A',
     ' Volt-Ampere': 'VA',
-    ' Watts': 'W',
+    ' Watts': POWER_WATT,
     ' Hz': 'Hz',
     ' C': TEMP_CELSIUS,
     ' Percent Load Capacity': '%',

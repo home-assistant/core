@@ -1,0 +1,12 @@
+{
+  "domain": "ambient_station",
+  "name": "Ambient station",
+  "documentation": "https://www.home-assistant.io/components/ambient_station",
+  "requirements": [
+    "aioambient==0.3.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

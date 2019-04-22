@@ -6,23 +6,21 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.core import CoreState
-from homeassistant.loader import bind_hass
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID,
-    EVENT_AUTOMATION_TRIGGERED, ATTR_NAME)
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_ID, CONF_PLATFORM,
+    EVENT_AUTOMATION_TRIGGERED, EVENT_HOMEASSISTANT_START, SERVICE_RELOAD,
+    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+from homeassistant.core import Context, CoreState
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import extract_domain_configs, script, condition
+from homeassistant.helpers import condition, extract_domain_configs, script
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
-import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'automation'
-DEPENDENCIES = ['group']
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
@@ -54,9 +52,8 @@ _LOGGER = logging.getLogger(__name__)
 def _platform_validator(config):
     """Validate it is a valid  platform."""
     try:
-        platform = importlib.import_module(
-            'homeassistant.components.automation.{}'.format(
-                config[CONF_PLATFORM]))
+        platform = importlib.import_module('.{}'.format(config[CONF_PLATFORM]),
+                                           __name__)
     except ImportError:
         raise vol.Invalid('Invalid platform specified') from None
 
@@ -120,7 +117,7 @@ async def async_setup(hass, config):
     async def trigger_service_handler(service_call):
         """Handle automation triggers."""
         tasks = []
-        for entity in component.async_extract_from_service(service_call):
+        for entity in await component.async_extract_from_service(service_call):
             tasks.append(entity.async_trigger(
                 service_call.data.get(ATTR_VARIABLES),
                 skip_condition=True,
@@ -133,7 +130,7 @@ async def async_setup(hass, config):
         """Handle automation turn on/off service calls."""
         tasks = []
         method = 'async_{}'.format(service_call.service)
-        for entity in component.async_extract_from_service(service_call):
+        for entity in await component.async_extract_from_service(service_call):
             tasks.append(getattr(entity, method)())
 
         if tasks:
@@ -142,7 +139,7 @@ async def async_setup(hass, config):
     async def toggle_service_handler(service_call):
         """Handle automation toggle service calls."""
         tasks = []
-        for entity in component.async_extract_from_service(service_call):
+        for entity in await component.async_extract_from_service(service_call):
             if entity.is_on:
                 tasks.append(entity.async_turn_off())
             else:
@@ -280,15 +277,21 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        if skip_condition or self._cond_func(variables):
-            self.async_set_context(context)
-            self.hass.bus.async_fire(EVENT_AUTOMATION_TRIGGERED, {
-                ATTR_NAME: self._name,
-                ATTR_ENTITY_ID: self.entity_id,
-            }, context=context)
-            await self._async_action(self.entity_id, variables, context)
-            self._last_triggered = utcnow()
-            await self.async_update_ha_state()
+        if not skip_condition and not self._cond_func(variables):
+            return
+
+        # Create a new context referring to the old context.
+        parent_id = None if context is None else context.id
+        trigger_context = Context(parent_id=parent_id)
+
+        self.async_set_context(trigger_context)
+        self.hass.bus.async_fire(EVENT_AUTOMATION_TRIGGERED, {
+            ATTR_NAME: self._name,
+            ATTR_ENTITY_ID: self.entity_id,
+        }, context=trigger_context)
+        await self._async_action(self.entity_id, variables, trigger_context)
+        self._last_triggered = utcnow()
+        await self.async_update_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from HASS."""
@@ -411,11 +414,8 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
     }
 
     for conf in trigger_configs:
-        platform = await async_prepare_setup_platform(
-            hass, config, DOMAIN, conf.get(CONF_PLATFORM))
-
-        if platform is None:
-            return None
+        platform = importlib.import_module('.{}'.format(conf[CONF_PLATFORM]),
+                                           __name__)
 
         remove = await platform.async_trigger(hass, conf, action, info)
 

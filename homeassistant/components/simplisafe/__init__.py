@@ -1,4 +1,5 @@
 """Support for SimpliSafe alarm systems."""
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -17,8 +18,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
-
-REQUIREMENTS = ['simplisafe-python==3.1.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,10 +106,18 @@ async def async_setup_entry(hass, config_entry):
 
     async def refresh(event_time):
         """Refresh data from the SimpliSafe account."""
-        for system in systems:
-            _LOGGER.debug('Updating system data: %s', system.system_id)
-            await system.update()
-            async_dispatcher_send(hass, TOPIC_UPDATE.format(system.system_id))
+        tasks = [system.update() for system in systems]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for system, result in zip(systems, results):
+            if isinstance(result, SimplipyError):
+                _LOGGER.error(
+                    'There was error updating "%s": %s', system.address,
+                    result)
+                continue
+
+            _LOGGER.debug('Updated status of "%s"', system.address)
+            async_dispatcher_send(
+                hass, TOPIC_UPDATE.format(system.system_id))
 
             if system.api.refresh_token_dirty:
                 _async_save_refresh_token(

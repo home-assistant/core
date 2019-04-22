@@ -3,10 +3,10 @@ import logging
 from time import sleep
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.verisure import CONF_ALARM, CONF_CODE_DIGITS
-from homeassistant.components.verisure import HUB as hub
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+
+from . import CONF_ALARM, CONF_CODE_DIGITS, HUB as hub
 
 _LOGGER = logging.getLogger(__name__)
 

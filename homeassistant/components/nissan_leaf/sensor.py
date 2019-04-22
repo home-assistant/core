@@ -1,17 +1,16 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
 import logging
 
-from homeassistant.components.nissan_leaf import (
-    DATA_BATTERY, DATA_CHARGING, DATA_LEAF, DATA_RANGE_AC, DATA_RANGE_AC_OFF,
-    LeafEntity)
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-_LOGGER = logging.getLogger(__name__)
+from . import (
+    DATA_BATTERY, DATA_CHARGING, DATA_LEAF, DATA_RANGE_AC, DATA_RANGE_AC_OFF,
+    LeafEntity)
 
-DEPENDENCIES = ['nissan_leaf']
+_LOGGER = logging.getLogger(__name__)
 
 ICON_RANGE = 'mdi:speedometer'
 

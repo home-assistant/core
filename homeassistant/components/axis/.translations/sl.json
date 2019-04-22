@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana",
+            "bad_config_file": "Napa\u010dni podatki iz konfiguracijske datoteke",
+            "link_local_address": "Lokalni naslovi povezave niso podprti"
+        },
+        "error": {
+            "already_configured": "Naprava je \u017ee konfigurirana",
+            "device_unavailable": "Naprava ni na voljo",
+            "faulty_credentials": "Napa\u010dni uporabni\u0161ki podatki"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "password": "Geslo",
+                    "port": "Vrata",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "title": "Nastavite plo\u0161\u010dek"
+            }
+        },
+        "title": "Plo\u0161\u010dek"
+    }
+}

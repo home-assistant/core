@@ -1,12 +1,9 @@
-"""
-Switches on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/switch.zha/
-"""
+"""Switches on Zigbee Home Automation networks."""
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.const import STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core.const import (
     DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, ON_OFF_CHANNEL,
@@ -15,8 +12,6 @@ from .core.const import (
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['zha']
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -71,11 +66,19 @@ class Switch(ZhaEntity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self._on_off_channel.on()
+        success = await self._on_off_channel.on()
+        if not success:
+            return
+        self._state = True
+        self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self._on_off_channel.off()
+        success = await self._on_off_channel.off()
+        if not success:
+            return
+        self._state = False
+        self.async_schedule_update_ha_state()
 
     def async_set_state(self, state):
         """Handle state update from channel."""
@@ -92,3 +95,15 @@ class Switch(ZhaEntity, SwitchDevice):
         await super().async_added_to_hass()
         await self.async_accept_signal(
             self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = last_state.state == STATE_ON
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the switch."""
+        await super().async_update()
+        if self._on_off_channel:
+            self._state = await self._on_off_channel.get_attribute_value(
+                'on_off')

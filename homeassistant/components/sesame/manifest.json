@@ -1,0 +1,10 @@
+{
+  "domain": "sesame",
+  "name": "Sesame",
+  "documentation": "https://www.home-assistant.io/components/sesame",
+  "requirements": [
+    "pysesame==0.1.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

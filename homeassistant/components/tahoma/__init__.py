@@ -9,8 +9,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['tahoma-api==0.0.14']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'tahoma'
@@ -43,6 +41,7 @@ TAHOMA_TYPES = {
     'io:SomfyContactIOSystemSensor': 'sensor',
     'io:VerticalExteriorAwningIOComponent': 'cover',
     'io:WindowOpenerVeluxIOComponent': 'cover',
+    'io:GarageOpenerIOComponent': 'cover',
     'rtds:RTDSContactSensor': 'sensor',
     'rtds:RTDSMotionSensor': 'sensor',
     'rtds:RTDSSmokeSensor': 'smoke',

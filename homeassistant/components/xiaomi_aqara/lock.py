@@ -1,11 +1,12 @@
 """Support for Xiaomi Aqara locks."""
 import logging
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
+
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
-from homeassistant.helpers.event import async_call_later
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import callback
+from homeassistant.helpers.event import async_call_later
+
+from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 

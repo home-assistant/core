@@ -13,8 +13,6 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 
-REQUIREMENTS = ['hlk-sw16==0.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_DEVICE_REGISTER = 'hlk_sw16_device_register'

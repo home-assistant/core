@@ -1,16 +1,14 @@
 """Support for Google Home Bluetooth tacker."""
-import logging
 from datetime import timedelta
+import logging
 
 from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.components.googlehome import (
-    CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
-_LOGGER = logging.getLogger(__name__)
+from . import CLIENT, DOMAIN as GOOGLEHOME_DOMAIN, NAME
 
-DEPENDENCIES = ['googlehome']
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 

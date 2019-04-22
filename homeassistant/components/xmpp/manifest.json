@@ -1,0 +1,13 @@
+{
+  "domain": "xmpp",
+  "name": "Xmpp",
+  "documentation": "https://www.home-assistant.io/components/xmpp",
+  "requirements": [
+    "slixmpp==1.4.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@fabaff",
+    "@flowolf"
+  ]
+}

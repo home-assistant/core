@@ -8,8 +8,6 @@ from homeassistant.components import mqtt
 from homeassistant.const import (CONF_PLATFORM, CONF_PAYLOAD)
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['mqtt']
-
 CONF_ENCODING = 'encoding'
 CONF_TOPIC = 'topic'
 DEFAULT_ENCODING = 'utf-8'
@@ -29,18 +27,18 @@ async def async_trigger(hass, config, action, automation_info):
     encoding = config[CONF_ENCODING] or None
 
     @callback
-    def mqtt_automation_listener(msg_topic, msg_payload, qos):
+    def mqtt_automation_listener(mqttmsg):
         """Listen for MQTT messages."""
-        if payload is None or payload == msg_payload:
+        if payload is None or payload == mqttmsg.payload:
             data = {
                 'platform': 'mqtt',
-                'topic': msg_topic,
-                'payload': msg_payload,
-                'qos': qos,
+                'topic': mqttmsg.topic,
+                'payload': mqttmsg.payload,
+                'qos': mqttmsg.qos,
             }
 
             try:
-                data['payload_json'] = json.loads(msg_payload)
+                data['payload_json'] = json.loads(mqttmsg.payload)
             except ValueError:
                 pass
 

@@ -3,9 +3,9 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
-    CONF_FEATURE, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-    HOMEKIT_NOTIFY_ID, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
-    TYPE_SWITCH, TYPE_VALVE)
+    CONF_FEATURE, CONF_FEATURE_LIST, CONF_LINKED_BATTERY_SENSOR,
+    FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, HOMEKIT_NOTIFY_ID, TYPE_FAUCET,
+    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping, SpeedRange, convert_to_float, density_to_air_quality,
     dismiss_setup_message, show_setup_message, temperature_to_homekit,
@@ -25,6 +25,9 @@ def test_validate_entity_config():
     """Test validate entities."""
     configs = [None, [], 'string', 12345,
                {'invalid_entity_id': {}}, {'demo.test': 1},
+               {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR: None}},
+               {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
+                                       'switch.demo'}},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
                {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
                {'media_player.test': {CONF_FEATURE_LIST: [
@@ -41,6 +44,11 @@ def test_validate_entity_config():
     assert vec({}) == {}
     assert vec({'demo.test': {CONF_NAME: 'Name'}}) == \
         {'demo.test': {CONF_NAME: 'Name'}}
+
+    assert vec({'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
+                                       'sensor.demo_battery'}}) == \
+        {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
+                                'sensor.demo_battery'}}
 
     assert vec({'alarm_control_panel.demo': {}}) == \
         {'alarm_control_panel.demo': {ATTR_CODE: None}}
@@ -183,6 +191,7 @@ def test_homekit_speed_mapping():
 def test_speed_to_homekit():
     """Test speed conversion from HA to Homekit."""
     speed_mapping = HomeKitSpeedMapping(['off', 'low', 'high'])
+    assert speed_mapping.speed_to_homekit(None) is None
     assert speed_mapping.speed_to_homekit('off') == 0
     assert speed_mapping.speed_to_homekit('low') == 50
     assert speed_mapping.speed_to_homekit('high') == 100
@@ -191,6 +200,7 @@ def test_speed_to_homekit():
 def test_speed_to_states():
     """Test speed conversion from Homekit to HA."""
     speed_mapping = HomeKitSpeedMapping(['off', 'low', 'high'])
+    assert speed_mapping.speed_to_states(-1) == 'off'
     assert speed_mapping.speed_to_states(0) == 'off'
     assert speed_mapping.speed_to_states(33) == 'off'
     assert speed_mapping.speed_to_states(34) == 'low'

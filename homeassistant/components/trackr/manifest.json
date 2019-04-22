@@ -1,0 +1,10 @@
+{
+  "domain": "trackr",
+  "name": "Trackr",
+  "documentation": "https://www.home-assistant.io/components/trackr",
+  "requirements": [
+    "pytrackr==0.0.5"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

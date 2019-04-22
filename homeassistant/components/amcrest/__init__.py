@@ -4,17 +4,13 @@ from datetime import timedelta
 
 import aiohttp
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectTimeout
-from requests.exceptions import ConnectionError as ConnectError
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SENSORS, CONF_SWITCHES, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
+    CONF_BINARY_SENSORS, CONF_SENSORS, CONF_SWITCHES, CONF_SCAN_INTERVAL,
+    HTTP_BASIC_AUTHENTICATION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['amcrest==1.2.3']
-DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +23,7 @@ DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = 'high'
 DEFAULT_STREAM_SOURCE = 'snapshot'
+DEFAULT_ARGUMENTS = '-pred 1'
 TIMEOUT = 10
 
 DATA_AMCREST = 'amcrest'
@@ -52,9 +49,14 @@ STREAM_SOURCE_LIST = {
     'rtsp': 2,
 }
 
+BINARY_SENSORS = {
+    'motion_detected': 'Motion Detected'
+}
+
 # Sensor types are defined like: Name, units, icon
+SENSOR_MOTION_DETECTOR = 'motion_detector'
 SENSORS = {
-    'motion_detector': ['Motion Detected', None, 'mdi:run'],
+    SENSOR_MOTION_DETECTOR: ['Motion Detected', None, 'mdi:run'],
     'sdcard': ['SD Used', '%', 'mdi:sd'],
     'ptz_preset': ['PTZ Preset', None, 'mdi:camera-iris'],
 }
@@ -65,48 +67,74 @@ SWITCHES = {
     'motion_recording': ['Motion Recording', 'mdi:record-rec']
 }
 
+
+def _deprecated_sensors(value):
+    if SENSOR_MOTION_DETECTOR in value:
+        _LOGGER.warning(
+            'sensors option %s is deprecated. '
+            'Please remove from your configuration and '
+            'use binary_sensors option motion_detected instead.',
+            SENSOR_MOTION_DETECTOR)
+    return value
+
+
+def _has_unique_names(value):
+    names = [camera[CONF_NAME] for camera in value]
+    vol.Schema(vol.Unique())(names)
+    return value
+
+
+AMCREST_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
+        vol.All(vol.In(AUTHENTICATION_LIST)),
+    vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
+        vol.All(vol.In(RESOLUTION_LIST)),
+    vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
+        vol.All(vol.In(STREAM_SOURCE_LIST)),
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS):
+        cv.string,
+    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+        cv.time_period,
+    vol.Optional(CONF_BINARY_SENSORS):
+        vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
+    vol.Optional(CONF_SENSORS):
+        vol.All(cv.ensure_list, [vol.In(SENSORS)], _deprecated_sensors),
+    vol.Optional(CONF_SWITCHES):
+        vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-            vol.All(vol.In(AUTHENTICATION_LIST)),
-        vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION):
-            vol.All(vol.In(RESOLUTION_LIST)),
-        vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
-            vol.All(vol.In(STREAM_SOURCE_LIST)),
-        vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-            cv.time_period,
-        vol.Optional(CONF_SENSORS):
-            vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-        vol.Optional(CONF_SWITCHES):
-            vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-    })])
+    DOMAIN: vol.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up the Amcrest IP Camera component."""
-    from amcrest import AmcrestCamera
+    from amcrest import AmcrestCamera, AmcrestError
 
-    hass.data[DATA_AMCREST] = {}
+    hass.data.setdefault(DATA_AMCREST, {})
     amcrest_cams = config[DOMAIN]
 
     for device in amcrest_cams:
+        name = device[CONF_NAME]
+        username = device[CONF_USERNAME]
+        password = device[CONF_PASSWORD]
+
         try:
-            camera = AmcrestCamera(device.get(CONF_HOST),
-                                   device.get(CONF_PORT),
-                                   device.get(CONF_USERNAME),
-                                   device.get(CONF_PASSWORD)).camera
+            camera = AmcrestCamera(device[CONF_HOST],
+                                   device[CONF_PORT],
+                                   username,
+                                   password).camera
             # pylint: disable=pointless-statement
             camera.current_time
 
-        except (ConnectError, ConnectTimeout, HTTPError) as ex:
-            _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
+        except AmcrestError as ex:
+            _LOGGER.error("Unable to connect to %s camera: %s", name, str(ex))
             hass.components.persistent_notification.create(
                 'Error: {}<br />'
                 'You will need to restart hass after fixing.'
@@ -115,23 +143,19 @@ def setup(hass, config):
                 notification_id=NOTIFICATION_ID)
             continue
 
-        ffmpeg_arguments = device.get(CONF_FFMPEG_ARGUMENTS)
-        name = device.get(CONF_NAME)
-        resolution = RESOLUTION_LIST[device.get(CONF_RESOLUTION)]
+        ffmpeg_arguments = device[CONF_FFMPEG_ARGUMENTS]
+        resolution = RESOLUTION_LIST[device[CONF_RESOLUTION]]
+        binary_sensors = device.get(CONF_BINARY_SENSORS)
         sensors = device.get(CONF_SENSORS)
         switches = device.get(CONF_SWITCHES)
-        stream_source = STREAM_SOURCE_LIST[device.get(CONF_STREAM_SOURCE)]
-
-        username = device.get(CONF_USERNAME)
-        password = device.get(CONF_PASSWORD)
+        stream_source = STREAM_SOURCE_LIST[device[CONF_STREAM_SOURCE]]
 
         # currently aiohttp only works with basic authentication
         # only valid for mjpeg streaming
-        if username is not None and password is not None:
-            if device.get(CONF_AUTHENTICATION) == HTTP_BASIC_AUTHENTICATION:
-                authentication = aiohttp.BasicAuth(username, password)
-            else:
-                authentication = None
+        if device[CONF_AUTHENTICATION] == HTTP_BASIC_AUTHENTICATION:
+            authentication = aiohttp.BasicAuth(username, password)
+        else:
+            authentication = None
 
         hass.data[DATA_AMCREST][name] = AmcrestDevice(
             camera, name, authentication, ffmpeg_arguments, stream_source,
@@ -141,6 +165,13 @@ def setup(hass, config):
             hass, 'camera', DOMAIN, {
                 CONF_NAME: name,
             }, config)
+
+        if binary_sensors:
+            discovery.load_platform(
+                hass, 'binary_sensor', DOMAIN, {
+                    CONF_NAME: name,
+                    CONF_BINARY_SENSORS: binary_sensors
+                }, config)
 
         if sensors:
             discovery.load_platform(
@@ -156,7 +187,7 @@ def setup(hass, config):
                     CONF_SWITCHES: switches
                 }, config)
 
-    return True
+    return len(hass.data[DATA_AMCREST]) >= 1
 
 
 class AmcrestDevice:

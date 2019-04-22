@@ -28,11 +28,10 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
     if current_ids is None:
         if hass is None:
             raise ValueError("Missing required parameter currentids or hass")
-        else:
-            return run_callback_threadsafe(
-                hass.loop, async_generate_entity_id, entity_id_format, name,
-                current_ids, hass
-            ).result()
+        return run_callback_threadsafe(
+            hass.loop, async_generate_entity_id, entity_id_format, name,
+            current_ids, hass
+        ).result()
 
     name = (slugify(name) or slugify(DEVICE_DEFAULT_NAME)).lower()
 
@@ -223,11 +222,28 @@ class Entity:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
 
+        self._async_write_ha_state()
+
+    @callback
+    def async_write_ha_state(self):
+        """Write the state to the state machine."""
+        if self.hass is None:
+            raise RuntimeError("Attribute hass is None for {}".format(self))
+
+        if self.entity_id is None:
+            raise NoEntitySpecifiedError(
+                "No entity id specified for entity {}".format(self.name))
+
+        self._async_write_ha_state()
+
+    @callback
+    def _async_write_ha_state(self):
+        """Write the state to the state machine."""
         start = timer()
 
+        attr = {}
         if not self.available:
             state = STATE_UNAVAILABLE
-            attr = {}
         else:
             state = self.state
 
@@ -236,10 +252,8 @@ class Entity:
             else:
                 state = str(state)
 
-            attr = self.state_attributes or {}
-            device_attr = self.device_state_attributes
-            if device_attr is not None:
-                attr.update(device_attr)
+            attr.update(self.state_attributes or {})
+            attr.update(self.device_state_attributes or {})
 
         unit_of_measurement = self.unit_of_measurement
         if unit_of_measurement is not None:
@@ -312,13 +326,27 @@ class Entity:
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
 
-        That avoid executor dead looks.
+        Scheduling the update avoids executor deadlocks.
+
+        Entity state and attributes are read when the update ha state change
+        task is executed.
+        If state is changed more than once before the ha state change task has
+        been executed, the intermediate state transitions will be missed.
         """
         self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     @callback
     def async_schedule_update_ha_state(self, force_refresh=False):
-        """Schedule an update ha state change task."""
+        """Schedule an update ha state change task.
+
+        This method must be run in the event loop.
+        Scheduling the update avoids executor deadlocks.
+
+        Entity state and attributes are read when the update ha state change
+        task is executed.
+        If state is changed more than once before the ha state change task has
+        been executed, the intermediate state transitions will be missed.
+        """
         self.hass.async_create_task(self.async_update_ha_state(force_refresh))
 
     async def async_device_update(self, warning=True):

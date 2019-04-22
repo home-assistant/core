@@ -1,8 +1,7 @@
 """Support for Tuya switches."""
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
 
-DEPENDENCIES = ['tuya']
+from . import DATA_TUYA, TuyaDevice
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

@@ -13,8 +13,6 @@ from .const import (
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
-REQUIREMENTS = ['pytradfri[async]==6.0.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 

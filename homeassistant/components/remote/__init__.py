@@ -23,9 +23,9 @@ ATTR_COMMAND = 'command'
 ATTR_DEVICE = 'device'
 ATTR_NUM_REPEATS = 'num_repeats'
 ATTR_DELAY_SECS = 'delay_secs'
+ATTR_HOLD_SECS = 'hold_secs'
 
 DOMAIN = 'remote'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_ALL_REMOTES = group.ENTITY_ID_FORMAT.format('all_remotes')
@@ -40,6 +40,7 @@ SERVICE_SYNC = 'sync'
 
 DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
+DEFAULT_HOLD_SECS = 0
 
 REMOTE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -55,6 +56,7 @@ REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Optional(
         ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
     vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
+    vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
 })
 
 

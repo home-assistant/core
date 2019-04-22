@@ -4,34 +4,41 @@ import logging
 import requests
 import voluptuous as vol
 
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA, Camera, SUPPORT_STREAM)
 from homeassistant.const import CONF_VERIFY_SSL
-from homeassistant.components.netatmo import CameraData
-from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.helpers import config_validation as cv
 
-DEPENDENCIES = ['netatmo']
+from . import CameraData, NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_HOME = 'home'
 CONF_CAMERAS = 'cameras'
+CONF_QUALITY = 'quality'
+
+DEFAULT_QUALITY = 'high'
+
+VALID_QUALITIES = ['high', 'medium', 'low', 'poor']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Optional(CONF_HOME): cv.string,
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_QUALITY, default=DEFAULT_QUALITY):
+        vol.All(cv.string, vol.In(VALID_QUALITIES)),
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to Netatmo cameras."""
-    netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
+    quality = config.get(CONF_QUALITY, DEFAULT_QUALITY)
     import pyatmo
     try:
-        data = CameraData(hass, netatmo.NETATMO_AUTH, home)
+        data = CameraData(hass, NETATMO_AUTH, home)
         for camera_name in data.get_camera_names():
             camera_type = data.get_camera_type(camera=camera_name, home=home)
             if CONF_CAMERAS in config:
@@ -39,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                    camera_name not in config[CONF_CAMERAS]:
                     continue
             add_entities([NetatmoCamera(data, camera_name, home,
-                                        camera_type, verify_ssl)])
+                                        camera_type, verify_ssl, quality)])
         data.get_persons()
     except pyatmo.NoDevice:
         return None
@@ -48,12 +55,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NetatmoCamera(Camera):
     """Representation of the images published from a Netatmo camera."""
 
-    def __init__(self, data, camera_name, home, camera_type, verify_ssl):
+    def __init__(self, data, camera_name, home, camera_type, verify_ssl,
+                 quality):
         """Set up for access to the Netatmo camera images."""
         super(NetatmoCamera, self).__init__()
         self._data = data
         self._camera_name = camera_name
         self._verify_ssl = verify_ssl
+        self._quality = quality
         if home:
             self._name = home + ' / ' + camera_name
         else:
@@ -104,3 +113,16 @@ class NetatmoCamera(Camera):
         if self._cameratype == "NACamera":
             return "Welcome"
         return None
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        return SUPPORT_STREAM
+
+    @property
+    def stream_source(self):
+        """Return the stream source."""
+        url = '{0}/live/files/{1}/index.m3u8'
+        if self._localurl:
+            return url.format(self._localurl, self._quality)
+        return url.format(self._vpnurl, self._quality)

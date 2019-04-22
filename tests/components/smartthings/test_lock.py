@@ -29,7 +29,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     device_registry = await hass.helpers.device_registry.async_get_registry()
     # Act
-    await setup_platform(hass, LOCK_DOMAIN, device)
+    await setup_platform(hass, LOCK_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get('lock.lock_1')
     assert entry
@@ -55,7 +55,7 @@ async def test_lock(hass, device_factory):
             'lockName': 'Front Door',
             'usedCode': 'Code 2'
         })
-    await setup_platform(hass, LOCK_DOMAIN, device)
+    await setup_platform(hass, LOCK_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
         LOCK_DOMAIN, 'lock', {'entity_id': 'lock.lock_1'},
@@ -77,7 +77,7 @@ async def test_unlock(hass, device_factory):
     # Arrange
     device = device_factory('Lock_1', [Capability.lock],
                             {Attribute.lock: 'locked'})
-    await setup_platform(hass, LOCK_DOMAIN, device)
+    await setup_platform(hass, LOCK_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
         LOCK_DOMAIN, 'unlock', {'entity_id': 'lock.lock_1'},
@@ -93,7 +93,7 @@ async def test_update_from_signal(hass, device_factory):
     # Arrange
     device = device_factory('Lock_1', [Capability.lock],
                             {Attribute.lock: 'unlocked'})
-    await setup_platform(hass, LOCK_DOMAIN, device)
+    await setup_platform(hass, LOCK_DOMAIN, devices=[device])
     await device.lock(True)
     # Act
     async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE,
@@ -110,7 +110,7 @@ async def test_unload_config_entry(hass, device_factory):
     # Arrange
     device = device_factory('Lock_1', [Capability.lock],
                             {Attribute.lock: 'locked'})
-    config_entry = await setup_platform(hass, LOCK_DOMAIN, device)
+    config_entry = await setup_platform(hass, LOCK_DOMAIN, devices=[device])
     # Act
     await hass.config_entries.async_forward_entry_unload(
         config_entry, 'lock')

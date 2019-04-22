@@ -7,12 +7,13 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET)
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger('homeassistant.components.hangouts')
+_LOGGER = logging.getLogger('.')
 
 
 DOMAIN = 'hangouts'
 
 CONF_2FA = '2fa'
+CONF_AUTH_CODE = 'authorization_code'
 CONF_REFRESH_TOKEN = 'refresh_token'
 CONF_BOT = 'bot'
 

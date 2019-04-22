@@ -9,6 +9,14 @@
             "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Zezwalaj na importowanie wirtualnych sensor\u00f3w",
+                    "allow_deconz_groups": "Zezw\u00f3l na importowanie grup deCONZ"
+                },
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant'a, aby po\u0142\u0105czy\u0142 si\u0119 z bramk\u0105 deCONZ dostarczon\u0105 przez dodatek hass.io {addon}?",
+                "title": "Bramka deCONZ Zigbee przez dodatek Hass.io"
+            },
             "init": {
                 "data": {
                     "host": "Host",

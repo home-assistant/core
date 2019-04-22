@@ -1,8 +1,7 @@
 """Support for VELUX scenes."""
 from homeassistant.components.scene import Scene
-from homeassistant.components.velux import _LOGGER, DATA_VELUX
 
-DEPENDENCIES = ['velux']
+from . import _LOGGER, DATA_VELUX
 
 
 async def async_setup_platform(
@@ -29,4 +28,4 @@ class VeluxScene(Scene):
 
     async def async_activate(self):
         """Activate the scene."""
-        await self.scene.run()
+        await self.scene.run(wait_for_completion=False)

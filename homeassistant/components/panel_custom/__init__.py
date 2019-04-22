@@ -10,8 +10,6 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'panel_custom'
-DEPENDENCIES = ['frontend']
-
 CONF_COMPONENT_NAME = 'name'
 CONF_SIDEBAR_TITLE = 'sidebar_title'
 CONF_SIDEBAR_ICON = 'sidebar_icon'
@@ -23,6 +21,7 @@ CONF_MODULE_URL = 'module_url'
 CONF_EMBED_IFRAME = 'embed_iframe'
 CONF_TRUST_EXTERNAL_SCRIPT = 'trust_external_script'
 CONF_URL_EXCLUSIVE_GROUP = 'url_exclusive_group'
+CONF_REQUIRE_ADMIN = 'require_admin'
 
 MSG_URL_CONFLICT = \
                 'Pass in only one of webcomponent_path, module_url or js_url'
@@ -52,6 +51,7 @@ CONFIG_SCHEMA = vol.Schema({
                      default=DEFAULT_EMBED_IFRAME): cv.boolean,
         vol.Optional(CONF_TRUST_EXTERNAL_SCRIPT,
                      default=DEFAULT_TRUST_EXTERNAL): cv.boolean,
+        vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -77,11 +77,13 @@ async def async_register_panel(
         # Should user be asked for confirmation when loading external source
         trust_external=DEFAULT_TRUST_EXTERNAL,
         # Configuration to be passed to the panel
-        config=None):
+        config=None,
+        # If your panel should only be shown to admin users
+        require_admin=False):
     """Register a new custom panel."""
     if js_url is None and html_url is None and module_url is None:
         raise ValueError('Either js_url, module_url or html_url is required.')
-    elif (js_url and html_url) or (module_url and html_url):
+    if (js_url and html_url) or (module_url and html_url):
         raise ValueError('Pass in only one of JS url, Module url or HTML url.')
 
     if config is not None and not isinstance(config, dict):
@@ -115,15 +117,19 @@ async def async_register_panel(
         sidebar_title=sidebar_title,
         sidebar_icon=sidebar_icon,
         frontend_url_path=frontend_url_path,
-        config=config
+        config=config,
+        require_admin=require_admin,
     )
 
 
 async def async_setup(hass, config):
     """Initialize custom panel."""
+    if DOMAIN not in config:
+        return True
+
     success = False
 
-    for panel in config.get(DOMAIN):
+    for panel in config[DOMAIN]:
         name = panel[CONF_COMPONENT_NAME]
 
         kwargs = {
@@ -134,6 +140,7 @@ async def async_setup(hass, config):
             'config': panel.get(CONF_CONFIG),
             'trust_external': panel[CONF_TRUST_EXTERNAL_SCRIPT],
             'embed_iframe': panel[CONF_EMBED_IFRAME],
+            'require_admin': panel[CONF_REQUIRE_ADMIN],
         }
 
         panel_path = panel.get(CONF_WEBCOMPONENT_PATH)

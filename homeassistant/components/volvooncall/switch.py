@@ -1,8 +1,9 @@
 """Support for Volvo heater."""
 import logging
 
-from homeassistant.components.volvooncall import VolvoEntity, DATA_KEY
 from homeassistant.helpers.entity import ToggleEntity
+
+from . import DATA_KEY, VolvoEntity
 
 _LOGGER = logging.getLogger(__name__)
 

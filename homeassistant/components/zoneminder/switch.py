@@ -3,14 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
-from homeassistant.const import (CONF_COMMAND_ON, CONF_COMMAND_OFF)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN as ZONEMINDER_DOMAIN
 
-DEPENDENCIES = ['zoneminder']
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND_ON): cv.string,

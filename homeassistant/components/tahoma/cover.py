@@ -2,12 +2,10 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.util.dt import utcnow
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION
-from homeassistant.components.tahoma import (
-    DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
 
-DEPENDENCIES = ['tahoma']
+from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,13 +3,11 @@ from functools import partial
 import logging
 
 from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.xs1 import (
-    ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity)
+from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import ATTR_TEMPERATURE
 
-DEPENDENCIES = ['xs1']
+from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
+
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TEMP = 8

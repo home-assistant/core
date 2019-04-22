@@ -4,7 +4,6 @@ from homeassistant.helpers import config_entry_flow
 
 
 DOMAIN = 'sonos'
-REQUIREMENTS = ['pysonos==0.0.7']
 
 
 async def async_setup(hass, config):

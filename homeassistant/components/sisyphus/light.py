@@ -1,13 +1,12 @@
 """Support for the light on the Sisyphus Kinetic Art Table."""
 import logging
 
-from homeassistant.const import CONF_NAME
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
-from homeassistant.components.sisyphus import DATA_SISYPHUS
+from homeassistant.const import CONF_NAME
+
+from . import DATA_SISYPHUS
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['sisyphus']
 
 SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 

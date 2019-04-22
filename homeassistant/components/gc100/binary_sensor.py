@@ -1,18 +1,12 @@
-"""
-Support for binary sensor using GC100.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.gc100/
-"""
+"""Support for binary sensor using GC100."""
 import voluptuous as vol
 
-from homeassistant.components.gc100 import DATA_GC100, CONF_PORTS
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['gc100']
+from . import CONF_PORTS, DATA_GC100
 
 _SENSORS_SCHEMA = vol.Schema({
     cv.string: cv.string,

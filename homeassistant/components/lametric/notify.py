@@ -5,13 +5,11 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_ICON
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.lametric import DOMAIN as LAMETRIC_DOMAIN
-
-REQUIREMENTS = ['lmnotify==0.0.4']
+from . import DOMAIN as LAMETRIC_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,10 +19,8 @@ CONF_CYCLES = 'cycles'
 CONF_LIFETIME = 'lifetime'
 CONF_PRIORITY = 'priority'
 
-DEPENDENCIES = ['lametric']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ICON, default='i555'): cv.string,
+    vol.Optional(CONF_ICON, default='a7956'): cv.string,
     vol.Optional(CONF_LIFETIME, default=10): cv.positive_int,
     vol.Optional(CONF_CYCLES, default=1): cv.positive_int,
     vol.Optional(CONF_PRIORITY, default='warning'):

@@ -1,19 +1,17 @@
 """Support for ESPHome switches."""
 import logging
-
 from typing import TYPE_CHECKING, Optional
 
-from homeassistant.components.esphome import EsphomeEntity, \
-    platform_async_setup_entry
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import EsphomeEntity, platform_async_setup_entry, esphome_state_property
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
     from aioesphomeapi import SwitchInfo, SwitchState  # noqa
 
-DEPENDENCIES = ['esphome']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -50,19 +48,17 @@ class EsphomeSwitch(EsphomeEntity, SwitchDevice):
     @property
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
-        return self._static_info.optimistic
+        return self._static_info.assumed_state
 
-    @property
-    def is_on(self):
+    @esphome_state_property
+    def is_on(self) -> Optional[bool]:
         """Return true if the switch is on."""
-        if self._state is None:
-            return None
         return self._state.state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         await self._client.switch_command(self._static_info.key, True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         await self._client.switch_command(self._static_info.key, False)

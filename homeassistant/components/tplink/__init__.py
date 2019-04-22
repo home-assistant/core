@@ -33,8 +33,6 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-REQUIREMENTS = ['pyHS100==0.3.4']
-
 
 async def _async_has_devices(hass):
     """Return if there are devices that can be discovered."""
@@ -107,10 +105,15 @@ async def async_setup_entry(hass, config_entry):
     def _fill_device_lists():
         for dev in devices.values():
             if isinstance(dev, SmartPlug):
-                if dev.is_dimmable:  # Dimmers act as lights
-                    lights.append(dev)
-                else:
-                    switches.append(dev)
+                try:
+                    if dev.is_dimmable:  # Dimmers act as lights
+                        lights.append(dev)
+                    else:
+                        switches.append(dev)
+                except SmartDeviceException as ex:
+                    _LOGGER.error("Unable to connect to device %s: %s",
+                                  dev.host, ex)
+
             elif isinstance(dev, SmartBulb):
                 lights.append(dev)
             else:

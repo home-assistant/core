@@ -1,5 +1,6 @@
 """Support for tracking consumption over given periods of time."""
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -23,6 +24,8 @@ TARIFF_ICON = 'mdi:clock-outline'
 
 ATTR_TARIFFS = 'tariffs'
 
+DEFAULT_OFFSET = timedelta(hours=0)
+
 SERVICE_METER_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 })
@@ -35,7 +38,8 @@ METER_CONFIG_SCHEMA = vol.Schema({
     vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
-    vol.Optional(CONF_METER_OFFSET, default=0): cv.positive_int,
+    vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET):
+        vol.All(cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
     vol.Optional(CONF_TARIFFS, default=[]): vol.All(
         cv.ensure_list, [cv.string]),

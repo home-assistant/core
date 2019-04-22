@@ -11,7 +11,8 @@ from homeassistant.components.sensor import (
 from homeassistant.components.smartthings import sensor
 from homeassistant.components.smartthings.const import (
     DOMAIN, SIGNAL_SMARTTHINGS_UPDATE)
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -34,15 +35,47 @@ async def test_async_setup_platform():
 
 
 async def test_entity_state(hass, device_factory):
-    """Tests the state attributes properly match the light types."""
+    """Tests the state attributes properly match the sensor types."""
     device = device_factory('Sensor 1', [Capability.battery],
                             {Attribute.battery: 100})
-    await setup_platform(hass, SENSOR_DOMAIN, device)
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     state = hass.states.get('sensor.sensor_1_battery')
     assert state.state == '100'
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == '%'
     assert state.attributes[ATTR_FRIENDLY_NAME] ==\
         device.label + " Battery"
+
+
+async def test_entity_three_axis_state(hass, device_factory):
+    """Tests the state attributes properly match the three axis types."""
+    device = device_factory('Three Axis', [Capability.three_axis],
+                            {Attribute.three_axis: [100, 75, 25]})
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    state = hass.states.get('sensor.three_axis_x_coordinate')
+    assert state.state == '100'
+    assert state.attributes[ATTR_FRIENDLY_NAME] ==\
+        device.label + " X Coordinate"
+    state = hass.states.get('sensor.three_axis_y_coordinate')
+    assert state.state == '75'
+    assert state.attributes[ATTR_FRIENDLY_NAME] ==\
+        device.label + " Y Coordinate"
+    state = hass.states.get('sensor.three_axis_z_coordinate')
+    assert state.state == '25'
+    assert state.attributes[ATTR_FRIENDLY_NAME] ==\
+        device.label + " Z Coordinate"
+
+
+async def test_entity_three_axis_invalid_state(hass, device_factory):
+    """Tests the state attributes properly match the three axis types."""
+    device = device_factory('Three Axis', [Capability.three_axis],
+                            {Attribute.three_axis: []})
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    state = hass.states.get('sensor.three_axis_x_coordinate')
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get('sensor.three_axis_y_coordinate')
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get('sensor.three_axis_z_coordinate')
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_entity_and_device_attributes(hass, device_factory):
@@ -53,7 +86,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     device_registry = await hass.helpers.device_registry.async_get_registry()
     # Act
-    await setup_platform(hass, SENSOR_DOMAIN, device)
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Assert
     entry = entity_registry.async_get('sensor.sensor_1_battery')
     assert entry
@@ -71,7 +104,7 @@ async def test_update_from_signal(hass, device_factory):
     # Arrange
     device = device_factory('Sensor 1', [Capability.battery],
                             {Attribute.battery: 100})
-    await setup_platform(hass, SENSOR_DOMAIN, device)
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     device.status.apply_attribute_update(
         'main', Capability.battery, Attribute.battery, 75)
     # Act
@@ -89,7 +122,7 @@ async def test_unload_config_entry(hass, device_factory):
     # Arrange
     device = device_factory('Sensor 1', [Capability.battery],
                             {Attribute.battery: 100})
-    config_entry = await setup_platform(hass, SENSOR_DOMAIN, device)
+    config_entry = await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     # Act
     await hass.config_entries.async_forward_entry_unload(
         config_entry, 'sensor')

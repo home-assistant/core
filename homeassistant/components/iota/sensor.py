@@ -1,9 +1,10 @@
 """Support for IOTA wallet sensors."""
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.components.iota import IotaDevice, CONF_WALLETS
 from homeassistant.const import CONF_NAME
+
+from . import CONF_WALLETS, IotaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,8 +14,6 @@ ATTR_URL = 'url'
 CONF_IRI = 'iri'
 CONF_SEED = 'seed'
 CONF_TESTNET = 'testnet'
-
-DEPENDENCIES = ['iota']
 
 SCAN_INTERVAL = timedelta(minutes=3)
 

@@ -1,14 +1,13 @@
 """Support for Abode Security System cameras."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
 import requests
 
-from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle
 
-DEPENDENCIES = ['abode']
+from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 

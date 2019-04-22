@@ -1,22 +1,15 @@
-"""
-Support for UPnP/IGD Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.upnp/
-"""
+"""Support for UPnP/IGD Sensors."""
 from datetime import datetime
 import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.upnp.const import DOMAIN as DOMAIN_UPNP
-from homeassistant.components.upnp.const import SIGNAL_REMOVE_SENSOR
+from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import DOMAIN as DOMAIN_UPNP, SIGNAL_REMOVE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['upnp']
 
 BYTES_RECEIVED = 'bytes_received'
 BYTES_SENT = 'bytes_sent'
@@ -47,7 +40,9 @@ OUT = 'sent'
 KBYTE = 1024
 
 
-async def async_setup_platform(hass, config, async_add_entities,
+async def async_setup_platform(hass: HomeAssistantType,
+                               config,
+                               async_add_entities,
                                discovery_info=None):
     """Old way of setting up UPnP/IGD sensors."""
     _LOGGER.debug('async_setup_platform: config: %s, discovery: %s',
@@ -113,7 +108,7 @@ class UpnpSensor(Entity):
                 (DOMAIN_UPNP, self.unique_id)
             },
             'name': self.name,
-            'via_hub': (DOMAIN_UPNP, self._device.udn),
+            'manufacturer': self._device.manufacturer,
         }
 
 

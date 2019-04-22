@@ -1,44 +1,19 @@
 """Support for Telegram bots using webhooks."""
 import datetime as dt
-from ipaddress import ip_network
 import logging
-
-import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
-from homeassistant.components.telegram_bot import (
-    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA,
-    initialize_bot)
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
-    HTTP_UNAUTHORIZED, CONF_URL)
-import homeassistant.helpers.config_validation as cv
+    EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
 
-DEPENDENCIES = ['http']
+from . import (CONF_ALLOWED_CHAT_IDS, CONF_TRUSTED_NETWORKS, CONF_URL,
+               BaseTelegramBotEntity, initialize_bot)
 
 _LOGGER = logging.getLogger(__name__)
 
 TELEGRAM_HANDLER_URL = '/api/telegram_webhooks'
 REMOVE_HANDLER_URL = ''
-
-CONF_TRUSTED_NETWORKS = 'trusted_networks'
-
-DEFAULT_TRUSTED_NETWORKS = [
-    ip_network('149.154.167.197/32'),
-    ip_network('149.154.167.198/31'),
-    ip_network('149.154.167.200/29'),
-    ip_network('149.154.167.208/28'),
-    ip_network('149.154.167.224/29'),
-    ip_network('149.154.167.232/31')
-]
-
-# pylint: disable=no-value-for-parameter
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_URL): vol.Url(),
-    vol.Optional(CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS):
-        vol.All(cv.ensure_list, [ip_network])
-})
 
 
 async def async_setup_platform(hass, config):

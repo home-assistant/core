@@ -10,7 +10,6 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.core as ha
-import homeassistant.loader as loader
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components import group
 from homeassistant.helpers.entity_component import EntityComponent
@@ -21,7 +20,8 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, MockPlatform, MockModule, mock_coro,
-    async_fire_time_changed, MockEntity, MockConfigEntry)
+    async_fire_time_changed, MockEntity, MockConfigEntry,
+    mock_entity_platform, mock_integration)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -74,11 +74,14 @@ class TestHelpersEntityComponent(unittest.TestCase):
         """Test the loading of the platforms."""
         component_setup = Mock(return_value=True)
         platform_setup = Mock(return_value=None)
-        loader.set_component(
-            self.hass, 'test_component',
-            MockModule('test_component', setup=component_setup))
-        loader.set_component(self.hass, 'test_domain.mod2',
-                             MockPlatform(platform_setup, ['test_component']))
+
+        mock_integration(self.hass,
+                         MockModule('test_component', setup=component_setup))
+        # mock the dependencies
+        mock_integration(self.hass,
+                         MockModule('mod2', dependencies=['test_component']))
+        mock_entity_platform(self.hass, 'test_domain.mod2',
+                             MockPlatform(platform_setup))
 
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -100,9 +103,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
         platform1_setup = Mock(side_effect=Exception('Broken'))
         platform2_setup = Mock(return_value=None)
 
-        loader.set_component(self.hass, 'test_domain.mod1',
+        mock_entity_platform(self.hass, 'test_domain.mod1',
                              MockPlatform(platform1_setup))
-        loader.set_component(self.hass, 'test_domain.mod2',
+        mock_entity_platform(self.hass, 'test_domain.mod2',
                              MockPlatform(platform2_setup))
 
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
@@ -147,7 +150,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             """Test the platform setup."""
             add_entities([MockEntity(should_poll=True)])
 
-        loader.set_component(self.hass, 'test_domain.platform',
+        mock_entity_platform(self.hass, 'test_domain.platform',
                              MockPlatform(platform_setup))
 
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
@@ -174,7 +177,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         platform = MockPlatform(platform_setup)
 
-        loader.set_component(self.hass, 'test_domain.platform', platform)
+        mock_entity_platform(self.hass, 'test_domain.platform', platform)
 
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -206,7 +209,7 @@ def test_extract_from_service_available_device(hass):
 
     assert ['test_domain.test_1', 'test_domain.test_3'] == \
         sorted(ent.entity_id for ent in
-               component.async_extract_from_service(call_1))
+               (yield from component.async_extract_from_service(call_1)))
 
     call_2 = ha.ServiceCall('test', 'service', data={
         'entity_id': ['test_domain.test_3', 'test_domain.test_4'],
@@ -214,7 +217,7 @@ def test_extract_from_service_available_device(hass):
 
     assert ['test_domain.test_3'] == \
         sorted(ent.entity_id for ent in
-               component.async_extract_from_service(call_2))
+               (yield from component.async_extract_from_service(call_2)))
 
 
 @asyncio.coroutine
@@ -222,7 +225,8 @@ def test_platform_not_ready(hass):
     """Test that we retry when platform not ready."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady,
                                         None])
-    loader.set_component(hass, 'test_domain.mod1',
+    mock_integration(hass, MockModule('mod1'))
+    mock_entity_platform(hass, 'test_domain.mod1',
                          MockPlatform(platform1_setup))
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -275,7 +279,7 @@ def test_extract_from_service_returns_all_if_no_entity_id(hass):
 
     assert ['test_domain.test_1', 'test_domain.test_2'] == \
         sorted(ent.entity_id for ent in
-               component.async_extract_from_service(call))
+               (yield from component.async_extract_from_service(call)))
 
 
 @asyncio.coroutine
@@ -293,7 +297,7 @@ def test_extract_from_service_filter_out_non_existing_entities(hass):
 
     assert ['test_domain.test_2'] == \
            [ent.entity_id for ent
-            in component.async_extract_from_service(call)]
+            in (yield from component.async_extract_from_service(call))]
 
 
 @asyncio.coroutine
@@ -308,7 +312,8 @@ def test_extract_from_service_no_group_expand(hass):
         'entity_id': ['group.test_group']
     })
 
-    extracted = component.async_extract_from_service(call, expand_group=False)
+    extracted = yield from component.async_extract_from_service(
+        call, expand_group=False)
     assert extracted == [test_group]
 
 
@@ -319,16 +324,12 @@ def test_setup_dependencies_platform(hass):
     We're explictely testing that we process dependencies even if a component
     with the same name has already been loaded.
     """
-    loader.set_component(hass, 'test_component', MockModule('test_component'))
-    loader.set_component(hass, 'test_component2',
-                         MockModule('test_component2'))
-    loader.set_component(
-        hass, 'test_domain.test_component',
-        MockPlatform(dependencies=['test_component', 'test_component2']))
+    mock_integration(hass, MockModule('test_component',
+                                      dependencies=['test_component2']))
+    mock_integration(hass, MockModule('test_component2'))
+    mock_entity_platform(hass, 'test_domain.test_component', MockPlatform())
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-
-    yield from async_setup_component(hass, 'test_component', {})
 
     yield from component.async_setup({
         DOMAIN: {
@@ -344,7 +345,7 @@ def test_setup_dependencies_platform(hass):
 async def test_setup_entry(hass):
     """Test setup entry calls async_setup_entry on platform."""
     mock_setup_entry = Mock(return_value=mock_coro(True))
-    loader.set_component(
+    mock_entity_platform(
         hass, 'test_domain.entry_domain',
         MockPlatform(async_setup_entry=mock_setup_entry,
                      scan_interval=timedelta(seconds=5)))
@@ -373,7 +374,7 @@ async def test_setup_entry_platform_not_exist(hass):
 async def test_setup_entry_fails_duplicate(hass):
     """Test we don't allow setting up a config entry twice."""
     mock_setup_entry = Mock(return_value=mock_coro(True))
-    loader.set_component(
+    mock_entity_platform(
         hass, 'test_domain.entry_domain',
         MockPlatform(async_setup_entry=mock_setup_entry))
 
@@ -389,7 +390,7 @@ async def test_setup_entry_fails_duplicate(hass):
 async def test_unload_entry_resets_platform(hass):
     """Test unloading an entry removes all entities."""
     mock_setup_entry = Mock(return_value=mock_coro(True))
-    loader.set_component(
+    mock_entity_platform(
         hass, 'test_domain.entry_domain',
         MockPlatform(async_setup_entry=mock_setup_entry))
 
@@ -466,7 +467,7 @@ async def test_extract_all_omit_entity_id(hass, caplog):
 
     assert ['test_domain.test_1', 'test_domain.test_2'] == \
         sorted(ent.entity_id for ent in
-               component.async_extract_from_service(call))
+               await component.async_extract_from_service(call))
     assert ('Not passing an entity ID to a service to target all entities is '
             'deprecated') in caplog.text
 
@@ -483,6 +484,6 @@ async def test_extract_all_use_match_all(hass, caplog):
 
     assert ['test_domain.test_1', 'test_domain.test_2'] == \
         sorted(ent.entity_id for ent in
-               component.async_extract_from_service(call))
+               await component.async_extract_from_service(call))
     assert ('Not passing an entity ID to a service to target all entities is '
             'deprecated') not in caplog.text

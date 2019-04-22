@@ -1,14 +1,12 @@
 """Support for tracking a Nissan Leaf."""
 import logging
 
-from homeassistant.components.nissan_leaf import (
-    DATA_LEAF, DATA_LOCATION, SIGNAL_UPDATE_LEAF)
 from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.util import slugify
 
-_LOGGER = logging.getLogger(__name__)
+from . import DATA_LEAF, DATA_LOCATION, SIGNAL_UPDATE_LEAF
 
-DEPENDENCIES = ['nissan_leaf']
+_LOGGER = logging.getLogger(__name__)
 
 ICON_CAR = "mdi:car"
 

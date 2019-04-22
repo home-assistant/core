@@ -2,7 +2,6 @@
 from datetime import timedelta
 from functools import partial
 import logging
-import socket
 
 import voluptuous as vol
 
@@ -13,8 +12,6 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['pyhomematic==0.1.56']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,18 +71,18 @@ HM_DEVICE_TYPES = {
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
         'IPKeySwitchPowermeter', 'IPThermostatWall230V', 'IPWeatherSensorPlus',
         'IPWeatherSensorBasic', 'IPBrightnessSensor', 'IPGarage',
-        'UniversalSensor', 'MotionIPV2', 'IPMultiIO'],
+        'UniversalSensor', 'MotionIPV2', 'IPMultiIO', 'IPThermostatWall2'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
-        'ThermostatGroup', 'IPThermostatWall230V'],
+        'ThermostatGroup', 'IPThermostatWall230V', 'IPThermostatWall2'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP', 'IPWeatherSensor', 'IPPassageSensor',
         'SmartwareMotion', 'IPWeatherSensorPlus', 'MotionIPV2', 'WaterIP',
-        'IPMultiIO', 'TiltIP'],
+        'IPMultiIO', 'TiltIP', 'IPShutterContactSabotage'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
     DISCOVER_LOCKS: ['KeyMatic']
 }
@@ -98,13 +95,14 @@ HM_IGNORE_DISCOVERY_NODE = [
 HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
     'ACTUAL_TEMPERATURE': [
         'IPAreaThermostat', 'IPWeatherSensor',
-        'IPWeatherSensorPlus', 'IPWeatherSensorBasic'],
+        'IPWeatherSensorPlus', 'IPWeatherSensorBasic',
+        'IPThermostatWall', 'IPThermostatWall2'],
 }
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
-    'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
+    'ERROR': ['error', {0: 'No'}],
     'ERROR_SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_PEER': ['rssi_peer', {}],
@@ -124,7 +122,8 @@ HM_ATTRIBUTE_SUPPORT = {
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
     'OPERATING_VOLTAGE': ['voltage', {}],
-    'WORKING': ['working', {0: 'No', 1: 'Yes'}]
+    'WORKING': ['working', {0: 'No', 1: 'Yes'}],
+    'STATE_UNCERTAIN': ['state_uncertain', {}]
 }
 
 HM_PRESS_EVENTS = [
@@ -263,7 +262,7 @@ def setup(hass, config):
     # Create hosts-dictionary for pyhomematic
     for rname, rconfig in conf[CONF_INTERFACES].items():
         remotes[rname] = {
-            'ip': socket.gethostbyname(rconfig.get(CONF_HOST)),
+            'ip': rconfig.get(CONF_HOST),
             'port': rconfig.get(CONF_PORT),
             'path': rconfig.get(CONF_PATH),
             'resolvenames': rconfig.get(CONF_RESOLVENAMES),
@@ -279,7 +278,7 @@ def setup(hass, config):
 
     for sname, sconfig in conf[CONF_HOSTS].items():
         remotes[sname] = {
-            'ip': socket.gethostbyname(sconfig.get(CONF_HOST)),
+            'ip': sconfig.get(CONF_HOST),
             'port': DEFAULT_PORT,
             'username': sconfig.get(CONF_USERNAME),
             'password': sconfig.get(CONF_PASSWORD),

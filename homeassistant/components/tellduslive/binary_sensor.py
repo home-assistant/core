@@ -3,13 +3,15 @@ import logging
 
 from homeassistant.components import binary_sensor, tellduslive
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up TelldusLive.
 
     Can only be called when a user accidentally mentions the platform in their

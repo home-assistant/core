@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Ingen TP-Link enheter funnet p\u00e5 nettverket.",
+            "single_instance_allowed": "Kun en enkelt konfigurasjon av TP-Link er n\u00f8dvendig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vil du konfigurere TP-Link smart enheter?",
+                "title": "TP-Link Smart Home"
+            }
+        },
+        "title": "TP-Link Smart Home"
+    }
+}

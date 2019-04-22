@@ -1,217 +1,187 @@
-"""Support for rebranded Quby thermostat as provided by Eneco."""
+"""Support for Toon sensors."""
+from datetime import timedelta
 import logging
-import datetime
 
-from homeassistant.helpers.entity import Entity
-import homeassistant.components.toon as toon_main
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
+
+from . import (ToonEntity, ToonElectricityMeterDeviceEntity,
+               ToonGasMeterDeviceEntity, ToonSolarDeviceEntity,
+               ToonBoilerDeviceEntity)
+from .const import (CURRENCY_EUR, DATA_TOON_CLIENT, DOMAIN, POWER_KWH,
+                    POWER_WATT, VOLUME_CM3, VOLUME_M3, RATIO_PERCENT)
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_ATTR_DEVICE_TYPE = 'device_type'
-STATE_ATTR_LAST_CONNECTED_CHANGE = 'last_connected_change'
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=300)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Toon sensors."""
-    _toon_main = hass.data[toon_main.TOON_HANDLE]
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry,
+                            async_add_entities) -> None:
+    """Set up Toon sensors based on a config entry."""
+    toon = hass.data[DATA_TOON_CLIENT][entry.entry_id]
 
-    sensor_items = []
-    sensor_items.extend([
-        ToonSensor(hass, 'Power_current', 'power-plug', 'Watt'),
-        ToonSensor(hass, 'Power_today', 'power-plug', 'kWh'),
-    ])
+    sensors = [
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'value',
+                                         "Current Power Usage",
+                                         'mdi:power-plug', POWER_WATT),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'average',
+                                         "Average Power Usage",
+                                         'mdi:power-plug', POWER_WATT),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'daily_value',
+                                         "Power Usage Today",
+                                         'mdi:power-plug', POWER_KWH),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'daily_cost',
+                                         "Power Cost Today",
+                                         'mdi:power-plug', CURRENCY_EUR),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'average_daily',
+                                         "Average Daily Power Usage",
+                                         'mdi:power-plug', POWER_KWH),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'meter_reading',
+                                         "Power Meter Feed IN Tariff 1",
+                                         'mdi:power-plug', POWER_KWH),
+        ToonElectricityMeterDeviceSensor(toon, 'power', 'meter_reading_low',
+                                         "Power Meter Feed IN Tariff 2",
+                                         'mdi:power-plug', POWER_KWH),
+    ]
 
-    if _toon_main.gas:
-        sensor_items.extend([
-            ToonSensor(hass, 'Gas_current', 'gas-cylinder', 'CM3'),
-            ToonSensor(hass, 'Gas_today', 'gas-cylinder', 'M3'),
+    if toon.gas:
+        sensors.extend([
+            ToonGasMeterDeviceSensor(toon, 'gas', 'value', "Current Gas Usage",
+                                     'mdi:gas-cylinder', VOLUME_CM3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'average',
+                                     "Average Gas Usage", 'mdi:gas-cylinder',
+                                     VOLUME_CM3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'daily_usage',
+                                     "Gas Usage Today", 'mdi:gas-cylinder',
+                                     VOLUME_M3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'average_daily',
+                                     "Average Daily Gas Usage",
+                                     'mdi:gas-cylinder', VOLUME_M3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'meter_reading', "Gas Meter",
+                                     'mdi:gas-cylinder', VOLUME_M3),
+            ToonGasMeterDeviceSensor(toon, 'gas', 'daily_cost',
+                                     "Gas Cost Today", 'mdi:gas-cylinder',
+                                     CURRENCY_EUR),
         ])
 
-    for plug in _toon_main.toon.smartplugs:
-        sensor_items.extend([
-            FibaroSensor(hass, '{}_current_power'.format(plug.name),
-                         plug.name, 'power-socket-eu', 'Watt'),
-            FibaroSensor(hass, '{}_today_energy'.format(plug.name),
-                         plug.name, 'power-socket-eu', 'kWh'),
+    if toon.solar:
+        sensors.extend([
+            ToonSolarDeviceSensor(toon, 'solar', 'value',
+                                  "Current Solar Production",
+                                  'mdi:solar-power', POWER_WATT),
+            ToonSolarDeviceSensor(toon, 'solar', 'maximum',
+                                  "Max Solar Production", 'mdi:solar-power',
+                                  POWER_WATT),
+            ToonSolarDeviceSensor(toon, 'solar', 'produced',
+                                  "Solar Production to Grid",
+                                  'mdi:solar-power', POWER_WATT),
+            ToonSolarDeviceSensor(toon, 'solar', 'average_produced',
+                                  "Average Solar Production to Grid",
+                                  'mdi:solar-power', POWER_WATT),
+            ToonElectricityMeterDeviceSensor(toon, 'solar',
+                                             'meter_reading_produced',
+                                             "Power Meter Feed OUT Tariff 1",
+                                             'mdi:solar-power',
+                                             POWER_KWH),
+            ToonElectricityMeterDeviceSensor(toon, 'solar',
+                                             'meter_reading_low_produced',
+                                             "Power Meter Feed OUT Tariff 2",
+                                             'mdi:solar-power', POWER_KWH),
         ])
 
-    if _toon_main.toon.solar.produced or _toon_main.solar:
-        sensor_items.extend([
-            SolarSensor(hass, 'Solar_maximum', 'kWh'),
-            SolarSensor(hass, 'Solar_produced', 'kWh'),
-            SolarSensor(hass, 'Solar_value', 'Watt'),
-            SolarSensor(hass, 'Solar_average_produced', 'kWh'),
-            SolarSensor(hass, 'Solar_meter_reading_low_produced', 'kWh'),
-            SolarSensor(hass, 'Solar_meter_reading_produced', 'kWh'),
-            SolarSensor(hass, 'Solar_daily_cost_produced', 'Euro'),
+    if toon.thermostat_info.have_ot_boiler:
+        sensors.extend([
+            ToonBoilerDeviceSensor(toon, 'thermostat_info',
+                                   'current_modulation_level',
+                                   "Boiler Modulation Level",
+                                   'mdi:percent',
+                                   RATIO_PERCENT),
         ])
 
-    for smokedetector in _toon_main.toon.smokedetectors:
-        sensor_items.append(
-            FibaroSmokeDetector(
-                hass, '{}_smoke_detector'.format(smokedetector.name),
-                smokedetector.device_uuid, 'alarm-bell', '%')
-        )
-
-    add_entities(sensor_items)
+    async_add_entities(sensors)
 
 
-class ToonSensor(Entity):
-    """Representation of a Toon sensor."""
+class ToonSensor(ToonEntity):
+    """Defines a Toon sensor."""
 
-    def __init__(self, hass, name, icon, unit_of_measurement):
+    def __init__(self, toon, section: str, measurement: str,
+                 name: str, icon: str, unit_of_measurement: str) -> None:
         """Initialize the Toon sensor."""
-        self._name = name
         self._state = None
-        self._icon = 'mdi:{}'.format(icon)
         self._unit_of_measurement = unit_of_measurement
-        self.thermos = hass.data[toon_main.TOON_HANDLE]
+        self.section = section
+        self.measurement = measurement
+
+        super().__init__(toon, name, icon)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the mdi icon of the sensor."""
-        return self._icon
+    def unique_id(self) -> str:
+        """Return the unique ID for this sensor."""
+        return '_'.join([DOMAIN, self.toon.agreement.id, 'sensor',
+                         self.section, self.measurement])
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.thermos.get_data(self.name.lower())
+        return self._state
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the sensor."""
-        self.thermos.update()
+        section = getattr(self.toon, self.section)
+        value = None
+
+        if self.section == 'power' and self.measurement == 'daily_value':
+            value = round((float(section.daily_usage)
+                           + float(section.daily_usage_low)) / 1000.0, 2)
+
+        if value is None:
+            value = getattr(section, self.measurement)
+
+        if self.section == 'power' and \
+                self.measurement in ['meter_reading', 'meter_reading_low',
+                                     'average_daily']:
+            value = round(float(value)/1000.0, 2)
+
+        if self.section == 'solar' and \
+                self.measurement in ['meter_reading_produced',
+                                     'meter_reading_low_produced']:
+            value = float(value)/1000.0
+
+        if self.section == 'gas' and \
+                self.measurement in ['average_daily', 'daily_usage',
+                                     'meter_reading']:
+            value = round(float(value)/1000.0, 2)
+
+        self._state = max(0, value)
 
 
-class FibaroSensor(Entity):
-    """Representation of a Fibaro sensor."""
+class ToonElectricityMeterDeviceSensor(ToonSensor,
+                                       ToonElectricityMeterDeviceEntity):
+    """Defines a Eletricity Meter sensor."""
 
-    def __init__(self, hass, name, plug_name, icon, unit_of_measurement):
-        """Initialize the Fibaro sensor."""
-        self._name = name
-        self._plug_name = plug_name
-        self._state = None
-        self._icon = 'mdi:{}'.format(icon)
-        self._unit_of_measurement = unit_of_measurement
-        self.toon = hass.data[toon_main.TOON_HANDLE]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the mdi icon of the sensor."""
-        return self._icon
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        value = '_'.join(self.name.lower().split('_')[1:])
-        return self.toon.get_data(value, self._plug_name)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-    def update(self):
-        """Get the latest data from the sensor."""
-        self.toon.update()
+    pass
 
 
-class SolarSensor(Entity):
-    """Representation of a Solar sensor."""
+class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
+    """Defines a Gas Meter sensor."""
 
-    def __init__(self, hass, name, unit_of_measurement):
-        """Initialize the Solar sensor."""
-        self._name = name
-        self._state = None
-        self._icon = 'mdi:weather-sunny'
-        self._unit_of_measurement = unit_of_measurement
-        self.toon = hass.data[toon_main.TOON_HANDLE]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the mdi icon of the sensor."""
-        return self._icon
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.toon.get_data(self.name.lower())
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-    def update(self):
-        """Get the latest data from the sensor."""
-        self.toon.update()
+    pass
 
 
-class FibaroSmokeDetector(Entity):
-    """Representation of a Fibaro smoke detector."""
+class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):
+    """Defines a Solar sensor."""
 
-    def __init__(self, hass, name, uid, icon, unit_of_measurement):
-        """Initialize the Fibaro smoke sensor."""
-        self._name = name
-        self._uid = uid
-        self._state = None
-        self._icon = 'mdi:{}'.format(icon)
-        self._unit_of_measurement = unit_of_measurement
-        self.toon = hass.data[toon_main.TOON_HANDLE]
+    pass
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
-    @property
-    def icon(self):
-        """Return the mdi icon of the sensor."""
-        return self._icon
+class ToonBoilerDeviceSensor(ToonSensor, ToonBoilerDeviceEntity):
+    """Defines a Boiler sensor."""
 
-    @property
-    def state_attributes(self):
-        """Return the state attributes of the smoke detectors."""
-        value = datetime.datetime.fromtimestamp(
-            int(self.toon.get_data('last_connected_change', self.name))
-        ).strftime('%Y-%m-%d %H:%M:%S')
-
-        return {
-            STATE_ATTR_DEVICE_TYPE:
-                self.toon.get_data('device_type', self.name),
-            STATE_ATTR_LAST_CONNECTED_CHANGE: value,
-        }
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        value = self.name.lower().split('_', 1)[1]
-        return self.toon.get_data(value, self.name)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-    def update(self):
-        """Get the latest data from the sensor."""
-        self.toon.update()
+    pass

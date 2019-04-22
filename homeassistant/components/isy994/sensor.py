@@ -2,11 +2,12 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.isy994 import (
-    ISY994_NODES, ISY994_WEATHER, ISYDevice)
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX
+from homeassistant.const import (
+    POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX)
 from homeassistant.helpers.typing import ConfigType
+
+from . import ISY994_NODES, ISY994_WEATHER, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ UOM_FRIENDLY_NAME = {
     '69': 'gal',
     '71': UNIT_UV_INDEX,
     '72': 'V',
-    '73': 'W',
+    '73': POWER_WATT,
     '74': 'W/m²',
     '75': 'weekday',
     '76': 'Wind Direction (°)',

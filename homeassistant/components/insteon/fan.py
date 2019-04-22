@@ -4,12 +4,11 @@ import logging
 from homeassistant.components.fan import (
     SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
     FanEntity)
-from homeassistant.components.insteon import InsteonEntity
 from homeassistant.const import STATE_OFF
 
-_LOGGER = logging.getLogger(__name__)
+from . import InsteonEntity
 
-DEPENDENCIES = ['insteon']
+_LOGGER = logging.getLogger(__name__)
 
 SPEED_TO_HEX = {
     SPEED_OFF: 0x00,

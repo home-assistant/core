@@ -1,9 +1,4 @@
-"""
-Provide functionality to TTS.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/
-"""
+"""Provide functionality to TTS."""
 import asyncio
 import ctypes
 import functools as ft
@@ -22,14 +17,12 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA)
 from homeassistant.components.media_player.const import DOMAIN as DOMAIN_MP
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, CONF_PLATFORM
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
-
-REQUIREMENTS = ['mutagen==1.42.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,16 +32,16 @@ ATTR_MESSAGE = 'message'
 ATTR_OPTIONS = 'options'
 ATTR_PLATFORM = 'platform'
 
+CONF_BASE_URL = 'base_url'
 CONF_CACHE = 'cache'
 CONF_CACHE_DIR = 'cache_dir'
 CONF_LANG = 'language'
+CONF_SERVICE_NAME = 'service_name'
 CONF_TIME_MEMORY = 'time_memory'
-CONF_BASE_URL = 'base_url'
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = 'tts'
 DEFAULT_TIME_MEMORY = 300
-DEPENDENCIES = ['http']
 DOMAIN = 'tts'
 
 MEM_CACHE_FILENAME = 'filename'
@@ -61,12 +54,24 @@ _RE_VOICE_FILE = re.compile(
     r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}")
 KEY_PATTERN = '{0}_{1}_{2}_{3}'
 
+
+def _deprecated_platform(value):
+    """Validate if platform is deprecated."""
+    if value == 'google':
+        raise vol.Invalid(
+            'google tts service has been renamed to google_translate,'
+            ' please update your configuration.')
+    return value
+
+
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
     vol.Optional(CONF_CACHE, default=DEFAULT_CACHE): cv.boolean,
     vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
         vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
     vol.Optional(CONF_BASE_URL): cv.string,
+    vol.Optional(CONF_SERVICE_NAME): cv.string,
 })
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
@@ -126,7 +131,7 @@ async def async_setup(hass, config):
 
         async def async_say_handle(service):
             """Service handle for say."""
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            entity_ids = service.data.get(ATTR_ENTITY_ID, ENTITY_MATCH_ALL)
             message = service.data.get(ATTR_MESSAGE)
             cache = service.data.get(ATTR_CACHE)
             language = service.data.get(ATTR_LANGUAGE)
@@ -144,16 +149,16 @@ async def async_setup(hass, config):
             data = {
                 ATTR_MEDIA_CONTENT_ID: url,
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_ENTITY_ID: entity_ids,
             }
-
-            if entity_ids:
-                data[ATTR_ENTITY_ID] = entity_ids
 
             await hass.services.async_call(
                 DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True)
 
+        service_name = p_config.get(CONF_SERVICE_NAME, "{}_{}".format(
+            p_type, SERVICE_SAY))
         hass.services.async_register(
-            DOMAIN, "{}_{}".format(p_type, SERVICE_SAY), async_say_handle,
+            DOMAIN, service_name, async_say_handle,
             schema=SCHEMA_SERVICE_SAY)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config

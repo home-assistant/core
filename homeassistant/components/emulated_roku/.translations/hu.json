@@ -6,7 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host_ip": "H\u00e1zigazda IP",
+                    "host_ip": "Hoszt IP",
                     "listen_port": "Port figyel\u00e9se",
                     "name": "N\u00e9v"
                 },

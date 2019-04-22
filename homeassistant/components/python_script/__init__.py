@@ -1,9 +1,4 @@
-"""
-Component to allow running Python scripts.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/python_script/
-"""
+"""Component to allow running Python scripts."""
 import datetime
 import glob
 import logging
@@ -17,8 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['restrictedpython==4.0b8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,13 +118,13 @@ def execute(hass, filename, source, data=None):
         # pylint: disable=too-many-boolean-expressions
         if name.startswith('async_'):
             raise ScriptError("Not allowed to access async methods")
-        elif (obj is hass and name not in ALLOWED_HASS or
-              obj is hass.bus and name not in ALLOWED_EVENTBUS or
-              obj is hass.states and name not in ALLOWED_STATEMACHINE or
-              obj is hass.services and name not in ALLOWED_SERVICEREGISTRY or
-              obj is dt_util and name not in ALLOWED_DT_UTIL or
-              obj is datetime and name not in ALLOWED_DATETIME or
-              isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME):
+        if (obj is hass and name not in ALLOWED_HASS or
+                obj is hass.bus and name not in ALLOWED_EVENTBUS or
+                obj is hass.states and name not in ALLOWED_STATEMACHINE or
+                obj is hass.services and name not in ALLOWED_SERVICEREGISTRY or
+                obj is dt_util and name not in ALLOWED_DT_UTIL or
+                obj is datetime and name not in ALLOWED_DATETIME or
+                isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME):
             raise ScriptError("Not allowed to access {}.{}".format(
                 obj.__class__.__name__, name))
 

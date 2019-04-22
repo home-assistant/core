@@ -1,20 +1,21 @@
 """Support for monitoring a Smappee energy sensor."""
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.components.smappee import DATA_SMAPPEE
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ['smappee']
+from . import DATA_SMAPPEE
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_PREFIX = 'Smappee'
 SENSOR_TYPES = {
     'solar':
-        ['Solar', 'mdi:white-balance-sunny', 'local', 'W', 'solar'],
+        ['Solar', 'mdi:white-balance-sunny', 'local', POWER_WATT, 'solar'],
     'active_power':
-        ['Active Power', 'mdi:power-plug', 'local', 'W', 'active_power'],
+        ['Active Power', 'mdi:power-plug', 'local', POWER_WATT,
+         'active_power'],
     'current':
         ['Current', 'mdi:gauge', 'local', 'A', 'current'],
     'voltage':
@@ -22,11 +23,14 @@ SENSOR_TYPES = {
     'active_cosfi':
         ['Power Factor', 'mdi:gauge', 'local', '%', 'active_cosfi'],
     'alwayson_today':
-        ['Always On Today', 'mdi:gauge', 'remote', 'kWh', 'alwaysOn'],
+        ['Always On Today', 'mdi:gauge', 'remote', ENERGY_KILO_WATT_HOUR,
+         'alwaysOn'],
     'solar_today':
-        ['Solar Today', 'mdi:white-balance-sunny', 'remote', 'kWh', 'solar'],
+        ['Solar Today', 'mdi:white-balance-sunny', 'remote',
+         ENERGY_KILO_WATT_HOUR, 'solar'],
     'power_today':
-        ['Power Today', 'mdi:power-plug', 'remote', 'kWh', 'consumption'],
+        ['Power Today', 'mdi:power-plug', 'remote', ENERGY_KILO_WATT_HOUR,
+         'consumption'],
     'water_sensor_1':
         ['Water Sensor 1', 'mdi:water', 'water', 'm3', 'value1'],
     'water_sensor_2':

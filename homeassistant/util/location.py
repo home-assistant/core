@@ -9,7 +9,7 @@ from typing import Any, Optional, Tuple, Dict
 
 import requests
 
-ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
+ELEVATION_URL = 'https://api.open-elevation.com/api/v1/lookup'
 IP_API = 'http://ip-api.com/json'
 IPAPI = 'https://ipapi.co/json/'
 
@@ -70,7 +70,6 @@ def elevation(latitude: float, longitude: float) -> int:
             ELEVATION_URL,
             params={
                 'locations': '{},{}'.format(latitude, longitude),
-                'sensor': 'false',
             },
             timeout=10)
     except requests.RequestException:

@@ -7,10 +7,15 @@ from homeassistant.components.light import (
     ATTR_WHITE_VALUE, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
     ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
     SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, DOMAIN, Light)
-from homeassistant.components import zwave
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
+from . import (
+    CONF_REFRESH_VALUE,
+    CONF_REFRESH_DELAY,
+    const,
+    ZWaveDeviceEntity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,13 +73,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def get_device(node, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
-    refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
-    delay = node_config.get(zwave.CONF_REFRESH_DELAY)
+    refresh = node_config.get(CONF_REFRESH_VALUE)
+    delay = node_config.get(CONF_REFRESH_DELAY)
     _LOGGER.debug("node=%d value=%d node_config=%s CONF_REFRESH_VALUE=%s"
                   " CONF_REFRESH_DELAY=%s", node.node_id,
                   values.primary.value_id, node_config, refresh, delay)
 
-    if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
+    if node.has_command_class(const.COMMAND_CLASS_SWITCH_COLOR):
         return ZwaveColorLight(values, refresh, delay)
     return ZwaveDimmer(values, refresh, delay)
 
@@ -104,12 +109,12 @@ def ct_to_hs(temp):
     return [int(val) for val in colorlist]
 
 
-class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
+class ZwaveDimmer(ZWaveDeviceEntity, Light):
     """Representation of a Z-Wave dimmer."""
 
     def __init__(self, values, refresh, delay):
         """Initialize the light."""
-        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._brightness = None
         self._state = None
         self._supported_features = None

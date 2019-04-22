@@ -1,22 +1,26 @@
 """The tests for the person component."""
 from unittest.mock import Mock
 
+import pytest
+
+from homeassistant.components.device_tracker import (
+    ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS, SOURCE_TYPE_ROUTER)
 from homeassistant.components.person import (
     ATTR_SOURCE, ATTR_USER_ID, DOMAIN, PersonManager)
 from homeassistant.const import (
-    ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN,
-    EVENT_HOMEASSISTANT_START)
+    ATTR_GPS_ACCURACY, ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE,
+    EVENT_HOMEASSISTANT_START, STATE_UNKNOWN)
 from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 
-import pytest
-
-from tests.common import mock_component, mock_restore_cache, mock_coro_func
+from tests.common import (
+    assert_setup_component, mock_component, mock_coro_func, mock_restore_cache)
 
 DEVICE_TRACKER = 'device_tracker.test_tracker'
 DEVICE_TRACKER_2 = 'device_tracker.test_tracker_2'
 
 
+# pylint: disable=redefined-outer-name
 @pytest.fixture
 def storage_setup(hass, hass_storage, hass_admin_user):
     """Storage setup."""
@@ -42,7 +46,8 @@ def storage_setup(hass, hass_storage, hass_admin_user):
 async def test_minimal_setup(hass):
     """Test minimal config with only name."""
     config = {DOMAIN: {'id': '1234', 'name': 'test person'}}
-    assert await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(1):
+        assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get('person.test_person')
     assert state.state == STATE_UNKNOWN
@@ -69,7 +74,8 @@ async def test_setup_user_id(hass, hass_admin_user):
     user_id = hass_admin_user.id
     config = {
         DOMAIN: {'id': '1234', 'name': 'test person', 'user_id': user_id}}
-    assert await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(1):
+        assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get('person.test_person')
     assert state.state == STATE_UNKNOWN
@@ -86,7 +92,8 @@ async def test_valid_invalid_user_ids(hass, hass_admin_user):
     config = {DOMAIN: [
         {'id': '1234', 'name': 'test valid user', 'user_id': user_id},
         {'id': '5678', 'name': 'test bad user', 'user_id': 'bad_user_id'}]}
-    assert await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(2):
+        assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get('person.test_valid_user')
     assert state.state == STATE_UNKNOWN
@@ -106,7 +113,8 @@ async def test_setup_tracker(hass, hass_admin_user):
     config = {DOMAIN: {
         'id': '1234', 'name': 'tracked person', 'user_id': user_id,
         'device_trackers': DEVICE_TRACKER}}
-    assert await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(1):
+        assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get('person.tracked_person')
     assert state.state == STATE_UNKNOWN
@@ -134,15 +142,18 @@ async def test_setup_tracker(hass, hass_admin_user):
     assert state.attributes.get(ATTR_USER_ID) == user_id
 
     hass.states.async_set(
-        DEVICE_TRACKER, 'not_home',
-        {ATTR_LATITUDE: 10.123456, ATTR_LONGITUDE: 11.123456})
+        DEVICE_TRACKER, 'not_home', {
+            ATTR_LATITUDE: 10.123456,
+            ATTR_LONGITUDE: 11.123456,
+            ATTR_GPS_ACCURACY: 10})
     await hass.async_block_till_done()
 
     state = hass.states.get('person.tracked_person')
     assert state.state == 'not_home'
     assert state.attributes.get(ATTR_ID) == '1234'
-    assert state.attributes.get(ATTR_LATITUDE) == 10.12346
-    assert state.attributes.get(ATTR_LONGITUDE) == 11.12346
+    assert state.attributes.get(ATTR_LATITUDE) == 10.123456
+    assert state.attributes.get(ATTR_LONGITUDE) == 11.123456
+    assert state.attributes.get(ATTR_GPS_ACCURACY) == 10
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
 
@@ -154,7 +165,8 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     config = {DOMAIN: {
         'id': '1234', 'name': 'tracked person', 'user_id': user_id,
         'device_trackers': [DEVICE_TRACKER, DEVICE_TRACKER_2]}}
-    assert await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(1):
+        assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get('person.tracked_person')
     assert state.state == STATE_UNKNOWN
@@ -166,7 +178,8 @@ async def test_setup_two_trackers(hass, hass_admin_user):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    hass.states.async_set(DEVICE_TRACKER, 'home')
+    hass.states.async_set(
+        DEVICE_TRACKER, 'home', {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER})
     await hass.async_block_till_done()
 
     state = hass.states.get('person.tracked_person')
@@ -174,21 +187,48 @@ async def test_setup_two_trackers(hass, hass_admin_user):
     assert state.attributes.get(ATTR_ID) == '1234'
     assert state.attributes.get(ATTR_LATITUDE) is None
     assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_GPS_ACCURACY) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
 
     hass.states.async_set(
-        DEVICE_TRACKER_2, 'not_home',
-        {ATTR_LATITUDE: 12.123456, ATTR_LONGITUDE: 13.123456})
+        DEVICE_TRACKER_2, 'not_home', {
+            ATTR_LATITUDE: 12.123456,
+            ATTR_LONGITUDE: 13.123456,
+            ATTR_GPS_ACCURACY: 12,
+            ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS})
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        DEVICE_TRACKER, 'not_home', {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER})
     await hass.async_block_till_done()
 
     state = hass.states.get('person.tracked_person')
     assert state.state == 'not_home'
     assert state.attributes.get(ATTR_ID) == '1234'
-    assert state.attributes.get(ATTR_LATITUDE) == 12.12346
-    assert state.attributes.get(ATTR_LONGITUDE) == 13.12346
+    assert state.attributes.get(ATTR_LATITUDE) == 12.123456
+    assert state.attributes.get(ATTR_LONGITUDE) == 13.123456
+    assert state.attributes.get(ATTR_GPS_ACCURACY) == 12
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
     assert state.attributes.get(ATTR_USER_ID) == user_id
+
+    hass.states.async_set(
+        DEVICE_TRACKER_2, 'zone1', {ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS})
+    await hass.async_block_till_done()
+
+    state = hass.states.get('person.tracked_person')
+    assert state.state == 'zone1'
+    assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER_2
+
+    hass.states.async_set(
+        DEVICE_TRACKER, 'home', {ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER})
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        DEVICE_TRACKER_2, 'zone2', {ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS})
+    await hass.async_block_till_done()
+
+    state = hass.states.get('person.tracked_person')
+    assert state.state == 'home'
+    assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
 
 
 async def test_ignore_unavailable_states(hass, hass_admin_user):
@@ -198,7 +238,8 @@ async def test_ignore_unavailable_states(hass, hass_admin_user):
     config = {DOMAIN: {
         'id': '1234', 'name': 'tracked person', 'user_id': user_id,
         'device_trackers': [DEVICE_TRACKER, DEVICE_TRACKER_2]}}
-    assert await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(1):
+        assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get('person.tracked_person')
     assert state.state == STATE_UNKNOWN
@@ -242,7 +283,8 @@ async def test_restore_home_state(hass, hass_admin_user):
     config = {DOMAIN: {
         'id': '1234', 'name': 'tracked person', 'user_id': user_id,
         'device_trackers': DEVICE_TRACKER}}
-    assert await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(1):
+        assert await async_setup_component(hass, DOMAIN, config)
 
     state = hass.states.get('person.tracked_person')
     assert state.state == 'home'
@@ -259,7 +301,8 @@ async def test_duplicate_ids(hass, hass_admin_user):
     config = {DOMAIN: [
         {'id': '1234', 'name': 'test user 1'},
         {'id': '1234', 'name': 'test user 2'}]}
-    assert await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(2):
+        assert await async_setup_component(hass, DOMAIN, config)
 
     assert len(hass.states.async_entity_ids('person')) == 1
     assert hass.states.get('person.test_user_1') is not None
@@ -269,7 +312,8 @@ async def test_duplicate_ids(hass, hass_admin_user):
 async def test_create_person_during_run(hass):
     """Test that person is updated if created while hass is running."""
     config = {DOMAIN: {}}
-    assert await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(0):
+        assert await async_setup_component(hass, DOMAIN, config)
     hass.states.async_set(DEVICE_TRACKER, 'home')
     await hass.async_block_till_done()
 

@@ -5,11 +5,6 @@ import os.path
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
-from homeassistant.components.ihc.const import (
-    ATTR_IHC_ID, ATTR_VALUE, CONF_AUTOSETUP, CONF_BINARY_SENSOR, CONF_DIMMABLE,
-    CONF_INFO, CONF_INVERTING, CONF_LIGHT, CONF_NODE, CONF_NOTE, CONF_POSITION,
-    CONF_SENSOR, CONF_SWITCH, CONF_XPATH, SERVICE_SET_RUNTIME_VALUE_BOOL,
-    SERVICE_SET_RUNTIME_VALUE_FLOAT, SERVICE_SET_RUNTIME_VALUE_INT)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT,
@@ -18,7 +13,13 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-REQUIREMENTS = ['ihcsdk==2.2.0', 'defusedxml==0.5.0']
+from .const import (
+    ATTR_IHC_ID, ATTR_VALUE, CONF_AUTOSETUP, CONF_BINARY_SENSOR, CONF_DIMMABLE,
+    CONF_INFO, CONF_INVERTING, CONF_LIGHT, CONF_NODE, CONF_NOTE, CONF_OFF_ID,
+    CONF_ON_ID, CONF_POSITION, CONF_SENSOR, CONF_SWITCH, CONF_XPATH,
+    SERVICE_PULSE, SERVICE_SET_RUNTIME_VALUE_BOOL,
+    SERVICE_SET_RUNTIME_VALUE_FLOAT, SERVICE_SET_RUNTIME_VALUE_INT)
+from .util import async_pulse
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +51,10 @@ DEVICE_SCHEMA = vol.Schema({
 })
 
 
-SWITCH_SCHEMA = DEVICE_SCHEMA.extend({})
+SWITCH_SCHEMA = DEVICE_SCHEMA.extend({
+    vol.Optional(CONF_OFF_ID, default=0): cv.positive_int,
+    vol.Optional(CONF_ON_ID, default=0): cv.positive_int,
+})
 
 BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
     vol.Optional(CONF_INVERTING, default=False): cv.boolean,
@@ -59,6 +63,8 @@ BINARY_SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
 
 LIGHT_SCHEMA = DEVICE_SCHEMA.extend({
     vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
+    vol.Optional(CONF_OFF_ID, default=0): cv.positive_int,
+    vol.Optional(CONF_ON_ID, default=0): cv.positive_int,
 })
 
 SENSOR_SCHEMA = DEVICE_SCHEMA.extend({
@@ -138,6 +144,10 @@ SET_RUNTIME_VALUE_FLOAT_SCHEMA = vol.Schema({
     vol.Required(ATTR_VALUE): vol.Coerce(float),
 })
 
+PULSE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_IHC_ID): cv.positive_int,
+})
+
 
 def setup(hass, config):
     """Set up the IHC platform."""
@@ -197,6 +207,8 @@ def get_manual_configuration(
                     'product_cfg': {
                         'type': sensor_cfg.get(CONF_TYPE),
                         'inverting': sensor_cfg.get(CONF_INVERTING),
+                        'off_id': sensor_cfg.get(CONF_OFF_ID),
+                        'on_id': sensor_cfg.get(CONF_ON_ID),
                         'dimmable': sensor_cfg.get(CONF_DIMMABLE),
                         'unit_of_measurement': sensor_cfg.get(
                             CONF_UNIT_OF_MEASUREMENT)
@@ -287,6 +299,11 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
         value = call.data[ATTR_VALUE]
         ihc_controller.set_runtime_value_float(ihc_id, value)
 
+    async def async_pulse_runtime_input(call):
+        """Pulse a IHC controller input function."""
+        ihc_id = call.data[ATTR_IHC_ID]
+        await async_pulse(hass, ihc_controller, ihc_id)
+
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_BOOL,
                            set_runtime_value_bool,
                            schema=SET_RUNTIME_VALUE_BOOL_SCHEMA)
@@ -296,3 +313,6 @@ def setup_service_functions(hass: HomeAssistantType, ihc_controller):
     hass.services.register(DOMAIN, SERVICE_SET_RUNTIME_VALUE_FLOAT,
                            set_runtime_value_float,
                            schema=SET_RUNTIME_VALUE_FLOAT_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_PULSE,
+                           async_pulse_runtime_input,
+                           schema=PULSE_SCHEMA)

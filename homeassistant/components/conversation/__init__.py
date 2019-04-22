@@ -6,23 +6,21 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import http
-from homeassistant.components.conversation.util import create_matcher
-from homeassistant.components.http.data_validator import (
-    RequestDataValidator)
-from homeassistant.components.cover import (INTENT_OPEN_COVER,
-                                            INTENT_CLOSE_COVER)
+from homeassistant.components.cover import (
+    INTENT_CLOSE_COVER, INTENT_OPEN_COVER)
+from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import intent
+from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.loader import bind_hass
-from homeassistant.setup import (ATTR_COMPONENT)
+from homeassistant.setup import ATTR_COMPONENT
+
+from .util import create_matcher
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TEXT = 'text'
 
-DEPENDENCIES = ['http']
 DOMAIN = 'conversation'
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')

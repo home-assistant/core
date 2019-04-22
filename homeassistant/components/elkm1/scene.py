@@ -1,9 +1,7 @@
 """Support for control of ElkM1 tasks ("macros")."""
-from homeassistant.components.elkm1 import (
-    DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities)
 from homeassistant.components.scene import Scene
 
-DEPENDENCIES = [ELK_DOMAIN]
+from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 
 async def async_setup_platform(

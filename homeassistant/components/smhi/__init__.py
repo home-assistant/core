@@ -6,8 +6,6 @@ from homeassistant.core import Config, HomeAssistant
 from .config_flow import smhi_locations  # noqa: F401
 from .const import DOMAIN  # noqa: F401
 
-REQUIREMENTS = ['smhi-pkg==1.0.8']
-
 DEFAULT_NAME = 'smhi'
 
 

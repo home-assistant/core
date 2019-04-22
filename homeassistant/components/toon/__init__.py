@@ -1,142 +1,195 @@
 """Support for Toon van Eneco devices."""
-from datetime import datetime, timedelta
 import logging
+from typing import Any, Dict
+from functools import partial
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.util import Throttle
+from homeassistant.helpers import (config_validation as cv,
+                                   device_registry as dr)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-REQUIREMENTS = ['toonlib==1.1.3']
+from . import config_flow  # noqa  pylint_disable=unused-import
+from .const import (
+    CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_DISPLAY, CONF_TENANT,
+    DATA_TOON_CLIENT, DATA_TOON_CONFIG, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_GAS = 'gas'
-CONF_SOLAR = 'solar'
-
-DEFAULT_GAS = True
-DEFAULT_SOLAR = False
-DOMAIN = 'toon'
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-
-TOON_HANDLE = 'toon_handle'
 
 # Validation of the user's configuration
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_GAS, default=DEFAULT_GAS): cv.boolean,
-        vol.Optional(CONF_SOLAR, default=DEFAULT_SOLAR): cv.boolean,
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_CLIENT_SECRET): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
-    """Set up the Toon component."""
-    from toonlib import InvalidCredentials
-    gas = config[DOMAIN][CONF_GAS]
-    solar = config[DOMAIN][CONF_SOLAR]
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+    """Set up the Toon components."""
+    if DOMAIN not in config:
+        return True
 
-    try:
-        hass.data[TOON_HANDLE] = ToonDataStore(username, password, gas, solar)
-    except InvalidCredentials:
-        return False
+    conf = config[DOMAIN]
 
-    for platform in ('climate', 'sensor', 'switch'):
-        load_platform(hass, platform, DOMAIN, {}, config)
+    # Store config to be used during entry setup
+    hass.data[DATA_TOON_CONFIG] = conf
 
     return True
 
 
-class ToonDataStore:
-    """An object to store the Toon data."""
+async def async_setup_entry(hass: HomeAssistantType,
+                            entry: ConfigType) -> bool:
+    """Set up Toon from a config entry."""
+    from toonapilib import Toon
 
-    def __init__(
-            self, username, password, gas=DEFAULT_GAS, solar=DEFAULT_SOLAR):
-        """Initialize Toon."""
-        from toonlib import Toon
+    conf = hass.data.get(DATA_TOON_CONFIG)
 
-        toon = Toon(username, password)
+    toon = await hass.async_add_executor_job(partial(
+        Toon, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD],
+        conf[CONF_CLIENT_ID], conf[CONF_CLIENT_SECRET],
+        tenant_id=entry.data[CONF_TENANT],
+        display_common_name=entry.data[CONF_DISPLAY]))
 
+    hass.data.setdefault(DATA_TOON_CLIENT, {})[entry.entry_id] = toon
+
+    # Register device for the Meter Adapter, since it will have no entities.
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={
+            (DOMAIN, toon.agreement.id, 'meter_adapter'),
+        },
+        manufacturer='Eneco',
+        name="Meter Adapter",
+        via_hub=(DOMAIN, toon.agreement.id)
+    )
+
+    for component in 'binary_sensor', 'climate', 'sensor':
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component))
+
+    return True
+
+
+class ToonEntity(Entity):
+    """Defines a base Toon entity."""
+
+    def __init__(self, toon, name: str, icon: str) -> None:
+        """Initialize the Toon entity."""
+        self._name = name
+        self._state = None
+        self._icon = icon
         self.toon = toon
-        self.gas = gas
-        self.solar = solar
-        self.data = {}
 
-        self.last_update = datetime.min
-        self.update()
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self._name
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update Toon data."""
-        self.last_update = datetime.now()
+    @property
+    def icon(self) -> str:
+        """Return the mdi icon of the entity."""
+        return self._icon
 
-        self.data['power_current'] = self.toon.power.value
-        self.data['power_today'] = round(
-            (float(self.toon.power.daily_usage) +
-             float(self.toon.power.daily_usage_low)) / 1000, 2)
-        self.data['temp'] = self.toon.temperature
 
-        if self.toon.thermostat_state:
-            self.data['state'] = self.toon.thermostat_state.name
-        else:
-            self.data['state'] = 'Manual'
+class ToonDisplayDeviceEntity(ToonEntity):
+    """Defines a Toon display device entity."""
 
-        self.data['setpoint'] = float(
-            self.toon.thermostat_info.current_set_point) / 100
-        self.data['gas_current'] = self.toon.gas.value
-        self.data['gas_today'] = round(float(self.toon.gas.daily_usage) /
-                                       1000, 2)
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this thermostat."""
+        agreement = self.toon.agreement
+        model = agreement.display_hardware_version.rpartition('/')[0]
+        sw_version = agreement.display_software_version.rpartition('/')[-1]
+        return {
+            'identifiers': {
+                (DOMAIN, agreement.id),
+            },
+            'name': 'Toon Display',
+            'manufacturer': 'Eneco',
+            'model': model,
+            'sw_version': sw_version,
+        }
 
-        for plug in self.toon.smartplugs:
-            self.data[plug.name] = {
-                'current_power': plug.current_usage,
-                'today_energy': round(float(plug.daily_usage) / 1000, 2),
-                'current_state': plug.current_state,
-                'is_connected': plug.is_connected,
-            }
 
-        self.data['solar_maximum'] = self.toon.solar.maximum
-        self.data['solar_produced'] = self.toon.solar.produced
-        self.data['solar_value'] = self.toon.solar.value
-        self.data['solar_average_produced'] = self.toon.solar.average_produced
-        self.data['solar_meter_reading_low_produced'] = \
-            self.toon.solar.meter_reading_low_produced
-        self.data['solar_meter_reading_produced'] = \
-            self.toon.solar.meter_reading_produced
-        self.data['solar_daily_cost_produced'] = \
-            self.toon.solar.daily_cost_produced
+class ToonElectricityMeterDeviceEntity(ToonEntity):
+    """Defines a Electricity Meter device entity."""
 
-        for detector in self.toon.smokedetectors:
-            value = '{}_smoke_detector'.format(detector.name)
-            self.data[value] = {
-                'smoke_detector': detector.battery_level,
-                'device_type': detector.device_type,
-                'is_connected': detector.is_connected,
-                'last_connected_change': detector.last_connected_change,
-            }
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            'name': 'Electricity Meter',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'electricity'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id, 'meter_adapter'),
+        }
 
-    def set_state(self, state):
-        """Push a new state to the Toon unit."""
-        self.toon.thermostat_state = state
 
-    def set_temp(self, temp):
-        """Push a new temperature to the Toon unit."""
-        self.toon.thermostat = temp
+class ToonGasMeterDeviceEntity(ToonEntity):
+    """Defines a Gas Meter device entity."""
 
-    def get_data(self, data_id, plug_name=None):
-        """Get the cached data."""
-        data = {'error': 'no data'}
-        if plug_name:
-            if data_id in self.data[plug_name]:
-                data = self.data[plug_name][data_id]
-        else:
-            if data_id in self.data:
-                data = self.data[data_id]
-        return data
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        via_hub = 'meter_adapter'
+        if self.toon.gas.is_smart:
+            via_hub = 'electricity'
+
+        return {
+            'name': 'Gas Meter',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'gas'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id, via_hub),
+        }
+
+
+class ToonSolarDeviceEntity(ToonEntity):
+    """Defines a Solar Device device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            'name': 'Solar Panels',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'solar'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id, 'meter_adapter'),
+        }
+
+
+class ToonBoilerModuleDeviceEntity(ToonEntity):
+    """Defines a Boiler Module device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            'name': 'Boiler Module',
+            'manufacturer': 'Eneco',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'boiler_module'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id),
+        }
+
+
+class ToonBoilerDeviceEntity(ToonEntity):
+    """Defines a Boiler device entity."""
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            'name': 'Boiler',
+            'identifiers': {
+                (DOMAIN, self.toon.agreement.id, 'boiler'),
+            },
+            'via_hub': (DOMAIN, self.toon.agreement.id, 'boiler_module'),
+        }

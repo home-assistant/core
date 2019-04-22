@@ -1,13 +1,11 @@
 """Support for XS1 switches."""
 import logging
 
-from homeassistant.components.xs1 import (
-    ACTUATORS, DOMAIN as COMPONENT_DOMAIN, XS1DeviceEntity)
 from homeassistant.helpers.entity import ToggleEntity
 
-_LOGGER = logging.getLogger(__name__)
+from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, XS1DeviceEntity
 
-DEPENDENCIES = ['xs1']
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(

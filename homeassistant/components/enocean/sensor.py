@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_ID)
+from homeassistant.const import (CONF_NAME, CONF_ID, POWER_WATT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import enocean
@@ -12,8 +12,6 @@ from homeassistant.components import enocean
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'EnOcean sensor'
-DEPENDENCIES = ['enocean']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -59,4 +57,4 @@ class EnOceanSensor(enocean.EnOceanDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return 'W'
+        return POWER_WATT

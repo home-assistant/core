@@ -2,12 +2,10 @@
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.lutron import (
-    LutronDevice, LUTRON_DEVICES, LUTRON_CONTROLLER)
+
+from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['lutron']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

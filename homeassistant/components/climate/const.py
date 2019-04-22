@@ -1,4 +1,4 @@
-"""Proides the constants needed for component."""
+"""Provides the constants needed for component."""
 
 ATTR_AUX_HEAT = 'aux_heat'
 ATTR_AWAY_MODE = 'away_mode'

@@ -1,0 +1,10 @@
+{
+  "domain": "sochain",
+  "name": "Sochain",
+  "documentation": "https://www.home-assistant.io/components/sochain",
+  "requirements": [
+    "python-sochain-api==0.0.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

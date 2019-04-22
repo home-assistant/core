@@ -1,19 +1,18 @@
 """Support for Envisalink zone states- represented as binary sensors."""
-import logging
 import datetime
+import logging
 
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import ATTR_LAST_TRIP_TIME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.envisalink import (
-    DATA_EVL, ZONE_SCHEMA, CONF_ZONENAME, CONF_ZONETYPE, EnvisalinkDevice,
-    SIGNAL_ZONE_UPDATE)
-from homeassistant.const import ATTR_LAST_TRIP_TIME
 from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from . import (
+    CONF_ZONENAME, CONF_ZONETYPE, DATA_EVL, SIGNAL_ZONE_UPDATE, ZONE_SCHEMA,
+    EnvisalinkDevice)
 
-DEPENDENCIES = ['envisalink']
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities,

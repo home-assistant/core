@@ -9,8 +9,6 @@ from homeassistant.components.websocket_api.decorators import (
     async_response, require_admin)
 from homeassistant.helpers import config_validation as cv
 
-DEPENDENCIES = ['websocket_api']
-
 WS_TYPE_LIST = 'config/entity_registry/list'
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_LIST,

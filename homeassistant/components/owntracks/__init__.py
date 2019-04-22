@@ -16,13 +16,9 @@ from homeassistant.setup import async_when_setup
 
 from .config_flow import CONF_SECRET
 
-REQUIREMENTS = ['libnacl==1.6.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'owntracks'
-DEPENDENCIES = ['webhook']
-
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_WAYPOINT_IMPORT = 'waypoints'
 CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
@@ -99,16 +95,16 @@ async def async_connect_mqtt(hass, component):
     """Subscribe to MQTT topic."""
     context = hass.data[DOMAIN]['context']
 
-    async def async_handle_mqtt_message(topic, payload, qos):
+    async def async_handle_mqtt_message(msg):
         """Handle incoming OwnTracks message."""
         try:
-            message = json.loads(payload)
+            message = json.loads(msg.payload)
         except ValueError:
             # If invalid JSON
-            _LOGGER.error("Unable to parse payload as JSON: %s", payload)
+            _LOGGER.error("Unable to parse payload as JSON: %s", msg.payload)
             return
 
-        message['topic'] = topic
+        message['topic'] = msg.topic
         hass.helpers.dispatcher.async_dispatcher_send(
             DOMAIN, hass, context, message)
 

@@ -7,8 +7,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-velbus==2.0.21']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'velbus'
@@ -62,7 +60,13 @@ async def async_setup(hass, config):
         load_platform(hass, 'sensor', DOMAIN,
                       discovery_info['sensor'], config)
 
+    def syn_clock(self, service=None):
+        controller.sync_clock()
+
     controller.scan(callback)
+    hass.services.async_register(
+        DOMAIN, 'sync_clock', syn_clock,
+        schema=vol.Schema({}))
 
     return True
 

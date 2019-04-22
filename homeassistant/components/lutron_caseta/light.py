@@ -2,15 +2,13 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, DOMAIN)
+    ATTR_BRIGHTNESS, DOMAIN, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.lutron.light import (
     to_hass_level, to_lutron_level)
-from homeassistant.components.lutron_caseta import (
-    LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
+
+from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['lutron_caseta']
 
 
 async def async_setup_platform(

@@ -11,8 +11,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.23']
-
 DOMAIN = 'tesla'
 
 _LOGGER = logging.getLogger(__name__)

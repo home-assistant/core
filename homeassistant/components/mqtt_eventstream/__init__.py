@@ -15,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
 
 DOMAIN = 'mqtt_eventstream'
-DEPENDENCIES = ['mqtt']
-
 CONF_PUBLISH_TOPIC = 'publish_topic'
 CONF_SUBSCRIBE_TOPIC = 'subscribe_topic'
 CONF_PUBLISH_EVENTSTREAM_RECEIVED = 'publish_eventstream_received'
@@ -74,9 +72,9 @@ def async_setup(hass, config):
 
     # Process events from a remote server that are received on a queue.
     @callback
-    def _event_receiver(topic, payload, qos):
+    def _event_receiver(msg):
         """Receive events published by and fire them on this hass instance."""
-        event = json.loads(payload)
+        event = json.loads(msg.payload)
         event_type = event.get('event_type')
         event_data = event.get('event_data')
 

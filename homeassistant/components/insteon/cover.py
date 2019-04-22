@@ -5,11 +5,11 @@ import math
 from homeassistant.components.cover import (
     ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
     CoverDevice)
-from homeassistant.components.insteon import InsteonEntity
+
+from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['insteon']
 SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 

@@ -1,15 +1,12 @@
 """Support for Ambient Weather Station sensors."""
 import logging
 
-from homeassistant.components.ambient_station import (
-    SENSOR_TYPES, AmbientWeatherEntity)
 from homeassistant.const import ATTR_NAME
 
+from . import SENSOR_TYPES, AmbientWeatherEntity
 from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TYPE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['ambient_station']
 
 
 async def async_setup_platform(

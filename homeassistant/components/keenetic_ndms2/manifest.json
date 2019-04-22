@@ -1,0 +1,10 @@
+{
+  "domain": "keenetic_ndms2",
+  "name": "Keenetic ndms2",
+  "documentation": "https://www.home-assistant.io/components/keenetic_ndms2",
+  "requirements": [
+    "ndms2_client==0.0.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -17,8 +17,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from .config_flow import configured_sensors, duplicate_stations
 from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 
-REQUIREMENTS = ['luftdaten==0.3.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_LUFTDATEN = 'luftdaten'

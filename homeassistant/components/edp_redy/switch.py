@@ -1,12 +1,11 @@
 """Support for EDP re:dy plugs/switches."""
 import logging
 
-from homeassistant.components.edp_redy import EdpRedyDevice, EDP_REDY
 from homeassistant.components.switch import SwitchDevice
 
-_LOGGER = logging.getLogger(__name__)
+from . import EDP_REDY, EdpRedyDevice
 
-DEPENDENCIES = ['edp_redy']
+_LOGGER = logging.getLogger(__name__)
 
 # Load power in watts (W)
 ATTR_ACTIVE_POWER = 'active_power'

@@ -9,8 +9,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aioasuswrt==1.1.20']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PUB_KEY = 'pub_key'

@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'history'
-DEPENDENCIES = ['recorder', 'http']
-
 CONF_ORDER = 'use_include_order'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -29,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
+SIGNIFICANT_DOMAINS = ('thermostat', 'climate', 'water_heater')
 IGNORE_DOMAINS = ('zone', 'scene',)
 
 

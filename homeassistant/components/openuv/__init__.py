@@ -11,11 +11,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.service import verify_domain_control
 
 from .config_flow import configured_instances
 from .const import DOMAIN
-
-REQUIREMENTS = ['pyopenuv==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,6 +131,8 @@ async def async_setup_entry(hass, config_entry):
     from pyopenuv import Client
     from pyopenuv.errors import OpenUvError
 
+    _verify_domain_control = verify_domain_control(hass, DOMAIN)
+
     try:
         websession = aiohttp_client.async_get_clientsession(hass)
         openuv = OpenUV(
@@ -157,6 +158,7 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(
                 config_entry, component))
 
+    @_verify_domain_control
     async def update_data(service):
         """Refresh OpenUV data."""
         _LOGGER.debug('Refreshing OpenUV data')

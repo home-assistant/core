@@ -20,13 +20,12 @@ from .const import (
     ATTR_LAST_DATA, CONF_APP_KEY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE,
     TYPE_BINARY_SENSOR, TYPE_SENSOR)
 
-REQUIREMENTS = ['aioambient==0.1.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CONFIG = 'config'
 
 DEFAULT_SOCKET_MIN_RETRY = 15
+DEFAULT_WATCHDOG_SECONDS = 5 * 60
 
 TYPE_24HOURRAININ = '24hourrainin'
 TYPE_BAROMABSIN = 'baromabsin'
@@ -295,19 +294,43 @@ class AmbientStation:
     def __init__(self, hass, config_entry, client, monitored_conditions):
         """Initialize."""
         self._config_entry = config_entry
+        self._entry_setup_complete = False
         self._hass = hass
+        self._watchdog_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
         self.monitored_conditions = monitored_conditions
         self.stations = {}
 
+    async def _attempt_connect(self):
+        """Attempt to connect to the socket (retrying later on fail)."""
+        from aioambient.errors import WebsocketError
+
+        try:
+            await self.client.websocket.connect()
+        except WebsocketError as err:
+            _LOGGER.error("Error with the websocket connection: %s", err)
+            self._ws_reconnect_delay = min(
+                2 * self._ws_reconnect_delay, 480)
+            async_call_later(
+                self._hass, self._ws_reconnect_delay, self.ws_connect)
+
     async def ws_connect(self):
         """Register handlers and connect to the websocket."""
-        from aioambient.errors import WebsocketError
+        async def _ws_reconnect(event_time):
+            """Forcibly disconnect from and reconnect to the websocket."""
+            _LOGGER.debug('Watchdog expired; forcing socket reconnection')
+            await self.client.websocket.disconnect()
+            await self._attempt_connect()
 
         def on_connect():
             """Define a handler to fire when the websocket is connected."""
             _LOGGER.info('Connected to websocket')
+            _LOGGER.debug('Watchdog starting')
+            if self._watchdog_listener:
+                self._watchdog_listener()
+            self._watchdog_listener = async_call_later(
+                self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect)
 
         def on_data(data):
             """Define a handler to fire when the data is received."""
@@ -316,6 +339,11 @@ class AmbientStation:
                 _LOGGER.debug('New data received: %s', data)
                 self.stations[mac_address][ATTR_LAST_DATA] = data
                 async_dispatcher_send(self._hass, TOPIC_UPDATE)
+
+            _LOGGER.debug('Resetting watchdog')
+            self._watchdog_listener()
+            self._watchdog_listener = async_call_later(
+                self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect)
 
         def on_disconnect():
             """Define a handler to fire when the websocket is disconnected."""
@@ -346,27 +374,25 @@ class AmbientStation:
                             'name', station['macAddress']),
                 }
 
-            for component in ('binary_sensor', 'sensor'):
-                self._hass.async_create_task(
-                    self._hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, component))
+            # If the websocket disconnects and reconnects, the on_subscribed
+            # handler will get called again; in that case, we don't want to
+            # attempt forward setup of the config entry (because it will have
+            # already been done):
+            if not self._entry_setup_complete:
+                for component in ('binary_sensor', 'sensor'):
+                    self._hass.async_create_task(
+                        self._hass.config_entries.async_forward_entry_setup(
+                            self._config_entry, component))
+                self._entry_setup_complete = True
 
-                self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
+            self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
         self.client.websocket.on_connect(on_connect)
         self.client.websocket.on_data(on_data)
         self.client.websocket.on_disconnect(on_disconnect)
         self.client.websocket.on_subscribed(on_subscribed)
 
-        try:
-            await self.client.websocket.connect()
-        except WebsocketError as err:
-            _LOGGER.error("Error with the websocket connection: %s", err)
-
-            self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
-
-            async_call_later(
-                self._hass, self._ws_reconnect_delay, self.ws_connect)
+        await self._attempt_connect()
 
     async def ws_disconnect(self):
         """Disconnect from the websocket."""
@@ -387,6 +413,12 @@ class AmbientWeatherEntity(Entity):
         self._sensor_type = sensor_type
         self._state = None
         self._station_name = station_name
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
+            self._sensor_type) is not None
 
     @property
     def device_info(self):

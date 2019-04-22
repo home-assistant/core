@@ -20,8 +20,6 @@ EDP_REDY = 'edp_redy'
 DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
 UPDATE_INTERVAL = 60
 
-REQUIREMENTS = ['edp_redy==0.0.3']
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,

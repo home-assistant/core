@@ -1,6 +1,7 @@
 """Support for Z-Wave."""
 import asyncio
 import copy
+from importlib import import_module
 import logging
 from pprint import pprint
 
@@ -8,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback, CoreState
-from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -36,8 +36,6 @@ from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import (check_node_schema, check_value_schema, node_name,
                    check_has_unique_id, is_node_parsed)
-
-REQUIREMENTS = ['pydispatcher==2.0.5', 'homeassistant-pyozw==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,7 +157,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
-        vol.Optional(CONF_NETWORK_KEY): cv.string,
+        vol.Optional(CONF_NETWORK_KEY):
+            vol.All(cv.string, vol.Match(r'(0x\w\w,\s?){15}0x\w\w')),
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
@@ -169,8 +168,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
             cv.positive_int,
-        vol.Optional(CONF_USB_STICK_PATH, default=DEFAULT_CONF_USB_STICK_PATH):
-            cv.string,
+        vol.Optional(CONF_USB_STICK_PATH): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -239,7 +237,8 @@ async def async_setup(hass, config):
         hass.async_create_task(hass.config_entries.flow.async_init(
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={
-                CONF_USB_STICK_PATH: conf[CONF_USB_STICK_PATH],
+                CONF_USB_STICK_PATH: conf.get(
+                    CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
                 CONF_NETWORK_KEY: conf.get(CONF_NETWORK_KEY),
             }
         ))
@@ -271,9 +270,14 @@ async def async_setup_entry(hass, config_entry):
         config.get(CONF_DEVICE_CONFIG_DOMAIN),
         config.get(CONF_DEVICE_CONFIG_GLOB))
 
+    usb_path = config.get(
+        CONF_USB_STICK_PATH, config_entry.data[CONF_USB_STICK_PATH])
+
+    _LOGGER.info('Z-Wave USB path is %s', usb_path)
+
     # Setup options
     options = ZWaveOption(
-        config_entry.data[CONF_USB_STICK_PATH],
+        usb_path,
         user_path=hass.config.config_dir,
         config_path=config.get(CONF_CONFIG_PATH))
 
@@ -374,7 +378,7 @@ async def async_setup_entry(hass, config_entry):
 
     def network_ready():
         """Handle the query of all awake nodes."""
-        _LOGGER.info("Zwave network is ready for use. All awake nodes "
+        _LOGGER.info("Z-Wave network is ready for use. All awake nodes "
                      "have been queried. Sleeping nodes will be "
                      "queried when they awake.")
         hass.bus.fire(const.EVENT_NETWORK_READY)
@@ -518,10 +522,16 @@ async def async_setup_entry(hass, config_entry):
                 .values()):
             if value.index != param:
                 continue
-            if value.type in [const.TYPE_LIST, const.TYPE_BOOL]:
+            if value.type == const.TYPE_BOOL:
+                value.data = int(selection == 'True')
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with bool selection %s", param, node_id,
+                             str(selection))
+                return
+            if value.type == const.TYPE_LIST:
                 value.data = str(selection)
                 _LOGGER.info("Setting config parameter %s on Node %s "
-                             "with list/bool selection %s", param, node_id,
+                             "with list selection %s", param, node_id,
                              str(selection))
                 return
             if value.type == const.TYPE_BUTTON:
@@ -902,7 +912,9 @@ class ZWaveDeviceEntityValues():
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
 
-        platform = get_platform(self._hass, component, DOMAIN)
+        platform = import_module('.{}'.format(component),
+                                 __name__)
+
         device = platform.get_device(
             node=self._node, values=self,
             node_config=node_config, hass=self._hass)

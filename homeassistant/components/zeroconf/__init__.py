@@ -7,11 +7,8 @@ import voluptuous as vol
 from homeassistant import util
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 
-REQUIREMENTS = ['zeroconf==0.21.3']
-
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['api']
 DOMAIN = 'zeroconf'
 
 
@@ -30,11 +27,11 @@ def setup(hass, config):
 
     zeroconf_name = '{}.{}'.format(hass.config.location_name, ZEROCONF_TYPE)
 
-    requires_api_password = hass.config.api.api_password is not None
     params = {
         'version': __version__,
         'base_url': hass.config.api.base_url,
-        'requires_api_password': requires_api_password,
+        # always needs authentication
+        'requires_api_password': True,
     }
 
     host_ip = util.get_local_ip()

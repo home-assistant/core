@@ -1,0 +1,10 @@
+{
+  "domain": "shell_command",
+  "name": "Shell command",
+  "documentation": "https://www.home-assistant.io/components/shell_command",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

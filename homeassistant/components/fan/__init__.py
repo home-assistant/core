@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with fans.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/fan/
-"""
+"""Provides functionality to interact with fans."""
 from datetime import timedelta
 import functools as ft
 import logging
@@ -23,7 +18,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'fan'
-DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_FANS = 'all fans'
