@@ -31,15 +31,18 @@ COLOR_CHANNEL_BLUE = 0x10
 # (Manufacturer ID, Product ID) from
 # https://github.com/OpenZWave/open-zwave/blob/master/config/manufacturer_specific.xml
 AEOTEC_ZW098_LED_BULB_LIGHT = (0x86, 0x62)
+AEOTEC_ZW121_LED_STRIPE_LIGHT = (0x86, 0x79)
 AEOTEC_ZWA001_LED_BULB_LIGHT = (0x371, 0x1)
 AEOTEC_ZWA002_LED_BULB_LIGHT = (0x371, 0x2)
 HANK_HKZW_RGB01_LED_BULB_LIGHT = (0x208, 0x4)
 ZIPATO_RGB_BULB_2_LED_BULB_LIGHT = (0x131, 0x3)
 
 WORKAROUND_ZW098 = 'zw098'
+WORKAROUND_ZW121 = 'zw121'
 
 DEVICE_MAPPINGS = {
     AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098,
+    AEOTEC_ZW121_LED_STRIPE_LIGHT: WORKAROUND_ZW121,
     AEOTEC_ZWA001_LED_BULB_LIGHT: WORKAROUND_ZW098,
     AEOTEC_ZWA002_LED_BULB_LIGHT: WORKAROUND_ZW098,
     HANK_HKZW_RGB01_LED_BULB_LIGHT: WORKAROUND_ZW098,
@@ -121,6 +124,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, Light):
         self._delay = delay
         self._refresh_value = refresh
         self._zw098 = None
+        self._zw121 = None
 
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
@@ -132,6 +136,9 @@ class ZwaveDimmer(ZWaveDeviceEntity, Light):
                 if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZW098:
                     _LOGGER.debug("AEOTEC ZW098 workaround enabled")
                     self._zw098 = 1
+                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZW121:
+                    _LOGGER.debug("AEOTEC ZW121 workaround enabled")
+                    self._zw121 = 1
 
         # Used for value change event handling
         self._refreshing = False
@@ -259,6 +266,8 @@ class ZwaveColorLight(ZwaveDimmer):
         self._supported_features |= SUPPORT_COLOR
         if self._zw098:
             self._supported_features |= SUPPORT_COLOR_TEMP
+        elif self._zw121:
+            self._supported_features |= SUPPORT_WHITE_VALUE
         elif self._color_channels is not None and self._color_channels & (
                 COLOR_CHANNEL_WARM_WHITE | COLOR_CHANNEL_COLD_WHITE):
             self._supported_features |= SUPPORT_WHITE_VALUE
@@ -274,6 +283,9 @@ class ZwaveColorLight(ZwaveDimmer):
 
         # Color Channels
         self._color_channels = self.values.color_channels.data
+        if self._zw121:
+            self._color_channels |= COLOR_CHANNEL_WARM_WHITE
+            self._color_channels |= COLOR_CHANNEL_COLD_WHITE
 
         # Color Data String
         data = self.values.color.data
@@ -373,7 +385,16 @@ class ZwaveColorLight(ZwaveDimmer):
             for colorval in color_util.color_hs_to_RGB(*self._hs):
                 rgbw += format(colorval, '02x')
             if self._white is not None:
-                rgbw += format(self._white, '02x') + '00'
+                if self._zw121 and self._white > 0:
+                    # We use just the warm and cold LEDs here on ZW121.
+                    # A color value is therfore ignored on purpose
+                    rgbw = '#000000'
+                    # The combined value of cold and warm LED must not
+                    # exceed 255
+                    rgbw += format(self._white, '02x')
+                    rgbw += format(255 - self._white, '02x')
+                else:
+                    rgbw += format(self._white, '02x') + '00'
             else:
                 rgbw += '0000'
 
