@@ -10,8 +10,6 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 
-REQUIREMENTS = ['python-mystrom==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'myStrom bulb'

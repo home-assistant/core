@@ -25,9 +25,6 @@ from homeassistant.components.modbus import (
     CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyflexit==0.3']
-DEPENDENCIES = ['modbus']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
     vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),

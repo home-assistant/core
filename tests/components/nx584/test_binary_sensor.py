@@ -85,7 +85,7 @@ class TestNX584SensorSetup(unittest.TestCase):
     def _test_assert_graceful_fail(self, config):
         """Test the failing."""
         assert not setup_component(
-            self.hass, 'binary_sensor.nx584', config)
+            self.hass, 'nx584', config)
 
     def test_setup_bad_config(self):
         """Test the setup with bad configuration."""

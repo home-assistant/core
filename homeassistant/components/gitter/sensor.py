@@ -1,9 +1,4 @@
-"""
-Support for displaying details about a Gitter.im chat room.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gitter/
-"""
+"""Support for displaying details about a Gitter.im chat room."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_ROOM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['gitterpy==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 

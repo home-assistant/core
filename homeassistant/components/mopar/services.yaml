@@ -1,0 +1,6 @@
+sound_horn:
+  description: Trigger the vehicle's horn
+  fields:
+    vehicle_index:
+      description: The index of the vehicle to trigger. This is exposed in the sensor's device attributes.
+      example: 1

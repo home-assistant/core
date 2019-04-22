@@ -55,6 +55,7 @@ pip-log.txt
 .tox
 nosetests.xml
 htmlcov/
+test-reports/
 
 # Translations
 *.mo
@@ -83,7 +84,7 @@ Scripts/
 # vimmy stuff
 *.swp
 *.swo
-
+tags
 ctags.tmp
 
 # vagrant stuff

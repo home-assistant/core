@@ -7,8 +7,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
 
-DEPENDENCIES = ['fastdotcom']
-
 _LOGGER = logging.getLogger(__name__)
 
 ICON = 'mdi:speedometer'

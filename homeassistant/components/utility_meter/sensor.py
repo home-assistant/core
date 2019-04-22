@@ -118,7 +118,8 @@ class UtilityMeterSensor(RestoreEntity):
             self._collecting = async_track_state_change(
                 self.hass, self._sensor_source_id, self.async_reading)
         else:
-            self._collecting()
+            if self._collecting:
+                self._collecting()
             self._collecting = None
 
         _LOGGER.debug("%s - %s - source <%s>", self._name,

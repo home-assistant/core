@@ -3,9 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from . import KNOWN_ACCESSORIES, HomeKitEntity
-
-DEPENDENCIES = ['homekit_controller']
+from . import KNOWN_DEVICES, HomeKitEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit motion sensor support."""
     if discovery_info is not None:
-        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+        accessory = hass.data[KNOWN_DEVICES][discovery_info['serial']]
         add_entities([HomeKitMotionSensor(accessory, discovery_info)], True)
 
 

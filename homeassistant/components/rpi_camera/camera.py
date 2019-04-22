@@ -1,9 +1,4 @@
-"""
-Camera platform that has a Raspberry Pi camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.rpi_camera/
-"""
+"""Camera platform that has a Raspberry Pi camera."""
 import os
 import subprocess
 import logging

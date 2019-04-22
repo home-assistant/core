@@ -1,9 +1,4 @@
-"""
-Support for Hikvision event stream events represented as binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.hikvision/
-"""
+"""Support for Hikvision event stream events represented as binary sensors."""
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -18,7 +13,6 @@ from homeassistant.const import (
     CONF_SSL, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
     ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
-REQUIREMENTS = ['pyhik==0.2.2']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = 'ignored'

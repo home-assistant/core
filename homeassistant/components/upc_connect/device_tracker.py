@@ -1,9 +1,4 @@
-"""
-Support for UPC ConnectBox router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.upc_connect/
-"""
+"""Support for UPC ConnectBox router."""
 import asyncio
 import logging
 
@@ -17,8 +12,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, HTTP_HEADER_X_REQUESTED_WITH
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['defusedxml==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 

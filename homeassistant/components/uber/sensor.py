@@ -1,9 +1,4 @@
-"""
-Support for the Uber API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.uber/
-"""
+"""Support for the Uber API."""
 import logging
 from datetime import timedelta
 
@@ -13,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['uber_rides==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 

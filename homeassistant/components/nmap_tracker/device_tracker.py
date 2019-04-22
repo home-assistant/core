@@ -13,8 +13,6 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOSTS
 
-REQUIREMENTS = ['python-nmap==0.6.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXCLUDE = 'exclude'

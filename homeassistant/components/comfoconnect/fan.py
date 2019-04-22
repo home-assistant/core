@@ -10,8 +10,6 @@ from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['comfoconnect']
-
 SPEED_MAPPING = {
     0: SPEED_OFF,
     1: SPEED_LOW,

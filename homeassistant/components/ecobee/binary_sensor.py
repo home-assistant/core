@@ -2,8 +2,6 @@
 from homeassistant.components import ecobee
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-DEPENDENCIES = ['ecobee']
-
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 

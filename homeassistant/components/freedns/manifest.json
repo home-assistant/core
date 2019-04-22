@@ -1,0 +1,8 @@
+{
+  "domain": "freedns",
+  "name": "Freedns",
+  "documentation": "https://www.home-assistant.io/components/freedns",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

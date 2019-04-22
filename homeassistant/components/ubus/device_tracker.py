@@ -1,9 +1,4 @@
-"""
-Support for OpenWRT (ubus) routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.ubus/
-"""
+"""Support for OpenWRT (ubus) routers."""
 import json
 import logging
 import re

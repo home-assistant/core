@@ -38,21 +38,18 @@ async def test_controlling_state_via_topic(hass, mock_publish):
     })
 
     state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'state-topic', '1')
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, 'state-topic', '0')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
 
 async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
@@ -74,7 +71,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
         })
 
     state = hass.states.get('switch.test')
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     common.turn_on(hass, 'switch.test')
@@ -84,7 +81,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
         'command-topic', 'beer on', 2, False)
     mock_publish.async_publish.reset_mock()
     state = hass.states.get('switch.test')
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
 
     common.turn_off(hass, 'switch.test')
     await hass.async_block_till_done()
@@ -93,7 +90,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
     mock_publish.async_publish.assert_called_once_with(
         'command-topic', 'beer off', 2, False)
     state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
 
 async def test_controlling_state_via_topic_and_json_message(
@@ -112,21 +109,17 @@ async def test_controlling_state_via_topic_and_json_message(
     })
 
     state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     async_fire_mqtt_message(hass, 'state-topic', '{"val":"beer on"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, 'state-topic', '{"val":"beer off"}')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
 
 async def test_default_availability_payload(hass, mock_publish):
@@ -144,36 +137,28 @@ async def test_default_availability_payload(hass, mock_publish):
     })
 
     state = hass.states.get('switch.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability_topic', 'online')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'availability_topic', 'offline')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'state-topic', '1')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability_topic', 'online')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
 
 
 async def test_custom_availability_payload(hass, mock_publish):
@@ -193,35 +178,28 @@ async def test_custom_availability_payload(hass, mock_publish):
     })
 
     state = hass.states.get('switch.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability_topic', 'good')
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'availability_topic', 'nogood')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'state-topic', '1')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_UNAVAILABLE == state.state
+    assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, 'availability_topic', 'good')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
 
 
 async def test_custom_state_payload(hass, mock_publish):
@@ -240,22 +218,18 @@ async def test_custom_state_payload(hass, mock_publish):
     })
 
     state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, 'state-topic', 'HIGH')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, 'state-topic', 'LOW')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
@@ -270,10 +244,9 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', '{ "val": "100" }')
-    await hass.async_block_till_done()
     state = hass.states.get('switch.test')
 
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
@@ -288,7 +261,6 @@ async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', '[ "list", "of", "things"]')
-    await hass.async_block_till_done()
     state = hass.states.get('switch.test')
 
     assert state.attributes.get('val') is None
@@ -307,7 +279,6 @@ async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     })
 
     async_fire_mqtt_message(hass, 'attr-topic', 'This is not JSON')
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.test')
     assert state.attributes.get('val') is None
@@ -332,30 +303,23 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
                             data1)
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "100" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('switch.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Change json_attributes_topic
     async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
                             data2)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, 'attr-topic1', '{ "val": "50" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('switch.beer')
-    assert '100' == state.attributes.get('val')
+    assert state.attributes.get('val') == '100'
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, 'attr-topic2', '{ "val": "75" }')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     state = hass.states.get('switch.beer')
-    assert '75' == state.attributes.get('val')
+    assert state.attributes.get('val') == '75'
 
 
 async def test_unique_id(hass):
@@ -378,8 +342,6 @@ async def test_unique_id(hass):
     })
 
     async_fire_mqtt_message(hass, 'test-topic', 'payload')
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 2
     # all switches group is 1, unique id created is 1
@@ -399,7 +361,6 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
                             data)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.beer')
     assert state is not None
@@ -407,7 +368,6 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
                             '')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('switch.beer')
@@ -441,7 +401,6 @@ async def test_discovery_update_switch(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
                             data2)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('switch.beer')
     assert state is not None
@@ -473,7 +432,6 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
                             data2)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('switch.milk')
@@ -509,7 +467,6 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     })
     async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
                             data)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
@@ -551,7 +508,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
                             data)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
     assert device is not None
@@ -561,7 +517,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     data = json.dumps(config)
     async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
                             data)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     device = registry.async_get_device({('mqtt', 'helloworld')}, set())
@@ -592,7 +547,6 @@ async def test_entity_id_update(hass, mqtt_mock):
     mock_mqtt.async_subscribe.reset_mock()
 
     registry.async_update_entity('switch.beer', new_entity_id='switch.milk')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('switch.beer')

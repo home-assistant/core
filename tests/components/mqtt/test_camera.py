@@ -1,5 +1,4 @@
 """The tests for mqtt camera component."""
-import asyncio
 from unittest.mock import ANY
 
 from homeassistant.components import camera, mqtt
@@ -11,12 +10,11 @@ from tests.common import (
     mock_registry)
 
 
-@asyncio.coroutine
-def test_run_camera_setup(hass, aiohttp_client):
+async def test_run_camera_setup(hass, aiohttp_client):
     """Test that it fetches the given payload."""
     topic = 'test/camera'
-    yield from async_mock_mqtt_component(hass)
-    yield from async_setup_component(hass, 'camera', {
+    await async_mock_mqtt_component(hass)
+    await async_setup_component(hass, 'camera', {
         'camera': {
             'platform': 'mqtt',
             'topic': topic,
@@ -26,20 +24,18 @@ def test_run_camera_setup(hass, aiohttp_client):
     url = hass.states.get('camera.test_camera').attributes['entity_picture']
 
     async_fire_mqtt_message(hass, topic, 'beer')
-    yield from hass.async_block_till_done()
 
-    client = yield from aiohttp_client(hass.http.app)
-    resp = yield from client.get(url)
+    client = await aiohttp_client(hass.http.app)
+    resp = await client.get(url)
     assert resp.status == 200
-    body = yield from resp.text()
+    body = await resp.text()
     assert body == 'beer'
 
 
-@asyncio.coroutine
-def test_unique_id(hass):
+async def test_unique_id(hass):
     """Test unique id option only creates one camera per unique_id."""
-    yield from async_mock_mqtt_component(hass)
-    yield from async_setup_component(hass, 'camera', {
+    await async_mock_mqtt_component(hass)
+    await async_setup_component(hass, 'camera', {
         'camera': [{
             'platform': 'mqtt',
             'name': 'Test Camera 1',
@@ -54,7 +50,6 @@ def test_unique_id(hass):
     })
 
     async_fire_mqtt_message(hass, 'test-topic', 'payload')
-    yield from hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
 
@@ -71,7 +66,6 @@ async def test_discovery_removal_camera(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, 'homeassistant/camera/bla/config',
                             data)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('camera.beer')
     assert state is not None
@@ -79,7 +73,6 @@ async def test_discovery_removal_camera(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/camera/bla/config',
                             '')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('camera.beer')
@@ -110,7 +103,6 @@ async def test_discovery_update_camera(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/camera/bla/config',
                             data2)
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('camera.beer')
@@ -143,7 +135,6 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, 'homeassistant/camera/bla/config',
                             data2)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get('camera.milk')
     assert state is not None
@@ -172,7 +163,6 @@ async def test_entity_id_update(hass, mqtt_mock):
     mock_mqtt.async_subscribe.reset_mock()
 
     registry.async_update_entity('camera.beer', new_entity_id='camera.milk')
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     state = hass.states.get('camera.beer')

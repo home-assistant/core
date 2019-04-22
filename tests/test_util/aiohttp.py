@@ -82,6 +82,10 @@ class AiohttpClientMocker:
         """Register a mock options request."""
         self.request('options', *args, **kwargs)
 
+    def patch(self, *args, **kwargs):
+        """Register a mock patch request."""
+        self.request('patch', *args, **kwargs)
+
     @property
     def call_count(self):
         """Return the number of requests made."""
@@ -102,7 +106,7 @@ class AiohttpClientMocker:
 
     async def match_request(self, method, url, *, data=None, auth=None,
                             params=None, headers=None, allow_redirects=None,
-                            timeout=None, json=None):
+                            timeout=None, json=None, cookies=None, **kwargs):
         """Match a request against pre-registered requests."""
         data = data or json
         url = URL(url)

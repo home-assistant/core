@@ -1,9 +1,4 @@
-"""
-Integration with the Rachio Iro sprinkler system controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rachio/
-"""
+"""Integration with the Rachio Iro sprinkler system controller."""
 from abc import abstractmethod
 from datetime import timedelta
 import logging
@@ -17,8 +12,6 @@ from . import (
     KEY_ZONE_NUMBER, SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE, SUBTYPE_SLEEP_MODE_OFF, SUBTYPE_SLEEP_MODE_ON,
     SUBTYPE_ZONE_COMPLETED, SUBTYPE_ZONE_STARTED, SUBTYPE_ZONE_STOPPED)
-
-DEPENDENCIES = ['rachio']
 
 _LOGGER = logging.getLogger(__name__)
 

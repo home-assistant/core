@@ -3,8 +3,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import DATA_HIVE, DOMAIN
 
-DEPENDENCIES = ['hive']
-
 DEVICETYPE_DEVICE_CLASS = {
     'motionsensor': 'motion',
     'contactsensor': 'opening',

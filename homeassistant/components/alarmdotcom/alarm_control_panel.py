@@ -1,9 +1,4 @@
-"""
-Interfaces with Alarm.com alarm control panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
-"""
+"""Interfaces with Alarm.com alarm control panels."""
 import logging
 import re
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyalarmdotcom==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Support for Rflink sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rflink/
-"""
+"""Support for Rflink sensors."""
 import logging
 
 import voluptuous as vol
@@ -19,8 +14,6 @@ from . import (
     DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, EVENT_KEY_ID, EVENT_KEY_SENSOR,
     EVENT_KEY_UNIT, SIGNAL_AVAILABILITY, SIGNAL_HANDLE_EVENT, TMP_ENTITY,
     RflinkDevice, remove_deprecated)
-
-DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
 

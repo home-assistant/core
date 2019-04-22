@@ -230,7 +230,7 @@ class TestStatisticsSensor(unittest.TestCase):
             state.attributes.get('max_age')
         assert self.change_rate == state.attributes.get('change_rate')
 
-    @pytest.mark.skip
+    @pytest.mark.skip("Flaky in CI")
     def test_initialize_from_database(self):
         """Test initializing the statistics from the database."""
         # enable the recorder
@@ -260,6 +260,7 @@ class TestStatisticsSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.test_mean')
         assert str(self.mean) == state.state
 
+    @pytest.mark.skip("Flaky in CI")
     def test_initialize_from_database_with_maxage(self):
         """Test initializing the statistics from the database."""
         mock_data = {

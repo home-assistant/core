@@ -30,7 +30,6 @@ DEFAULT_BRIGHTNESS = 255
 DEFAULT_COLOR_TEMP_MODE = 'absolute'
 DEFAULT_MIN_KELVIN = 2700  # 370 mireds
 DEFAULT_MAX_KELVIN = 6000  # 166 mireds
-DEPENDENCIES = ['knx']
 
 
 class ColorTempModes(Enum):

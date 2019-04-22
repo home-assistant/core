@@ -3,12 +3,10 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME)
 from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['libpurecoollink==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +39,7 @@ def setup(hass, config):
     if DYSON_DEVICES not in hass.data:
         hass.data[DYSON_DEVICES] = []
 
-    from libpurecoollink.dyson import DysonAccount
+    from libpurecool.dyson import DysonAccount
     dyson_account = DysonAccount(config[DOMAIN].get(CONF_USERNAME),
                                  config[DOMAIN].get(CONF_PASSWORD),
                                  config[DOMAIN].get(CONF_LANGUAGE))

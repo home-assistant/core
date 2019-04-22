@@ -1,9 +1,4 @@
-"""
-Demo platform that has two fake switches.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that has two fake switches."""
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
@@ -19,12 +14,13 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
 class DemoSwitch(SwitchDevice):
     """Representation of a demo switch."""
 
-    def __init__(self, name, state, icon, assumed):
+    def __init__(self, name, state, icon, assumed, device_class=None):
         """Initialize the Demo switch."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self._icon = icon
         self._assumed = assumed
+        self._device_class = device_class
 
     @property
     def should_poll(self):
@@ -61,6 +57,11 @@ class DemoSwitch(SwitchDevice):
     def is_on(self):
         """Return true if switch is on."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return device of entity."""
+        return self._device_class
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

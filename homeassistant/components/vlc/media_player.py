@@ -1,9 +1,4 @@
-"""
-Provide functionality to interact with vlc devices on the network.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.vlc/
-"""
+"""Provide functionality to interact with vlc devices on the network."""
 import logging
 
 import voluptuous as vol
@@ -17,8 +12,6 @@ from homeassistant.const import (
     CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['python-vlc==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

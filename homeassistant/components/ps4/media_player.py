@@ -1,9 +1,4 @@
-"""
-Support for PlayStation 4 consoles.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/ps4/
-"""
+"""Support for PlayStation 4 consoles."""
 import logging
 import socket
 
@@ -12,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     ENTITY_IMAGE_URL, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC, SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF,
+    MEDIA_TYPE_GAME, SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON)
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_REGION,
@@ -20,9 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-from .const import DOMAIN as PS4_DOMAIN
-
-DEPENDENCIES = ['ps4']
+from .const import DOMAIN as PS4_DOMAIN, REGIONS as deprecated_regions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,6 +135,12 @@ class PS4Device(MediaPlayerDevice):
                 self._games = self.load_games()
                 if self._games is not None:
                     self._source_list = list(sorted(self._games.values()))
+                # Non-Breaking although data returned may be inaccurate.
+                if self._region in deprecated_regions:
+                    _LOGGER.info("""Region: %s has been deprecated.
+                                    Please remove PS4 integration
+                                    and Re-configure again to utilize
+                                    current regions""", self._region)
         except socket.timeout:
             status = None
         if status is not None:
@@ -275,6 +274,8 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
+        # Close TCP Socket
+        await self.hass.async_add_executor_job(self._ps4.close)
         self.hass.data[PS4_DATA].devices.remove(self)
 
     @property
@@ -320,7 +321,7 @@ class PS4Device(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
+        return MEDIA_TYPE_GAME
 
     @property
     def media_image_url(self):

@@ -1,9 +1,4 @@
-"""
-Adds a simulated sensor.
-
-For more details about this platform, refer to the documentation at
-https://home-assistant.io/components/sensor.simulated/
-"""
+"""Adds a simulated sensor."""
 import logging
 import math
 from random import Random

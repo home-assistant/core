@@ -2,16 +2,17 @@
 import unittest
 from unittest import mock
 
+from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+
+from homeassistant.components.dyson import sensor as dyson
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, \
     STATE_OFF
-from homeassistant.components.dyson import sensor as dyson
 from tests.common import get_test_home_assistant
-from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
 
 
 def _get_device_without_state():
     """Return a valid device provide by Dyson web services."""
-    device = mock.Mock(spec=DysonPureCoolLink)
+    device = mock.Mock()
     device.name = "Device_name"
     device.state = None
     device.environmental_state = None
@@ -20,7 +21,7 @@ def _get_device_without_state():
 
 def _get_with_state():
     """Return a valid device with state values."""
-    device = mock.Mock()
+    device = mock.Mock(spec=DysonPureCoolLink)
     device.name = "Device_name"
     device.state = mock.Mock()
     device.state.filter_life = 100

@@ -11,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as LAMETRIC_DOMAIN
 
-REQUIREMENTS = ['lmnotify==0.0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 AVAILABLE_PRIORITIES = ['info', 'warning', 'critical']
@@ -20,8 +18,6 @@ AVAILABLE_PRIORITIES = ['info', 'warning', 'critical']
 CONF_CYCLES = 'cycles'
 CONF_LIFETIME = 'lifetime'
 CONF_PRIORITY = 'priority'
-
-DEPENDENCIES = ['lametric']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ICON, default='a7956'): cv.string,
