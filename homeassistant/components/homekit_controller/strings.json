@@ -12,7 +12,7 @@
             },
             "pair": {
                 "title": "Pair with HomeKit Accessory",
-                "description": "Enter your HomeKit pairing code to use this accessory",
+                "description": "Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory",
                 "data": {
                     "pairing_code": "Pairing Code"
                 }
