@@ -21,10 +21,6 @@ async def init_config_flow(hass, valid_code=True):
     hass.data[config_flow.DATA_AMBICLIMATE_IMPL] = config
     flow.hass = hass
 
-    flow._generate_view = Mock(  # pylint: disable=W0212
-        return_value=mock_coro(None),
-    )
-
     await async_setup_component(hass, 'http', {
         'http': {
             'base_url': 'https://hass.com'
