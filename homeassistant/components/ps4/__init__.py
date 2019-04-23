@@ -54,12 +54,11 @@ async def async_migrate_entry(hass, entry):
             if country in COUNTRIES:
                 for device in data['devices']:
                     device[CONF_REGION] = country
-                entry.version = 2
+                version = entry.version = 2
                 config_entries.async_update_entry(entry, data=data)
                 _LOGGER.info(
                     "PlayStation 4 Config Updated: \
                     Region changed to: %s", country)
-                version = 2
 
     # Migrate Version 2 -> Version 3: Update identifier format.
     if version == 2:
