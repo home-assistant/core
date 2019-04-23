@@ -92,12 +92,14 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._device.dimLevel != 0
+        return self._device.dimLevel and self._device.dimLevel > 0.0
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return int(self._device.dimLevel*255)
+        if self._device.dimLevel:
+            return int(self._device.dimLevel*255)
+        return 0
 
     @property
     def supported_features(self):
@@ -144,12 +146,14 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._channel.dimLevel > 0.0
+        return self._func_channel.dimLevel and self._func_channel.dimLevel > 0.0
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return int(self._channel.dimLevel * 255)
+        if self._func_channel.dimLevel:
+            return int(self._func_channel.dimLevel * 255)
+        return 0
 
     @property
     def hs_color(self):
