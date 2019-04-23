@@ -83,24 +83,23 @@ class AxisNetworkDevice:
         self.product_type = self.api.vapix.params.prodtype
 
         if self.config_entry.options[CONF_CAMERA]:
+
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, 'camera'))
 
         if self.config_entry.options[CONF_EVENTS]:
-            task = self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, 'binary_sensor'))
-
-            task = self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, 'switch'))
 
             self.api.stream.connection_status_callback = \
                 self.async_connection_status_callback
             self.api.enable_events(event_callback=self.async_event_callback)
-            # queue???
-            task.add_done_callback(self.start)
+
+            platform_tasks = [
+                self.hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, platform)
+                for platform in ['binary_sensor', 'switch']
+            ]
+            self.hass.async_create_task(self.start(platform_tasks))
 
         self.config_entry.add_update_listener(self.async_new_address_callback)
 
@@ -150,9 +149,9 @@ class AxisNetworkDevice:
         if action == 'add':
             async_dispatcher_send(self.hass, self.event_new_sensor, event_id)
 
-    @callback
-    def start(self, fut):
-        """Start the event stream."""
+    async def start(self, platform_tasks):
+        """Start the event stream when all platforms are loaded."""
+        await asyncio.gather(*platform_tasks)
         self.api.start()
 
     @callback
@@ -196,10 +195,13 @@ async def get_device(hass, config):
         with async_timeout.timeout(15):
             await hass.async_add_executor_job(
                 device.vapix.params.update_brand)
+
             await hass.async_add_executor_job(
                 device.vapix.params.update_properties)
+
             await hass.async_add_executor_job(
                 device.vapix.ports.update)
+
         return device
 
     except axis.Unauthorized:

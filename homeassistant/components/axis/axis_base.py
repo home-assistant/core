@@ -49,16 +49,19 @@ class AxisEventBase(AxisEntityBase):
     def __init__(self, event, device):
         """Initialize the Axis event."""
         super().__init__(device)
+
         self.event = event
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sensors events."""
         self.event.register_callback(self.update_callback)
+
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self.event.remove_callback(self.update_callback)
+
         await super().async_will_remove_from_hass()
 
     @property
