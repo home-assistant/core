@@ -113,18 +113,18 @@ class FroniusSensor(Entity):
         """Get the values for the current state."""
         if self._type == TYPE_INVERTER:
             if self._scope == SCOPE_SYSTEM:
-                await self.data.current_system_inverter_data()
+                return await self.data.current_system_inverter_data()
             else:
-                await self.data.current_inverter_data(self._device)
+                return await self.data.current_inverter_data(self._device)
         elif self._type == TYPE_STORAGE:
-            await self.data.current_storage_data(self._device)
+            return await self.data.current_storage_data(self._device)
         elif self._type == TYPE_METER:
             if self._scope == SCOPE_SYSTEM:
-                await self.data.current_system_meter_data()
+                return await self.data.current_system_meter_data()
             else:
-                await self.data.current_meter_data()
+                return await self.data.current_meter_data()
         elif self._type == TYPE_POWER_FLOW:
-            await self.data.current_power_flow()
+            return await self.data.current_power_flow()
 
     @staticmethod
     def _get_attributes(values):
