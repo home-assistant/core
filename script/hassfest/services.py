@@ -59,7 +59,7 @@ def validate_services(integration: Integration):
     """Validate services."""
     # Find if integration uses services
     has_services = grep_dir(integration.path, "**/*.py",
-                            r"hass\.(services|async_register)")
+                            r"hass\.services\.(register|async_register)")
 
     if not has_services:
         return
