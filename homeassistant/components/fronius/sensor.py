@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
         vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
     vol.Optional(CONF_DEVICEID, default=DEFAULT_DEVICE):
-    cv.positive_int,
+        cv.positive_int,
 })
 
 

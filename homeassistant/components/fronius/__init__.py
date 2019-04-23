@@ -1,1 +1,1 @@
-""" The Fronius component """
+"""The Fronius component."""
