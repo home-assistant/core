@@ -30,10 +30,6 @@ async def init_config_flow(hass, valid_code=True):
     flow = config_flow.AmbiclimateFlowHandler()
     flow.hass = hass
 
-    flow._get_authorize_url = Mock(  # pylint: disable=W0212
-        return_value=mock_coro('test'),
-    )
-
     flow._get_token_info = Mock(  # pylint: disable=W0212
         return_value=mock_coro('token' if valid_code else None),
     )
@@ -76,7 +72,12 @@ async def test_full_flow_implementation(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
     assert result['description_placeholders']['cb_url'] == 'https://hass.com/api/ambiclimate'
-    assert result['description_placeholders']['authorization_url'] == 'test'
+
+    url = result['description_placeholders']['authorization_url']
+    assert 'https://api.ambiclimate.com/oauth2/authorize' in url
+    assert 'client_id=id' in url
+    assert 'response_type=code' in url
+    assert 'redirect_uri=https%3A%2F%2Fhass.com%2Fapi%2Fambiclimate' in url
 
     result = await flow.async_step_code('123ABC')
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
