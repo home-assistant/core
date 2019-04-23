@@ -3,8 +3,8 @@
 import logging
 import voluptuous as vol
 
-from homeassistant.const import (CONF_RESOURCE, CONF_HOST, CONF_NAME,
-                                 CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (
+    CONF_RESOURCE, CONF_HOST, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -13,7 +13,12 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Samsung Printer'
-COLORS = ['black', 'cyan', 'magenta', 'yellow']
+COLORS = [
+    'black',
+    'cyan',
+    'magenta',
+    'yellow'
+]
 DRUM_COLORS = COLORS
 TONER_COLORS = COLORS
 TRAYS = range(1, 6)
@@ -33,13 +38,12 @@ DEFAULT_MONITORED_CONDITIONS.extend(
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE):
-    cv.url,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-    cv.string,
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(
-        CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED_CONDITIONS):
-    vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)])
+        CONF_MONITORED_CONDITIONS,
+        default=DEFAULT_MONITORED_CONDITIONS
+    ): vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)])
 })
 
 
@@ -196,8 +200,8 @@ class SyncThruTonerSensor(SyncThruSensor):
         # Data fetching is taken care of through the Main sensor
 
         if self.syncthru.is_online():
-            self._attributes = self.syncthru.toner_status().get(
-                self._color, {})
+            self._attributes = self.syncthru.toner_status(
+                ).get(self._color, {})
             self._state = self._attributes.get('remaining')
 
 
@@ -217,7 +221,8 @@ class SyncThruDrumSensor(SyncThruSensor):
         # Data fetching is taken care of through the Main sensor
 
         if self.syncthru.is_online():
-            self._attributes = self.syncthru.drum_status().get(self._color, {})
+            self._attributes = self.syncthru.drum_status(
+                ).get(self._color, {})
             self._state = self._attributes.get('remaining')
 
 
@@ -236,8 +241,8 @@ class SyncThruInputTraySensor(SyncThruSensor):
         # Data fetching is taken care of through the Main sensor
 
         if self.syncthru.is_online():
-            self._attributes = self.syncthru.input_tray_status().get(
-                self._number, {})
+            self._attributes = self.syncthru.input_tray_status(
+                ).get(self._number, {})
             self._state = self._attributes.get('newError')
             if self._state == '':
                 self._state = 'Ready'
@@ -258,8 +263,8 @@ class SyncThruOutputTraySensor(SyncThruSensor):
         # Data fetching is taken care of through the Main sensor
 
         if self.syncthru.is_online():
-            self._attributes = self.syncthru.output_tray_status().get(
-                self._number, {})
+            self._attributes = self.syncthru.output_tray_status(
+                ).get(self._number, {})
             self._state = self._attributes.get('status')
             if self._state == '':
                 self._state = 'Ready'
