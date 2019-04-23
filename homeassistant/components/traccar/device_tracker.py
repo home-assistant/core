@@ -127,16 +127,16 @@ class TraccarScanner:
             await self._api.test_connection()
             self.connected = self._api.connected
             if not self._api.connected:
-                _LOGGER.error("Not connected to Traccar.")
+                _LOGGER.error("Not connected to Traccar")
 
         if not self.connected:
-            _LOGGER.debug('Testing connection to Traccar.')
+            _LOGGER.debug('Testing connection to Traccar')
             await self._api.test_connection()
             self.connected = self._api.connected
             if self.connected:
-                _LOGGER.info("Connection to Traccar restored.")
+                _LOGGER.info("Connection to Traccar restored")
         else:
-            _LOGGER.debug('Updating device data.')
+            _LOGGER.debug('Updating device data')
             await self._api.get_device_info(self._custom_attributes)
             self._hass.async_create_task(self.import_device_data())
             if self._event_types:
