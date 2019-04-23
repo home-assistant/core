@@ -1,6 +1,17 @@
 """Support for HomematicIP Cloud sensors."""
 import logging
 
+from homematicip.aio.device import (
+    AsyncBrandSwitchMeasuring, AsyncFullFlushSwitchMeasuring,
+    AsyncHeatingThermostat, AsyncHeatingThermostatCompact, AsyncLightSensor,
+    AsyncMotionDetectorIndoor, AsyncMotionDetectorOutdoor,
+    AsyncMotionDetectorPushButton, AsyncPlugableSwitchMeasuring,
+    AsyncTemperatureHumiditySensorDisplay,
+    AsyncTemperatureHumiditySensorOutdoor,
+    AsyncTemperatureHumiditySensorWithoutDisplay, AsyncWeatherSensor,
+    AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+from homematicip.base.enums import ValveState
+
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE, POWER_WATT, TEMP_CELSIUS)
@@ -22,16 +33,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud sensors from a config entry."""
-    from homematicip.aio.device import (
-        AsyncHeatingThermostat, AsyncHeatingThermostatCompact,
-        AsyncTemperatureHumiditySensorWithoutDisplay,
-        AsyncTemperatureHumiditySensorDisplay, AsyncMotionDetectorIndoor,
-        AsyncMotionDetectorOutdoor, AsyncTemperatureHumiditySensorOutdoor,
-        AsyncMotionDetectorPushButton, AsyncLightSensor,
-        AsyncPlugableSwitchMeasuring, AsyncBrandSwitchMeasuring,
-        AsyncFullFlushSwitchMeasuring, AsyncWeatherSensor,
-        AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
-
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = [HomematicipAccesspointStatus(home)]
     for device in home.devices:
@@ -119,8 +120,6 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
     @property
     def icon(self):
         """Return the icon."""
-        from homematicip.base.enums import ValveState
-
         if super().icon:
             return super().icon
         if self._device.valveState != ValveState.ADAPTION_DONE:
@@ -130,8 +129,6 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
     @property
     def state(self):
         """Return the state of the radiator valve."""
-        from homematicip.base.enums import ValveState
-
         if self._device.valveState != ValveState.ADAPTION_DONE:
             return self._device.valveState
         return round(self._device.valvePosition*100)

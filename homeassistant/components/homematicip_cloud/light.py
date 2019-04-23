@@ -1,6 +1,8 @@
 """Support for HomematicIP Cloud lights."""
 import logging
 
+from homematicip.base.enums import RGBColorState
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, Light)
@@ -117,15 +119,14 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
 class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
-    def __init__(self, home, device, channel_index):
+    def __init__(self, home, device, channel):
         """Initialize the dimmer light device."""
-        self._channel_index = channel_index
-        if self._channel_index == 2:
+        self.channel = channel
+        if self.channel == 2:
             super().__init__(home, device, 'Top')
         else:
             super().__init__(home, device, 'Bottom')
 
-        from homematicip.base.enums import RGBColorState
         self._color_switcher = {
             RGBColorState.WHITE: [0.0, 0.0],
             RGBColorState.RED: [0.0, 100.0],
@@ -220,8 +221,6 @@ def _convert_color(color):
     RGBColorStat contains only 8 colors including white and black,
     so a conversion is required.
     """
-    from homematicip.base.enums import RGBColorState
-
     if color is None:
         return RGBColorState.WHITE
 
