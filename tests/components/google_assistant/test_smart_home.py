@@ -598,6 +598,7 @@ async def test_device_class_switch(hass, device_class, google_type):
         }
     }
 
+
 @pytest.mark.parametrize("device_class,google_type", [
     ('door', 'action.devices.types.DOOR'),
     ('garage_door', 'action.devices.types.SENSOR'),
