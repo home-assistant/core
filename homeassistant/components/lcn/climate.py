@@ -1,4 +1,5 @@
 """Support for LCN climate control."""
+import pypck
 
 from homeassistant.components.climate import ClimateDevice, const
 from homeassistant.const import (
@@ -9,16 +10,12 @@ from .const import (
     CONF_CONNECTIONS, CONF_LOCKABLE, CONF_MAX_TEMP, CONF_MIN_TEMP,
     CONF_SETPOINT, CONF_SOURCE, DATA_LCN)
 
-DEPENDENCIES = ['lcn']
-
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
     """Set up the LCN climate platform."""
     if discovery_info is None:
         return
-
-    import pypck
 
     devices = []
     for config in discovery_info:
@@ -55,23 +52,22 @@ class LcnClimate(LcnDevice, ClimateDevice):
         self._target_temperature = None
         self._is_on = True
 
+        self.support = const.SUPPORT_TARGET_TEMPERATURE
+        if self.is_lockable:
+            self.support |= const.SUPPORT_ON_OFF
+
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.variable))
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.setpoint))
+        await self.address_connection.activate_status_request_handler(
+            self.variable)
+        await self.address_connection.activate_status_request_handler(
+            self.setpoint)
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        support = const.SUPPORT_TARGET_TEMPERATURE
-        if self.is_lockable:
-            support |= const.SUPPORT_ON_OFF
-        return support
+        return self.support
 
     @property
     def temperature_unit(self):
@@ -118,11 +114,14 @@ class LcnClimate(LcnDevice, ClimateDevice):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-            self.address_connection.var_abs(
-                self.setpoint, self._target_temperature, self.unit)
-            await self.async_update_ha_state()
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
+
+        self._target_temperature = temperature
+        self.address_connection.var_abs(
+            self.setpoint, self._target_temperature, self.unit)
+        await self.async_update_ha_state()
 
     def input_received(self, input_obj):
         """Set temperature value when LCN input object is received."""
