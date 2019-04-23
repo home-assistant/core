@@ -3,16 +3,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TYPE = 'type'
 CONF_SCOPE = 'scope'
-CONF_DEVICEID = 'device'
 
 TYPE_INVERTER = 'inverter'
 TYPE_STORAGE = 'storage'
@@ -28,11 +26,11 @@ SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
         vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
-    vol.Optional(CONF_DEVICEID, default=DEFAULT_DEVICE):
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
         cv.positive_int,
 })
 
@@ -45,13 +43,18 @@ async def async_setup_platform(hass,
     from pyfronius import Fronius
 
     session = async_get_clientsession(hass)
-    fronius = Fronius(session, config.get(CONF_HOST))
+    fronius = Fronius(session, config[CONF_RESOURCE])
 
-    name = "fronius_{}_{}".format(config.get(CONF_TYPE), config.get(CONF_HOST))
-    device = config.get(CONF_DEVICEID)
+    name = "fronius_{}_{}".format(
+        config[CONF_SENSOR_TYPE], config[CONF_RESOURCE]
+    )
+    device = config.get(CONF_DEVICE)
+    if device == 0:
+        if config[CONF_SENSOR_TYPE] == 'inverter':
+            device = 1
     name = "{}_{}".format(name, device)
 
-    sensor = FroniusSensor(fronius, name, config.get(CONF_TYPE),
+    sensor = FroniusSensor(fronius, name, config[CONF_SENSOR_TYPE],
                            config.get(CONF_SCOPE), device)
 
     async_add_devices([sensor])
