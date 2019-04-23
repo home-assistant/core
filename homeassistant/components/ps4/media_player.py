@@ -211,12 +211,13 @@ class PS4Device(MediaPlayerDevice):
         try:
             title = self._ps4.get_ps_store_data(
                 name, title_id, self._region)
-            app_name = title.name
-            art = title.cover_art
         except PSDataIncomplete:
             _LOGGER.error(
                 "Could not find data in region: %s for PS ID: %s",
                 self._region, title_id)
+        else:
+            app_name = title.name
+            art = title.cover_art      
         finally:
             self._media_title = app_name or name
             self._source = self._media_title
