@@ -91,6 +91,7 @@ async def test_abort_no_code(hass):
 
 
 async def test_cb_url(hass):
+    """Test callback function."""
     hass.config.api = Mock(base_url='http://example.com')
     flow = config_flow.AmbiclimateFlowHandler()
     flow.hass = hass
@@ -98,6 +99,7 @@ async def test_cb_url(hass):
 
 
 async def test_get_authorize_url(hass):
+    """Test authorize url."""
     hass.config.api = Mock(base_url='http://example.com')
 
     hass.data[config_flow.DATA_AMBICLIMATE_IMPL] = {config_flow.CONF_CLIENT_ID: 'client_id',
@@ -111,6 +113,7 @@ async def test_get_authorize_url(hass):
 
 
 async def test_generate_view(hass):
+    """Test generate view."""
     await async_setup_component(hass, 'http', {
         'http': {
             'base_url': 'example.com'
@@ -124,6 +127,7 @@ async def test_generate_view(hass):
 
 
 async def test_view(hass):
+    """Test view."""
     hass.config_entries.flow.async_init = Mock()
 
     request = aiohttp.MockRequest(b'', query_string='code=test_code')
