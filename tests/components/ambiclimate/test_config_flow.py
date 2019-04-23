@@ -10,25 +10,14 @@ from tests.common import mock_coro
 
 async def init_config_flow(hass, valid_code=True):
     """Init a configuration flow."""
-    config_flow.register_flow_implementation(hass, 'id', 'secret')
-    flow = config_flow.AmbiclimateFlowHandler()
-
-    hass.config.api = Mock(base_url='http://example.com')
-
-    config = {config_flow.CONF_CLIENT_ID: 'id',
-              config_flow.CONF_CLIENT_SECRET: 'secret',
-              }
-    hass.data[config_flow.DATA_AMBICLIMATE_IMPL] = config
-    flow.hass = hass
-
     await async_setup_component(hass, 'http', {
         'http': {
             'base_url': 'https://hass.com'
         }
     })
 
+    config_flow.register_flow_implementation(hass, 'id', 'secret')
     flow = config_flow.AmbiclimateFlowHandler()
-    flow.hass = hass
 
     flow._get_token_info = Mock(  # pylint: disable=W0212
         return_value=mock_coro('token' if valid_code else None),
