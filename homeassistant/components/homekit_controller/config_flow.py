@@ -152,7 +152,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                         "HomeKit info %s: c# incremented, refreshing entities",
                         hkid)
                     self.hass.async_create_task(
-                        conn.async_config_num_changed(config_num))
+                        conn.async_refresh_entity_map(config_num))
                 return self.async_abort(reason='already_configured')
 
             old_pairings = await self.hass.async_add_executor_job(

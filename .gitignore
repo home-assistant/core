@@ -84,7 +84,7 @@ Scripts/
 # vimmy stuff
 *.swp
 *.swo
-
+tags
 ctags.tmp
 
 # vagrant stuff

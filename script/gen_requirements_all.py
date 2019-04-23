@@ -48,6 +48,7 @@ TEST_REQUIREMENTS = (
     'aiohttp_cors',
     'aiohue',
     'aiounifi',
+    'aioswitcher',
     'apns2',
     'av',
     'axis',

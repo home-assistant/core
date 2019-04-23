@@ -51,6 +51,9 @@ aiohttp_cors==0.7.0
 # homeassistant.components.hue
 aiohue==1.9.1
 
+# homeassistant.components.switcher_kis
+aioswitcher==2019.3.21
+
 # homeassistant.components.unifi
 aiounifi==4
 
@@ -61,7 +64,7 @@ apns2==0.3.0
 av==6.1.2
 
 # homeassistant.components.axis
-axis==21
+axis==22
 
 # homeassistant.components.zha
 bellows-homeassistant==0.7.2
@@ -124,7 +127,7 @@ ha-ffmpeg==2.0
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.11
+hass-nabucasa==0.12
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.4
@@ -136,7 +139,7 @@ hdate==0.8.7
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190331.0
+home-assistant-frontend==20190419.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.13.0
@@ -217,7 +220,7 @@ pydeconz==54
 pydispatcher==2.0.5
 
 # homeassistant.components.heos
-pyheos==0.3.1
+pyheos==0.4.0
 
 # homeassistant.components.homematic
 pyhomematic==0.1.58
@@ -237,7 +240,7 @@ pyopenuv==1.0.9
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.2.6
+pyotp==2.2.7
 
 # homeassistant.components.ps4
 pyps4-homeassistant==0.5.2
@@ -330,4 +333,4 @@ vultr==0.1.2
 wakeonlan==1.1.6
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.3.1
+zigpy-homeassistant==0.3.2

@@ -162,6 +162,7 @@ omit =
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
     homeassistant/components/epson/media_player.py
+    homeassistant/components/epsonworkforce/sensor.py
     homeassistant/components/eq3btsmart/climate.py
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/binary_sensor.py
@@ -417,6 +418,7 @@ omit =
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather.py
     homeassistant/components/opple/light.py
+    homeassistant/components/orangepi_gpio/*
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
@@ -560,6 +562,7 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbot/switch.py
+    homeassistant/components/switcher_kis/switch.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthru/sensor.py
     homeassistant/components/synology/camera.py

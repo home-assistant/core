@@ -67,6 +67,7 @@ homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/emby/* @mezz64
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/ephember/* @ttroy50
+homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/file/* @fabaff
@@ -98,6 +99,7 @@ homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/hive/* @Rendili @KJonline
 homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit/* @cdce8p
+homeassistant/components/homekit_controller/* @Jc2k
 homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/html5/* @robbiet480
 homeassistant/components/http/* @home-assistant/core
@@ -152,13 +154,14 @@ homeassistant/components/netdata/* @fabaff
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
-homeassistant/components/notify/* @flowolf
+homeassistant/components/notify/* @home-assistant/core
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nuki/* @pschmitt
 homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/openuv/* @bachya
 homeassistant/components/openweathermap/* @fabaff
+homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/owlet/* @oblogic7
 homeassistant/components/panel_custom/* @home-assistant/core
 homeassistant/components/panel_iframe/* @home-assistant/core
@@ -203,6 +206,7 @@ homeassistant/components/supla/* @mwegrzynek
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switchbot/* @danielhiversen
+homeassistant/components/switcher_kis/* @tomerfi
 homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
@@ -234,6 +238,7 @@ homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/version/* @fabaff
+homeassistant/components/vizio/* @raman325
 homeassistant/components/waqi/* @andrey-git
 homeassistant/components/weather/* @fabaff
 homeassistant/components/weblink/* @home-assistant/core
@@ -244,7 +249,7 @@ homeassistant/components/xfinity/* @cisasteelersfan
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
 homeassistant/components/xiaomi_miio/* @rytilahti @syssi
 homeassistant/components/xiaomi_tv/* @fattdev
-homeassistant/components/xmpp/* @fabaff
+homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yamaha_musiccast/* @jalmeroth
 homeassistant/components/yeelight/* @rytilahti @zewelor
 homeassistant/components/yeelightsunflower/* @lindsaymarkward

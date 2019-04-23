@@ -1,4 +1,4 @@
-"""Support for a generic MQTT vacuum."""
+"""Support for Legacy MQTT vacuum."""
 import logging
 import json
 
@@ -6,20 +6,20 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.vacuum import (
-    DOMAIN, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
+    SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     VacuumDevice)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import (
-    ATTR_DISCOVERY_HASH, CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
+from homeassistant.components.mqtt import (
+    CONF_UNIQUE_ID, MqttAttributes, MqttAvailability,
     MqttDiscoveryUpdate, MqttEntityDeviceInfo, subscription)
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+
+from . import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,24 +38,6 @@ SERVICE_TO_STRING = {
 }
 
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
-
-
-def services_to_strings(services):
-    """Convert SUPPORT_* service bitmask to list of service strings."""
-    strings = []
-    for service in SERVICE_TO_STRING:
-        if service & services:
-            strings.append(SERVICE_TO_STRING[service])
-    return strings
-
-
-def strings_to_services(strings):
-    """Convert service strings to SUPPORT_* service bitmask."""
-    services = 0
-    for string in strings:
-        services |= STRING_TO_SERVICE[string]
-    return services
-
 
 DEFAULT_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP |\
                    SUPPORT_RETURN_HOME | SUPPORT_STATUS | SUPPORT_BATTERY |\
@@ -96,9 +78,10 @@ DEFAULT_PAYLOAD_STOP = 'stop'
 DEFAULT_PAYLOAD_TURN_OFF = 'turn_off'
 DEFAULT_PAYLOAD_TURN_ON = 'turn_on'
 DEFAULT_RETAIN = False
-DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES)
+DEFAULT_SERVICE_STRINGS = services_to_strings(
+    DEFAULT_SERVICES, SERVICE_TO_STRING)
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA_LEGACY = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_BATTERY_LEVEL_TEMPLATE, 'battery'): cv.template,
     vol.Inclusive(CONF_BATTERY_LEVEL_TOPIC,
                   'battery'): mqtt.valid_publish_topic,
@@ -137,44 +120,19 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema).extend(
-    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    mqtt.MQTT_JSON_ATTRS_SCHEMA.schema).extend(MQTT_VACUUM_SCHEMA.schema)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
-    """Set up MQTT vacuum through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities,
-                              discovery_info)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT vacuum dynamically through MQTT discovery."""
-    async def async_discover(discovery_payload):
-        """Discover and add a MQTT vacuum."""
-        try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(config, async_add_entities, config_entry,
-                                      discovery_hash)
-        except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(DOMAIN, 'mqtt'), async_discover)
-
-
-async def _async_setup_entity(config, async_add_entities, config_entry,
-                              discovery_hash=None):
-    """Set up the MQTT vacuum."""
+async def async_setup_entity_legacy(config, async_add_entities,
+                                    config_entry, discovery_hash):
+    """Set up a MQTT Vacuum Legacy."""
     async_add_entities([MqttVacuum(config, config_entry, discovery_hash)])
 
 
 # pylint: disable=too-many-ancestors
 class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                  MqttEntityDeviceInfo, VacuumDevice):
-    """Representation of a MQTT-controlled vacuum."""
+    """Representation of a MQTT-controlled legacy vacuum."""
 
     def __init__(self, config, config_entry, discovery_info):
         """Initialize the vacuum."""
@@ -204,7 +162,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         self._name = config[CONF_NAME]
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
         self._supported_features = strings_to_services(
-            supported_feature_strings
+            supported_feature_strings, STRING_TO_SERVICE
         )
         self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
         self._qos = config[mqtt.CONF_QOS]
@@ -248,7 +206,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
+        config = PLATFORM_SCHEMA_LEGACY(discovery_payload)
         self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
@@ -313,7 +271,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 error = self._templates[CONF_ERROR_TEMPLATE]\
                     .async_render_with_possible_json_value(
                         msg.payload, error_value=None)
-                if error:
+                if error is not None:
                     self._error = cv.string(error)
 
             if self._docked:
@@ -374,7 +332,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def status(self):
         """Return a status string for the vacuum."""
         if self.supported_features & SUPPORT_STATUS == 0:
-            return
+            return None
 
         return self._status
 
@@ -382,7 +340,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     def fan_speed(self):
         """Return the status of the vacuum."""
         if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
+            return None
 
         return self._fan_speed
 
@@ -429,7 +387,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_turn_off(self, **kwargs):
         """Turn the vacuum off."""
         if self.supported_features & SUPPORT_TURN_OFF == 0:
-            return
+            return None
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payloads[CONF_PAYLOAD_TURN_OFF],
@@ -440,7 +398,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_stop(self, **kwargs):
         """Stop the vacuum."""
         if self.supported_features & SUPPORT_STOP == 0:
-            return
+            return None
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payloads[CONF_PAYLOAD_STOP],
@@ -451,7 +409,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
         if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
-            return
+            return None
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payloads[CONF_PAYLOAD_CLEAN_SPOT],
@@ -462,7 +420,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_locate(self, **kwargs):
         """Locate the vacuum (usually by playing a song)."""
         if self.supported_features & SUPPORT_LOCATE == 0:
-            return
+            return None
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payloads[CONF_PAYLOAD_LOCATE],
@@ -473,7 +431,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
         if self.supported_features & SUPPORT_PAUSE == 0:
-            return
+            return None
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payloads[CONF_PAYLOAD_START_PAUSE],
@@ -484,7 +442,7 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
     async def async_return_to_base(self, **kwargs):
         """Tell the vacuum to return to its dock."""
         if self.supported_features & SUPPORT_RETURN_HOME == 0:
-            return
+            return None
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payloads[CONF_PAYLOAD_RETURN_TO_BASE],
@@ -494,10 +452,9 @@ class MqttVacuum(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return
-        if not self._fan_speed_list or fan_speed not in self._fan_speed_list:
-            return
+        if ((self.supported_features & SUPPORT_FAN_SPEED == 0) or
+                fan_speed not in self._fan_speed_list):
+            return None
 
         mqtt.async_publish(self.hass, self._set_fan_speed_topic,
                            fan_speed, self._qos, self._retain)

@@ -22,7 +22,6 @@ from tests.common import (mock_device_registry, mock_registry,
 
 BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
-    allow_unlock=False
 )
 REQ_ID = 'ff36a3cc-ec34-11e6-b1a0-64510650abcf'
 
@@ -57,7 +56,6 @@ async def test_sync_message(hass):
 
     config = helpers.Config(
         should_expose=lambda state: state.entity_id != 'light.not_expose',
-        allow_unlock=False,
         entity_config={
             'light.demo_light': {
                 const.CONF_ROOM_HINT: 'Living Room',
@@ -96,7 +94,7 @@ async def test_sync_message(hass):
                     trait.TRAIT_ONOFF,
                     trait.TRAIT_COLOR_SETTING,
                 ],
-                'type': sh.TYPE_LIGHT,
+                'type': const.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
                     'colorModel': 'hsv',
@@ -146,7 +144,6 @@ async def test_sync_in_area(hass, registries):
 
     config = helpers.Config(
         should_expose=lambda _: True,
-        allow_unlock=False,
         entity_config={}
     )
 
@@ -176,7 +173,7 @@ async def test_sync_in_area(hass, registries):
                     trait.TRAIT_ONOFF,
                     trait.TRAIT_COLOR_SETTING,
                 ],
-                'type': sh.TYPE_LIGHT,
+                'type': const.TYPE_LIGHT,
                 'willReportState': False,
                 'attributes': {
                     'colorModel': 'hsv',
@@ -489,7 +486,7 @@ async def test_serialize_input_boolean(hass):
     """Test serializing an input boolean entity."""
     state = State('input_boolean.bla', 'on')
     # pylint: disable=protected-access
-    entity = sh._GoogleEntity(hass, BASIC_CONFIG, state)
+    entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
     result = await entity.sync_serialize()
     assert result == {
         'id': 'input_boolean.bla',

@@ -38,6 +38,9 @@ HAP-python==2.5.0
 # homeassistant.components.mastodon
 Mastodon.py==1.3.1
 
+# homeassistant.components.orangepi_gpio
+OPi.GPIO==0.3.6
+
 # homeassistant.components.github
 PyGithub==1.43.5
 
@@ -112,7 +115,7 @@ aiobotocore==0.10.2
 aiodns==1.1.1
 
 # homeassistant.components.esphome
-aioesphomeapi==2.0.0
+aioesphomeapi==2.0.1
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
@@ -141,6 +144,9 @@ aiolifx_effects==0.2.1
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
+
+# homeassistant.components.switcher_kis
+aioswitcher==2019.3.21
 
 # homeassistant.components.unifi
 aiounifi==4
@@ -192,7 +198,7 @@ av==6.1.2
 # avion==0.10
 
 # homeassistant.components.axis
-axis==21
+axis==22
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -397,6 +403,9 @@ ephem==3.7.6.0
 # homeassistant.components.epson
 epson-projector==0.1.3
 
+# homeassistant.components.epsonworkforce
+epsonprinter==0.0.8
+
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.7
 
@@ -509,7 +518,7 @@ gstreamer-player==1.1.2
 ha-ffmpeg==2.0
 
 # homeassistant.components.philips_js
-ha-philipsjs==0.0.5
+ha-philipsjs==0.0.6
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -518,7 +527,7 @@ habitipy==0.2.0
 hangups==0.4.6
 
 # homeassistant.components.cloud
-hass-nabucasa==0.11
+hass-nabucasa==0.12
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.4
@@ -548,7 +557,7 @@ hole==0.3.0
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190331.0
+home-assistant-frontend==20190419.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -743,7 +752,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.niko_home_control
-niko-home-control==0.2.0
+niko-home-control==0.2.1
 
 # homeassistant.components.nilu
 niluclient==0.1.2
@@ -1058,7 +1067,7 @@ pyfttt==0.3
 
 # homeassistant.components.bluetooth_le_tracker
 # homeassistant.components.skybeacon
-pygatt[GATTTOOL]==3.2.0
+pygatt[GATTTOOL]==4.0.1
 
 # homeassistant.components.gogogate2
 pygogogate2==0.1.1
@@ -1073,7 +1082,7 @@ pygtt==1.1.2
 pyhaversion==2.2.0
 
 # homeassistant.components.heos
-pyheos==0.3.1
+pyheos==0.4.0
 
 # homeassistant.components.hikvision
 pyhik==0.2.2
@@ -1207,7 +1216,7 @@ pyotgw==0.4b3
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
-pyotp==2.2.6
+pyotp==2.2.7
 
 # homeassistant.components.owlet
 pyowlet==1.0.2
@@ -1423,7 +1432,7 @@ pytile==2.0.6
 pytouchline==0.7
 
 # homeassistant.components.traccar
-pytraccar==0.5.0
+pytraccar==0.7.0
 
 # homeassistant.components.trackr
 pytrackr==0.0.5
@@ -1453,7 +1462,7 @@ pyvera==0.2.45
 pyvesync_v2==0.9.6
 
 # homeassistant.components.vizio
-pyvizio==0.0.4
+pyvizio==0.0.7
 
 # homeassistant.components.velux
 pyvlx==0.2.10
@@ -1576,7 +1585,7 @@ simplisafe-python==3.4.1
 sisyphus-control==2.1
 
 # homeassistant.components.skybell
-skybellpy==0.3.0
+skybellpy==0.4.0
 
 # homeassistant.components.slack
 slacker==0.12.0
@@ -1803,7 +1812,7 @@ xknx==0.10.0
 # homeassistant.components.ted5000
 # homeassistant.components.yr
 # homeassistant.components.zestimate
-xmltodict==0.11.0
+xmltodict==0.12.0
 
 # homeassistant.components.xs1
 xs1-api-client==2.3.5
@@ -1830,7 +1839,7 @@ zengge==0.2
 zeroconf==0.21.3
 
 # homeassistant.components.zha
-zha-quirks==0.0.7
+zha-quirks==0.0.8
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -1839,13 +1848,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.1.3
+zigpy-deconz==0.1.4
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.3.1
+zigpy-homeassistant==0.3.2
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.1.3
+zigpy-xbee-homeassistant==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
