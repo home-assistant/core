@@ -110,7 +110,7 @@ class TraccarScanner:
         self._scan_interval = scan_interval
         self._async_see = async_see
         self._api = api
-        self.connected = None
+        self.connected = False
         self._hass = hass
 
     async def async_init(self):
@@ -122,20 +122,15 @@ class TraccarScanner:
 
     async def _async_update(self, now=None):
         """Update info from Traccar."""
-        if self.connected is None:
-            # We should only get here on the first run.
-            await self._api.test_connection()
-            self.connected = self._api.connected
-            if not self._api.connected:
-                _LOGGER.error("Not connected to Traccar")
-
         if not self.connected:
             _LOGGER.debug('Testing connection to Traccar')
             await self._api.test_connection()
             self.connected = self._api.connected
             if self.connected:
                 _LOGGER.info("Connection to Traccar restored")
-        else:
+            else:
+                _LOGGER.error("Not connected to Traccar")
+        if self.connected:
             _LOGGER.debug('Updating device data')
             await self._api.get_device_info(self._custom_attributes)
             self._hass.async_create_task(self.import_device_data())
