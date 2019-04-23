@@ -45,6 +45,7 @@ ATTR_UNIQUE_ID = 'unique_id'
 ATTR_PARAMSET_KEY = 'paramset_key'
 ATTR_PARAMSET = 'paramset'
 
+
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
 EVENT_ERROR = 'homematic.error'
@@ -481,6 +482,9 @@ def _system_callback_handler(hass, config, src, *args):
                         discovery.load_platform(hass, component_name, DOMAIN,
                                                 discovery_info, config)
 
+                    # Pass all devices to binary sensor discovery,
+                    # check whether they are battery operated and
+                    # add them as a battery operated binary sensor device.
                     discovery_info[ATTR_BATTERY_DEVICES] = True
                     discovery.load_platform(hass, 'binary_sensor', DOMAIN,
                                             discovery_info, config)

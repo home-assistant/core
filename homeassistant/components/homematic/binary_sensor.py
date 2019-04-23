@@ -3,13 +3,14 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.homematic import ATTR_BATTERY_DEVICES
-from homeassistant.components.homematic.battery_sensor import ATTR_LOW_BAT, \
-    ATTR_LOWBAT
 from homeassistant.const import STATE_UNKNOWN, DEVICE_CLASS_BATTERY
 
 from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_LOW_BAT = 'LOW_BAT'
+ATTR_LOWBAT = 'LOWBAT'
 
 SENSOR_TYPES_CLASS = {
     'IPShutterContact': 'opening',
@@ -37,11 +38,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
         if battery_devices:
-
-            # todo: check whether the device is indeed
-            #  a battery operated device.
-
-            new_device = HMBatterySensor(conf)
+            battery_device = conf.get(ATTR_LOWBAT) or conf.get(ATTR_LOW_BAT)
+            if battery_device:
+                new_device = HMBatterySensor(conf)
         else:
             new_device = HMBinarySensor(conf)
         devices.append(new_device)
