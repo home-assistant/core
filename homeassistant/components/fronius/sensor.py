@@ -1,9 +1,4 @@
-"""
-Support for Fronius devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.fronius/
-"""
+"""Support for Fronius devices."""
 import logging
 import voluptuous as vol
 
@@ -33,12 +28,10 @@ SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST):
-    cv.string,
-    vol.Required(CONF_TYPE):
-    vol.In(SENSOR_TYPES),
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
-    vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
+        vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
     vol.Optional(CONF_DEVICEID, default=DEFAULT_DEVICE):
     cv.positive_int,
 })
@@ -56,8 +49,7 @@ async def async_setup_platform(hass,
 
     name = "fronius_{}_{}".format(config.get(CONF_TYPE), config.get(CONF_HOST))
     device = config.get(CONF_DEVICEID)
-    if CONF_DEVICEID in config.keys():
-        name = "{}_{}".format(name, device)
+    name = "{}_{}".format(name, device)
 
     sensor = FroniusSensor(fronius, name, config.get(CONF_TYPE),
                            config.get(CONF_SCOPE), device)
@@ -107,7 +99,7 @@ class FroniusSensor(Entity):
 
         if values:
             self._state = values['status']['Code']
-            self._attributes = self._get_attributes(values)
+            self._attributes = self._parse_attributes(values)
 
     async def _update(self):
         """Get the values for the current state."""
@@ -125,7 +117,7 @@ class FroniusSensor(Entity):
             return await self.data.current_power_flow()
 
     @staticmethod
-    def _get_attributes(values):
+    def _parse_attributes(values):
         """Map the attributes and ensure proper values."""
         attributes = {}
         for key in values:
