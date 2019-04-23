@@ -140,8 +140,8 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         }
 
     @property
-    def _channel(self):
-        return self._device.functionalChannels[self._channel_index]
+    def _func_channel(self):
+        return self._device.functionalChannels[self.channel]
 
     @property
     def is_on(self):
@@ -158,7 +158,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
-        simple_rgb_color = self._channel.simpleRGBColorState
+        simple_rgb_color = self._func_channel.simpleRGBColorState
         return self._color_switcher.get(simple_rgb_color, [0.0, 0.0])
 
     @property
@@ -166,7 +166,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         """Return the state attributes of the generic device."""
         attr = super().device_state_attributes
         if self.is_on:
-            attr[ATTR_COLOR_NAME] = self._channel.simpleRGBColorState
+            attr[ATTR_COLOR_NAME] = self._func_channel.simpleRGBColorState
         return attr
 
     @property
@@ -206,15 +206,15 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         dim_level = brightness / 255.0
 
         await self._device.set_rgb_dim_level(
-            self._channel_index,
+            self.channel,
             simple_rgb_color,
             dim_level)
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        simple_rgb_color = self._channel.simpleRGBColorState
+        simple_rgb_color = self._func_channel.simpleRGBColorState
         await self._device.set_rgb_dim_level(
-            self._channel_index,
+            self.channel,
             simple_rgb_color, 0.0)
 
 
