@@ -881,6 +881,9 @@ protobuf==3.6.1
 # homeassistant.components.systemmonitor
 psutil==5.6.1
 
+# homeassistant.components.ptvsd
+ptvsd==4.2.8
+
 # homeassistant.components.wink
 pubnubsub-handler==1.0.3
 

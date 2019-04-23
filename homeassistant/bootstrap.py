@@ -26,6 +26,7 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
+DEBUGGER_INTEGRATIONS = {'ptvsd', }
 CORE_INTEGRATIONS = ('homeassistant', 'persistent_notification')
 LOGGING_INTEGRATIONS = {'logger', 'system_log'}
 STAGE_1_INTEGRATIONS = {
@@ -305,6 +306,19 @@ async def _async_set_up_integrations(
         hass: core.HomeAssistant, config: Dict[str, Any]) -> None:
     """Set up all the integrations."""
     domains = _get_domains(hass, config)
+
+    # Start up debuggers. Start these first in case they want to wait.
+    debuggers = domains & DEBUGGER_INTEGRATIONS
+    if debuggers:
+        _LOGGER.debug("starting up debuggers %s", debuggers)
+        await asyncio.gather(*[
+            loader.async_component_dependencies(hass, domain)
+            for domain in debuggers
+        ])
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in debuggers])
+        domains -= DEBUGGER_INTEGRATIONS
 
     # Resolve all dependencies of all components so we can find the logging
     # and integrations that need faster initialization.
