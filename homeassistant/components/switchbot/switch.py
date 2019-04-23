@@ -1,7 +1,6 @@
 """Support for Switchbot."""
 import logging
 
-import switchbot
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -34,6 +33,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
     def __init__(self, mac, name) -> None:
         """Initialize the Switchbot."""
         # pylint: disable=import-error, no-member
+        import switchbot
 
         self._state = None
         self._name = name
