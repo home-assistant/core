@@ -3,6 +3,7 @@ import json
 from unittest import mock
 
 import homekit
+import pytest
 
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
@@ -10,6 +11,18 @@ from tests.common import MockConfigEntry
 from tests.components.homekit_controller.common import (
     Accessory, FakeService, setup_platform
 )
+
+
+ERROR_MAPPING_FORM_FIXTURE = [
+    (homekit.MaxPeersError, 'max_peers_error'),
+    (homekit.BusyError, 'busy_error'),
+    (homekit.MaxTriesError, 'max_tries_error'),
+    (KeyError, 'pairing_failed'),
+]
+
+ERROR_MAPPING_ABORT_FIXTURE = [
+    (homekit.AccessoryNotFoundError, 'accessory_not_found_error'),
+]
 
 
 def _setup_flow_handler(hass):
@@ -345,6 +358,80 @@ async def test_pair_unable_to_pair(hass):
 
     assert result['type'] == 'form'
     assert result['errors']['pairing_code'] == 'unable_to_pair'
+
+
+@pytest.mark.parametrize("exception,expected", ERROR_MAPPING_ABORT_FIXTURE)
+async def test_pair_abort_errors(hass, exception, expected):
+    """Test various pairing errors."""
+    discovery_info = {
+        'name': 'TestDevice',
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': 1,
+            'sf': 1,
+        }
+    }
+
+    flow = _setup_flow_handler(hass)
+
+    result = await flow.async_step_discovery(discovery_info)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+    controller = mock.Mock()
+    controller.pairings = {}
+
+    with mock.patch('homekit.Controller') as controller_cls:
+        controller_cls.return_value = controller
+        controller.perform_pairing.side_effect = exception('error')
+        result = await flow.async_step_pair({
+            'pairing_code': '111-22-33',
+        })
+
+    assert result['type'] == 'abort'
+    assert result['reason'] == expected
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+
+@pytest.mark.parametrize("exception,expected", ERROR_MAPPING_FORM_FIXTURE)
+async def test_pair_form_errors(hass, exception, expected):
+    """Test various pairing errors."""
+    discovery_info = {
+        'name': 'TestDevice',
+        'host': '127.0.0.1',
+        'port': 8080,
+        'properties': {
+            'md': 'TestDevice',
+            'id': '00:00:00:00:00:00',
+            'c#': 1,
+            'sf': 1,
+        }
+    }
+
+    flow = _setup_flow_handler(hass)
+
+    result = await flow.async_step_discovery(discovery_info)
+    assert result['type'] == 'form'
+    assert result['step_id'] == 'pair'
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
+
+    controller = mock.Mock()
+    controller.pairings = {}
+
+    with mock.patch('homekit.Controller') as controller_cls:
+        controller_cls.return_value = controller
+        controller.perform_pairing.side_effect = exception('error')
+        result = await flow.async_step_pair({
+            'pairing_code': '111-22-33',
+        })
+
+    assert result['type'] == 'form'
+    assert result['errors']['pairing_code'] == expected
+    assert flow.context == {'title_placeholders': {'name': 'TestDevice'}}
 
 
 async def test_pair_authentication_error(hass):
