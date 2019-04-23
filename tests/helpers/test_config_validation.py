@@ -12,9 +12,6 @@ import voluptuous as vol
 import homeassistant
 import homeassistant.helpers.config_validation as cv
 
-#  pylint: disable=redefined-outer-name, len-as-condition
-#  pylint: disable=misplaced-comparison-constant
-
 
 def test_boolean():
     """Test boolean validation."""
@@ -34,14 +31,14 @@ def test_boolean():
         assert not schema(value)
 
 
-def test_boolean_true():
+def test_boolean_tolerant():
     """Test boolean_true validation."""
-    schema = vol.Schema(cv.boolean_true)
+    schema = vol.Schema(cv.boolean_tolerant)
 
     for value in (
             'false', 'Off', '0', 'NO', 'disable', 0, False,
             'T', 'negative', 'lock', 'true like', 'tr ue',
-            None, [], [1, 2], {'one': 'two'}, test_boolean_true):
+            None, [], [1, 2], {'one': 'two'}, test_boolean_tolerant):
         assert not schema(value)
 
     for value in ('true', 'On', '1', 'YES', '   true ',
