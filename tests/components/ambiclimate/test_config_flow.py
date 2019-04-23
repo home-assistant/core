@@ -109,9 +109,10 @@ async def test_get_authorize_url(hass):
     flow = config_flow.AmbiclimateFlowHandler()
     flow.hass = hass
     url = await flow._get_authorize_url()  # pylint: disable=W0212
-    assert url == 'https://api.ambiclimate.com/oauth2/authorize?' \
-                  'client_id=client_id&response_type=code&redirect_uri=' \
-                  'http%3A%2F%2Fexample.com%2Fapi%2Fambiclimate'
+    assert 'https://api.ambiclimate.com/oauth2/authorize' in url
+    assert 'client_id=client_id' in url
+    assert 'response_type=code' in url
+    assert 'redirect_uri=http%3A%2F%2Fexample.com%2Fapi%2Fambiclimate' in url
 
 
 async def test_generate_view(hass):
