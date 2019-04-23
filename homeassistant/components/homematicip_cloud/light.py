@@ -92,7 +92,8 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._device.dimLevel is not None and self._device.dimLevel > 0.0
+        return self._device.dimLevel is not None and \
+            self._device.dimLevel > 0.0
 
     @property
     def brightness(self):
