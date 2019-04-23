@@ -79,7 +79,7 @@ def _register_panel(hass, addon, data):
 
     Return coroutine.
     """
-    return hass.components.frontend.async_register_built_in_panel(
+    return hass.components.panel_custom.async_register_panel(
         frontend_url_path=addon,
         webcomponent_name='hassio-main',
         sidebar_title=data[ATTR_TITLE],
