@@ -114,16 +114,14 @@ class FroniusSensor(Entity):
         if self._type == TYPE_INVERTER:
             if self._scope == SCOPE_SYSTEM:
                 return await self.data.current_system_inverter_data()
-            else:
-                return await self.data.current_inverter_data(self._device)
-        elif self._type == TYPE_STORAGE:
+            return await self.data.current_inverter_data(self._device)
+        if self._type == TYPE_STORAGE:
             return await self.data.current_storage_data(self._device)
-        elif self._type == TYPE_METER:
+        if self._type == TYPE_METER:
             if self._scope == SCOPE_SYSTEM:
                 return await self.data.current_system_meter_data()
-            else:
-                return await self.data.current_meter_data()
-        elif self._type == TYPE_POWER_FLOW:
+            return await self.data.current_meter_data()
+        if self._type == TYPE_POWER_FLOW:
             return await self.data.current_power_flow()
 
     @staticmethod
