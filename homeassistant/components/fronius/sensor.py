@@ -99,7 +99,13 @@ class FroniusSensor(Entity):
 
         if values:
             self._state = values['status']['Code']
-            self._attributes = self._parse_attributes(values)
+            attributes = {}
+            for key in values:
+                if 'value' in values[key] and values[key]['value']:
+                    attributes[key] = values[key]['value']
+                else:
+                    attributes[key] = 0
+            self._attributes = attributes
 
     async def _update(self):
         """Get the values for the current state."""
@@ -115,15 +121,3 @@ class FroniusSensor(Entity):
             return await self.data.current_meter_data()
         if self._type == TYPE_POWER_FLOW:
             return await self.data.current_power_flow()
-
-    @staticmethod
-    def _parse_attributes(values):
-        """Map the attributes and ensure proper values."""
-        attributes = {}
-        for key in values:
-            if 'value' in values[key] and values[key]['value']:
-                attributes[key] = values[key]['value']
-            else:
-                attributes[key] = 0
-
-        return attributes
