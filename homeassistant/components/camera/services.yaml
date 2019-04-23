@@ -51,6 +51,23 @@ play_stream:
       description: (Optional) Stream format supported by media player.
       example: 'hls'
 
+record:
+  description: Record live camera feed.
+  fields:
+    entity_id:
+      description: Name of entities to record.
+      example: 'camera.living_room_camera'
+    filename:
+      description: Template of a Filename. Variable is entity_id.  Must be mp4.
+      example: '/tmp/snapshot_{{ entity_id }}.mp4'
+    duration:
+      description: (Optional) Target recording length (in seconds).
+      default: 30
+      example: 30
+    lookback:
+      description: (Optional) Target lookback period (in seconds) to include in addition to duration.  Only available if there is currently an active HLS stream.
+      example: 4
+
 local_file_update_file_path:
   description: Update the file_path for a local_file camera.
   fields:

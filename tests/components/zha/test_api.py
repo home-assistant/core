@@ -1,5 +1,4 @@
 """Test ZHA API."""
-from unittest.mock import Mock
 import pytest
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.zha.api import (
@@ -18,7 +17,7 @@ async def zha_client(hass, config_entry, zha_gateway, hass_ws_client):
     from zigpy.zcl.clusters.general import OnOff, Basic
 
     # load the ZHA API
-    async_load_api(hass, Mock(), zha_gateway)
+    async_load_api(hass)
 
     # create zigpy device
     await async_init_zigpy_device(

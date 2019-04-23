@@ -1,10 +1,10 @@
 """Support for loading picture from Neato."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
 from homeassistant.components.camera import Camera
-from homeassistant.components.neato import (
-    NEATO_MAP_DATA, NEATO_ROBOTS, NEATO_LOGIN)
+
+from . import NEATO_LOGIN, NEATO_MAP_DATA, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -144,7 +144,7 @@ def _find_files(directory: str, pattern: str) -> Iterator[str]:
     """Recursively load files in a directory."""
     for root, dirs, files in os.walk(directory, topdown=True):
         dirs[:] = [d for d in dirs if _is_file_valid(d)]
-        for basename in files:
+        for basename in sorted(files):
             if _is_file_valid(basename) and fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
                 yield filename

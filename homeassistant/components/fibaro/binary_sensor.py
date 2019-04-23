@@ -2,10 +2,10 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, ENTITY_ID_FORMAT)
-from homeassistant.components.fibaro import (
-    FIBARO_DEVICES, FibaroDevice)
-from homeassistant.const import (CONF_DEVICE_CLASS, CONF_ICON)
+    ENTITY_ID_FORMAT, BinarySensorDevice)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
+
+from . import FIBARO_DEVICES, FibaroDevice
 
 DEPENDENCIES = ['fibaro']
 

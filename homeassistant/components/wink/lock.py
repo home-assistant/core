@@ -4,10 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.const import (
     ATTR_CODE, ATTR_ENTITY_ID, ATTR_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
+
+from . import DOMAIN, WinkDevice
 
 DEPENDENCIES = ['wink']
 

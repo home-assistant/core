@@ -6,7 +6,6 @@ https://home-assistant.io/components/zha/
 """
 import logging
 from . import ZigbeeChannel
-from ..const import COLOR_CHANNEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +20,6 @@ class ColorChannel(ZigbeeChannel):
     def __init__(self, cluster, device):
         """Initialize ColorChannel."""
         super().__init__(cluster, device)
-        self.name = COLOR_CHANNEL
         self._color_capabilities = None
 
     def get_color_capabilities(self):

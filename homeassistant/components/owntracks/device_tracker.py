@@ -9,12 +9,11 @@ import logging
 
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import (
-    ATTR_SOURCE_TYPE, SOURCE_TYPE_BLUETOOTH_LE, SOURCE_TYPE_GPS
-)
-from homeassistant.components.owntracks import DOMAIN as OT_DOMAIN
+    ATTR_SOURCE_TYPE, SOURCE_TYPE_BLUETOOTH_LE, SOURCE_TYPE_GPS)
 from homeassistant.const import STATE_HOME
-from homeassistant.util import slugify, decorator
+from homeassistant.util import decorator, slugify
 
+from . import DOMAIN as OT_DOMAIN
 
 DEPENDENCIES = ['owntracks']
 

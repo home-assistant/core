@@ -2,8 +2,8 @@
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.zigbee import (
-    ZigBeeDigitalIn, ZigBeeDigitalInConfig, PLATFORM_SCHEMA)
+
+from . import PLATFORM_SCHEMA, ZigBeeDigitalIn, ZigBeeDigitalInConfig
 
 CONF_ON_STATE = 'on_state'
 

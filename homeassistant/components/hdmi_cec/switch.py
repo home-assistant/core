@@ -1,9 +1,10 @@
 """Support for HDMI CEC devices as switches."""
 import logging
 
-from homeassistant.components.hdmi_cec import ATTR_NEW, CecDevice
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY
+
+from . import ATTR_NEW, CecDevice
 
 DEPENDENCIES = ['hdmi_cec']
 

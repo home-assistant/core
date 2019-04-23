@@ -121,3 +121,8 @@ class TadoDataStore:
         """Wrap for setZoneOverlay(..)."""
         self.tado.setZoneOverlay(zone_id, mode, temperature, duration)
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
+
+    def set_zone_off(self, zone_id, mode):
+        """Set a zone to off."""
+        self.tado.setZoneOverlay(zone_id, mode, None, None, 'HEATING', 'OFF')
+        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg

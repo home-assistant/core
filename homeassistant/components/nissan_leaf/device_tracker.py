@@ -1,10 +1,10 @@
 """Support for tracking a Nissan Leaf."""
 import logging
 
-from homeassistant.components.nissan_leaf import (
-    DATA_LEAF, DATA_LOCATION, SIGNAL_UPDATE_LEAF)
 from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.util import slugify
+
+from . import DATA_LEAF, DATA_LOCATION, SIGNAL_UPDATE_LEAF
 
 _LOGGER = logging.getLogger(__name__)
 

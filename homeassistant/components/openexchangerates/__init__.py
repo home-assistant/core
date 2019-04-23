@@ -1,0 +1,1 @@
+"""The openexchangerates component."""

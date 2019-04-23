@@ -9,11 +9,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-from homeassistant.core import callback
-from homeassistant.const import CONF_DEVICES
-from homeassistant.components.mqtt import CONF_QOS
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.const import CONF_DEVICES
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_QOS
 
 DEPENDENCIES = ['mqtt']
 

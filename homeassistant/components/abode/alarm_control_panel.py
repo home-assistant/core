@@ -2,11 +2,11 @@
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.abode import ATTRIBUTION, AbodeDevice
-from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN
 from homeassistant.const import (
     ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED)
+
+from . import ATTRIBUTION, DOMAIN as ABODE_DOMAIN, AbodeDevice
 
 DEPENDENCIES = ['abode']
 

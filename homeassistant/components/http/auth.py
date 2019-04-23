@@ -190,6 +190,16 @@ def setup_auth(hass, app):
 
         elif (trusted_networks and
               await async_validate_trusted_networks(request)):
+            if request.path not in old_auth_warning:
+                # When removing this, don't forget to remove the print logic
+                # in http/view.py
+                request['deprecate_warning_message'] = \
+                    'Access from trusted networks without auth token is ' \
+                    'going to be removed in Home Assistant 0.96. Configure ' \
+                    'the trusted networks auth provider or use long-lived ' \
+                    'access tokens to access {} from {}'.format(
+                        request.path, request[KEY_REAL_IP])
+                old_auth_warning.add(request.path)
             authenticated = True
 
         elif (support_legacy and HTTP_HEADER_HA_AUTH in request.headers and

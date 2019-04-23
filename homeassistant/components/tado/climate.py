@@ -7,7 +7,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.components.tado import DATA_TADO
+
+from . import DATA_TADO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -362,7 +363,7 @@ class TadoClimate(ClimateDevice):
         if self._current_operation == CONST_MODE_OFF:
             _LOGGER.info("Switching mytado.com to OFF for zone %s",
                          self.zone_name)
-            self._store.set_zone_overlay(self.zone_id, CONST_OVERLAY_MANUAL)
+            self._store.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL)
             self._overlay_mode = self._current_operation
             return
 

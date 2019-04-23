@@ -1,14 +1,17 @@
 """Constants for the deCONZ component."""
 import logging
 
-_LOGGER = logging.getLogger('homeassistant.components.deconz')
+_LOGGER = logging.getLogger('.')
 
 DOMAIN = 'deconz'
 
 DEFAULT_PORT = 80
+DEFAULT_ALLOW_CLIP_SENSOR = False
+DEFAULT_ALLOW_DECONZ_GROUPS = False
 
 CONF_ALLOW_CLIP_SENSOR = 'allow_clip_sensor'
 CONF_ALLOW_DECONZ_GROUPS = 'allow_deconz_groups'
+CONF_BRIDGEID = 'bridgeid'
 
 SUPPORTED_PLATFORMS = ['binary_sensor', 'climate', 'cover',
                        'light', 'scene', 'sensor', 'switch']

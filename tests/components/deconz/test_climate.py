@@ -46,11 +46,14 @@ async def setup_gateway(hass, data, allow_clip_sensor=True):
     """Load the deCONZ sensor platform."""
     from pydeconz import DeconzSession
 
-    session = Mock(put=asynctest.CoroutineMock(
-        return_value=Mock(status=200,
-                          json=asynctest.CoroutineMock(),
-                          text=asynctest.CoroutineMock(),
-                          )
+    response = Mock(
+        status=200, json=asynctest.CoroutineMock(),
+        text=asynctest.CoroutineMock())
+    response.content_type = 'application/json'
+
+    session = Mock(
+        put=asynctest.CoroutineMock(
+            return_value=response
         )
     )
 

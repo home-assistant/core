@@ -1,21 +1,21 @@
 """Support for testing internet speed via Speedtest.net."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL, CONF_UPDATE_INTERVAL,
+    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.speedtestdotnet.const import DOMAIN, \
-    DATA_UPDATED, SENSOR_TYPES
-from homeassistant.const import CONF_MONITORED_CONDITIONS, \
-    CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL, \
-    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
-REQUIREMENTS = ['speedtest-cli==2.0.2']
+from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
+
+REQUIREMENTS = ['speedtest-cli==2.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.All(cv.time_period, cv.positive_timedelta),
             vol.Optional(CONF_MANUAL, default=False): cv.boolean,
             vol.Optional(
-                CONF_MONITORED_CONDITIONS,
-                default=list(SENSOR_TYPES)
+                CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
             ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))])
         }),
         cv.deprecated(
@@ -55,8 +54,7 @@ async def async_setup(hass, config):
 
     if not conf[CONF_MANUAL]:
         async_track_time_interval(
-            hass, data.update, conf[CONF_SCAN_INTERVAL]
-        )
+            hass, data.update, conf[CONF_SCAN_INTERVAL])
 
     def update(call=None):
         """Service call to manually update the data."""
@@ -66,13 +64,8 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         async_load_platform(
-            hass,
-            SENSOR_DOMAIN,
-            DOMAIN,
-            conf[CONF_MONITORED_CONDITIONS],
-            config
-        )
-    )
+            hass, SENSOR_DOMAIN, DOMAIN, conf[CONF_MONITORED_CONDITIONS],
+            config))
 
     return True
 
@@ -89,7 +82,7 @@ class SpeedtestData:
     def update(self, now=None):
         """Get the latest data from speedtest.net."""
         import speedtest
-        _LOGGER.debug("Executing speedtest.net speedtest")
+        _LOGGER.debug("Executing speedtest.net speed test")
         speed = speedtest.Speedtest()
         speed.get_servers(self._servers)
         speed.get_best_server()

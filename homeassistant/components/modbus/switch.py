@@ -3,14 +3,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.modbus import (
-    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_NAME, CONF_SLAVE, STATE_ON)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

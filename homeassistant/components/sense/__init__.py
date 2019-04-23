@@ -44,7 +44,7 @@ async def async_setup(hass, config):
         _LOGGER.error("Could not authenticate with sense server")
         return False
     hass.async_create_task(
-        async_load_platform(hass, 'sensor', DOMAIN, None, config))
+        async_load_platform(hass, 'sensor', DOMAIN, {}, config))
     hass.async_create_task(
-        async_load_platform(hass, 'binary_sensor', DOMAIN, None, config))
+        async_load_platform(hass, 'binary_sensor', DOMAIN, {}, config))
     return True

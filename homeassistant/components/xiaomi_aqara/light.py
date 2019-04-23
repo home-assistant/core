@@ -1,13 +1,13 @@
 """Support for Xiaomi Gateway Light."""
+import binascii
 import logging
 import struct
-import binascii
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_HS_COLOR,
-                                            SUPPORT_BRIGHTNESS,
-                                            SUPPORT_COLOR, Light)
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 import homeassistant.util.color as color_util
+
+from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 

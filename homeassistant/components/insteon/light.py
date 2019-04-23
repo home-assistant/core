@@ -1,9 +1,10 @@
 """Support for Insteon lights via PowerLinc Modem."""
 import logging
 
-from homeassistant.components.insteon import InsteonEntity
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+
+from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 

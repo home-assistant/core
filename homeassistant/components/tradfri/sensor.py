@@ -1,11 +1,11 @@
 """Support for IKEA Tradfri sensors."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
-
 from homeassistant.core import callback
-from homeassistant.components.tradfri import KEY_GATEWAY, KEY_API
 from homeassistant.helpers.entity import Entity
+
+from . import KEY_API, KEY_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 

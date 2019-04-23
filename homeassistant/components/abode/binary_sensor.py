@@ -1,9 +1,9 @@
 """Support for Abode Security System binary sensors."""
 import logging
 
-from homeassistant.components.abode import (AbodeDevice, AbodeAutomation,
-                                            DOMAIN as ABODE_DOMAIN)
 from homeassistant.components.binary_sensor import BinarySensorDevice
+
+from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
 
 _LOGGER = logging.getLogger(__name__)
 

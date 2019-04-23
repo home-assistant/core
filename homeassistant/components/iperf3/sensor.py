@@ -1,10 +1,10 @@
 """Support for Iperf3 sensors."""
-from homeassistant.components.iperf3 import (
-    DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES, ATTR_VERSION)
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from . import ATTR_VERSION, DATA_UPDATED, DOMAIN as IPERF3_DOMAIN, SENSOR_TYPES
 
 DEPENDENCIES = ['iperf3']
 

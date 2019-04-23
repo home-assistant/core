@@ -2,11 +2,12 @@
 import logging
 
 from homeassistant.components import sensor, tellduslive
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS, POWER_WATT)
+    POWER_WATT, TEMP_CELSIUS)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 

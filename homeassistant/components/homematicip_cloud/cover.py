@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
+
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 DEPENDENCIES = ['homematicip_cloud']
 

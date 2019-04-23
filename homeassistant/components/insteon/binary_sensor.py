@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.insteon import InsteonEntity
+
+from . import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 

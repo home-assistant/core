@@ -9,6 +9,7 @@
         },
         "error": {
             "login_failed": "Feeler beim verbanne mat der Playstation 4. Iwwerpr\u00e9ift op de PIN korrekt ass.",
+            "no_ipaddress": "Gitt d'IP Adresse vun der Playstation 4 an:",
             "not_ready": "PlayStation 4 ass net un oder mam Netzwierk verbonnen."
         },
         "step": {
@@ -24,6 +25,14 @@
                     "region": "Regioun"
                 },
                 "description": "Gitt \u00e4r Playstation 4 Informatiounen an. Fir 'PIN', gitt an d'Astellunge vun der Playstation 4 Konsole. Dann op 'Mobile App Verbindungs Astellungen' a wielt \"Apparat dob\u00e4isetzen' aus. Gitt de PIN an deen ugewise g\u00ebtt.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP Address (Eidel loossen falls Auto Discovery benotzt g\u00ebtt)",
+                    "mode": "Konfiguratioun's Modus"
+                },
+                "description": "Konfiguratioun's Modus auswielen. D'Feld IP Adress kann eidel bl\u00e9iwen wann Auto Discovery benotzt g\u00ebtt, well d'Apparaten automatesch entdeckt ginn.",
                 "title": "PlayStation 4"
             }
         },

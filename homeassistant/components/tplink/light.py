@@ -8,15 +8,14 @@ import logging
 import time
 
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
-from homeassistant.util.color import \
-    color_temperature_mired_to_kelvin as mired_to_kelvin
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired as kelvin_to_mired)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
 import homeassistant.helpers.device_registry as dr
-from homeassistant.components.tplink import (DOMAIN as TPLINK_DOMAIN,
-                                             CONF_LIGHT)
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired as kelvin_to_mired,
+    color_temperature_mired_to_kelvin as mired_to_kelvin)
+
+from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
 
 DEPENDENCIES = ['tplink']
 

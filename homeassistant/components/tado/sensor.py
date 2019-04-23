@@ -1,9 +1,10 @@
 """Support for Tado sensors for each zone."""
 import logging
 
-from homeassistant.components.tado import DATA_TADO
 from homeassistant.const import ATTR_ID, ATTR_NAME, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
+from . import DATA_TADO
 
 _LOGGER = logging.getLogger(__name__)
 

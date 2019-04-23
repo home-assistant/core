@@ -4,17 +4,18 @@ This component provides support for RainMachine programs and zones.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.rainmachine/
 """
-import logging
 from datetime import datetime
+import logging
 
-from homeassistant.components.rainmachine import (
-    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, PROGRAM_UPDATE_TOPIC,
-    ZONE_UPDATE_TOPIC, RainMachineEntity)
-from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
+
+from . import (
+    DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN, PROGRAM_UPDATE_TOPIC,
+    ZONE_UPDATE_TOPIC, RainMachineEntity)
 
 DEPENDENCIES = ['rainmachine']
 

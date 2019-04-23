@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "device_unavailable": "Apparat ass net erreechbar",
+            "faulty_credentials": "Ong\u00eblteg Login Informatioune"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "title": "Axis Apparat ariichten"
+            }
+        },
+        "title": "Axis Apparat"
+    }
+}

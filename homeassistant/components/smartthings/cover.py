@@ -135,6 +135,8 @@ class SmartThingsCover(SmartThingsEntity, CoverDevice):
     @property
     def current_cover_position(self):
         """Return current position of cover."""
+        if not self._supported_features & SUPPORT_SET_POSITION:
+            return None
         return self._device.status.level
 
     @property

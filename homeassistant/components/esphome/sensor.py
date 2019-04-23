@@ -1,12 +1,12 @@
 """Support for esphome sensors."""
 import logging
 import math
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
-from homeassistant.components.esphome import EsphomeEntity, \
-    platform_async_setup_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import EsphomeEntity, platform_async_setup_entry
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import

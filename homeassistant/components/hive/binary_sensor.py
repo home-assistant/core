@@ -1,6 +1,7 @@
 """Support for the Hive binary sensors."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.hive import DATA_HIVE, DOMAIN
+
+from . import DATA_HIVE, DOMAIN
 
 DEPENDENCIES = ['hive']
 

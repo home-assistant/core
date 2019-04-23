@@ -429,7 +429,7 @@ class KonnectedView(HomeAssistantView):
 
         if not pin:
             return self.json_message(
-                'Switch on pin ' + pin_num + ' not configured',
+                format('Switch on pin {} not configured', pin_num),
                 status_code=HTTP_NOT_FOUND)
 
         return self.json(

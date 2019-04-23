@@ -14,7 +14,7 @@ from homeassistant.helpers.event import async_call_later
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
-    CONF_HOST, DOMAIN, KEY_HOST, KEY_SCAN_INTERVAL, KEY_SESSION,
+    CONF_HOST, DOMAIN, KEY_SCAN_INTERVAL, KEY_SESSION,
     MIN_UPDATE_INTERVAL, NOT_SO_PRIVATE_KEY, PUBLIC_KEY, SCAN_INTERVAL,
     SIGNAL_UPDATE_ENTITY, TELLDUS_DISCOVERY_NEW)
 
@@ -54,7 +54,7 @@ async def async_setup_entry(hass, entry):
     from tellduslive import Session
     conf = entry.data[KEY_SESSION]
 
-    if KEY_HOST in conf:
+    if CONF_HOST in conf:
         # Session(**conf) does blocking IO when
         # communicating with local devices.
         session = await hass.async_add_executor_job(partial(Session, **conf))
@@ -108,7 +108,7 @@ async def async_setup(hass, config):
             DOMAIN,
             context={'source': config_entries.SOURCE_IMPORT},
             data={
-                KEY_HOST: config[DOMAIN].get(CONF_HOST),
+                CONF_HOST: config[DOMAIN].get(CONF_HOST),
                 KEY_SCAN_INTERVAL: config[DOMAIN][CONF_SCAN_INTERVAL],
             }))
     return True

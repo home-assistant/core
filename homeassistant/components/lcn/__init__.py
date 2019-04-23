@@ -3,16 +3,20 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.lcn.const import (
-    CONF_CONNECTIONS, CONF_DIM_MODE, CONF_DIMMABLE, CONF_MOTOR, CONF_OUTPUT,
-    CONF_SK_NUM_TRIES, CONF_TRANSITION, DATA_LCN, DEFAULT_NAME, DIM_MODES,
-    DOMAIN, MOTOR_PORTS, OUTPUT_PORTS, PATTERN_ADDRESS, RELAY_PORTS)
 from homeassistant.const import (
     CONF_ADDRESS, CONF_COVERS, CONF_HOST, CONF_LIGHTS, CONF_NAME,
-    CONF_PASSWORD, CONF_PORT, CONF_SWITCHES, CONF_USERNAME)
+    CONF_PASSWORD, CONF_PORT, CONF_SENSORS, CONF_SWITCHES,
+    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
+
+from .const import (
+    CONF_CONNECTIONS, CONF_DIM_MODE, CONF_DIMMABLE, CONF_MOTOR, CONF_OUTPUT,
+    CONF_SK_NUM_TRIES, CONF_SOURCE, CONF_TRANSITION, DATA_LCN, DEFAULT_NAME,
+    DIM_MODES, DOMAIN, LED_PORTS, LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS,
+    PATTERN_ADDRESS, RELAY_PORTS, S0_INPUTS, SETPOINTS, THRESHOLDS, VAR_UNITS,
+    VARIABLES)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +82,17 @@ LIGHTS_SCHEMA = vol.Schema({
                 lambda value: value * 1000),
 })
 
+SENSORS_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ADDRESS): is_address,
+    vol.Required(CONF_SOURCE): vol.All(vol.Upper,
+                                       vol.In(VARIABLES + SETPOINTS +
+                                              THRESHOLDS + S0_INPUTS +
+                                              LED_PORTS + LOGICOP_PORTS)),
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default='native'):
+        vol.All(vol.Upper, vol.In(VAR_UNITS))
+})
+
 SWITCHES_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ADDRESS): is_address,
@@ -104,6 +119,8 @@ CONFIG_SCHEMA = vol.Schema({
             cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(
             cv.ensure_list, [LIGHTS_SCHEMA]),
+        vol.Optional(CONF_SENSORS): vol.All(
+            cv.ensure_list, [SENSORS_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(
             cv.ensure_list, [SWITCHES_SCHEMA])
     })
@@ -162,6 +179,7 @@ async def async_setup(hass, config):
     # load platforms
     for component, conf_key in (('cover', CONF_COVERS),
                                 ('light', CONF_LIGHTS),
+                                ('sensor', CONF_SENSORS),
                                 ('switch', CONF_SWITCHES)):
         if conf_key in config[DOMAIN]:
             hass.async_create_task(

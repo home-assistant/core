@@ -1,0 +1,1 @@
+"""The flunearyou component."""

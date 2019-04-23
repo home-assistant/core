@@ -1,18 +1,17 @@
 """Support for devices connected to UniFi POE."""
 import asyncio
-import logging
-
 from datetime import timedelta
+import logging
 
 import async_timeout
 
 from homeassistant.components import unifi
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.unifi.const import (
-    CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+
+from .const import CONF_CONTROLLER, CONF_SITE_ID, CONTROLLER_ID, DOMAIN
 
 DEPENDENCIES = [DOMAIN]
 SCAN_INTERVAL = timedelta(seconds=15)

@@ -1,9 +1,9 @@
 """Charge and Climate Control Support for the Nissan Leaf."""
 import logging
 
-from homeassistant.components.nissan_leaf import (
-    DATA_CLIMATE, DATA_LEAF, LeafEntity)
 from homeassistant.helpers.entity import ToggleEntity
+
+from . import DATA_CLIMATE, DATA_LEAF, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,9 +2,10 @@
 import logging
 
 from homeassistant.components import switch, tellduslive
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
+
+from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 

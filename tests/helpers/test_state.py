@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 
 import homeassistant.core as ha
-import homeassistant.components as core_components
+from homeassistant.setup import async_setup_component
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.util import dt as dt_util
@@ -88,8 +88,8 @@ class TestStateHelpers(unittest.TestCase):
     def setUp(self):     # pylint: disable=invalid-name
         """Run when tests are started."""
         self.hass = get_test_home_assistant()
-        run_coroutine_threadsafe(core_components.async_setup(
-            self.hass, {}), self.hass.loop).result()
+        run_coroutine_threadsafe(async_setup_component(
+            self.hass, 'homeassistant', {}), self.hass.loop).result()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop when tests are finished."""

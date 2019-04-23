@@ -1,0 +1,1 @@
+"""The gstreamer component."""

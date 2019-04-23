@@ -11,6 +11,10 @@ from .deconz_device import DeconzDevice
 
 DEPENDENCIES = ['deconz']
 
+ATTR_ORIENTATION = 'orientation'
+ATTR_TILTANGLE = 'tiltangle'
+ATTR_VIBRATIONSTRENGTH = 'vibrationstrength'
+
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
@@ -74,7 +78,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        from pydeconz.sensor import PRESENCE
+        from pydeconz.sensor import PRESENCE, VIBRATION
         attr = {}
         if self._device.battery:
             attr[ATTR_BATTERY_LEVEL] = self._device.battery
@@ -82,4 +86,8 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
             attr[ATTR_ON] = self._device.on
         if self._device.type in PRESENCE and self._device.dark is not None:
             attr[ATTR_DARK] = self._device.dark
+        elif self._device.type in VIBRATION:
+            attr[ATTR_ORIENTATION] = self._device.orientation
+            attr[ATTR_TILTANGLE] = self._device.tiltangle
+            attr[ATTR_VIBRATIONSTRENGTH] = self._device.vibrationstrength
         return attr

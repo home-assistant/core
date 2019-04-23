@@ -7,13 +7,14 @@ https://home-assistant.io/components/binary_sensor.rainmachine/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.rainmachine import (
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import (
     BINARY_SENSORS, DATA_CLIENT, DOMAIN as RAINMACHINE_DOMAIN,
     SENSOR_UPDATE_TOPIC, TYPE_FREEZE, TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS,
     TYPE_HOURLY, TYPE_MONTH, TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY,
     RainMachineEntity)
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)

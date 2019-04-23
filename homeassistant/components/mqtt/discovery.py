@@ -10,11 +10,12 @@ import logging
 import re
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 

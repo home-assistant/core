@@ -5,13 +5,6 @@ import os.path
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
-from homeassistant.components.ihc.const import (
-    ATTR_IHC_ID, ATTR_VALUE, CONF_AUTOSETUP, CONF_BINARY_SENSOR, CONF_DIMMABLE,
-    CONF_INFO, CONF_INVERTING, CONF_LIGHT, CONF_NODE, CONF_NOTE, CONF_OFF_ID,
-    CONF_ON_ID, CONF_POSITION, CONF_SENSOR, CONF_SWITCH, CONF_XPATH,
-    SERVICE_SET_RUNTIME_VALUE_BOOL, SERVICE_SET_RUNTIME_VALUE_FLOAT,
-    SERVICE_SET_RUNTIME_VALUE_INT, SERVICE_PULSE)
-from homeassistant.components.ihc.util import async_pulse
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT,
@@ -19,6 +12,14 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import (
+    ATTR_IHC_ID, ATTR_VALUE, CONF_AUTOSETUP, CONF_BINARY_SENSOR, CONF_DIMMABLE,
+    CONF_INFO, CONF_INVERTING, CONF_LIGHT, CONF_NODE, CONF_NOTE, CONF_OFF_ID,
+    CONF_ON_ID, CONF_POSITION, CONF_SENSOR, CONF_SWITCH, CONF_XPATH,
+    SERVICE_PULSE, SERVICE_SET_RUNTIME_VALUE_BOOL,
+    SERVICE_SET_RUNTIME_VALUE_FLOAT, SERVICE_SET_RUNTIME_VALUE_INT)
+from .util import async_pulse
 
 REQUIREMENTS = ['ihcsdk==2.3.0', 'defusedxml==0.5.0']
 

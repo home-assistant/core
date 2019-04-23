@@ -16,6 +16,9 @@
                 "description": "Por favor ingrese la contrase\u00f1a que estableci\u00f3 en su configuraci\u00f3n para {name} .",
                 "title": "Escriba la contrase\u00f1a"
             },
+            "discovery_confirm": {
+                "title": "Nodo ESPHome descubierto"
+            },
             "user": {
                 "data": {
                     "host": "Host",

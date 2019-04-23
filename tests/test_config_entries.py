@@ -192,7 +192,7 @@ async def test_remove_entry(hass, manager):
         async_remove_entry=mock_remove_entry
     ))
     loader.set_component(
-        hass, 'light.test',
+        hass, 'test.light',
         MockPlatform(async_setup_entry=mock_setup_entry_platform))
 
     MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)

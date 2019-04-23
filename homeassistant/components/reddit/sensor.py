@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
+CONF_SORT_BY = 'sort_by'
 CONF_SUBREDDITS = 'subreddits'
 
 ATTR_ID = 'id'
@@ -29,6 +30,10 @@ ATTR_URL = 'url'
 
 DEFAULT_NAME = 'Reddit'
 
+DOMAIN = 'reddit'
+
+LIST_TYPES = ['top', 'controversial', 'hot', 'new']
+
 SCAN_INTERVAL = timedelta(seconds=300)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -37,6 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_SUBREDDITS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SORT_BY, default='hot'):
+        vol.All(cv.string, vol.In(LIST_TYPES)),
     vol.Optional(CONF_MAXIMUM, default=10): cv.positive_int
 })
 
@@ -48,6 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     subreddits = config[CONF_SUBREDDITS]
     user_agent = '{}_home_assistant_sensor'.format(config[CONF_USERNAME])
     limit = config[CONF_MAXIMUM]
+    sort_by = config[CONF_SORT_BY]
 
     try:
         reddit = praw.Reddit(
@@ -63,18 +71,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Reddit error %s", err)
         return
 
-    sensors = [RedditSensor(reddit, sub, limit) for sub in subreddits]
+    sensors = [RedditSensor(reddit, subreddit, limit, sort_by)
+               for subreddit in subreddits]
     add_entities(sensors, True)
 
 
 class RedditSensor(Entity):
     """Representation of a Reddit sensor."""
 
-    def __init__(self, reddit, subreddit: str, limit: int):
+    def __init__(self, reddit, subreddit: str, limit: int, sort_by: str):
         """Initialize the Reddit sensor."""
         self._reddit = reddit
-        self._limit = limit
         self._subreddit = subreddit
+        self._limit = limit
+        self._sort_by = sort_by
 
         self._subreddit_data = []
 
@@ -93,7 +103,8 @@ class RedditSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_SUBREDDIT: self._subreddit,
-            ATTR_POSTS: self._subreddit_data
+            ATTR_POSTS: self._subreddit_data,
+            CONF_SORT_BY: self._sort_by
         }
 
     @property
@@ -109,17 +120,19 @@ class RedditSensor(Entity):
 
         try:
             subreddit = self._reddit.subreddit(self._subreddit)
+            if hasattr(subreddit, self._sort_by):
+                method_to_call = getattr(subreddit, self._sort_by)
 
-            for submission in subreddit.top(limit=self._limit):
-                self._subreddit_data.append({
-                    ATTR_ID: submission.id,
-                    ATTR_URL: submission.url,
-                    ATTR_TITLE: submission.title,
-                    ATTR_SCORE: submission.score,
-                    ATTR_COMMENTS_NUMBER: submission.num_comments,
-                    ATTR_CREATED: submission.created,
-                    ATTR_BODY: submission.selftext
-                })
+                for submission in method_to_call(limit=self._limit):
+                    self._subreddit_data.append({
+                        ATTR_ID: submission.id,
+                        ATTR_URL: submission.url,
+                        ATTR_TITLE: submission.title,
+                        ATTR_SCORE: submission.score,
+                        ATTR_COMMENTS_NUMBER: submission.num_comments,
+                        ATTR_CREATED: submission.created,
+                        ATTR_BODY: submission.selftext
+                    })
 
         except praw.exceptions.PRAWException as err:
             _LOGGER.error("Reddit error %s", err)

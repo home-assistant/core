@@ -4,12 +4,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_MONITORED_CONDITIONS,
-                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
-import homeassistant.components.aqualogic as aq
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN, UPDATE_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ async def async_setup_platform(
     """Set up the sensor platform."""
     sensors = []
 
-    processor = hass.data[aq.DOMAIN]
+    processor = hass.data[DOMAIN]
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         sensors.append(AquaLogicSensor(processor, sensor_type))
 
@@ -95,7 +96,7 @@ class AquaLogicSensor(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            aq.UPDATE_TOPIC, self.async_update_callback)
+            UPDATE_TOPIC, self.async_update_callback)
 
     @callback
     def async_update_callback(self):

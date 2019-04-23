@@ -1,8 +1,9 @@
 """Support for Android IP Webcam sensors."""
-from homeassistant.components.android_ip_webcam import (
-    KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
-    CONF_NAME, CONF_SENSORS)
 from homeassistant.helpers.icon import icon_for_battery_level
+
+from . import (
+    CONF_HOST, CONF_NAME, CONF_SENSORS, DATA_IP_WEBCAM, ICON_MAP, KEY_MAP,
+    AndroidIPCamEntity)
 
 DEPENDENCIES = ['android_ip_webcam']
 

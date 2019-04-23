@@ -1,23 +1,18 @@
 """Support for Homekit device discovery."""
-import asyncio
-import json
 import logging
-import os
 
 from homeassistant.components.discovery import SERVICE_HOMEKIT
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import call_later
 
+from .config_flow import load_old_pairings
+from .connection import get_accessory_information, HKDevice
 from .const import (
-    CONTROLLER, DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, KNOWN_ACCESSORIES,
-    KNOWN_DEVICES
+    CONTROLLER, KNOWN_DEVICES
 )
-
+from .const import DOMAIN   # noqa: pylint: disable=unused-import
 
 REQUIREMENTS = ['homekit[IP]==0.13.0']
-
-HOMEKIT_DIR = '.homekit'
 
 HOMEKIT_IGNORE = [
     'BSB002',
@@ -27,175 +22,10 @@ HOMEKIT_IGNORE = [
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUEST_TIMEOUT = 5  # seconds
-RETRY_INTERVAL = 60  # seconds
-
-PAIRING_FILE = "pairing.json"
-
-
-def get_serial(accessory):
-    """Obtain the serial number of a HomeKit device."""
-    # pylint: disable=import-error
-    from homekit.model.services import ServicesTypes
-    from homekit.model.characteristics import CharacteristicsTypes
-
-    for service in accessory['services']:
-        if ServicesTypes.get_short(service['type']) != \
-           'accessory-information':
-            continue
-        for characteristic in service['characteristics']:
-            ctype = CharacteristicsTypes.get_short(
-                characteristic['type'])
-            if ctype != 'serial-number':
-                continue
-            return characteristic['value']
-    return None
-
 
 def escape_characteristic_name(char_name):
     """Escape any dash or dots in a characteristics name."""
     return char_name.replace('-', '_').replace('.', '_')
-
-
-class HKDevice():
-    """HomeKit device."""
-
-    def __init__(self, hass, host, port, model, hkid, config_num, config):
-        """Initialise a generic HomeKit device."""
-        _LOGGER.info("Setting up Homekit device %s", model)
-        self.hass = hass
-        self.controller = hass.data[CONTROLLER]
-
-        self.host = host
-        self.port = port
-        self.model = model
-        self.hkid = hkid
-        self.config_num = config_num
-        self.config = config
-        self.configurator = hass.components.configurator
-        self._connection_warning_logged = False
-
-        self.pairing_lock = asyncio.Lock(loop=hass.loop)
-
-        self.pairing = self.controller.pairings.get(hkid)
-
-        if self.pairing is not None:
-            self.accessory_setup()
-        else:
-            self.configure()
-
-    def accessory_setup(self):
-        """Handle setup of a HomeKit accessory."""
-        # pylint: disable=import-error
-        from homekit.model.services import ServicesTypes
-        from homekit.exceptions import AccessoryDisconnectedError
-
-        self.pairing.pairing_data['AccessoryIP'] = self.host
-        self.pairing.pairing_data['AccessoryPort'] = self.port
-
-        try:
-            data = self.pairing.list_accessories_and_characteristics()
-        except AccessoryDisconnectedError:
-            call_later(
-                self.hass, RETRY_INTERVAL, lambda _: self.accessory_setup())
-            return
-        for accessory in data:
-            serial = get_serial(accessory)
-            if serial in self.hass.data[KNOWN_ACCESSORIES]:
-                continue
-            self.hass.data[KNOWN_ACCESSORIES][serial] = self
-            aid = accessory['aid']
-            for service in accessory['services']:
-                devtype = ServicesTypes.get_short(service['type'])
-                _LOGGER.debug("Found %s", devtype)
-                service_info = {'serial': serial,
-                                'aid': aid,
-                                'iid': service['iid'],
-                                'model': self.model,
-                                'device-type': devtype}
-                component = HOMEKIT_ACCESSORY_DISPATCH.get(devtype, None)
-                if component is not None:
-                    discovery.load_platform(self.hass, component, DOMAIN,
-                                            service_info, self.config)
-
-    def device_config_callback(self, callback_data):
-        """Handle initial pairing."""
-        import homekit  # pylint: disable=import-error
-        code = callback_data.get('code').strip()
-        try:
-            self.controller.perform_pairing(self.hkid, self.hkid, code)
-        except homekit.UnavailableError:
-            error_msg = "This accessory is already paired to another device. \
-                         Please reset the accessory and try again."
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.notify_errors(_configurator, error_msg)
-            return
-        except homekit.AuthenticationError:
-            error_msg = "Incorrect HomeKit code for {}. Please check it and \
-                         try again.".format(self.model)
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.notify_errors(_configurator, error_msg)
-            return
-        except homekit.UnknownError:
-            error_msg = "Received an unknown error. Please file a bug."
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.notify_errors(_configurator, error_msg)
-            raise
-
-        self.pairing = self.controller.pairings.get(self.hkid)
-        if self.pairing is not None:
-            pairing_file = os.path.join(
-                self.hass.config.path(),
-                HOMEKIT_DIR,
-                PAIRING_FILE,
-            )
-            self.controller.save_data(pairing_file)
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.request_done(_configurator)
-            self.accessory_setup()
-        else:
-            error_msg = "Unable to pair, please try again"
-            _configurator = self.hass.data[DOMAIN+self.hkid]
-            self.configurator.notify_errors(_configurator, error_msg)
-
-    def configure(self):
-        """Obtain the pairing code for a HomeKit device."""
-        description = "Please enter the HomeKit code for your {}".format(
-            self.model)
-        self.hass.data[DOMAIN+self.hkid] = \
-            self.configurator.request_config(self.model,
-                                             self.device_config_callback,
-                                             description=description,
-                                             submit_caption="submit",
-                                             fields=[{'id': 'code',
-                                                      'name': 'HomeKit code',
-                                                      'type': 'string'}])
-
-    async def get_characteristics(self, *args, **kwargs):
-        """Read latest state from homekit accessory."""
-        async with self.pairing_lock:
-            chars = await self.hass.async_add_executor_job(
-                self.pairing.get_characteristics,
-                *args,
-                **kwargs,
-            )
-        return chars
-
-    async def put_characteristics(self, characteristics):
-        """Control a HomeKit device state from Home Assistant."""
-        chars = []
-        for row in characteristics:
-            chars.append((
-                row['aid'],
-                row['iid'],
-                row['value'],
-            ))
-
-        async with self.pairing_lock:
-            await self.hass.async_add_executor_job(
-                self.pairing.put_characteristics,
-                chars
-            )
 
 
 class HomeKitEntity(Entity):
@@ -204,11 +34,9 @@ class HomeKitEntity(Entity):
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
         self._available = True
-        self._name = accessory.model
         self._accessory = accessory
         self._aid = devinfo['aid']
         self._iid = devinfo['iid']
-        self._address = "homekit-{}-{}".format(devinfo['serial'], self._iid)
         self._features = 0
         self._chars = {}
         self.setup()
@@ -232,6 +60,7 @@ class HomeKitEntity(Entity):
         for accessory in pairing_data.get('accessories', []):
             if accessory['aid'] != self._aid:
                 continue
+            self._accessory_info = get_accessory_information(accessory)
             for service in accessory['services']:
                 if service['iid'] != self._iid:
                     continue
@@ -304,12 +133,13 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self):
         """Return the ID of this device."""
-        return self._address
+        serial = self._accessory_info['serial-number']
+        return "homekit-{}-{}".format(serial, self._iid)
 
     @property
     def name(self):
         """Return the name of the device if any."""
-        return self._name
+        return self._accessory_info.get('name')
 
     @property
     def available(self) -> bool:
@@ -329,25 +159,8 @@ def setup(hass, config):
 
     hass.data[CONTROLLER] = controller = homekit.Controller()
 
-    data_dir = os.path.join(hass.config.path(), HOMEKIT_DIR)
-    if not os.path.isdir(data_dir):
-        os.mkdir(data_dir)
-
-    pairing_file = os.path.join(data_dir, PAIRING_FILE)
-    if os.path.exists(pairing_file):
-        controller.load_data(pairing_file)
-
-    # Migrate any existing pairings to the new internal homekit_python format
-    for device in os.listdir(data_dir):
-        if not device.startswith('hk-'):
-            continue
-        alias = device[3:]
-        if alias in controller.pairings:
-            continue
-        with open(os.path.join(data_dir, device)) as pairing_data_fp:
-            pairing_data = json.load(pairing_data_fp)
-        controller.pairings[alias] = IpPairing(pairing_data)
-        controller.save_data(pairing_file)
+    for hkid, pairing_data in load_old_pairings(hass).items():
+        controller.pairings[hkid] = IpPairing(pairing_data)
 
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for Homekit discovery events."""
@@ -378,10 +191,8 @@ def setup(hass, config):
             return
 
         _LOGGER.debug('Discovered unique device %s', hkid)
-        device = HKDevice(hass, host, port, model, hkid, config_num, config)
-        hass.data[KNOWN_DEVICES][hkid] = device
+        HKDevice(hass, host, port, model, hkid, config_num, config)
 
-    hass.data[KNOWN_ACCESSORIES] = {}
     hass.data[KNOWN_DEVICES] = {}
     discovery.listen(hass, SERVICE_HOMEKIT, discovery_dispatch)
     return True

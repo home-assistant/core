@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL)
 
 
-REQUIREMENTS = ['ciscomobilityexpress==0.1.2']
+REQUIREMENTS = ['ciscomobilityexpress==0.1.5']
 
 
 _LOGGER = logging.getLogger(__name__)

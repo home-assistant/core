@@ -2,8 +2,9 @@
 from homeassistant.components.cover import (
     ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
     SUPPORT_STOP, CoverDevice)
-from homeassistant.components.velux import DATA_VELUX
 from homeassistant.core import callback
+
+from . import DATA_VELUX
 
 DEPENDENCIES = ['velux']
 

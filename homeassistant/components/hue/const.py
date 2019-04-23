@@ -1,6 +1,6 @@
 """Constants for the Hue component."""
 import logging
 
-LOGGER = logging.getLogger('homeassistant.components.hue')
+LOGGER = logging.getLogger('.')
 DOMAIN = "hue"
 API_NUPNP = 'https://www.meethue.com/api/nupnp'

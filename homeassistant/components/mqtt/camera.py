@@ -12,16 +12,16 @@ import voluptuous as vol
 
 from homeassistant.components import camera, mqtt
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.components.mqtt import (
-    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttDiscoveryUpdate,
-    subscription)
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW, clear_discovery_hash)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import (
+    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_UNIQUE_ID, MqttDiscoveryUpdate,
+    subscription)
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 

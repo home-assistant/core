@@ -1,8 +1,9 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
 import logging
 
-from homeassistant.components.insteon import InsteonEntity
 from homeassistant.components.switch import SwitchDevice
+
+from . import InsteonEntity
 
 DEPENDENCIES = ['insteon']
 

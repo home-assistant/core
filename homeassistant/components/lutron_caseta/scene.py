@@ -1,8 +1,9 @@
 """Support for Lutron Caseta scenes."""
 import logging
 
-from homeassistant.components.lutron_caseta import LUTRON_CASETA_SMARTBRIDGE
 from homeassistant.components.scene import Scene
+
+from . import LUTRON_CASETA_SMARTBRIDGE
 
 _LOGGER = logging.getLogger(__name__)
 

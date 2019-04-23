@@ -1,17 +1,17 @@
 """Support for ESPHome lights."""
 import logging
-from typing import Optional, List, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from homeassistant.components.esphome import EsphomeEntity, \
-    platform_async_setup_entry
-from homeassistant.components.light import Light, SUPPORT_FLASH, \
-    SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR, \
-    SUPPORT_WHITE_VALUE, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, ATTR_HS_COLOR, \
-    ATTR_FLASH, ATTR_TRANSITION, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
-    ATTR_EFFECT, ATTR_WHITE_VALUE, FLASH_SHORT, FLASH_LONG
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
+    ATTR_TRANSITION, ATTR_WHITE_VALUE, FLASH_LONG, FLASH_SHORT,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
+    SUPPORT_FLASH, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, Light)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
+
+from . import EsphomeEntity, platform_async_setup_entry
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import

@@ -4,8 +4,9 @@ import logging
 from homeassistant.components import light, tellduslive
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.tellduslive.entry import TelldusLiveEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .entry import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 

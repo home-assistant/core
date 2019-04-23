@@ -10,9 +10,10 @@ from typing import Any, Callable, Dict, Optional
 import attr
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import DEFAULT_QOS, MessageCallbackType
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
+
+from . import DEFAULT_QOS, MessageCallbackType
 
 _LOGGER = logging.getLogger(__name__)
 

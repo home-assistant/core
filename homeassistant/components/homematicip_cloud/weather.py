@@ -2,9 +2,9 @@
 """Support for HomematicIP Cloud weather devices."""
 import logging
 
-from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice)
 from homeassistant.components.weather import WeatherEntity
+
+from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 
 DEPENDENCIES = ['homematicip_cloud']
 

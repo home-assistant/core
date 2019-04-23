@@ -7,6 +7,9 @@ from homeassistant.components.cloud.const import DISPATCHER_REMOTE_UPDATE
 
 async def test_remote_connection_sensor(hass):
     """Test the remote connection sensor."""
+    from homeassistant.components.cloud import binary_sensor as bin_sensor
+    bin_sensor.WAIT_UNTIL_CHANGE = 0
+
     assert await async_setup_component(hass, 'cloud', {'cloud': {}})
     cloud = hass.data['cloud'] = Mock()
     cloud.remote.certificate = None

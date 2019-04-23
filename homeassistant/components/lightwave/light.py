@@ -1,8 +1,9 @@
 """Support for LightwaveRF lights."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.lightwave import LIGHTWAVE_LINK
 from homeassistant.const import CONF_NAME
+
+from . import LIGHTWAVE_LINK
 
 DEPENDENCIES = ['lightwave']
 

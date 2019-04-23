@@ -1,9 +1,10 @@
 """Support for Homematic locks."""
 import logging
 
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
 from homeassistant.const import STATE_UNKNOWN
+
+from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -6,10 +6,10 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
-from homeassistant.components.modbus import (
-    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, CONF_SLAVE
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

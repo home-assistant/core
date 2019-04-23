@@ -1,13 +1,11 @@
 """Light/LED support for the Skybell HD Doorbell."""
 import logging
 
-
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
-from homeassistant.components.skybell import (
-    DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 import homeassistant.util.color as color_util
+
+from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 DEPENDENCIES = ['skybell']
 

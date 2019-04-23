@@ -2,9 +2,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.egardia import (
-    ATTR_DISCOVER_DEVICES, EGARDIA_DEVICE)
 from homeassistant.const import STATE_OFF, STATE_ON
+
+from . import ATTR_DISCOVER_DEVICES, EGARDIA_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 

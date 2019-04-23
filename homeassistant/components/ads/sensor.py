@@ -4,12 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import ads
-from homeassistant.components.ads import (
-    CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from . import CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR
 
 _LOGGER = logging.getLogger(__name__)
 
