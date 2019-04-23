@@ -296,7 +296,7 @@ class HomematicipTodayRainSensor(HomematicipGenericDevice):
         return 'mm'
 
 
-def _get_wind_direction(wind_direction_degree):
+def _get_wind_direction(wind_direction_degree) -> str:
     """Convert wind direction degree to named direction."""
     if 11.25 <= wind_direction_degree < 33.75:
         return 'NNE'

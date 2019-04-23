@@ -196,7 +196,7 @@ class HomematicipHAP:
                 self.config_entry, component)
         return True
 
-    async def get_hap(self, hass, hapid, authtoken, name):
+    async def get_hap(self, hass, hapid, authtoken, name) -> AsyncHome:
         """Create a HomematicIP access point object."""
         home = AsyncHome(hass.loop, async_get_clientsession(hass))
 

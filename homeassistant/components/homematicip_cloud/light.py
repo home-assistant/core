@@ -214,7 +214,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
             simple_rgb_color, 0.0)
 
 
-def _convert_color(color):
+def _convert_color(color) -> RGBColorState:
     """
     Convert the given color to the reduced RGBColorState color.
 
