@@ -288,7 +288,7 @@ class PS4Device(MediaPlayerDevice):
     async def async_will_remove_from_hass(self):
         """Remove Entity from Hass."""
         # Close TCP Socket
-        if self._ps4.connected is True:
+        if self._ps4.connected:
             await self.hass.async_add_executor_job(self._ps4.close)
         self.hass.data[PS4_DATA].devices.remove(self)
 
