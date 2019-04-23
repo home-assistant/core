@@ -60,7 +60,8 @@ async def test_full_flow_implementation(hass):
     result = await flow.async_step_user()
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'auth'
-    assert result['description_placeholders']['cb_url'] == 'https://hass.com/api/ambiclimate'
+    assert result['description_placeholders']['cb_url']\
+        == 'https://hass.com/api/ambiclimate'
 
     url = result['description_placeholders']['authorization_url']
     assert 'https://api.ambiclimate.com/oauth2/authorize' in url
