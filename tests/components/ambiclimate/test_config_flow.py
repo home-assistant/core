@@ -3,6 +3,8 @@ from unittest.mock import Mock, patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.ambiclimate import config_flow
+from homeassistant.setup import async_setup_component
+from homeassistant.util import aiohttp
 from tests.common import mock_coro
 
 
@@ -86,3 +88,50 @@ async def test_abort_no_code(hass):
     result = await flow.async_step_code('invalid')
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'access_token'
+
+
+async def test_cb_url(hass):
+    hass.config.api = Mock(base_url='http://example.com')
+    flow = config_flow.AmbiclimateFlowHandler()
+    flow.hass = hass
+    assert flow._cb_url() == 'http://example.com/api/ambiclimate'
+
+
+async def test_get_authorize_url(hass):
+    hass.config.api = Mock(base_url='http://example.com')
+
+    hass.data[config_flow.DATA_AMBICLIMATE_IMPL] = {config_flow.CONF_CLIENT_ID: 'client_id',
+                                                    config_flow.CONF_CLIENT_SECRET: 'client_secret',
+                                                    }
+    flow = config_flow.AmbiclimateFlowHandler()
+    flow.hass = hass
+    url = await flow._get_authorize_url()  # pylint: disable=W0212
+    assert url == 'https://api.ambiclimate.com/oauth2/authorize?client_id=client_id&response_type=code&redirect_uri=' \
+                  'http%3A%2F%2Fexample.com%2Fapi%2Fambiclimate'
+
+
+async def test_generate_view(hass):
+    await async_setup_component(hass, 'http', {
+        'http': {
+            'base_url': 'example.com'
+        }
+    })
+
+    flow = config_flow.AmbiclimateFlowHandler()
+    flow.hass = hass
+    await flow._generate_view()  # pylint: disable=W0212
+    assert flow._registered_view  # pylint: disable=W0212
+
+
+async def test_view(hass):
+    hass.config_entries.flow.async_init = Mock()
+
+    request = aiohttp.MockRequest(b'', query_string='code=test_code')
+    request.app = {'hass': hass}
+    view = config_flow.AmbiclimateAuthCallbackView()
+    assert await view.get(request) == 'OK!'
+
+    request = aiohttp.MockRequest(b'', query_string='')
+    request.app = {'hass': hass}
+    view = config_flow.AmbiclimateAuthCallbackView()
+    assert await view.get(request) == 'No code'

@@ -89,7 +89,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)
         if device:
-            await device.set_comfort_feedback(service.data.get(ATTR_VALUE))
+            await device.set_comfort_feedback(service.data[ATTR_VALUE])
 
     hass.services.async_register(DOMAIN,
                                  SERVICE_COMFORT_FEEDBACK,
