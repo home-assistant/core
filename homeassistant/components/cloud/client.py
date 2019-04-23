@@ -106,6 +106,10 @@ class CloudClient(Interface):
                 entity_config=google_conf.get(CONF_ENTITY_CONFIG),
             )
 
+        # Set it to the latest.
+        self._google_config.secure_devices_pin = \
+            self._prefs.google_secure_devices_pin
+
         return self._google_config
 
     @property
