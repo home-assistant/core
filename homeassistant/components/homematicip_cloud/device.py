@@ -1,6 +1,8 @@
 """Generic device for the HomematicIP Cloud component."""
 import logging
 
+from homematicip.aio.device import AsyncDevice
+
 from homeassistant.components import homematicip_cloud
 from homeassistant.helpers.entity import Entity
 
@@ -29,7 +31,6 @@ class HomematicipGenericDevice(Entity):
     @property
     def device_info(self):
         """Return device specific attributes."""
-        from homematicip.aio.device import AsyncDevice
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
             return {

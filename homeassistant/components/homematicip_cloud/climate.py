@@ -1,6 +1,8 @@
 """Support for HomematicIP Cloud climate devices."""
 import logging
 
+from homematicip.group import HeatingGroup
+
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_MANUAL, SUPPORT_TARGET_TEMPERATURE)
@@ -26,8 +28,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP climate from a config entry."""
-    from homematicip.group import HeatingGroup
-
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.groups:
