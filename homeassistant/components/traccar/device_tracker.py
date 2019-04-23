@@ -114,14 +114,15 @@ class TraccarScanner:
 
     async def async_init(self):
         """Further initialize connection to Traccar."""
-        await self._async_update()
-        async_track_time_interval(self._hass,
-                                  self._async_update,
-                                  self._scan_interval)
+        await self._api.test_connection()
         if self._api.connected and not self._api.authenticated:
             _LOGGER.error("Authentication for Traccar failed")
             return False
         else:
+            await self._async_update()
+            async_track_time_interval(self._hass,
+                                    self._async_update,
+                                    self._scan_interval)
             return True
 
     async def _async_update(self, now=None):
