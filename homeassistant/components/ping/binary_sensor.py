@@ -1,9 +1,4 @@
-"""
-Tracks the latency of a host by sending ICMP echo requests (ping).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.ping/
-"""
+"""Tracks the latency of a host by sending ICMP echo requests (ping)."""
 import logging
 import subprocess
 import re

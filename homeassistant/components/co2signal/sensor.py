@@ -1,8 +1,4 @@
-"""
-Support for the CO2signal platform.
-
-For more details about this platform, please refer to the documentation
-"""
+"""Support for the CO2signal platform."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +10,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
 CONF_COUNTRY_CODE = "country_code"
-
-REQUIREMENTS = ['co2signal==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 

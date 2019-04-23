@@ -1,9 +1,4 @@
-"""
-Support for Template lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.template/
-"""
+"""Support for Template lights."""
 import logging
 
 import voluptuous as vol

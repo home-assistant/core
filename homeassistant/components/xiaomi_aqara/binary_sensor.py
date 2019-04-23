@@ -476,18 +476,24 @@ class XiaomiCube(XiaomiBinarySensor):
             self._last_action = data[self._data_key]
 
         if 'rotate' in data:
+            action_value = float(data['rotate']
+                                 if isinstance(data['rotate'], int)
+                                 else data['rotate'].replace(",", "."))
             self._hass.bus.fire('xiaomi_aqara.cube_action', {
                 'entity_id': self.entity_id,
                 'action_type': 'rotate',
-                'action_value': float(data['rotate'].replace(",", "."))
+                'action_value': action_value
             })
             self._last_action = 'rotate'
 
         if 'rotate_degree' in data:
+            action_value = float(data['rotate_degree']
+                                 if isinstance(data['rotate_degree'], int)
+                                 else data['rotate_degree'].replace(",", "."))
             self._hass.bus.fire('xiaomi_aqara.cube_action', {
                 'entity_id': self.entity_id,
                 'action_type': 'rotate',
-                'action_value': float(data['rotate_degree'].replace(",", "."))
+                'action_value': action_value
             })
             self._last_action = 'rotate'
 

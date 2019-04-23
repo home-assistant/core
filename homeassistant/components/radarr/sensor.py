@@ -1,9 +1,4 @@
-"""
-Support for Radarr.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.radarr/
-"""
+"""Support for Radarr."""
 import logging
 import time
 from datetime import datetime, timedelta

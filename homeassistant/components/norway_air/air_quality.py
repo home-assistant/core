@@ -1,9 +1,4 @@
-"""
-Sensor for checking the air quality forecast around Norway.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/air_quality.norway_air/
-"""
+"""Sensor for checking the air quality forecast around Norway."""
 import logging
 
 from datetime import timedelta
@@ -16,8 +11,6 @@ from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE,
                                  CONF_NAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-
-REQUIREMENTS = ['pyMetno==0.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 

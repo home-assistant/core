@@ -1,9 +1,4 @@
-"""
-Support for exposing NX584 elements as sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.nx584/
-"""
+"""Support for exposing NX584 elements as sensors."""
 import logging
 import threading
 import time
@@ -15,8 +10,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES, BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pynx584==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

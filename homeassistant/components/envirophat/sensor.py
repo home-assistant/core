@@ -1,9 +1,4 @@
-"""
-Support for Enviro pHAT sensors.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.envirophat
-"""
+"""Support for Enviro pHAT sensors."""
 import importlib
 import logging
 from datetime import timedelta
@@ -15,9 +10,6 @@ from homeassistant.const import (TEMP_CELSIUS, CONF_DISPLAY_OPTIONS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['envirophat==0.0.6',
-                'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 

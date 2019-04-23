@@ -1,9 +1,4 @@
-"""
-Support for Samsung Printers with SyncThru web interface.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.syncthru/
-"""
+"""Support for Samsung Printers with SyncThru web interface."""
 
 import logging
 import voluptuous as vol
@@ -13,8 +8,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-
-REQUIREMENTS = ['pysyncthru==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 

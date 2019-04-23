@@ -1,0 +1,8 @@
+{
+  "domain": "mpchc",
+  "name": "Mpchc",
+  "documentation": "https://www.home-assistant.io/components/mpchc",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

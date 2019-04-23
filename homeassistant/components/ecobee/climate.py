@@ -27,8 +27,6 @@ TEMPERATURE_HOLD = 'temp'
 VACATION_HOLD = 'vacation'
 AWAY_MODE = 'awayMode'
 
-DEPENDENCIES = ['ecobee']
-
 SERVICE_SET_FAN_MIN_ON_TIME = 'ecobee_set_fan_min_on_time'
 SERVICE_RESUME_PROGRAM = 'ecobee_resume_program'
 
@@ -279,6 +277,7 @@ class Thermostat(ClimateDevice):
             "fan": self.fan,
             "climate_mode": self.mode,
             "operation": operation,
+            "equipment_running": status,
             "climate_list": self.climate_list,
             "fan_min_on_time": self.fan_min_on_time
         }

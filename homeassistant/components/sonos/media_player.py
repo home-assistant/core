@@ -454,18 +454,7 @@ class SonosEntity(MediaPlayerDevice):
 
     def _set_favorites(self):
         """Set available favorites."""
-        # SoCo 0.16 raises a generic Exception on invalid xml in favorites.
-        # Filter those out now so our list is safe to use.
-        try:
-            self._favorites = []
-            for fav in self.soco.music_library.get_sonos_favorites():
-                try:
-                    if fav.reference.get_uri():
-                        self._favorites.append(fav)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.debug("Ignoring invalid favorite '%s'", fav.title)
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.debug("Ignoring invalid favorite list")
+        self._favorites = self.soco.music_library.get_sonos_favorites()
 
     def _radio_artwork(self, url):
         """Return the private URL with artwork for a radio stream."""

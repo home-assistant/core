@@ -65,6 +65,12 @@ API_THERMOSTAT_MODES = OrderedDict([
     (climate.STATE_DRY, 'OFF'),
 ])
 
+PERCENTAGE_FAN_MAP = {
+    fan.SPEED_LOW: 33,
+    fan.SPEED_MEDIUM: 66,
+    fan.SPEED_HIGH: 100,
+}
+
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
 
 CONF_DESCRIPTION = 'description'
@@ -579,6 +585,26 @@ class _AlexaPercentageController(_AlexaInterface):
 
     def name(self):
         return 'Alexa.PercentageController'
+
+    def properties_supported(self):
+        return [{'name': 'percentage'}]
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name != 'percentage':
+            raise _UnsupportedProperty(name)
+
+        if self.entity.domain == fan.DOMAIN:
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+
+            return PERCENTAGE_FAN_MAP.get(speed, 0)
+
+        if self.entity.domain == cover.DOMAIN:
+            return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION, 0)
+
+        return 0
 
 
 class _AlexaSpeaker(_AlexaInterface):

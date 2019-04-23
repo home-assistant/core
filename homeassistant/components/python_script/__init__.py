@@ -1,9 +1,4 @@
-"""
-Component to allow running Python scripts.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/python_script/
-"""
+"""Component to allow running Python scripts."""
 import datetime
 import glob
 import logging
@@ -17,8 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['restrictedpython==4.0b8']
 
 _LOGGER = logging.getLogger(__name__)
 

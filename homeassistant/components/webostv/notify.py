@@ -8,8 +8,6 @@ from homeassistant.components.notify import (
     ATTR_DATA, BaseNotificationService, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_FILENAME, CONF_HOST, CONF_ICON)
 
-REQUIREMENTS = ['pylgtv==0.1.9']
-
 _LOGGER = logging.getLogger(__name__)
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'

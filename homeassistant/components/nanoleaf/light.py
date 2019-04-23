@@ -1,25 +1,19 @@
-"""
-Support for Nanoleaf Lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.nanoleaf/
-"""
+"""Support for Nanoleaf Lights."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
-    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT, Light)
+    ATTR_TRANSITION, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
+    SUPPORT_TRANSITION, Light)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color as color_util
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.json import load_json, save_json
-
-REQUIREMENTS = ['pynanoleaf==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +26,7 @@ CONFIG_FILE = '.nanoleaf.conf'
 ICON = 'mdi:triangle-outline'
 
 SUPPORT_NANOLEAF = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
-                    SUPPORT_COLOR)
+                    SUPPORT_COLOR | SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -171,27 +165,40 @@ class NanoleafLight(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        self._light.on = True
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         hs_color = kwargs.get(ATTR_HS_COLOR)
         color_temp_mired = kwargs.get(ATTR_COLOR_TEMP)
         effect = kwargs.get(ATTR_EFFECT)
+        transition = kwargs.get(ATTR_TRANSITION)
 
         if hs_color:
             hue, saturation = hs_color
             self._light.hue = int(hue)
             self._light.saturation = int(saturation)
-
         if color_temp_mired:
             self._light.color_temperature = mired_to_kelvin(color_temp_mired)
-        if brightness:
-            self._light.brightness = int(brightness / 2.55)
+
+        if transition:
+            if brightness:  # tune to the required brightness in n seconds
+                self._light.brightness_transition(
+                    int(brightness / 2.55), int(transition))
+            else:  # If brightness is not specified, assume full brightness
+                self._light.brightness_transition(100, int(transition))
+        else:  # If no transition is occurring, turn on the light
+            self._light.on = True
+            if brightness:
+                self._light.brightness = int(brightness / 2.55)
+
         if effect:
             self._light.effect = effect
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._light.on = False
+        transition = kwargs.get(ATTR_TRANSITION)
+        if transition:
+            self._light.brightness_transition(0, int(transition))
+        else:
+            self._light.on = False
 
     def update(self):
         """Fetch new state data for this light."""

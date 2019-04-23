@@ -8,7 +8,6 @@ from homeassistant import util
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv

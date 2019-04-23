@@ -17,8 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_FLASH_BRIEFINGS = 'flash_briefings'
 CONF_SMART_HOME = 'smart_home'
 
-DEPENDENCIES = ['http']
-
 ALEXA_ENTITY_SCHEMA = vol.Schema({
     vol.Optional(smart_home.CONF_DESCRIPTION): cv.string,
     vol.Optional(smart_home.CONF_DISPLAY_CATEGORIES): cv.string,

@@ -5,7 +5,6 @@ from asynctest import patch
 import pytest
 
 from homeassistant.setup import async_setup_component
-import homeassistant.loader as loader
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.components import (
     device_tracker, light, device_sun_light_trigger)
@@ -18,13 +17,13 @@ from tests.components.light import common as common_light
 @pytest.fixture
 def scanner(hass):
     """Initialize components."""
-    scanner = loader.get_component(
-        hass, 'device_tracker.test').get_scanner(None, None)
+    scanner = getattr(
+        hass.components, 'test.device_tracker').get_scanner(None, None)
 
     scanner.reset()
     scanner.come_home('DEV1')
 
-    loader.get_component(hass, 'light.test').init()
+    getattr(hass.components, 'test.light').init()
 
     with patch(
         'homeassistant.components.device_tracker.load_yaml_config_file',

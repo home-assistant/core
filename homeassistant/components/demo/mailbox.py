@@ -63,7 +63,7 @@ class DemoMailbox(Mailbox):
             raise StreamError("Message not found")
 
         audio_path = os.path.join(
-            os.path.dirname(__file__), '..', 'tts', 'demo.mp3')
+            os.path.dirname(__file__), 'tts.mp3')
         with open(audio_path, 'rb') as file:
             return file.read()
 

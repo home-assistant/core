@@ -20,8 +20,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyfido==2.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 KILOBITS = 'Kb'  # type: str

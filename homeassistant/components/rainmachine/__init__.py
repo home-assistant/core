@@ -1,4 +1,5 @@
 """Support for RainMachine devices."""
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -14,12 +15,12 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import verify_domain_control
 
 from .config_flow import configured_instances
 from .const import (
-    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN)
-
-REQUIREMENTS = ['regenmaschine==1.4.0']
+    DATA_CLIENT, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN,
+    OPERATION_RESTRICTIONS_CURRENT, OPERATION_RESTRICTIONS_UNIVERSAL)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,6 +158,8 @@ async def async_setup_entry(hass, config_entry):
     from regenmaschine import login
     from regenmaschine.errors import RainMachineError
 
+    _verify_domain_control = verify_domain_control(hass, DOMAIN)
+
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -197,59 +200,70 @@ async def async_setup_entry(hass, config_entry):
             refresh,
             timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL]))
 
-    async def disable_program(service):
+    @_verify_domain_control
+    async def disable_program(call):
         """Disable a program."""
         await rainmachine.client.programs.disable(
-            service.data[CONF_PROGRAM_ID])
+            call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def disable_zone(service):
+    @_verify_domain_control
+    async def disable_zone(call):
         """Disable a zone."""
-        await rainmachine.client.zones.disable(service.data[CONF_ZONE_ID])
+        await rainmachine.client.zones.disable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    async def enable_program(service):
+    @_verify_domain_control
+    async def enable_program(call):
         """Enable a program."""
-        await rainmachine.client.programs.enable(service.data[CONF_PROGRAM_ID])
+        await rainmachine.client.programs.enable(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def enable_zone(service):
+    @_verify_domain_control
+    async def enable_zone(call):
         """Enable a zone."""
-        await rainmachine.client.zones.enable(service.data[CONF_ZONE_ID])
+        await rainmachine.client.zones.enable(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    async def pause_watering(service):
+    @_verify_domain_control
+    async def pause_watering(call):
         """Pause watering for a set number of seconds."""
-        await rainmachine.client.watering.pause_all(service.data[CONF_SECONDS])
+        await rainmachine.client.watering.pause_all(call.data[CONF_SECONDS])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def start_program(service):
+    @_verify_domain_control
+    async def start_program(call):
         """Start a particular program."""
-        await rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
+        await rainmachine.client.programs.start(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def start_zone(service):
+    @_verify_domain_control
+    async def start_zone(call):
         """Start a particular zone for a certain amount of time."""
         await rainmachine.client.zones.start(
-            service.data[CONF_ZONE_ID], service.data[CONF_ZONE_RUN_TIME])
+            call.data[CONF_ZONE_ID], call.data[CONF_ZONE_RUN_TIME])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    async def stop_all(service):
+    @_verify_domain_control
+    async def stop_all(call):
         """Stop all watering."""
         await rainmachine.client.watering.stop_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def stop_program(service):
+    @_verify_domain_control
+    async def stop_program(call):
         """Stop a program."""
-        await rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
+        await rainmachine.client.programs.stop(call.data[CONF_PROGRAM_ID])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    async def stop_zone(service):
+    @_verify_domain_control
+    async def stop_zone(call):
         """Stop a zone."""
-        await rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
+        await rainmachine.client.zones.stop(call.data[CONF_ZONE_ID])
         async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    async def unpause_watering(service):
+    @_verify_domain_control
+    async def unpause_watering(call):
         """Unpause watering."""
         await rainmachine.client.watering.unpause_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
@@ -296,17 +310,30 @@ class RainMachine:
         """Initialize."""
         self.binary_sensor_conditions = binary_sensor_conditions
         self.client = client
+        self.data = {}
         self.default_zone_runtime = default_zone_runtime
         self.device_mac = self.client.mac
-        self.restrictions = {}
         self.sensor_conditions = sensor_conditions
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        self.restrictions.update({
-            'current': await self.client.restrictions.current(),
-            'global': await self.client.restrictions.universal()
-        })
+        from regenmaschine.errors import RainMachineError
+
+        tasks = {
+            OPERATION_RESTRICTIONS_CURRENT: self.client.restrictions.current(),
+            OPERATION_RESTRICTIONS_UNIVERSAL:
+                self.client.restrictions.universal(),
+        }
+
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+        for operation, result in zip(tasks, results):
+            if isinstance(result, RainMachineError):
+                _LOGGER.error(
+                    'There was an error while updating %s: %s', operation,
+                    result)
+                continue
+
+            self.data[operation] = result
 
 
 class RainMachineEntity(Entity):

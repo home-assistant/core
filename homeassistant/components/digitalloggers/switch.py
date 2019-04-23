@@ -1,9 +1,4 @@
-"""
-Support for Digital Loggers DIN III Relays.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.digitalloggers/
-"""
+"""Support for Digital Loggers DIN III Relays."""
 import logging
 from datetime import timedelta
 
@@ -14,8 +9,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['dlipower==0.7.165']
 
 _LOGGER = logging.getLogger(__name__)
 

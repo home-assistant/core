@@ -1,9 +1,4 @@
-"""
-Support for Songpal-enabled (Sony) media devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.songpal/
-"""
+"""Support for Songpal-enabled (Sony) media devices."""
 import asyncio
 import logging
 from collections import OrderedDict
@@ -20,8 +15,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['python-songpal==0.0.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 

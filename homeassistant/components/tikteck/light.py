@@ -1,9 +1,4 @@
-"""
-Support for Tikteck lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.tikteck/
-"""
+"""Support for Tikteck lights."""
 import logging
 
 import voluptuous as vol
@@ -14,8 +9,6 @@ from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-REQUIREMENTS = ['tikteck==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

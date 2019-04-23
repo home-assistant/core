@@ -7,7 +7,8 @@ https://home-assistant.io/components/zha/
 import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from . import ZigbeeChannel, parse_and_log_command
+from homeassistant.helpers.event import async_call_later
+from . import ZigbeeChannel, parse_and_log_command, MAINS_POWERED
 from ..helpers import get_attr_id_by_name
 from ..const import (
     SIGNAL_ATTR_UPDATED, SIGNAL_MOVE_LEVEL, SIGNAL_SET_LEVEL,
@@ -40,10 +41,27 @@ class OnOffChannel(ZigbeeChannel):
 
         if cmd in ('off', 'off_with_effect'):
             self.attribute_updated(self.ON_OFF, False)
-        elif cmd in ('on', 'on_with_recall_global_scene', 'on_with_timed_off'):
+        elif cmd in ('on', 'on_with_recall_global_scene'):
             self.attribute_updated(self.ON_OFF, True)
+        elif cmd == 'on_with_timed_off':
+            should_accept = args[0]
+            on_time = args[1]
+            # 0 is always accept 1 is only accept when already on
+            if should_accept == 0 or (should_accept == 1 and self._state):
+                self.attribute_updated(self.ON_OFF, True)
+                if on_time > 0:
+                    async_call_later(
+                        self.device.hass,
+                        (on_time / 10),  # value is in 10ths of a second
+                        self.set_to_off
+                    )
         elif cmd == 'toggle':
             self.attribute_updated(self.ON_OFF, not bool(self._state))
+
+    @callback
+    def set_to_off(self, *_):
+        """Set the state to off."""
+        self.attribute_updated(self.ON_OFF, False)
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -64,9 +82,14 @@ class OnOffChannel(ZigbeeChannel):
 
     async def async_update(self):
         """Initialize channel."""
-        _LOGGER.debug("Attempting to update onoff state")
+        from_cache = not self.device.power_source == MAINS_POWERED
+        _LOGGER.debug(
+            "%s is attempting to update onoff state - from cache: %s",
+            self._unique_id,
+            from_cache
+        )
         self._state = bool(
-            await self.get_attribute_value(self.ON_OFF, from_cache=False))
+            await self.get_attribute_value(self.ON_OFF, from_cache=from_cache))
         await super().async_update()
 
 

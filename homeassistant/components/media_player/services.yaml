@@ -131,7 +131,7 @@ play_media:
       description: The ID of the content to play. Platform dependent.
       example: 'https://home-assistant.io/images/cast/splash.png'
     media_content_type:
-      description: The type of the content to play. Must be one of music, tvshow, video, episode, channel or playlist
+      description: The type of the content to play. Must be one of image, music, tvshow, video, episode, channel or playlist
       example: 'music'
 
 select_source:

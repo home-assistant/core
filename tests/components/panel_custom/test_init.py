@@ -25,7 +25,11 @@ async def test_webcomponent_custom_path_not_found(hass):
             hass, 'panel_custom', config
         )
         assert not result
-        assert len(hass.data.get(frontend.DATA_PANELS, {})) == 0
+
+        panels = hass.data.get(frontend.DATA_PANELS, [])
+
+        assert panels
+        assert 'nice_url' not in panels
 
 
 async def test_webcomponent_custom_path(hass):
@@ -130,6 +134,7 @@ async def test_module_webcomponent(hass):
             },
             'embed_iframe': True,
             'trust_external_script': True,
+            'require_admin': True,
         }
     }
 
@@ -145,6 +150,7 @@ async def test_module_webcomponent(hass):
 
     panel = panels['nice_url']
 
+    assert panel.require_admin
     assert panel.config == {
         'hello': 'world',
         '_panel_custom': {

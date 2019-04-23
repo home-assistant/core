@@ -1,0 +1,10 @@
+{
+  "domain": "homeworks",
+  "name": "Homeworks",
+  "documentation": "https://www.home-assistant.io/components/homeworks",
+  "requirements": [
+    "pyhomeworks==0.0.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

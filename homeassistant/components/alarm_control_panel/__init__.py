@@ -1,9 +1,4 @@
-"""
-Component to interface with an alarm control panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel/
-"""
+"""Component to interface with an alarm control panel."""
 from datetime import timedelta
 import logging
 

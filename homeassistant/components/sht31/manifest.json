@@ -1,0 +1,11 @@
+{
+  "domain": "sht31",
+  "name": "Sht31",
+  "documentation": "https://www.home-assistant.io/components/sht31",
+  "requirements": [
+    "Adafruit-GPIO==1.0.3",
+    "Adafruit-SHT31==1.0.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

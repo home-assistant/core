@@ -1,0 +1,10 @@
+{
+  "domain": "satel_integra",
+  "name": "Satel integra",
+  "documentation": "https://www.home-assistant.io/components/satel_integra",
+  "requirements": [
+    "satel_integra==0.3.4"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
