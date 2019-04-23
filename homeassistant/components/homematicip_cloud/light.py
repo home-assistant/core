@@ -146,7 +146,8 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._func_channel.dimLevel and self._func_channel.dimLevel > 0.0
+        return self._func_channel.dimLevel and \
+            self._func_channel.dimLevel > 0.0
 
     @property
     def brightness(self):
