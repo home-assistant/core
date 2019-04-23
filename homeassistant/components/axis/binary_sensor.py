@@ -11,7 +11,7 @@ from homeassistant.util.dt import utcnow
 
 from axis.event_stream import CLASS_INPUT, CLASS_OUTPUT
 
-from .axis_event_base import AxisEventBase
+from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 
 

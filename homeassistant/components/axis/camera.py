@@ -8,7 +8,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .axis_event_base import AxisEntityBase
+from .axis_base import AxisEntityBase
 from .const import DOMAIN as AXIS_DOMAIN
 
 AXIS_IMAGE = 'http://{}:{}/axis-cgi/jpg/image.cgi'

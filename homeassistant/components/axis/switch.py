@@ -7,7 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from axis.event_stream import CLASS_OUTPUT
 
-from .axis_event_base import AxisEventBase
+from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 
 

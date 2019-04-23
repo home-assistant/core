@@ -1,4 +1,4 @@
-"""Base class for Axis event entities."""
+"""Base classes for Axis entities."""
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
