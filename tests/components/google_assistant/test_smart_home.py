@@ -14,6 +14,7 @@ from homeassistant.components.google_assistant import (
     const, trait, helpers, smart_home as sh,
     EVENT_COMMAND_RECEIVED, EVENT_QUERY_RECEIVED, EVENT_SYNC_RECEIVED)
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
+from homeassistant.components.demo.cover import DemoCover
 from homeassistant.components.demo.light import DemoLight
 from homeassistant.components.demo.switch import DemoSwitch
 
@@ -640,6 +641,47 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
             }]
         }
     }
+
+
+@pytest.mark.parametrize("device_class,google_type", [
+    ('non_existing_class', 'action.devices.types.BLINDS'),
+    ('door', 'action.devices.types.DOOR'),
+])
+async def test_device_class_cover(hass, device_class, google_type):
+    """Test that a binary entity syncs to the correct device type."""
+    sensor = DemoCover(
+        hass,
+        'Demo Sensor',
+        device_class=device_class
+    )
+    sensor.hass = hass
+    sensor.entity_id = 'cover.demo_sensor'
+    await sensor.async_update_ha_state()
+
+    result = await sh.async_handle_message(
+        hass, BASIC_CONFIG, 'test-agent',
+        {
+            "requestId": REQ_ID,
+            "inputs": [{
+                "intent": "action.devices.SYNC"
+            }]
+        })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': [{
+                'attributes': {},
+                'id': 'cover.demo_sensor',
+                'name': {'name': 'Demo Sensor'},
+                'traits': ['action.devices.traits.OpenClose'],
+                'type': google_type,
+                'willReportState': False
+            }]
+        }
+    }
+
 
 async def test_query_disconnect(hass):
     """Test a disconnect message."""
