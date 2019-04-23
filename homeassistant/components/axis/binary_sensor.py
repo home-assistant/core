@@ -42,7 +42,7 @@ class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
 
     @callback
     def update_callback(self, no_delay=False):
-        """Update the sensor's state, if needed.
+        """Update the sensors state, if needed.
 
         Parameter no_delay is True when device_event_reachable is sent.
         """
