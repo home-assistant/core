@@ -93,8 +93,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
         config[CONF_MONITORED_CONDITIONS], config[CONF_EVENT])
 
-    await scanner.async_init()
-    return True
+    return await scanner.async_init()
 
 
 class TraccarScanner:
@@ -119,6 +118,11 @@ class TraccarScanner:
         async_track_time_interval(self._hass,
                                   self._async_update,
                                   self._scan_interval)
+        if self._api.connected and not self._api.authenticated:
+            _LOGGER.error("Authentication for Traccar failed")
+            return False
+        else:
+            return True
 
     async def _async_update(self, now=None):
         """Update info from Traccar."""
