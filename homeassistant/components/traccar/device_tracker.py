@@ -118,12 +118,12 @@ class TraccarScanner:
         if self._api.connected and not self._api.authenticated:
             _LOGGER.error("Authentication for Traccar failed")
             return False
-        else:
-            await self._async_update()
-            async_track_time_interval(self._hass,
-                                      self._async_update,
-                                      self._scan_interval)
-            return True
+
+        await self._async_update()
+        async_track_time_interval(self._hass,
+                                  self._async_update,
+                                  self._scan_interval)
+        return True
 
     async def _async_update(self, now=None):
         """Update info from Traccar."""
@@ -134,14 +134,13 @@ class TraccarScanner:
             if self.connected:
                 _LOGGER.info("Connection to Traccar restored")
             else:
-                _LOGGER.error("Not connected to Traccar")
-        if self.connected:
-            _LOGGER.debug('Updating device data')
-            await self._api.get_device_info(self._custom_attributes)
-            self._hass.async_create_task(self.import_device_data())
-            if self._event_types:
-                self._hass.async_create_task(self.import_events())
-            self.connected = self._api.connected
+                return
+        _LOGGER.debug('Updating device data')
+        await self._api.get_device_info(self._custom_attributes)
+        self._hass.async_create_task(self.import_device_data())
+        if self._event_types:
+            self._hass.async_create_task(self.import_events())
+        self.connected = self._api.connected
 
     async def import_device_data(self):
         """Import device data from Traccar."""
