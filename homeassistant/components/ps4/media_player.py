@@ -217,7 +217,7 @@ class PS4Device(MediaPlayerDevice):
                 self._region, title_id)
         else:
             app_name = title.name
-            art = title.cover_art      
+            art = title.cover_art
         finally:
             self._media_title = app_name or name
             self._source = self._media_title
