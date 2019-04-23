@@ -66,7 +66,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
             errors['base'] = 'follow_link'
 
         if not self._registered_view:
-            await self._generate_view()
+            self._generate_view()
 
         return self.async_show_form(
             step_id='auth',
@@ -95,7 +95,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         )
 
     async def _get_token_info(self, code):
-        oauth = await self._generate_oauth()
+        oauth = self._generate_oauth()
         try:
             token_info = await oauth.get_access_token(code)
         except ambiclimate.AmbiclimateOauthError:
@@ -107,11 +107,11 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
 
         return token_info
 
-    async def _generate_view(self):
+    def _generate_view(self):
         self.hass.http.register_view(AmbiclimateAuthCallbackView())
         self._registered_view = True
 
-    async def _generate_oauth(self):
+    def _generate_oauth(self):
         config = self.hass.data[DATA_AMBICLIMATE_IMPL]
         clientsession = async_get_clientsession(self.hass)
         callback_url = self._cb_url()
@@ -127,7 +127,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
                              AUTH_CALLBACK_PATH)
 
     async def _get_authorize_url(self):
-        oauth = await self._generate_oauth()
+        oauth = self._generate_oauth()
         if oauth is None:
             return ""
         return oauth.get_authorize_url()
