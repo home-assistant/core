@@ -394,7 +394,7 @@ class PS4Device(MediaPlayerDevice):
                     title_id, running_id=self._media_content_id)
                 return
         _LOGGER.warning(
-            "Could not start title. '%s' is not in source list.", source)
+            "Could not start title. '%s' is not in source list", source)
         return
 
     def send_command(self, command):
