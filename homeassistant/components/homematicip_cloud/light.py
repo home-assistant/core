@@ -2,8 +2,8 @@
 import logging
 
 from homematicip.aio.device import (
-    AsyncBrandSwitchMeasuring, AsyncDimmer, AsyncPluggableDimmer, 
-    AsyncBrandDimmer, AsyncFullFlushDimmer, 
+    AsyncBrandSwitchMeasuring, AsyncDimmer, AsyncPluggableDimmer,
+    AsyncBrandDimmer, AsyncFullFlushDimmer,
     AsyncBrandSwitchNotificationLight)
 from homematicip.base.enums import RGBColorState
 
