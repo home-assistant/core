@@ -34,6 +34,7 @@ DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     'climate', 'cover', 'fan', 'group', 'input_boolean', 'light',
     'media_player', 'scene', 'script', 'switch', 'vacuum', 'lock',
+    'binary_sensor', 'sensor'
 ]
 
 PREFIX_TYPES = 'action.devices.types.'
