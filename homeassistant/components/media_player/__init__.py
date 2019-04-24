@@ -326,9 +326,9 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
-    def media_image_remotely_accessible(self):
+    def media_image_remotely_accessible(self) -> bool:
         """If the image url is remotely accessible."""
-        return None
+        return False
 
     @property
     def media_image_hash(self):
@@ -345,9 +345,6 @@ class MediaPlayerDevice(Entity):
 
         if url is None:
             return None, None
-
-        if self.media_image_remotely_accessible:
-            return url, TYPE_URL
 
         return await _async_fetch_image(self.hass, url)
 
@@ -821,15 +818,18 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
+        if player.media_image_remotely_accessible:
+            url = player.media_image_url
+            if url is not None:
+                return web.Response(status=301, headers={
+                    'location': url
+                })
+            return web.Response(status=500)
+
         data, content_type = await player.async_get_media_image()
 
         if data is None:
             return web.Response(status=500)
-
-        if content_type == TYPE_URL:
-            return web.Response(status=301, headers={
-                'location': data
-            })
 
         headers = {CACHE_CONTROL: 'max-age=3600'}
         return web.Response(
