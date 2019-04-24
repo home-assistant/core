@@ -92,36 +92,6 @@ async def test_brightness_light(hass):
     }
 
 
-async def test_brightness_media_player(hass):
-    """Test brightness trait support for media player domain."""
-    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
-    assert trait.BrightnessTrait.supported(media_player.DOMAIN,
-                                           media_player.SUPPORT_VOLUME_SET,
-                                           None)
-
-    trt = trait.BrightnessTrait(hass, State(
-        'media_player.bla', media_player.STATE_PLAYING, {
-            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3
-        }), BASIC_CONFIG)
-
-    assert trt.sync_attributes() == {}
-
-    assert trt.query_attributes() == {
-        'brightness': 30
-    }
-
-    calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
-    await trt.execute(
-        trait.COMMAND_BRIGHTNESS_ABSOLUTE, BASIC_DATA,
-        {'brightness': 60}, {})
-    assert len(calls) == 1
-    assert calls[0].data == {
-        ATTR_ENTITY_ID: 'media_player.bla',
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: .6
-    }
-
-
 async def test_camera_stream(hass):
     """Test camera stream trait support for camera domain."""
     hass.config.api = Mock(base_url='http://1.1.1.1:8123')
@@ -1275,4 +1245,66 @@ async def test_openclose_binary_sensor(hass, device_class):
 
     assert trt.query_attributes() == {
         'openPercent': 0
+    }
+
+
+async def test_volume_media_player(hass):
+    """Test volume trait support for media player domain."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.VolumeTrait.supported(media_player.DOMAIN,
+                                       media_player.SUPPORT_VOLUME_SET |
+                                       media_player.SUPPORT_VOLUME_MUTE,
+                                       None)
+
+    trt = trait.VolumeTrait(hass, State(
+        'media_player.bla', media_player.STATE_PLAYING, {
+            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3,
+            media_player.ATTR_MEDIA_VOLUME_MUTED: False,
+        }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'currentVolume': 30,
+        'isMuted': False
+    }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
+    await trt.execute(
+        trait.COMMAND_SET_VOLUME, BASIC_DATA,
+        {'volumeLevel': 60}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'media_player.bla',
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: .6
+    }
+
+
+async def test_volume_media_player_relative(hass):
+    """Test volume trait support for media player domain."""
+    trt = trait.VolumeTrait(hass, State(
+        'media_player.bla', media_player.STATE_PLAYING, {
+            media_player.ATTR_MEDIA_VOLUME_LEVEL: .3,
+            media_player.ATTR_MEDIA_VOLUME_MUTED: False,
+        }), BASIC_CONFIG)
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {
+        'currentVolume': 30,
+        'isMuted': False
+    }
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_SET)
+
+    await trt.execute(
+        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA,
+        {'volumeRelativeLevel': 20,
+         'relativeSteps': 2}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'media_player.bla',
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: .5
     }
