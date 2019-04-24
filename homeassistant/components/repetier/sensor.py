@@ -7,14 +7,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import SENSOR_TYPES
+from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['repetier']
-
-UPDATE_SIGNAL = 'repetier_update_signal'
-REPETIER_API = 'repetier_api'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -34,36 +31,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
     for info in discovery_info:
-        name = info['name']
         printer_name = info['printer_name']
-        printers = hass.data[REPETIER_API][printer_name]
+        api = hass.data[REPETIER_API][printer_name]
         printer_id = info['printer_id']
-        printer = printers[printer_id]
         sensor_type = info['sensor_type']
-        data_key = None
-        sensor_class = sensor_map[sensor_type]
-
-        if sensor_type == 'bed_temperature':
-            if printer.heatedbeds is None:
-                continue
-            for data_key, _ in enumerate(printer.heatedbeds):
-                entity = sensor_class(printer, name, sensor_type, data_key)
-                entities.append(entity)
-        elif sensor_type == 'extruder_temperature':
-            if printer.extruder is None:
-                continue
-            for data_key, _ in enumerate(printer.extruder):
-                entity = sensor_class(printer, name, sensor_type, data_key)
-                entities.append(entity)
-        elif sensor_type == 'chamber_temperature':
-            if printer.heatedchambers is None:
-                continue
-            for data_key, _ in enumerate(printer.heatedchambers):
-                entity = sensor_class(printer, name, sensor_type, data_key)
-                entities.append(entity)
+        data_key = info['data_key']
+        name = info['name']
+        if data_key is not None:
+            name = '{}{}{}'.format(
+                name, SENSOR_TYPES[sensor_type][3], data_key)
         else:
-            entity = sensor_class(printer, name, sensor_type, data_key)
-            entities.append(entity)
+            name = '{}{}'.format(name, SENSOR_TYPES[sensor_type][3])
+        sensor_class = sensor_map[sensor_type]
+        entity = sensor_class(api, data_key, name, printer_id, sensor_type)
+        entities.append(entity)
 
     add_entities(entities, True)
 
@@ -71,15 +52,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RepetierSensor(Entity):
     """Class to create and populate a Repetier Sensor."""
 
-    def __init__(self, printer, name, sensor_type, data_key):
+    def __init__(self, api, data_key, name, printer_id, sensor_type):
         """Init new sensor."""
-        self._printer = printer
-        self._available = False
-        self._name = '{}{}'.format(name, SENSOR_TYPES[sensor_type][3])
-        self._sensor_type = sensor_type
-        self._data_key = data_key
-        self._state = None
+        self._api = api
         self._attributes = {}
+        self._available = False
+        self._data_key = data_key
+        self._name = name
+        self._printer_id = printer_id
+        self._sensor_type = sensor_type
+        self._state = None
 
     @property
     def available(self) -> bool:
@@ -106,6 +88,11 @@ class RepetierSensor(Entity):
         """Icon to use in the frontend."""
         return SENSOR_TYPES[self._sensor_type][2]
 
+    @property
+    def should_poll(self):
+        """Return False as entity is updated from the component."""
+        return False
+
     @callback
     def update_callback(self):
         """Get new data and update state."""
@@ -116,15 +103,21 @@ class RepetierSensor(Entity):
         async_dispatcher_connect(
             self.hass, UPDATE_SIGNAL, self.update_callback)
 
+    def _get_data(self):
+        """Return new data from the api cache."""
+        data = self._api.get_data(self._sensor_type, self._data_key)
+        if data is None:
+            _LOGGER.debug(
+                "Data not found for %s and %s",
+                self._sensor_type, self._data_key)
+            self._available = False
+            return None
+        self._available = True
+        return data
+
 
 class RepetierBedSensor(RepetierSensor):
     """Class to create and populate a Repetier Bed Sensor."""
-
-    def __init__(self, printer, name, sensor_type, data_key):
-        """Init new sensor."""
-        super().__init__(printer, name, sensor_type, data_key)
-        self._name = '{}{}{}'.format(
-            name, SENSOR_TYPES[sensor_type][3], data_key)
 
     @property
     def state(self):
@@ -135,34 +128,19 @@ class RepetierBedSensor(RepetierSensor):
 
     def update(self):
         """Update the sensor."""
-        self._printer.get_data()
-        if self._printer.heatedbeds is None:
-            self._available = False
+        data = self._get_data()
+        if data is None:
             return
-        if self._printer.state == "off":
-            self._available = False
-            return
-        self._available = True
-        temp_set = self._printer.heatedbeds[self._data_key].tempset
-        temp = self._printer.heatedbeds[self._data_key].tempread
-        output = self._printer.heatedbeds[self._data_key].output
-        _LOGGER.debug("Bed %s Setpoint: %s, Temp: %s",
-                      self._data_key,
-                      temp_set,
-                      temp)
-        self._attributes['setpoint'] = temp_set
-        self._attributes['output'] = output
+        temp = data.pop('temp')
+        temp_set = data['temp_set']
+        _LOGGER.debug(
+            "Bed %s Setpoint: %s, Temp: %s", self._data_key, temp_set, temp)
+        self._attributes.update(data)
         self._state = temp
 
 
 class RepetierExtruderSensor(RepetierSensor):
     """Class to create and populate a Repetier Nozzle Sensor."""
-
-    def __init__(self, printer, name, sensor_type, data_key):
-        """Init new sensor."""
-        super().__init__(printer, name, sensor_type, data_key)
-        self._name = '{}{}{}'.format(
-            name, SENSOR_TYPES[sensor_type][3], data_key)
 
     @property
     def state(self):
@@ -195,12 +173,6 @@ class RepetierExtruderSensor(RepetierSensor):
 
 class RepetierChamberSensor(RepetierSensor):
     """Class to create and populate a Repetier Nozzle Sensor."""
-
-    def __init__(self, printer, name, sensor_type, data_key):
-        """Init new sensor."""
-        super().__init__(printer, name, sensor_type, data_key)
-        self._name = '{}{}{}'.format(
-            name, SENSOR_TYPES[sensor_type][3], data_key)
 
     @property
     def state(self):

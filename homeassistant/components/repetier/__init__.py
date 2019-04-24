@@ -1,5 +1,6 @@
 """Support for Repetier-Server sensors."""
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -8,6 +9,8 @@ from homeassistant.const import (
     CONF_SENSORS, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import slugify as util_slugify
 
 REQUIREMENTS = ['pyrepetier==3.0.4']
@@ -17,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'RepetierServer'
 DOMAIN = 'repetier'
 REPETIER_API = 'repetier_api'
+SCAN_INTERVAL = timedelta(seconds=10)
+UPDATE_SIGNAL = 'repetier_update_signal'
 
 
 def has_all_unique_names(value):
@@ -81,19 +86,92 @@ def setup(hass, config):
         if not printers:
             return False
 
-        hass.data[REPETIER_API][repetier[CONF_NAME]] = printers
+        api = PrinterAPI(hass, client, printers)
+        api.update()
+        track_time_interval(hass, api.update, SCAN_INTERVAL)
+
+        hass.data[REPETIER_API][repetier[CONF_NAME]] = api
 
         sensors = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
         for pidx, printer in enumerate(printers):
-            printer.get_data()
             for sensor_type in sensors:
                 sensvar = {}
                 sensvar['sensor_type'] = sensor_type
                 sensvar['printer_id'] = pidx
                 sensvar['name'] = printer.slug
                 sensvar['printer_name'] = repetier[CONF_NAME]
-                sensor_info.append(sensvar)
+
+                if sensor_type == 'bed_temperature':
+                    if printer.heatedbeds is None:
+                        continue
+                    for idx, _ in enumerate(printer.heatedbeds):
+                        sensvar['data_key'] = idx
+                        sensor_info.append(sensvar)
+                elif sensor_type == 'extruder_temperature':
+                    if printer.extruder is None:
+                        continue
+                    for idx, _ in enumerate(printer.extruder):
+                        sensvar['data_key'] = idx
+                        sensor_info.append(sensvar)
+                elif sensor_type == 'chamber_temperature':
+                    if printer.heatedchambers is None:
+                        continue
+                    for idx, _ in enumerate(printer.heatedchambers):
+                        sensvar['data_key'] = idx
+                        sensor_info.append(sensvar)
+                else:
+                    sensvar['data_key'] = None
+                    sensor_info.append(sensvar)
 
     load_platform(hass, 'sensor', DOMAIN, sensor_info, config)
 
     return True
+
+
+API_SENSOR_METHODS = {
+    'bed_temperature': {
+        'online': ['heatedbeds', 'state'],
+        'state': {'heatedbeds': 'data_key'},
+        'data_key': {
+            'tempset': 'temp_set',
+            'tempread': 'temp',
+            'output': 'output'
+        },
+    },
+}
+
+
+class PrinterAPI:
+    """Handle the printer API."""
+
+    def __init__(self, hass, client, printers):
+        """Set up instance."""
+        self._hass = hass
+        self._client = client
+        self.printers = printers
+
+    def get_data(self, printer_id, sensor_type, data_key):
+        """Get data from the state cache."""
+        printer = self.printers[printer_id]
+        methods = API_SENSOR_METHODS[sensor_type]
+        for prop in methods['online']:
+            online = getattr(printer, prop)
+            if online is None:
+                return None
+
+        data = {}
+        for prop, attr in methods['state'].items():
+            prop_data = getattr(printer, prop)
+            if attr == 'data_key':
+                dk_props = methods['data_key']
+                for dk_prop, dk_attr in dk_props.items():
+                    data[dk_attr] = getattr(prop_data[data_key], dk_prop)
+            else:
+                data[attr] = prop_data
+        return data
+
+    def update(self, now=None):
+        """Update the state cache from the printer API."""
+        for printer in self.printers:
+            printer.get_data()
+        dispatcher_send(self._hass, UPDATE_SIGNAL)
