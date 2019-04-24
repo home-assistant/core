@@ -64,7 +64,6 @@ ENTITY_IMAGE_CACHE = {
     CACHE_MAXSIZE: 16
 }
 
-TYPE_URL = 'text/url'
 SCAN_INTERVAL = timedelta(seconds=10)
 
 # Service call validation schemas
