@@ -1,14 +1,15 @@
 """Tests for the Ambiclimate config flow."""
+import ambiclimate
 from unittest.mock import Mock, patch
 
-from homeassistant import data_entry_flow
-from homeassistant.components.ambiclimate import config_flow
+from homeassistant.components.ambiclimate import config_flow, DOMAIN
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
+from homeassistant import data_entry_flow
 from tests.common import mock_coro
 
 
-async def init_config_flow(hass, valid_code=True):
+async def init_config_flow(hass):
     """Init a configuration flow."""
     await async_setup_component(hass, 'http', {
         'http': {
@@ -18,10 +19,6 @@ async def init_config_flow(hass, valid_code=True):
 
     config_flow.register_flow_implementation(hass, 'id', 'secret')
     flow = config_flow.AmbiclimateFlowHandler()
-
-    flow._get_token_info = Mock(  # pylint: disable=W0212
-        return_value=mock_coro('token' if valid_code else None),
-    )
 
     flow.hass = hass
     return flow
@@ -69,22 +66,47 @@ async def test_full_flow_implementation(hass):
     assert 'response_type=code' in url
     assert 'redirect_uri=https%3A%2F%2Fhass.com%2Fapi%2Fambiclimate' in url
 
-    result = await flow.async_step_code('123ABC')
+    with patch('ambiclimate.AmbiclimateOAuth.get_access_token',
+               return_value=mock_coro('test')):
+        result = await flow.async_step_code('123ABC')
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['title'] == 'Ambiclimate'
     assert result['data']['callback_url'] == 'https://hass.com/api/ambiclimate'
     assert result['data']['client_secret'] == 'secret'
     assert result['data']['client_id'] == 'id'
 
+    with patch('ambiclimate.AmbiclimateOAuth.get_access_token',
+               return_value=mock_coro(None)):
+        result = await flow.async_step_code('123ABC')
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+
+    with patch('ambiclimate.AmbiclimateOAuth.get_access_token',
+               side_effect=ambiclimate.AmbiclimateOauthError()):
+        result = await flow.async_step_code('123ABC')
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+
 
 async def test_abort_no_code(hass):
     """Test if no code is given to step_code."""
     config_flow.register_flow_implementation(hass, None, None)
-    flow = await init_config_flow(hass, valid_code=False)
+    flow = await init_config_flow(hass)
 
     result = await flow.async_step_code('invalid')
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'access_token'
+
+
+async def test_already_setup(hass):
+    """Test when already setup."""
+
+    config_flow.register_flow_implementation(hass, None, None)
+    flow = await init_config_flow(hass)
+
+    with patch.object(hass.config_entries, 'async_entries', return_value=True):
+        result = await flow.async_step_user()
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result['reason'] == 'already_setup'
 
 
 async def test_view(hass):
