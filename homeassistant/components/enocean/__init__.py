@@ -7,8 +7,6 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['enocean==0.50']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'enocean'
