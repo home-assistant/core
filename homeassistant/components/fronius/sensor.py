@@ -3,7 +3,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE)
+from homeassistant.const import (
+    CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE, CONF_MONITORED_CONDITIONS
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -27,11 +29,13 @@ SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
-    vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-    vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
-        vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
-        cv.positive_int,
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [{
+            vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+            vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE): vol.In(SCOPE_TYPES),
+            vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
+                cv.positive_int,
+        }]),
 })
 
 
@@ -45,19 +49,23 @@ async def async_setup_platform(hass,
     session = async_get_clientsession(hass)
     fronius = Fronius(session, config[CONF_RESOURCE])
 
-    name = "fronius_{}_{}".format(
-        config[CONF_SENSOR_TYPE], config[CONF_RESOURCE]
-    )
-    device = config.get(CONF_DEVICE)
-    if device == 0:
-        if config[CONF_SENSOR_TYPE] == 'inverter':
-            device = 1
-    name = "{}_{}".format(name, device)
+    sensors = []
+    for condition in config[CONF_MONITORED_CONDITIONS]:
 
-    sensor = FroniusSensor(fronius, name, config[CONF_SENSOR_TYPE],
-                           config.get(CONF_SCOPE), device)
+        name = "fronius_{}_{}".format(
+            condition[CONF_SENSOR_TYPE], config[CONF_RESOURCE]
+        )
+        device = condition.get(CONF_DEVICE)
+        if device == 0:
+            if condition[CONF_SENSOR_TYPE] == 'inverter':
+                device = 1
+        name = "{}_{}".format(name, device)
 
-    async_add_devices([sensor])
+        sensor = FroniusSensor(fronius, name, condition[CONF_SENSOR_TYPE],
+                               condition.get(CONF_SCOPE), device)
+        sensors.append(sensor)
+
+    async_add_devices(sensors)
 
 
 class FroniusSensor(Entity):
