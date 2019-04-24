@@ -1,9 +1,10 @@
 """Support for HomematicIP Cloud lights."""
 import logging
 
-from homematicip.aio.device import AsyncBrandSwitchMeasuring, AsyncDimmer,
-    AsyncPluggableDimmer, AsyncBrandDimmer, AsyncFullFlushDimmer,
-    AsyncBrandSwitchNotificationLight
+from homematicip.aio.device import (
+    AsyncBrandSwitchMeasuring, AsyncDimmer, AsyncPluggableDimmer, 
+    AsyncBrandDimmer, AsyncFullFlushDimmer, 
+    AsyncBrandSwitchNotificationLight)
 from homematicip.base.enums import RGBColorState
 
 from homeassistant.components.light import (
