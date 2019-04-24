@@ -341,7 +341,6 @@ class MediaPlayerDevice(Entity):
     async def async_get_media_image(self):
         """Fetch media image of current playing image."""
         url = self.media_image_url
-
         if url is None:
             return None, None
 
@@ -857,11 +856,8 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             'Failed to fetch thumbnail'))
         return
 
-    if content_type != TYPE_URL:
-        data = base64.b64encode(data).decode('utf-8')
-
     connection.send_message(websocket_api.result_message(
         msg['id'], {
             'content_type': content_type,
-            'content': data
+            'content': base64.b64encode(data).decode('utf-8')
         }))
