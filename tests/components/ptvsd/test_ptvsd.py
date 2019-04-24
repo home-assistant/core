@@ -20,7 +20,7 @@ async def test_ptvsd(hass):
                 })
 
             attach.assert_called_once_with(('0.0.0.0', 5678))
-            wait.assert_not_called()
+            assert wait.call_count == 0
 
 
 async def test_ptvsd_wait(hass):
@@ -35,7 +35,7 @@ async def test_ptvsd_wait(hass):
                 })
 
             attach.assert_called_once_with(('0.0.0.0', 5678))
-            wait.assert_called_once()
+            assert wait.call_count == 1
 
 
 async def test_ptvsd_bootstrap(hass):
@@ -51,4 +51,4 @@ async def test_ptvsd_bootstrap(hass):
             await async_from_config_dict(config, hass)
 
             attach.assert_called_once_with(('0.0.0.0', 5678))
-            wait.assert_called_once()
+            assert wait.call_count == 1
