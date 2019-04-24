@@ -245,9 +245,6 @@ blockchain==1.4.4
 bomradarloop==0.1.2
 
 # homeassistant.components.amazon_polly
-# homeassistant.components.aws_lambda
-# homeassistant.components.aws_sns
-# homeassistant.components.aws_sqs
 # homeassistant.components.route53
 boto3==1.9.16
 
