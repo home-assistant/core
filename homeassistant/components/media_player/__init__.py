@@ -345,7 +345,8 @@ class MediaPlayerDevice(Entity):
 
         if url is None:
             return None, None
-        elif self.media_image_remotely_accessible:
+
+        if self.media_image_remotely_accessible:
             return url, TYPE_URL
 
         return await _async_fetch_image(self.hass, url)
