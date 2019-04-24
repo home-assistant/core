@@ -7,7 +7,7 @@ import ptvsd  # noqa: F401
 
 import homeassistant.components.ptvsd as ptvsd_component
 from homeassistant.setup import async_setup_component
-from homeassistant.bootstrap import async_from_config_dict
+from homeassistant.bootstrap import _async_set_up_integrations
 
 
 async def test_ptvsd(hass):
@@ -48,7 +48,7 @@ async def test_ptvsd_bootstrap(hass):
 
     with patch('ptvsd.enable_attach') as attach:
         with patch('ptvsd.wait_for_attach') as wait:
-            await async_from_config_dict(config, hass)
+            await _async_set_up_integrations(hass, config)
 
             attach.assert_called_once_with(('0.0.0.0', 5678))
             assert wait.call_count == 1
