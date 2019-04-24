@@ -34,15 +34,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         api = hass.data[REPETIER_API][printer_name]
         printer_id = info['printer_id']
         sensor_type = info['sensor_type']
-        data_key = info['data_key']
+        temp_id = info['temp_id']
         name = info['name']
-        if data_key is not None:
+        if temp_id is not None:
             name = '{}{}{}'.format(
-                name, SENSOR_TYPES[sensor_type][3], data_key)
+                name, SENSOR_TYPES[sensor_type][3], temp_id)
         else:
             name = '{}{}'.format(name, SENSOR_TYPES[sensor_type][3])
         sensor_class = sensor_map[sensor_type]
-        entity = sensor_class(api, data_key, name, printer_id, sensor_type)
+        entity = sensor_class(api, temp_id, name, printer_id, sensor_type)
         entities.append(entity)
 
     add_entities(entities, True)
@@ -51,12 +51,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RepetierSensor(Entity):
     """Class to create and populate a Repetier Sensor."""
 
-    def __init__(self, api, data_key, name, printer_id, sensor_type):
+    def __init__(self, api, temp_id, name, printer_id, sensor_type):
         """Init new sensor."""
         self._api = api
         self._attributes = {}
         self._available = False
-        self._data_key = data_key
+        self._temp_id = temp_id
         self._name = name
         self._printer_id = printer_id
         self._sensor_type = sensor_type
@@ -110,11 +110,11 @@ class RepetierSensor(Entity):
     def _get_data(self):
         """Return new data from the api cache."""
         data = self._api.get_data(
-            self._printer_id, self._sensor_type, self._data_key)
+            self._printer_id, self._sensor_type, self._temp_id)
         if data is None:
             _LOGGER.debug(
                 "Data not found for %s and %s",
-                self._sensor_type, self._data_key)
+                self._sensor_type, self._temp_id)
             self._available = False
             return None
         self._available = True

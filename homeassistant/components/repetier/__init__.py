@@ -103,22 +103,22 @@ def setup(hass, config):
                     if printer.heatedbeds is None:
                         continue
                     for idx, _ in enumerate(printer.heatedbeds):
-                        sensvar['data_key'] = idx
+                        sensvar['temp_id'] = idx
                         sensor_info.append(sensvar)
                 elif sensor_type == 'extruder_temperature':
                     if printer.extruder is None:
                         continue
                     for idx, _ in enumerate(printer.extruder):
-                        sensvar['data_key'] = idx
+                        sensvar['temp_id'] = idx
                         sensor_info.append(sensvar)
                 elif sensor_type == 'chamber_temperature':
                     if printer.heatedchambers is None:
                         continue
                     for idx, _ in enumerate(printer.heatedchambers):
-                        sensvar['data_key'] = idx
+                        sensvar['temp_id'] = idx
                         sensor_info.append(sensvar)
                 else:
-                    sensvar['data_key'] = None
+                    sensvar['temp_id'] = None
                     sensor_info.append(sensvar)
 
     load_platform(hass, 'sensor', DOMAIN, sensor_info, config)
@@ -133,21 +133,21 @@ TEMP_DATA = {
 }
 
 
-API_SENSOR_METHODS = {
+API_PRINTER_METHODS = {
     'bed_temperature': {
         'offline': {'heatedbeds': None, 'state': 'off'},
-        'state': {'heatedbeds': 'data_key'},
-        'data_key': TEMP_DATA,
+        'state': {'heatedbeds': 'temp_data'},
+        'temp_data': TEMP_DATA,
     },
     'extruder_temperature': {
         'offline': {'extruder': None, 'state': 'off'},
-        'state': {'extruder': 'data_key'},
-        'data_key': TEMP_DATA,
+        'state': {'extruder': 'temp_data'},
+        'temp_data': TEMP_DATA,
     },
     'chamber_temperature': {
         'offline': {'heatedchambers': None, 'state': 'off'},
-        'state': {'heatedchambers': 'data_key'},
-        'data_key': TEMP_DATA,
+        'state': {'heatedchambers': 'temp_data'},
+        'temp_data': TEMP_DATA,
     },
     'current_state': {
         'offline': {'state': None},
@@ -213,10 +213,10 @@ class PrinterAPI:
         self._client = client
         self.printers = printers
 
-    def get_data(self, printer_id, sensor_type, data_key):
+    def get_data(self, printer_id, sensor_type, temp_id):
         """Get data from the state cache."""
         printer = self.printers[printer_id]
-        methods = API_SENSOR_METHODS[sensor_type]
+        methods = API_PRINTER_METHODS[sensor_type]
         for prop, offline in methods['offline'].items():
             state = getattr(printer, prop)
             if state == offline:
@@ -226,10 +226,10 @@ class PrinterAPI:
         data = {}
         for prop, attr in methods['state'].items():
             prop_data = getattr(printer, prop)
-            if attr == 'data_key':
-                dk_props = methods['data_key']
-                for dk_prop, dk_attr in dk_props.items():
-                    data[dk_attr] = getattr(prop_data[data_key], dk_prop)
+            if attr == 'temp_data':
+                temp_methods = methods['temp_data']
+                for temp_prop, temp_attr in temp_methods.items():
+                    data[temp_attr] = getattr(prop_data[temp_id], temp_prop)
             else:
                 data[attr] = prop_data
         return data
