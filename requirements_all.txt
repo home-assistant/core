@@ -939,11 +939,11 @@ pyW215==0.6.0
 # homeassistant.components.w800rf32
 pyW800rf32==0.1
 
+# homeassistant.components.nextbus
+py_nextbus==0.1.2
+
 # homeassistant.components.noaa_tides
 # py_noaa==0.3.0
-
-# homeassistant.components.nextbus.sensor
-py_nextbus==0.1.2
 
 # homeassistant.components.ads
 pyads==3.0.7
