@@ -50,7 +50,7 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
 #        data = [0xD2, 0x03]
 #        data.extend(self.base_id)
 #        data.extend([0x00])
-        
+
 #        self.send_command(data=data, optional=optional,packet_type=0x01)
 
     @property
@@ -68,11 +68,11 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
         optional = [0x03, ]
         optional.extend(self.dev_id)
         optional.extend([0xFF, 0x00])
-        
+
         data = [0xD2, 0x01, self.channel & 0xFF, 0x64]
         data.extend(self.base_id)
         data.extend([0x00])
-        
+
         self.send_command(data=data, optional=optional, packet_type=0x01)
         self._on_state = True
 
@@ -85,7 +85,7 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
         data = [0xD2, 0x01, self.channel & 0xFF, 0x00]
         data.extend(self.base_id)
         data.extend([0x00])
-        
+
         self.send_command(data=data, optional=optional, packet_type=0x01)
         self._on_state = False
 
