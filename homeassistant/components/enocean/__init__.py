@@ -66,8 +66,8 @@ class EnOceanDongle:
         elif isinstance(packet, Packet):
             from enocean.protocol.constants import RETURN_CODE, PACKET
             if (packet.packet_type == PACKET.RESPONSE and
-                packet.response == RETURN_CODE.OK and
-                len(packet.response_data) == 4):
+                    packet.response == RETURN_CODE.OK and
+                    len(packet.response_data) == 4):
                     self.__communicator.base_id = packet.response_data
                     self.base_id = self.__communicator.base_id
 
