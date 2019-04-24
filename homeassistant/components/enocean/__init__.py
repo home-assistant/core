@@ -23,6 +23,7 @@ CONFIG_SCHEMA = vol.Schema({
 SIGNAL_RECEIVE_MESSAGE = 'enocean.receive_message'
 SIGNAL_SEND_MESSAGE = 'enocean.send_message'
 
+
 def setup(hass, config):
     """Set up the EnOcean component."""
     global ENOCEAN_DONGLE
