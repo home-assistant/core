@@ -22,8 +22,6 @@ from .const import (
     TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
     TYPE_ASTHMA_YESTERDAY, TYPE_DISEASE_FORECAST)
 
-REQUIREMENTS = ['numpy==1.16.2', 'pyiqvia==0.2.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ZIP_CODE = 'zip_code'
