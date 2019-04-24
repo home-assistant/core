@@ -37,11 +37,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+
 def setup_platform(hass, config, add_entities, discovery_infom=None):
     """Set up the EnOcean Cover platform."""
     dev_name = config.get(CONF_NAME)
     dev_id = config.get(CONF_ID)
     add_entities([EnOceanCover(dev_name, dev_id)])
+
 
 class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
     """Representation of an EnOcean cover source."""
@@ -62,7 +64,7 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
 #        data = [0xD2, 0x03]
 #        data.extend(self.base_id)
 #        data.extend([0x00])
-        
+
 #        self.send_command(data=data, optional=optional,packet_type=0x01)
 
     @property
@@ -88,7 +90,7 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
             self._is_closing = False
             self._is_opening = False
             self.schedule_update_ha_state()
-        
+
         _LOGGER.warning("Received radio packet COVER : %s", packet)
         if packet.data[0] == 0xd2:
             # actuator status telegram
@@ -98,11 +100,11 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
                 value = packet.parsed['POS']['raw_value']
                 self.percent_closed = value
                 if self._async_on_done_timer:
-                	self._async_on_done_timer()
+                 self._async_on_done_timer()
                 if self.percent_closed <= 0 or self.percent_closed >= 100:
-                	on_done(None)
+                 on_done(None)
                 else:
-                	self._async_on_done_timer = async_call_later(self.hass, 3, on_done)
+                 self._async_on_done_timer = async_call_later(self.hass, 3, on_done)
                 self.schedule_update_ha_state()
 
     @property
@@ -122,9 +124,9 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
         data = [0xD2, 0x00, 0x00, 0x00, 0x01]
         data.extend(self.base_id)
         data.extend([0x00])
-        
-        self.send_command(data=data, optional=optional,packet_type=0x01)
-        
+
+        self.send_command(data=data, optional=optional, packet_type=0x01)
+
     def close_cover(self, **kwargs):
         """Close cover."""
         self._is_opening = False
@@ -133,16 +135,16 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
         optional = [0x03, ]
         optional.extend(self.dev_id)
         optional.extend([0xff, 0x00])
-        
+
         data = [0xD2, 0x64, 0x00, 0x00, 0x01]
         data.extend(self.base_id)
         data.extend([0x00])
-        
-        self.send_command(data=data, optional=optional,packet_type=0x01)
+
+        self.send_command(data=data, optional=optional, packet_type=0x01)
 
     def stop_cover(self, **kwargs):
         """Stop cover."""
-        
+
         optional = [0x03, ]
         optional.extend(self.dev_id)
         optional.extend([0xFF, 0x00])
@@ -150,8 +152,8 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
         data = [0xD2, 0x02]
         data.extend(self.base_id)
         data.extend([0x00])
-        
-        self.send_command(data=data, optional=optional,packet_type=0x01)
+
+        self.send_command(data=data, optional=optional, packet_type=0x01)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -175,7 +177,7 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
         data.extend(self.base_id)
         data.extend([0x00])
 
-        self.send_command(data=data, optional=optional,packet_type=0x01)
+        self.send_command(data=data, optional=optional, packet_type=0x01)
 
     @property
     def is_opening(self):
