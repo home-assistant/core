@@ -64,6 +64,7 @@ ENTITY_IMAGE_CACHE = {
     CACHE_MAXSIZE: 16
 }
 
+TYPE_URL = 'text/url'
 SCAN_INTERVAL = timedelta(seconds=10)
 
 # Service call validation schemas
@@ -325,6 +326,11 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def media_image_remotely_accessible(self):
+        """If the image url is remotely accessible."""
+        return None
+
+    @property
     def media_image_hash(self):
         """Hash value for media image."""
         url = self.media_image_url
@@ -336,8 +342,11 @@ class MediaPlayerDevice(Entity):
     async def async_get_media_image(self):
         """Fetch media image of current playing image."""
         url = self.media_image_url
+
         if url is None:
             return None, None
+        elif self.media_image_remotely_accessible:
+            return url, TYPE_URL
 
         return await _async_fetch_image(self.hass, url)
 
@@ -722,6 +731,9 @@ class MediaPlayerDevice(Entity):
         if self.state == STATE_OFF:
             return None
 
+        if self.media_image_remotely_accessible:
+            return self.media_image_url
+
         image_hash = self.media_image_hash
 
         if image_hash is None:
@@ -813,6 +825,11 @@ class MediaPlayerImageView(HomeAssistantView):
         if data is None:
             return web.Response(status=500)
 
+        if content_type == TYPE_URL:
+            return web.Response(status=301, headers={
+                'location': data
+            })
+
         headers = {CACHE_CONTROL: 'max-age=3600'}
         return web.Response(
             body=data, content_type=content_type, headers=headers)
@@ -840,8 +857,11 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             'Failed to fetch thumbnail'))
         return
 
+    if content_type != TYPE_URL:
+        data = base64.b64encode(data).decode('utf-8')
+
     connection.send_message(websocket_api.result_message(
         msg['id'], {
             'content_type': content_type,
-            'content': base64.b64encode(data).decode('utf-8')
+            'content': data
         }))
