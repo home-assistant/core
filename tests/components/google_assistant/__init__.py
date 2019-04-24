@@ -143,7 +143,7 @@ DEMO_DEVICES = [{
     },
     'traits':
         [
-            'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
+            'action.devices.traits.OnOff', 'action.devices.traits.Volume',
             'action.devices.traits.Modes'
         ],
     'type':
@@ -158,7 +158,7 @@ DEMO_DEVICES = [{
     },
     'traits':
         [
-            'action.devices.traits.OnOff', 'action.devices.traits.Brightness',
+            'action.devices.traits.OnOff', 'action.devices.traits.Volume',
             'action.devices.traits.Modes'
         ],
     'type':
@@ -180,7 +180,7 @@ DEMO_DEVICES = [{
         'name': 'Walkman'
     },
     'traits':
-    ['action.devices.traits.OnOff', 'action.devices.traits.Brightness'],
+    ['action.devices.traits.OnOff', 'action.devices.traits.Volume'],
     'type':
     'action.devices.types.SWITCH',
     'willReportState':
