@@ -1136,8 +1136,7 @@ class VolumeTrait(_Trait):
     def supported(domain, features, device_class):
         """Test if state is supported."""
         if domain == media_player.DOMAIN:
-            return ((features & media_player.SUPPORT_VOLUME_SET) and
-                    (features & media_player.SUPPORT_VOLUME_MUTE))
+            return features & media_player.SUPPORT_VOLUME_SET
 
         return False
 
@@ -1162,32 +1161,14 @@ class VolumeTrait(_Trait):
 
     async def _execute_set_volume(self, data, params):
         level = params['volumeLevel']
-        if level == 0:
-            await self.hass.services.async_call(
-                media_player.DOMAIN,
-                media_player.SERVICE_VOLUME_MUTE, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_MEDIA_VOLUME_MUTED:
-                    True
-                }, blocking=True, context=data.context)
-        else:
-            await self.hass.services.async_call(
-                media_player.DOMAIN,
-                media_player.SERVICE_VOLUME_SET, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_MEDIA_VOLUME_LEVEL:
-                    level / 100
-                }, blocking=True, context=data.context)
 
-            if self.state.attributes.get(
-                    media_player.ATTR_MEDIA_VOLUME_MUTED):
-                await self.hass.services.async_call(
-                    media_player.DOMAIN,
-                    media_player.SERVICE_VOLUME_MUTE, {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        media_player.ATTR_MEDIA_VOLUME_MUTED:
-                        False
-                    }, blocking=True, context=data.context)
+        await self.hass.services.async_call(
+            media_player.DOMAIN,
+            media_player.SERVICE_VOLUME_SET, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_MEDIA_VOLUME_LEVEL:
+                level / 100
+            }, blocking=True, context=data.context)
 
     async def _execute_volume_relative(self, data, params):
         # This could also support up/down commands using relativeSteps
