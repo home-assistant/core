@@ -1,9 +1,4 @@
-"""
-Support for Social Blade.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.socialblade/
-"""
+"""Support for Social Blade."""
 from datetime import timedelta
 import logging
 
@@ -16,8 +11,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['socialbladeclient==0.2']
 
 CHANNEL_ID = 'channel_id'
 

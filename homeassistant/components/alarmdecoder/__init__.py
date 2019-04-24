@@ -10,8 +10,6 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import dt as dt_util
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 
-REQUIREMENTS = ['alarmdecoder==1.13.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'alarmdecoder'

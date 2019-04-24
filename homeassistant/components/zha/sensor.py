@@ -1,9 +1,4 @@
-"""
-Sensors on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/sensor.zha/
-"""
+"""Sensors on Zigbee Home Automation networks."""
 import logging
 
 from homeassistant.core import callback
@@ -20,8 +15,6 @@ from .core.const import (
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['zha']
 
 
 # Formatter functions
@@ -86,7 +79,7 @@ POLLING_REGISTRY = {
 }
 
 FORCE_UPDATE_REGISTRY = {
-    ELECTRICAL_MEASUREMENT: True
+    ELECTRICAL_MEASUREMENT: False
 }
 
 

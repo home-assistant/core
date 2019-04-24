@@ -1,9 +1,4 @@
-"""
-Support for Venstar WiFi Thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.venstar/
-"""
+"""Support for Venstar WiFi Thermostats."""
 import logging
 
 import voluptuous as vol
@@ -21,8 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME, PRECISION_WHOLE, STATE_OFF, STATE_ON, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['venstarcolortouch==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

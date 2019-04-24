@@ -1,9 +1,4 @@
-"""
-Demo light platform that implements lights.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo light platform that implements lights."""
 import random
 
 from homeassistant.components.light import (

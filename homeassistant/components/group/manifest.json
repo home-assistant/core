@@ -1,0 +1,10 @@
+{
+  "domain": "group",
+  "name": "Group",
+  "documentation": "https://www.home-assistant.io/components/group",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@home-assistant/core"
+  ]
+}

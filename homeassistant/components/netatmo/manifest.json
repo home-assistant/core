@@ -1,0 +1,12 @@
+{
+  "domain": "netatmo",
+  "name": "Netatmo",
+  "documentation": "https://www.home-assistant.io/components/netatmo",
+  "requirements": [
+    "pyatmo==1.10"
+  ],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": []
+}

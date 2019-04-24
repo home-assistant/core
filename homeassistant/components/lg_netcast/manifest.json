@@ -1,0 +1,10 @@
+{
+  "domain": "lg_netcast",
+  "name": "Lg netcast",
+  "documentation": "https://www.home-assistant.io/components/lg_netcast",
+  "requirements": [
+    "pylgnetcast-homeassistant==0.2.0.dev0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

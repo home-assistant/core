@@ -1,9 +1,4 @@
-"""
-Jabber (XMPP) notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.xmpp/
-"""
+"""Jabber (XMPP) notification service."""
 from concurrent.futures import TimeoutError as FutTimeoutError
 import logging
 import mimetypes
@@ -21,8 +16,6 @@ import homeassistant.helpers.template as template_helper
 
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
-
-REQUIREMENTS = ['slixmpp==1.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 

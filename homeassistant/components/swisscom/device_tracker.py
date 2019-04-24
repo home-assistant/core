@@ -1,9 +1,4 @@
-"""
-Support for Swisscom routers (Internet-Box).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.swisscom/
-"""
+"""Support for Swisscom routers (Internet-Box)."""
 import logging
 
 from aiohttp.hdrs import CONTENT_TYPE

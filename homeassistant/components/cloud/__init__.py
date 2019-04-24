@@ -24,9 +24,6 @@ from .const import (
     CONF_USER_POOL_ID, DOMAIN, MODE_DEV, MODE_PROD)
 from .prefs import CloudPreferences
 
-REQUIREMENTS = ['hass-nabucasa==0.11']
-DEPENDENCIES = ['http']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_MODE = MODE_PROD
@@ -187,12 +184,17 @@ async def async_setup(hass, config):
             await cloud.remote.disconnect()
             await prefs.async_update(remote_enabled=False)
 
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler)
 
+    async def _on_connect():
+        """Discover RemoteUI binary sensor."""
+        hass.async_create_task(hass.helpers.discovery.async_load_platform(
+            'binary_sensor', DOMAIN, {}, config))
+
+    cloud.iot.register_on_connect(_on_connect)
+
     await http_api.async_setup(hass)
-    hass.async_create_task(hass.helpers.discovery.async_load_platform(
-        'binary_sensor', DOMAIN, {}, config))
     return True

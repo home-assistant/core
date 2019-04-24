@@ -12,7 +12,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'EnOcean Switch'
-DEPENDENCIES = ['enocean']
 CONF_CHANNEL = 'channel'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

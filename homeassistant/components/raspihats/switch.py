@@ -14,8 +14,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['raspihats']
-
 _CHANNELS_SCHEMA = vol.Schema([{
     vol.Required(CONF_INDEX): cv.positive_int,
     vol.Required(CONF_NAME): cv.string,

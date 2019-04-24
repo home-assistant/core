@@ -1,9 +1,4 @@
-"""
-Component that will help set the Microsoft face for verify processing.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/image_processing.microsoft_face_identify/
-"""
+"""Component that will help set the Microsoft face for verify processing."""
 import logging
 
 import voluptuous as vol
@@ -16,8 +11,6 @@ from homeassistant.const import ATTR_NAME
 from homeassistant.core import split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-
-DEPENDENCIES = ['microsoft_face']
 
 _LOGGER = logging.getLogger(__name__)
 

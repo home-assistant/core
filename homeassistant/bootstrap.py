@@ -11,9 +11,6 @@ from typing import Any, Optional, Dict, Set
 import voluptuous as vol
 
 from homeassistant import core, config as conf_util, config_entries, loader
-from homeassistant.components import (
-    persistent_notification, homeassistant as core_component
-)
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import AsyncHandler
@@ -29,48 +26,14 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
-LOGGING_COMPONENT = {'logger', 'system_log'}
-
-FIRST_INIT_COMPONENT = {
+CORE_INTEGRATIONS = ('homeassistant', 'persistent_notification')
+LOGGING_INTEGRATIONS = {'logger', 'system_log'}
+STAGE_1_INTEGRATIONS = {
+    # To record data
     'recorder',
-    'mqtt',
+    # To make sure we forward data to other instances
     'mqtt_eventstream',
-    'introduction',
-    'frontend',
-    'history',
 }
-
-
-def from_config_dict(config: Dict[str, Any],
-                     hass: Optional[core.HomeAssistant] = None,
-                     config_dir: Optional[str] = None,
-                     enable_log: bool = True,
-                     verbose: bool = False,
-                     skip_pip: bool = False,
-                     log_rotate_days: Any = None,
-                     log_file: Any = None,
-                     log_no_color: bool = False) \
-                     -> Optional[core.HomeAssistant]:
-    """Try to configure Home Assistant from a configuration dictionary.
-
-    Dynamically loads required components and its dependencies.
-    """
-    if hass is None:
-        hass = core.HomeAssistant()
-        if config_dir is not None:
-            config_dir = os.path.abspath(config_dir)
-            hass.config.config_dir = config_dir
-            if not is_virtual_env():
-                hass.loop.run_until_complete(
-                    async_mount_local_lib_path(config_dir))
-
-    # run task
-    hass = hass.loop.run_until_complete(
-        async_from_config_dict(
-            config, hass, config_dir, enable_log, verbose, skip_pip,
-            log_rotate_days, log_file, log_no_color)
-    )
-    return hass
 
 
 async def async_from_config_dict(config: Dict[str, Any],
@@ -115,70 +78,17 @@ async def async_from_config_dict(config: Dict[str, Any],
                       "Further initialization aborted")
         return None
 
-    await hass.async_add_executor_job(
-        conf_util.process_ha_config_upgrade, hass)
-
     # Make a copy because we are mutating it.
     config = OrderedDict(config)
 
     # Merge packages
-    conf_util.merge_packages_config(
+    await conf_util.merge_packages_config(
         hass, config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await hass.config_entries.async_initialize()
 
-    components = _get_components(hass, config)
-
-    # Resolve all dependencies of all components.
-    for component in list(components):
-        try:
-            components.update(loader.component_dependencies(hass, component))
-        except loader.LoaderError:
-            # Ignore it, or we'll break startup
-            # It will be properly handled during setup.
-            pass
-
-    # setup components
-    res = await core_component.async_setup(hass, config)
-    if not res:
-        _LOGGER.error("Home Assistant core failed to initialize. "
-                      "Further initialization aborted")
-        return hass
-
-    await persistent_notification.async_setup(hass, config)
-
-    _LOGGER.info("Home Assistant core initialized")
-
-    # stage 0, load logging components
-    for component in components:
-        if component in LOGGING_COMPONENT:
-            hass.async_create_task(
-                async_setup_component(hass, component, config))
-
-    await hass.async_block_till_done()
-
-    # Kick off loading the registries. They don't need to be awaited.
-    asyncio.gather(
-        hass.helpers.device_registry.async_get_registry(),
-        hass.helpers.entity_registry.async_get_registry(),
-        hass.helpers.area_registry.async_get_registry())
-
-    # stage 1
-    for component in components:
-        if component in FIRST_INIT_COMPONENT:
-            hass.async_create_task(
-                async_setup_component(hass, component, config))
-
-    await hass.async_block_till_done()
-
-    # stage 2
-    for component in components:
-        if component in FIRST_INIT_COMPONENT or component in LOGGING_COMPONENT:
-            continue
-        hass.async_create_task(async_setup_component(hass, component, config))
-
-    await hass.async_block_till_done()
+    await _async_set_up_integrations(hass, config)
 
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
@@ -231,32 +141,6 @@ async def async_from_config_dict(config: Dict[str, Any],
     return hass
 
 
-def from_config_file(config_path: str,
-                     hass: Optional[core.HomeAssistant] = None,
-                     verbose: bool = False,
-                     skip_pip: bool = True,
-                     log_rotate_days: Any = None,
-                     log_file: Any = None,
-                     log_no_color: bool = False)\
-        -> Optional[core.HomeAssistant]:
-    """Read the configuration file and try to start all the functionality.
-
-    Will add functionality to 'hass' parameter if given,
-    instantiates a new Home Assistant object if 'hass' is not given.
-    """
-    if hass is None:
-        hass = core.HomeAssistant()
-
-    # run task
-    hass = hass.loop.run_until_complete(
-        async_from_config_file(
-            config_path, hass, verbose, skip_pip,
-            log_rotate_days, log_file, log_no_color)
-    )
-
-    return hass
-
-
 async def async_from_config_file(config_path: str,
                                  hass: core.HomeAssistant,
                                  verbose: bool = False,
@@ -279,6 +163,9 @@ async def async_from_config_file(config_path: str,
 
     async_enable_logging(hass, verbose, log_rotate_days, log_file,
                          log_no_color)
+
+    await hass.async_add_executor_job(
+        conf_util.process_ha_config_upgrade, hass)
 
     try:
         config_dict = await hass.async_add_executor_job(
@@ -398,18 +285,127 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 
 
 @core.callback
-def _get_components(hass: core.HomeAssistant,
-                    config: Dict[str, Any]) -> Set[str]:
-    """Get components to set up."""
+def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
+    """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
-    components = set(key.split(' ')[0] for key in config.keys()
-                     if key != core.DOMAIN)
+    domains = set(key.split(' ')[0] for key in config.keys()
+                  if key != core.DOMAIN)
 
     # Add config entry domains
-    components.update(hass.config_entries.async_domains())  # type: ignore
+    domains.update(hass.config_entries.async_domains())  # type: ignore
 
     # Make sure the Hass.io component is loaded
     if 'HASSIO' in os.environ:
-        components.add('hassio')
+        domains.add('hassio')
 
-    return components
+    return domains
+
+
+async def _async_set_up_integrations(
+        hass: core.HomeAssistant, config: Dict[str, Any]) -> None:
+    """Set up all the integrations."""
+    domains = _get_domains(hass, config)
+
+    # Resolve all dependencies of all components so we can find the logging
+    # and integrations that need faster initialization.
+    resolved_domains_task = asyncio.gather(*[
+        loader.async_component_dependencies(hass, domain)
+        for domain in domains
+    ], return_exceptions=True)
+
+    # Set up core.
+    _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
+
+    if not all(await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in CORE_INTEGRATIONS
+    ])):
+        _LOGGER.error("Home Assistant core failed to initialize. "
+                      "Further initialization aborted")
+        return
+
+    _LOGGER.debug("Home Assistant core initialized")
+
+    # Finish resolving domains
+    for dep_domains in await resolved_domains_task:
+        # Result is either a set or an exception. We ignore exceptions
+        # It will be properly handled during setup of the domain.
+        if isinstance(dep_domains, set):
+            domains.update(dep_domains)
+
+    # setup components
+    logging_domains = domains & LOGGING_INTEGRATIONS
+    stage_1_domains = domains & STAGE_1_INTEGRATIONS
+    stage_2_domains = domains - logging_domains - stage_1_domains
+
+    if logging_domains:
+        _LOGGER.debug("Setting up %s", logging_domains)
+
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in logging_domains
+        ])
+
+    # Kick off loading the registries. They don't need to be awaited.
+    asyncio.gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry(),
+        hass.helpers.area_registry.async_get_registry())
+
+    if stage_1_domains:
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in logging_domains
+        ])
+
+    # Load all integrations
+    after_dependencies = {}  # type: Dict[str, Set[str]]
+
+    for int_or_exc in await asyncio.gather(*[
+            loader.async_get_integration(hass, domain)
+            for domain in stage_2_domains
+    ], return_exceptions=True):
+        # Exceptions are handled in async_setup_component.
+        if (isinstance(int_or_exc, loader.Integration) and
+                int_or_exc.after_dependencies):
+            after_dependencies[int_or_exc.domain] = set(
+                int_or_exc.after_dependencies
+            )
+
+    last_load = None
+    while stage_2_domains:
+        domains_to_load = set()
+
+        for domain in stage_2_domains:
+            after_deps = after_dependencies.get(domain)
+            # Load if integration has no after_dependencies or they are
+            # all loaded
+            if (not after_deps or
+                    not after_deps-hass.config.components):
+                domains_to_load.add(domain)
+
+        if not domains_to_load or domains_to_load == last_load:
+            break
+
+        _LOGGER.debug("Setting up %s", domains_to_load)
+
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in domains_to_load
+        ])
+
+        last_load = domains_to_load
+        stage_2_domains -= domains_to_load
+
+    # These are stage 2 domains that never have their after_dependencies
+    # satisfied.
+    if stage_2_domains:
+        _LOGGER.debug("Final set up: %s", stage_2_domains)
+
+        await asyncio.gather(*[
+            async_setup_component(hass, domain, config)
+            for domain in stage_2_domains
+        ])
+
+    # Wrap up startup
+    await hass.async_block_till_done()

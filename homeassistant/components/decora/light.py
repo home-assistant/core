@@ -1,9 +1,4 @@
-"""
-Support for Decora dimmers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.decora/
-"""
+"""Support for Decora dimmers."""
 import importlib
 import logging
 from functools import wraps
@@ -16,8 +11,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light,
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['decora==0.6', 'bluepy==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 

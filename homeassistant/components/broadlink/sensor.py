@@ -1,26 +1,18 @@
-"""
-Support for the Broadlink RM2 Pro (only temperature) and A1 devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.broadlink/
-"""
-from datetime import timedelta
+"""Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
 import binascii
 import logging
 import socket
+from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS,
-    CONF_TIMEOUT, CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL,
-    CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
+    CONF_TIMEOUT, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['broadlink==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,24 +28,14 @@ SENSOR_TYPES = {
     'noise': ['Noise', ' '],
 }
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({
-        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-            vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-        vol.Optional(CONF_UPDATE_INTERVAL):
-            vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
-    }),
-    cv.deprecated(
-        CONF_UPDATE_INTERVAL,
-        replacement_key=CONF_SCAN_INTERVAL,
-        invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-        default=SCAN_INTERVAL
-    )
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

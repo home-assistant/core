@@ -1,9 +1,4 @@
-"""
-Support for the KIWI.KI lock platform.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/lock.kiwi/
-"""
+"""Support for the KIWI.KI lock platform."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.core import callback
-
-REQUIREMENTS = ['kiwiki-client==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,9 +1,4 @@
-"""
-Support for TPLink HS100/HS110/HS200 smart switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.tplink/
-"""
+"""Support for TPLink HS100/HS110/HS200 smart switch."""
 import logging
 import time
 
@@ -14,8 +9,6 @@ import homeassistant.helpers.device_registry as dr
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
 
-DEPENDENCIES = ['tplink']
-
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +17,8 @@ ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
 ATTR_CURRENT_A = 'current_a'
 
 
-def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
     """Set up the platform.
 
     Deprecated.

@@ -1,0 +1,10 @@
+{
+  "domain": "opentherm_gw",
+  "name": "Opentherm gw",
+  "documentation": "https://www.home-assistant.io/components/opentherm_gw",
+  "requirements": [
+    "pyotgw==0.4b3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

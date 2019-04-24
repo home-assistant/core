@@ -12,15 +12,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2019.03.18']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CUSTOMIZE_ENTITIES = 'customize'
 CONF_DEFAULT_STREAM_QUERY = 'default_query'
 
 DEFAULT_STREAM_QUERY = 'best'
-DEPENDENCIES = ['media_player']
 DOMAIN = 'media_extractor'
 
 CONFIG_SCHEMA = vol.Schema({

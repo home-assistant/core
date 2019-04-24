@@ -1,9 +1,4 @@
-"""
-Vizio SmartCast TV support.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.vizio/
-"""
+"""Vizio SmartCast TV support."""
 from datetime import timedelta
 import logging
 
@@ -19,8 +14,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 from homeassistant.helpers import config_validation as cv
-
-REQUIREMENTS = ['pyvizio==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

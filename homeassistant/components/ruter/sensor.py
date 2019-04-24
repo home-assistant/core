@@ -1,9 +1,4 @@
-"""
-A sensor platform that give you information about next departures from Ruter.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.ruter/
-"""
+"""A sensor to provide information about next departures from Ruter."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-REQUIREMENTS = ['pyruter==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 

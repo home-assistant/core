@@ -1,0 +1,12 @@
+{
+  "domain": "ign_sismologia",
+  "name": "IGN Sismologia",
+  "documentation": "https://www.home-assistant.io/components/ign_sismologia",
+  "requirements": [
+    "georss_ign_sismologia_client==0.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@exxamalte"
+  ]
+}
