@@ -30,24 +30,24 @@ def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
     body = yield from resp.text()
     assert body == 'hello world'
 
-    # default interval is 600s -> should be the same when calling immediately
+    # default delta is 600s -> should be the same when calling immediately
     # afterwards.
 
     resp = yield from client.get('/api/camera_proxy/camera.config_test')
     assert aioclient_mock.call_count == 1
 
 
-async def test_expire_interval(aioclient_mock, hass, hass_client):
-    """Test that the cache expires after interval."""
+async def test_expire_delta(aioclient_mock, hass, hass_client):
+    """Test that the cache expires after delta."""
     aioclient_mock.get(radar_map_url(), text='hello world')
 
-    interval = 0.0000000001
+    delta = 0.0000000001
 
     await async_setup_component(hass, 'camera', {
         'camera': {
             'name': 'config_test',
             'platform': 'buienradar',
-            'interval': interval,
+            'delta': delta,
         }})
 
     client = await hass_client()
@@ -59,8 +59,8 @@ async def test_expire_interval(aioclient_mock, hass, hass_client):
     body = await resp.text()
     assert body == 'hello world'
 
-    await asyncio.sleep(interval)
-    # interval has passed -> should immediately call again
+    await asyncio.sleep(delta)
+    # delta has passed -> should immediately call again
     resp = await client.get('/api/camera_proxy/camera.config_test')
     assert aioclient_mock.call_count == 2
 

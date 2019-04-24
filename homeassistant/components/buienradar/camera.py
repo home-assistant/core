@@ -17,7 +17,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_coroutine_threadsafe
 
 CONF_DIMENSION = 'dimension'
-CONF_INTERVAL = 'interval'
+CONF_DELTA = 'delta'
 
 RADAR_MAP_URL_TEMPLATE = ('https://api.buienradar.nl/image/1.0/'
                           'RadarMapNL?w={w}&h={h}')
@@ -30,7 +30,7 @@ DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_DIMENSION): DIM_RANGE,
-        vol.Optional(CONF_INTERVAL): vol.All(vol.Coerce(float),
+        vol.Optional(CONF_DELTA): vol.All(vol.Coerce(float),
                                              vol.Range(min=0)),
         vol.Optional(CONF_NAME): cv.string,
     }))
@@ -41,10 +41,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up buienradar radar-loop camera component."""
     c_id = config.get(CONF_ID)
     dimension = config.get(CONF_DIMENSION) or 512
-    interval = config.get(CONF_INTERVAL) or 600.0
+    delta = config.get(CONF_DELTA) or 600.0
     name = config.get(CONF_NAME) or "Buienradar loop"
 
-    async_add_entities([BuienradarCam(hass, name, c_id, dimension, interval)])
+    async_add_entities([BuienradarCam(hass, name, c_id, dimension, delta)])
 
 
 class BuienradarCam(Camera):
@@ -60,7 +60,7 @@ class BuienradarCam(Camera):
     """ Deadline for image refresh """
     _deadline = None        # type: Optional[datetime]
     _name = ""              # type: str
-    _interval = 0.0         # type: float
+    _delta = 0.0         # type: float
     _condition = None       # type: Optional[asyncio.Condition]
     """ Loading status """
     _loading = False        # type: bool
@@ -70,14 +70,14 @@ class BuienradarCam(Camera):
     _last_modified = None   # type: Optional[str]
 
     def __init__(self, hass, name: str, c_id: Optional[str], dimension: int,
-                 interval: float):
+                 delta: float):
         """Initialize the component."""
         super().__init__()
         self._hass = hass
         self._name = name
 
         self._dimension = dimension
-        self._interval = interval
+        self._delta = delta
 
         self._condition = asyncio.Condition(loop=hass.loop)
 
@@ -99,7 +99,7 @@ class BuienradarCam(Camera):
             self.async_camera_image(), self.hass.loop).result()
 
     def __needs_refresh(self) -> bool:
-        if not (self._interval and self._deadline and self._last_image):
+        if not (self._delta and self._deadline and self._last_image):
             return True
 
         return dt_util.utcnow() > self._deadline
@@ -166,7 +166,7 @@ class BuienradarCam(Camera):
             res = await self.__retrieve_radar_image()
             # successful response? update deadline to time before loading
             if res:
-                self._deadline = now + timedelta(seconds=self._interval)
+                self._deadline = now + timedelta(seconds=self._delta)
 
             return self._last_image
         finally:
