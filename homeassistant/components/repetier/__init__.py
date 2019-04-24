@@ -21,6 +21,83 @@ REPETIER_API = 'repetier_api'
 SCAN_INTERVAL = timedelta(seconds=10)
 UPDATE_SIGNAL = 'repetier_update_signal'
 
+TEMP_DATA = {
+    'tempset': 'temp_set',
+    'tempread': 'state',
+    'output': 'output',
+}
+
+
+API_PRINTER_METHODS = {
+    'bed_temperature': {
+        'offline': {'heatedbeds': None, 'state': 'off'},
+        'state': {'heatedbeds': 'temp_data'},
+        'temp_data': TEMP_DATA,
+    },
+    'extruder_temperature': {
+        'offline': {'extruder': None, 'state': 'off'},
+        'state': {'extruder': 'temp_data'},
+        'temp_data': TEMP_DATA,
+    },
+    'chamber_temperature': {
+        'offline': {'heatedchambers': None, 'state': 'off'},
+        'state': {'heatedchambers': 'temp_data'},
+        'temp_data': TEMP_DATA,
+    },
+    'current_state': {
+        'offline': {'state': None},
+        'state': {
+            'state': 'state',
+            'activeextruder': 'active_extruder',
+            'hasxhome': 'x_homed',
+            'hasyhome': 'y_homed',
+            'haszhome': 'z_homed',
+            'firmware': 'firmware',
+            'firmwareurl': 'firmware_url',
+        },
+    },
+    'current_job': {
+        'offline': {'job': None, 'state': 'off'},
+        'state': {
+            'done': 'state',
+            'job': 'job_name',
+            'jobid': 'job_id',
+            'totallines': 'total_lines',
+            'linessent': 'lines_sent',
+            'oflayer': 'total_layers',
+            'layer': 'current_layer',
+            'speedmultiply': 'feed_rate',
+            'flowmultiply': 'flow',
+            'x': 'x',
+            'y': 'y',
+            'z': 'z',
+        },
+    },
+    'time_remaining': {
+        'offline': {
+            'job': None, 'state': 'off', 'start': None, 'printtime': None},
+        'state': {
+            'job': 'job_name',
+            'start': 'start',
+            'printtime': 'print_time',
+            'printedtimecomp': 'from_start',
+        },
+    },
+    'time_elapsed': {
+        'offline': {
+            'job': None,
+            'state': 'off',
+            'start': None,
+            'printedtimecomp': None
+        },
+        'state': {
+            'job': 'job_name',
+            'start': 'start',
+            'printedtimecomp': 'from_start',
+        },
+    },
+}
+
 
 def has_all_unique_names(value):
     """Validate that printers have an unique name."""
@@ -124,84 +201,6 @@ def setup(hass, config):
     load_platform(hass, 'sensor', DOMAIN, sensor_info, config)
 
     return True
-
-
-TEMP_DATA = {
-    'tempset': 'temp_set',
-    'tempread': 'state',
-    'output': 'output',
-}
-
-
-API_PRINTER_METHODS = {
-    'bed_temperature': {
-        'offline': {'heatedbeds': None, 'state': 'off'},
-        'state': {'heatedbeds': 'temp_data'},
-        'temp_data': TEMP_DATA,
-    },
-    'extruder_temperature': {
-        'offline': {'extruder': None, 'state': 'off'},
-        'state': {'extruder': 'temp_data'},
-        'temp_data': TEMP_DATA,
-    },
-    'chamber_temperature': {
-        'offline': {'heatedchambers': None, 'state': 'off'},
-        'state': {'heatedchambers': 'temp_data'},
-        'temp_data': TEMP_DATA,
-    },
-    'current_state': {
-        'offline': {'state': None},
-        'state': {
-            'state': 'state',
-            'activeextruder': 'active_extruder',
-            'hasxhome': 'x_homed',
-            'hasyhome': 'y_homed',
-            'haszhome': 'z_homed',
-            'firmware': 'firmware',
-            'firmwareurl': 'firmware_url',
-        },
-    },
-    'current_job': {
-        'offline': {'job': None, 'state': 'off'},
-        'state': {
-            'done': 'state',
-            'job': 'job_name',
-            'jobid': 'job_id',
-            'totallines': 'total_lines',
-            'linessent': 'lines_sent',
-            'oflayer': 'total_layers',
-            'layer': 'current_layer',
-            'speedmultiply': 'feed_rate',
-            'flowmultiply': 'flow',
-            'x': 'x',
-            'y': 'y',
-            'z': 'z',
-        },
-    },
-    'time_remaining': {
-        'offline': {
-            'job': None, 'state': 'off', 'start': None, 'printtime': None},
-        'state': {
-            'job': 'job_name',
-            'start': 'start',
-            'printtime': 'print_time',
-            'printedtimecomp': 'from_start',
-        },
-    },
-    'time_elapsed': {
-        'offline': {
-            'job': None,
-            'state': 'off',
-            'start': None,
-            'printedtimecomp': None
-        },
-        'state': {
-            'job': 'job_name',
-            'start': 'start',
-            'printedtimecomp': 'from_start',
-        },
-    },
-}
 
 
 class PrinterAPI:
