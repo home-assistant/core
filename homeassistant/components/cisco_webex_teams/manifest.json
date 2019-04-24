@@ -1,0 +1,10 @@
+{
+  "domain": "cisco_webex_teams",
+  "name": "Cisco webex teams",
+  "documentation": "https://www.home-assistant.io/components/cisco_webex_teams",
+  "requirements": [
+    "webexteamssdk==1.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": ["@fbradyirl"]
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "tplink_lte",
+  "name": "Tplink lte",
+  "documentation": "https://www.home-assistant.io/components/tplink_lte",
+  "requirements": [
+    "tp-connected==0.0.4"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

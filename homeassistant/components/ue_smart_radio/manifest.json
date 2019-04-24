@@ -1,0 +1,8 @@
+{
+  "domain": "ue_smart_radio",
+  "name": "Ue smart radio",
+  "documentation": "https://www.home-assistant.io/components/ue_smart_radio",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

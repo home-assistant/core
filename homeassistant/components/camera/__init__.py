@@ -1,9 +1,4 @@
-"""
-Component to interface with cameras.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/camera/
-"""
+"""Component to interface with cameras."""
 import asyncio
 import base64
 import collections
@@ -20,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, \
-    SERVICE_TURN_ON, EVENT_HOMEASSISTANT_START, CONF_FILENAME
+    SERVICE_TURN_ON, CONF_FILENAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
@@ -37,11 +32,10 @@ from homeassistant.components.stream.const import (
     CONF_DURATION, SERVICE_RECORD, DOMAIN as DOMAIN_STREAM)
 from homeassistant.components import websocket_api
 import homeassistant.helpers.config_validation as cv
+from homeassistant.setup import async_when_setup
 
 from .const import DOMAIN, DATA_CAMERA_PREFS
 from .prefs import CameraPreferences
-
-DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -224,14 +218,13 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
 
-    @callback
-    def preload_stream(event):
+    async def preload_stream(hass, _):
         for camera in component.entities:
             camera_prefs = prefs.get(camera.entity_id)
             if camera.stream_source and camera_prefs.preload_stream:
                 request_stream(hass, camera.stream_source, keepalive=True)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
+    async_when_setup(hass, DOMAIN_STREAM, preload_stream)
 
     @callback
     def update_tokens(time):

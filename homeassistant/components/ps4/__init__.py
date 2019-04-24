@@ -1,9 +1,4 @@
-"""
-Support for PlayStation 4 consoles.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ps4/
-"""
+"""Support for PlayStation 4 consoles."""
 import logging
 
 from homeassistant.const import CONF_REGION
@@ -13,8 +8,6 @@ from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused
 from .const import DOMAIN  # noqa: pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pyps4-homeassistant==0.5.2']
 
 
 async def async_setup(hass, config):

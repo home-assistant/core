@@ -11,8 +11,6 @@ from homeassistant.helpers import discovery
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pywemo==0.4.34']
-
 DOMAIN = 'wemo'
 
 # Mapping from Wemo model_name to component.
@@ -166,7 +164,7 @@ def setup(hass, config):
                 'ssdp_description': url,
             }
 
-            discovery.discover(hass, SERVICE_WEMO, discovery_info)
+            discovery_dispatch(SERVICE_WEMO, discovery_info)
 
         _LOGGER.debug("WeMo device discovery has finished")
 

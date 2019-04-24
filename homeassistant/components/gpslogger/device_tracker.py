@@ -10,8 +10,6 @@ from . import DOMAIN as GPSLOGGER_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['gpslogger']
-
 DATA_KEY = '{}.{}'.format(GPSLOGGER_DOMAIN, DEVICE_TRACKER_DOMAIN)
 
 

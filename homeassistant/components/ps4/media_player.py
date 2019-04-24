@@ -1,9 +1,4 @@
-"""
-Support for PlayStation 4 consoles.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/ps4/
-"""
+"""Support for PlayStation 4 consoles."""
 import logging
 import socket
 
@@ -21,8 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
 from .const import DOMAIN as PS4_DOMAIN, REGIONS as deprecated_regions
-
-DEPENDENCIES = ['ps4']
 
 _LOGGER = logging.getLogger(__name__)
 

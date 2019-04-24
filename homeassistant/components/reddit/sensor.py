@@ -9,8 +9,6 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_MAXIMUM)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['praw==6.1.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CLIENT_ID = 'client_id'

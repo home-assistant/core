@@ -3,7 +3,7 @@ from ipaddress import ip_address
 
 from .const import (
     DOMAIN, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE, PREF_ENABLE_REMOTE,
-    PREF_GOOGLE_ALLOW_UNLOCK, PREF_CLOUDHOOKS, PREF_CLOUD_USER,
+    PREF_GOOGLE_SECURE_DEVICES_PIN, PREF_CLOUDHOOKS, PREF_CLOUD_USER,
     InvalidTrustedNetworks)
 
 STORAGE_KEY = DOMAIN
@@ -29,7 +29,7 @@ class CloudPreferences:
                 PREF_ENABLE_ALEXA: True,
                 PREF_ENABLE_GOOGLE: True,
                 PREF_ENABLE_REMOTE: False,
-                PREF_GOOGLE_ALLOW_UNLOCK: False,
+                PREF_GOOGLE_SECURE_DEVICES_PIN: None,
                 PREF_CLOUDHOOKS: {},
                 PREF_CLOUD_USER: None,
             }
@@ -38,14 +38,14 @@ class CloudPreferences:
 
     async def async_update(self, *, google_enabled=_UNDEF,
                            alexa_enabled=_UNDEF, remote_enabled=_UNDEF,
-                           google_allow_unlock=_UNDEF, cloudhooks=_UNDEF,
+                           google_secure_devices_pin=_UNDEF, cloudhooks=_UNDEF,
                            cloud_user=_UNDEF):
         """Update user preferences."""
         for key, value in (
                 (PREF_ENABLE_GOOGLE, google_enabled),
                 (PREF_ENABLE_ALEXA, alexa_enabled),
                 (PREF_ENABLE_REMOTE, remote_enabled),
-                (PREF_GOOGLE_ALLOW_UNLOCK, google_allow_unlock),
+                (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
                 (PREF_CLOUDHOOKS, cloudhooks),
                 (PREF_CLOUD_USER, cloud_user),
         ):
@@ -85,9 +85,9 @@ class CloudPreferences:
         return self._prefs[PREF_ENABLE_GOOGLE]
 
     @property
-    def google_allow_unlock(self):
+    def google_secure_devices_pin(self):
         """Return if Google is allowed to unlock locks."""
-        return self._prefs.get(PREF_GOOGLE_ALLOW_UNLOCK, False)
+        return self._prefs.get(PREF_GOOGLE_SECURE_DEVICES_PIN)
 
     @property
     def cloudhooks(self):

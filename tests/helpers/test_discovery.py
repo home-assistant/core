@@ -3,13 +3,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import loader, setup
+from homeassistant import setup
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 
 from tests.common import (
-    get_test_home_assistant, MockModule, MockPlatform, mock_coro)
+    get_test_home_assistant, MockModule, MockPlatform, mock_coro,
+    mock_integration, mock_entity_platform)
 
 
 class TestHelpersDiscovery:
@@ -46,17 +47,17 @@ class TestHelpersDiscovery:
                                  callback_multi)
 
         helpers.discovery.discover('test service', 'discovery info',
-                                   'test_component')
+                                   'test_component', {})
         self.hass.block_till_done()
 
         assert mock_setup_component.called
         assert mock_setup_component.call_args[0] == \
-            (self.hass, 'test_component', None)
+            (self.hass, 'test_component', {})
         assert len(calls_single) == 1
         assert calls_single[0] == ('test service', 'discovery info')
 
         helpers.discovery.discover('another service', 'discovery info',
-                                   'test_component')
+                                   'test_component', {})
         self.hass.block_till_done()
 
         assert len(calls_single) == 1
@@ -128,14 +129,18 @@ class TestHelpersDiscovery:
             """Set up mock platform."""
             platform_calls.append('disc' if discovery_info else 'component')
 
-        loader.set_component(
-            self.hass, 'test_component',
+        mock_integration(
+            self.hass,
             MockModule('test_component', setup=component_setup))
 
-        loader.set_component(
+        # dependencies are only set in component level
+        # since we are using manifest to hold them
+        mock_integration(
+            self.hass,
+            MockModule('test_circular', dependencies=['test_component']))
+        mock_entity_platform(
             self.hass, 'switch.test_circular',
-            MockPlatform(setup_platform,
-                         dependencies=['test_component']))
+            MockPlatform(setup_platform))
 
         setup.setup_component(self.hass, 'test_component', {
             'test_component': None,
@@ -167,8 +172,8 @@ class TestHelpersDiscovery:
         def component1_setup(hass, config):
             """Set up mock component."""
             print('component1 setup')
-            discovery.discover(hass, 'test_component2',
-                               component='test_component2')
+            discovery.discover(hass, 'test_component2', {},
+                               'test_component2', {})
             return True
 
         def component2_setup(hass, config):
@@ -176,12 +181,12 @@ class TestHelpersDiscovery:
             component_calls.append(1)
             return True
 
-        loader.set_component(
-            self.hass, 'test_component1',
+        mock_integration(
+            self.hass,
             MockModule('test_component1', setup=component1_setup))
 
-        loader.set_component(
-            self.hass, 'test_component2',
+        mock_integration(
+            self.hass,
             MockModule('test_component2', setup=component2_setup))
 
         @callback
@@ -209,4 +214,4 @@ async def test_load_platform_forbids_config():
 async def test_discover_forbids_config():
     """Test you cannot setup config component with load_platform."""
     with pytest.raises(HomeAssistantError):
-        await discovery.async_discover(None, None, None, 'config')
+        await discovery.async_discover(None, None, None, 'config', {})

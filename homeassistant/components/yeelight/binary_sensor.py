@@ -6,8 +6,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DATA_YEELIGHT, DATA_UPDATED
 
-DEPENDENCIES = ['yeelight']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -31,14 +29,15 @@ class YeelightNightlightModeSensor(BinarySensorDevice):
         self._device = device
 
     @callback
-    def _schedule_immediate_update(self, ipaddr):
-        if ipaddr == self._device.ipaddr:
-            self.async_schedule_update_ha_state()
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
+            self.hass,
+            DATA_UPDATED.format(self._device.ipaddr),
+            self._schedule_immediate_update
         )
 
     @property

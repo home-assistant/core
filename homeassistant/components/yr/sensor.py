@@ -1,9 +1,4 @@
-"""
-Support for Yr.no weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.yr/
-"""
+"""Support for Yr.no weather service."""
 import asyncio
 import logging
 
@@ -24,8 +19,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (async_track_utc_time_change,
                                          async_call_later)
 from homeassistant.util import dt as dt_util
-
-REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 

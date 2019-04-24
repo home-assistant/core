@@ -20,11 +20,7 @@ from .const import (
     CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, POINT_DISCOVERY_NEW,
     SCAN_INTERVAL, SIGNAL_UPDATE_ENTITY, SIGNAL_WEBHOOK)
 
-REQUIREMENTS = ['pypoint==1.1.1']
-
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['webhook']
 
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'

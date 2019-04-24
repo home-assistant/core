@@ -14,8 +14,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['upcloud-api==0.4.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CORE_NUMBER = 'core_number'

@@ -12,8 +12,6 @@ from .const import (
 )
 from .const import DOMAIN   # noqa: pylint: disable=unused-import
 
-REQUIREMENTS = ['homekit[IP]==0.13.0']
-
 HOMEKIT_IGNORE = [
     'BSB002',
     'Home Assistant Bridge',
@@ -186,7 +184,7 @@ def setup(hass, config):
         if hkid in hass.data[KNOWN_DEVICES]:
             device = hass.data[KNOWN_DEVICES][hkid]
             if config_num > device.config_num and \
-               device.pairing_info is not None:
+               device.pairing is not None:
                 device.accessory_setup()
             return
 

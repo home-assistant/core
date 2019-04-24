@@ -1,0 +1,12 @@
+{
+  "domain": "irish_rail_transport",
+  "name": "Irish rail transport",
+  "documentation": "https://www.home-assistant.io/components/irish_rail_transport",
+  "requirements": [
+    "pyirishrail==0.0.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@ttroy50"
+  ]
+}

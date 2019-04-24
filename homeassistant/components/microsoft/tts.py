@@ -1,9 +1,4 @@
-"""
-Support for the Microsoft Cognitive Services text-to-speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.microsoft/
-"""
+"""Support for the Microsoft Cognitive Services text-to-speech service."""
 from http.client import HTTPException
 import logging
 
@@ -19,8 +14,6 @@ CONF_RATE = 'rate'
 CONF_VOLUME = 'volume'
 CONF_PITCH = 'pitch'
 CONF_CONTOUR = 'contour'
-
-REQUIREMENTS = ["pycsspeechtts==1.0.2"]
 
 _LOGGER = logging.getLogger(__name__)
 

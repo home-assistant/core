@@ -1,9 +1,4 @@
-"""
-Support for Frontier Silicon Devices (Medion, Hama, Auna,...).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.frontier_silicon/
-"""
+"""Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
 import logging
 
 import voluptuous as vol
@@ -19,8 +14,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['afsapi==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

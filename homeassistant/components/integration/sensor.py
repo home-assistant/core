@@ -1,9 +1,4 @@
-"""
-Numeric integration of data coming from a source sensor over time.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.integration/
-"""
+"""Numeric integration of data coming from a source sensor over time."""
 import logging
 
 from decimal import Decimal, DecimalException

@@ -1,9 +1,4 @@
-"""
-Lockitron lock platform.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/lockitron/
-"""
+"""Lockitron lock platform."""
 import logging
 
 import requests

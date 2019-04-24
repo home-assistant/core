@@ -1,0 +1,12 @@
+{
+  "domain": "stream",
+  "name": "Stream",
+  "documentation": "https://www.home-assistant.io/components/stream",
+  "requirements": [
+    "av==6.1.2"
+  ],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

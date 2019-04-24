@@ -1,0 +1,13 @@
+{
+  "domain": "spotify",
+  "name": "Spotify",
+  "documentation": "https://www.home-assistant.io/components/spotify",
+  "requirements": [
+    "spotipy-homeassistant==2.4.4.dev1"
+  ],
+  "dependencies": [
+    "configurator",
+    "http"
+  ],
+  "codeowners": []
+}

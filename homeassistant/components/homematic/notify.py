@@ -1,9 +1,4 @@
-"""
-Notification support for Homematic.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.homematic/
-"""
+"""Notification support for Homematic."""
 import logging
 
 import voluptuous as vol
@@ -18,8 +13,6 @@ from . import (
     SERVICE_SET_DEVICE_VALUE)
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ["homematic"]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),

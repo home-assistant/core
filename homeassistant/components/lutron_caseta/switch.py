@@ -7,8 +7,6 @@ from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['lutron_caseta']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

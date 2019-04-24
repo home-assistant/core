@@ -1,9 +1,4 @@
-"""
-MessageBird platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.message_bird/
-"""
+"""MessageBird platform for notify component."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
                                              BaseNotificationService)
-
-REQUIREMENTS = ['messagebird==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

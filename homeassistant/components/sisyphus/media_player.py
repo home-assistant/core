@@ -13,8 +13,6 @@ from . import DATA_SISYPHUS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['sisyphus']
-
 MEDIA_TYPE_TRACK = 'sisyphus_track'
 
 SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE \

@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+import fnmatch
 import importlib
 import os
+import pathlib
 import pkgutil
 import re
 import sys
-import fnmatch
+
+from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
     'Adafruit-DHT',
@@ -59,7 +62,9 @@ TEST_REQUIREMENTS = (
     'feedparser-homeassistant',
     'foobot_async',
     'geojson_client',
-    'georss_client',
+    'georss_generic_client',
+    'georss_ign_sismologia_client',
+    'google-api-python-client',
     'gTTS-token',
     'ha-ffmpeg',
     'hangups',
@@ -72,14 +77,16 @@ TEST_REQUIREMENTS = (
     'home-assistant-frontend',
     'homekit[IP]',
     'homematicip',
+    'httplib2',
     'influxdb',
     'jsonpath',
-    'libpurecoollink',
+    'libpurecool',
     'libsoundtouch',
     'luftdaten',
     'mbddns',
     'mficlient',
     'numpy',
+    'oauth2client',
     'paho-mqtt',
     'pexpect',
     'pilight',
@@ -90,6 +97,7 @@ TEST_REQUIREMENTS = (
     'pyblackbird',
     'pydeconz',
     'pydispatcher',
+    'pyheos',
     'pyhomematic',
     'pylitejet',
     'pymonoprice',
@@ -212,36 +220,8 @@ def gather_modules():
 
     errors = []
 
-    for package in sorted(
-            explore_module('homeassistant.components', True) +
-            explore_module('homeassistant.scripts', True) +
-            explore_module('homeassistant.auth', True)):
-        try:
-            module = importlib.import_module(package)
-        except ImportError as err:
-            for pattern in IGNORE_PACKAGES:
-                if fnmatch.fnmatch(package, pattern):
-                    break
-            else:
-                print("{}: {}".format(package.replace('.', '/') + '.py', err))
-                errors.append(package)
-            continue
-
-        if not getattr(module, 'REQUIREMENTS', None):
-            continue
-
-        for req in module.REQUIREMENTS:
-            if req in IGNORE_REQ:
-                continue
-            if '://' in req and 'pyharmony' not in req:
-                errors.append(
-                    "{}[Only pypi dependencies are allowed: {}]".format(
-                        package, req))
-            if req.partition('==')[1] == '' and req not in IGNORE_PIN:
-                errors.append(
-                    "{}[Please pin requirement {}, see {}]".format(
-                        package, req, URL_PIN))
-            reqs.setdefault(req, []).append(package)
+    gather_requirements_from_manifests(errors, reqs)
+    gather_requirements_from_modules(errors, reqs)
 
     for key in reqs:
         reqs[key] = sorted(reqs[key],
@@ -256,12 +236,69 @@ def gather_modules():
     return reqs
 
 
+def gather_requirements_from_manifests(errors, reqs):
+    """Gather all of the requirements from manifests."""
+    integrations = Integration.load_dir(pathlib.Path(
+        'homeassistant/components'
+    ))
+    for domain in sorted(integrations):
+        integration = integrations[domain]
+
+        if not integration.manifest:
+            errors.append(
+                'The manifest for component {} is invalid.'.format(domain)
+            )
+            continue
+
+        process_requirements(
+            errors,
+            integration.manifest['requirements'],
+            'homeassistant.components.{}'.format(domain),
+            reqs
+        )
+
+
+def gather_requirements_from_modules(errors, reqs):
+    """Collect the requirements from the modules directly."""
+    for package in sorted(
+            explore_module('homeassistant.scripts', True) +
+            explore_module('homeassistant.auth', True)):
+        try:
+            module = importlib.import_module(package)
+        except ImportError as err:
+            for pattern in IGNORE_PACKAGES:
+                if fnmatch.fnmatch(package, pattern):
+                    break
+            else:
+                print("{}: {}".format(package.replace('.', '/') + '.py', err))
+                errors.append(package)
+            continue
+
+        if getattr(module, 'REQUIREMENTS', None):
+            process_requirements(errors, module.REQUIREMENTS, package, reqs)
+
+
+def process_requirements(errors, module_requirements, package, reqs):
+    """Process all of the requirements."""
+    for req in module_requirements:
+        if req in IGNORE_REQ:
+            continue
+        if '://' in req:
+            errors.append(
+                "{}[Only pypi dependencies are allowed: {}]".format(
+                    package, req))
+        if req.partition('==')[1] == '' and req not in IGNORE_PIN:
+            errors.append(
+                "{}[Please pin requirement {}, see {}]".format(
+                    package, req, URL_PIN))
+        reqs.setdefault(req, []).append(package)
+
+
 def generate_requirements_list(reqs):
     """Generate a pip file based on requirements."""
     output = []
     for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
-        for req in sorted(requirements,
-                          key=lambda name: (len(name.split('.')), name)):
+        for req in sorted(requirements):
             output.append('\n# {}'.format(req))
 
         if comment_requirement(pkg):

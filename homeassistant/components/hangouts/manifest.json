@@ -1,0 +1,10 @@
+{
+  "domain": "hangouts",
+  "name": "Hangouts",
+  "documentation": "https://www.home-assistant.io/components/hangouts",
+  "requirements": [
+    "hangups==0.4.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

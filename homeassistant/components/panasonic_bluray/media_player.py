@@ -1,9 +1,4 @@
-"""
-Support for Panasonic Blu-Ray players.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/panasonic_bluray/
-"""
+"""Support for Panasonic Blu-Ray players."""
 from datetime import timedelta
 import logging
 
@@ -18,8 +13,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
-
-REQUIREMENTS = ['panacotta==0.1']
 
 DEFAULT_NAME = "Panasonic Blu-Ray"
 SCAN_INTERVAL = timedelta(seconds=30)

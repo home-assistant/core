@@ -13,7 +13,8 @@ from homeassistant.components import (
     fan, http, light, script, emulated_hue, media_player, cover, climate)
 from homeassistant.components.emulated_hue import Config
 from homeassistant.components.emulated_hue.hue_api import (
-    HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView, HueOneLightStateView,
+    HUE_API_STATE_ON, HUE_API_STATE_BRI, HUE_API_STATE_HUE, HUE_API_STATE_SAT,
+    HueUsernameView, HueOneLightStateView,
     HueAllLightsStateView, HueOneLightChangeView, HueAllGroupsStateView)
 from homeassistant.const import STATE_ON, STATE_OFF
 
@@ -221,12 +222,13 @@ def test_discover_lights(hue_client):
 @asyncio.coroutine
 def test_get_light_state(hass_hue, hue_client):
     """Test the getting of light state."""
-    # Turn office light on and set to 127 brightness
+    # Turn office light on and set to 127 brightness, and set light color
     yield from hass_hue.services.async_call(
         light.DOMAIN, const.SERVICE_TURN_ON,
         {
             const.ATTR_ENTITY_ID: 'light.ceiling_lights',
-            light.ATTR_BRIGHTNESS: 127
+            light.ATTR_BRIGHTNESS: 127,
+            light.ATTR_RGB_COLOR: (1, 2, 7)
         },
         blocking=True)
 
@@ -235,6 +237,8 @@ def test_get_light_state(hass_hue, hue_client):
 
     assert office_json['state'][HUE_API_STATE_ON] is True
     assert office_json['state'][HUE_API_STATE_BRI] == 127
+    assert office_json['state'][HUE_API_STATE_HUE] == 41869
+    assert office_json['state'][HUE_API_STATE_SAT] == 217
 
     # Check all lights view
     result = yield from hue_client.get('/api/username/lights')
@@ -261,6 +265,8 @@ def test_get_light_state(hass_hue, hue_client):
 
     assert office_json['state'][HUE_API_STATE_ON] is False
     assert office_json['state'][HUE_API_STATE_BRI] == 0
+    assert office_json['state'][HUE_API_STATE_HUE] == 0
+    assert office_json['state'][HUE_API_STATE_SAT] == 0
 
     # Make sure bedroom light isn't accessible
     yield from perform_get_light_state(
@@ -287,6 +293,19 @@ def test_put_light_state(hass_hue, hue_client):
     assert ceiling_lights.state == STATE_ON
     assert ceiling_lights.attributes[light.ATTR_BRIGHTNESS] == 153
 
+    # update light state through api
+    yield from perform_put_light_state(
+        hass_hue, hue_client,
+        'light.ceiling_lights', True,
+        hue=4369, saturation=127, brightness=123)
+
+    # go through api to get the state back
+    ceiling_json = yield from perform_get_light_state(
+        hue_client, 'light.ceiling_lights', 200)
+    assert ceiling_json['state'][HUE_API_STATE_BRI] == 123
+    assert ceiling_json['state'][HUE_API_STATE_HUE] == 4369
+    assert ceiling_json['state'][HUE_API_STATE_SAT] == 127
+
     # Go through the API to turn it off
     ceiling_result = yield from perform_put_light_state(
         hass_hue, hue_client,
@@ -302,6 +321,11 @@ def test_put_light_state(hass_hue, hue_client):
     # Check to make sure the state changed
     ceiling_lights = hass_hue.states.get('light.ceiling_lights')
     assert ceiling_lights.state == STATE_OFF
+    ceiling_json = yield from perform_get_light_state(
+        hue_client, 'light.ceiling_lights', 200)
+    assert ceiling_json['state'][HUE_API_STATE_BRI] == 0
+    assert ceiling_json['state'][HUE_API_STATE_HUE] == 0
+    assert ceiling_json['state'][HUE_API_STATE_SAT] == 0
 
     # Make sure we can't change the bedroom light state
     bedroom_result = yield from perform_put_light_state(
@@ -706,7 +730,8 @@ def perform_get_light_state(client, entity_id, expected_status):
 
 @asyncio.coroutine
 def perform_put_light_state(hass_hue, client, entity_id, is_on,
-                            brightness=None, content_type='application/json'):
+                            brightness=None, content_type='application/json',
+                            hue=None, saturation=None):
     """Test the setting of a light state."""
     req_headers = {'Content-Type': content_type}
 
@@ -714,6 +739,10 @@ def perform_put_light_state(hass_hue, client, entity_id, is_on,
 
     if brightness is not None:
         data[HUE_API_STATE_BRI] = brightness
+    if hue is not None:
+        data[HUE_API_STATE_HUE] = hue
+    if saturation is not None:
+        data[HUE_API_STATE_SAT] = saturation
 
     result = yield from client.put(
         '/api/username/lights/{}/state'.format(entity_id), headers=req_headers,

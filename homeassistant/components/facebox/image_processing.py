@@ -1,9 +1,4 @@
-"""
-Component that will perform facial detection and identification via facebox.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.facebox
-"""
+"""Component for facial detection and identification via facebox."""
 import base64
 import logging
 

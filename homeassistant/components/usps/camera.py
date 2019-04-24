@@ -8,8 +8,6 @@ from . import DATA_USPS
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['usps']
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
