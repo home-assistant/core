@@ -2,6 +2,8 @@
 import logging
 import pytest
 
+import voluptuous as vol
+
 from homeassistant import setup
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.fan import (
@@ -417,7 +419,8 @@ async def test_set_invalid_osc_from_initial_state(hass, calls):
     await common.async_turn_on(hass, _TEST_FAN)
 
     # Set fan's osc to 'invalid'
-    await common.async_oscillate(hass, _TEST_FAN, 'invalid')
+    with pytest.raises(vol.Invalid):
+        await common.async_oscillate(hass, _TEST_FAN, 'invalid')
 
     # verify
     assert hass.states.get(_OSC_INPUT).state == ''
@@ -438,8 +441,9 @@ async def test_set_invalid_osc(hass, calls):
     assert hass.states.get(_OSC_INPUT).state == 'True'
     _verify(hass, STATE_ON, None, True, None)
 
-    # Set fan's osc to False
-    await common.async_oscillate(hass, _TEST_FAN, None)
+    # Set fan's osc to None
+    with pytest.raises(vol.Invalid):
+        await common.async_oscillate(hass, _TEST_FAN, None)
 
     # verify osc is unchanged
     assert hass.states.get(_OSC_INPUT).state == 'True'
