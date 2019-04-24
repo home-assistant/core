@@ -392,13 +392,13 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         config_path = find_config_file(hass.config.config_dir)
         assert config_path is not None
 
-        with open(config_path, 'rt') as config_file:
+        with open(config_path, 'rt', encoding='utf-8') as config_file:
             config_raw = config_file.read()
 
         if TTS_PRE_92 in config_raw:
             _LOGGER.info("Migrating google tts to google_translate tts")
             config_raw = config_raw.replace(TTS_PRE_92, TTS_92)
-            with open(config_path, 'wt') as config_file:
+            with open(config_path, 'wt', encoding='utf-8') as config_file:
                 config_file.write(config_raw)
 
     with open(version_path, 'wt') as outp:
