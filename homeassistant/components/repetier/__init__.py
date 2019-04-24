@@ -13,8 +13,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import slugify as util_slugify
 
-REQUIREMENTS = ['pyrepetier==3.0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'RepetierServer'

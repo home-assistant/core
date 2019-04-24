@@ -11,8 +11,6 @@ from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['repetier']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Repetier Server sensors."""
