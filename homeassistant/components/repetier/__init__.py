@@ -4,16 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_NAME,
-    CONF_SENSORS,
-    CONF_MONITORED_CONDITIONS,
-    TEMP_CELSIUS)
+    CONF_API_KEY, CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PORT,
+    CONF_SENSORS, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify as util_slugify
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.util import slugify as util_slugify
 
 REQUIREMENTS = ['pyrepetier==3.0.4']
 
