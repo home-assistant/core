@@ -708,7 +708,7 @@ class HASchema(vol.Schema):
                         redacted_data[k] = v
                     else:
                         redacted_data[k] = '<redacted>'
-                submsg += " (Offending data: {}".format(
+                submsg += "\n(Offending data: {}".format(
                     json.dumps(redacted_data))
 
                 msg += submsg
