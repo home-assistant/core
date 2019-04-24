@@ -52,14 +52,15 @@ async def async_setup_platform(hass,
     sensors = []
     for condition in config[CONF_MONITORED_CONDITIONS]:
 
-        name = "fronius_{}_{}".format(
-            condition[CONF_SENSOR_TYPE], config[CONF_RESOURCE]
-        )
         device = condition.get(CONF_DEVICE)
         if device == 0:
             if condition[CONF_SENSOR_TYPE] == 'inverter':
                 device = 1
-        name = "{}_{}".format(name, device)
+        name = "fronius_{}_{}_{}".format(
+            condition[CONF_SENSOR_TYPE],
+            device,
+            config[CONF_RESOURCE],
+        )
 
         sensor = FroniusSensor(fronius, name, condition[CONF_SENSOR_TYPE],
                                condition.get(CONF_SCOPE), device)
