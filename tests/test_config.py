@@ -318,7 +318,8 @@ class TestConfig(unittest.TestCase):
         ha_version = '0.92.0'
 
         mock_open = mock.mock_open()
-        with mock.patch('homeassistant.config.open', mock_open, create=True):
+        with mock.patch('homeassistant.config.open', mock_open, create=True), \
+                mock.patch.object(config_util, '__version__', '0.91.0'):
             opened_file = mock_open.return_value
             # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
@@ -326,7 +327,7 @@ class TestConfig(unittest.TestCase):
             config_util.process_ha_config_upgrade(self.hass)
 
             assert opened_file.write.call_count == 1
-            assert opened_file.write.call_args == mock.call(__version__)
+            assert opened_file.write.call_args == mock.call('0.91.0')
 
     def test_config_upgrade_same_version(self):
         """Test no update of version on no upgrade."""
