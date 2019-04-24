@@ -3,7 +3,7 @@
   "name": "Philips js",
   "documentation": "https://www.home-assistant.io/components/philips_js",
   "requirements": [
-    "ha-philipsjs==0.0.6"
+    "ha-philipsjs==0.0.7"
   ],
   "dependencies": [],
   "codeowners": []
