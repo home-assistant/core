@@ -602,7 +602,7 @@ async def test_device_class_switch(hass, device_class, google_type):
 
 @pytest.mark.parametrize("device_class,google_type", [
     ('door', 'action.devices.types.DOOR'),
-    ('garage_door', 'action.devices.types.SENSOR'),
+    ('garage_door', 'action.devices.types.GARAGE'),
     ('lock', 'action.devices.types.SENSOR'),
     ('opening', 'action.devices.types.SENSOR'),
     ('window', 'action.devices.types.SENSOR'),
@@ -646,6 +646,7 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
 @pytest.mark.parametrize("device_class,google_type", [
     ('non_existing_class', 'action.devices.types.BLINDS'),
     ('door', 'action.devices.types.DOOR'),
+    ('garage', 'action.devices.types.GARAGE'),
 ])
 async def test_device_class_cover(hass, device_class, google_type):
     """Test that a binary entity syncs to the correct device type."""
