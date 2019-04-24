@@ -167,7 +167,7 @@ def catch_log_exception(
 
 
 def catch_log_coro_exception(
-        func: Coroutine[Any, Any, Any],
+        target: Coroutine[Any, Any, Any],
         format_err: Callable[..., Any],
         *args: Any) -> Coroutine[Any, Any, Any]:
     """Decorate a coroutine to catch and log exceptions."""
@@ -179,15 +179,14 @@ def catch_log_coro_exception(
         friendly_msg = format_err(*args)
         logging.getLogger(module_name).error('%s\n%s', friendly_msg, exc_msg)
 
-    @wraps(func)  # type: ignore
     async def coro_wrapper(*args: Any) -> Any:
         """Catch and log exception."""
         try:
-            return await func
+            return await target
         except Exception:  # pylint: disable=broad-except
             log_exception(*args)
             return None
-    return coro_wrapper()  # type: ignore
+    return coro_wrapper()
 
 
 def async_create_catching_coro(
@@ -204,6 +203,6 @@ def async_create_catching_coro(
         target, lambda *args:
         "Exception in {} called from\n {}".format(
             target.__name__,  # type: ignore
-            "".join(traceback.format_list(trace))))
+            "".join(traceback.format_list(trace[:-1]))))
 
     return wrapped_target
