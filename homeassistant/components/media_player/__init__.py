@@ -66,6 +66,16 @@ ENTITY_IMAGE_CACHE = {
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
+DEVICE_CLASS_TV = 'tv'
+DEVICE_CLASS_SPEAKER = 'speaker'
+
+DEVICE_CLASSES = [
+    DEVICE_CLASS_TV,
+    DEVICE_CLASS_SPEAKER,
+]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.comp_entity_ids,
