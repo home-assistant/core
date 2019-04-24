@@ -24,7 +24,7 @@ def hass_ws_client(aiohttp_client, hass_access_token):
     """Websocket client fixture connected to websocket server."""
     async def create_client(hass, access_token=hass_access_token):
         """Create a websocket client."""
-        assert await async_setup_component(hass, 'websocket_api')
+        assert await async_setup_component(hass, 'websocket_api', {})
 
         client = await aiohttp_client(hass.http.app)
 

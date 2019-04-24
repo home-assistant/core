@@ -1,5 +1,4 @@
 """The tests for the Demo component."""
-import asyncio
 import json
 import os
 
@@ -16,18 +15,6 @@ def mock_history(hass):
     hass.config.components.add('history')
 
 
-@pytest.fixture
-def minimize_demo_platforms(hass):
-    """Cleanup demo component for tests."""
-    orig = demo.COMPONENTS_WITH_DEMO_PLATFORM
-    demo.COMPONENTS_WITH_DEMO_PLATFORM = [
-        'switch', 'light', 'media_player']
-
-    yield
-
-    demo.COMPONENTS_WITH_DEMO_PLATFORM = orig
-
-
 @pytest.fixture(autouse=True)
 def demo_cleanup(hass):
     """Clean up device tracker demo file."""
@@ -38,29 +25,15 @@ def demo_cleanup(hass):
         pass
 
 
-@asyncio.coroutine
-def test_if_demo_state_shows_by_default(hass, minimize_demo_platforms):
-    """Test if demo state shows if we give no configuration."""
-    yield from async_setup_component(hass, demo.DOMAIN, {demo.DOMAIN: {}})
+async def test_setting_up_demo(hass):
+    """Test if we can set up the demo and dump it to JSON."""
+    assert await async_setup_component(hass, demo.DOMAIN, {
+        'demo': {}
+    })
+    await hass.async_start()
 
-    assert hass.states.get('a.Demo_Mode') is not None
-
-
-@asyncio.coroutine
-def test_hiding_demo_state(hass, minimize_demo_platforms):
-    """Test if you can hide the demo card."""
-    yield from async_setup_component(hass, demo.DOMAIN, {
-        demo.DOMAIN: {'hide_demo_state': 1}})
-
-    assert hass.states.get('a.Demo_Mode') is None
-
-
-@asyncio.coroutine
-def test_all_entities_can_be_loaded_over_json(hass):
-    """Test if you can hide the demo card."""
-    yield from async_setup_component(hass, demo.DOMAIN, {
-        demo.DOMAIN: {'hide_demo_state': 1}})
-
+    # This is done to make sure entity components don't accidentally store
+    # non-JSON-serializable data in the state machine.
     try:
         json.dumps(hass.states.async_all(), cls=JSONEncoder)
     except Exception:

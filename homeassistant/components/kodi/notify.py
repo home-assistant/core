@@ -1,9 +1,4 @@
-"""
-Kodi notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.kodi/
-"""
+"""Kodi notification service."""
 import logging
 
 import aiohttp
@@ -18,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
-
-REQUIREMENTS = ['jsonrpc-async==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

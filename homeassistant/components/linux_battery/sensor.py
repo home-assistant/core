@@ -1,9 +1,4 @@
-"""
-Details about the built-in battery.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.linux_battery/
-"""
+"""Details about the built-in battery."""
 import logging
 import os
 
@@ -13,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_NAME, CONF_NAME, DEVICE_CLASS_BATTERY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['batinfo==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 

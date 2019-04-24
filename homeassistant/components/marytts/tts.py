@@ -1,9 +1,4 @@
-"""
-Support for the MaryTTS service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts.marytts/
-"""
+"""Support for the MaryTTS service."""
 import asyncio
 import logging
 import re

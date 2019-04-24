@@ -1,9 +1,4 @@
-"""
-Support for Ness D8X/D16X alarm panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.ness_alarm/
-"""
+"""Support for Ness D8X/D16X alarm panel."""
 
 import logging
 
@@ -17,8 +12,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['ness_alarm']
 
 
 async def async_setup_platform(hass, config, async_add_entities,

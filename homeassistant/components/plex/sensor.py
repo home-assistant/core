@@ -1,9 +1,4 @@
-"""
-Support for Plex media server monitoring.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.plex/
-"""
+"""Support for Plex media server monitoring."""
 from datetime import timedelta
 import logging
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['plexapi==3.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

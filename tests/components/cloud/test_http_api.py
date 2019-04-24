@@ -9,7 +9,8 @@ from hass_nabucasa.const import STATE_CONNECTED
 
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.cloud.const import (
-    PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_ALLOW_UNLOCK, DOMAIN)
+    PREF_ENABLE_GOOGLE, PREF_ENABLE_ALEXA, PREF_GOOGLE_SECURE_DEVICES_PIN,
+    DOMAIN)
 
 from tests.common import mock_coro
 
@@ -335,7 +336,7 @@ async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture,
     client = await hass_ws_client(hass)
 
     with patch.dict(
-        'homeassistant.components.google_assistant.smart_home.'
+        'homeassistant.components.google_assistant.const.'
         'DOMAIN_TO_GOOGLE_TYPES', {'light': None}, clear=True
     ), patch.dict('homeassistant.components.alexa.smart_home.ENTITY_ADAPTERS',
                   {'switch': None}, clear=True):
@@ -493,21 +494,21 @@ async def test_websocket_update_preferences(hass, hass_ws_client,
     """Test updating preference."""
     assert setup_api[PREF_ENABLE_GOOGLE]
     assert setup_api[PREF_ENABLE_ALEXA]
-    assert setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
+    assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] is None
     client = await hass_ws_client(hass)
     await client.send_json({
         'id': 5,
         'type': 'cloud/update_prefs',
         'alexa_enabled': False,
         'google_enabled': False,
-        'google_allow_unlock': False,
+        'google_secure_devices_pin': '1234',
     })
     response = await client.receive_json()
 
     assert response['success']
     assert not setup_api[PREF_ENABLE_GOOGLE]
     assert not setup_api[PREF_ENABLE_ALEXA]
-    assert not setup_api[PREF_GOOGLE_ALLOW_UNLOCK]
+    assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] == '1234'
 
 
 async def test_enabling_webhook(hass, hass_ws_client, setup_api,

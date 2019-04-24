@@ -349,6 +349,11 @@ def positive_timedelta(value: timedelta) -> timedelta:
     return value
 
 
+def remove_falsy(value: Sequence[T]) -> Sequence[T]:
+    """Remove falsy values from a list."""
+    return [v for v in value if v]
+
+
 def service(value):
     """Validate service."""
     # Services use same format as entities so we can use same helper.

@@ -1,9 +1,4 @@
-"""
-Support for showing random states.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.random/
-"""
+"""Support for showing random states."""
 import logging
 
 import voluptuous as vol

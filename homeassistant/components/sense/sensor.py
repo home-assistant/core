@@ -15,8 +15,6 @@ ACTIVE_TYPE = 'active'
 
 CONSUMPTION_NAME = 'Usage'
 
-DEPENDENCIES = ['sense']
-
 ICON = 'mdi:flash'
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)

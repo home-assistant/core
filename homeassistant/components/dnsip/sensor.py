@@ -1,9 +1,4 @@
-"""
-Get your own public IP address or that of any host.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dnsip/
-"""
+"""Get your own public IP address or that of any host."""
 import logging
 from datetime import timedelta
 
@@ -12,8 +7,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['aiodns==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

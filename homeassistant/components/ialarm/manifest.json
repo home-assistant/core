@@ -1,0 +1,10 @@
+{
+  "domain": "ialarm",
+  "name": "Ialarm",
+  "documentation": "https://www.home-assistant.io/components/ialarm",
+  "requirements": [
+    "pyialarm==0.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

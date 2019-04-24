@@ -1,0 +1,10 @@
+{
+  "domain": "google_assistant",
+  "name": "Google assistant",
+  "documentation": "https://www.home-assistant.io/components/google_assistant",
+  "requirements": [],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": []
+}

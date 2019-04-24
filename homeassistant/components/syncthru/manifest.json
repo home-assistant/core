@@ -1,0 +1,10 @@
+{
+  "domain": "syncthru",
+  "name": "Syncthru",
+  "documentation": "https://www.home-assistant.io/components/syncthru",
+  "requirements": [
+    "pysyncthru==0.3.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

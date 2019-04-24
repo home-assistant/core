@@ -1,0 +1,10 @@
+{
+  "domain": "ps4",
+  "name": "Ps4",
+  "documentation": "https://www.home-assistant.io/components/ps4",
+  "requirements": [
+    "pyps4-homeassistant==0.5.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

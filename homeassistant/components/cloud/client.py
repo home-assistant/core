@@ -102,9 +102,13 @@ class CloudClient(Interface):
 
             self._google_config = ga_h.Config(
                 should_expose=should_expose,
-                allow_unlock=self._prefs.google_allow_unlock,
+                secure_devices_pin=self._prefs.google_secure_devices_pin,
                 entity_config=google_conf.get(CONF_ENTITY_CONFIG),
             )
+
+        # Set it to the latest.
+        self._google_config.secure_devices_pin = \
+            self._prefs.google_secure_devices_pin
 
         return self._google_config
 
@@ -150,8 +154,11 @@ class CloudClient(Interface):
         )
 
         # Fix AgentUserId
-        cloud = self._hass.data[DOMAIN]
-        answer['payload']['agentUserId'] = cloud.claims['cognito:username']
+        try:
+            cloud = self._hass.data[DOMAIN]
+            answer['payload']['agentUserId'] = cloud.claims['cognito:username']
+        except (TypeError, KeyError):
+            return ga.turned_off_response(payload)
 
         return answer
 

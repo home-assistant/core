@@ -1,0 +1,10 @@
+{
+  "domain": "history_stats",
+  "name": "History stats",
+  "documentation": "https://www.home-assistant.io/components/history_stats",
+  "requirements": [],
+  "dependencies": [
+    "history"
+  ],
+  "codeowners": []
+}

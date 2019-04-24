@@ -1,9 +1,4 @@
-"""
-Support for RESTful switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rest/
-"""
+"""Support for RESTful switches."""
 import asyncio
 import logging
 

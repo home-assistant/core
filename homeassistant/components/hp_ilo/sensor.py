@@ -13,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-hpilo==3.9']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "HP ILO"

@@ -1,9 +1,4 @@
-"""
-Support Hook, available at hooksmarthome.com.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hook/
-"""
+"""Support Hook, available at hooksmarthome.com."""
 import logging
 import asyncio
 

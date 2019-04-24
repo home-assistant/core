@@ -1,26 +1,18 @@
-"""
-Support for Dark Sky weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.darksky/
-"""
-from datetime import timedelta
+"""Support for Dark Sky weather service."""
 import logging
+from datetime import timedelta
 
+import voluptuous as vol
 from requests.exceptions import (
     ConnectionError as ConnectError, HTTPError, Timeout)
-import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX, CONF_UPDATE_INTERVAL,
-    CONF_SCAN_INTERVAL, CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
-import homeassistant.helpers.config_validation as cv
+    CONF_MONITORED_CONDITIONS, CONF_NAME, UNIT_UV_INDEX, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['python-forecastio==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -163,47 +155,38 @@ CONDITION_PICTURES = {
 
 # Language Supported Codes
 LANGUAGE_CODES = [
-    'ar', 'az', 'be', 'bg', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
-    'et', 'fi', 'fr', 'he', 'hr', 'hu', 'id', 'is', 'it', 'ja', 'ka', 'ko',
-    'kw', 'lv', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv',
-    'tet', 'tr', 'uk', 'x-pig-latin', 'zh', 'zh-tw',
+    'ar', 'az', 'be', 'bg', 'bn', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en',
+    'ja', 'ka', 'kn', 'ko', 'eo', 'es', 'et', 'fi', 'fr', 'he', 'hi', 'hr',
+    'hu', 'id', 'is', 'it', 'kw', 'lv', 'ml', 'mr', 'nb', 'nl', 'pa', 'pl',
+    'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv', 'ta', 'te', 'tet', 'tr', 'uk',
+    'ur', 'x-pig-latin', 'zh', 'zh-tw',
 ]
 
 ALLOWED_UNITS = ['auto', 'si', 'us', 'ca', 'uk', 'uk2']
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_MONITORED_CONDITIONS):
-            vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNITS): vol.In(ALLOWED_UNITS),
-        vol.Optional(CONF_LANGUAGE,
-                     default=DEFAULT_LANGUAGE): vol.In(LANGUAGE_CODES),
-        vol.Inclusive(
-            CONF_LATITUDE,
-            'coordinates',
-            'Latitude and longitude must exist together'
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE,
-            'coordinates',
-            'Latitude and longitude must exist together'
-        ): cv.longitude,
-        vol.Optional(CONF_UPDATE_INTERVAL):
-            vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_FORECAST):
-            vol.All(cv.ensure_list, [vol.Range(min=0, max=7)]),
-        vol.Optional(CONF_HOURLY_FORECAST):
-            vol.All(cv.ensure_list, [vol.Range(min=0, max=48)]),
-    }),
-    cv.deprecated(
-        CONF_UPDATE_INTERVAL,
-        replacement_key=CONF_SCAN_INTERVAL,
-        invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-        default=SCAN_INTERVAL
-    )
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNITS): vol.In(ALLOWED_UNITS),
+    vol.Optional(CONF_LANGUAGE,
+                 default=DEFAULT_LANGUAGE): vol.In(LANGUAGE_CODES),
+    vol.Inclusive(
+        CONF_LATITUDE,
+        'coordinates',
+        'Latitude and longitude must exist together'
+    ): cv.latitude,
+    vol.Inclusive(
+        CONF_LONGITUDE,
+        'coordinates',
+        'Latitude and longitude must exist together'
+    ): cv.longitude,
+    vol.Optional(CONF_FORECAST):
+        vol.All(cv.ensure_list, [vol.Range(min=0, max=7)]),
+    vol.Optional(CONF_HOURLY_FORECAST):
+        vol.All(cv.ensure_list, [vol.Range(min=0, max=48)]),
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

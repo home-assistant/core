@@ -10,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, dispatcher_connect)
 
-REQUIREMENTS = ['asterisk_mbox==0.5.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'asterisk_mbox'

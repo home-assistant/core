@@ -1,9 +1,4 @@
-"""
-This component provides support for Xiaomi Cameras (HiSilicon Hi3518e V200).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.yi/
-"""
+"""Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
 import asyncio
 import logging
 
@@ -17,8 +12,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['aioftp==0.12.0']
-DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRAND = 'YI Home Camera'

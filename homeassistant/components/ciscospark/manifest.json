@@ -1,0 +1,10 @@
+{
+  "domain": "ciscospark",
+  "name": "Ciscospark",
+  "documentation": "https://www.home-assistant.io/components/ciscospark",
+  "requirements": [
+    "ciscosparkapi==0.4.2"
+  ],
+  "dependencies": [],
+  "codeowners": ["@fbradyirl"]
+}

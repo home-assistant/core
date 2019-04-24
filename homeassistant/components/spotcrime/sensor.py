@@ -1,9 +1,4 @@
-"""
-Sensor for Spot Crime.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.spotcrime/
-"""
+"""Sensor for Spot Crime."""
 
 from datetime import timedelta
 from collections import defaultdict
@@ -19,8 +14,6 @@ from homeassistant.const import (CONF_API_KEY, CONF_INCLUDE, CONF_EXCLUDE,
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['spotcrime==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

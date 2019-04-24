@@ -1,9 +1,4 @@
-"""
-Support to interface with the Plex API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.plex/
-"""
+"""Support to interface with the Plex API."""
 from datetime import timedelta
 import json
 import logging
@@ -24,8 +19,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json, save_json
-
-REQUIREMENTS = ['plexapi==3.0.6']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -679,7 +672,7 @@ class PlexClient(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         if not self._is_player_active:
-            return None
+            return 0
 
         # force show all controls
         if self.config.get(CONF_SHOW_ALL_CONTROLS):
@@ -690,7 +683,7 @@ class PlexClient(MediaPlayerDevice):
 
         # only show controls when we know what device is connecting
         if not self._make:
-            return None
+            return 0
         # no mute support
         if self.make.lower() == "shield android tv":
             _LOGGER.debug(
@@ -715,7 +708,7 @@ class PlexClient(MediaPlayerDevice):
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                     SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
 
-        return None
+        return 0
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""

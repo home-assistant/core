@@ -1,9 +1,4 @@
-"""
-Support for switch devices that can be controlled using the RaspyRFM rc module.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.raspyrfm/
-"""
+"""Support for switchs that can be controlled using the RaspyRFM rc module."""
 import logging
 
 import voluptuous as vol
@@ -14,7 +9,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['raspyrfm-client==1.2.8']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_GATEWAY_MANUFACTURER = 'gateway_manufacturer'

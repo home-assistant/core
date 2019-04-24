@@ -16,8 +16,6 @@ DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = 'default'
 DEFAULT_VERIFY_SSL = False
 
-REQUIREMENTS = ['aiounifi==4']
-
 
 async def async_setup(hass, config):
     """Component doesn't support configuration through configuration.yaml."""

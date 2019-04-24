@@ -18,8 +18,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.restore_state import RestoreEntity
 
-REQUIREMENTS = ['rflink==0.0.37']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EVENT = 'event'

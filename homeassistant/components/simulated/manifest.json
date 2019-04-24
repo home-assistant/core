@@ -1,0 +1,8 @@
+{
+  "domain": "simulated",
+  "name": "Simulated",
+  "documentation": "https://www.home-assistant.io/components/simulated",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

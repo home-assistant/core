@@ -1,9 +1,4 @@
-"""
-Support for eQ-3 Bluetooth Smart thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.eq3btsmart/
-"""
+"""Support for eQ-3 Bluetooth Smart thermostats."""
 import logging
 
 import voluptuous as vol
@@ -17,8 +12,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_MAC, CONF_DEVICES, STATE_ON, STATE_OFF,
     TEMP_CELSIUS, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['python-eq3bt==0.1.9', 'construct==2.9.45']
 
 _LOGGER = logging.getLogger(__name__)
 

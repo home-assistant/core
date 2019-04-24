@@ -1,9 +1,4 @@
-"""
-Support for DD-WRT routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.ddwrt/
-"""
+"""Support for DD-WRT routers."""
 import logging
 import re
 

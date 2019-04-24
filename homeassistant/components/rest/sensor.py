@@ -1,9 +1,4 @@
-"""
-Support for RESTful API sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rest/
-"""
+"""Support for RESTful API sensors."""
 import logging
 import json
 
