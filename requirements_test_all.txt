@@ -87,6 +87,9 @@ dsmr_parser==0.12
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
 
+# homeassistant.components.enocean
+enocean==0.50
+
 # homeassistant.components.emulated_roku
 emulated_roku==0.1.8
 
