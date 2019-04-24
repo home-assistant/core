@@ -170,33 +170,33 @@ def setup(hass, config):
         sensors = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
         for pidx, printer in enumerate(printers):
             for sensor_type in sensors:
-                sensvar = {}
-                sensvar['sensor_type'] = sensor_type
-                sensvar['printer_id'] = pidx
-                sensvar['name'] = printer.slug
-                sensvar['printer_name'] = repetier[CONF_NAME]
+                info = {}
+                info['sensor_type'] = sensor_type
+                info['printer_id'] = pidx
+                info['name'] = printer.slug
+                info['printer_name'] = repetier[CONF_NAME]
 
                 if sensor_type == 'bed_temperature':
                     if printer.heatedbeds is None:
                         continue
                     for idx, _ in enumerate(printer.heatedbeds):
-                        sensvar['temp_id'] = idx
-                        sensor_info.append(sensvar)
+                        info['temp_id'] = idx
+                        sensor_info.append(info)
                 elif sensor_type == 'extruder_temperature':
                     if printer.extruder is None:
                         continue
                     for idx, _ in enumerate(printer.extruder):
-                        sensvar['temp_id'] = idx
-                        sensor_info.append(sensvar)
+                        info['temp_id'] = idx
+                        sensor_info.append(info)
                 elif sensor_type == 'chamber_temperature':
                     if printer.heatedchambers is None:
                         continue
                     for idx, _ in enumerate(printer.heatedchambers):
-                        sensvar['temp_id'] = idx
-                        sensor_info.append(sensvar)
+                        info['temp_id'] = idx
+                        sensor_info.append(info)
                 else:
-                    sensvar['temp_id'] = None
-                    sensor_info.append(sensvar)
+                    info['temp_id'] = None
+                    sensor_info.append(info)
 
     load_platform(hass, 'sensor', DOMAIN, sensor_info, config)
 
