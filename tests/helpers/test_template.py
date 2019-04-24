@@ -17,7 +17,6 @@ from homeassistant.helpers.entityfilter import EntityFilter
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
-
 def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem('custom', TEMP_CELSIUS,
@@ -40,6 +39,42 @@ def extract_entities(hass, template_str, variables=None):
         and not filt.exclude_domains
         and not filt.exclude_entities)
     return filt.include_entities
+
+
+def test_template_equality():
+    """Test template comparison and hashing."""
+    template_one = template.Template("{{ template_one }}")
+    template_one_1 = template.Template("{{ template_" + "one }}")
+    template_two = template.Template("{{ template_two }}")
+
+    assert template_one == template_one_1
+    assert template_one != template_two
+    assert hash(template_one) == hash(template_one_1)
+    assert hash(template_one) != hash(template_two)
+
+    assert str(template_one_1) == 'Template("{{ template_one }}")'
+
+    with pytest.raises(TypeError):
+        template.Template(["{{ template_one }}"])
+
+
+async def test_invalid_entity_id(hass):
+    """Test referring states by entity id."""
+    with pytest.raises(TemplateError):
+        template.Template(
+            '{{ states["big.fat..."] }}', hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template(
+            '{{ states.test["big.fat..."] }}', hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template(
+            '{{ states["invalid/domain"] }}', hass).async_render()
+
+
+def test_raise_exception_on_error(hass):
+    """Test raising an exception on error."""
+    with pytest.raises(TemplateError):
+        template.Template('{{ invalid_syntax').ensure_valid()
 
 
 def test_referring_states_by_entity_id(hass):
@@ -462,42 +497,6 @@ def test_render_with_possible_json_value_non_string_value(hass):
     value = datetime(2019, 1, 18, 12, 13, 14)
     expected = str(pytz.utc.localize(value))
     assert tpl.async_render_with_possible_json_value(value) == expected
-
-
-def test_template_equality():
-    """Test template comparison and hashing."""
-    template_one = template.Template("{{ template_one }}")
-    template_one_1 = template.Template("{{ template_" + "one }}")
-    template_two = template.Template("{{ template_two }}")
-
-    assert template_one == template_one_1
-    assert template_one != template_two
-    assert hash(template_one) == hash(template_one_1)
-    assert hash(template_one) != hash(template_two)
-
-    assert str(template_one_1) == 'Template("{{ template_one }}")'
-
-    with pytest.raises(TypeError):
-        template.Template(["{{ template_one }}"])
-
-
-async def test_invalid_entity_id(hass):
-    """Test referring states by entity id."""
-    with pytest.raises(TemplateError):
-        template.Template(
-            '{{ states["big.fat..."] }}', hass).async_render()
-    with pytest.raises(TemplateError):
-        template.Template(
-            '{{ states.test["big.fat..."] }}', hass).async_render()
-    with pytest.raises(TemplateError):
-        template.Template(
-            '{{ states["invalid/domain"] }}', hass).async_render()
-
-
-def test_raise_exception_on_error(hass):
-    """Test raising an exception on error."""
-    with pytest.raises(TemplateError):
-        template.Template('{{ invalid_syntax').ensure_valid()
 
 
 def test_if_state_exists(hass):
