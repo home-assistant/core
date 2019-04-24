@@ -22,7 +22,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    printers = hass.data[REPETIER_API]
+    printer_name = discovery_info[0]['printer_name']
+    printers = hass.data[REPETIER_API][printer_name]
 
     sensor_map = {
         'bed_temperature': RepetierBedSensor,
@@ -36,48 +37,32 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
     for info in discovery_info:
-        pidx = info['pidx']
+        printer_id = info['printer_id']
         sensor_type = info['sensor_type']
         name = info['name']
-        printer = printers[pidx]
-        data_key = 0
+        printer = printers[printer_id]
+        data_key = None
+        sensor_class = sensor_map[sensor_type]
 
         if sensor_type == 'bed_temperature':
             if printer.heatedbeds is None:
                 continue
-            sensor_class = sensor_map[sensor_type]
-            for idx, _ in enumerate(printer.heatedbeds):
-                name = '{}{}{}'.format(name,
-                                       SENSOR_TYPES[sensor_type][3],
-                                       idx)
-                data_key = idx
+            for data_key, _ in enumerate(printer.heatedbeds):
                 entity = sensor_class(printer, name, sensor_type, data_key)
                 entities.append(entity)
         elif sensor_type == 'extruder_temperature':
             if printer.extruder is None:
                 continue
-            sensor_class = sensor_map[sensor_type]
-            for idx, _ in enumerate(printer.extruder):
-                name = '{}{}{}'.format(name,
-                                       SENSOR_TYPES[sensor_type][3],
-                                       idx)
-                data_key = idx
+            for data_key, _ in enumerate(printer.extruder):
                 entity = sensor_class(printer, name, sensor_type, data_key)
                 entities.append(entity)
         elif sensor_type == 'chamber_temperature':
             if printer.heatedchambers is None:
                 continue
-            sensor_class = sensor_map[sensor_type]
-            for idx, _ in enumerate(printer.heatedchambers):
-                name = '{}{}{}'.format(name,
-                                       SENSOR_TYPES[sensor_type][3],
-                                       idx)
-                data_key = idx
+            for data_key, _ in enumerate(printer.heatedchambers):
                 entity = sensor_class(printer, name, sensor_type, data_key)
                 entities.append(entity)
         else:
-            sensor_class = sensor_map[sensor_type]
-            name = '{}{}'.format(name, SENSOR_TYPES[sensor_type][3])
             entity = sensor_class(printer, name, sensor_type, data_key)
             entities.append(entity)
 
@@ -91,7 +76,7 @@ class RepetierSensor(Entity):
         """Init new sensor."""
         self._printer = printer
         self._available = False
-        self._name = name
+        self._name = '{}{}'.format(name, SENSOR_TYPES[sensor_type][3])
         self._sensor_type = sensor_type
         self._data_key = data_key
         self._state = None
@@ -136,6 +121,12 @@ class RepetierSensor(Entity):
 class RepetierBedSensor(RepetierSensor):
     """Class to create and populate a Repetier Bed Sensor."""
 
+    def __init__(self, printer, name, sensor_type, data_key):
+        """Init new sensor."""
+        super().__init__(printer, name, sensor_type, data_key)
+        self._name = '{}{}{}'.format(
+            name, SENSOR_TYPES[sensor_type][3], data_key)
+
     @property
     def state(self):
         """Return sensor state."""
@@ -168,6 +159,12 @@ class RepetierBedSensor(RepetierSensor):
 class RepetierExtruderSensor(RepetierSensor):
     """Class to create and populate a Repetier Nozzle Sensor."""
 
+    def __init__(self, printer, name, sensor_type, data_key):
+        """Init new sensor."""
+        super().__init__(printer, name, sensor_type, data_key)
+        self._name = '{}{}{}'.format(
+            name, SENSOR_TYPES[sensor_type][3], data_key)
+
     @property
     def state(self):
         """Return sensor state."""
@@ -199,6 +196,12 @@ class RepetierExtruderSensor(RepetierSensor):
 
 class RepetierChamberSensor(RepetierSensor):
     """Class to create and populate a Repetier Nozzle Sensor."""
+
+    def __init__(self, printer, name, sensor_type, data_key):
+        """Init new sensor."""
+        super().__init__(printer, name, sensor_type, data_key)
+        self._name = '{}{}{}'.format(
+            name, SENSOR_TYPES[sensor_type][3], data_key)
 
     @property
     def state(self):
@@ -235,8 +238,6 @@ class RepetierStateSensor(RepetierSensor):
     @property
     def state(self):
         """Return sensor state."""
-        if self._state is None:
-            return None
         return self._state
 
     def update(self):
@@ -304,8 +305,6 @@ class RepetierRemainingSensor(RepetierSensor):
     @property
     def state(self):
         """Return sensor state."""
-        if self._state is None:
-            return None
         return self._state
 
     def update(self):
@@ -345,8 +344,6 @@ class RepetierElapsedSensor(RepetierSensor):
     @property
     def state(self):
         """Return sensor state."""
-        if self._state is None:
-            return None
         return self._state
 
     def update(self):
