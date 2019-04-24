@@ -67,6 +67,7 @@ def setup(hass, config):
     import pyrepetier
 
     hass.data[REPETIER_API] = {}
+    sensor_info = []
 
     for repetier in config[DOMAIN]:
         _LOGGER.debug("Repetier server config %s", repetier[CONF_HOST])
@@ -87,7 +88,6 @@ def setup(hass, config):
 
         hass.data[REPETIER_API][repetier[CONF_NAME]] = printers
 
-        sensor_info = []
         sensors = repetier[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
         for pidx, printer in enumerate(printers):
             printer.get_data()
@@ -99,6 +99,6 @@ def setup(hass, config):
                 sensvar['printer_name'] = repetier[CONF_NAME]
                 sensor_info.append(sensvar)
 
-        load_platform(hass, 'sensor', DOMAIN, sensor_info, config)
+    load_platform(hass, 'sensor', DOMAIN, sensor_info, config)
 
     return True

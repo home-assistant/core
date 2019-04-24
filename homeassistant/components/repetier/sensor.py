@@ -22,9 +22,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    printer_name = discovery_info[0]['printer_name']
-    printers = hass.data[REPETIER_API][printer_name]
-
     sensor_map = {
         'bed_temperature': RepetierBedSensor,
         'extruder_temperature': RepetierExtruderSensor,
@@ -37,10 +34,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
     for info in discovery_info:
-        printer_id = info['printer_id']
-        sensor_type = info['sensor_type']
         name = info['name']
+        printer_name = info['printer_name']
+        printers = hass.data[REPETIER_API][printer_name]
+        printer_id = info['printer_id']
         printer = printers[printer_id]
+        sensor_type = info['sensor_type']
         data_key = None
         sensor_class = sensor_map[sensor_type]
 
