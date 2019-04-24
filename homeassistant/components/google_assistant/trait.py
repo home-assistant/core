@@ -1160,49 +1160,57 @@ class VolumeTrait(_Trait):
 
         return response
 
-    async def execute(self, command, data, params, challenge):
-        """Execute a brightness command."""
-        if command == COMMAND_SET_VOLUME:
-            level = params['volumeLevel']
-            if level == 0:
+    async def _execute_set_volume(self, data, params):
+        level = params['volumeLevel']
+        if level == 0:
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_VOLUME_MUTE, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_MEDIA_VOLUME_MUTED:
+                    True
+                }, blocking=True, context=data.context)
+        else:
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_VOLUME_SET, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_MEDIA_VOLUME_LEVEL:
+                    level / 100
+                }, blocking=True, context=data.context)
+
+            if self.state.attributes.get(
+                    media_player.ATTR_MEDIA_VOLUME_MUTED):
                 await self.hass.services.async_call(
                     media_player.DOMAIN,
                     media_player.SERVICE_VOLUME_MUTE, {
                         ATTR_ENTITY_ID: self.state.entity_id,
                         media_player.ATTR_MEDIA_VOLUME_MUTED:
-                        True
-                    }, blocking=True, context=data.context)
-            else:
-                await self.hass.services.async_call(
-                    media_player.DOMAIN,
-                    media_player.SERVICE_VOLUME_SET, {
-                        ATTR_ENTITY_ID: self.state.entity_id,
-                        media_player.ATTR_MEDIA_VOLUME_LEVEL:
-                        level / 100
+                        False
                     }, blocking=True, context=data.context)
 
-                if self.state.attributes.get(
-                        media_player.ATTR_MEDIA_VOLUME_MUTED):
-                    await self.hass.services.async_call(
-                        media_player.DOMAIN,
-                        media_player.SERVICE_VOLUME_MUTE, {
-                            ATTR_ENTITY_ID: self.state.entity_id,
-                            media_player.ATTR_MEDIA_VOLUME_MUTED:
-                            False
-                        }, blocking=True, context=data.context)
+    async def _execute_volume_relative(self, data, params):
+        # This could also support up/down commands using relativeSteps
+        relative = params['volumeRelativeLevel']
+        current = self.state.attributes.get(
+            media_player.ATTR_MEDIA_VOLUME_LEVEL)
 
+        await self.hass.services.async_call(
+            media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                media_player.ATTR_MEDIA_VOLUME_LEVEL:
+                current + relative / 100
+            }, blocking=True, context=data.context)
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a brightness command."""
+        if command == COMMAND_SET_VOLUME:
+            await self._execute_set_volume(data, params)
         elif command == COMMAND_VOLUME_RELATIVE:
-            # This could also support up/down commands using relativeSteps
-            relative = params['volumeRelativeLevel']
-            current = self.state.attributes.get(
-                media_player.ATTR_MEDIA_VOLUME_LEVEL)
-
-            await self.hass.services.async_call(
-                media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_MEDIA_VOLUME_LEVEL:
-                    current + relative / 100
-                }, blocking=True, context=data.context)
+            await self._execute_volume_relative(data, params)
+        else:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED, 'Command not supported')
 
 
 def _verify_pin_challenge(data, challenge):
