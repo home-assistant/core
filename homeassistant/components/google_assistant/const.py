@@ -53,6 +53,7 @@ TYPE_SENSOR = PREFIX_TYPES + 'SENSOR'
 TYPE_DOOR = PREFIX_TYPES + 'DOOR'
 TYPE_TV = PREFIX_TYPES + 'TV'
 TYPE_SPEAKER = PREFIX_TYPES + 'SPEAKER'
+TYPE_MEDIA = PREFIX_TYPES + 'MEDIA'
 
 SERVICE_REQUEST_SYNC = 'request_sync'
 HOMEGRAPH_URL = 'https://homegraph.googleapis.com/'
@@ -88,7 +89,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     input_boolean.DOMAIN: TYPE_SWITCH,
     light.DOMAIN: TYPE_LIGHT,
     lock.DOMAIN: TYPE_LOCK,
-    media_player.DOMAIN: TYPE_SWITCH,
+    media_player.DOMAIN: TYPE_MEDIA,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,

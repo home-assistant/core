@@ -685,6 +685,7 @@ async def test_device_class_cover(hass, device_class, google_type):
 
 
 @pytest.mark.parametrize("device_class,google_type", [
+    ('non_existing_class', 'action.devices.types.MEDIA'),
     ('speaker', 'action.devices.types.SPEAKER'),
     ('tv', 'action.devices.types.TV'),
 ])
