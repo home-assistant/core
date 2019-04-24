@@ -3,9 +3,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE, CONF_MONITORED_CONDITIONS
-)
+from homeassistant.const import (CONF_RESOURCE, CONF_SENSOR_TYPE, CONF_DEVICE,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -28,13 +27,16 @@ SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Required(CONF_RESOURCE):
+    cv.url,
     vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [{
+    vol.All(
+        cv.ensure_list,
+        [{
             vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-            vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE): vol.In(SCOPE_TYPES),
-            vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
-                cv.positive_int,
+            vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
+            vol.In(SCOPE_TYPES),
+            vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.positive_int,
         }]),
 })
 
@@ -105,9 +107,7 @@ class FroniusSensor(Entity):
         except ConnectionError:
             _LOGGER.error("Failed to update: connection error")
         except ValueError:
-            _LOGGER.error(
-                "Failed to update: invalid response returned"
-            )
+            _LOGGER.error("Failed to update: invalid response returned")
 
         if values:
             self._state = values['status']['Code']
