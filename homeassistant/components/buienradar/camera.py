@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_DIMENSION): DIM_RANGE,
         vol.Optional(CONF_DELTA): vol.All(vol.Coerce(float),
-                                             vol.Range(min=0)),
+                                          vol.Range(min=0)),
         vol.Optional(CONF_NAME): cv.string,
     }))
 
