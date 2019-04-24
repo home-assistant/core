@@ -34,6 +34,22 @@ CONFIG_INVALID_MISSING = {
     }
 }
 
+BASIC_RESULTS = {
+    'predictions': {
+        'agencyTitle': VALID_AGENCY_TITLE,
+        'routeTitle': VALID_ROUTE_TITLE,
+        'stopTitle': VALID_STOP_TITLE,
+        'direction': {
+            'title': 'Outbound',
+            'prediction': [
+                {'minutes': '1', 'epochTime': '1553807371000'},
+                {'minutes': '2', 'epochTime': '1553807372000'},
+                {'minutes': '3', 'epochTime': '1553807373000'},
+            ],
+        }
+    }
+}
+
 
 async def assert_setup_sensor(hass, config, count=1):
     """Set up the sensor and assert it's been created."""
@@ -52,6 +68,8 @@ def mock_nextbus():
 def mock_nextbus_predictions(mock_nextbus):
     """Create a mock of NextBusClient predictions."""
     instance = mock_nextbus.NextBusClient.return_value
+    instance.get_predictions_for_multi_stops.return_value = BASIC_RESULTS
+
     yield instance.get_predictions_for_multi_stops
 
 
@@ -130,22 +148,6 @@ async def test_verify_valid_state(
         mock_nextbus_predictions,
 ):
     """Verify all attributes are set from a valid response."""
-    mock_nextbus_predictions.return_value = {
-        'predictions': {
-            'agencyTitle': VALID_AGENCY_TITLE,
-            'routeTitle': VALID_ROUTE_TITLE,
-            'stopTitle': VALID_STOP_TITLE,
-            'direction': {
-                'title': 'Outbound',
-                'prediction': [
-                    {'minutes': '1', 'epochTime': '1553807371000'},
-                    {'minutes': '2', 'epochTime': '1553807372000'},
-                    {'minutes': '3', 'epochTime': '1553807373000'},
-                ],
-            }
-        }
-    }
-
     await assert_setup_sensor(hass, CONFIG_BASIC)
     mock_nextbus_predictions.assert_called_once_with(
         [{'stop_tag': int(VALID_STOP), 'route_tag': VALID_ROUTE}],
@@ -222,6 +224,51 @@ async def test_message_list(
     state = hass.states.get(SENSOR_ID_SHORT)
     assert state is not None
     assert state.attributes['message'] == 'Message 1 -- Message 2'
+
+
+async def test_direction_list(
+        hass,
+        mock_nextbus,
+        mock_nextbus_lists,
+        mock_nextbus_predictions,
+):
+    """Verify that a list of messages are rendered correctly."""
+    mock_nextbus_predictions.return_value = {
+        'predictions': {
+            'agencyTitle': VALID_AGENCY_TITLE,
+            'routeTitle': VALID_ROUTE_TITLE,
+            'stopTitle': VALID_STOP_TITLE,
+            'message': [{'text': 'Message 1'}, {'text': 'Message 2'}],
+            'direction': [
+                {
+                    'title': 'Outbound',
+                    'prediction': [
+                        {'minutes': '1', 'epochTime': '1553807371000'},
+                        {'minutes': '2', 'epochTime': '1553807372000'},
+                        {'minutes': '3', 'epochTime': '1553807373000'},
+                    ],
+                },
+                {
+                    'title': 'Outbound 2',
+                    'prediction': {
+                        'minutes': '4',
+                        'epochTime': '1553807374000',
+                    },
+                },
+            ],
+        }
+    }
+
+    await assert_setup_sensor(hass, CONFIG_BASIC)
+
+    state = hass.states.get(SENSOR_ID_SHORT)
+    assert state is not None
+    assert state.state == '2019-03-28T21:09:31+00:00'
+    assert state.attributes['agency'] == VALID_AGENCY_TITLE
+    assert state.attributes['route'] == VALID_ROUTE_TITLE
+    assert state.attributes['stop'] == VALID_STOP_TITLE
+    assert state.attributes['direction'] == 'Outbound, Outbound 2'
+    assert state.attributes['upcoming'] == '1, 2, 3, 4'
 
 
 async def test_custom_name(

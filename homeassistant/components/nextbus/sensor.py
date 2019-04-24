@@ -1,5 +1,6 @@
 """NextBus sensor."""
 import logging
+from itertools import chain
 
 import voluptuous as vol
 
@@ -26,6 +27,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 })
+
+
+def listify(maybe_list):
+    """Return list version of whatever value is passed in.
+
+    This is used to provide a consistent way of interacting with the JSON
+    results from the API. There are several attributes that will either missing
+    if there are no values, a single dictionary if there is only one value, and
+    a list if there are multiple.
+    """
+    if maybe_list is None:
+        return []
+    if isinstance(maybe_list, list):
+        return maybe_list
+    return [maybe_list]
+
+
+def maybe_first(maybe_list):
+    """Return the first item out of a list or returns back the input."""
+    if isinstance(maybe_list, list) and maybe_list:
+        return maybe_list[0]
+
+    return maybe_list
 
 
 def validate_value(value_name, value, value_list):
@@ -96,11 +120,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities([
         NextBusDepartureSensor(
+            client,
             agency,
             route,
             stop,
             name,
-            client=client,
         ),
     ], True)
 
@@ -116,7 +140,7 @@ class NextBusDepartureSensor(Entity):
     the future using fuzzy logic and matching.
     """
 
-    def __init__(self, agency, route, stop, name=None, client=None):
+    def __init__(self, client, agency, route, stop, name=None):
         """Initialize sensor with all required config."""
         self.agency = agency
         self.route = route
@@ -176,7 +200,7 @@ class NextBusDepartureSensor(Entity):
     def update(self):
         """Update sensor with new departures times."""
         # Note: using Multi because there is a bug with the single stop impl
-        predictions = self._client.get_predictions_for_multi_stops(
+        results = self._client.get_predictions_for_multi_stops(
             [{
                 'stop_tag': int(self.stop),
                 'route_tag': self.route,
@@ -184,53 +208,61 @@ class NextBusDepartureSensor(Entity):
             self.agency,
         )
 
-        self._log_debug('Predictions results: %s', predictions)
+        self._log_debug('Predictions results: %s', results)
 
-        if 'Error' in predictions:
-            self._log_debug('Could not get predictions: %s', predictions)
+        if 'Error' in results:
+            self._log_debug('Could not get predictions: %s', results)
 
-        if not predictions.get('predictions'):
+        if not results.get('predictions'):
             self._log_debug('No predictions available')
             self._state = None
             # Remove attributes that may now be outdated
             self._attributes.pop('upcoming', None)
             return
 
-        predictions = predictions['predictions']
+        results = results['predictions']
 
         # Set detailed attributes
         self._attributes.update({
-            'agency': predictions.get('agencyTitle'),
-            'route': predictions.get('routeTitle'),
-            'direction': predictions.get('direction', {}).get('title'),
-            'stop': predictions.get('stopTitle'),
+            'agency': results.get('agencyTitle'),
+            'route': results.get('routeTitle'),
+            'stop': results.get('stopTitle'),
         })
 
-        # Sometimes message will return a dict, others a list of dicts
-        message = predictions.get('message')
-        if isinstance(message, dict):
-            self._attributes['message'] = message.get('text', '')
-        elif isinstance(message, list):
-            self._attributes['message'] = ' -- '.join(
-                m.get('text', '')
-                for m in message
-            )
-        else:
-            self._attributes.pop('message', None)
+        # List all messages in the attributes
+        messages = listify(results.get('message', []))
+        self._log_debug('Messages: %s', messages)
+        self._attributes['message'] = ' -- '.join((
+            message.get('text', '')
+            for message in messages
+        ))
 
-        upcoming = predictions.get('direction', {}).get('prediction')
-        if not upcoming:
+        # List out all directions in the attributes
+        directions = listify(results.get('direction', []))
+        self._attributes['direction'] = ', '.join((
+            direction.get('title', '')
+            for direction in directions
+        ))
+
+        # Chain all predictions together
+        predictions = list(chain(*[
+            listify(direction.get('prediction', []))
+            for direction in directions
+        ]))
+
+        # Short circuit if we don't have any actual bus predictions
+        if not predictions:
             self._log_debug('No upcoming predictions available')
             self._state = None
             self._attributes['upcoming'] = 'No upcoming predictions'
             return
 
+        # Generate list of upcoming times
         self._attributes['upcoming'] = ', '.join(
-            p['minutes'] for p in upcoming
+            p['minutes'] for p in predictions
         )
 
-        latest_prediction = upcoming[0]
-
+        latest_prediction = maybe_first(predictions)
         self._state = utc_from_timestamp(
             int(latest_prediction['epochTime']) / 1000
         ).isoformat()
