@@ -3,6 +3,8 @@
 
 from unittest.mock import patch
 
+import ptvsd  # noqa: F401
+
 import homeassistant.components.ptvsd as ptvsd_component
 from homeassistant.setup import async_setup_component
 from homeassistant.bootstrap import async_from_config_dict
