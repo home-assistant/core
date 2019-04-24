@@ -29,7 +29,8 @@ CONF_SENDER_ID = 'sender_id'
 DEFAULT_NAME = 'EnOcean Cover'
 DEPENDENCIES = ['enocean']
 
-SUPPORT_ENOCEAN = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+SUPPORT_ENOCEAN = (SUPPORT_OPEN | SUPPORT_CLOSE |
+                   SUPPORT_SET_POSITION | SUPPORT_STOP)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ID, default=[]):
@@ -100,11 +101,11 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
                 value = packet.parsed['POS']['raw_value']
                 self.percent_closed = value
                 if self._async_on_done_timer:
-                 self._async_on_done_timer()
+                    self._async_on_done_timer()
                 if self.percent_closed <= 0 or self.percent_closed >= 100:
-                 on_done(None)
+                    on_done(None)
                 else:
-                 self._async_on_done_timer = async_call_later(self.hass, 3, on_done)
+                    self._async_on_done_timer = async_call_later(self.hass, 3, on_done)
                 self.schedule_update_ha_state()
 
     @property
@@ -144,7 +145,6 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop cover."""
-
         optional = [0x03, ]
         optional.extend(self.dev_id)
         optional.extend([0xFF, 0x00])
