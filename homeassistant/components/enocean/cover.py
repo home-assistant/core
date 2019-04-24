@@ -105,7 +105,8 @@ class EnOceanCover(enocean.EnOceanDevice, CoverDevice):
                 if self.percent_closed <= 0 or self.percent_closed >= 100:
                     on_done(None)
                 else:
-                    self._async_on_done_timer = async_call_later(self.hass, 3, on_done)
+                    self._async_on_done_timer = async_call_later(
+                        self.hass, 3, on_done)
                 self.schedule_update_ha_state()
 
     @property
