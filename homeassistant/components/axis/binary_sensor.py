@@ -76,6 +76,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
         """Return the name of the event."""
         if self.event.CLASS == CLASS_INPUT and \
             self.event.id and self.device.api.vapix.ports[self.event.id].name:
-            return self.device.api.vapix.ports[self.event.id].name
+            return '{} {}'.format(
+                self.device.name,
+                self.device.api.vapix.ports[self.event.id].name)
 
         return super().name

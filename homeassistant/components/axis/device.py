@@ -161,8 +161,6 @@ class AxisNetworkDevice:
 
     async def async_reset(self):
         """Reset this device to default state."""
-        self.api.stop()
-
         platform_tasks = []
 
         if self.config_entry.options[CONF_CAMERA]:
@@ -171,6 +169,7 @@ class AxisNetworkDevice:
                     self.config_entry, 'camera'))
 
         if self.config_entry.options[CONF_EVENTS]:
+            self.api.stop()
             platform_tasks += [
                 self.hass.config_entries.async_forward_entry_unload(
                     self.config_entry, platform)

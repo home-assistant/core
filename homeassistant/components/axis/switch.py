@@ -52,6 +52,8 @@ class AxisSwitch(AxisEventBase, SwitchDevice):
     def name(self):
         """Return the name of the event."""
         if self.event.id and self.device.api.vapix.ports[self.event.id].name:
-            return self.device.api.vapix.ports[self.event.id].name
+            return '{} {}'.format(
+                self.device.name,
+                self.device.api.vapix.ports[self.event.id].name)
 
         return super().name

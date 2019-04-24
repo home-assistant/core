@@ -49,7 +49,6 @@ class AxisEventBase(AxisEntityBase):
     def __init__(self, event, device):
         """Initialize the Axis event."""
         super().__init__(device)
-
         self.event = event
 
     async def async_added_to_hass(self) -> None:
