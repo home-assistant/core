@@ -36,6 +36,7 @@ async def test_sensor(hass, create_registrations, webhook_client):  # noqa: F401
 
     json = await reg_resp.json()
     assert json == {'success': True}
+    await hass.async_block_till_done()
 
     entity = hass.states.get('sensor.battery_state')
     assert entity is not None
