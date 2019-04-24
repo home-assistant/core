@@ -103,10 +103,10 @@ class FroniusSensor(Entity):
         try:
             values = await self._update()
         except ConnectionError:
-            _LOGGER.error("Failed to update: connection error.")
+            _LOGGER.error("Failed to update: connection error")
         except ValueError:
             _LOGGER.error(
-                "Failed to update: invalid response returned."
+                "Failed to update: invalid response returned"
             )
 
         if values:
