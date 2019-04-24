@@ -697,6 +697,9 @@ class HASchema(vol.Schema):
                 if hasattr(data, '__config_file__'):
                     submsg += " (See {}, line {}). ".format(
                         data.__config_file__, data.__line__)
+                if hasattr(data, '__configuration_topic__'):
+                    submsg += " (Received on MQTT topic {}). ".format(
+                        data.__configuration_topic__)
                 redacted_data = {}
 
                 for k, v in data.items():
