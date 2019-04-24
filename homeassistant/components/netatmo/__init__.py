@@ -58,8 +58,8 @@ ATTR_FACE_URL = 'face_url'
 ATTR_SNAPSHOT_URL = 'snapshot_url'
 ATTR_VIGNETTE_URL = 'vignette_url'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=5)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
