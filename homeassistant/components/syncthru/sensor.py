@@ -177,7 +177,7 @@ class SyncThruMainSensor(SyncThruSensor):
             # if an exception is thrown, printer does not support syncthru
             _LOGGER.warning(
                 "Configured printer at %s does not support SyncThru. "
-                "Consider changing your configuration.",
+                "Consider changing your configuration",
                 self.syncthru.url
             )
             self._active = False
