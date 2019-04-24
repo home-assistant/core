@@ -54,15 +54,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config.get(CONF_KEY), config.get(CONF_SECRET))
     sensors = []
 
-    timezone = str(hass.config.time_zone)
-
     for departure in config.get(CONF_DEPARTURES):
         sensors.append(
             VasttrafikDepartureSensor(
                 vasttrafik, planner, departure.get(CONF_NAME),
                 departure.get(CONF_FROM), departure.get(CONF_HEADING),
-                departure.get(CONF_LINES), departure.get(CONF_DELAY),
-                timezone))
+                departure.get(CONF_LINES), departure.get(CONF_DELAY)))
     add_entities(sensors, True)
 
 
@@ -70,10 +67,9 @@ class VasttrafikDepartureSensor(Entity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
     def __init__(self, vasttrafik, planner, name, departure, heading,
-                 lines, delay, timezone):
+                 lines, delay):
         """Initialize the sensor."""
         self._vasttrafik = vasttrafik
-        self.timezone = timezone
         self._planner = planner
         self._name = name or departure
         self._departure = planner.location_name(departure)[0]
@@ -112,7 +108,8 @@ class VasttrafikDepartureSensor(Entity):
             self._departureboard = self._planner.departureboard(
                 self._departure['id'],
                 direction=self._heading['id'] if self._heading else None,
-                date=datetime.now(pytz.timezone(self.timezone))+self._delay)
+                date=datetime.now(
+                    pytz.timezone(str(self.hass.config.time_zone)))+self._delay)
         except self._vasttrafik.Error:
             _LOGGER.debug("Unable to read departure board, updating token")
             self._planner.update_token()
