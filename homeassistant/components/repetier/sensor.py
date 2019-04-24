@@ -3,6 +3,7 @@ from datetime import datetime
 import logging
 import time
 
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -18,10 +19,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensor_map = {
-        'bed_temperature': RepetierBedSensor,
-        'extruder_temperature': RepetierExtruderSensor,
-        'chamber_temperature': RepetierChamberSensor,
-        'current_state': RepetierStateSensor,
+        'bed_temperature': RepetierTempSensor,
+        'extruder_temperature': RepetierTempSensor,
+        'chamber_temperature': RepetierTempSensor,
+        'current_state': RepetierSensor,
         'current_job': RepetierJobSensor,
         'time_remaining': RepetierRemainingSensor,
         'time_elapsed': RepetierElapsedSensor,
@@ -91,6 +92,11 @@ class RepetierSensor(Entity):
         """Return False as entity is updated from the component."""
         return False
 
+    @property
+    def state(self):
+        """Return sensor state."""
+        return self._state
+
     @callback
     def update_callback(self):
         """Get new data and update state."""
@@ -103,7 +109,8 @@ class RepetierSensor(Entity):
 
     def _get_data(self):
         """Return new data from the api cache."""
-        data = self._api.get_data(self._sensor_type, self._data_key)
+        data = self._api.get_data(
+            self._printer_id, self._sensor_type, self._data_key)
         if data is None:
             _LOGGER.debug(
                 "Data not found for %s and %s",
@@ -113,9 +120,19 @@ class RepetierSensor(Entity):
         self._available = True
         return data
 
+    def update(self):
+        """Update the sensor."""
+        data = self._get_data()
+        if data is None:
+            return
+        state = data.pop('state')
+        _LOGGER.debug("Printer %s State %s", self._name, state)
+        self._attributes.update(data)
+        self._state = state
 
-class RepetierBedSensor(RepetierSensor):
-    """Class to create and populate a Repetier Bed Sensor."""
+
+class RepetierTempSensor(RepetierSensor):
+    """Represent a Repetier temp sensor."""
 
     @property
     def state(self):
@@ -129,108 +146,17 @@ class RepetierBedSensor(RepetierSensor):
         data = self._get_data()
         if data is None:
             return
-        temp = data.pop('temp')
+        state = data.pop('state')
         temp_set = data['temp_set']
         _LOGGER.debug(
-            "Bed %s Setpoint: %s, Temp: %s", self._data_key, temp_set, temp)
+            "Printer %s Setpoint: %s, Temp: %s",
+            self._name, temp_set, state)
         self._attributes.update(data)
-        self._state = temp
-
-
-class RepetierExtruderSensor(RepetierSensor):
-    """Class to create and populate a Repetier Nozzle Sensor."""
-
-    @property
-    def state(self):
-        """Return sensor state."""
-        if self._state is None:
-            return None
-        return round(self._state, 2)
-
-    def update(self):
-        """Update the sensor."""
-        self._printer.get_data()
-        if self._printer.extruder is None:
-            self._available = False
-            return
-        if self._printer.state == "off":
-            self._available = False
-            return
-        self._available = True
-        temp_set = self._printer.extruder[self._data_key].tempset
-        temp = self._printer.extruder[self._data_key].tempread
-        output = self._printer.extruder[self._data_key].output
-        _LOGGER.debug("Extruder %s Setpoint: %s, Temp: %s",
-                      self._data_key,
-                      temp_set,
-                      temp)
-        self._attributes['setpoint'] = temp_set
-        self._attributes['output'] = output
-        self._state = temp
-
-
-class RepetierChamberSensor(RepetierSensor):
-    """Class to create and populate a Repetier Nozzle Sensor."""
-
-    @property
-    def state(self):
-        """Return sensor state."""
-        if self._state is None:
-            return None
-        return round(self._state, 2)
-
-    def update(self):
-        """Update the sensor."""
-        self._printer.get_data()
-        if self._printer.heatedchambers is None:
-            self._available = False
-            return
-        if self._printer.state == "off":
-            self._available = False
-            return
-        self._available = True
-        temp_set = self._printer.chamber[self._data_key].tempset
-        temp = self._printer.chamber[self._data_key].tempread
-        output = self._printer.chamber[self._data_key].output
-        _LOGGER.debug("Chamber %s Setpoint: %s, Temp: %s",
-                      self._data_key,
-                      temp_set,
-                      temp)
-        self._attributes['setpoint'] = temp_set
-        self._attributes['output'] = output
-        self._state = temp
-
-
-class RepetierStateSensor(RepetierSensor):
-    """Class to create and populate a Repetier State Sensor."""
-
-    @property
-    def state(self):
-        """Return sensor state."""
-        return self._state
-
-    def update(self):
-        """Update the sensor."""
-        self._printer.get_data()
-        if self._printer.state is None:
-            self._available = False
-            return
-        self._available = True
-        state = self._printer.state
-        _LOGGER.debug("Printer %s State %s",
-                      self._printer.name,
-                      state)
-        self._attributes['active_extruder'] = self._printer.activeextruder
-        self._attributes['x_homed'] = self._printer.hasxhome
-        self._attributes['y_homed'] = self._printer.hasyhome
-        self._attributes['z_homed'] = self._printer.haszhome
-        self._attributes['firmware'] = self._printer.firmware
-        self._attributes['firmware_url'] = self._printer.firmwareurl
         self._state = state
 
 
 class RepetierJobSensor(RepetierSensor):
-    """Class to create and populate a Repetier Job Sensor."""
+    """Represent a Repetier job sensor."""
 
     @property
     def state(self):
@@ -238,106 +164,50 @@ class RepetierJobSensor(RepetierSensor):
         if self._state is None:
             return None
         return round(self._state, 2)
-
-    def update(self):
-        """Update the sensor."""
-        self._printer.get_data()
-        if self._printer.job is None:
-            self._available = False
-            return
-        if self._printer.state == "off":
-            self._available = False
-            return
-        self._available = True
-        pct_done = self._printer.done
-        job_name = self._printer.job
-        _LOGGER.debug("Job %s State %s",
-                      job_name,
-                      pct_done)
-        self._attributes['job_name'] = job_name
-        self._attributes['job_id'] = self._printer.jobid
-        self._attributes['total_lines'] = self._printer.totallines
-        self._attributes['lines_sent'] = self._printer.linessent
-        self._attributes['total_layers'] = self._printer.oflayer
-        self._attributes['current_layer'] = self._printer.layer
-        self._attributes['feed_rate'] = self._printer.speedmultiply
-        self._attributes['flow'] = self._printer.flowmultiply
-        self._attributes['x'] = self._printer.x
-        self._attributes['y'] = self._printer.y
-        self._attributes['z'] = self._printer.z
-        self._state = pct_done
 
 
 class RepetierRemainingSensor(RepetierSensor):
     """Class to create and populate a Repetier Time Remaining Sensor."""
 
-    @property
-    def state(self):
-        """Return sensor state."""
-        return self._state
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
 
     def update(self):
         """Update the sensor."""
-        self._printer.get_data()
-        if self._printer.job is None:
-            self._available = False
+        data = self._get_data()
+        if data is None:
             return
-        if self._printer.state == "off":
-            self._available = False
-            return
-        start = self._printer.start
-        end = self._printer.printtime
-        if start is None or end is None:
-            self._available = False
-            return
-        self._available = True
-        from_start = self._printer.printedtimecomp
-        remaining = end - from_start
-        tend = start + round(end, 0)
-        dtime = datetime.utcfromtimestamp(tend).isoformat()
-        endtime = dtime
-        secs = int(round(remaining, 0))
-        state = time.strftime('%H:%M:%S', time.gmtime(secs))
-
-        _LOGGER.debug("Job %s remaining %s",
-                      self._printer.job,
-                      state)
-        self._attributes['finished'] = endtime
-        self._attributes['seconds'] = secs
-        self._state = state
+        job_name = data['job_name']
+        start = data['start']
+        print_time = data['print_time']
+        from_start = data['from_start']
+        time_end = start + round(print_time, 0)
+        self._state = datetime.utcfromtimestamp(time_end).isoformat()
+        remaining = print_time - from_start
+        remaining_secs = int(round(remaining, 0))
+        _LOGGER.debug(
+            "Job %s remaining %s",
+            job_name, time.strftime('%H:%M:%S', time.gmtime(remaining_secs)))
 
 
 class RepetierElapsedSensor(RepetierSensor):
     """Class to create and populate a Repetier Time Elapsed Sensor."""
 
-    @property
-    def state(self):
-        """Return sensor state."""
-        return self._state
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
 
     def update(self):
         """Update the sensor."""
-        self._printer.get_data()
-        if self._printer.job is None:
-            self._available = False
+        data = self._get_data()
+        if data is None:
             return
-        if self._printer.state == "off":
-            self._available = False
-            return
-        start = self._printer.start
-        printtime = self._printer.printedtimecomp
-        if start is None or printtime is None:
-            self._available = False
-            return
-        self._available = True
-        dtime = datetime.utcfromtimestamp(start).isoformat()
-        starttime = dtime
-        secs = int(round(printtime, 0))
-        state = time.strftime('%H:%M:%S', time.gmtime(secs))
-
-        _LOGGER.debug("Job %s elapsed %s",
-                      self._printer.job,
-                      state)
-        self._attributes['started'] = starttime
-        self._attributes['seconds'] = secs
-        self._state = state
+        job_name = data['job_name']
+        start = data['start']
+        from_start = data['from_start']
+        self._state = datetime.utcfromtimestamp(start).isoformat()
+        elapsed_secs = int(round(from_start, 0))
+        _LOGGER.debug(
+            "Job %s elapsed %s",
+            job_name, time.strftime('%H:%M:%S', time.gmtime(elapsed_secs)))

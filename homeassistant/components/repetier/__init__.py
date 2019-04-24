@@ -126,14 +126,79 @@ def setup(hass, config):
     return True
 
 
+TEMP_DATA = {
+    'tempset': 'temp_set',
+    'tempread': 'state',
+    'output': 'output',
+}
+
+
 API_SENSOR_METHODS = {
     'bed_temperature': {
-        'online': ['heatedbeds', 'state'],
+        'offline': {'heatedbeds': None, 'state': 'off'},
         'state': {'heatedbeds': 'data_key'},
-        'data_key': {
-            'tempset': 'temp_set',
-            'tempread': 'temp',
-            'output': 'output'
+        'data_key': TEMP_DATA,
+    },
+    'extruder_temperature': {
+        'offline': {'extruder': None, 'state': 'off'},
+        'state': {'extruder': 'data_key'},
+        'data_key': TEMP_DATA,
+    },
+    'chamber_temperature': {
+        'offline': {'heatedchambers': None, 'state': 'off'},
+        'state': {'heatedchambers': 'data_key'},
+        'data_key': TEMP_DATA,
+    },
+    'current_state': {
+        'offline': {'state': None},
+        'state': {
+            'state': 'state',
+            'activeextruder': 'active_extruder',
+            'hasxhome': 'x_homed',
+            'hasyhome': 'y_homed',
+            'haszhome': 'z_homed',
+            'firmware': 'firmware',
+            'firmwareurl': 'firmware_url',
+        },
+    },
+    'current_job': {
+        'offline': {'job': None, 'state': 'off'},
+        'state': {
+            'done': 'state',
+            'job': 'job_name',
+            'jobid': 'job_id',
+            'totallines': 'total_lines',
+            'linessent': 'lines_sent',
+            'oflayer': 'total_layers',
+            'layer': 'current_layer',
+            'speedmultiply': 'feed_rate',
+            'flowmultiply': 'flow',
+            'x': 'x',
+            'y': 'y',
+            'z': 'z',
+        },
+    },
+    'time_remaining': {
+        'offline': {
+            'job': None, 'state': 'off', 'start': None, 'printtime': None},
+        'state': {
+            'job': 'job_name',
+            'start': 'start',
+            'printtime': 'print_time',
+            'printedtimecomp': 'from_start',
+        },
+    },
+    'time_elapsed': {
+        'offline': {
+            'job': None,
+            'state': 'off',
+            'start': None,
+            'printedtimecomp': None
+        },
+        'state': {
+            'job': 'job_name',
+            'start': 'start',
+            'printedtimecomp': 'from_start',
         },
     },
 }
@@ -152,9 +217,10 @@ class PrinterAPI:
         """Get data from the state cache."""
         printer = self.printers[printer_id]
         methods = API_SENSOR_METHODS[sensor_type]
-        for prop in methods['online']:
-            online = getattr(printer, prop)
-            if online is None:
+        for prop, offline in methods['offline'].items():
+            state = getattr(printer, prop)
+            if state == offline:
+                # if state matches offline, sensor is offline
                 return None
 
         data = {}
