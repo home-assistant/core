@@ -1,0 +1,2 @@
+zones_from_places:
+  description: Create/update Home Assistant zones from Life360 Places.

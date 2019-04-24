@@ -1,0 +1,14 @@
+{
+  "domain": "life360",
+  "name": "Life360",
+  "documentation": "",
+  "requirements": [
+    "life360==3.2.0"
+  ],
+  "dependencies": [
+    "zone"
+  ],
+  "codeowners": [
+    "@pnbruckner"
+  ]
+}
