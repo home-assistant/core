@@ -120,11 +120,14 @@ def boolean_tolerant(value: Any) -> bool:
 _WS = re.compile('\\s*')
 
 
-def whitespace(value: Any) -> str:
-    """Validate result contains only whitespace."""
-    if isinstance(value, str) and _WS.fullmatch(value):
-        return ''
-    raise vol.Invalid('invalid whitespace string "{}"'.format(value))
+def whitespace_as(value: Any = None) -> Callable:
+    """Accept only whitespace and returns the passed value."""
+    def validate(obj: Any) -> Any:
+        if isinstance(obj, str) and _WS.fullmatch(obj):
+            return value
+        raise vol.Invalid('invalid whitespace string {}'
+                          .format(repr(value)))
+    return validate
 
 
 def isdevice(value):

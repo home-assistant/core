@@ -48,10 +48,15 @@ def test_boolean_tolerant():
 
 def test_whitespace():
     """Test whitespace validation."""
-    schema = vol.Schema(cv.whitespace)
+    schema = vol.Schema(cv.whitespace_as())
 
     for value in ('  ', '  \t', '\r\n\t\t', ''):
-        assert schema(value) == ''
+        assert schema(value) is None
+
+    schema = vol.Schema(cv.whitespace_as(test_whitespace))
+
+    for value in ('  ', '  \t', '\r\n\t\t', ''):
+        assert schema(value) is test_whitespace
 
     for value in (
             'false', 'Off', '0', 'NO', 'disable',
