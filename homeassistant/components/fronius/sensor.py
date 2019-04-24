@@ -84,7 +84,7 @@ async def async_setup_platform(hass,
 
         sensors.append(sensor_cls(fronius, name, device))
 
-    async_add_devices(sensors)
+    async_add_devices(sensors, True)
 
 
 class FroniusSensor(Entity):
@@ -173,7 +173,7 @@ class FroniusMeterDevice(FroniusSensor):
 
     async def _update(self):
         """Get the values for the current state."""
-        return await self.data.current_system_meter_data(self._device)
+        return await self.data.current_meter_data(self._device)
 
 
 class FroniusPowerFlow(FroniusSensor):
