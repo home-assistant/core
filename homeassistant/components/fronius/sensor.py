@@ -35,9 +35,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         [{
             vol.Required(CONF_SENSOR_TYPE): vol.In(SENSOR_TYPES),
             vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
-            vol.In(SCOPE_TYPES),
-            vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.positive_int,
-        }]),
+                vol.In(SCOPE_TYPES),
+            vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE):
+                vol.All(vol.Coerce(int), vol.Range(min=0))
+        }]
+    )
 })
 
 
@@ -56,17 +58,31 @@ async def async_setup_platform(hass,
 
         device = condition.get(CONF_DEVICE)
         if device == 0:
-            if condition[CONF_SENSOR_TYPE] == 'inverter':
+            if condition[CONF_SENSOR_TYPE] == TYPE_INVERTER:
                 device = 1
-        name = "fronius_{}_{}_{}".format(
-            condition[CONF_SENSOR_TYPE],
+        name = "Fronius {} {} {}".format(
+            condition[CONF_SENSOR_TYPE].replace('_', ' ').capitalize(),
             device,
             config[CONF_RESOURCE],
         )
+        sensor_type = condition[CONF_SENSOR_TYPE]
+        scope = condition[CONF_SCOPE]
+        if sensor_type == TYPE_INVERTER:
+            if scope == SCOPE_SYSTEM:
+                sensor_cls = FroniusInverterSystem
+            else:
+                sensor_cls = FroniusInverterDevice
+        elif sensor_type == TYPE_METER:
+            if scope == SCOPE_SYSTEM:
+                sensor_cls = FroniusMeterSystem
+            else:
+                sensor_cls = FroniusMeterDevice
+        elif sensor_type == TYPE_POWER_FLOW:
+            sensor_cls = FroniusPowerFlow
+        else:
+            sensor_cls = FroniusStorage
 
-        sensor = FroniusSensor(fronius, name, condition[CONF_SENSOR_TYPE],
-                               condition.get(CONF_SCOPE), device)
-        sensors.append(sensor)
+        sensors.append(sensor_cls(fronius, name, device))
 
     async_add_devices(sensors)
 
@@ -74,13 +90,11 @@ async def async_setup_platform(hass,
 class FroniusSensor(Entity):
     """The Fronius sensor implementation."""
 
-    def __init__(self, data, name, device_type, scope, device):
+    def __init__(self, data, name, device):
         """Initialize the sensor."""
         self.data = data
         self._name = name
-        self._type = device_type
         self._device = device
-        self._scope = scope
         self._state = None
         self._attributes = {}
 
@@ -113,23 +127,58 @@ class FroniusSensor(Entity):
             self._state = values['status']['Code']
             attributes = {}
             for key in values:
-                if 'value' in values[key] and values[key]['value']:
-                    attributes[key] = values[key]['value']
-                else:
-                    attributes[key] = 0
+                if 'value' in values[key]:
+                    attributes[key] = values[key].get('value', 0)
             self._attributes = attributes
+
+    def _update(self):
+        """Function returning values of interest"""
+        pass
+
+
+class FroniusInverterSystem(FroniusSensor):
+    """Sensor for the fronius inverter with system scope."""
 
     async def _update(self):
         """Get the values for the current state."""
-        if self._type == TYPE_INVERTER:
-            if self._scope == SCOPE_SYSTEM:
-                return await self.data.current_system_inverter_data()
-            return await self.data.current_inverter_data(self._device)
-        if self._type == TYPE_STORAGE:
-            return await self.data.current_storage_data(self._device)
-        if self._type == TYPE_METER:
-            if self._scope == SCOPE_SYSTEM:
-                return await self.data.current_system_meter_data()
-            return await self.data.current_meter_data()
-        if self._type == TYPE_POWER_FLOW:
-            return await self.data.current_power_flow()
+        return await self.data.current_system_inverter_data()
+
+
+class FroniusInverterDevice(FroniusSensor):
+    """Sensor for the fronius inverter with device scope."""
+
+    async def _update(self):
+        """Get the values for the current state."""
+        return await self.data.current_inverter_data(self._device)
+
+
+class FroniusStorage(FroniusSensor):
+    """Sensor for the fronius battery storage."""
+
+    async def _update(self):
+        """Get the values for the current state."""
+        return await self.data.current_storage_data(self._device)
+
+
+class FroniusMeterSystem(FroniusSensor):
+    """Sensor for the fronius meter with system scope."""
+
+    async def _update(self):
+        """Get the values for the current state."""
+        return await self.data.current_system_meter_data()
+
+
+class FroniusMeterDevice(FroniusSensor):
+    """Sensor for the fronius meter with device scope."""
+
+    async def _update(self):
+        """Get the values for the current state."""
+        return await self.data.current_system_meter_data(self._device)
+
+
+class FroniusPowerFlow(FroniusSensor):
+    """Sensor for the fronius power flow."""
+
+    async def _update(self):
+        """Get the values for the current state."""
+        return await self.data.current_power_flow()
