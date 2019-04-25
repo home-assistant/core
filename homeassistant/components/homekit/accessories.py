@@ -27,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_LOW_BATTERY_THRESHOLD = 20
 
+
 def debounce(func):
     """Decorate function to debounce callbacks from HomeKit."""
     @ha_callback
