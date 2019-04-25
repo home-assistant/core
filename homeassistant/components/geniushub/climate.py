@@ -13,6 +13,8 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+GH_CLIMATE_DEVICES = ['radiator']
+
 GENIUSHUB_SUPPORT_FLAGS = \
     SUPPORT_TARGET_TEMPERATURE | \
     SUPPORT_ON_OFF | \
@@ -48,9 +50,8 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Set up the Genius Hub climate entities."""
     client = hass.data[DOMAIN]['client']
 
-    climate_device = ['radiator']
     entities = [GeniusClimate(client, z)
-                for z in client.hub.zone_objs if z.type == climate_device]
+                for z in client.hub.zone_objs if z.type in GH_CLIMATE_DEVICES]
 
     async_add_entities(entities)
 

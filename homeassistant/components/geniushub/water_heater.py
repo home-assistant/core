@@ -15,6 +15,8 @@ STATE_MANUAL = 'manual'
 
 _LOGGER = logging.getLogger(__name__)
 
+GH_WATER_HEATERS = ['hot water temperature']
+
 GENIUSHUB_SUPPORT_FLAGS = \
     SUPPORT_TARGET_TEMPERATURE | \
     SUPPORT_OPERATION_MODE
@@ -51,9 +53,8 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Set up the Genius Hub water_heater entities."""
     client = hass.data[DOMAIN]['client']
 
-    water_heater = 'hot water temperature'
     entities = [GeniusWaterHeater(client, z)
-                for z in client.hub.zone_objs if z.type == water_heater]
+                for z in client.hub.zone_objs if z.type in GH_WATER_HEATERS]
 
     async_add_entities(entities)
 
