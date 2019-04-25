@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/components/somfy",
   "dependencies": [],
   "codeowners": [
-    "tetienne"
+    "@tetienne"
   ],
   "requirements": [
     "pymfy==0.5.1"
