@@ -16,6 +16,7 @@ CONF_FEATURE = 'feature'
 CONF_FEATURE_LIST = 'feature_list'
 CONF_FILTER = 'filter'
 CONF_LINKED_BATTERY_SENSOR = 'linked_battery_sensor'
+CONF_LOW_BATTERY_THRESHOLD = 'low_battery_threshold'
 CONF_SAFE_MODE = 'safe_mode'
 
 # #### Config Defaults ####
