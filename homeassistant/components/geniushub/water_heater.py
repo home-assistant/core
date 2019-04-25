@@ -44,8 +44,7 @@ GH_STATE_TO_HA = {
     'other': None,
 }
 
-# temperature is repeated here, as it gives access to high-precision temps
-GH_DEVICE_STATE_ATTRS = ['temperature', 'type', 'override']
+GH_DEVICE_STATE_ATTRS = ['type', 'override']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
