@@ -271,7 +271,6 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
         if self._config.get(CONF_TILT_STATUS_TOPIC) is None:
             self._tilt_optimistic = True
         else:
-            self._tilt_optimistic = False
             self._tilt_value = STATE_UNKNOWN
             topics['tilt_status_topic'] = {
                 'topic': self._config.get(CONF_TILT_STATUS_TOPIC),
