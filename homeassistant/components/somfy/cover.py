@@ -12,6 +12,7 @@ from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES, API
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy cover platform."""
+
     def get_covers():
         """Retrieve covers."""
         from pymfy.api.devices.category import Category
@@ -27,6 +28,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 categories & set(cover.categories)]
 
     async_add_entities(await hass.async_add_executor_job(get_covers), True)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old way of setting up platform.
+    Can only be called when a user accidentally mentions the platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
 
 
 class SomfyCover(SomfyEntity, CoverDevice):
