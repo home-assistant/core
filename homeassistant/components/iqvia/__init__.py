@@ -67,7 +67,8 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN][DATA_CLIENT] = iqvia
 
-    await async_load_platform(hass, 'sensor', DOMAIN, {}, config)
+    hass.async_create_task(
+        async_load_platform(hass, 'sensor', DOMAIN, {}, config))
 
     async def refresh(event_time):
         """Refresh IQVIA data."""
