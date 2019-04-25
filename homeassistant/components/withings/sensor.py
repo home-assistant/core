@@ -175,12 +175,20 @@ WITHINGS_ATTRIBUTES = [
         'Fat Mass', const.UOM_MASS_LB, 'mdi:weight-pound'
     ),
     WithingsMeasureAttribute(
+        const.MEAS_FAT_MASS_STONE, const.MEASURE_TYPE_FAT_MASS,
+        'Fat Mass', const.UOM_MASS_STONE, 'mdi:weight'
+    ),
+    WithingsMeasureAttribute(
         const.MEAS_FAT_FREE_MASS_KG, const.MEASURE_TYPE_FAT_MASS_FREE,
         'Fat Free Mass', const.UOM_MASS_KG, 'mdi:weight-kilogram'
     ),
     WithingsMeasureAttribute(
         const.MEAS_FAT_FREE_MASS_LB, const.MEASURE_TYPE_FAT_MASS_FREE,
         'Fat Free Mass', const.UOM_MASS_LB, 'mdi:weight-pound'
+    ),
+    WithingsMeasureAttribute(
+        const.MEAS_FAT_FREE_MASS_STONE, const.MEASURE_TYPE_FAT_MASS_FREE,
+        'Fat Free Mass', const.UOM_MASS_STONE, 'mdi:weight'
     ),
     WithingsMeasureAttribute(
         const.MEAS_MUSCLE_MASS_KG, const.MEASURE_TYPE_MUSCLE_MASS,
@@ -191,12 +199,20 @@ WITHINGS_ATTRIBUTES = [
         'Muscle Mass', const.UOM_MASS_LB, 'mdi:weight-pound'
     ),
     WithingsMeasureAttribute(
+        const.MEAS_MUSCLE_MASS_STONE, const.MEASURE_TYPE_MUSCLE_MASS,
+        'Muscle Mass', const.UOM_MASS_STONE, 'mdi:weight'
+    ),
+    WithingsMeasureAttribute(
         const.MEAS_BONE_MASS_KG, const.MEASURE_TYPE_BONE_MASS,
         'Bone Mass', const.UOM_MASS_KG, 'mdi:weight-kilogram'
     ),
     WithingsMeasureAttribute(
         const.MEAS_BONE_MASS_LB, const.MEASURE_TYPE_BONE_MASS,
         'Bone Mass', const.UOM_MASS_LB, 'mdi:weight-pound'
+    ),
+    WithingsMeasureAttribute(
+        const.MEAS_BONE_MASS_STONE, const.MEASURE_TYPE_BONE_MASS,
+        'Bone Mass', const.UOM_MASS_STONE, 'mdi:weight'
     ),
 
     WithingsMeasureAttribute(
