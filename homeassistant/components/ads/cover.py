@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the light platform for ADS."""
+    """Set up the cover platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
     ads_var_is_closed = config.get(CONF_ADS_VAR)
