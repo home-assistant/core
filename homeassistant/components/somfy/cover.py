@@ -9,8 +9,6 @@ from homeassistant.components.cover import CoverDevice, ATTR_POSITION, \
     ATTR_TILT_POSITION
 from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES, API
 
-DEPENDENCIES = ['somfy']
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy cover platform."""

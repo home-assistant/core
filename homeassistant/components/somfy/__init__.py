@@ -22,8 +22,6 @@ API = 'api'
 
 DEVICES = 'devices'
 
-REQUIREMENTS = ['pymfy==0.5.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)

@@ -1,0 +1,12 @@
+{
+  "domain": "somfy",
+  "name": "Somfy Open API",
+  "documentation": "https://www.home-assistant.io/components/somfy",
+  "dependencies": [],
+  "codeowners": [
+    "tetienne"
+  ],
+  "requirements": [
+    "pymfy==0.5.1"
+  ]
+}
