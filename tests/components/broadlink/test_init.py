@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch, call
 import pytest
 
 from homeassistant.util.dt import utcnow
-from homeassistant.components.broadlink import async_setup_service
+from homeassistant.components.broadlink import async_setup_service, data_packet
 from homeassistant.components.broadlink.const import (
     DOMAIN, SERVICE_LEARN, SERVICE_SEND)
 
@@ -23,6 +23,13 @@ def dummy_broadlink():
             'broadlink': broadlink,
     }):
         yield broadlink
+
+
+async def test_padding(hass):
+    """Verify that non padding strings are allowed"""
+    assert data_packet('Jg') == b'&'
+    assert data_packet('Jg=') == b'&'
+    assert data_packet('Jg==') == b'&'
 
 
 async def test_send(hass):

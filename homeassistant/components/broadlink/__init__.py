@@ -21,7 +21,11 @@ DEFAULT_RETRY = 3
 
 def data_packet(value):
     """Decode a data packet given for broadlink."""
-    return b64decode(cv.string(value))
+    value = cv.string(value)
+    extra = len(value) % 4
+    if extra > 0:
+        value = value + ('=' * (4 - extra))
+    return b64decode(value)
 
 
 SERVICE_SEND_SCHEMA = vol.Schema({
