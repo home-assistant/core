@@ -117,6 +117,7 @@ homeassistant/components/input_text/* @home-assistant/core
 homeassistant/components/integration/* @dgomes
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/ipma/* @dgomes
+homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/knx/* @Julius2342
@@ -170,7 +171,6 @@ homeassistant/components/persistent_notification/* @home-assistant/core
 homeassistant/components/pi_hole/* @fabaff
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/point/* @fredrike
-homeassistant/components/pollen/* @bachya
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
