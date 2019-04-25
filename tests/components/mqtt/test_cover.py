@@ -583,13 +583,17 @@ class TestCoverMQTT(unittest.TestCase):
             {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 0, 0, False)
+        self.mock_publish.async_publish.reset_mock()
+
         # Close tilt status would be received from device when non-optimistic
         fire_mqtt_message(self.hass, 'tilt-status-topic', '0')
         self.hass.block_till_done()
 
-        self.mock_publish.async_publish.assert_called_once_with(
-            'tilt-command-topic', 0, 0, False)
-        self.mock_publish.async_publish.reset_mock()
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        assert 0 == current_cover_tilt_position
 
         self.hass.services.call(
             cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
@@ -603,6 +607,10 @@ class TestCoverMQTT(unittest.TestCase):
         # Open tilt status would be received from device when non-optimistic
         fire_mqtt_message(self.hass, 'tilt-status-topic', '100')
         self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        assert 100 == current_cover_tilt_position
 
         self.hass.services.call(
             cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
@@ -653,6 +661,10 @@ class TestCoverMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'tilt-status-topic', '25')
         self.hass.block_till_done()
 
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        assert 25 == current_cover_tilt_position
+
         self.hass.services.call(
             cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
             {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
@@ -665,6 +677,10 @@ class TestCoverMQTT(unittest.TestCase):
         # Open tilt status would be received from device when non-optimistic
         fire_mqtt_message(self.hass, 'tilt-status-topic', '80')
         self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        assert 80 == current_cover_tilt_position
 
         self.hass.services.call(
             cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
@@ -765,6 +781,19 @@ class TestCoverMQTT(unittest.TestCase):
 
         self.mock_publish.async_publish.assert_called_once_with(
             'tilt-command-topic', 0, 0, False)
+        self.mock_publish.async_publish.reset_mock()
+
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        assert 50 == current_cover_tilt_position
+
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 25, 0, False)
 
     def test_tilt_via_topic(self):
         """Test tilt by updating status via MQTT."""
