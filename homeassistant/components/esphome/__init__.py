@@ -149,7 +149,8 @@ class RuntimeEntryData:
 
 
 def _attr_obj_from_dict(cls, **kwargs):
-    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls)})
+    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls)
+                  if key in kwargs})
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:

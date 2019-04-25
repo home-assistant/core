@@ -1,4 +1,6 @@
 """Support for LCN sensors."""
+import pypck
+
 from homeassistant.const import CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
 
 from . import LcnDevice, get_connection
@@ -12,8 +14,6 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Set up the LCN sensor platform."""
     if discovery_info is None:
         return
-
-    import pypck
 
     devices = []
     for config in discovery_info:
@@ -50,9 +50,8 @@ class LcnVariableSensor(LcnDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.variable))
+        await self.address_connection.activate_status_request_handler(
+            self.variable)
 
     @property
     def state(self):
@@ -91,9 +90,8 @@ class LcnLedLogicSensor(LcnDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.source))
+        await self.address_connection.activate_status_request_handler(
+            self.source)
 
     @property
     def state(self):

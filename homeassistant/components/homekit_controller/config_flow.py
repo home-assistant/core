@@ -130,6 +130,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         status_flags = int(properties['sf'])
         paired = not status_flags & 0x01
 
+        # pylint: disable=unsupported-assignment-operation
+        self.context['title_placeholders'] = {
+            'name': discovery_info['name'],
+        }
+
         # The configuration number increases every time the characteristic map
         # needs updating. Some devices use a slightly off-spec name so handle
         # both cases.

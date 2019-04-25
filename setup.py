@@ -35,7 +35,7 @@ REQUIRES = [
     'aiohttp==3.5.4',
     'astral==1.10.1',
     'async_timeout==3.0.1',
-    'attrs==18.2.0',
+    'attrs==19.1.0',
     'bcrypt==3.1.6',
     'certifi>=2018.04.16',
     'jinja2>=2.10',
@@ -47,7 +47,7 @@ REQUIRES = [
     'pytz>=2019.01',
     'pyyaml>=3.13,<4',
     'requests==2.21.0',
-    'ruamel.yaml==0.15.91',
+    'ruamel.yaml==0.15.94',
     'voluptuous==0.11.5',
     'voluptuous-serialize==2.1.0',
 ]

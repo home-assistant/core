@@ -1,4 +1,5 @@
 """Denon HEOS Media Player."""
+import asyncio
 from functools import reduce, wraps
 import logging
 from operator import ior
@@ -6,10 +7,10 @@ from typing import Sequence
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP)
+    DOMAIN, MEDIA_TYPE_MUSIC, MEDIA_TYPE_URL, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.typing import HomeAssistantType
@@ -20,7 +21,8 @@ from .const import (
 
 BASE_SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                           SUPPORT_VOLUME_STEP | SUPPORT_CLEAR_PLAYLIST | \
-                          SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOURCE
+                          SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOURCE | \
+                          SUPPORT_PLAY_MEDIA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +49,7 @@ def log_command_error(command: str):
             from pyheos import CommandError
             try:
                 await func(*args, **kwargs)
-            except CommandError as ex:
+            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
                 _LOGGER.error("Unable to %s: %s", command, ex)
         return wrapper
     return decorator
@@ -85,6 +87,13 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def _heos_event(self, event):
         """Handle connection event."""
+        from pyheos import CommandError, const
+        if event == const.EVENT_CONNECTED:
+            try:
+                await self._player.refresh()
+            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
+                _LOGGER.error("Unable to refresh player %s: %s",
+                              self._player, ex)
         await self.async_update_ha_state(True)
 
     async def _player_update(self, player_id, event):
@@ -152,6 +161,15 @@ class HeosMediaPlayer(MediaPlayerDevice):
     async def async_mute_volume(self, mute):
         """Mute the volume."""
         await self._player.set_mute(mute)
+
+    @log_command_error("play media")
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        if media_type == MEDIA_TYPE_URL:
+            await self._player.play_url(media_id)
+        else:
+            _LOGGER.error("Unable to play media: Unsupported media type '%s'",
+                          media_type)
 
     @log_command_error("select source")
     async def async_select_source(self, source):
