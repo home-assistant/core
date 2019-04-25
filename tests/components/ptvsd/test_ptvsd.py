@@ -20,4 +20,4 @@ async def test_ptvsd_bootstrap(hass):
             CoroutineMock()) as setup_mock:
         await _async_set_up_integrations(hass, config)
 
-        setup_mock.assert_called_once()
+        assert setup_mock.call_count == 1
