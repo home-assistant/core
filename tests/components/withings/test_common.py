@@ -3,7 +3,7 @@ import datetime
 import nokia
 import callee
 from asynctest import patch, MagicMock
-from homeassistant.components.withings import (
+from homeassistant.components.withings.common import (
     WithingsDataManager
 )
 from tests.common import get_test_home_assistant

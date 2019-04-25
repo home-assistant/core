@@ -1,5 +1,7 @@
 """Sensors flow for Withings."""
-from homeassistant.core import callback
+import typing as types
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.components.withings import (
@@ -12,9 +14,9 @@ from homeassistant.components.withings.common import (
 
 
 async def async_setup_entry(
-        hass,
-        entry,
-        async_add_entities
+        hass: HomeAssistantType,
+        entry: ConfigEntry,
+        async_add_entities: types.Callable[[types.List[Entity], bool], None]
 ):
     """Set up the sensor config entry."""
     import nokia
@@ -60,13 +62,32 @@ async def async_setup_entry(
         return False
 
     _LOGGER.debug('Creating entities.')
+    entities = create_sensor_entities(hass, data_manager)
+
+    _LOGGER.debug('Adding entities.')
+    async_add_entities(entities, True)
+
+    return True
+
+
+def create_sensor_entities(
+        hass: HomeAssistantType,
+        data_manager: WithingsDataManager
+):
+    """Create sensor entities."""
     entities = []
 
+    measures = hass.data.get(const.DOMAIN, {}) \
+        .get(const.CONFIG, {}) \
+        .get(const.MEASURES, list(WITHINGS_MEASUREMENTS_MAP.keys()))
+
     for attribute in WITHINGS_ATTRIBUTES:
-        if attribute.measurement != const.MEAS_BODY_TEMP_F:
+        if attribute.measurement not in measures:
+            _LOGGER.debug("Skipping measurement %s as it is not in the list of measurements to use.", attribute.measurement)  # pylint: disable=line-too-long  # noqa: E501
             continue
+
         _LOGGER.debug(
-            'Creating entity for measurement: %s, measure_type: %s, friendly_name: %s, unit_of_measurement: %s',  # pylint: disable=line-too-long  # noqa: E501
+            "Creating entity for measurement: %s, measure_type: %s, friendly_name: %s, unit_of_measurement: %s",  # pylint: disable=line-too-long  # noqa: E501
             attribute.measurement,
             attribute.measure_type,
             attribute.friendly_name,
@@ -77,10 +98,7 @@ async def async_setup_entry(
 
         entities.append(entity)
 
-    _LOGGER.debug('Adding entities.')
-    async_add_entities(entities, True)
-
-    return True
+    return entities
 
 
 class WithingsAttribute:
@@ -370,7 +388,6 @@ class WithingsHealthSensor(Entity):
         self._data_manager = data_manager
         self._attribute = attribute
         self._state = None
-        _LOGGER.debug('ATTRIBUTES: %s', self._attribute.__dict__)
 
         self._slug = self._data_manager.get_slug()
         self._user_id = self._data_manager.get_api().get_credentials().user_id
@@ -393,15 +410,24 @@ class WithingsHealthSensor(Entity):
         return self._state
 
     @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity, if any."""
+        return self._attribute.unit_of_measurement
+
+    @property
+    def icon(self) -> str:
+        """Icon to use in the frontend, if any."""
+        return self._attribute.icon
+
+    @property
     def state_attributes(self):
         """Get withings attributes."""
         return self._attribute.__dict__
 
-    @callback
-    def _async_write_ha_state(self):
-        """Override ha state as the entity converts units without any option to disable."""
-        self.hass.states.async_set(
-            self.entity_id, self.state, self.state_attributes, self.force_update, self._context)
+    @property
+    def convert_units(self):
+        """Prevent home assistant from converting units."""
+        return False
 
     async def async_update(self) -> None:
         """Update the data."""
@@ -599,5 +625,5 @@ class WithingsHealthSensor(Entity):
         else:
             state = value
 
-        _LOGGER.debug('Setting state: %s', state)
+        _LOGGER.debug("Setting state: %s", state)
         self._state = state

@@ -6,7 +6,7 @@ https://home-assistant.io/components/withings/
 """
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.withings import (
     config_flow,  # noqa  pylint_disable=unused-import
@@ -14,7 +14,10 @@ from homeassistant.components.withings import (
 )
 from homeassistant.components.withings.common import (
     _LOGGER,
-    WithingsDataManager
+    ensure_unique_list
+)
+from homeassistant.components.withings.sensor import (
+    WITHINGS_MEASUREMENTS_MAP
 )
 
 DOMAIN = const.DOMAIN
@@ -23,36 +26,71 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN:
             vol.Schema({
-                vol.Required(const.CLIENT_ID): cv.string,
-                vol.Required(const.CLIENT_SECRET): cv.string,
-                vol.Optional(const.BASE_URL): cv.string,
-                vol.Required(const.PROFILES): [cv.string],
+                vol.Required(const.CLIENT_ID): vol.All(
+                    cv.string, vol.Length(min=1)
+                ),
+                vol.Required(const.CLIENT_SECRET): vol.All(
+                    cv.string, vol.Length(min=1)
+                ),
+                vol.Optional(const.BASE_URL): cv.url,
+                vol.Required(const.PROFILES): vol.All(
+                    cv.ensure_list,
+                    ensure_unique_list,
+                    vol.Length(min=1),
+                    [vol.All(
+                        cv.string,
+                        vol.Length(min=1)
+                    )]
+                ),
+                vol.Optional(
+                    const.MEASURES,
+                    default=list(WITHINGS_MEASUREMENTS_MAP.keys())
+                ): vol.All(
+                    cv.ensure_list,
+                    ensure_unique_list,
+                    vol.Length(min=1),
+                    [vol.All(
+                        cv.string,
+                        vol.In(list(WITHINGS_MEASUREMENTS_MAP.keys()))
+                    )]
+                ),
             })
     },
     extra=vol.ALLOW_EXTRA,
 )
 
 
-async def async_setup(hass: HomeAssistantType, config):
+async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the Withings component."""
-    if DOMAIN not in config:
+    conf = config.get(DOMAIN, None)
+    if not conf:
+        _LOGGER.debug("No withing config was provided.")
         return True
 
-    conf = config[DOMAIN]
+    _LOGGER.debug("Saving component config for later.")
+    hass.data[DOMAIN] = {
+        const.CONFIG: conf
+    }
 
-    base_url = hass.config.api.base_url.rstrip('/')
-    if const.BASE_URL in conf and conf[const.BASE_URL] is not None:
-        base_url = conf[const.BASE_URL].rstrip('/')
+    _LOGGER.debug("Determining the base url to use for callbacks.")
+    base_url = conf.get(
+        const.BASE_URL,
+        hass.config.api.base_url
+    ).rstrip('/')
 
-    for profile in conf[const.PROFILES]:
+    _LOGGER.debug("Setting up configuration flow data.")
+    # We don't pull default values from conf because the config
+    # schema would have validated it for us.
+    for profile in conf.get(const.PROFILES):
         config_flow.register_flow_implementation(
             hass,
-            conf[const.CLIENT_ID],
-            conf[const.CLIENT_SECRET],
+            conf.get(const.CLIENT_ID),
+            conf.get(const.CLIENT_SECRET),
             base_url,
             profile
         )
 
+    _LOGGER.debug("Initializing configuration flow.")
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,

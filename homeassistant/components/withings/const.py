@@ -4,15 +4,17 @@ import homeassistant.const as const
 
 SOURCE_USER = 'user'
 
-LOG_NAMESPACE = 'homeassistant.components.withings'
-DOMAIN = 'withings'
+BASE_URL = 'base_url'
 CLIENT_ID = 'client_id'
 CLIENT_SECRET = 'client_secret'
-PROFILES = 'profiles'
-PROFILE = 'profile'
 CODE = 'code'
+CONFIG = 'config'
 CREDENTIALS = 'credentials'
-BASE_URL = 'base_url'
+DOMAIN = 'withings'
+LOG_NAMESPACE = 'homeassistant.components.withings'
+MEASURES = 'measures'
+PROFILE = 'profile'
+PROFILES = 'profiles'
 
 AUTH_CALLBACK_PATH = '/api/withings/callback'
 AUTH_CALLBACK_NAME = 'api:withings:callback'

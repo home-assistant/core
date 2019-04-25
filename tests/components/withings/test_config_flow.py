@@ -162,15 +162,17 @@ class TestWithingsFlowHandler:
     async def test_async_step_code(self):
         """Test the code step."""
         auth_client = MagicMock(spec=nokia.NokiaAuth)
-        auth_client.get_credentials = MagicMock(return_value=nokia.NokiaCredentials(
-            access_token='my_access_token',
-            token_expiry='my_token_expiry',
-            token_type='my_token_type',
-            refresh_token='my_refresh_token',
-            user_id='my_user_id',
-            client_id='my_client_id',
-            consumer_secret='my_consumer_secret'
-        ))
+        auth_client.get_credentials = MagicMock(
+            return_value=nokia.NokiaCredentials(
+                access_token='my_access_token',
+                token_expiry='my_token_expiry',
+                token_type='my_token_type',
+                refresh_token='my_refresh_token',
+                user_id='my_user_id',
+                client_id='my_client_id',
+                consumer_secret='my_consumer_secret'
+            )
+        )
 
         get_auth_client_patch = patch.object(
             self.flow_handler,
@@ -279,15 +281,17 @@ class TestWithingsFlowHandler:
             assert callback_view.name == 'api:withings:callback:person_1'
 
         auth_client = MagicMock(spec=nokia.NokiaAuth)
-        auth_client.get_credentials = MagicMock(return_value=nokia.NokiaCredentials(
-            access_token='my_access_token',
-            token_expiry='my_token_expiry',
-            token_type='my_token_type',
-            refresh_token='my_refresh_token',
-            user_id='my_user_id',
-            client_id='my_client_id',
-            consumer_secret='my_consumer_secret'
-        ))
+        auth_client.get_credentials = MagicMock(
+            return_value=nokia.NokiaCredentials(
+                access_token='my_access_token',
+                token_expiry='my_token_expiry',
+                token_type='my_token_type',
+                refresh_token='my_refresh_token',
+                user_id='my_user_id',
+                client_id='my_client_id',
+                consumer_secret='my_consumer_secret'
+            )
+        )
 
         get_auth_client_patch = patch.object(
             self.flow_handler,

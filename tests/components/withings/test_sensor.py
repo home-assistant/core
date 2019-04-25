@@ -13,7 +13,8 @@ from homeassistant.components.withings import (
 from homeassistant.components.withings.sensor import (
     WITHINGS_MEASUREMENTS_MAP,
     WithingsHealthSensor,
-    async_setup_entry
+    async_setup_entry,
+    create_sensor_entities
 )
 
 
@@ -77,7 +78,43 @@ async def test_async_setup_entry(hass):
 
         assert result
 
-        nokia_api_instance.request.assert_called_with('user', 'getdevice', version='v2')
+        nokia_api_instance.request.assert_called_with(
+            'user',
+            'getdevice',
+            version='v2'
+        )
+
+
+def test_create_sensor_entities_all(hass):
+    """Test entity creation for all."""
+    data_manager = MagicMock(spec=WithingsDataManager)
+    hass.data[const.DOMAIN] = {
+        const.CONFIG: {}
+    }
+
+    entities = create_sensor_entities(hass, data_manager)
+    assert entities
+    assert len(entities) == len(WITHINGS_MEASUREMENTS_MAP)
+
+
+def test_create_sensor_entities_skip(hass):
+    """Test entity creation skipped."""
+    data_manager = MagicMock(spec=WithingsDataManager)
+    hass.data[const.DOMAIN] = {
+        const.CONFIG: {
+            const.MEASURES: [
+                const.MEAS_BODY_TEMP_C
+            ]
+        }
+    }
+
+    entities = create_sensor_entities(hass, data_manager)
+    assert entities
+    assert len(entities) == 1
+    assert entities[0] == WithingsHealthSensor(
+        data_manager,
+        WITHINGS_MEASUREMENTS_MAP[const.MEAS_BODY_TEMP_C]
+    )
 
 
 class TestWithingsHealthSensor:

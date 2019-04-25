@@ -2,12 +2,29 @@
 import time
 import datetime
 import logging
+import voluptuous as vol
 from homeassistant.util import Throttle
 from homeassistant.components.withings import (
     const
 )
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
+
+
+def ensure_unique_list(value):
+    """Ensure a config schema value is a unique list."""
+    if isinstance(value, set):
+        return list(value)
+
+    if not isinstance(value, list):
+        raise vol.Invalid("Value is not a list.")
+
+    if len(set(value)) != len(value):
+        raise vol.Invalid(
+            "Value is not a unique list. Please remove duplicates."
+        )
+
+    return value
 
 
 class WithingsDataManager:
