@@ -674,7 +674,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'tilt_status_topic': 'tilt-status-topic',
                 'tilt_opened_value': 80,
                 'tilt_closed_value': 25,
-                'tilt_status_optimistic': True
+                'tilt_optimistic': True
             }
         })
 
@@ -721,7 +721,7 @@ class TestCoverMQTT(unittest.TestCase):
                 'tilt_closed_value': 0,
                 'tilt_min': 0,
                 'tilt_max': 50,
-                'tilt_status_optimistic': True
+                'tilt_optimistic': True
             }
         })
 
