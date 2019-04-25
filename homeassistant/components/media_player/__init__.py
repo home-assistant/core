@@ -819,7 +819,7 @@ class MediaPlayerImageView(HomeAssistantView):
         if player.media_image_remotely_accessible:
             url = player.media_image_url
             if url is not None:
-                return web.Response(status=301, headers={
+                return web.Response(status=302, headers={
                     'location': url
                 })
             return web.Response(status=500)
