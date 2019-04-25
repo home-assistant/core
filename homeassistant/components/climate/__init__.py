@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with climate devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/climate/
-"""
+"""Provides functionality to interact with climate devices."""
 from datetime import timedelta
 import logging
 import functools as ft

@@ -1,0 +1,10 @@
+{
+  "domain": "dyson",
+  "name": "Dyson",
+  "documentation": "https://www.home-assistant.io/components/dyson",
+  "requirements": [
+    "libpurecool==0.5.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

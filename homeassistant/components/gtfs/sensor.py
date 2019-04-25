@@ -1,9 +1,4 @@
-"""
-Support for GTFS (Google/General Transport Format Schema).
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.gtfs/
-"""
+"""Support for GTFS (Google/General Transport Format Schema)."""
 import datetime
 import logging
 import os
@@ -21,8 +16,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['pygtfs==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +123,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({  # type: ignore
 
 def get_next_departure(schedule: Any, start_station_id: Any,
                        end_station_id: Any, offset: cv.time_period,
-                       include_tomorrow: cv.boolean = False) -> dict:
+                       include_tomorrow: bool = False) -> dict:
     """Get the next departure for the given schedule."""
     now = datetime.datetime.now() + offset
     now_date = now.strftime(dt_util.DATE_STR_FORMAT)
@@ -147,7 +140,7 @@ def get_next_departure(schedule: Any, start_station_id: Any,
     limit = 24 * 60 * 60 * 2
     tomorrow_select = tomorrow_where = tomorrow_order = ''
     if include_tomorrow:
-        limit = limit / 2 * 3
+        limit = int(limit / 2 * 3)
         tomorrow_name = tomorrow.strftime('%A').lower()
         tomorrow_select = "calendar.{} AS tomorrow,".format(tomorrow_name)
         tomorrow_where = "OR calendar.{} = 1".format(tomorrow_name)
@@ -218,7 +211,7 @@ def get_next_departure(schedule: Any, start_station_id: Any,
     # as long as all departures are within the calendar date range.
     timetable = {}
     yesterday_start = today_start = tomorrow_start = None
-    yesterday_last = today_last = None
+    yesterday_last = today_last = ''
 
     for row in result:
         if row['yesterday'] == 1 and yesterday_date >= row['start_date']:
@@ -268,13 +261,12 @@ def get_next_departure(schedule: Any, start_station_id: Any,
                 timetable[idx] = {**row, **extras}
 
     # Flag last departures.
-    for idx in [yesterday_last, today_last]:
-        if idx is not None:
-            timetable[idx]['last'] = True
+    for idx in filter(None, [yesterday_last, today_last]):
+        timetable[idx]['last'] = True
 
     _LOGGER.debug("Timetable: %s", sorted(timetable.keys()))
 
-    item = {}
+    item = {}  # type: dict
     for key in sorted(timetable.keys()):
         if dt_util.parse_datetime(key) > now:
             item = timetable[key]
@@ -350,22 +342,22 @@ def get_next_departure(schedule: Any, start_station_id: Any,
 
 def setup_platform(hass: HomeAssistantType, config: ConfigType,
                    add_entities: Callable[[list], None],
-                   discovery_info: Optional[dict] = None) -> bool:
+                   discovery_info: Optional[dict] = None) -> None:
     """Set up the GTFS sensor."""
     gtfs_dir = hass.config.path(DEFAULT_PATH)
-    data = str(config.get(CONF_DATA))
+    data = config[CONF_DATA]
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
     name = config.get(CONF_NAME)
     offset = config.get(CONF_OFFSET)
-    include_tomorrow = config.get(CONF_TOMORROW)
+    include_tomorrow = config[CONF_TOMORROW]
 
     if not os.path.exists(gtfs_dir):
         os.makedirs(gtfs_dir)
 
     if not os.path.exists(os.path.join(gtfs_dir, data)):
         _LOGGER.error("The given GTFS data file/folder was not found")
-        return False
+        return
 
     import pygtfs
 
@@ -382,7 +374,6 @@ def setup_platform(hass: HomeAssistantType, config: ConfigType,
     add_entities([
         GTFSDepartureSensor(gtfs, name, origin, destination, offset,
                             include_tomorrow)])
-    return True
 
 
 class GTFSDepartureSensor(Entity):
@@ -390,7 +381,7 @@ class GTFSDepartureSensor(Entity):
 
     def __init__(self, pygtfs: Any, name: Optional[Any], origin: Any,
                  destination: Any, offset: cv.time_period,
-                 include_tomorrow: cv.boolean) -> None:
+                 include_tomorrow: bool) -> None:
         """Initialize the sensor."""
         self._pygtfs = pygtfs
         self.origin = origin
@@ -402,7 +393,7 @@ class GTFSDepartureSensor(Entity):
         self._available = False
         self._icon = ICON
         self._name = ''
-        self._state = None
+        self._state = None  # type: Optional[str]
         self._attributes = {}  # type: dict
 
         self._agency = None
@@ -421,10 +412,8 @@ class GTFSDepartureSensor(Entity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def state(self) -> Optional[str]:  # type: ignore
         """Return the state of the sensor."""
-        if self._state is None:
-            return STATE_UNKNOWN
         return self._state
 
     @property
@@ -488,26 +477,27 @@ class GTFSDepartureSensor(Entity):
             else:
                 trip_id = self._departure['trip_id']
                 if not self._trip or self._trip.trip_id != trip_id:
-                    _LOGGER.info("Fetching trip details for %s", trip_id)
+                    _LOGGER.debug("Fetching trip details for %s", trip_id)
                     self._trip = self._pygtfs.trips_by_id(trip_id)[0]
 
                 route_id = self._departure['route_id']
                 if not self._route or self._route.route_id != route_id:
-                    _LOGGER.info("Fetching route details for %s", route_id)
+                    _LOGGER.debug("Fetching route details for %s", route_id)
                     self._route = self._pygtfs.routes_by_id(route_id)[0]
 
             # Fetch agency details exactly once
             if self._agency is None and self._route:
+                _LOGGER.debug("Fetching agency details for %s",
+                              self._route.agency_id)
                 try:
-                    _LOGGER.info("Fetching agency details for %s",
-                                 self._route.agency_id)
                     self._agency = self._pygtfs.agencies_by_id(
                         self._route.agency_id)[0]
                 except IndexError:
                     _LOGGER.warning(
-                        "Agency ID '%s' not found in agency table. You may "
-                        "want to update the agency database table to fix this "
-                        "missing reference.", self._route.agency_id)
+                        "Agency ID '%s' was not found in agency table, "
+                        "you may want to update the routes database table "
+                        "to fix this missing reference",
+                        self._route.agency_id)
                     self._agency = False
 
             # Assign attributes, icon and name
@@ -540,21 +530,21 @@ class GTFSDepartureSensor(Entity):
 
             if self._departure[ATTR_FIRST] is not None:
                 self._attributes[ATTR_FIRST] = self._departure['first']
-            elif ATTR_FIRST in self._attributes.keys():
+            elif ATTR_FIRST in self._attributes:
                 del self._attributes[ATTR_FIRST]
 
             if self._departure[ATTR_LAST] is not None:
                 self._attributes[ATTR_LAST] = self._departure['last']
-            elif ATTR_LAST in self._attributes.keys():
+            elif ATTR_LAST in self._attributes:
                 del self._attributes[ATTR_LAST]
         else:
-            if ATTR_ARRIVAL in self._attributes.keys():
+            if ATTR_ARRIVAL in self._attributes:
                 del self._attributes[ATTR_ARRIVAL]
-            if ATTR_DAY in self._attributes.keys():
+            if ATTR_DAY in self._attributes:
                 del self._attributes[ATTR_DAY]
-            if ATTR_FIRST in self._attributes.keys():
+            if ATTR_FIRST in self._attributes:
                 del self._attributes[ATTR_FIRST]
-            if ATTR_LAST in self._attributes.keys():
+            if ATTR_LAST in self._attributes:
                 del self._attributes[ATTR_LAST]
 
         # Add contextual information
@@ -563,21 +553,21 @@ class GTFSDepartureSensor(Entity):
         if self._state is None:
             self._attributes[ATTR_INFO] = "No more departures" if \
                 self._include_tomorrow else "No more departures today"
-        elif ATTR_INFO in self._attributes.keys():
+        elif ATTR_INFO in self._attributes:
             del self._attributes[ATTR_INFO]
 
         if self._agency:
             self._attributes[ATTR_ATTRIBUTION] = self._agency.agency_name
-        elif ATTR_ATTRIBUTION in self._attributes.keys():
+        elif ATTR_ATTRIBUTION in self._attributes:
             del self._attributes[ATTR_ATTRIBUTION]
 
         # Add extra metadata
         key = 'agency_id'
-        if self._agency and key not in self._attributes.keys():
+        if self._agency and key not in self._attributes:
             self.append_keys(self.dict_for_table(self._agency), 'Agency')
 
         key = 'origin_station_stop_id'
-        if self._origin and key not in self._attributes.keys():
+        if self._origin and key not in self._attributes:
             self.append_keys(self.dict_for_table(self._origin),
                              "Origin Station")
             self._attributes[ATTR_LOCATION_ORIGIN] = \
@@ -590,7 +580,7 @@ class GTFSDepartureSensor(Entity):
                     WHEELCHAIR_BOARDING_DEFAULT)
 
         key = 'destination_station_stop_id'
-        if self._destination and key not in self._attributes.keys():
+        if self._destination and key not in self._attributes:
             self.append_keys(self.dict_for_table(self._destination),
                              "Destination Station")
             self._attributes[ATTR_LOCATION_DESTINATION] = \
@@ -604,9 +594,9 @@ class GTFSDepartureSensor(Entity):
 
         # Manage Route metadata
         key = 'route_id'
-        if not self._route and key in self._attributes.keys():
+        if not self._route and key in self._attributes:
             self.remove_keys('Route')
-        elif self._route and (key not in self._attributes.keys() or
+        elif self._route and (key not in self._attributes or
                               self._attributes[key] != self._route.route_id):
             self.append_keys(self.dict_for_table(self._route), 'Route')
             self._attributes[ATTR_ROUTE_TYPE] = \
@@ -614,9 +604,9 @@ class GTFSDepartureSensor(Entity):
 
         # Manage Trip metadata
         key = 'trip_id'
-        if not self._trip and key in self._attributes.keys():
+        if not self._trip and key in self._attributes:
             self.remove_keys('Trip')
-        elif self._trip and (key not in self._attributes.keys() or
+        elif self._trip and (key not in self._attributes or
                              self._attributes[key] != self._trip.trip_id):
             self.append_keys(self.dict_for_table(self._trip), 'Trip')
             self._attributes[ATTR_BICYCLE] = BICYCLE_ALLOWED_OPTIONS.get(

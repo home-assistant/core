@@ -1,9 +1,4 @@
-"""
-Support for UPnP/IGD Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.upnp/
-"""
+"""Support for UPnP/IGD Sensors."""
 from datetime import datetime
 import logging
 
@@ -16,8 +11,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import DOMAIN as DOMAIN_UPNP, SIGNAL_REMOVE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['upnp']
 
 BYTES_RECEIVED = 'bytes_received'
 BYTES_SENT = 'bytes_sent'

@@ -15,8 +15,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyipma==1.2.1']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Instituto Português do Mar e Atmosfera'

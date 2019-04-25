@@ -20,8 +20,6 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_URL)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['georss_client==0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CATEGORY = 'category'

@@ -14,8 +14,6 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['openuv']
-
 ATTR_MAX_UV_TIME = 'time'
 
 EXPOSURE_TYPE_MAP = {

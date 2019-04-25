@@ -1,0 +1,10 @@
+{
+  "domain": "fritzbox_netmonitor",
+  "name": "Fritzbox netmonitor",
+  "documentation": "https://www.home-assistant.io/components/fritzbox_netmonitor",
+  "requirements": [
+    "fritzconnection==0.6.5"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

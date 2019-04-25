@@ -1,9 +1,4 @@
-"""
-Web socket API for Zigbee Home Automation devices.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
-"""
+"""Web socket API for Zigbee Home Automation devices."""
 
 import asyncio
 import logging
@@ -356,10 +351,11 @@ async def websocket_get_bindable_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_IEEE]
     source_device = zha_gateway.get_device(source_ieee)
+    ha_device_registry = await async_get_registry(hass)
     devices = [
-        {
-            **device.device_info
-        } for device in zha_gateway.devices.values() if
+        async_get_device_info(
+            hass, device, ha_device_registry=ha_device_registry
+        ) for device in zha_gateway.devices.values() if
         async_is_bindable_target(source_device, device)
     ]
 

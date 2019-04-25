@@ -1,9 +1,4 @@
-"""
-Support for customised Kankun SP3 Wifi switch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.kankun/
-"""
+"""Support for customised Kankun SP3 Wifi switch."""
 import logging
 
 import requests

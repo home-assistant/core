@@ -1,0 +1,10 @@
+{
+  "domain": "lutron",
+  "name": "Lutron",
+  "documentation": "https://www.home-assistant.io/components/lutron",
+  "requirements": [
+    "pylutron==0.2.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

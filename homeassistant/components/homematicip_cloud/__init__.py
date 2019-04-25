@@ -15,8 +15,6 @@ from .const import (
 from .device import HomematicipGenericDevice  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
-REQUIREMENTS = ['homematicip==0.10.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({

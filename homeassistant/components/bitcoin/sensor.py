@@ -1,9 +1,4 @@
-"""
-Bitcoin information service that uses blockchain.info.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.bitcoin/
-"""
+"""Bitcoin information service that uses blockchain.info."""
 import logging
 from datetime import timedelta
 
@@ -14,8 +9,6 @@ from homeassistant.const import (
     CONF_DISPLAY_OPTIONS, ATTR_ATTRIBUTION, CONF_CURRENCY)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['blockchain==1.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 

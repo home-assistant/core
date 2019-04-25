@@ -1,9 +1,4 @@
-"""
-Support for Enphase Envoy solar energy monitor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.enphase_envoy/
-"""
+"""Support for Enphase Envoy solar energy monitor."""
 import logging
 
 import voluptuous as vol
@@ -15,7 +10,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS, POWER_WATT)
 
 
-REQUIREMENTS = ['envoy_reader==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS = {

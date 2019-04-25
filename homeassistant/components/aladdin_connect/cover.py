@@ -1,9 +1,4 @@
-"""
-Platform for the Aladdin Connect cover component.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.aladdin_connect/
-"""
+"""Platform for the Aladdin Connect cover component."""
 import logging
 
 import voluptuous as vol
@@ -13,8 +8,6 @@ from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA,
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
                                  STATE_OPENING, STATE_CLOSING, STATE_OPEN)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['aladdin_connect==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

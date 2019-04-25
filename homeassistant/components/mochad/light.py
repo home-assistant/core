@@ -12,8 +12,6 @@ from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mochad']
-
 CONF_BRIGHTNESS_LEVELS = 'brightness_levels'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

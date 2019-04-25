@@ -1,9 +1,4 @@
-"""
-Support for displaying collected data over SNMP.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.snmp/
-"""
+"""Support for displaying collected data over SNMP."""
 import logging
 from datetime import timedelta
 
@@ -15,8 +10,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
     CONF_USERNAME, CONF_VALUE_TEMPLATE)
-
-REQUIREMENTS = ['pysnmp==4.4.8']
 
 _LOGGER = logging.getLogger(__name__)
 

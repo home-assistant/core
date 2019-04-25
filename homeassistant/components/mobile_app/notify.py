@@ -22,8 +22,6 @@ from .const import (ATTR_APP_DATA, ATTR_APP_ID, ATTR_APP_VERSION,
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['mobile_app']
-
 
 def push_registrations(hass):
     """Return a dictionary of push enabled registrations."""

@@ -1,9 +1,4 @@
-"""
-Support gathering ted500 information.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ted5000/
-"""
+"""Support gathering ted500 information."""
 import logging
 from datetime import timedelta
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 

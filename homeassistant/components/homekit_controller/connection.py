@@ -145,9 +145,14 @@ class HKDevice():
 
         self.pairing = self.controller.pairings.get(self.hkid)
         if self.pairing is not None:
-            pairing_file = os.path.join(
+            pairing_dir = os.path.join(
                 self.hass.config.path(),
                 HOMEKIT_DIR,
+            )
+            if not os.path.exists(pairing_dir):
+                os.makedirs(pairing_dir)
+            pairing_file = os.path.join(
+                pairing_dir,
                 PAIRING_FILE,
             )
             self.controller.save_data(pairing_file)

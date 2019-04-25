@@ -1,0 +1,12 @@
+{
+  "domain": "sonos",
+  "name": "Sonos",
+  "documentation": "https://www.home-assistant.io/components/sonos",
+  "requirements": [
+    "pysonos==0.0.10"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@amelchio"
+  ]
+}

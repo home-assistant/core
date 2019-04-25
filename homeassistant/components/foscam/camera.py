@@ -1,9 +1,4 @@
-"""
-This component provides basic support for Foscam IP cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.foscam/
-"""
+"""This component provides basic support for Foscam IP cameras."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['libpyfoscam==1.0']
 
 CONF_IP = 'ip'
 CONF_RTSP_PORT = 'rtsp_port'

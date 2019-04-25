@@ -1,9 +1,4 @@
-"""
-Support for ONVIF Cameras with FFmpeg as decoder.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.onvif/
-"""
+"""Support for ONVIF Cameras with FFmpeg as decoder."""
 import asyncio
 import logging
 import os
@@ -25,10 +20,6 @@ from homeassistant.helpers.service import extract_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['onvif-py3==0.1.3',
-                'suds-py3==1.3.3.0',
-                'suds-passworddigest-homeassistant==0.1.2a0.dev0']
-DEPENDENCIES = ['ffmpeg']
 DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'

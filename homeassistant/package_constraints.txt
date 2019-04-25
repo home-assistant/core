@@ -5,14 +5,14 @@ attrs==18.2.0
 bcrypt==3.1.6
 certifi>=2018.04.16
 jinja2>=2.10
-PyJWT==1.6.4
-cryptography==2.5
+PyJWT==1.7.1
+cryptography==2.6.1
 pip>=8.0.3
-python-slugify==1.2.6
-pytz>=2018.07
+python-slugify==3.0.2
+pytz>=2019.01
 pyyaml>=3.13,<4
 requests==2.21.0
-ruamel.yaml==0.15.89
+ruamel.yaml==0.15.91
 voluptuous==0.11.5
 voluptuous-serialize==2.1.0
 

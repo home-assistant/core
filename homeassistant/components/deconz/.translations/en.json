@@ -3,12 +3,21 @@
         "abort": {
             "already_configured": "Bridge is already configured",
             "no_bridges": "No deCONZ bridges discovered",
-            "one_instance_only": "Component only supports one deCONZ instance"
+            "one_instance_only": "Component only supports one deCONZ instance",
+            "updated_instance": "Updated deCONZ instance with new host address"
         },
         "error": {
             "no_key": "Couldn't get an API key"
         },
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Allow importing virtual sensors",
+                    "allow_deconz_groups": "Allow importing deCONZ groups"
+                },
+                "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the hass.io add-on {addon}?",
+                "title": "deCONZ Zigbee gateway via Hass.io add-on"
+            },
             "init": {
                 "data": {
                     "host": "Host",

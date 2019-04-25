@@ -1,9 +1,4 @@
-"""
-Support for Melissa Climate A/C.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.melissa/
-"""
+"""Support for Melissa Climate A/C."""
 import logging
 
 from homeassistant.components.climate import ClimateDevice
@@ -17,8 +12,6 @@ from homeassistant.const import (
     TEMP_CELSIUS)
 
 from . import DATA_MELISSA
-
-DEPENDENCIES = ['melissa']
 
 _LOGGER = logging.getLogger(__name__)
 

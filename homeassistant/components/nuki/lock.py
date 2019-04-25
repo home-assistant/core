@@ -1,9 +1,4 @@
-"""
-Nuki.io lock platform.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/lock.nuki/
-"""
+"""Nuki.io lock platform."""
 from datetime import timedelta
 import logging
 
@@ -14,8 +9,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
-
-REQUIREMENTS = ['pynuki==1.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
