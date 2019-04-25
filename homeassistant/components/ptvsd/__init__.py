@@ -40,16 +40,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up ptvsd debugger."""
     import ptvsd
 
-    conf = config.get(DOMAIN)
-    if not conf:
-        return True
-
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
+    conf = config[DOMAIN]
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
 
     ptvsd.enable_attach((host, port))
 
-    wait = conf.get(CONF_WAIT)
+    wait = conf[CONF_WAIT]
     if wait:
         _LOGGER.warning("Waiting for ptvsd connection on %s:%s", host, port)
         ready = Event()
