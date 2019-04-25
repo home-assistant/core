@@ -272,8 +272,7 @@ class TestWithingsFlowHandler:
             }
             assert result['errors'] == {'base': 'follow_link'}
 
-            callback_view: WithingsAuthCallbackView = \
-                register_view.call_args[0][0]
+            callback_view = register_view.call_args[0][0]
             assert callback_view is not None
             assert callback_view.requires_auth is False
             assert callback_view.profile == 'Person 1'
