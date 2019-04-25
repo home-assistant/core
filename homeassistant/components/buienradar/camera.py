@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import run_coroutine_threadsafe
+
 
 CONF_DIMENSION = 'dimension'
 CONF_DELTA = 'delta'
@@ -92,12 +92,6 @@ class BuienradarCam(Camera):
         """Return the component name."""
         return self._name
 
-    # Cargo-cult from components/proxy/camera.py
-    def camera_image(self) -> Optional[bytes]:
-        """Return camera image."""
-        return run_coroutine_threadsafe(
-            self.async_camera_image(), self.hass.loop).result()
-
     def __needs_refresh(self) -> bool:
         if not (self._delta and self._deadline and self._last_image):
             return True
@@ -118,12 +112,11 @@ class BuienradarCam(Camera):
 
         try:
             async with session.get(url, timeout=5, headers=headers) as res:
+                res.raise_for_status()
+
                 if res.status == 304:
                     _LOG.debug("HTTP 304 - success")
                     return True
-                if res.status != 200:
-                    _LOG.error("HTTP %s - failure", res.status)
-                    return False
 
                 last_modified = res.headers.get('Last-Modified', None)
                 if last_modified:
@@ -142,17 +135,26 @@ class BuienradarCam(Camera):
         Return a still image response from the camera.
 
         Uses ayncio conditions to make sure only one task enters the critical
-        section at the same time. Othertwise, two http requests would start
+        section at the same time. Otherwise, two http requests would start
         when two tabs with home assistant are open.
 
-        An additional boolean (_loading) is used to indicate the loading status
-        instead of _last_image since that is initialized to None.
+        The condition is entered in two sections because otherwise the lock
+        would be held while doing the http request.
+
+        A boolean (_loading) is used to indicate the loading status instead of
+        _last_image since that is initialized to None.
+
+        For reference:
+          * :func:`asyncio.Condition.wait` releases the lock and acquires it
+            again before continuing.
+          * :func:`asyncio.Condition.notify_all` requires the lock to be held.
         """
         if not self.__needs_refresh():
             return self._last_image
 
         # get lock, check iff loading, await notification if loading
         async with self._condition:
+            # can not be tested - mocked http response returns immediately
             if self._loading:
                 _LOG.debug("already loading - waiting for notification")
                 await self._condition.wait()
@@ -163,9 +165,9 @@ class BuienradarCam(Camera):
 
         try:
             now = dt_util.utcnow()
-            res = await self.__retrieve_radar_image()
-            # successful response? update deadline to time before loading
-            if res:
+            was_updated = await self.__retrieve_radar_image()
+            # was updated? Set new deadline relative to now before loading
+            if was_updated:
                 self._deadline = now + timedelta(seconds=self._delta)
 
             return self._last_image
