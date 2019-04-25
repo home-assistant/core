@@ -310,11 +310,7 @@ async def _async_set_up_integrations(
     # Start up debuggers. Start these first in case they want to wait.
     debuggers = domains & DEBUGGER_INTEGRATIONS
     if debuggers:
-        _LOGGER.debug("starting up debuggers %s", debuggers)
-        await asyncio.gather(*[
-            loader.async_component_dependencies(hass, domain)
-            for domain in debuggers
-        ])
+        _LOGGER.debug("Starting up debuggers %s", debuggers)
         await asyncio.gather(*[
             async_setup_component(hass, domain, config)
             for domain in debuggers])
