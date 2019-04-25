@@ -1,0 +1,10 @@
+{
+  "domain": "modem_callerid",
+  "name": "Modem callerid",
+  "documentation": "https://www.home-assistant.io/components/modem_callerid",
+  "requirements": [
+    "basicmodem==0.7"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -42,8 +42,6 @@ MODE_XY = 'xy'
 MODE_MIRED = 'mired'
 MODE_RGB = 'rgb'
 DEFAULT_MODE = MODE_XY
-DEPENDENCIES = ['light']
-
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'flux',

@@ -9,6 +9,7 @@
         },
         "error": {
             "login_failed": "Nie uda\u0142o si\u0119 sparowa\u0107 z PlayStation 4. Sprawd\u017a, czy PIN jest poprawny.",
+            "no_ipaddress": "Wprowad\u017a adres IP PlayStation 4, kt\u00f3ry chcesz skonfigurowa\u0107.",
             "not_ready": "PlayStation 4 nie jest w\u0142\u0105czona lub po\u0142\u0105czona z sieci\u0105."
         },
         "step": {
@@ -24,6 +25,14 @@
                     "region": "Region"
                 },
                 "description": "Wprowad\u017a informacje o PlayStation 4. Aby uzyska\u0107 'PIN', przejd\u017a do 'Ustawienia' na konsoli PlayStation 4. Nast\u0119pnie przejd\u017a do 'Ustawienia po\u0142\u0105czenia aplikacji mobilnej' i wybierz 'Dodaj urz\u0105dzenie'. Wprowad\u017a wy\u015bwietlony kod PIN.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "Adres IP (pozostaw puste, je\u015bli u\u017cywasz funkcji Auto Discovery).",
+                    "mode": "Tryb konfiguracji"
+                },
+                "description": "Wybierz tryb konfiguracji. Pole adresu IP mo\u017cna pozostawi\u0107 puste, je\u015bli wybierzesz opcj\u0119 Auto Discovery, poniewa\u017c urz\u0105dzenia zostan\u0105 automatycznie wykryte.",
                 "title": "PlayStation 4"
             }
         },

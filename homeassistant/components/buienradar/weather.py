@@ -13,8 +13,6 @@ from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from .sensor import BrData
 
-REQUIREMENTS = ['buienradar==0.91']
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CONDITION = 'buienradar_condition'

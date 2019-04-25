@@ -1,14 +1,7 @@
-"""
-Support for the QR image processing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.qr/
-"""
+"""Support for the QR image processing."""
 from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
     ImageProcessingEntity, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
-
-REQUIREMENTS = ['pyzbar==0.1.7', 'pillow==5.4.1']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

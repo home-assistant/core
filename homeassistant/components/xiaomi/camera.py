@@ -1,9 +1,4 @@
-"""
-This component provides support for Xiaomi Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.xiaomi/
-"""
+"""This component provides support for Xiaomi Cameras."""
 import asyncio
 import logging
 
@@ -16,7 +11,6 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PATH,
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
-DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRAND = 'Xiaomi Home Camera'

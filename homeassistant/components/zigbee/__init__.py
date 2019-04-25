@@ -11,8 +11,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 
-REQUIREMENTS = ['xbee-helper==0.0.7']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'zigbee'

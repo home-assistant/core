@@ -1,9 +1,4 @@
-"""
-Support for the Geofency device tracker platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.geofency/
-"""
+"""Support for the Geofency device tracker platform."""
 import logging
 
 from homeassistant.components.device_tracker import (
@@ -13,8 +8,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN as GEOFENCY_DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['geofency']
 
 DATA_KEY = '{}.{}'.format(GEOFENCY_DOMAIN, DEVICE_TRACKER_DOMAIN)
 

@@ -1,0 +1,10 @@
+{
+  "domain": "blackbird",
+  "name": "Blackbird",
+  "documentation": "https://www.home-assistant.io/components/blackbird",
+  "requirements": [
+    "pyblackbird==0.5"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

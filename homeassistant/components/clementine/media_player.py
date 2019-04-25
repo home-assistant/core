@@ -1,9 +1,4 @@
-"""
-Support for Clementine Music Player as media player.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.clementine/
-"""
+"""Support for Clementine Music Player as media player."""
 from datetime import timedelta
 import logging
 import time
@@ -20,8 +15,6 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF,
     STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['python-clementine-remote==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 

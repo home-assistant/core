@@ -1,9 +1,4 @@
-"""
-Discord platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.discord/
-"""
+"""Discord platform for notify component."""
 import logging
 
 import voluptuous as vol
@@ -16,8 +11,6 @@ from homeassistant.components.notify import (ATTR_DATA, ATTR_TARGET,
                                              BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['discord.py==0.16.12']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string

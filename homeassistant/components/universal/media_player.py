@@ -1,9 +1,4 @@
-"""
-Combination of multiple media players into one for a universal controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.universal/
-"""
+"""Combination of multiple media players for a universal controller."""
 from copy import copy
 import logging
 

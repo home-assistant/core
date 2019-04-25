@@ -1,12 +1,4 @@
-"""
-Interfaces with the myLeviton API for Decora Smart WiFi products.
-
-See:
-http://www.leviton.com/en/products/lighting-controls/decora-smart-with-wifi
-
-Uses Leviton's cloud services API for cloud-to-cloud integration.
-
-"""
+"""Interfaces with the myLeviton API for Decora Smart WiFi products."""
 
 import logging
 
@@ -19,8 +11,6 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['decora_wifi==1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

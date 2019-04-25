@@ -14,8 +14,6 @@ DEVICE_CLASS_COLD = 'cold'
 DEVICE_CLASS_HEAT = 'heat'
 DEVICE_CLASS_PROBLEM = 'problem'
 
-DEPENDENCIES = ['opentherm_gw']
-
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):

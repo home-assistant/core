@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 91
-PATCH_VERSION = '4'
+MINOR_VERSION = 92
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
@@ -147,11 +147,6 @@ CONF_TTL = 'ttl'
 CONF_TYPE = 'type'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 CONF_UNIT_SYSTEM = 'unit_system'
-
-# Deprecated in 0.88.0, invalidated in 0.91.0, remove in 0.92.0
-CONF_UPDATE_INTERVAL = 'update_interval'
-CONF_UPDATE_INTERVAL_INVALIDATION_VERSION = '0.91.0'
-
 CONF_URL = 'url'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
@@ -185,9 +180,11 @@ EVENT_SCRIPT_STARTED = 'script_started'
 DEVICE_CLASS_BATTERY = 'battery'
 DEVICE_CLASS_HUMIDITY = 'humidity'
 DEVICE_CLASS_ILLUMINANCE = 'illuminance'
+DEVICE_CLASS_SIGNAL_STRENGTH = 'signal_strength'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
 DEVICE_CLASS_TIMESTAMP = 'timestamp'
 DEVICE_CLASS_PRESSURE = 'pressure'
+DEVICE_CLASS_POWER = 'power'
 
 # #### STATES ####
 STATE_ON = 'on'

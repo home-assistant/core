@@ -1,0 +1,13 @@
+{
+  "domain": "liveboxplaytv",
+  "name": "Liveboxplaytv",
+  "documentation": "https://www.home-assistant.io/components/liveboxplaytv",
+  "requirements": [
+    "liveboxplaytv==2.0.2",
+    "pyteleloisirs==3.4"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@pschmitt"
+  ]
+}

@@ -1,9 +1,4 @@
-"""
-Support for Logitech UE Smart Radios.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.ue_smart_radio/
-"""
+"""Support for Logitech UE Smart Radios."""
 
 import logging
 

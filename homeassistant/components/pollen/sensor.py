@@ -13,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['numpy==1.16.2', 'pypollencom==2.2.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALLERGEN_AMOUNT = 'allergen_amount'

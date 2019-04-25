@@ -1,9 +1,4 @@
-"""
-Support for Xiaomi Mi Flora BLE plant sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.miflora/
-"""
+"""Support for Xiaomi Mi Flora BLE plant sensor."""
 from datetime import timedelta
 import logging
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC,
     CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
-
-REQUIREMENTS = ['miflora==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

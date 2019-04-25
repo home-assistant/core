@@ -1,9 +1,4 @@
-"""
-Support for TPLink lights.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.tplink/
-"""
+"""Support for TPLink lights."""
 import logging
 import time
 
@@ -17,8 +12,6 @@ from homeassistant.util.color import (
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
 
-DEPENDENCIES = ['tplink']
-
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +21,8 @@ ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
 ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
 
-def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities,
+                               discovery_info=None):
     """Set up the platform.
 
     Deprecated.

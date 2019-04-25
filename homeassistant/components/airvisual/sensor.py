@@ -1,9 +1,4 @@
-"""
-Support for AirVisual air quality sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.airvisual/
-"""
+"""Support for AirVisual air quality sensors."""
 from logging import getLogger
 from datetime import timedelta
 
@@ -18,7 +13,6 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyairvisual==3.0.1']
 _LOGGER = getLogger(__name__)
 
 ATTR_CITY = 'city'

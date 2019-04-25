@@ -1,9 +1,4 @@
-"""
-Support for covers which integrate with other components.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.template/
-"""
+"""Support for covers which integrate with other components."""
 import logging
 
 import voluptuous as vol

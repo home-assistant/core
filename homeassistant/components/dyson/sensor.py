@@ -1,17 +1,10 @@
-"""
-Support for Dyson Pure Cool Link Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dyson/
-"""
+"""Support for Dyson Pure Cool Link Sensors."""
 import logging
 
 from homeassistant.const import STATE_OFF, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DYSON_DEVICES
-
-DEPENDENCIES = ['dyson']
 
 SENSOR_UNITS = {
     'air_quality': None,
@@ -37,9 +30,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     unit = hass.config.units.temperature_unit
     # Get Dyson Devices from parent component
-    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
-    for device in [d for d in hass.data[DYSON_DEVICES] if
-                   isinstance(d, DysonPureCoolLink)]:
+    from libpurecool.dyson_pure_cool import DysonPureCool
+    from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+
+    for device in [d for d in hass.data[DYSON_DEVICES]
+                   if isinstance(d, DysonPureCoolLink) and
+                   not isinstance(d, DysonPureCool)]:
         devices.append(DysonFilterLifeSensor(device))
         devices.append(DysonDustSensor(device))
         devices.append(DysonHumiditySensor(device))

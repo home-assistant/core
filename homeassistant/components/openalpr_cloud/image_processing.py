@@ -1,9 +1,4 @@
-"""
-Component that will help set the OpenALPR cloud for ALPR processing.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.openalpr_cloud/
-"""
+"""Component that will help set the OpenALPR cloud for ALPR processing."""
 import asyncio
 import logging
 from base64 import b64encode

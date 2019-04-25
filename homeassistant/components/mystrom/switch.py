@@ -7,8 +7,6 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-mystrom==0.5.0']
-
 DEFAULT_NAME = 'myStrom Switch'
 
 _LOGGER = logging.getLogger(__name__)

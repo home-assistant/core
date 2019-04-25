@@ -1,9 +1,4 @@
-"""
-Support for CO2 sensor connected to a serial port.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mhz19/
-"""
+"""Support for CO2 sensor connected to a serial port."""
 import logging
 from datetime import timedelta
 
@@ -16,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.util.temperature import celsius_to_fahrenheit
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['pmsensor==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

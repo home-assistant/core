@@ -9,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['coinbase==2.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'coinbase'

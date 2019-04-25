@@ -1,9 +1,4 @@
-"""
-Demo camera platform that has a fake camera.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo camera platform that has a fake camera."""
 import logging
 import os
 

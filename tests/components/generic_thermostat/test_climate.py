@@ -18,7 +18,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE
 )
-from homeassistant import loader
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate.const import (
@@ -98,7 +97,7 @@ async def test_heater_input_boolean(hass, setup_comp_1):
 
 async def test_heater_switch(hass, setup_comp_1):
     """Test heater switching test switch."""
-    platform = loader.get_component(hass, 'switch.test')
+    platform = getattr(hass.components, 'test.switch')
     platform.init()
     switch_1 = platform.DEVICES[1]
     assert await async_setup_component(hass, switch.DOMAIN, {'switch': {
@@ -112,6 +111,7 @@ async def test_heater_switch(hass, setup_comp_1):
         'target_sensor': ENT_SENSOR
     }})
 
+    await hass.async_block_till_done()
     assert STATE_OFF == \
         hass.states.get(heater_switch).state
 

@@ -1,9 +1,4 @@
-"""
-Support for Epson projector.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/media_player.epson/
-"""
+"""Support for Epson projector."""
 import logging
 
 import voluptuous as vol
@@ -19,8 +14,6 @@ from homeassistant.const import (
     STATE_ON)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['epson-projector==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,12 +135,14 @@ class EpsonProjector(MediaPlayerDevice):
     async def async_turn_on(self):
         """Turn on epson."""
         from epson_projector.const import TURN_ON
-        await self._projector.send_command(TURN_ON)
+        if self._state == STATE_OFF:
+            await self._projector.send_command(TURN_ON)
 
     async def async_turn_off(self):
         """Turn off epson."""
         from epson_projector.const import TURN_OFF
-        await self._projector.send_command(TURN_OFF)
+        if self._state == STATE_ON:
+            await self._projector.send_command(TURN_OFF)
 
     @property
     def source_list(self):

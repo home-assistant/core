@@ -9,8 +9,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-etherscan-api==0.0.3']
-
 ATTRIBUTION = "Data provided by etherscan.io"
 
 CONF_TOKEN_ADDRESS = 'token_address'

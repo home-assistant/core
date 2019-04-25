@@ -1,0 +1,10 @@
+{
+  "domain": "futurenow",
+  "name": "Futurenow",
+  "documentation": "https://www.home-assistant.io/components/futurenow",
+  "requirements": [
+    "pyfnip==0.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

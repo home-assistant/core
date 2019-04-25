@@ -1,0 +1,12 @@
+{
+  "domain": "mailgun",
+  "name": "Mailgun",
+  "documentation": "https://www.home-assistant.io/components/mailgun",
+  "requirements": [
+    "pymailgunner==1.4"
+  ],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": []
+}

@@ -5,8 +5,6 @@ from homeassistant.const import CONF_NAME
 
 from . import LIGHTWAVE_LINK
 
-DEPENDENCIES = ['lightwave']
-
 MAX_BRIGHTNESS = 255
 
 

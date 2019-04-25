@@ -4,23 +4,21 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ADDRESS, CONF_COVERS, CONF_HOST, CONF_LIGHTS, CONF_NAME,
-    CONF_PASSWORD, CONF_PORT, CONF_SENSORS, CONF_SWITCHES,
+    CONF_ADDRESS, CONF_BINARY_SENSORS, CONF_COVERS, CONF_HOST, CONF_LIGHTS,
+    CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SENSORS, CONF_SWITCHES,
     CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    CONF_CONNECTIONS, CONF_DIM_MODE, CONF_DIMMABLE, CONF_MOTOR, CONF_OUTPUT,
-    CONF_SK_NUM_TRIES, CONF_SOURCE, CONF_TRANSITION, DATA_LCN, DEFAULT_NAME,
-    DIM_MODES, DOMAIN, LED_PORTS, LOGICOP_PORTS, MOTOR_PORTS, OUTPUT_PORTS,
-    PATTERN_ADDRESS, RELAY_PORTS, S0_INPUTS, SETPOINTS, THRESHOLDS, VAR_UNITS,
-    VARIABLES)
+    BINSENSOR_PORTS, CONF_CONNECTIONS, CONF_DIM_MODE, CONF_DIMMABLE,
+    CONF_MOTOR, CONF_OUTPUT, CONF_SK_NUM_TRIES, CONF_SOURCE, CONF_TRANSITION,
+    DATA_LCN, DEFAULT_NAME, DIM_MODES, DOMAIN, KEYS, LED_PORTS, LOGICOP_PORTS,
+    MOTOR_PORTS, OUTPUT_PORTS, PATTERN_ADDRESS, RELAY_PORTS, S0_INPUTS,
+    SETPOINTS, THRESHOLDS, VAR_UNITS, VARIABLES)
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pypck==0.5.9']
 
 
 def has_unique_connection_names(connections):
@@ -64,6 +62,13 @@ def is_address(value):
         return addr, conn_id
     raise vol.error.Invalid('Not a valid address string.')
 
+
+BINARY_SENSORS_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ADDRESS): is_address,
+    vol.Required(CONF_SOURCE): vol.All(vol.Upper, vol.In(SETPOINTS + KEYS +
+                                                         BINSENSOR_PORTS))
+    })
 
 COVERS_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -115,6 +120,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONNECTIONS): vol.All(
             cv.ensure_list, has_unique_connection_names, [CONNECTION_SCHEMA]),
+        vol.Optional(CONF_BINARY_SENSORS): vol.All(
+            cv.ensure_list, [BINARY_SENSORS_SCHEMA]),
         vol.Optional(CONF_COVERS): vol.All(
             cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_LIGHTS): vol.All(
@@ -177,7 +184,8 @@ async def async_setup(hass, config):
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections
 
     # load platforms
-    for component, conf_key in (('cover', CONF_COVERS),
+    for component, conf_key in (('binary_sensor', CONF_BINARY_SENSORS),
+                                ('cover', CONF_COVERS),
                                 ('light', CONF_LIGHTS),
                                 ('sensor', CONF_SENSORS),
                                 ('switch', CONF_SWITCHES)):

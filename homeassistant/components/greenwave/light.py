@@ -1,9 +1,4 @@
-"""
-Support for Greenwave Reality (TCP Connected) lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.greenwave/
-"""
+"""Support for Greenwave Reality (TCP Connected) lights."""
 import logging
 from datetime import timedelta
 
@@ -15,7 +10,6 @@ from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['greenwavereality==0.5.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VERSION = 'version'

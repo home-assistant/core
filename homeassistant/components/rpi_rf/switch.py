@@ -1,9 +1,4 @@
-"""
-Allows to configure a switch using a 433MHz module via GPIO on a Raspberry Pi.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rpi_rf/
-"""
+"""Support for a switch using a 433MHz module via GPIO on a Raspberry Pi."""
 import importlib
 import logging
 
@@ -13,8 +8,6 @@ from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_SWITCHES, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['rpi-rf==0.9.7']
 
 _LOGGER = logging.getLogger(__name__)
 

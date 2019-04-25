@@ -5,8 +5,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
-DEPENDENCIES = ['homekit_controller']
-
 _LOGGER = logging.getLogger(__name__)
 
 

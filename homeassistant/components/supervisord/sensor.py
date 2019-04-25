@@ -1,9 +1,4 @@
-"""
-Sensor for Supervisord process status.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.supervisord/
-"""
+"""Sensor for Supervisord process status."""
 import logging
 import xmlrpc.client
 

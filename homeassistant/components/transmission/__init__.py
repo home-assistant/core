@@ -11,8 +11,6 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['transmissionrpc==0.11']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'transmission'

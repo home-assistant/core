@@ -18,7 +18,6 @@ from homeassistant.setup import async_prepare_setup_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['http']
 DOMAIN = 'mailbox'
 
 EVENT = 'mailbox_updated'

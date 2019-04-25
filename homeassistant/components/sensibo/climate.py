@@ -1,9 +1,4 @@
-"""
-Support for Sensibo wifi-enabled home thermostats.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.sensibo/
-"""
+"""Support for Sensibo wifi-enabled home thermostats."""
 
 import asyncio
 import logging
@@ -25,8 +20,6 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
-
-REQUIREMENTS = ['pysensibo==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

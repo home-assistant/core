@@ -1,9 +1,4 @@
-"""
-Platform to retrieve uptime for Home Assistant.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.uptime/
-"""
+"""Platform to retrieve uptime for Home Assistant."""
 import logging
 
 import voluptuous as vol

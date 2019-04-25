@@ -1,9 +1,4 @@
-"""
-Support for OhmConnect.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/sensor.ohmconnect/
-"""
+"""Support for OhmConnect."""
 import logging
 from datetime import timedelta
 
@@ -15,8 +10,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['defusedxml==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 

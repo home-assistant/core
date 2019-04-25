@@ -1,0 +1,10 @@
+{
+  "domain": "etherscan",
+  "name": "Etherscan",
+  "documentation": "https://www.home-assistant.io/components/etherscan",
+  "requirements": [
+    "python-etherscan-api==0.0.3"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

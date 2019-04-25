@@ -1,0 +1,10 @@
+{
+  "domain": "otp",
+  "name": "Otp",
+  "documentation": "https://www.home-assistant.io/components/otp",
+  "requirements": [
+    "pyotp==2.2.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

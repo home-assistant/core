@@ -16,16 +16,16 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
-from .auth import async_setup_auth
-from .discovery import async_setup_discovery
+from .auth import async_setup_auth_view
+from .addon_panel import async_setup_addon_panel
+from .discovery import async_setup_discovery_view
 from .handler import HassIO, HassioAPIError
 from .http import HassIOView
-from .ingress import async_setup_ingress
+from .ingress import async_setup_ingress_view
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'hassio'
-DEPENDENCIES = ['http']
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -266,12 +266,15 @@ async def async_setup(hass, config):
             HASS_DOMAIN, service, async_handle_core_service)
 
     # Init discovery Hass.io feature
-    async_setup_discovery(hass, hassio, config)
+    async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
-    async_setup_auth(hass)
+    async_setup_auth_view(hass)
 
     # Init ingress Hass.io feature
-    async_setup_ingress(hass, host)
+    async_setup_ingress_view(hass, host)
+
+    # Init add-on ingress panels
+    await async_setup_addon_panel(hass, hassio)
 
     return True

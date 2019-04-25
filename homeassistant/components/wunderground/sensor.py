@@ -1,9 +1,4 @@
-"""
-Support for WUnderground weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.wunderground/
-"""
+"""Support for WUnderground weather service."""
 import asyncio
 from datetime import timedelta
 import logging
