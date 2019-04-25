@@ -2,6 +2,8 @@
 import logging
 from statistics import mean
 
+import numpy as np
+
 from homeassistant.components.iqvia import (
     DATA_CLIENT, DOMAIN, SENSORS, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_HISTORIC,
     TYPE_ALLERGY_OUTLOOK, TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY,
@@ -88,8 +90,6 @@ def calculate_average_rating(indices):
 
 def calculate_trend(indices):
     """Calculate the "moving average" of a set of indices."""
-    import numpy as np
-
     def moving_average(data, samples):
         """Determine the "moving average" (http://tinyurl.com/yaereb3c)."""
         ret = np.cumsum(data, dtype=float)
