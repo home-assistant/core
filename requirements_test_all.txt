@@ -327,6 +327,9 @@ vsure==1.5.2
 # homeassistant.components.vultr
 vultr==0.1.2
 
+# homeassistant.components.withings
+nokia==1.2.0
+
 # homeassistant.components.panasonic_viera
 # homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan

@@ -1,4 +1,5 @@
 """Sensors flow for Withings."""
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.components.withings import (
@@ -392,19 +393,15 @@ class WithingsHealthSensor(Entity):
         return self._state
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._attribute.unit_of_measurement
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return self._attribute.icon
-
-    @property
     def state_attributes(self):
-        """Get withings attribute."""
+        """Get withings attributes."""
         return self._attribute.__dict__
+
+    @callback
+    def _async_write_ha_state(self):
+        """Override ha state as the entity converts units without any option to disable."""
+        self.hass.states.async_set(
+            self.entity_id, self.state, self.state_attributes, self.force_update, self._context)
 
     async def async_update(self) -> None:
         """Update the data."""

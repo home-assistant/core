@@ -39,6 +39,7 @@ async def test_async_setup_entry(hass):
         nokia_api_instance.get_user = MagicMock()
         nokia_api_instance.credentials = MagicMock(spec=nokia.NokiaCredentials)
         nokia_api_instance.credentials.token_expiry = 99999999999999
+        nokia_api_instance.request = MagicMock()
 
         data_manager_instance = MagicMock(spec=WithingsDataManager)
         data_manager_instance.async_refresh_token = async_refresh_token
@@ -54,7 +55,15 @@ async def test_async_setup_entry(hass):
             'title',
             {
                 const.PROFILE: 'Person 1',
-                const.CREDENTIALS: 'my_credentials',
+                const.CREDENTIALS: {
+                    'access_token': 'my_access_token',
+                    'token_expiry': 'my_token_expiry',
+                    'token_type': 'my_token_type',
+                    'refresh_token': 'my_refresh_token',
+                    'user_id': 'my_user_id',
+                    'client_id': 'my_client_id',
+                    'consumer_secret': 'my_consumer_secret'
+                },
             },
             'source',
             'connection_class'
@@ -67,6 +76,8 @@ async def test_async_setup_entry(hass):
         )
 
         assert result
+
+        nokia_api_instance.request.assert_called_with('user', 'getdevice', version='v2')
 
 
 class TestWithingsHealthSensor:
