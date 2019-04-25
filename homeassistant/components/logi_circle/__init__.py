@@ -15,10 +15,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import config_flow
 from .const import (
-    CONF_API_KEY, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_REDIRECT_URI,
-    DATA_LOGI, DEFAULT_CACHEDB, DOMAIN, LED_MODE_KEY, LOGI_SENSORS,
-    RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
-    SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
+    CONF_API_KEY, CONF_CAMERAS, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
+    CONF_FFMPEG_ARGUMENTS, CONF_REDIRECT_URI, DATA_LOGI, DEFAULT_CACHEDB,
+    DOMAIN, LED_MODE_KEY, LOGI_SENSORS, RECORDING_MODE_KEY,
+    SIGNAL_LOGI_CIRCLE_RECONFIGURE, SIGNAL_LOGI_CIRCLE_RECORD,
+    SIGNAL_LOGI_CIRCLE_SNAPSHOT)
 
 NOTIFICATION_ID = 'logi_circle_notification'
 NOTIFICATION_TITLE = 'Logi Circle Setup'
@@ -39,6 +40,10 @@ SENSOR_SCHEMA = vol.Schema({
         vol.All(cv.ensure_list, [vol.In(LOGI_SENSORS)])
 })
 
+CAMERA_SCHEMA = vol.Schema({
+    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string
+})
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN:
@@ -47,7 +52,8 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Required(CONF_CLIENT_SECRET): cv.string,
             vol.Required(CONF_API_KEY): cv.string,
             vol.Required(CONF_REDIRECT_URI): cv.string,
-            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA
+            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+            vol.Optional(CONF_CAMERAS, default={}): CAMERA_SCHEMA,
         })
     },
     extra=vol.ALLOW_EXTRA,
@@ -83,7 +89,8 @@ async def async_setup(hass, config):
         client_secret=conf[CONF_CLIENT_SECRET],
         api_key=conf[CONF_API_KEY],
         redirect_uri=conf[CONF_REDIRECT_URI],
-        sensors=conf[CONF_SENSORS])
+        sensors=conf[CONF_SENSORS],
+        cameras=conf[CONF_CAMERAS])
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(

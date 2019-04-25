@@ -34,7 +34,8 @@ def init_config_flow(hass):
                                              client_secret='secret',
                                              api_key='123',
                                              redirect_uri='http://example.com',
-                                             sensors=None)
+                                             sensors=None,
+                                             cameras=None)
     flow = config_flow.LogiCircleFlowHandler()
     flow._get_authorization_url = Mock(  # pylint: disable=W0212
         return_value='http://example.com')
@@ -75,7 +76,8 @@ async def test_full_flow_implementation(hass, mock_logi_circle):  # noqa pylint:
         client_secret=None,
         api_key=None,
         redirect_uri=None,
-        sensors=None)
+        sensors=None,
+        cameras=None)
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
@@ -170,7 +172,8 @@ async def test_gen_auth_url(hass, mock_logi_circle):  # pylint: disable=W0621
                                              client_secret='secret',
                                              api_key='123',
                                              redirect_uri='http://example.com',
-                                             sensors=None)
+                                             sensors=None,
+                                             cameras=None)
     flow = config_flow.LogiCircleFlowHandler()
     flow.hass = hass
     flow.flow_impl = 'test-auth-url'

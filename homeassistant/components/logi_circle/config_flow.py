@@ -11,8 +11,8 @@ from homeassistant.const import CONF_SENSORS
 from homeassistant.core import callback
 
 from .const import (
-    CONF_API_KEY, CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_REDIRECT_URI,
-    DEFAULT_CACHEDB, DOMAIN)
+    CONF_API_KEY, CONF_CAMERAS, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
+    CONF_REDIRECT_URI, DEFAULT_CACHEDB, DOMAIN)
 
 _TIMEOUT = 15  # seconds
 
@@ -24,7 +24,7 @@ AUTH_CALLBACK_NAME = 'api:logi_circle'
 
 @callback
 def register_flow_implementation(hass, domain, client_id, client_secret,
-                                 api_key, redirect_uri, sensors):
+                                 api_key, redirect_uri, sensors, cameras):
     """Register a flow implementation.
 
     domain: Domain of the component responsible for the implementation.
@@ -33,6 +33,7 @@ def register_flow_implementation(hass, domain, client_id, client_secret,
     api_key: API key issued by Logitech.
     redirect_uri: Auth callback redirect URI.
     sensors: Sensor config.
+    cameras: Camera config.
     """
     if DATA_FLOW_IMPL not in hass.data:
         hass.data[DATA_FLOW_IMPL] = OrderedDict()
@@ -43,6 +44,7 @@ def register_flow_implementation(hass, domain, client_id, client_secret,
         CONF_API_KEY: api_key,
         CONF_REDIRECT_URI: redirect_uri,
         CONF_SENSORS: sensors,
+        CONF_CAMERAS: cameras,
         EXTERNAL_ERRORS: None
     }
 
@@ -151,6 +153,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         api_key = flow[CONF_API_KEY]
         redirect_uri = flow[CONF_REDIRECT_URI]
         sensors = flow[CONF_SENSORS]
+        cameras = flow[CONF_CAMERAS]
 
         logi_session = LogiCircle(
             client_id=client_id,
@@ -180,7 +183,8 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
                 CONF_CLIENT_SECRET: client_secret,
                 CONF_API_KEY: api_key,
                 CONF_REDIRECT_URI: redirect_uri,
-                CONF_SENSORS: sensors})
+                CONF_SENSORS: sensors,
+                CONF_CAMERAS: cameras})
 
 
 class LogiCircleAuthCallbackView(HomeAssistantView):

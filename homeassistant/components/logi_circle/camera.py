@@ -8,12 +8,14 @@ from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, STATE_OFF,
     STATE_ON)
+from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTRIBUTION, DOMAIN as LOGI_CIRCLE_DOMAIN, LED_MODE_KEY,
-    RECORDING_MODE_KEY, SIGNAL_LOGI_CIRCLE_RECONFIGURE,
-    SIGNAL_LOGI_CIRCLE_RECORD, SIGNAL_LOGI_CIRCLE_SNAPSHOT)
+    ATTRIBUTION, CONF_CAMERAS, CONF_FFMPEG_ARGUMENTS,
+    DOMAIN as LOGI_CIRCLE_DOMAIN, LED_MODE_KEY, RECORDING_MODE_KEY,
+    SIGNAL_LOGI_CIRCLE_RECONFIGURE, SIGNAL_LOGI_CIRCLE_RECORD,
+    SIGNAL_LOGI_CIRCLE_SNAPSHOT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +51,8 @@ class LogiCam(Camera):
         self._id = self._camera.mac_address
         self._has_battery = self._camera.supports_feature('battery_level')
         self._ffmpeg = ffmpeg
+        self._ffmpeg_arguments = device_info.data.get(
+            CONF_CAMERAS, {}).get(CONF_FFMPEG_ARGUMENTS)
         self._listeners = []
 
     async def async_added_to_hass(self):
@@ -118,6 +122,28 @@ class LogiCam(Camera):
     async def async_camera_image(self):
         """Return a still image from the camera."""
         return await self._camera.live_stream.download_jpeg()
+
+    async def handle_async_mjpeg_stream(self, request):
+        """Generate an HTTP MJPEG stream from the camera's live stream."""
+        from haffmpeg.camera import CameraMjpeg
+
+        live_stream = await self._camera.live_stream.get_rtsp_url()
+
+        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        # Extend the timeout if device is in deep sleep
+        timeout = 60 if self._camera.pir_wake_up else 10
+
+        await stream.open_camera(
+            live_stream, extra_cmd=self._ffmpeg_arguments)
+
+        try:
+            stream_reader = await stream.get_reader()
+            return await async_aiohttp_proxy_stream(
+                self.hass, request, stream_reader,
+                self._ffmpeg.ffmpeg_stream_content_type,
+                timeout=timeout)
+        finally:
+            await stream.close()
 
     async def async_turn_off(self):
         """Disable streaming mode for this camera."""
