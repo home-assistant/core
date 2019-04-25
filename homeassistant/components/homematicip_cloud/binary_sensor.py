@@ -78,7 +78,7 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the shutter contact is on/open."""
-        if self._device.sabotage:
+        if hasattr(self._device, 'sabotage') and self._device.sabotage:
             return True
         if self._device.windowState is None:
             return None
@@ -96,7 +96,7 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if motion is detected."""
-        if self._device.sabotage:
+        if hasattr(self._device, 'sabotage') and self._device.sabotage:
             return True
         return self._device.motionDetected
 
