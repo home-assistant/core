@@ -398,8 +398,12 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         if TTS_PRE_92 in config_raw:
             _LOGGER.info("Migrating google tts to google_translate tts")
             config_raw = config_raw.replace(TTS_PRE_92, TTS_92)
-            with open(config_path, 'wt', encoding='utf-8') as config_file:
-                config_file.write(config_raw)
+            try:
+                with open(config_path, 'wt', encoding='utf-8') as config_file:
+                    config_file.write(config_raw)
+            except IOError:
+                _LOGGER.exception("Migrating to google_translate tts failed")
+                pass
 
     with open(version_path, 'wt') as outp:
         outp.write(__version__)
