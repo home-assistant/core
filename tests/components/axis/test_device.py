@@ -125,7 +125,7 @@ async def test_device_reset(hass):
     await axis_device.async_reset()
 
     assert len(api.stop.mock_calls) == 1
-    assert len(hass.states.async_all()) == 1 #######
+    assert len(hass.states.async_all()) == 1
     assert len(axis_device.listeners) == 0
 
 
@@ -198,7 +198,7 @@ async def test_get_device(hass):
             patch('axis.param_cgi.Params.update_properties',
                   return_value=mock_coro()), \
             patch('axis.port_cgi.Ports.update',
-               return_value=mock_coro()):
+                  return_value=mock_coro()):
         assert await device.get_device(hass, DEVICE_DATA)
 
 

@@ -77,6 +77,7 @@ async def test_platform_manually_configured(hass):
 
     assert axis.DOMAIN not in hass.data
 
+
 async def test_no_switches(hass):
     """Test that no output events in Axis results in no switch entities."""
     await setup_device(hass)
