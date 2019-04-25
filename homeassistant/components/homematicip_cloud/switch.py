@@ -1,6 +1,12 @@
 """Support for HomematicIP Cloud switches."""
 import logging
 
+from homematicip.aio.device import (
+    AsyncBrandSwitchMeasuring, AsyncFullFlushSwitchMeasuring, AsyncMultiIOBox,
+    AsyncOpenCollector8Module, AsyncPlugableSwitch,
+    AsyncPlugableSwitchMeasuring)
+from homematicip.aio.group import AsyncSwitchingGroup
+
 from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
@@ -17,17 +23,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP switch from a config entry."""
-    from homematicip.aio.device import (
-        AsyncPlugableSwitch,
-        AsyncPlugableSwitchMeasuring,
-        AsyncBrandSwitchMeasuring,
-        AsyncFullFlushSwitchMeasuring,
-        AsyncOpenCollector8Module,
-        AsyncMultiIOBox,
-    )
-
-    from homematicip.aio.group import AsyncSwitchingGroup
-
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:

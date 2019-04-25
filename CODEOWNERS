@@ -66,6 +66,7 @@ homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/emby/* @mezz64
 homeassistant/components/enigma2/* @fbradyirl
+homeassistant/components/enocean/* @bdurrer
 homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
@@ -170,6 +171,7 @@ homeassistant/components/pi_hole/* @fabaff
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/point/* @fredrike
 homeassistant/components/pollen/* @bachya
+homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/qnap/* @colinodell
@@ -208,6 +210,7 @@ homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switchbot/* @danielhiversen
 homeassistant/components/switcher_kis/* @tomerfi
 homeassistant/components/switchmate/* @danielhiversen
+homeassistant/components/syncthru/* @nielstron
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/sytadin/* @gautric

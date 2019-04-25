@@ -90,6 +90,9 @@ eebrightbox==0.0.4
 # homeassistant.components.emulated_roku
 emulated_roku==0.1.8
 
+# homeassistant.components.enocean
+enocean==0.50
+
 # homeassistant.components.season
 ephem==3.7.6.0
 
@@ -139,7 +142,7 @@ hdate==0.8.7
 holidays==0.9.10
 
 # homeassistant.components.frontend
-home-assistant-frontend==20190419.0
+home-assistant-frontend==20190424.0
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.13.0
@@ -243,7 +246,7 @@ pyopenuv==1.0.9
 pyotp==2.2.7
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.5.2
+pyps4-homeassistant==0.7.2
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93

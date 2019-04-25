@@ -34,6 +34,7 @@ DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     'climate', 'cover', 'fan', 'group', 'input_boolean', 'light',
     'media_player', 'scene', 'script', 'switch', 'vacuum', 'lock',
+    'binary_sensor', 'sensor'
 ]
 
 PREFIX_TYPES = 'action.devices.types.'
@@ -49,6 +50,7 @@ TYPE_BLINDS = PREFIX_TYPES + 'BLINDS'
 TYPE_GARAGE = PREFIX_TYPES + 'GARAGE'
 TYPE_OUTLET = PREFIX_TYPES + 'OUTLET'
 TYPE_SENSOR = PREFIX_TYPES + 'SENSOR'
+TYPE_DOOR = PREFIX_TYPES + 'DOOR'
 
 SERVICE_REQUEST_SYNC = 'request_sync'
 HOMEGRAPH_URL = 'https://homegraph.googleapis.com/'
@@ -93,11 +95,12 @@ DOMAIN_TO_GOOGLE_TYPES = {
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.DEVICE_CLASS_GARAGE): TYPE_GARAGE,
+    (cover.DOMAIN, cover.DEVICE_CLASS_DOOR): TYPE_DOOR,
     (switch.DOMAIN, switch.DEVICE_CLASS_SWITCH): TYPE_SWITCH,
     (switch.DOMAIN, switch.DEVICE_CLASS_OUTLET): TYPE_OUTLET,
-    (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_DOOR): TYPE_SENSOR,
+    (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_DOOR): TYPE_DOOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_GARAGE_DOOR):
-    TYPE_SENSOR,
+    TYPE_GARAGE,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_LOCK): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
