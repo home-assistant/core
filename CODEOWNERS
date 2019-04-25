@@ -64,6 +64,7 @@ homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/edp_redy/* @abmantis
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
+homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/ephember/* @ttroy50
