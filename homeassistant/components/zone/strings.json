@@ -10,6 +10,8 @@
                     "longitude": "Longitude",
                     "radius": "Radius",
                     "passive": "Passive",
+                    "area_threshold": "Area threshold",
+                    "accuracy_threshold": "Accuracy threshold",
                     "icon": "Icon"
                 }
             }

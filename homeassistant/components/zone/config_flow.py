@@ -9,7 +9,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
-from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE
+from .const import (CONF_PASSIVE, DOMAIN, HOME_ZONE,
+                    CONF_AREA_THRESHOLD, CONF_ACCURACY_THRESHOLD)
 
 
 @callback
@@ -55,6 +56,8 @@ class ZoneFlowHandler(config_entries.ConfigFlow):
                 vol.Optional(CONF_RADIUS): vol.Coerce(float),
                 vol.Optional(CONF_ICON): str,
                 vol.Optional(CONF_PASSIVE): bool,
+                vol.Optional(CONF_AREA_THRESHOLD): vol.Coerce(float),
+                vol.Optional(CONF_ACCURACY_THRESHOLD): vol.Coerce(float),
             }),
             errors=errors,
         )

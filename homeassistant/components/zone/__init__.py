@@ -11,7 +11,8 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
 
 from .config_flow import configured_zones
-from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE
+from .const import (CONF_PASSIVE, DOMAIN, HOME_ZONE,
+                    CONF_AREA_THRESHOLD, CONF_ACCURACY_THRESHOLD)
 from .zone import Zone
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +35,8 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
     vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_AREA_THRESHOLD): vol.Coerce(float),
+    vol.Optional(CONF_ACCURACY_THRESHOLD): vol.Coerce(float),
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -46,7 +49,9 @@ async def async_setup(hass, config):
         if slugify(entry[CONF_NAME]) not in zone_entries:
             zone = Zone(hass, entry[CONF_NAME], entry[CONF_LATITUDE],
                         entry[CONF_LONGITUDE], entry.get(CONF_RADIUS),
-                        entry.get(CONF_ICON), entry.get(CONF_PASSIVE))
+                        entry.get(CONF_ICON), entry.get(CONF_PASSIVE),
+                        entry.get(CONF_AREA_THRESHOLD),
+                        entry.get(CONF_ACCURACY_THRESHOLD))
             zone.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, entry[CONF_NAME], entities)
             hass.async_create_task(zone.async_update_ha_state())
@@ -55,7 +60,7 @@ async def async_setup(hass, config):
     if ENTITY_ID_HOME not in entities and HOME_ZONE not in zone_entries:
         zone = Zone(hass, hass.config.location_name,
                     hass.config.latitude, hass.config.longitude,
-                    DEFAULT_RADIUS, ICON_HOME, False)
+                    DEFAULT_RADIUS, ICON_HOME, False, None, None)
         zone.entity_id = ENTITY_ID_HOME
         hass.async_create_task(zone.async_update_ha_state())
 
@@ -68,7 +73,9 @@ async def async_setup_entry(hass, config_entry):
     name = entry[CONF_NAME]
     zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
                 entry.get(CONF_RADIUS, DEFAULT_RADIUS), entry.get(CONF_ICON),
-                entry.get(CONF_PASSIVE, DEFAULT_PASSIVE))
+                entry.get(CONF_PASSIVE, DEFAULT_PASSIVE),
+                entry.get(CONF_AREA_THRESHOLD),
+                entry.get(CONF_ACCURACY_THRESHOLD))
     zone.entity_id = async_generate_entity_id(
         ENTITY_ID_FORMAT, name, None, hass)
     hass.async_create_task(zone.async_update_ha_state())

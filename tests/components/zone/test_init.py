@@ -221,3 +221,58 @@ class TestComponentZone(unittest.TestCase):
 
         assert zone.zone.in_zone(self.hass.states.get('zone.passive_zone'),
                                  latitude, longitude)
+
+    def test_in_zone_honors_area_threshold(self):
+        """Test working in passive zones."""
+        zone_latitude = 32.880600
+        zone_longitude = -117.237561
+        latitude = 32.880600
+        longitude_1 = -117.237200
+        longitude_2 = -117.237000
+        assert setup.setup_component(self.hass, zone.DOMAIN, {
+            'zone': [
+                {
+                    'name': 'Area Threshold Zone',
+                    'latitude': zone_latitude,
+                    'longitude': zone_longitude,
+                    'radius': 50,
+                    'area_threshold': 0.5
+                },
+            ]
+        })
+
+        assert zone.zone.in_zone(
+            self.hass.states.get('zone.area_threshold_zone'),
+            latitude, longitude_1, 20
+        )
+        assert not zone.zone.in_zone(
+            self.hass.states.get('zone.area_threshold_zone'),
+            latitude, longitude_2, 20
+        )
+
+    def test_in_zone_honors_accuracy_threshold(self):
+        """Test working in passive zones."""
+        zone_latitude = 32.880600
+        zone_longitude = -117.237561
+        latitude = 32.880600
+        longitude = -117.237200
+        assert setup.setup_component(self.hass, zone.DOMAIN, {
+            'zone': [
+                {
+                    'name': 'Accuracy Threshold Zone',
+                    'latitude': zone_latitude,
+                    'longitude': zone_longitude,
+                    'radius': 50,
+                    'accuracy_threshold': 20
+                },
+            ]
+        })
+
+        assert zone.zone.in_zone(
+            self.hass.states.get('zone.accuracy_threshold_zone'),
+            latitude, longitude, 15
+        )
+        assert not zone.zone.in_zone(
+            self.hass.states.get('zone.accuracy_threshold_zone'),
+            latitude, longitude, 50
+        )
