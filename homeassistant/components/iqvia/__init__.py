@@ -144,7 +144,7 @@ class IQVIAData:
         #   1. If `InvalidZipError` is thrown, quit everything immediately.
         #   2. If a single request throws any other error, try the others.
         for key, result in zip(tasks, results):
-            if isinstance(result, IQVIAError):
+            if isinstance(result, InvalidZipError):
                 _LOGGER.error("No data for ZIP: %s", self._client.zip_code)
                 self.data = {}
                 return
