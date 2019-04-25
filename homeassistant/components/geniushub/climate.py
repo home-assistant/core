@@ -1,4 +1,4 @@
-"""Supports Genius hub to provide climate controls."""
+"""Support for Genius Hub climate devices."""
 import asyncio
 import logging
 
@@ -21,7 +21,7 @@ GENIUSHUB_SUPPORT_FLAGS = \
 GENIUSHUB_MAX_TEMP = 28.0
 GENIUSHUB_MIN_TEMP = 4.0
 
-# Genius supports only Off, Override/Boost, Footprint & Timer modes
+# Genius Hub Zones support only Off, Override/Boost, Footprint & Timer modes
 HA_OPMODE_TO_GH = {
     STATE_AUTO: 'timer',
     STATE_ECO: 'footprint',
@@ -38,18 +38,18 @@ GH_STATE_TO_HA = {
     'linked': None,
     'other': None,
 }  # intentionally missing 'off': None
+
+# temperature is repeated here, as it gives access to high-precision temps
 GH_DEVICE_STATE_ATTRS = ['temperature', 'type', 'occupied', 'override']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
-    """Set up the Genius hub climate devices."""
+    """Set up the Genius Hub climate entities."""
     client = hass.data[DOMAIN]['client']
 
-    zones = []
-    for zone in client.hub.zone_objs:
-        if hasattr(zone, 'temperature'):
-            zones.append(GeniusClimate(client, zone))
+    zones = [GeniusClimate(client, z)
+     for z in client.hub.zone_objs if zone['type'] == 'radiator']
 
     async_add_entities(zones)
 
