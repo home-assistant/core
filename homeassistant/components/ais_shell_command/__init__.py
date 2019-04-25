@@ -77,6 +77,10 @@ def async_setup(hass, config):
         yield from _change_remote_access(hass, service)
 
     @asyncio.coroutine
+    def ssh_remote_access(service):
+        yield from _ssh_remote_access(hass, service)
+
+    @asyncio.coroutine
     def set_ais_secure_android_id_dom(service):
         yield from _set_ais_secure_android_id_dom(hass, service)
 
@@ -111,6 +115,8 @@ def async_setup(hass, config):
         DOMAIN, 'flush_logs', flush_logs)
     hass.services.async_register(
         DOMAIN, 'change_remote_access', change_remote_access)
+    hass.services.async_register(
+        DOMAIN, 'ssh_remote_access', ssh_remote_access)
     return True
 
 
@@ -142,6 +148,24 @@ def _change_remote_access(hass, call):
     else:
         os.system("pm2 delete tunnel")
         os.system("pm2 save")
+
+
+@asyncio.coroutine
+def _ssh_remote_access(hass, call):
+    access = 'on'
+    if "access" in call.data:
+        access = call.data["access"]
+    gate_id = 'ssh-' + hass.states.get('sensor.ais_secure_android_id_dom').state
+    import os
+    if access == 'on':
+        os.system("pm2 delete ssh-tunnel")
+        os.system("pm2 start lt --name ssh-tunnel -- -h http://paczka.pro -p 8888 -s " + gate_id)
+        os.system("pm2 save")
+        _LOGGER.warning("You have SSH access to gate on http://" + gate_id + ".paczka.pro")
+    else:
+        os.system("pm2 delete ssh-tunnel")
+        os.system("pm2 save")
+
 
 @asyncio.coroutine
 def _key_event(hass, call):
