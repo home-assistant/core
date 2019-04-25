@@ -1,11 +1,11 @@
 """Support for Axis switches."""
 
+from axis.event_stream import CLASS_OUTPUT
+
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_MAC
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from axis.event_stream import CLASS_OUTPUT
 
 from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
