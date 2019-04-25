@@ -1,13 +1,16 @@
-"""Support for Genius Hub climate devices."""
+"""Support for Genius Hub water_heater devices."""
 import asyncio
 import logging
 
-from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_HEAT, STATE_MANUAL,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_ON_OFF)
+from homeassistant.components.water_heater import (
+    WaterHeaterDevice,
+#   STATE_AUTO, STATE_MANUAL,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, TEMP_CELSIUS)
+    ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS)
+
+STATE_AUTO = 'auto'
+STATE_MANUAL = 'manual'
 
 from . import DOMAIN
 
@@ -15,64 +18,61 @@ _LOGGER = logging.getLogger(__name__)
 
 GENIUSHUB_SUPPORT_FLAGS = \
     SUPPORT_TARGET_TEMPERATURE | \
-    SUPPORT_ON_OFF | \
     SUPPORT_OPERATION_MODE
+# HA does not have SUPPORT_ON_OFF for water_heater
 
-GENIUSHUB_MAX_TEMP = 28.0
-GENIUSHUB_MIN_TEMP = 4.0
+GENIUSHUB_MAX_TEMP = 80.0
+GENIUSHUB_MIN_TEMP = 30.0
 
-# Genius Hub Zones support only Off, Override/Boost, Footprint & Timer modes
+# Genius Hub HW supports only Off, Override/Boost & Timer modes
 HA_OPMODE_TO_GH = {
+    STATE_OFF: 'off',
     STATE_AUTO: 'timer',
-    STATE_ECO: 'footprint',
     STATE_MANUAL: 'override',
 }
 GH_OPMODE_OFF = 'off'
 GH_STATE_TO_HA = {
+    'off': STATE_OFF,
     'timer': STATE_AUTO,
-    'footprint': STATE_ECO,
+    'footprint': None,
     'away': None,
     'override': STATE_MANUAL,
-    'early': STATE_HEAT,
+    'early': None,
     'test': None,
     'linked': None,
     'other': None,
-}  # intentionally missing 'off': None
+}
 
 # temperature is repeated here, as it gives access to high-precision temps
-GH_DEVICE_STATE_ATTRS = ['temperature', 'type', 'occupied', 'override']
+GH_DEVICE_STATE_ATTRS = ['temperature', 'type', 'override']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
                                discovery_info=None):
-    """Set up the Genius Hub climate entities."""
+    """Set up the Genius Hub water_heater entities."""
     client = hass.data[DOMAIN]['client']
 
-    zones = [GeniusClimate(client, z)
-     for z in client.hub.zone_objs if z.type == 'radiator']
+    zones = [GeniusWaterHeater(client, z)
+             for z in client.hub.zone_objs if z.type == 'hot water temperature']
 
     async_add_entities(zones)
 
 
-class GeniusClimate(ClimateDevice):
-    """Representation of a Genius Hub climate device."""
+class GeniusWaterHeater(WaterHeaterDevice):
+    """Representation of a Genius Hub water_heater device."""
 
     def __init__(self, client, zone):
-        """Initialize the climate device."""
+        """Initialize the water_heater device."""
         self._client = client
         self._objref = zone
         self._id = zone.id
         self._name = zone.name
 
-        # Only some zones have movement detectors, which allows footprint mode
-        op_list = list(HA_OPMODE_TO_GH)
-        if not hasattr(self._objref, 'occupied'):
-            op_list.remove(STATE_ECO)
-        self._operation_list = op_list
+        self._operation_list = list(HA_OPMODE_TO_GH)
 
     @property
     def name(self):
-        """Return the name of the climate device."""
+        """Return the name of the water_heater device."""
         return self._objref.name
 
     @property
@@ -123,11 +123,6 @@ class GeniusClimate(ClimateDevice):
         """Return the current operation mode."""
         return GH_STATE_TO_HA.get(self._objref.mode)
 
-    @property
-    def is_on(self):
-        """Return True if the device is on."""
-        return self._objref.mode in GH_STATE_TO_HA
-
     async def async_set_operation_mode(self, operation_mode):
         """Set a new operation mode for this zone."""
         await self._objref.set_mode(HA_OPMODE_TO_GH.get(operation_mode))
@@ -136,14 +131,6 @@ class GeniusClimate(ClimateDevice):
         """Set a new target temperature for this zone."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._objref.set_override(temperature, 3600)  # 1 hour
-
-    async def async_turn_on(self):
-        """Turn on this heating zone."""
-        await self._objref.set_mode(HA_OPMODE_TO_GH.get(STATE_AUTO))
-
-    async def async_turn_off(self):
-        """Turn off this heating zone (i.e. to frost protect)."""
-        await self._objref.set_mode(GH_OPMODE_OFF)
 
     async def async_update(self):
         """Get the latest data from the hub."""
