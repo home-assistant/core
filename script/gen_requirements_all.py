@@ -8,7 +8,7 @@ import pkgutil
 import re
 import sys
 
-from hassfest.model import Integration
+from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
     'Adafruit-DHT',
