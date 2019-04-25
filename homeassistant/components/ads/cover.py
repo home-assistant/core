@@ -15,7 +15,7 @@ from . import CONF_ADS_VAR, CONF_ADS_VAR_POSITION, DATA_ADS, \
     AdsEntity, STATE_KEY_STATE, STATE_KEY_POSITION
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['ads']
+
 DEFAULT_NAME = 'ADS Cover'
 
 CONF_ADS_VAR_SET_POS = 'adsvar_set_position'
