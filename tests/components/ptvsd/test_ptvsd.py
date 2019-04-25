@@ -18,6 +18,7 @@ async def test_ptvsd_bootstrap(hass):
     with patch(
             'homeassistant.components.ptvsd.async_setup',
             CoroutineMock()) as setup_mock:
+        setup_mock.return_value = True
         await _async_set_up_integrations(hass, config)
 
         assert setup_mock.call_count == 1
