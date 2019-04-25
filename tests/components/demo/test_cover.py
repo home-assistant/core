@@ -8,8 +8,8 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION, DOMAIN)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
-    STATE_OPEN, STATE_OPENING, STATE_CLOSED, STATE_CLOSING,
-    SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT,
+    STATE_OPEN, STATE_OPENING, STATE_CLOSED, STATE_CLOSING, SERVICE_TOGGLE,
+    SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT, SERVICE_TOGGLE_COVER_TILT,
     SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION, SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT)
@@ -232,7 +232,7 @@ async def test_set_cover_tilt_position(hass, setup_comp):
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
     await hass.services.async_call(
         DOMAIN, SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_TILT_POSITION: 90}, 
+        {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_TILT_POSITION: 90},
         blocking=True)
     for _ in range(7):
         future = dt_util.utcnow() + timedelta(seconds=1)

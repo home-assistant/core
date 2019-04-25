@@ -652,7 +652,7 @@ class TestCoverMQTT(unittest.TestCase):
         # Close tilt status would be received from device when non-optimistic
         fire_mqtt_message(self.hass, 'tilt-status-topic', '25')
         self.hass.block_till_done()
-        
+
         self.hass.services.call(
             cover.DOMAIN, SERVICE_TOGGLE_COVER_TILT,
             {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
