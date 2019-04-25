@@ -1,9 +1,4 @@
-"""
-Lights on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/light.zha/
-"""
+"""Lights on Zigbee Home Automation networks."""
 from datetime import timedelta
 import logging
 
@@ -21,8 +16,6 @@ from .entity import ZhaEntity
 
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['zha']
 
 DEFAULT_DURATION = 5
 
@@ -258,6 +251,22 @@ class Light(ZhaEntity, light.Light):
         if self._level_channel:
             self._brightness = await self._level_channel.get_attribute_value(
                 'current_level', from_cache=from_cache)
+        if self._color_channel:
+            color_capabilities = self._color_channel.get_color_capabilities()
+            if color_capabilities is not None and\
+                    color_capabilities & CAPABILITIES_COLOR_TEMP:
+                self._color_temp = await\
+                    self._color_channel.get_attribute_value(
+                        'color_temperature', from_cache=from_cache)
+            if color_capabilities is not None and\
+                    color_capabilities & CAPABILITIES_COLOR_XY:
+                color_x = await self._color_channel.get_attribute_value(
+                    'current_x', from_cache=from_cache)
+                color_y = await self._color_channel.get_attribute_value(
+                    'current_y', from_cache=from_cache)
+                if color_x is not None and color_y is not None:
+                    self._hs_color = color_util.color_xy_to_hs(
+                        float(color_x / 65535), float(color_y / 65535))
 
     async def refresh(self, time):
         """Call async_get_state at an interval."""

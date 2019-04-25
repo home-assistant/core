@@ -9,8 +9,6 @@ from homeassistant.const import (
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['datadog==0.15.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_RATE = 'rate'

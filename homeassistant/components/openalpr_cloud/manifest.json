@@ -1,0 +1,8 @@
+{
+  "domain": "openalpr_cloud",
+  "name": "Openalpr cloud",
+  "documentation": "https://www.home-assistant.io/components/openalpr_cloud",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

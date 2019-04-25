@@ -22,8 +22,6 @@ from . import (
     YEELIGHT_FLOW_TRANSITION_SCHEMA, ACTION_RECOVER, CONF_FLOW_PARAMS,
     ATTR_ACTION, ATTR_COUNT)
 
-DEPENDENCIES = ['yeelight']
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
@@ -212,14 +210,15 @@ class YeelightLight(Light):
             self._custom_effects = {}
 
     @callback
-    def _schedule_immediate_update(self, ipaddr):
-        if ipaddr == self.device.ipaddr:
-            self.async_schedule_update_ha_state(True)
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
+            self.hass,
+            DATA_UPDATED.format(self._device.ipaddr),
+            self._schedule_immediate_update
         )
 
     @property

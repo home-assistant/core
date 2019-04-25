@@ -1,9 +1,4 @@
-"""
-Support for Traccar device tracking.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.traccar/
-"""
+"""Support for Traccar device tracking."""
 from datetime import datetime, timedelta
 import logging
 
@@ -20,8 +15,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 
-
-REQUIREMENTS = ['pytraccar==0.5.0', 'stringcase==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

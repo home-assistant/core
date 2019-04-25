@@ -1,0 +1,12 @@
+{
+  "domain": "flunearyou",
+  "name": "Flunearyou",
+  "documentation": "https://www.home-assistant.io/components/flunearyou",
+  "requirements": [
+    "pyflunearyou==1.0.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ]
+}

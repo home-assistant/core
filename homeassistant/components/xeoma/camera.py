@@ -1,9 +1,4 @@
-"""
-Support for Xeoma Cameras.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.xeoma/
-"""
+"""Support for Xeoma Cameras."""
 import logging
 
 import voluptuous as vol
@@ -12,8 +7,6 @@ from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
-
-REQUIREMENTS = ['pyxeoma==1.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 

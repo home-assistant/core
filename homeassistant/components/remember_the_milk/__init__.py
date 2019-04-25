@@ -13,8 +13,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 # httplib2 is a transitive dependency from RtmAPI. If this dependency is not
 # set explicitly, the library does not work.
-REQUIREMENTS = ['RtmAPI==0.7.0', 'httplib2==0.10.3']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'remember_the_milk'

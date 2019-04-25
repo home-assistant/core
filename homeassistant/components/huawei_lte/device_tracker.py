@@ -11,8 +11,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_URL
 from ..huawei_lte import DATA_KEY, RouterData
 
-DEPENDENCIES = ['huawei_lte']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_URL): cv.url,
 })

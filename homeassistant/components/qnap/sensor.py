@@ -1,9 +1,4 @@
-"""
-Support for QNAP NAS Sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.qnap/
-"""
+"""Support for QNAP NAS Sensors."""
 import logging
 from datetime import timedelta
 
@@ -17,8 +12,6 @@ from homeassistant.const import (
 from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['qnapstats==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 

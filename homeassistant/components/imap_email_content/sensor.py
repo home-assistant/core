@@ -1,9 +1,4 @@
-"""
-Email sensor support.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.imap_email_content/
-"""
+"""Email sensor support."""
 import logging
 import datetime
 import email

@@ -1,9 +1,4 @@
-"""
-Support for the Yahoo! Weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.yweather/
-"""
+"""Support for the Yahoo! Weather service."""
 import logging
 from datetime import timedelta
 
@@ -16,8 +11,6 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-REQUIREMENTS = ['yahooweather==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 

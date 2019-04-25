@@ -1,0 +1,8 @@
+{
+  "domain": "haveibeenpwned",
+  "name": "Haveibeenpwned",
+  "documentation": "https://www.home-assistant.io/components/haveibeenpwned",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

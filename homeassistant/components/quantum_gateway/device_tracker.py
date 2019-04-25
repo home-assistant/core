@@ -1,9 +1,4 @@
-"""
-Support for Verizon FiOS Quantum Gateways.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.quantum_gateway/
-"""
+"""Support for Verizon FiOS Quantum Gateways."""
 import logging
 
 from requests.exceptions import RequestException
@@ -13,8 +8,6 @@ from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
                                                      DeviceScanner)
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_SSL)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['quantum-gateway==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 

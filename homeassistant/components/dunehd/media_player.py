@@ -1,9 +1,4 @@
-"""
-DuneHD implementation of the media player.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/media_player.dunehd/
-"""
+"""DuneHD implementation of the media player."""
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -15,8 +10,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pdunehd==1.3']
 
 DEFAULT_NAME = 'DuneHD'
 

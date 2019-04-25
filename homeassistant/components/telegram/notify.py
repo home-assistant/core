@@ -1,9 +1,4 @@
-"""
-Telegram platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.telegram/
-"""
+"""Telegram platform for notify component."""
 import logging
 
 import voluptuous as vol
@@ -17,8 +12,6 @@ from homeassistant.components.notify import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'telegram_bot'
-DEPENDENCIES = [DOMAIN]
-
 ATTR_KEYBOARD = 'keyboard'
 ATTR_INLINE_KEYBOARD = 'inline_keyboard'
 ATTR_PHOTO = 'photo'

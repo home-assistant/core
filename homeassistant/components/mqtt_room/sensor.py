@@ -1,9 +1,4 @@
-"""
-Support for MQTT room presence detection.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mqtt_room/
-"""
+"""Support for MQTT room presence detection."""
 import logging
 import json
 from datetime import timedelta
@@ -21,8 +16,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt, slugify
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['mqtt']
 
 ATTR_DEVICE_ID = 'device_id'
 ATTR_DISTANCE = 'distance'

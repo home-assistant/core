@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_DOMAIN, ATTR_SERVICE, EVENT_CALL_SERVICE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import (
     MockConfigEntry, async_fire_mqtt_message, async_mock_mqtt_component,
@@ -27,8 +28,7 @@ def mock_MQTT():
         yield mock_MQTT
 
 
-@asyncio.coroutine
-def async_mock_mqtt_client(hass, config=None):
+async def async_mock_mqtt_client(hass, config=None):
     """Mock the MQTT paho client."""
     if config is None:
         config = {mqtt.CONF_BROKER: 'mock-broker'}
@@ -38,10 +38,11 @@ def async_mock_mqtt_client(hass, config=None):
         mock_client().subscribe.return_value = (0, 0)
         mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
-        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
+        result = await async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: config
         })
         assert result
+        await hass.async_block_till_done()
         return mock_client()
 
 
@@ -619,6 +620,19 @@ async def test_setup_fails_if_no_connect_broker(hass):
     with mock.patch('paho.mqtt.client.Client') as mock_client:
         mock_client().connect = lambda *args: 1
         assert not await mqtt.async_setup_entry(hass, entry)
+
+
+async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass):
+    """Test for setup failure if connection to broker is missing."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={
+        mqtt.CONF_BROKER: 'test-broker'
+    })
+
+    with mock.patch('paho.mqtt.client.Client') as mock_client:
+        mock_client().connect = mock.Mock(
+            side_effect=OSError("Connection error"))
+        with pytest.raises(ConfigEntryNotReady):
+            await mqtt.async_setup_entry(hass, entry)
 
 
 async def test_setup_uses_certificate_on_certificate_set_to_auto(

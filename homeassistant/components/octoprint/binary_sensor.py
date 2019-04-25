@@ -9,8 +9,6 @@ from . import BINARY_SENSOR_TYPES, DOMAIN as COMPONENT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['octoprint']
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""

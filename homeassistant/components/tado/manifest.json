@@ -1,0 +1,10 @@
+{
+  "domain": "tado",
+  "name": "Tado",
+  "documentation": "https://www.home-assistant.io/components/tado",
+  "requirements": [
+    "python-tado==0.2.9"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

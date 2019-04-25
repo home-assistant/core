@@ -184,9 +184,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
         state = self.hass.states.get(ent_id)
         assert 1 == state.attributes.get('media_episode')
 
-    @patch('homeassistant.components.demo.media_player.DemoYoutubePlayer.'
-           'media_seek', autospec=True)
-    def test_play_media(self, mock_seek):
+    def test_play_media(self):
         """Test play_media ."""
         assert setup_component(
             self.hass, mp.DOMAIN,
@@ -212,6 +210,16 @@ class TestDemoMediaPlayer(unittest.TestCase):
                     state.attributes.get('supported_features'))
         assert 'some_id' == state.attributes.get('media_content_id')
 
+    @patch('homeassistant.components.demo.media_player.DemoYoutubePlayer.'
+           'media_seek', autospec=True)
+    def test_seek(self, mock_seek):
+        """Test seek."""
+        assert setup_component(
+            self.hass, mp.DOMAIN,
+            {'media_player': {'platform': 'demo'}})
+        ent_id = 'media_player.living_room'
+        state = self.hass.states.get(ent_id)
+        assert state.attributes['supported_features'] & mp.SUPPORT_SEEK
         assert not mock_seek.called
         with pytest.raises(vol.Invalid):
             common.media_seek(self.hass, None, ent_id)

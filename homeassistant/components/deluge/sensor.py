@@ -1,9 +1,4 @@
-"""
-Support for monitoring the Deluge BitTorrent client API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.deluge/
-"""
+"""Support for monitoring the Deluge BitTorrent client API."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES, STATE_IDLE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import PlatformNotReady
-
-REQUIREMENTS = ['deluge-client==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 _THROTTLED_REFRESH = None

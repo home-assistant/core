@@ -14,11 +14,12 @@ from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.components import websocket_api
 from homeassistant.components.alexa import smart_home as alexa_sh
-from homeassistant.components.google_assistant import smart_home as google_sh
+from homeassistant.components.google_assistant import (
+    const as google_const)
 
 from .const import (
     DOMAIN, REQUEST_TIMEOUT, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE,
-    PREF_GOOGLE_ALLOW_UNLOCK, InvalidTrustedNetworks)
+    PREF_GOOGLE_SECURE_DEVICES_PIN, InvalidTrustedNetworks)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,15 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 WS_TYPE_STATUS = 'cloud/status'
 SCHEMA_WS_STATUS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_STATUS,
-})
-
-
-WS_TYPE_UPDATE_PREFS = 'cloud/update_prefs'
-SCHEMA_WS_UPDATE_PREFS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): WS_TYPE_UPDATE_PREFS,
-    vol.Optional(PREF_ENABLE_GOOGLE): bool,
-    vol.Optional(PREF_ENABLE_ALEXA): bool,
-    vol.Optional(PREF_GOOGLE_ALLOW_UNLOCK): bool,
 })
 
 
@@ -76,9 +68,7 @@ async def async_setup(hass):
         SCHEMA_WS_SUBSCRIPTION
     )
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_UPDATE_PREFS, websocket_update_prefs,
-        SCHEMA_WS_UPDATE_PREFS
-    )
+        websocket_update_prefs)
     hass.components.websocket_api.async_register_command(
         WS_TYPE_HOOK_CREATE, websocket_hook_create,
         SCHEMA_WS_HOOK_CREATE
@@ -105,6 +95,8 @@ async def async_setup(hass):
             (400, "User does not exist."),
         auth.UserNotConfirmed:
             (400, 'Email not confirmed.'),
+        auth.UserExists:
+            (400, 'An account with the given email already exists.'),
         auth.Unauthenticated:
             (401, 'Authentication failed.'),
         auth.PasswordChangeRequired:
@@ -355,6 +347,12 @@ async def websocket_subscription(hass, connection, msg):
 
 @_require_cloud_login
 @websocket_api.async_response
+@websocket_api.websocket_command({
+    vol.Required('type'): 'cloud/update_prefs',
+    vol.Optional(PREF_ENABLE_GOOGLE): bool,
+    vol.Optional(PREF_ENABLE_ALEXA): bool,
+    vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
+})
 async def websocket_update_prefs(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -413,7 +411,7 @@ def _account_data(cloud):
         'cloud': cloud.iot.state,
         'prefs': client.prefs.as_dict(),
         'google_entities': client.google_user_config['filter'].config,
-        'google_domains': list(google_sh.DOMAIN_TO_GOOGLE_TYPES),
+        'google_domains': list(google_const.DOMAIN_TO_GOOGLE_TYPES),
         'alexa_entities': client.alexa_config.should_expose.config,
         'alexa_domains': list(alexa_sh.ENTITY_ADAPTERS),
         'remote_domain': remote.instance_domain,
@@ -422,6 +420,7 @@ def _account_data(cloud):
     }
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.async_response
 @_ws_handle_cloud_errors
@@ -436,6 +435,7 @@ async def websocket_remote_connect(hass, connection, msg):
     connection.send_result(msg['id'], _account_data(cloud))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.async_response
 @_ws_handle_cloud_errors

@@ -1,9 +1,4 @@
-"""
-Support for Onkyo Receivers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.onkyo/
-"""
+"""Support for Onkyo Receivers."""
 import logging
 
 # pylint: disable=unused-import
@@ -20,8 +15,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['onkyo-eiscp==1.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 

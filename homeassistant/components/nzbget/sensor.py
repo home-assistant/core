@@ -1,9 +1,4 @@
-"""
-Support for monitoring NZBGet NZB client.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.nzbget/
-"""
+"""Support for monitoring NZBGet NZB client."""
 from datetime import timedelta
 import logging
 

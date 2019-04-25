@@ -1,9 +1,9 @@
 """The test the Honeywell thermostat module."""
-import socket
 import unittest
 from unittest import mock
 
 import voluptuous as vol
+import requests.exceptions
 import somecomfort
 
 from homeassistant.const import (
@@ -247,7 +247,8 @@ class TestHoneywell(unittest.TestCase):
             honeywell.CONF_AWAY_TEMPERATURE: 20,
             honeywell.CONF_REGION: 'eu',
         }
-        mock_evo.return_value.temperatures.side_effect = socket.error
+        mock_evo.return_value.temperatures.side_effect = \
+            requests.exceptions.RequestException
         add_entities = mock.MagicMock()
         hass = mock.MagicMock()
         assert not honeywell.setup_platform(hass, config, add_entities)

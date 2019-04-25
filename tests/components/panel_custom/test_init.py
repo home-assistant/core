@@ -25,7 +25,11 @@ async def test_webcomponent_custom_path_not_found(hass):
             hass, 'panel_custom', config
         )
         assert not result
-        assert len(hass.data.get(frontend.DATA_PANELS, {})) == 0
+
+        panels = hass.data.get(frontend.DATA_PANELS, [])
+
+        assert panels
+        assert 'nice_url' not in panels
 
 
 async def test_webcomponent_custom_path(hass):

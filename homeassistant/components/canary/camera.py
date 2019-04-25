@@ -1,9 +1,4 @@
-"""
-Support for Canary camera.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.canary/
-"""
+"""Support for Canary camera."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -17,8 +12,6 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.util import Throttle
 
 from . import DATA_CANARY, DEFAULT_TIMEOUT
-
-DEPENDENCIES = ['canary', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 

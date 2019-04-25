@@ -1,9 +1,4 @@
-"""
-Pushover platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.pushover/
-"""
+"""Pushover platform for notify component."""
 import logging
 
 import voluptuous as vol
@@ -15,7 +10,6 @@ from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA,
     BaseNotificationService)
 
-REQUIREMENTS = ['python-pushover==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 

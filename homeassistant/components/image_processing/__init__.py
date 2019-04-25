@@ -1,9 +1,4 @@
-"""
-Provides functionality to interact with image processing services.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/image_processing/
-"""
+"""Provides functionality to interact with image processing services."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -22,8 +17,6 @@ from homeassistant.util.async_ import run_callback_threadsafe
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'image_processing'
-DEPENDENCIES = ['camera']
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 DEVICE_CLASSES = [
