@@ -2,7 +2,7 @@
 import ambiclimate
 from unittest.mock import Mock, patch
 
-from homeassistant.components.ambiclimate import config_flow, DOMAIN
+from homeassistant.components.ambiclimate import config_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
 from homeassistant import data_entry_flow
@@ -98,7 +98,6 @@ async def test_abort_no_code(hass):
 
 async def test_already_setup(hass):
     """Test when already setup."""
-
     config_flow.register_flow_implementation(hass, None, None)
     flow = await init_config_flow(hass)
 
