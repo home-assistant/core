@@ -4,7 +4,7 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components.cover import (
-    ATTR_POSITION, ATTR_CURRENT_POSITION, ATTR_CURRENT_TILT_POSITION, 
+    ATTR_POSITION, ATTR_CURRENT_POSITION, ATTR_CURRENT_TILT_POSITION,
     ATTR_TILT_POSITION, DOMAIN)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
