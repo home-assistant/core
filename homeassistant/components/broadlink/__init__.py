@@ -2,7 +2,6 @@
 import asyncio
 from base64 import b64decode, b64encode
 import logging
-import re
 import socket
 
 from datetime import timedelta
