@@ -4,15 +4,14 @@ import logging
 
 from homeassistant.components.water_heater import (
     WaterHeaterDevice,
-#   STATE_AUTO, STATE_MANUAL,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS)
 
+from . import DOMAIN
+
 STATE_AUTO = 'auto'
 STATE_MANUAL = 'manual'
-
-from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,10 +51,11 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Set up the Genius Hub water_heater entities."""
     client = hass.data[DOMAIN]['client']
 
-    zones = [GeniusWaterHeater(client, z)
-             for z in client.hub.zone_objs if z.type == 'hot water temperature']
+    water_heater = 'hot water temperature'
+    entities = [GeniusWaterHeater(client, z)
+                for z in client.hub.zone_objs if z.type == water_heater]
 
-    async_add_entities(zones)
+    async_add_entities(entities)
 
 
 class GeniusWaterHeater(WaterHeaterDevice):
