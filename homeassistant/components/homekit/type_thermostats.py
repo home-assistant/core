@@ -20,16 +20,21 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 
+from homeassistant.core import callback as ha_callback
+from homeassistant.helpers.event import (async_track_state_change)
+
 from . import TYPES
 from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_CURRENT_HEATING_COOLING,
-    CHAR_CURRENT_TEMPERATURE, CHAR_HEATING_THRESHOLD_TEMPERATURE,
-    CHAR_TARGET_HEATING_COOLING, CHAR_TARGET_TEMPERATURE,
-    CHAR_TEMP_DISPLAY_UNITS, DEFAULT_MAX_TEMP_WATER_HEATER,
-    DEFAULT_MIN_TEMP_WATER_HEATER, PROP_MAX_VALUE, PROP_MIN_STEP,
-    PROP_MIN_VALUE, SERV_THERMOSTAT)
-from .util import temperature_to_homekit, temperature_to_states
+    CHAR_CURRENT_HUMIDITY, CHAR_CURRENT_TEMPERATURE,
+    CHAR_HEATING_THRESHOLD_TEMPERATURE, CHAR_TARGET_HEATING_COOLING,
+    CHAR_TARGET_TEMPERATURE, CHAR_TEMP_DISPLAY_UNITS,
+    CONF_LINKED_HUMIDITY_SENSOR, DEFAULT_MAX_TEMP_WATER_HEATER,
+    DEFAULT_MIN_TEMP_WATER_HEATER, PROP_MAX_VALUE,
+    PROP_MIN_STEP, PROP_MIN_VALUE, SERV_THERMOSTAT)
+from .util import (
+    convert_to_float, temperature_to_homekit, temperature_to_states)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +61,8 @@ class Thermostat(HomeAccessory):
         self._flag_coolingthresh = False
         self._flag_heatingthresh = False
         self.support_power_state = False
+        self.linked_humidity_sensor = \
+            self.config.get(CONF_LINKED_HUMIDITY_SENSOR)
         min_temp, max_temp = self.get_temperature_range()
 
         # Add additional characteristics if auto mode is supported
@@ -67,6 +74,8 @@ class Thermostat(HomeAccessory):
         if features & SUPPORT_TEMP_RANGE:
             self.chars.extend((CHAR_COOLING_THRESHOLD_TEMPERATURE,
                                CHAR_HEATING_THRESHOLD_TEMPERATURE))
+        if self.linked_humidity_sensor:
+            self.chars.append(CHAR_CURRENT_HUMIDITY)
 
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT, self.chars)
 
@@ -91,6 +100,11 @@ class Thermostat(HomeAccessory):
         self.char_display_units = serv_thermostat.configure_char(
             CHAR_TEMP_DISPLAY_UNITS, value=0)
 
+        # Humidity sensor
+        if CHAR_CURRENT_HUMIDITY in self.chars:
+            self.char_current_humidity = serv_thermostat.\
+                configure_char(CHAR_CURRENT_HUMIDITY, value=0)
+
         # If the device supports it: high and low temperature characteristics
         self.char_cooling_thresh_temp = None
         self.char_heating_thresh_temp = None
@@ -108,6 +122,35 @@ class Thermostat(HomeAccessory):
                             PROP_MAX_VALUE: max_temp,
                             PROP_MIN_STEP: 0.5},
                 setter_callback=self.set_heating_threshold)
+
+    async def run_handler(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
+        await super().run_handler()
+        if self.linked_humidity_sensor:
+            humidity_state = self.hass.states.get(self.linked_humidity_sensor)
+            self.hass.async_add_job(self.update_linked_humidity, None, None,
+                                    humidity_state)
+            async_track_state_change(
+                self.hass, self.linked_humidity_sensor,
+                self.update_linked_humidity)
+
+    @ha_callback
+    def update_linked_humidity(self, entity_id=None, old_state=None,
+                               new_state=None):
+        """Handle linked humidity sensor state change listener callback."""
+        self.hass.async_add_executor_job(self.update_humidity, new_state)
+
+    def update_humidity(self, new_state):
+        """Update humidity char if available."""
+        humidity_level = convert_to_float(new_state.state)
+        if humidity_level is None:
+            return
+        self.char_current_humidity.set_value(humidity_level)
+        _LOGGER.debug('%s: Updated humidity level to %d', self.entity_id,
+                      humidity_level)
 
     def get_temperature_range(self):
         """Return min and max temperature range."""

@@ -16,6 +16,7 @@ CONF_FEATURE = 'feature'
 CONF_FEATURE_LIST = 'feature_list'
 CONF_FILTER = 'filter'
 CONF_LINKED_BATTERY_SENSOR = 'linked_battery_sensor'
+CONF_LINKED_HUMIDITY_SENSOR = 'linked_humidity_sensor'
 CONF_SAFE_MODE = 'safe_mode'
 
 # #### Config Defaults ####

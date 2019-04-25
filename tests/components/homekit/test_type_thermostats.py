@@ -10,8 +10,9 @@ from homeassistant.components.climate.const import (
     ATTR_OPERATION_LIST, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP,
     DOMAIN as DOMAIN_CLIMATE, STATE_AUTO, STATE_COOL, STATE_HEAT)
 from homeassistant.components.homekit.const import (
-    ATTR_VALUE, DEFAULT_MAX_TEMP_WATER_HEATER, DEFAULT_MIN_TEMP_WATER_HEATER,
-    PROP_MAX_VALUE, PROP_MIN_STEP, PROP_MIN_VALUE)
+    ATTR_VALUE, CONF_LINKED_HUMIDITY_SENSOR, DEFAULT_MAX_TEMP_WATER_HEATER,
+    DEFAULT_MIN_TEMP_WATER_HEATER, PROP_MAX_VALUE, PROP_MIN_STEP,
+    PROP_MIN_VALUE)
 from homeassistant.components.water_heater import (
     DOMAIN as DOMAIN_WATER_HEATER)
 from homeassistant.const import (
@@ -385,6 +386,35 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls, events):
     assert call_set_temperature[2].data[ATTR_TEMPERATURE] == 75.0
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] == '75.0°F'
+
+async def test_thermostat_linked_humidity_sensor(hass, hk_driver, caplog, cls,
+                                                 events):
+    """Test humidity chat with linked_humidity_sensor."""
+    entity_id = 'climate.test'
+    linked_humidity = 'sensor.humidity'
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(linked_humidity, 50, None)
+    await hass.async_block_till_done()
+    acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2,
+                         {CONF_LINKED_HUMIDITY_SENSOR: linked_humidity})
+    acc.update_state = lambda x: None
+    assert acc.linked_humidity_sensor == linked_humidity
+    assert acc.char_current_humidity.value == 0
+
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 50
+
+    hass.states.async_set(linked_humidity, 10, None)
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 10
+
+    # Test none numeric state for linked_humidity
+    hass.states.async_set(linked_humidity, 'error', None)
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 10
+    assert 'ERROR' not in caplog.text
 
 
 async def test_thermostat_get_temperature_range(hass, hk_driver, cls):

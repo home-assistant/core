@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import fan, media_player, sensor
+from homeassistant.components import climate, fan, media_player, sensor
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, TEMP_CELSIUS)
 from homeassistant.core import split_entity_id
@@ -13,9 +13,9 @@ import homeassistant.util.temperature as temp_util
 
 from .const import (
     CONF_FEATURE, CONF_FEATURE_LIST, CONF_LINKED_BATTERY_SENSOR,
-    FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE,
-    HOMEKIT_NOTIFY_ID, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
-    TYPE_SWITCH, TYPE_VALVE)
+    CONF_LINKED_HUMIDITY_SENSOR, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, HOMEKIT_NOTIFY_ID, TYPE_FAUCET,
+    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 BASIC_INFO_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_LINKED_BATTERY_SENSOR): cv.entity_domain(sensor.DOMAIN),
+})
+
+CLIMATE_SCHEMA = BASIC_INFO_SCHEMA.extend({
+    vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN),
 })
 
 FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend({
@@ -63,6 +67,9 @@ def validate_entity_config(values):
 
         if domain in ('alarm_control_panel', 'lock'):
             config = CODE_SCHEMA(config)
+
+        elif domain == climate.const.DOMAIN:
+            config = CLIMATE_SCHEMA(config)
 
         elif domain == media_player.const.DOMAIN:
             config = FEATURE_SCHEMA(config)

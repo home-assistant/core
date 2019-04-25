@@ -4,8 +4,9 @@ import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
     CONF_FEATURE, CONF_FEATURE_LIST, CONF_LINKED_BATTERY_SENSOR,
-    FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, HOMEKIT_NOTIFY_ID, TYPE_FAUCET,
-    TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER, TYPE_SWITCH, TYPE_VALVE)
+    CONF_LINKED_HUMIDITY_SENSOR, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+    HOMEKIT_NOTIFY_ID, TYPE_FAUCET, TYPE_OUTLET, TYPE_SHOWER, TYPE_SPRINKLER,
+    TYPE_SWITCH, TYPE_VALVE)
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping, SpeedRange, convert_to_float, density_to_air_quality,
     dismiss_setup_message, show_setup_message, temperature_to_homekit,
@@ -28,6 +29,10 @@ def test_validate_entity_config():
                {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR: None}},
                {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
                                        'switch.demo'}},
+               {'binary_sensor.demo': {CONF_LINKED_HUMIDITY_SENSOR:
+                                       'sensor.demo'}},
+               {'climate.demo': {CONF_LINKED_HUMIDITY_SENSOR:
+                                 'switch.demo'}},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
                {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
                {'media_player.test': {CONF_FEATURE_LIST: [
@@ -49,6 +54,11 @@ def test_validate_entity_config():
                                        'sensor.demo_battery'}}) == \
         {'binary_sensor.demo': {CONF_LINKED_BATTERY_SENSOR:
                                 'sensor.demo_battery'}}
+
+    assert vec({'climate.demo': {CONF_LINKED_HUMIDITY_SENSOR:
+                                       'sensor.demo_humidity'}}) == \
+        {'climate.demo': {CONF_LINKED_HUMIDITY_SENSOR:
+                                'sensor.demo_humidity'}}
 
     assert vec({'alarm_control_panel.demo': {}}) == \
         {'alarm_control_panel.demo': {ATTR_CODE: None}}
