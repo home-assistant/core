@@ -6,7 +6,6 @@ import math
 import random
 import re
 from datetime import datetime
-from typing import Union
 
 import jinja2
 from jinja2 import contextfilter
@@ -15,11 +14,11 @@ from jinja2.utils import Namespace
 
 from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL,
                                  ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
-from homeassistant.core import State, callback, valid_entity_id
+from homeassistant.core import (
+    State, callback, valid_entity_id, split_entity_id)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
@@ -30,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-_COLLECT_KEY = 'template.collect'
+_RENDER_INFO = 'template.render_info'
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
@@ -92,6 +91,54 @@ def extract_entities(template, variables=None):
     return MATCH_ALL
 
 
+def _true(arg) -> bool:
+    return True
+
+
+class RenderInfo:
+    """Holds information about a template render."""
+
+    def __init__(self, template):
+        """Initialise."""
+        self.template = template
+        # Will be set sensibly once frozen.
+        self.filter_lifecycle = _true
+        self._result = None
+        self._exception = None
+        self._all_states = False
+        self._domains = []
+        self._entities = []
+
+    def filter(self, entity_id: str) -> bool:
+        """Template should re-render if the state changes."""
+        return entity_id in self._entities
+
+    def _filter_lifecycle(self, entity_id: str) -> bool:
+        """Template should re-render if the state changes."""
+        return (
+            split_entity_id(entity_id)[0] in self._domains
+            or entity_id in self._entities)
+
+    @property
+    def result(self) -> str:
+        """Results of the template computation."""
+        if self._exception is not None:
+            raise self._exception  # pylint: disable=raising-bad-type
+        return self._result
+
+    def _freeze(self) -> None:
+        self._entities = frozenset(self._entities)
+        if self._all_states:
+            # Leave lifecycle_filter as True
+            del self._domains
+        elif not self._domains:
+            del self._domains
+            self.filter_lifecycle = self.filter
+        else:
+            self._domains = frozenset(self._domains)
+            self.filter_lifecycle = self._filter_lifecycle
+
+
 class Template:
     """Class to hold a template and manage caching and rendering."""
 
@@ -145,33 +192,33 @@ class Template:
         except jinja2.TemplateError as err:
             raise TemplateError(err)
 
-    def render_with_collect(
+    def render_to_info(
             self, variables: TemplateVarsType = None,
-            **kwargs) -> (Union[str, TemplateError],
-                          EntityFilter):
+            **kwargs) -> RenderInfo:
         """Render given template and collect an entity filter."""
         if variables is not None:
             kwargs.update(variables)
 
         return run_callback_threadsafe(
-            self.hass.loop, self.async_render_with_collect,
+            self.hass.loop, self.async_render_to_info,
             kwargs).result()
 
     @callback
-    def async_render_with_collect(
+    def async_render_to_info(
             self, variables: TemplateVarsType = None,
-            **kwargs) -> (Union[str, TemplateError],
-                          EntityFilter):
+            **kwargs) -> RenderInfo:
         """Render the template and collect an entity filter."""
-        assert self.hass and _COLLECT_KEY not in self.hass.data
-        entity_collect = self.hass.data[_COLLECT_KEY] = EntityFilter()
+        assert self.hass and _RENDER_INFO not in self.hass.data
+        render_info = self.hass.data[_RENDER_INFO] = RenderInfo(self)
+        # pylint: disable=protected-access
         try:
-            result = self.async_render(variables, **kwargs)
-            return (result, entity_collect)
+            render_info._result = self.async_render(variables, **kwargs)
         except TemplateError as ex:
-            return (ex, entity_collect)
+            render_info._exception = ex
         finally:
-            del self.hass.data[_COLLECT_KEY]
+            del self.hass.data[_RENDER_INFO]
+        render_info._freeze()
+        return render_info
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
         """Render template with value exposed.
@@ -267,9 +314,10 @@ class AllStates:
         return DomainStates(self._hass, name)
 
     def _collect_all(self):
-        entity_collect = self._hass.data.get(_COLLECT_KEY)
-        if entity_collect is not None:
-            entity_collect.include_all = True
+        render_info = self._hass.data.get(_RENDER_INFO)
+        if render_info is not None:
+            # pylint: disable=protected-access
+            render_info._all_states = True
 
     def __iter__(self):
         """Return all states."""
@@ -310,9 +358,10 @@ class DomainStates:
         return _get_state(self._hass, entity_id)
 
     def _collect_domain(self):
-        entity_collect = self._hass.data.get(_COLLECT_KEY)
+        entity_collect = self._hass.data.get(_RENDER_INFO)
         if entity_collect is not None:
-            entity_collect.include_domains.add(self._domain)
+            # pylint: disable=protected-access
+            entity_collect._domains.append(self._domain)
 
     def __iter__(self):
         """Return the iteration over all the states."""
@@ -379,9 +428,10 @@ class TemplateState(State):
 
 
 def _collect_state(hass, entity_id):
-    entity_collect = hass.data.get(_COLLECT_KEY)
+    entity_collect = hass.data.get(_RENDER_INFO)
     if entity_collect is not None:
-        entity_collect.include_entities.add(entity_id)
+        # pylint: disable=protected-access
+        entity_collect._entities.append(entity_id)
 
 
 def _wrap_state(hass, state):
@@ -511,12 +561,6 @@ class TemplateMethods:
 
                 latitude = point_state.attributes.get(ATTR_LATITUDE)
                 longitude = point_state.attributes.get(ATTR_LONGITUDE)
-
-                if latitude is None or longitude is None:
-                    _LOGGER.warning(
-                        "Distance:State does not contains a location: %s",
-                        value)
-                    return None
 
             locations.append((latitude, longitude))
 

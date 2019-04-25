@@ -13,7 +13,6 @@ from homeassistant.const import (
     TEMP_CELSIUS, VOLUME_LITERS, MATCH_ALL)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
-from homeassistant.helpers.entityfilter import EntityFilter
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
@@ -24,21 +23,39 @@ def _set_up_units(hass):
                                    MASS_GRAMS, PRESSURE_PA)
 
 
-def generate_filter(hass, template_str, variables=None):
-    """Create filter from template."""
+def render_to_info(hass, template_str, variables=None):
+    """Create render info from template."""
     tmp = template.Template(template_str, hass)
-    (_, filt) = tmp.async_render_with_collect(variables)
-    return filt
+    return tmp.render_to_info(variables)
 
 
 def extract_entities(hass, template_str, variables=None):
     """Extract entities from a template."""
-    filt = generate_filter(hass, template_str, variables)
-    assert (
-        not filt.include_domains
-        and not filt.exclude_domains
-        and not filt.exclude_entities)
-    return filt.include_entities
+    info render_to_info(hass, template_str, variables)
+    # pylint: disable=protected-access
+    assert not hasattr(info, '_domains')
+    return info._entities
+
+
+def assert_result_info(
+        info, result, entities=None, domains=None, all_states=False):
+    """Check result info."""
+    assert info.result == result
+    # pylint: disable=protected-access
+    assert info._all_states == all_states
+    assert info.filter_lifecycle('invalid_entity_name.somewhere') == all_states
+    if entities is not None:
+        assert info._entities == frozenset(entities)
+        assert all([info.filter(entity) for entity in entities])
+        assert not info.filter('invalid_entity_name.somewhere')
+    else:
+        assert not info._entities
+    if domains is not None:
+        assert info._domains == frozenset(domains)
+        assert all([info.filter_lifecycle(domain + ".entity")
+                    for domain in domains])
+    else:
+        assert not hasattr(info, '_domains')
 
 
 def test_template_equality():
@@ -56,6 +73,42 @@ def test_template_equality():
 
     with pytest.raises(TypeError):
         template.Template(["{{ template_one }}"])
+
+
+async def test_invalid_template(hass):
+    """Invalid template raises error."""
+    tmpl = template.Template("{{", hass)
+
+    with pytest.raises(TemplateError):
+        tmpl.ensure_valid()
+
+    with pytest.raises(TemplateError):
+        tmpl.async_render()
+
+    info = tmpl.async_render_to_info()
+    with pytest.raises(TemplateError):
+        assert info.result == "impossible"
+
+    tmpl = template.Template("{{states(keyword)}}", hass)
+
+    tmpl.ensure_valid()
+
+    with pytest.raises(TemplateError):
+        tmpl.async_render()
+
+
+def test_referring_states_by_entity_id(hass):
+    """Test referring states by entity id."""
+    hass.states.async_set('test.object', 'happy')
+    assert template.Template(
+        '{{ states.test.object.state }}', hass).async_render() == 'happy'
+
+    assert template.Template(
+        '{{ states["test.object"].state }}',
+        hass).async_render() == 'happy'
+
+    assert template.Template(
+        '{{ states("test.object") }}', hass).async_render() == 'happy'
 
 
 async def test_invalid_entity_id(hass):
@@ -77,39 +130,38 @@ def test_raise_exception_on_error(hass):
         template.Template('{{ invalid_syntax').ensure_valid()
 
 
-def test_referring_states_by_entity_id(hass):
-    """Test referring states by entity id."""
-    hass.states.async_set('test.object', 'happy')
-    assert template.Template(
-        '{{ states.test.object.state }}', hass).async_render() == 'happy'
-
-    assert template.Template(
-        '{{ states["test.object"].state }}',
-        hass).async_render() == 'happy'
-
-    assert template.Template(
-        '{{ states("test.object") }}', hass).async_render() == 'happy'
-
-
 def test_iterating_all_states(hass):
     """Test iterating all states."""
+    tmpl_str = '{% for state in states %}{{ state.state }}{% endfor %}'
+
+    info = render_to_info(hass, tmpl_str)
+    assert_result_info(info, '', all_states=True)
+
     hass.states.async_set('test.object', 'happy')
     hass.states.async_set('sensor.temperature', 10)
 
-    assert template.Template(
-        '{% for state in states %}{{ state.state }}{% endfor %}',
-        hass).async_render() == '10happy'
+    info = render_to_info(hass, tmpl_str)
+    assert_result_info(
+        info, '10happy',
+        entities=['test.object', 'sensor.temperature'],
+        all_states=True)
 
 
 def test_iterating_domain_states(hass):
     """Test iterating domain states."""
+    tmpl_str = \
+        "{% for state in states.sensor %}" \
+        "{{ state.state }}{% endfor %}"
+
+    info = render_to_info(hass, tmpl_str)
+    assert_result_info(info, '', domains=['sensor'])
+
     hass.states.async_set('test.object', 'happy')
     hass.states.async_set('sensor.back_door', 'open')
     hass.states.async_set('sensor.temperature', 10)
 
-    assert template.Template("""
-{% for state in states.sensor %}{{ state.state }}{% endfor %}
-            """, hass).async_render() == 'open10'
+    info = render_to_info(hass, tmpl_str)
+    assert_result_info(info, 'open10', domains=['sensor'])
 
 
 def test_float(hass):
@@ -880,9 +932,12 @@ async def test_closest_function_home_vs_group_state(hass):
     await group.Group.async_create_group(
         hass, 'location group', ['test_domain.object'])
 
-    assert template.Template(
-        '{{ closest(states.group.location_group).entity_id }}',
-        hass).async_render() == 'test_domain.object'
+    info = render_to_info(
+        hass, '{{ closest("group.location_group").entity_id }}')
+
+    assert_result_info(
+        info, 'test_domain.object',
+        ['test_domain.object', 'group.location_group'])
 
 
 def test_closest_function_to_coord(hass):
@@ -927,11 +982,18 @@ def test_closest_function_to_entity_id(hass):
         'longitude': hass.config.longitude + 0.3,
     })
 
-    assert template.Template(
-        '{{ closest("zone.far_away", '
-        'states.test_domain).entity_id }}', hass).async_render() == \
-        'test_domain.closest_zone'
-    # TODO: need to check into
+    info = self.render_to_info(
+        hass,
+        '{{ closest(zone, states.test_domain).entity_id }}',
+        {
+            'zone': 'zone.far_away'
+        })
+
+    assert_result_info(
+        info, 'test_domain.closest_zone',
+        ['test_domain.closest_home', 'test_domain.closest_zone',
+            'zone.far_away'],
+        ["test_domain"])
 
 
 def test_closest_function_to_state(hass):
@@ -1017,66 +1079,61 @@ def test_extract_entities_no_match_entities(hass):
     assert template.extract_entities(
         "{{ value_json.tst | timestamp_custom('%Y' True) }}") == MATCH_ALL
 
-    assert template.extract_entities("""
+    info = render_to_info(hass, """
 {% for state in states.sensor %}
 {{ state.entity_id }}={{ state.state }},d
 {% endfor %}
-        """) == MATCH_ALL
-    # TODO: needs check filter.
+            """)
+    assert_result_info(info, '', domains=['sensor'])
 
 
-async def test_generate_filter_iterators(hass):
+def test_generate_filter_iterators(hass):
     """Test extract entities function with none entities stuff."""
-    assert generate_filter(hass, """
-{% for state in states %}
-{{ state.entity_id }}
-{% endfor %}
-        """) == EntityFilter(include_all=True)
+    info = self.render_to_info(hass, """
+        {% for state in states %}
+        {{ state.entity_id }}
+        {% endfor %}
+        """)
+    assert_result_info(info, '', all_states=True)
 
-    assert generate_filter(hass, """
-{% for state in states.sensor %}
-{{ state.entity_id }}
-{% endfor %}
-        """) == EntityFilter(include_domains=['sensor'])
+    info = render_to_info(hass, """
+        {% for state in states.sensor %}
+        {{ state.entity_id }}
+        {% endfor %}
+        """)
+    assert_result_info(info, '', domains=['sensor'])
 
     hass.states.async_set('sensor.test_sensor', 'off', {
         'attr': 'value'})
 
     # Don't need the entity because the state is not accessed
-    assert generate_filter(hass, """
-{% for state in states.sensor %}
-{{ state.entity_id }}
-{% endfor %}
-        """) == EntityFilter(include_domains=['sensor'])
+    info = render_to_info(hass, """
+        {% for state in states.sensor %}
+        {{ state.entity_id }}
+        {% endfor %}
+        """)
+    assert_result_info(info, 'sensor.test_sensor', domains=['sensor'])
 
-    assert generate_filter(hass, """
-{% for state in states.sensor %}
-{{ state.entity_id }}={{ state.state }},d
-{% endfor %}
-        """) == EntityFilter(
-            include_domains=['sensor'],
-            include_entities=['sensor.test_sensor'])
+    # But we do here because the state gets accessed
+    info = render_to_info(hass, """
+        {% for state in states.sensor %}
+        {{ state.entity_id }}={{ state.state }},
+        {% endfor %}
+        """)
+    assert_result_info(
+        info, 'sensor.test_sensor=off,',
+        ['sensor.test_sensor'],
+        ['sensor'])
 
-    assert generate_filter(hass, """
-{% for state in states.sensor %}
-{{ state.entity_id }}={{ state.attributes.attr }},d
-{% endfor %}
-        """) == EntityFilter(
-            include_domains=['sensor'],
-            include_entities=['sensor.test_sensor'])
-
-    # Don't need the entity because the state is not accessed
-    assert generate_filter(hass, """
-{% for state in states.sensor %}
-{{ state.entity_id }}
-{% endfor %}
-        """) == EntityFilter(include_domains=['sensor'])
-
-    assert generate_filter(hass, """
-{% for state in states %}
-{{ state.entity_id }}
-{% endfor %}
-        """) == EntityFilter(include_all=True)
+    info = render_to_info(hass, """
+        {% for state in states.sensor %}
+        {{ state.entity_id }}={{ state.attributes.attr }},
+        {% endfor %}
+        """)
+    assert_result_info(
+        info, 'sensor.test_sensor=value,',
+        ['sensor.test_sensor'],
+        ['sensor'])
 
 
 async def test_generate_select(hass):
@@ -1086,23 +1143,19 @@ async def test_generate_select(hass):
 |join(",", attribute="entity_id") }}
         """
 
-    tmp = template.Template(template_str, hass)
-    (result, filt) = tmp.async_render_with_collect()
-
-    assert result == ''
-    assert filt == EntityFilter(
-        include_domains=['sensor'])
+    tmp = template.Template(template_str, self.hass)
+    info = tmp.async_render_to_info()
+    assert_result_info(info, '', [], ['sensor'])
 
     hass.states.async_set('sensor.test_sensor', 'off', {
         'attr': 'value'})
     hass.states.async_set('sensor.test_sensor_on', 'on')
 
-    (result, filt) = tmp.async_render_with_collect()
-    assert result == 'sensor.test_sensor'
-    assert filt == EntityFilter(
-        include_domains=['sensor'],
-        include_entities=[
-            'sensor.test_sensor', 'sensor.test_sensor_on'])
+    info = tmp.async_render_to_info()
+    assert_result_info(
+        info, 'sensor.test_sensor',
+        ['sensor.test_sensor', 'sensor.test_sensor_on'],
+        ['sensor'])
 
 
 def test_extract_entities_match_entities(hass):
