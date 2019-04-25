@@ -26,7 +26,7 @@ def dummy_broadlink():
 
 
 async def test_padding(hass):
-    """Verify that non padding strings are allowed"""
+    """Verify that non padding strings are allowed."""
     assert data_packet('Jg') == b'&'
     assert data_packet('Jg=') == b'&'
     assert data_packet('Jg==') == b'&'
