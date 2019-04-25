@@ -1,9 +1,9 @@
 {
   "domain": "frontend",
-  "name": "Home Assistant Frontend",
-  "documentation": "https://www.home-assistant.io/components/frontend",
+  "name": "Ais dom Frontend",
+  "documentation": "https://sviete.github.io/AIS-docs/docs/en/ais_app_index.html",
   "requirements": [
-    "home-assistant-frontend==20190424.0"
+    "ais-dom-frontend==20190424.1"
   ],
   "dependencies": [
     "api",
