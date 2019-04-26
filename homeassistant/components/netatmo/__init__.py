@@ -85,12 +85,15 @@ def setup(hass, config):
 
     hass.data[DATA_PERSONS] = {}
     try:
-        conf = pyatmo.ClientAuth(
+        auth = pyatmo.ClientAuth(
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
             'read_station read_camera access_camera '
             'read_thermostat write_thermostat '
             'read_presence access_presence read_homecoach')
+
+        # Store config to be used during entry setup
+        hass.data[DATA_NETATMO_CONFIG] = auth
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False
@@ -106,7 +109,7 @@ def setup(hass, config):
                 webhook_id)
         hass.components.webhook.async_register(
             DOMAIN, DATA_NETATMO, webhook_id, handle_webhook)
-        conf.addwebhook(hass.data[DATA_WEBHOOK_URL])
+        auth.addwebhook(hass.data[DATA_WEBHOOK_URL])
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_STOP, dropwebhook)
 
@@ -116,7 +119,7 @@ def setup(hass, config):
         if url is None:
             url = hass.data[DATA_WEBHOOK_URL]
         _LOGGER.info("Adding webhook for URL: %s", url)
-        conf.addwebhook(url)
+        auth.addwebhook(url)
 
     hass.services.register(
         DOMAIN, SERVICE_ADDWEBHOOK, _service_addwebhook,
@@ -125,22 +128,19 @@ def setup(hass, config):
     def _service_dropwebhook(service):
         """Service to drop webhooks during runtime."""
         _LOGGER.info("Dropping webhook")
-        conf.dropwebhook()
+        auth.dropwebhook()
 
     hass.services.register(
         DOMAIN, SERVICE_DROPWEBHOOK, _service_dropwebhook,
         schema=SCHEMA_SERVICE_DROPWEBHOOK)
-
-    # Store config to be used during entry setup
-    hass.data[DATA_NETATMO_CONFIG] = conf
 
     return True
 
 
 def dropwebhook(hass):
     """Drop the webhook subscription."""
-    conf = hass.data.get(DATA_NETATMO_CONFIG, {})
-    conf.dropwebhook()
+    auth = hass.data.get(DATA_NETATMO_CONFIG, {})
+    auth.dropwebhook()
 
 
 async def handle_webhook(hass, webhook_id, request):

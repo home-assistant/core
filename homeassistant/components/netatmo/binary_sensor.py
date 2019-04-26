@@ -61,10 +61,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     import pyatmo
 
-    conf = hass.data.get(DATA_NETATMO_CONFIG, {})
+    auth = hass.data.get(DATA_NETATMO_CONFIG, {})
 
     try:
-        data = CameraData(hass, conf, home)
+        data = CameraData(hass, auth, home)
         if not data.get_camera_names():
             return None
     except pyatmo.NoDevice:

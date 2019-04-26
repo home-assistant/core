@@ -39,10 +39,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     quality = config.get(CONF_QUALITY, DEFAULT_QUALITY)
     import pyatmo
 
-    conf = hass.data.get(DATA_NETATMO_CONFIG, {})
+    auth = hass.data.get(DATA_NETATMO_CONFIG, {})
 
     try:
-        data = CameraData(hass, conf, home)
+        data = CameraData(hass, auth, home)
         for camera_name in data.get_camera_names():
             camera_type = data.get_camera_type(camera=camera_name, home=home)
             if CONF_CAMERAS in config:

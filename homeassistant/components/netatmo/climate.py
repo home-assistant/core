@@ -69,10 +69,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     import pyatmo
     homes_conf = config.get(CONF_HOMES)
 
-    conf = hass.data.get(DATA_NETATMO_CONFIG, {})
+    auth = hass.data.get(DATA_NETATMO_CONFIG, {})
 
     try:
-        home_data = HomeData(conf)
+        home_data = HomeData(auth)
     except pyatmo.NoDevice:
         return
 
@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for home in homes:
         _LOGGER.debug("Setting up %s ...", home)
         try:
-            room_data = ThermostatData(conf, home)
+            room_data = ThermostatData(auth, home)
         except pyatmo.NoDevice:
             continue
         for room_id in room_data.get_room_ids():
