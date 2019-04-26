@@ -2,4 +2,4 @@
 DOMAIN = 'netatmo'
 
 DATA_NETATMO = 'netatmo'
-DATA_NETATMO_AUTH = 'netatmo_config'
+DATA_NETATMO_AUTH = 'netatmo_auth'
