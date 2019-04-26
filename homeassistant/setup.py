@@ -179,7 +179,7 @@ async def _async_setup_component(hass: core.HomeAssistant,
         for entry in hass.config_entries.async_entries(domain):
             await entry.async_setup(hass, integration=integration)
 
-    hass.config.components.add(domain)  # type: ignore
+    hass.config.components.add(domain)
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:
@@ -187,7 +187,7 @@ async def _async_setup_component(hass: core.HomeAssistant,
 
     hass.bus.async_fire(
         EVENT_COMPONENT_LOADED,
-        {ATTR_COMPONENT: domain}    # type: ignore
+        {ATTR_COMPONENT: domain}
     )
 
     return True
