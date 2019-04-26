@@ -36,7 +36,6 @@ DATA_CONFIG = 'config'
 DEFAULT_ATTRIBUTION = 'Data provided by IQVIA™'
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-FETCHERS = Registry()
 FETCHER_MAPPING = {
     (TYPE_ALLERGY_FORECAST,): (TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK),
     (TYPE_ALLERGY_HISTORIC,): (TYPE_ALLERGY_HISTORIC,),
@@ -106,16 +105,22 @@ class IQVIAData:
         self.sensor_types = sensor_types
         self.zip_code = client.zip_code
 
-        FETCHERS.register(TYPE_ALLERGY_FORECAST)(
+        self.fetchers = Registry()
+        self.fetchers.register(TYPE_ALLERGY_FORECAST)(
             self._client.allergens.extended)
-        FETCHERS.register(TYPE_ALLERGY_HISTORIC)(
+        self.fetchers.register(TYPE_ALLERGY_HISTORIC)(
             self._client.allergens.historic)
-        FETCHERS.register(TYPE_ALLERGY_OUTLOOK)(self._client.allergens.outlook)
-        FETCHERS.register(TYPE_ALLERGY_INDEX)(self._client.allergens.current)
-        FETCHERS.register(TYPE_ASTHMA_FORECAST)(self._client.asthma.extended)
-        FETCHERS.register(TYPE_ASTHMA_HISTORIC)(self._client.asthma.historic)
-        FETCHERS.register(TYPE_ASTHMA_INDEX)(self._client.asthma.current)
-        FETCHERS.register(TYPE_DISEASE_FORECAST)(self._client.disease.extended)
+        self.fetchers.register(TYPE_ALLERGY_OUTLOOK)(
+            self._client.allergens.outlook)
+        self.fetchers.register(TYPE_ALLERGY_INDEX)(
+            self._client.allergens.current)
+        self.fetchers.register(TYPE_ASTHMA_FORECAST)(
+            self._client.asthma.extended)
+        self.fetchers.register(TYPE_ASTHMA_HISTORIC)(
+            self._client.asthma.historic)
+        self.fetchers.register(TYPE_ASTHMA_INDEX)(self._client.asthma.current)
+        self.fetchers.register(TYPE_DISEASE_FORECAST)(
+            self._client.disease.extended)
 
     async def async_update(self):
         """Update IQVIA data."""
@@ -126,7 +131,7 @@ class IQVIAData:
                 continue
 
             for fetcher_type in fetcher_types:
-                tasks[fetcher_type] = FETCHERS[fetcher_type]()
+                tasks[fetcher_type] = self.fetchers[fetcher_type]()
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
 
