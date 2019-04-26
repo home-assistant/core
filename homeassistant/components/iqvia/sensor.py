@@ -9,7 +9,7 @@ from homeassistant.components.iqvia import (
     TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
     TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
     TYPE_ASTHMA_TOMORROW, TYPE_DISEASE_FORECAST, TYPE_DISEASE_INDEX,
-    TYPE_DISEASE_TODAY, TYPE_DISEASE_TOMORROW, IQVIAEntity)
+    TYPE_DISEASE_TODAY, IQVIAEntity)
 from homeassistant.const import ATTR_STATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,6 @@ async def async_setup_platform(
         TYPE_ASTHMA_TOMORROW: IndexSensor,
         TYPE_DISEASE_FORECAST: ForecastSensor,
         TYPE_DISEASE_TODAY: IndexSensor,
-        TYPE_DISEASE_TOMORROW: IndexSensor,
     }
 
     sensors = []
