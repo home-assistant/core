@@ -139,7 +139,7 @@ def setup(hass, config):
 
 def dropwebhook(hass):
     """Drop the webhook subscription."""
-    auth = hass.data.get(DATA_NETATMO_AUTH, {})
+    auth = hass.data[DATA_NETATMO_AUTH]
     auth.dropwebhook()
 
 

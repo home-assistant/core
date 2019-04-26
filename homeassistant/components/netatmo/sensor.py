@@ -68,8 +68,7 @@ MODULE_TYPE_INDOOR = 'NAModule4'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
     dev = []
-
-    auth = hass.data.get(DATA_NETATMO_AUTH, {})
+    auth = hass.data[DATA_NETATMO_AUTH]
 
     if CONF_MODULES in config:
         manual_config(auth, config, dev)

@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     quality = config.get(CONF_QUALITY, DEFAULT_QUALITY)
     import pyatmo
 
-    auth = hass.data.get(DATA_NETATMO_AUTH, {})
+    auth = hass.data[DATA_NETATMO_AUTH]
 
     try:
         data = CameraData(hass, auth, home)
