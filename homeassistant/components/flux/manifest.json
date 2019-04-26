@@ -6,5 +6,6 @@
   "dependencies": [
     "light"
   ],
+  "after_dependencies": ['light'],
   "codeowners": []
 }
