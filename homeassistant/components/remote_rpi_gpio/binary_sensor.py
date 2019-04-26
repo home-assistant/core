@@ -1,16 +1,11 @@
 """Support for binary sensor using RPi GPIO."""
 import logging
 
-import voluptuous as vol
-
 import requests
 
 from homeassistant.components import remote_rpi_gpio
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice)
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +46,6 @@ class RemoteRPiGPIOBinarySensor(BinarySensorDevice):
         self._invert_logic = invert_logic
         self._state = False
         self._button = button
-
 
         def read_gpio():
             """Read state from GPIO."""
