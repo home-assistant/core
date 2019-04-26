@@ -12,7 +12,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, DATA_NETATMO_CONFIG
+from .const import DOMAIN, DATA_NETATMO_CONFIG, DATA_NETATMO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ def setup(hass, config):
             DATA_WEBHOOK_URL] = hass.components.webhook.async_generate_url(
                 webhook_id)
         hass.components.webhook.async_register(
-            DOMAIN, 'Netatmo', webhook_id, handle_webhook)
+            DOMAIN, DATA_NETATMO, webhook_id, handle_webhook)
         conf.addwebhook(hass.data[DATA_WEBHOOK_URL])
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_STOP, dropwebhook)

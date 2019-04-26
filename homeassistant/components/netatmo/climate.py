@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     homes_conf = config.get(CONF_HOMES)
 
     conf = hass.data.get(DATA_NETATMO_CONFIG, {})
-    
+
     try:
         home_data = HomeData(conf)
     except pyatmo.NoDevice:
