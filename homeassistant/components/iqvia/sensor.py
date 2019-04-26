@@ -48,6 +48,7 @@ RATING_MAPPING = [{
     'maximum': 12
 }]
 
+TREND_FLAT = 'Flat'
 TREND_INCREASING = 'Increasing'
 TREND_SUBSIDING = 'Subsiding'
 
@@ -90,17 +91,18 @@ def calculate_average_rating(indices):
 
 def calculate_trend(indices):
     """Calculate the "moving average" of a set of indices."""
-    def moving_average(data, samples):
-        """Determine the "moving average" (http://tinyurl.com/yaereb3c)."""
-        ret = np.cumsum(data, dtype=float)
-        ret[samples:] = ret[samples:] - ret[:-samples]
-        return ret[samples - 1:] / samples
+    index_range = np.arange(0, len(indices))
+    index_array = np.array(indices)
+    linear_fit = np.polyfit(index_range, index_array, 1)
+    slope = round(linear_fit[0], 2)
 
-    increasing = np.all(np.diff(moving_average(np.array(indices), 4)) > 0)
-
-    if increasing:
+    if slope > 0:
         return TREND_INCREASING
-    return TREND_SUBSIDING
+
+    if slope < 0:
+        return TREND_SUBSIDING
+
+    return TREND_FLAT
 
 
 class ForecastSensor(IQVIAEntity):
