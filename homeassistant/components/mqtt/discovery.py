@@ -270,7 +270,9 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         discovery_hash = (component, discovery_id)
 
         if payload:
+            # Attach MQTT topic to the payload, used for debug prints
             setattr(payload, '__configuration_topic__', topic)
+
             if CONF_PLATFORM in payload and 'schema' not in payload:
                 platform = payload[CONF_PLATFORM]
                 if (component in DEPRECATED_PLATFORM_TO_SCHEMA and

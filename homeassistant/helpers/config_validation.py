@@ -654,13 +654,6 @@ def key_dependency(key, dependency):
     return validator
 
 
-WHITELIST = [
-    re.compile(CONF_NAME),
-    re.compile(CONF_PLATFORM),
-    re.compile('.*_topic'),
-    ]
-
-
 # Schemas
 class HASchema(vol.Schema):
     """Schema class that allows us to mark PREVENT_EXTRA errors as warnings."""
@@ -687,37 +680,50 @@ class HASchema(vol.Schema):
             # This is a legacy config, print warning
             extra_key_errs = [err.path[-1] for err in orig_err.errors
                               if err.error_message == 'extra keys not allowed']
-            if extra_key_errs:
-                msg = "Your configuration contains extra keys " \
-                      "that the platform does not support.\n" \
-                      "Please remove "
-                submsg = ', '.join('[{}]'.format(err) for err in
-                                   extra_key_errs)
-                submsg += '. '
-                if hasattr(data, '__config_file__'):
-                    submsg += " (See {}, line {}). ".format(
-                        data.__config_file__, data.__line__)
-                if hasattr(data, '__configuration_topic__'):
-                    submsg += " (Received on MQTT topic {}). ".format(
-                        data.__configuration_topic__)
-                redacted_data = {}
 
-                for k, v in data.items():
-                    if (any(regex.match(k) for regex in WHITELIST) or
-                            k in extra_key_errs):
-                        redacted_data[k] = v
-                    else:
-                        redacted_data[k] = '<redacted>'
-                submsg += "\n(Offending data: {}".format(
-                    json.dumps(redacted_data))
-
-                msg += submsg
-                logging.getLogger(__name__).warning(msg)
-                INVALID_EXTRA_KEYS_FOUND.append(submsg)
-            else:
+            if not extra_key_errs:
                 # This should not happen (all errors should be extra key
                 # errors). Let's raise the original error anyway.
                 raise orig_err
+
+            WHITELIST = [
+                re.compile(CONF_NAME),
+                re.compile(CONF_PLATFORM),
+                re.compile('.*_topic'),
+                ]
+
+            msg = "Your configuration contains extra keys " \
+                  "that the platform does not support.\n" \
+                  "Please remove "
+            submsg = ', '.join('[{}]'.format(err) for err in
+                               extra_key_errs)
+            submsg += '. '
+
+            # Add file+line information, if available
+            if hasattr(data, '__config_file__'):
+                submsg += " (See {}, line {}). ".format(
+                    data.__config_file__, data.__line__)
+
+            # Add MQTT topic information, if available
+            if hasattr(data, '__configuration_topic__'):
+                submsg += " (Received on MQTT topic {}). ".format(
+                    data.__configuration_topic__)
+            redacted_data = {}
+
+            # Print configuration causing the error, but filter any potentially
+            # sensitive data
+            for k, v in data.items():
+                if (any(regex.match(k) for regex in WHITELIST) or
+                        k in extra_key_errs):
+                    redacted_data[k] = v
+                else:
+                    redacted_data[k] = '<redacted>'
+            submsg += "\n(Offending data: {}".format(
+                json.dumps(redacted_data))
+
+            msg += submsg
+            logging.getLogger(__name__).warning(msg)
+            INVALID_EXTRA_KEYS_FOUND.append(submsg)
 
             # Return legacy validated config
             return validated
