@@ -9,7 +9,8 @@ from homeassistant.components.camera import (
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.helpers import config_validation as cv
 
-from . import CameraData, NETATMO_AUTH
+from .const import DATA_NETATMO_CONFIG
+from . import CameraData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +38,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
     quality = config.get(CONF_QUALITY, DEFAULT_QUALITY)
     import pyatmo
+
+    conf = hass.data.get(DATA_NETATMO_CONFIG, {})
+
     try:
-        data = CameraData(hass, NETATMO_AUTH, home)
+        data = CameraData(hass, conf, home)
         for camera_name in data.get_camera_names():
             camera_type = data.get_camera_type(camera=camera_name, home=home)
             if CONF_CAMERAS in config:
