@@ -12,7 +12,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-from . import NETATMO_AUTH
+from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,23 +68,26 @@ MODULE_TYPE_INDOOR = 'NAModule4'
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
     dev = []
+    auth = hass.data[DATA_NETATMO_AUTH]
+
     if CONF_MODULES in config:
-        manual_config(config, dev)
+        manual_config(auth, config, dev)
     else:
-        auto_config(config, dev)
+        auto_config(auth, config, dev)
 
     if dev:
         add_entities(dev, True)
 
 
-def manual_config(config, dev):
+def manual_config(auth, config, dev):
     """Handle manual configuration."""
     import pyatmo
 
     all_classes = all_product_classes()
     not_handled = {}
+
     for data_class in all_classes:
-        data = NetAtmoData(NETATMO_AUTH, data_class,
+        data = NetAtmoData(auth, data_class,
                            config.get(CONF_STATION))
         try:
             # Iterate each module
@@ -107,12 +110,12 @@ def manual_config(config, dev):
             _LOGGER.error('Module name: "%s" not found', module_name)
 
 
-def auto_config(config, dev):
+def auto_config(auth, config, dev):
     """Handle auto configuration."""
     import pyatmo
 
     for data_class in all_product_classes():
-        data = NetAtmoData(NETATMO_AUTH, data_class, config.get(CONF_STATION))
+        data = NetAtmoData(auth, data_class, config.get(CONF_STATION))
         try:
             for module_name in data.get_module_names():
                 for variable in \

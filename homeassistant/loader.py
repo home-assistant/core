@@ -51,11 +51,11 @@ CUSTOM_WARNING = (
 _UNDEF = object()
 
 
-def manifest_from_legacy_module(module: ModuleType) -> Dict:
+def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
     """Generate a manifest from a legacy module."""
     return {
-        'domain': module.DOMAIN,  # type: ignore
-        'name': module.DOMAIN,  # type: ignore
+        'domain': domain,
+        'name': domain,
         'documentation': None,
         'requirements': getattr(module, 'REQUIREMENTS', []),
         'dependencies': getattr(module, 'DEPENDENCIES', []),
@@ -106,7 +106,7 @@ class Integration:
 
         return cls(
             hass, comp.__name__, pathlib.Path(comp.__file__).parent,
-            manifest_from_legacy_module(comp)
+            manifest_from_legacy_module(domain, comp)
         )
 
     def __init__(self, hass: 'HomeAssistant', pkg_path: str,
@@ -161,11 +161,13 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
         await int_or_evt.wait()
         int_or_evt = cache.get(domain, _UNDEF)
 
-    if int_or_evt is _UNDEF:
-        pass
-    elif int_or_evt is None:
-        raise IntegrationNotFound(domain)
-    else:
+        # When we have waited and it's _UNDEF, it doesn't exist
+        # We don't cache that it doesn't exist, or else people can't fix it
+        # and then restart, because their config will never be valid.
+        if int_or_evt is _UNDEF:
+            raise IntegrationNotFound(domain)
+
+    if int_or_evt is not _UNDEF:
         return cast(Integration, int_or_evt)
 
     event = cache[domain] = asyncio.Event()
@@ -197,7 +199,12 @@ async def async_get_integration(hass: 'HomeAssistant', domain: str)\
         return integration
 
     integration = Integration.resolve_legacy(hass, domain)
-    cache[domain] = integration
+    if integration is not None:
+        cache[domain] = integration
+    else:
+        # Remove event from cache.
+        cache.pop(domain)
+
     event.set()
 
     if not integration:

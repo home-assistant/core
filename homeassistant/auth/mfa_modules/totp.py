@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from . import MultiFactorAuthModule, MULTI_FACTOR_AUTH_MODULES, \
     MULTI_FACTOR_AUTH_MODULE_SCHEMA, SetupFlow
 
-REQUIREMENTS = ['pyotp==2.2.6', 'PyQRCode==1.2.1']
+REQUIREMENTS = ['pyotp==2.2.7', 'PyQRCode==1.2.1']
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)

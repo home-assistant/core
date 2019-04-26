@@ -15,7 +15,7 @@ from homeassistant.components.homekit_controller.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from tests.common import (
-    async_fire_time_changed, fire_service_discovered, load_fixture)
+    async_fire_time_changed, async_fire_service_discovered, load_fixture)
 
 
 class FakePairing:
@@ -221,7 +221,7 @@ async def setup_test_accessories(hass, accessories, capitalize=False):
         }
     }
 
-    fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
+    async_fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
     await hass.async_block_till_done()
 
     return pairing
@@ -245,9 +245,10 @@ async def device_config_changed(hass, accessories):
         }
     }
 
-    fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
+    async_fire_service_discovered(hass, SERVICE_HOMEKIT, discovery_info)
 
     # Wait for services to reconfigure
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
 

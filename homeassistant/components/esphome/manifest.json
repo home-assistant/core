@@ -3,7 +3,7 @@
   "name": "ESPHome",
   "documentation": "https://www.home-assistant.io/components/esphome",
   "requirements": [
-    "aioesphomeapi==2.0.0"
+    "aioesphomeapi==2.0.1"
   ],
   "dependencies": [],
   "codeowners": [

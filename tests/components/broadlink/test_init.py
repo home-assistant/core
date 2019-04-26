@@ -4,10 +4,9 @@ from base64 import b64decode
 from unittest.mock import MagicMock, patch, call
 
 import pytest
-import voluptuous as vol
 
 from homeassistant.util.dt import utcnow
-from homeassistant.components.broadlink import async_setup_service
+from homeassistant.components.broadlink import async_setup_service, data_packet
 from homeassistant.components.broadlink.const import (
     DOMAIN, SERVICE_LEARN, SERVICE_SEND)
 
@@ -24,6 +23,13 @@ def dummy_broadlink():
             'broadlink': broadlink,
     }):
         yield broadlink
+
+
+async def test_padding(hass):
+    """Verify that non padding strings are allowed."""
+    assert data_packet('Jg') == b'&'
+    assert data_packet('Jg=') == b'&'
+    assert data_packet('Jg==') == b'&'
 
 
 async def test_send(hass):
@@ -100,18 +106,3 @@ async def test_learn_timeout(hass):
         assert mock_create.call_args == call(
             "No signal was received",
             title='Broadlink switch')
-
-
-async def test_ipv4():
-    """Test ipv4 parsing."""
-    from homeassistant.components.broadlink import ipv4_address
-
-    schema = vol.Schema(ipv4_address)
-
-    for value in ('invalid', '1', '192', '192.168',
-                  '192.168.0', '192.168.0.A'):
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-    for value in ('192.168.0.1', '10.0.0.1'):
-        schema(value)
