@@ -93,15 +93,6 @@ class IQVIAData:
         self.sensor_types = sensor_types
         self.zip_code = client.zip_code
 
-    async def _get_data(self, method, key):
-        """Return API data from a specific call."""
-        try:
-            data = await method()
-            self.data[key] = data
-        except IQVIAError as err:
-            _LOGGER.error('Unable to get "%s" data: %s', key, err)
-            self.data[key] = {}
-
     async def async_update(self):
         """Update IQVIA data."""
         condition_method_mapping = {
@@ -131,7 +122,7 @@ class IQVIAData:
 
         tasks = {}
         for conditions, actions in condition_method_mapping.items():
-            if not any(True for c in conditions if c in self.sensor_types):
+            if not any(c in self.sensor_types for c in conditions):
                 continue
 
             for action, key in actions:
@@ -150,18 +141,18 @@ class IQVIAData:
                 return
 
             if isinstance(result, IQVIAError):
-                _LOGGER.error('Unable to get "%s" data: %s', key, result)
+                _LOGGER.error('Unable to get %s data: %s', key, result)
                 self.data[key] = {}
                 continue
 
-            _LOGGER.debug('Loaded new "%s" data', key)
+            _LOGGER.debug('Loaded new %s data', key)
             self.data[key] = result
 
 
 class IQVIAEntity(Entity):
     """Define a base IQVIA entity."""
 
-    def __init__(self, iqvia, kind, name, icon, zip_code):
+    def __init__(self, iqvia, sensor_type, name, icon, zip_code):
         """Initialize the sensor."""
         self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
@@ -169,7 +160,7 @@ class IQVIAEntity(Entity):
         self._iqvia = iqvia
         self._name = name
         self._state = None
-        self._type = kind
+        self._type = sensor_type
         self._zip_code = zip_code
 
     @property

@@ -72,10 +72,10 @@ async def async_setup_platform(
     }
 
     sensors = []
-    for kind in iqvia.sensor_types:
-        klass = sensor_class_mapping[kind]
-        name, icon = SENSORS[kind]
-        sensors.append(klass(iqvia, kind, name, icon, iqvia.zip_code))
+    for sensor_type in iqvia.sensor_types:
+        klass = sensor_class_mapping[sensor_type]
+        name, icon = SENSORS[sensor_type]
+        sensors.append(klass(iqvia, sensor_type, name, icon, iqvia.zip_code))
 
     async_add_entities(sensors, True)
 
