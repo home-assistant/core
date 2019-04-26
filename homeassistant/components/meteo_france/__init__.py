@@ -9,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['meteofrance==0.3.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Météo-France"

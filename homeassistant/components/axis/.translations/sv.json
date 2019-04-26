@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "bad_config_file": "Felaktig data fr\u00e5n config fil"
+        },
+        "error": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "device_unavailable": "Enheten \u00e4r inte tillg\u00e4nglig",
+            "faulty_credentials": "Felaktiga anv\u00e4ndaruppgifter"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "password": "L\u00f6senord",
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "title": "Konfigurera Axis enhet"
+            }
+        },
+        "title": "Axis enhet"
+    }
+}

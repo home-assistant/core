@@ -1,9 +1,4 @@
-"""
-HTML5 Push Messaging notification service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.html5/
-"""
+"""HTML5 Push Messaging notification service."""
 import datetime
 from functools import partial
 import json
@@ -28,10 +23,6 @@ from homeassistant.util.json import load_json, save_json
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, DOMAIN,
     PLATFORM_SCHEMA, BaseNotificationService)
-
-REQUIREMENTS = ['pywebpush==1.6.0']
-
-DEPENDENCIES = ['frontend']
 
 _LOGGER = logging.getLogger(__name__)
 

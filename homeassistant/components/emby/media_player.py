@@ -1,9 +1,4 @@
-"""
-Support to interface with the Emby API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.emby/
-"""
+"""Support to interface with the Emby API."""
 import logging
 
 import voluptuous as vol
@@ -21,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-REQUIREMENTS = ['pyemby==1.6']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,26 +1,20 @@
-"""
-Support for interface with a Bose Soundtouch.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.soundtouch/
-"""
+"""Support for interface with a Bose Soundtouch."""
 import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.components.media_player.const import (
     DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNAVAILABLE)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['libsoundtouch==0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +57,7 @@ DEFAULT_PORT = 8090
 SUPPORT_SOUNDTOUCH = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | \
-    SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_PLAY
+    SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,

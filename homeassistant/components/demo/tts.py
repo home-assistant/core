@@ -1,9 +1,4 @@
-"""
-Support for the demo speech service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/demo/
-"""
+"""Support for the demo speech service."""
 import os
 
 import voluptuous as vol

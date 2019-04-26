@@ -4,14 +4,15 @@ import struct
 import logging
 import ctypes
 from collections import namedtuple
+import asyncio
+import async_timeout
 
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_DEVICE, CONF_IP_ADDRESS, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['pyads==3.0.7']
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,9 @@ CONF_ADS_TYPE = 'adstype'
 CONF_ADS_VALUE = 'value'
 CONF_ADS_VAR = 'adsvar'
 CONF_ADS_VAR_BRIGHTNESS = 'adsvar_brightness'
+
+STATE_KEY_STATE = 'state'
+STATE_KEY_BRIGHTNESS = 'brightness'
 
 DOMAIN = 'ads'
 
@@ -154,28 +158,41 @@ class AdsHub:
 
     def write_by_name(self, name, value, plc_datatype):
         """Write a value to the device."""
+        import pyads
         with self._lock:
-            return self._client.write_by_name(name, value, plc_datatype)
+            try:
+                return self._client.write_by_name(name, value, plc_datatype)
+            except pyads.ADSError as err:
+                _LOGGER.error("Error writing %s: %s", name, err)
 
     def read_by_name(self, name, plc_datatype):
         """Read a value from the device."""
+        import pyads
         with self._lock:
-            return self._client.read_by_name(name, plc_datatype)
+            try:
+                return self._client.read_by_name(name, plc_datatype)
+            except pyads.ADSError as err:
+                _LOGGER.error("Error reading %s: %s", name, err)
 
     def add_device_notification(self, name, plc_datatype, callback):
         """Add a notification to the ADS devices."""
-        from pyads import NotificationAttrib
-        attr = NotificationAttrib(ctypes.sizeof(plc_datatype))
+        import pyads
+        attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 
         with self._lock:
-            hnotify, huser = self._client.add_device_notification(
-                name, attr, self._device_notification_callback)
-            hnotify = int(hnotify)
-            self._notification_items[hnotify] = NotificationItem(
-                hnotify, huser, name, plc_datatype, callback)
+            try:
+                hnotify, huser = self._client.add_device_notification(
+                    name, attr, self._device_notification_callback)
+            except pyads.ADSError as err:
+                _LOGGER.error("Error subscribing to %s: %s", name, err)
+            else:
+                hnotify = int(hnotify)
+                self._notification_items[hnotify] = NotificationItem(
+                    hnotify, huser, name, plc_datatype, callback)
 
-        _LOGGER.debug(
-            "Added device notification %d for variable %s", hnotify, name)
+                _LOGGER.debug(
+                    "Added device notification %d for variable %s",
+                    hnotify, name)
 
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
@@ -210,3 +227,68 @@ class AdsHub:
             _LOGGER.warning("No callback available for this datatype")
 
         notification_item.callback(notification_item.name, value)
+
+
+class AdsEntity(Entity):
+    """Representation of ADS entity."""
+
+    def __init__(self, ads_hub, name, ads_var):
+        """Initialize ADS binary sensor."""
+        self._name = name
+        self._unique_id = ads_var
+        self._state_dict = {}
+        self._state_dict[STATE_KEY_STATE] = None
+        self._ads_hub = ads_hub
+        self._ads_var = ads_var
+        self._event = None
+
+    async def async_initialize_device(
+            self, ads_var, plctype, state_key=STATE_KEY_STATE, factor=None):
+        """Register device notification."""
+        def update(name, value):
+            """Handle device notifications."""
+            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+
+            if factor is None:
+                self._state_dict[state_key] = value
+            else:
+                self._state_dict[state_key] = value / factor
+
+            asyncio.run_coroutine_threadsafe(async_event_set(), self.hass.loop)
+            self.schedule_update_ha_state()
+
+        async def async_event_set():
+            """Set event in async context."""
+            self._event.set()
+
+        self._event = asyncio.Event()
+
+        await self.hass.async_add_executor_job(
+            self._ads_hub.add_device_notification,
+            ads_var, plctype, update)
+        try:
+            with async_timeout.timeout(10):
+                await self._event.wait()
+        except asyncio.TimeoutError:
+            _LOGGER.debug('Variable %s: Timeout during first update',
+                          ads_var)
+
+    @property
+    def name(self):
+        """Return the default name of the binary sensor."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return an unique identifier for this entity."""
+        return self._unique_id
+
+    @property
+    def should_poll(self):
+        """Return False because entity pushes its state to HA."""
+        return False
+
+    @property
+    def available(self):
+        """Return False if state has not been updated yet."""
+        return self._state_dict[STATE_KEY_STATE] is not None

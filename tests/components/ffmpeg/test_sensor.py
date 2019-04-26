@@ -29,6 +29,7 @@ class TestFFmpegNoiseSetup:
         """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
+        self.hass.block_till_done()
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
         assert self.hass.states.get('binary_sensor.ffmpeg_noise') is not None
@@ -39,6 +40,7 @@ class TestFFmpegNoiseSetup:
         """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
+        self.hass.block_till_done()
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
         assert self.hass.states.get('binary_sensor.ffmpeg_noise') is not None
@@ -54,6 +56,7 @@ class TestFFmpegNoiseSetup:
         """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
+        self.hass.block_till_done()
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
         assert self.hass.states.get('binary_sensor.ffmpeg_noise') is not None
@@ -92,6 +95,7 @@ class TestFFmpegMotionSetup:
         """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
+        self.hass.block_till_done()
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
         assert self.hass.states.get('binary_sensor.ffmpeg_motion') is not None
@@ -102,6 +106,7 @@ class TestFFmpegMotionSetup:
         """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
+        self.hass.block_till_done()
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
         assert self.hass.states.get('binary_sensor.ffmpeg_motion') is not None
@@ -117,6 +122,7 @@ class TestFFmpegMotionSetup:
         """Set up ffmpeg component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config)
+        self.hass.block_till_done()
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
         assert self.hass.states.get('binary_sensor.ffmpeg_motion') is not None

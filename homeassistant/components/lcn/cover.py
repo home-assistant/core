@@ -1,11 +1,11 @@
 """Support for LCN covers."""
+import pypck
+
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import CONF_ADDRESS
 
 from . import LcnDevice, get_connection
 from .const import CONF_CONNECTIONS, CONF_MOTOR, DATA_LCN
-
-DEPENDENCIES = ['lcn']
 
 
 async def async_setup_platform(hass, hass_config, async_add_entities,
@@ -13,8 +13,6 @@ async def async_setup_platform(hass, hass_config, async_add_entities,
     """Setups the LCN cover platform."""
     if discovery_info is None:
         return
-
-    import pypck
 
     devices = []
     for config in discovery_info:
@@ -45,9 +43,8 @@ class LcnCover(LcnDevice, CoverDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        self.hass.async_create_task(
-            self.address_connection.activate_status_request_handler(
-                self.motor))
+        await self.address_connection.activate_status_request_handler(
+            self.motor)
 
     @property
     def is_closed(self):

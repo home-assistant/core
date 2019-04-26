@@ -5,12 +5,10 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
 
-DEPENDENCIES = ['zigbee']
 
 CONF_ON_STATE = 'on_state'
 
 DEFAULT_ON_STATE = 'high'
-DEPENDENCIES = ['zigbee']
 
 STATES = ['high', 'low']
 

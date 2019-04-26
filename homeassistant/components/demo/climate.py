@@ -1,9 +1,4 @@
-"""
-Demo platform that offers a fake climate device.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/demo/
-"""
+"""Demo platform that offers a fake climate device."""
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from homeassistant.components.climate import ClimateDevice

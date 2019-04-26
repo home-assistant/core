@@ -4,10 +4,10 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_ID)
 from homeassistant.components import enocean
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.const import CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,8 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SENDER_ID = 'sender_id'
 
 DEFAULT_NAME = 'EnOcean Light'
-DEPENDENCIES = ['enocean']
-
 SUPPORT_ENOCEAN = SUPPORT_BRIGHTNESS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -30,29 +28,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the EnOcean light platform."""
     sender_id = config.get(CONF_SENDER_ID)
-    devname = config.get(CONF_NAME)
+    dev_name = config.get(CONF_NAME)
     dev_id = config.get(CONF_ID)
 
-    add_entities([EnOceanLight(sender_id, devname, dev_id)])
+    add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
 
 
 class EnOceanLight(enocean.EnOceanDevice, Light):
     """Representation of an EnOcean light source."""
 
-    def __init__(self, sender_id, devname, dev_id):
+    def __init__(self, sender_id, dev_id, dev_name):
         """Initialize the EnOcean light source."""
-        enocean.EnOceanDevice.__init__(self)
+        super().__init__(dev_id, dev_name)
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
-        self.dev_id = dev_id
-        self._devname = devname
-        self.stype = 'dimmer'
 
     @property
     def name(self):
         """Return the name of the device if any."""
-        return self._devname
+        return self.dev_name
 
     @property
     def brightness(self):
@@ -96,8 +91,14 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
         self.send_command(command, [], 0x01)
         self._on_state = False
 
-    def value_changed(self, val):
-        """Update the internal state of this device."""
-        self._brightness = math.floor(val / 100.0 * 256.0)
-        self._on_state = bool(val != 0)
-        self.schedule_update_ha_state()
+    def value_changed(self, packet):
+        """Update the internal state of this device.
+
+        Dimmer devices like Eltako FUD61 send telegram in different RORGs.
+        We only care about the 4BS (0xA5).
+        """
+        if packet.data[0] == 0xa5 and packet.data[1] == 0x02:
+            val = packet.data[2]
+            self._brightness = math.floor(val / 100.0 * 256.0)
+            self._on_state = bool(val != 0)
+            self.schedule_update_ha_state()

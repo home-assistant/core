@@ -1,9 +1,4 @@
-"""
-Camera platform that receives images through HTTP POST.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/camera.push/
-"""
+"""Camera platform that receives images through HTTP POST."""
 import logging
 import asyncio
 
@@ -21,8 +16,6 @@ from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
-
-DEPENDENCIES = ['webhook']
 
 _LOGGER = logging.getLogger(__name__)
 

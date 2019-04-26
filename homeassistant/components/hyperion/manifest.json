@@ -1,0 +1,8 @@
+{
+  "domain": "hyperion",
+  "name": "Hyperion",
+  "documentation": "https://www.home-assistant.io/components/hyperion",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

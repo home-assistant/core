@@ -8,8 +8,6 @@ from homeassistant.components.notify import (
 
 from . import CONF_RECIPIENT, DATA_KEY
 
-DEPENDENCIES = ['netgear_lte']
-
 _LOGGER = logging.getLogger(__name__)
 
 

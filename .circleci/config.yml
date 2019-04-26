@@ -57,6 +57,7 @@ commands:
             <<# parameters.all >>pip install -q --progress-bar off -r requirements_all.txt -c homeassistant/package_constraints.txt<</ parameters.all>>
             <<# parameters.test >>pip install -q --progress-bar off -r requirements_test.txt -c homeassistant/package_constraints.txt<</ parameters.test>>
             <<# parameters.test_all >>pip install -q --progress-bar off -r requirements_test_all.txt -c homeassistant/package_constraints.txt<</ parameters.test_all>>
+          no_output_timeout: 15m  
       - save_cache:
           paths:
             - ./venv
@@ -99,6 +100,13 @@ jobs:
             mypy $TYPING_FILES
 
       - install
+
+      - run:
+          name: validate manifests
+          command: |
+            . venv/bin/activate
+            python -m script.hassfest validate
+
       - run:
           name: run gen_requirements_all
           command: |
@@ -139,6 +147,7 @@ jobs:
             . venv/bin/activate
             PYFILES=$(circleci tests glob "homeassistant/**/*.py" | circleci tests split)
             pylint ${PYFILES}
+          no_output_timeout: 15m
 
   pre-test:
     parameters:
@@ -173,13 +182,14 @@ jobs:
       - install
 
       - run:
-          name: run tests
+          name: run tests with code coverage
           command: |
             . venv/bin/activate
+            CC_SWITCH="--cov --cov-report="
             TESTFILES=$(circleci tests glob "tests/**/test_*.py" | circleci tests split --split-by=timings)
-            if [ -z "$CODE_COVERAGE" ]; then CC_SWITCH=""; else CC_SWITCH="--cov --cov-report html:htmlcov"; fi
-            pytest --timeout=9 --duration=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH -- ${TESTFILES}
+            pytest --timeout=9 --durations=10 --junitxml=test-reports/homeassistant/results.xml -qq -o junit_family=xunit2 -o junit_suite_name=homeassistant -o console_output_style=count -p no:sugar $CC_SWITCH -- ${TESTFILES}
             script/check_dirty
+            codecov
 
       - store_test_results:
           path: test-reports

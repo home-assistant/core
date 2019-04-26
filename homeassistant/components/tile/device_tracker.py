@@ -1,9 +1,4 @@
-"""
-Support for Tile® Bluetooth trackers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.tile/
-"""
+"""Support for Tile® Bluetooth trackers."""
 import logging
 from datetime import timedelta
 
@@ -18,8 +13,6 @@ from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pytile==2.0.6']
-
 CLIENT_UUID_CONFIG_FILE = '.tile.conf'
 DEVICE_TYPES = ['PHONE', 'TILE']
 

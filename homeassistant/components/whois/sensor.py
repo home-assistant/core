@@ -1,9 +1,4 @@
-"""
-Get WHOIS information for a given host.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.whois/
-"""
+"""Get WHOIS information for a given host."""
 from datetime import timedelta
 import logging
 
@@ -13,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['python-whois==0.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 

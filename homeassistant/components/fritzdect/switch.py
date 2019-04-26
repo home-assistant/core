@@ -1,9 +1,4 @@
-"""
-Support for FRITZ!DECT Switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.fritzdect/
-"""
+"""Support for FRITZ!DECT Switches."""
 import logging
 
 from requests.exceptions import RequestException, HTTPError
@@ -15,8 +10,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, POWER_WATT, ENERGY_KILO_WATT_HOUR)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-
-REQUIREMENTS = ['fritzhome==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

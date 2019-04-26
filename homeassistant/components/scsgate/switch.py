@@ -11,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 
 ATTR_SCENARIO_ID = 'scenario_id'
 
-DEPENDENCIES = ['scsgate']
-
 CONF_TRADITIONAL = 'traditional'
 CONF_SCENARIO = 'scenario'
 

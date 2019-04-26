@@ -1,9 +1,4 @@
-"""
-Support for the yandex speechkit tts  service.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/yandextts/
-"""
+"""Support for the yandex speechkit tts  service."""
 import asyncio
 import logging
 

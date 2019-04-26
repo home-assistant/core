@@ -23,11 +23,11 @@ from .const import (
     ADD_DEVICE_RELAY_LOGGERS, ATTR_MANUFACTURER, BELLOWS, CONF_BAUDRATE,
     CONF_DATABASE, CONF_RADIO_TYPE, CONF_USB_PATH, CONTROLLER, CURRENT,
     DATA_ZHA, DATA_ZHA_BRIDGE_ID, DATA_ZHA_CORE_COMPONENT, DATA_ZHA_GATEWAY,
-    DATA_ZHA_RADIO, DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME,
-    DEVICE_FULL_INIT, DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE,
-    LOG_ENTRY, LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION,
-    RAW_INIT, SIGNAL_REMOVE, SIGNATURE, TYPE, ZHA, ZHA_GW_MSG, ZIGPY,
-    ZIGPY_DECONZ, ZIGPY_XBEE)
+    DEBUG_LEVELS, DEFAULT_BAUDRATE, DEFAULT_DATABASE_NAME, DEVICE_FULL_INIT,
+    DEVICE_INFO, DEVICE_JOINED, DEVICE_REMOVED, DOMAIN, IEEE, LOG_ENTRY,
+    LOG_OUTPUT, MODEL, NWK, ORIGINAL, RADIO, RADIO_DESCRIPTION, RAW_INIT,
+    SIGNAL_REMOVE, SIGNATURE, TYPE, ZHA, ZHA_GW_MSG, ZIGPY, ZIGPY_DECONZ,
+    ZIGPY_XBEE)
 from .device import DeviceStatus, ZHADevice
 from .discovery import (
     async_create_device_entity, async_dispatch_discovery_info,
@@ -76,7 +76,6 @@ class ZHAGateway:
         radio = radio_details[RADIO]
         self.radio_description = RADIO_TYPES[radio_type][RADIO_DESCRIPTION]
         await radio.connect(usb_path, baudrate)
-        self._hass.data[DATA_ZHA][DATA_ZHA_RADIO] = radio
 
         if CONF_DATABASE in self._config:
             database = self._config[CONF_DATABASE]
@@ -146,14 +145,14 @@ class ZHAGateway:
 
     def device_removed(self, device):
         """Handle device being removed from the network."""
-        device = self._devices.pop(device.ieee, None)
+        zha_device = self._devices.pop(device.ieee, None)
         self._device_registry.pop(device.ieee, None)
-        if device is not None:
-            device_info = async_get_device_info(self._hass, device)
-            self._hass.async_create_task(device.async_unsub_dispatcher())
+        if zha_device is not None:
+            device_info = async_get_device_info(self._hass, zha_device)
+            self._hass.async_create_task(zha_device.async_unsub_dispatcher())
             async_dispatcher_send(
                 self._hass,
-                "{}_{}".format(SIGNAL_REMOVE, str(device.ieee))
+                "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
             )
             if device_info is not None:
                 async_dispatcher_send(
@@ -260,17 +259,25 @@ class ZHAGateway:
         """Handle device joined and basic information discovered (async)."""
         zha_device = self._async_get_or_create_device(device, is_new_join)
 
-        discovery_infos = []
-        for endpoint_id, endpoint in device.endpoints.items():
-            async_process_endpoint(
-                self._hass, self._config, endpoint_id, endpoint,
-                discovery_infos, device, zha_device, is_new_join
+        is_rejoin = False
+        if zha_device.status is not DeviceStatus.INITIALIZED:
+            discovery_infos = []
+            for endpoint_id, endpoint in device.endpoints.items():
+                async_process_endpoint(
+                    self._hass, self._config, endpoint_id, endpoint,
+                    discovery_infos, device, zha_device, is_new_join
+                )
+                if endpoint_id != 0:
+                    for cluster in endpoint.in_clusters.values():
+                        cluster.bind_only = False
+                    for cluster in endpoint.out_clusters.values():
+                        cluster.bind_only = True
+        else:
+            is_rejoin = is_new_join is True
+            _LOGGER.debug(
+                'skipping discovery for previously discovered device: %s',
+                "{} - is rejoin: {}".format(zha_device.ieee, is_rejoin)
             )
-            if endpoint_id != 0:
-                for cluster in endpoint.in_clusters.values():
-                    cluster.bind_only = False
-                for cluster in endpoint.out_clusters.values():
-                    cluster.bind_only = True
 
         if is_new_join:
             # configure the device
@@ -291,15 +298,16 @@ class ZHAGateway:
         else:
             await zha_device.async_initialize(from_cache=True)
 
-        for discovery_info in discovery_infos:
-            async_dispatch_discovery_info(
-                self._hass,
-                is_new_join,
-                discovery_info
-            )
+        if not is_rejoin:
+            for discovery_info in discovery_infos:
+                async_dispatch_discovery_info(
+                    self._hass,
+                    is_new_join,
+                    discovery_info
+                )
 
-        device_entity = async_create_device_entity(zha_device)
-        await self._component.async_add_entities([device_entity])
+            device_entity = async_create_device_entity(zha_device)
+            await self._component.async_add_entities([device_entity])
 
         if is_new_join:
             device_info = async_get_device_info(self._hass, zha_device)
@@ -311,6 +319,11 @@ class ZHAGateway:
                     DEVICE_INFO: device_info
                 }
             )
+
+    async def shutdown(self):
+        """Stop ZHA Controller Application."""
+        _LOGGER.debug("Shutting down ZHA ControllerApplication")
+        await self.application_controller.shutdown()
 
 
 @callback

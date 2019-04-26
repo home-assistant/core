@@ -1,0 +1,12 @@
+{
+  "domain": "googlehome",
+  "name": "Googlehome",
+  "documentation": "https://www.home-assistant.io/components/googlehome",
+  "requirements": [
+    "googledevices==1.0.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@ludeeus"
+  ]
+}

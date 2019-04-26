@@ -1,9 +1,4 @@
-"""
-Support for tracking MQTT enabled devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.mqtt/
-"""
+"""Support for tracking MQTT enabled devices."""
 import logging
 
 import voluptuous as vol
@@ -15,8 +10,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_QOS
-
-DEPENDENCIES = ['mqtt']
 
 _LOGGER = logging.getLogger(__name__)
 

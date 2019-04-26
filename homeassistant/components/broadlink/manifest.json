@@ -1,0 +1,12 @@
+{
+  "domain": "broadlink",
+  "name": "Broadlink",
+  "documentation": "https://www.home-assistant.io/components/broadlink",
+  "requirements": [
+    "broadlink==0.9.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@danielhiversen"
+  ]
+}

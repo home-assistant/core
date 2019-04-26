@@ -1,9 +1,4 @@
-"""
-A sensor platform that give you information about the next space launch.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.launch_library/
-"""
+"""A sensor platform that give you information about the next space launch."""
 from datetime import timedelta
 import logging
 
@@ -14,8 +9,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-REQUIREMENTS = ['pylaunches==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

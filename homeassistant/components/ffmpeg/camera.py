@@ -1,9 +1,4 @@
-"""
-Support for Cameras with FFmpeg as decoder.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.ffmpeg/
-"""
+"""Support for Cameras with FFmpeg as decoder."""
 import asyncio
 import logging
 
@@ -18,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['ffmpeg']
 
 DEFAULT_NAME = 'FFmpeg'
 DEFAULT_ARGUMENTS = "-pred 1"

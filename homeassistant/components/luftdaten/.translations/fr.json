@@ -8,7 +8,8 @@
         "step": {
             "user": {
                 "data": {
-                    "show_on_map": "Montrer sur la carte"
+                    "show_on_map": "Montrer sur la carte",
+                    "station_id": "ID capteur Luftdaten"
                 },
                 "title": "D\u00e9finir Luftdaten"
             }

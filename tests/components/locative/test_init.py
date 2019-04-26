@@ -22,15 +22,16 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-def locative_client(loop, hass, hass_client):
+async def locative_client(loop, hass, hass_client):
     """Locative mock client."""
-    assert loop.run_until_complete(async_setup_component(
+    assert await async_setup_component(
         hass, DOMAIN, {
             DOMAIN: {}
-        }))
+        })
+    await hass.async_block_till_done()
 
     with patch('homeassistant.components.device_tracker.update_config'):
-        yield loop.run_until_complete(hass_client())
+        return await hass_client()
 
 
 @pytest.fixture
@@ -45,6 +46,7 @@ async def webhook_id(hass, locative_client):
     result = await hass.config_entries.flow.async_configure(
         result['flow_id'], {})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    await hass.async_block_till_done()
 
     return result['result'].data['webhook_id']
 
