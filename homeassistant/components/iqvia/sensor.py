@@ -2,11 +2,15 @@
 import logging
 from statistics import mean
 
+import numpy as np
+
 from homeassistant.components.iqvia import (
-    DATA_CLIENT, DOMAIN, SENSORS, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK,
-    TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-    TYPE_ALLERGY_YESTERDAY, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
-    TYPE_ASTHMA_TOMORROW, TYPE_ASTHMA_YESTERDAY, IQVIAEntity)
+    DATA_CLIENT, DOMAIN, SENSORS, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_HISTORIC,
+    TYPE_ALLERGY_OUTLOOK, TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY,
+    TYPE_ALLERGY_TOMORROW, TYPE_ALLERGY_YESTERDAY, TYPE_ASTHMA_FORECAST,
+    TYPE_ASTHMA_HISTORIC, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
+    TYPE_ASTHMA_TOMORROW, TYPE_ASTHMA_YESTERDAY, TYPE_DISEASE_FORECAST,
+    IQVIAEntity)
 from homeassistant.const import ATTR_STATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,11 +57,25 @@ async def async_setup_platform(
     """Configure the platform and add the sensors."""
     iqvia = hass.data[DOMAIN][DATA_CLIENT]
 
+    sensor_class_mapping = {
+        TYPE_ALLERGY_FORECAST: ForecastSensor,
+        TYPE_ALLERGY_HISTORIC: HistoricalSensor,
+        TYPE_ALLERGY_TODAY: IndexSensor,
+        TYPE_ALLERGY_TOMORROW: IndexSensor,
+        TYPE_ALLERGY_YESTERDAY: IndexSensor,
+        TYPE_ASTHMA_FORECAST: ForecastSensor,
+        TYPE_ASTHMA_HISTORIC: HistoricalSensor,
+        TYPE_ASTHMA_TODAY: IndexSensor,
+        TYPE_ASTHMA_TOMORROW: IndexSensor,
+        TYPE_ASTHMA_YESTERDAY: IndexSensor,
+        TYPE_DISEASE_FORECAST: ForecastSensor,
+    }
+
     sensors = []
-    for kind in iqvia.sensor_types:
-        sensor_class, name, icon = SENSORS[kind]
-        sensors.append(
-            globals()[sensor_class](iqvia, kind, name, icon, iqvia.zip_code))
+    for sensor_type in iqvia.sensor_types:
+        klass = sensor_class_mapping[sensor_type]
+        name, icon = SENSORS[sensor_type]
+        sensors.append(klass(iqvia, sensor_type, name, icon, iqvia.zip_code))
 
     async_add_entities(sensors, True)
 
@@ -72,8 +90,6 @@ def calculate_average_rating(indices):
 
 def calculate_trend(indices):
     """Calculate the "moving average" of a set of indices."""
-    import numpy as np
-
     def moving_average(data, samples):
         """Determine the "moving average" (http://tinyurl.com/yaereb3c)."""
         ret = np.cumsum(data, dtype=float)
@@ -92,11 +108,10 @@ class ForecastSensor(IQVIAEntity):
 
     async def async_update(self):
         """Update the sensor."""
-        await self._iqvia.async_update()
         if not self._iqvia.data:
             return
 
-        data = self._iqvia.data[self._kind].get('Location')
+        data = self._iqvia.data[self._type].get('Location')
         if not data:
             return
 
@@ -115,7 +130,7 @@ class ForecastSensor(IQVIAEntity):
             ATTR_ZIP_CODE: data['ZIP']
         })
 
-        if self._kind == TYPE_ALLERGY_FORECAST:
+        if self._type == TYPE_ALLERGY_FORECAST:
             outlook = self._iqvia.data[TYPE_ALLERGY_OUTLOOK]
             self._attrs[ATTR_OUTLOOK] = outlook.get('Outlook')
             self._attrs[ATTR_SEASON] = outlook.get('Season')
@@ -128,11 +143,10 @@ class HistoricalSensor(IQVIAEntity):
 
     async def async_update(self):
         """Update the sensor."""
-        await self._iqvia.async_update()
         if not self._iqvia.data:
             return
 
-        data = self._iqvia.data[self._kind].get('Location')
+        data = self._iqvia.data[self._type].get('Location')
         if not data:
             return
 
@@ -155,22 +169,21 @@ class IndexSensor(IQVIAEntity):
 
     async def async_update(self):
         """Update the sensor."""
-        await self._iqvia.async_update()
         if not self._iqvia.data:
             return
 
         data = {}
-        if self._kind in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
+        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
                           TYPE_ALLERGY_YESTERDAY):
             data = self._iqvia.data[TYPE_ALLERGY_INDEX].get('Location')
-        elif self._kind in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
+        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
                             TYPE_ASTHMA_YESTERDAY):
             data = self._iqvia.data[TYPE_ASTHMA_INDEX].get('Location')
 
         if not data:
             return
 
-        key = self._kind.split('_')[-1].title()
+        key = self._type.split('_')[-1].title()
         [period] = [p for p in data['periods'] if p['Type'] == key]
         [rating] = [
             i['label'] for i in RATING_MAPPING
@@ -184,7 +197,7 @@ class IndexSensor(IQVIAEntity):
             ATTR_ZIP_CODE: data['ZIP']
         })
 
-        if self._kind in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
+        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
                           TYPE_ALLERGY_YESTERDAY):
             for idx, attrs in enumerate(period['Triggers']):
                 index = idx + 1
@@ -196,7 +209,7 @@ class IndexSensor(IQVIAEntity):
                     '{0}_{1}'.format(ATTR_ALLERGEN_TYPE, index):
                         attrs['PlantType'],
                 })
-        elif self._kind in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
+        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
                             TYPE_ASTHMA_YESTERDAY):
             for idx, attrs in enumerate(period['Triggers']):
                 index = idx + 1
