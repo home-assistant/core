@@ -355,7 +355,7 @@ async def _async_set_up_integrations(
     if stage_1_domains:
         await asyncio.gather(*[
             async_setup_component(hass, domain, config)
-            for domain in logging_domains
+            for domain in stage_1_domains
         ])
 
     # Load all integrations

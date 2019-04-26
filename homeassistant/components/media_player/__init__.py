@@ -45,7 +45,8 @@ from .const import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP)
 from .reproduce_state import async_reproduce_states  # noqa
 
 _LOGGER = logging.getLogger(__name__)
@@ -164,77 +165,77 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(
         SERVICE_TURN_ON, MEDIA_PLAYER_SCHEMA,
-        'async_turn_on', SUPPORT_TURN_ON
+        'async_turn_on', [SUPPORT_TURN_ON]
     )
     component.async_register_entity_service(
         SERVICE_TURN_OFF, MEDIA_PLAYER_SCHEMA,
-        'async_turn_off', SUPPORT_TURN_OFF
+        'async_turn_off', [SUPPORT_TURN_OFF]
     )
     component.async_register_entity_service(
         SERVICE_TOGGLE, MEDIA_PLAYER_SCHEMA,
-        'async_toggle', SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+        'async_toggle', [SUPPORT_TURN_OFF | SUPPORT_TURN_ON]
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_UP, MEDIA_PLAYER_SCHEMA,
-        'async_volume_up', SUPPORT_VOLUME_SET
+        'async_volume_up', [SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP]
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_DOWN, MEDIA_PLAYER_SCHEMA,
-        'async_volume_down', SUPPORT_VOLUME_SET
+        'async_volume_down', [SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP]
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PLAY_PAUSE, MEDIA_PLAYER_SCHEMA,
-        'async_media_play_pause', SUPPORT_PLAY | SUPPORT_PAUSE
+        'async_media_play_pause', [SUPPORT_PLAY | SUPPORT_PAUSE]
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PLAY, MEDIA_PLAYER_SCHEMA,
-        'async_media_play', SUPPORT_PLAY
+        'async_media_play', [SUPPORT_PLAY]
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PAUSE, MEDIA_PLAYER_SCHEMA,
-        'async_media_pause', SUPPORT_PAUSE
+        'async_media_pause', [SUPPORT_PAUSE]
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_STOP, MEDIA_PLAYER_SCHEMA,
-        'async_media_stop', SUPPORT_STOP
+        'async_media_stop', [SUPPORT_STOP]
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_NEXT_TRACK, MEDIA_PLAYER_SCHEMA,
-        'async_media_next_track', SUPPORT_NEXT_TRACK
+        'async_media_next_track', [SUPPORT_NEXT_TRACK]
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PREVIOUS_TRACK, MEDIA_PLAYER_SCHEMA,
-        'async_media_previous_track', SUPPORT_PREVIOUS_TRACK
+        'async_media_previous_track', [SUPPORT_PREVIOUS_TRACK]
     )
     component.async_register_entity_service(
         SERVICE_CLEAR_PLAYLIST, MEDIA_PLAYER_SCHEMA,
-        'async_clear_playlist', SUPPORT_CLEAR_PLAYLIST
+        'async_clear_playlist', [SUPPORT_CLEAR_PLAYLIST]
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_SET, MEDIA_PLAYER_SET_VOLUME_SCHEMA,
         lambda entity, call: entity.async_set_volume_level(
             volume=call.data[ATTR_MEDIA_VOLUME_LEVEL]),
-        SUPPORT_VOLUME_SET
+        [SUPPORT_VOLUME_SET]
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_MUTE, MEDIA_PLAYER_MUTE_VOLUME_SCHEMA,
         lambda entity, call: entity.async_mute_volume(
             mute=call.data[ATTR_MEDIA_VOLUME_MUTED]),
-        SUPPORT_VOLUME_MUTE
+        [SUPPORT_VOLUME_MUTE]
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_SEEK, MEDIA_PLAYER_MEDIA_SEEK_SCHEMA,
         lambda entity, call: entity.async_media_seek(
             position=call.data[ATTR_MEDIA_SEEK_POSITION]),
-        SUPPORT_SEEK
+        [SUPPORT_SEEK]
     )
     component.async_register_entity_service(
         SERVICE_SELECT_SOURCE, MEDIA_PLAYER_SELECT_SOURCE_SCHEMA,
-        'async_select_source', SUPPORT_SELECT_SOURCE
+        'async_select_source', [SUPPORT_SELECT_SOURCE]
     )
     component.async_register_entity_service(
         SERVICE_SELECT_SOUND_MODE, MEDIA_PLAYER_SELECT_SOUND_MODE_SCHEMA,
-        'async_select_sound_mode', SUPPORT_SELECT_SOUND_MODE
+        'async_select_sound_mode', [SUPPORT_SELECT_SOUND_MODE]
     )
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA, MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
@@ -242,11 +243,11 @@ async def async_setup(hass, config):
             media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
             media_id=call.data[ATTR_MEDIA_CONTENT_ID],
             enqueue=call.data.get(ATTR_MEDIA_ENQUEUE)
-        ), SUPPORT_PLAY_MEDIA
+        ), [SUPPORT_PLAY_MEDIA]
     )
     component.async_register_entity_service(
         SERVICE_SHUFFLE_SET, MEDIA_PLAYER_SET_SHUFFLE_SCHEMA,
-        'async_set_shuffle', SUPPORT_SHUFFLE_SET
+        'async_set_shuffle', [SUPPORT_SHUFFLE_SET]
     )
 
     return True
@@ -686,7 +687,8 @@ class MediaPlayerDevice(Entity):
             await self.hass.async_add_job(self.volume_up)
             return
 
-        if self.volume_level < 1:
+        if self.volume_level < 1 \
+           and self.supported_features & SUPPORT_VOLUME_SET:
             await self.async_set_volume_level(min(1, self.volume_level + .1))
 
     async def async_volume_down(self):
@@ -699,7 +701,8 @@ class MediaPlayerDevice(Entity):
             await self.hass.async_add_job(self.volume_down)
             return
 
-        if self.volume_level > 0:
+        if self.volume_level > 0 \
+           and self.supported_features & SUPPORT_VOLUME_SET:
             await self.async_set_volume_level(
                 max(0, self.volume_level - .1))
 
