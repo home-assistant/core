@@ -33,5 +33,3 @@ cache:
 install: pip install -U tox
 language: python
 script: travis_wait 40 tox --develop
-services:
-  - docker
