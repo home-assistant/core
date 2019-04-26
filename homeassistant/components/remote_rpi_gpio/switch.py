@@ -12,34 +12,35 @@ DEPENDENCIES = ['remote_rpi_gpio']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Remote Raspberry PI GPIO devices."""
+    if discovery_info is None:
+        return
+
     address = discovery_info['address']
     invert_logic = discovery_info['invert_logic']
+    ports = discovery_info['switches']
 
     devices = []
-    ports = discovery_info['switches']
     for port, name in ports.items():
-        devices.append(RemoteRPiGPIOSwitch(name, address, port, invert_logic))
+        try:
+            led = remote_rpi_gpio.setup_output(address,
+                                               port,
+                                               invert_logic)
+        except (ValueError, IndexError, KeyError, IOError):
+            return None
+        new_switch = RemoteRPiGPIOSwitch(name, led, invert_logic)
+        devices.append(new_switch)
     add_entities(devices)
 
 
 class RemoteRPiGPIOSwitch(ToggleEntity):
     """Representation of a Remtoe Raspberry Pi GPIO."""
 
-    def __init__(self, name, address, port, invert_logic):
+    def __init__(self, name, led, invert_logic):
         """Initialize the pin."""
         self._name = name or DEVICE_DEFAULT_NAME
-        self._address = address
-        self._port = port
-        self._invert_logic = invert_logic
         self._state = False
-        self._switch = None
-
-        try:
-            self._switch = remote_rpi_gpio.setup_output(self._address,
-                                                        self._port,
-                                                        self._invert_logic)
-        except (ValueError, IndexError, KeyError, IOError):
-            return None
+        self._invert_logic = invert_logic
+        self._switch = led
 
     @property
     def name(self):

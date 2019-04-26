@@ -90,7 +90,7 @@ def setup_output(address, port, invert_logic):
         return None
 
 
-def setup_input(address, port, pull_mode):
+def setup_input(address, port, pull_mode, bouncetime):
     """Set up a GPIO as input."""
     from gpiozero import Button
     from gpiozero.pins.pigpio import PiGPIOFactory
@@ -103,6 +103,7 @@ def setup_input(address, port, pull_mode):
     try:
         return Button(port,
                       pull_up=pull_gpio_up,
+                      bounce_time=bouncetime,
                       pin_factory=PiGPIOFactory(address))
     except (ValueError, IndexError, KeyError, IOError):
         return None
