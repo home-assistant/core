@@ -1073,7 +1073,7 @@ pygtt==1.1.2
 pyhaversion==2.2.1
 
 # homeassistant.components.heos
-pyheos==0.4.0
+pyheos==0.4.1
 
 # homeassistant.components.hikvision
 pyhik==0.2.2
@@ -1650,7 +1650,7 @@ steamodd==4.21
 stringcase==1.2.0
 
 # homeassistant.components.ecovacs
-sucks==0.9.3
+sucks==0.9.4
 
 # homeassistant.components.onvif
 suds-passworddigest-homeassistant==0.1.2a0.dev0
