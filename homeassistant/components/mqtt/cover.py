@@ -455,13 +455,11 @@ class MqttCover(MqttAttributes, MqttAvailability, MqttDiscoveryUpdate,
                 self.async_write_ha_state()
 
     async def async_toggle_tilt(self, **kwargs):
-        """Toggle the entity.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Toggle the entity."""
         if self.is_tilt_closed():
-            return self.async_open_cover_tilt(**kwargs)
-        return self.async_close_cover_tilt(**kwargs)
+            await self.async_open_cover_tilt(**kwargs)
+        else:
+            await self.async_close_cover_tilt(**kwargs)
 
     def is_tilt_closed(self):
         """Return if the cover is tilted closed."""
