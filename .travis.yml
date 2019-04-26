@@ -24,8 +24,8 @@ matrix:
       env: TOXENV=typing
     - python: "3.5.3"
       env: TOXENV=py35
-    - python: "3.8-dev"
-      env: TOXENV=py38
+    - python: "3.7"
+      env: TOXENV=py37
 
 cache:
   directories:
