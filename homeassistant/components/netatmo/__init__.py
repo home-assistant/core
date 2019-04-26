@@ -12,7 +12,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, DATA_NETATMO_AUTH, DATA_NETATMO
+from .const import DOMAIN, DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,12 +91,12 @@ def setup(hass, config):
             'read_station read_camera access_camera '
             'read_thermostat write_thermostat '
             'read_presence access_presence read_homecoach')
-
-        # Store config to be used during entry setup
-        hass.data[DATA_NETATMO_AUTH] = auth
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False
+
+    # Store config to be used during entry setup
+    hass.data[DATA_NETATMO_AUTH] = auth
 
     if config[DOMAIN][CONF_DISCOVERY]:
         for component in 'camera', 'sensor', 'binary_sensor', 'climate':
