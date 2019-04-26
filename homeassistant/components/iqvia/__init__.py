@@ -16,6 +16,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.decorator import Registry
 
 from .const import (
     DATA_CLIENT, DATA_LISTENER, DOMAIN, SENSORS, TOPIC_DATA_UPDATE,
@@ -27,6 +28,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 CONF_ZIP_CODE = 'zip_code'
 
 DATA_CONFIG = 'config'
@@ -34,8 +36,19 @@ DATA_CONFIG = 'config'
 DEFAULT_ATTRIBUTION = 'Data provided by IQVIA™'
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-NOTIFICATION_ID = 'iqvia_setup'
-NOTIFICATION_TITLE = 'IQVIA Setup'
+FETCHERS = Registry()
+FETCHER_MAPPING = {
+    (TYPE_ALLERGY_FORECAST,): (TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK),
+    (TYPE_ALLERGY_HISTORIC,): (TYPE_ALLERGY_HISTORIC,),
+    (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW, TYPE_ALLERGY_YESTERDAY): (
+        TYPE_ALLERGY_INDEX,),
+    (TYPE_ASTHMA_FORECAST,): (TYPE_ASTHMA_FORECAST,),
+    (TYPE_ASTHMA_HISTORIC,): (TYPE_ASTHMA_HISTORIC,),
+    (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW, TYPE_ASTHMA_YESTERDAY): (
+        TYPE_ASTHMA_INDEX,),
+    (TYPE_DISEASE_FORECAST,): (TYPE_DISEASE_FORECAST,),
+}
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -93,40 +106,27 @@ class IQVIAData:
         self.sensor_types = sensor_types
         self.zip_code = client.zip_code
 
+        FETCHERS.register(TYPE_ALLERGY_FORECAST)(
+            self._client.allergens.extended)
+        FETCHERS.register(TYPE_ALLERGY_HISTORIC)(
+            self._client.allergens.historic)
+        FETCHERS.register(TYPE_ALLERGY_OUTLOOK)(self._client.allergens.outlook)
+        FETCHERS.register(TYPE_ALLERGY_INDEX)(self._client.allergens.current)
+        FETCHERS.register(TYPE_ASTHMA_FORECAST)(self._client.asthma.extended)
+        FETCHERS.register(TYPE_ASTHMA_HISTORIC)(self._client.asthma.historic)
+        FETCHERS.register(TYPE_ASTHMA_INDEX)(self._client.asthma.current)
+        FETCHERS.register(TYPE_DISEASE_FORECAST)(self._client.disease.extended)
+
     async def async_update(self):
         """Update IQVIA data."""
-        condition_method_mapping = {
-            (TYPE_ALLERGY_FORECAST,): [
-                (self._client.allergens.extended, TYPE_ALLERGY_FORECAST),
-                (self._client.allergens.outlook, TYPE_ALLERGY_OUTLOOK)
-            ],
-            (TYPE_ALLERGY_HISTORIC,): [(
-                self._client.allergens.historic, TYPE_ALLERGY_HISTORIC)],
-            (
-                TYPE_ALLERGY_TODAY,
-                TYPE_ALLERGY_TOMORROW,
-                TYPE_ALLERGY_YESTERDAY
-            ): [(self._client.allergens.current, TYPE_ALLERGY_INDEX)],
-            (TYPE_ASTHMA_FORECAST,): [(
-                self._client.asthma.extended, TYPE_ASTHMA_FORECAST)],
-            (TYPE_ASTHMA_HISTORIC,): [(
-                self._client.asthma.historic, TYPE_ASTHMA_HISTORIC)],
-            (
-                TYPE_ASTHMA_TODAY,
-                TYPE_ASTHMA_TOMORROW,
-                TYPE_ASTHMA_YESTERDAY
-            ): [(self._client.asthma.current, TYPE_ASTHMA_INDEX)],
-            (TYPE_DISEASE_FORECAST,): [(
-                self._client.disease.extended, TYPE_DISEASE_FORECAST)],
-        }
-
         tasks = {}
-        for conditions, actions in condition_method_mapping.items():
+
+        for conditions, fetcher_types in FETCHER_MAPPING.items():
             if not any(c in self.sensor_types for c in conditions):
                 continue
 
-            for action, key in actions:
-                tasks[key] = action()
+            for fetcher_type in fetcher_types:
+                tasks[fetcher_type] = FETCHERS[fetcher_type]()
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
 
