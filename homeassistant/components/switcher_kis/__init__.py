@@ -58,8 +58,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
         """On homeassistant stop, gracefully stop the bridge if running."""
         await v2bridge.stop()
 
-    hass.async_add_job(hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_stop_bridge))
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_bridge)
 
     try:
         device_data = await wait_for(v2bridge.queue.get(), timeout=10.0)
