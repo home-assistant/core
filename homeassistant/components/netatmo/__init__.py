@@ -108,7 +108,7 @@ def setup(hass, config):
             DATA_WEBHOOK_URL] = hass.components.webhook.async_generate_url(
                 webhook_id)
         hass.components.webhook.async_register(
-            DOMAIN, DATA_NETATMO, webhook_id, handle_webhook)
+            DOMAIN, 'Netatmo', webhook_id, handle_webhook)
         auth.addwebhook(hass.data[DATA_WEBHOOK_URL])
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_STOP, dropwebhook)
