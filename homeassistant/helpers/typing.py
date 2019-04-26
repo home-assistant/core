@@ -9,6 +9,7 @@ GPSType = Tuple[float, float]
 ConfigType = Dict[str, Any]
 EventType = homeassistant.core.Event
 HomeAssistantType = homeassistant.core.HomeAssistant
+ServiceCallType = homeassistant.core.ServiceCall
 ServiceDataType = Dict[str, Any]
 TemplateVarsType = Optional[Dict[str, Any]]
 
