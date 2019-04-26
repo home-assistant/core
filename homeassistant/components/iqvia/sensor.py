@@ -7,9 +7,8 @@ import numpy as np
 from homeassistant.components.iqvia import (
     DATA_CLIENT, DOMAIN, SENSORS, TYPE_ALLERGY_FORECAST, TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_INDEX, TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-    TYPE_ALLERGY_YESTERDAY, TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_INDEX,
-    TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW, TYPE_ASTHMA_YESTERDAY,
-    TYPE_DISEASE_FORECAST, IQVIAEntity)
+    TYPE_ASTHMA_FORECAST, TYPE_ASTHMA_INDEX, TYPE_ASTHMA_TODAY,
+    TYPE_ASTHMA_TOMORROW, TYPE_DISEASE_FORECAST, IQVIAEntity)
 from homeassistant.const import ATTR_STATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,11 +59,9 @@ async def async_setup_platform(
         TYPE_ALLERGY_FORECAST: ForecastSensor,
         TYPE_ALLERGY_TODAY: IndexSensor,
         TYPE_ALLERGY_TOMORROW: IndexSensor,
-        TYPE_ALLERGY_YESTERDAY: IndexSensor,
         TYPE_ASTHMA_FORECAST: ForecastSensor,
         TYPE_ASTHMA_TODAY: IndexSensor,
         TYPE_ASTHMA_TOMORROW: IndexSensor,
-        TYPE_ASTHMA_YESTERDAY: IndexSensor,
         TYPE_DISEASE_FORECAST: ForecastSensor,
     }
 
@@ -136,11 +133,9 @@ class IndexSensor(IQVIAEntity):
             return
 
         data = {}
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-                          TYPE_ALLERGY_YESTERDAY):
+        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
             data = self._iqvia.data[TYPE_ALLERGY_INDEX].get('Location')
-        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-                            TYPE_ASTHMA_YESTERDAY):
+        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             data = self._iqvia.data[TYPE_ASTHMA_INDEX].get('Location')
 
         if not data:
@@ -160,8 +155,7 @@ class IndexSensor(IQVIAEntity):
             ATTR_ZIP_CODE: data['ZIP']
         })
 
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
-                          TYPE_ALLERGY_YESTERDAY):
+        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
             for idx, attrs in enumerate(period['Triggers']):
                 index = idx + 1
                 self._attrs.update({
@@ -172,8 +166,7 @@ class IndexSensor(IQVIAEntity):
                     '{0}_{1}'.format(ATTR_ALLERGEN_TYPE, index):
                         attrs['PlantType'],
                 })
-        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW,
-                            TYPE_ASTHMA_YESTERDAY):
+        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             for idx, attrs in enumerate(period['Triggers']):
                 index = idx + 1
                 self._attrs.update({
