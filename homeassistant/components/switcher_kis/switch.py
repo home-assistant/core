@@ -30,7 +30,8 @@ async def async_setup_platform(hass: HomeAssistantType, config: Dict,
                                async_add_entities: Callable,
                                discovery_info: Dict) -> None:
     """Set up the switcher platform for the switch component."""
-    assert DOMAIN in hass.data
+    if discovery_info is None:
+        return
     async_add_entities([SwitcherControl(hass.data[DOMAIN][DATA_DEVICE])])
 
 
