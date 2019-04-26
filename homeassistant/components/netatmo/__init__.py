@@ -12,7 +12,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, DATA_NETATMO_CONFIG, DATA_NETATMO
+from .const import DOMAIN, DATA_NETATMO_AUTH, DATA_NETATMO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ def setup(hass, config):
             'read_presence access_presence read_homecoach')
 
         # Store config to be used during entry setup
-        hass.data[DATA_NETATMO_CONFIG] = auth
+        hass.data[DATA_NETATMO_AUTH] = auth
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False
@@ -139,7 +139,7 @@ def setup(hass, config):
 
 def dropwebhook(hass):
     """Drop the webhook subscription."""
-    auth = hass.data.get(DATA_NETATMO_CONFIG, {})
+    auth = hass.data.get(DATA_NETATMO_AUTH, {})
     auth.dropwebhook()
 
 

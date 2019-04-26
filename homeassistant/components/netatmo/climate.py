@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_NAME)
 from homeassistant.util import Throttle
 
-from .const import DATA_NETATMO_CONFIG
+from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     import pyatmo
     homes_conf = config.get(CONF_HOMES)
 
-    auth = hass.data.get(DATA_NETATMO_CONFIG, {})
+    auth = hass.data.get(DATA_NETATMO_AUTH, {})
 
     try:
         home_data = HomeData(auth)

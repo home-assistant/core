@@ -12,7 +12,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-from .const import DATA_NETATMO_CONFIG
+from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
     dev = []
 
-    auth = hass.data.get(DATA_NETATMO_CONFIG, {})
+    auth = hass.data.get(DATA_NETATMO_AUTH, {})
 
     if CONF_MODULES in config:
         manual_config(auth, config, dev)

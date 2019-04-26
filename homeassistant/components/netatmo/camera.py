@@ -9,7 +9,7 @@ from homeassistant.components.camera import (
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.helpers import config_validation as cv
 
-from .const import DATA_NETATMO_CONFIG
+from .const import DATA_NETATMO_AUTH
 from . import CameraData
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     quality = config.get(CONF_QUALITY, DEFAULT_QUALITY)
     import pyatmo
 
-    auth = hass.data.get(DATA_NETATMO_CONFIG, {})
+    auth = hass.data.get(DATA_NETATMO_AUTH, {})
 
     try:
         data = CameraData(hass, auth, home)
