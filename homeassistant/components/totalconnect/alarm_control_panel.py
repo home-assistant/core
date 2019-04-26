@@ -77,7 +77,14 @@ class TotalConnect(alarm.AlarmControlPanel):
             state = STATE_ALARM_ARMING
         elif status == self._client.DISARMING:
             state = STATE_ALARM_DISARMING
+        elif status == self._client.ALARMING:
+            state = STATE_ALARM_TRIGGERED
+        elif status == self._client.ALARMING_FIRE_SMOKE:
+            state = STATE_ALARM_TRIGGERED_FIRE_SMOKE
+        elif status == self._client.ALARMING_CARBON_MONOXIDE:
+            state = STATE_ALARM_TRIGGERED_CARBON_MONOXIDE        
         else:
+            logging.info("Total Connect Client returned unknown status code: " + str(status))
             state = None
 
         self._state = state
