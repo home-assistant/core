@@ -18,15 +18,20 @@ from homeassistant.components.withings.sensor import (
 class TestConfigSchema:
     """Test the config schema."""
 
+    base_hass_config = {
+        http.DOMAIN: {},
+        api.DOMAIN: {
+            'base_url': 'http://localhost/'
+        },
+        const.DOMAIN: None,
+    }
+
     def validate(self, config):
         """Assert a schema config succeeds."""
-        return CONFIG_SCHEMA({
-            http.DOMAIN: {},
-            api.DOMAIN: {
-                'base_url': 'http://localhost/'
-            },
-            const.DOMAIN: config
-        })
+        hass_config = self.base_hass_config.copy()
+        hass_config[const.DOMAIN] = config
+
+        return CONFIG_SCHEMA(hass_config)
 
     def assert_fail(self, config):
         """Assert a schema config will fail."""

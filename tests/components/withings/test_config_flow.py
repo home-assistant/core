@@ -22,6 +22,9 @@ import homeassistant.components.api as api
 class TestWithingsFlowHandler:
     """Test class for the withings flow handler."""
 
+    hass = None
+    flow_handler = None
+
     def setup_method(self):
         """Set up the flow handler."""
         config = {
@@ -330,6 +333,8 @@ class TestWithingsFlowHandler:
 
 class TestWithingsAuthCallbackView:
     """Tests the auth callback view."""
+
+    hass = None
 
     def setup_method(self):
         """Set up the test."""

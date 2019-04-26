@@ -1,6 +1,5 @@
 """Tests for the Withings component."""
 import time
-import nokia
 from asynctest import patch, MagicMock
 from tests.common import get_test_home_assistant
 from homeassistant.config_entries import ConfigEntry
@@ -120,8 +119,13 @@ def test_create_sensor_entities_skip(hass):
 class TestWithingsHealthSensor:
     """Tests all the health sensors."""
 
+    hass = None
+    api = None
+    data_manager = None
+
     def setup_method(self):
         """Set up the test."""
+        import nokia
         self.hass = get_test_home_assistant()
 
         self.api = nokia.NokiaApi.__new__(nokia.NokiaApi)
@@ -162,6 +166,7 @@ class TestWithingsHealthSensor:
 
     async def test_async_update(self):
         """Test method."""
+        import nokia
         self.api.get_measures.return_value = nokia.NokiaMeasures({
             'updatetime': '',
             'timezone': '',

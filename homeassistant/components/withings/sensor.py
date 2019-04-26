@@ -487,8 +487,8 @@ class WithingsHealthSensor(Entity):
         )
         measure_groups = list(filter(
             lambda g: (
-                    not g.is_ambiguous() and
-                    g.get_measure(measure_type) is not None
+                not g.is_ambiguous() and
+                g.get_measure(measure_type) is not None
             ),
             data
         ))
