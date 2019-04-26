@@ -15,7 +15,7 @@ REQUIREMENTS = ['epsonprinter==0.0.9']
 _LOGGER = logging.getLogger(__name__)
 MONITORED_CONDITIONS = {
     'black': ['Inklevel Black', '%', 'mdi:water'],
-    'photoblack': ['Inklevel Photoblack','%', 'mdi:water'],
+    'photoblack': ['Inklevel Photoblack', '%', 'mdi:water'],
     'magenta': ['Inklevel Magenta', '%', 'mdi:water'],
     'cyan': ['Inklevel Cyan', '%', 'mdi:water'],
     'yellow': ['Inklevel Yellow', '%', 'mdi:water'],
