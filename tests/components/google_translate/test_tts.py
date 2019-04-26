@@ -47,7 +47,7 @@ class TestTTSGooglePlatform:
         """Test setup component."""
         config = {
             tts.DOMAIN: {
-                'platform': 'google',
+                'platform': 'google_translate',
             }
         }
 
@@ -65,14 +65,14 @@ class TestTTSGooglePlatform:
 
         config = {
             tts.DOMAIN: {
-                'platform': 'google',
+                'platform': 'google_translate',
             }
         }
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(tts.DOMAIN, 'google_say', {
+        self.hass.services.call(tts.DOMAIN, 'google_translate_say', {
             tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
@@ -93,7 +93,7 @@ class TestTTSGooglePlatform:
 
         config = {
             tts.DOMAIN: {
-                'platform': 'google',
+                'platform': 'google_translate',
                 'language': 'de',
             }
         }
@@ -101,7 +101,7 @@ class TestTTSGooglePlatform:
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(tts.DOMAIN, 'google_say', {
+        self.hass.services.call(tts.DOMAIN, 'google_translate_say', {
             tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
@@ -121,7 +121,8 @@ class TestTTSGooglePlatform:
 
         config = {
             tts.DOMAIN: {
-                'platform': 'google',
+                'platform': 'google_translate',
+                'service_name': 'google_say',
             }
         }
 
@@ -148,14 +149,14 @@ class TestTTSGooglePlatform:
 
         config = {
             tts.DOMAIN: {
-                'platform': 'google',
+                'platform': 'google_translate',
             }
         }
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(tts.DOMAIN, 'google_say', {
+        self.hass.services.call(tts.DOMAIN, 'google_translate_say', {
             tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
@@ -174,14 +175,14 @@ class TestTTSGooglePlatform:
 
         config = {
             tts.DOMAIN: {
-                'platform': 'google',
+                'platform': 'google_translate',
             }
         }
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(tts.DOMAIN, 'google_say', {
+        self.hass.services.call(tts.DOMAIN, 'google_translate_say', {
             tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
@@ -205,7 +206,8 @@ class TestTTSGooglePlatform:
 
         config = {
             tts.DOMAIN: {
-                'platform': 'google',
+                'platform': 'google_translate',
+                'service_name': 'google_say',
             }
         }
 

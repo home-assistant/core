@@ -164,7 +164,7 @@ def setup(hass, config):
                 'ssdp_description': url,
             }
 
-            discovery.discover(hass, SERVICE_WEMO, discovery_info)
+            discovery_dispatch(SERVICE_WEMO, discovery_info)
 
         _LOGGER.debug("WeMo device discovery has finished")
 

@@ -70,6 +70,9 @@ async def test_device_signal_new_address(hass):
         await axis_device.async_setup()
         await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 1
+    assert len(axis_device.listeners) == 1
+
     entry.data[device.CONF_DEVICE][device.CONF_HOST] = '2.3.4.5'
     hass.config_entries.async_update_entry(entry, data=entry.data)
     await hass.async_block_till_done()
@@ -77,6 +80,50 @@ async def test_device_signal_new_address(hass):
     assert axis_device.host == '2.3.4.5'
     assert axis_device.api.config.host == '2.3.4.5'
     assert len(new_address_mock.mock_calls) == 1
+
+
+async def test_device_unavailable(hass):
+    """Successful setup."""
+    entry = MockConfigEntry(
+        domain=device.DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
+
+    api = Mock()
+    api.vapix.get_param.return_value = '1234'
+
+    axis_device = device.AxisNetworkDevice(hass, entry)
+    hass.data[device.DOMAIN] = {axis_device.serial: axis_device}
+
+    with patch.object(device, 'get_device', return_value=mock_coro(api)), \
+            patch.object(device, 'async_dispatcher_send') as mock_dispatcher:
+        await axis_device.async_setup()
+        await hass.async_block_till_done()
+
+        axis_device.async_connection_status_callback(status=False)
+
+    assert not axis_device.available
+    assert len(mock_dispatcher.mock_calls) == 1
+
+
+async def test_device_reset(hass):
+    """Successfully reset device."""
+    entry = MockConfigEntry(
+        domain=device.DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
+
+    api = Mock()
+    api.vapix.get_param.return_value = '1234'
+
+    axis_device = device.AxisNetworkDevice(hass, entry)
+    hass.data[device.DOMAIN] = {axis_device.serial: axis_device}
+
+    with patch.object(device, 'get_device', return_value=mock_coro(api)):
+        await axis_device.async_setup()
+        await hass.async_block_till_done()
+
+    await axis_device.async_reset()
+
+    assert len(api.stop.mock_calls) == 1
+    assert len(hass.states.async_all()) == 0
+    assert len(axis_device.listeners) == 0
 
 
 async def test_device_not_accessible():
@@ -120,7 +167,7 @@ async def test_new_event_sends_signal(hass):
     axis_device = device.AxisNetworkDevice(hass, entry)
 
     with patch.object(device, 'async_dispatcher_send') as mock_dispatch_send:
-        axis_device.async_event_callback(action='add', event='event')
+        axis_device.async_event_callback(action='add', event_id='event')
         await hass.async_block_till_done()
 
     assert len(mock_dispatch_send.mock_calls) == 1
@@ -143,8 +190,10 @@ async def test_shutdown():
 
 async def test_get_device(hass):
     """Successful call."""
-    with patch('axis.vapix.Vapix.load_params',
-               return_value=mock_coro()):
+    with patch('axis.param_cgi.Params.update_brand',
+               return_value=mock_coro()), \
+            patch('axis.param_cgi.Params.update_properties',
+                  return_value=mock_coro()):
         assert await device.get_device(hass, DEVICE_DATA)
 
 
@@ -152,7 +201,7 @@ async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
     import axis
 
-    with patch('axis.vapix.Vapix.load_params',
+    with patch('axis.param_cgi.Params.update_brand',
                side_effect=axis.Unauthorized), \
             pytest.raises(errors.AuthenticationRequired):
         await device.get_device(hass, DEVICE_DATA)
@@ -162,7 +211,7 @@ async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
     import axis
 
-    with patch('axis.vapix.Vapix.load_params',
+    with patch('axis.param_cgi.Params.update_brand',
                side_effect=axis.RequestError), \
             pytest.raises(errors.CannotConnect):
         await device.get_device(hass, DEVICE_DATA)
@@ -172,7 +221,7 @@ async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
     import axis
 
-    with patch('axis.vapix.Vapix.load_params',
+    with patch('axis.param_cgi.Params.update_brand',
                side_effect=axis.AxisException), \
             pytest.raises(errors.AuthenticationRequired):
         await device.get_device(hass, DEVICE_DATA)
