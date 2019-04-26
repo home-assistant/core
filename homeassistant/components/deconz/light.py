@@ -140,7 +140,7 @@ class DeconzLight(DeconzDevice, Light):
             else:
                 data['effect'] = 'none'
 
-        await self._device.async_set_state(data)
+        await self.async_device_set_state(data)
 
     async def async_turn_off(self, **kwargs):
         """Turn off light."""
@@ -158,13 +158,15 @@ class DeconzLight(DeconzDevice, Light):
                 data['alert'] = 'lselect'
                 del data['on']
 
-        await self._device.async_set_state(data)
+        await self.async_device_set_state(data)
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         attributes['is_deconz_group'] = self._device.type == 'LightGroup'
+
         if self._device.type == 'LightGroup':
             attributes['all_on'] = self._device.all_on
+
         return attributes

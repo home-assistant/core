@@ -88,10 +88,12 @@ class DeconzCover(DeconzDevice, CoverDevice):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         data = {'on': False}
+
         if position > 0:
             data['on'] = True
             data['bri'] = int(position / 100 * 255)
-        await self._device.async_set_state(data)
+
+        await self.async_device_set_state(data)
 
     async def async_open_cover(self, **kwargs):
         """Open cover."""
@@ -106,7 +108,7 @@ class DeconzCover(DeconzDevice, CoverDevice):
     async def async_stop_cover(self, **kwargs):
         """Stop cover."""
         data = {'bri_inc': 0}
-        await self._device.async_set_state(data)
+        await self.async_device_set_state(data)
 
 
 class DeconzCoverZigbeeSpec(DeconzCover):
@@ -126,7 +128,9 @@ class DeconzCoverZigbeeSpec(DeconzCover):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         data = {'on': False}
+
         if position < 100:
             data['on'] = True
             data['bri'] = 255 - int(position / 100 * 255)
-        await self._device.async_set_state(data)
+
+        await self.async_device_set_state(data)
