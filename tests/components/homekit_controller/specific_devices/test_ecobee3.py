@@ -37,6 +37,13 @@ async def test_ecobee3_setup(hass):
         SUPPORT_OPERATION_MODE
     )
 
+    assert climate_state.attributes['operation_list'] == [
+        'off',
+        'heat',
+        'cool',
+        'auto',
+    ]
+
     assert climate_state.attributes['min_temp'] == 7.2
     assert climate_state.attributes['max_temp'] == 33.3
     assert climate_state.attributes['min_humidity'] == 20

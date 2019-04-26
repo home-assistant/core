@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
@@ -17,6 +17,7 @@ MODE_HOMEKIT_TO_HASS = {
     0: STATE_OFF,
     1: STATE_HEAT,
     2: STATE_COOL,
+    3: STATE_AUTO,
 }
 
 # Map of hass operation modes to homekit modes
