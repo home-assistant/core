@@ -43,6 +43,7 @@ FETCHER_MAPPING = {
     (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW): (
         TYPE_ASTHMA_INDEX,),
     (TYPE_DISEASE_FORECAST,): (TYPE_DISEASE_FORECAST,),
+    (TYPE_DISEASE_TODAY, TYPE_DISEASE_YESTERDAY): (TYPE_DISEASE_INDEX,),
 }
 
 
@@ -114,6 +115,8 @@ class IQVIAData:
         self.fetchers.register(TYPE_ASTHMA_INDEX)(self._client.asthma.current)
         self.fetchers.register(TYPE_DISEASE_FORECAST)(
             self._client.disease.extended)
+        self.fetchers.register(TYPE_DISEASE_INDEX)(
+            self._client.disease.current)
 
     async def async_update(self):
         """Update IQVIA data."""
