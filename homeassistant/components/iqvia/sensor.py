@@ -65,6 +65,8 @@ async def async_setup_platform(
         TYPE_ASTHMA_TODAY: IndexSensor,
         TYPE_ASTHMA_TOMORROW: IndexSensor,
         TYPE_DISEASE_FORECAST: ForecastSensor,
+        TYPE_DISEASE_TODAY: IndexSensor,
+        TYPE_DISEASE_YESTERDAY: IndexSensor,
     }
 
     sensors = []
