@@ -22,24 +22,15 @@ TYPE_ASTHMA_YESTERDAY = 'asthma_index_yesterday'
 TYPE_DISEASE_FORECAST = 'disease_average_forecasted'
 
 SENSORS = {
-    TYPE_ALLERGY_FORECAST: (
-        'ForecastSensor', 'Allergy Index: Forecasted Average', 'mdi:flower'),
-    TYPE_ALLERGY_HISTORIC: (
-        'HistoricalSensor', 'Allergy Index: Historical Average', 'mdi:flower'),
-    TYPE_ALLERGY_TODAY: ('IndexSensor', 'Allergy Index: Today', 'mdi:flower'),
-    TYPE_ALLERGY_TOMORROW: (
-        'IndexSensor', 'Allergy Index: Tomorrow', 'mdi:flower'),
-    TYPE_ALLERGY_YESTERDAY: (
-        'IndexSensor', 'Allergy Index: Yesterday', 'mdi:flower'),
-    TYPE_ASTHMA_TODAY: ('IndexSensor', 'Asthma Index: Today', 'mdi:flower'),
-    TYPE_ASTHMA_TOMORROW: (
-        'IndexSensor', 'Asthma Index: Tomorrow', 'mdi:flower'),
-    TYPE_ASTHMA_YESTERDAY: (
-        'IndexSensor', 'Asthma Index: Yesterday', 'mdi:flower'),
-    TYPE_ASTHMA_FORECAST: (
-        'ForecastSensor', 'Asthma Index: Forecasted Average', 'mdi:flower'),
-    TYPE_ASTHMA_HISTORIC: (
-        'HistoricalSensor', 'Asthma Index: Historical Average', 'mdi:flower'),
-    TYPE_DISEASE_FORECAST: (
-        'ForecastSensor', 'Cold & Flu: Forecasted Average', 'mdi:snowflake')
+    TYPE_ALLERGY_FORECAST: ('Allergy Index: Forecasted Average', 'mdi:flower'),
+    TYPE_ALLERGY_HISTORIC: ('Allergy Index: Historical Average', 'mdi:flower'),
+    TYPE_ALLERGY_TODAY: ('Allergy Index: Today', 'mdi:flower'),
+    TYPE_ALLERGY_TOMORROW: ('Allergy Index: Tomorrow', 'mdi:flower'),
+    TYPE_ALLERGY_YESTERDAY: ('Allergy Index: Yesterday', 'mdi:flower'),
+    TYPE_ASTHMA_TODAY: ('Asthma Index: Today', 'mdi:flower'),
+    TYPE_ASTHMA_TOMORROW: ('Asthma Index: Tomorrow', 'mdi:flower'),
+    TYPE_ASTHMA_YESTERDAY: ('Asthma Index: Yesterday', 'mdi:flower'),
+    TYPE_ASTHMA_FORECAST: ('Asthma Index: Forecasted Average', 'mdi:flower'),
+    TYPE_ASTHMA_HISTORIC: ('Asthma Index: Historical Average', 'mdi:flower'),
+    TYPE_DISEASE_FORECAST: ('Cold & Flu: Forecasted Average', 'mdi:snowflake')
 }

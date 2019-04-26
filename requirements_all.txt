@@ -70,7 +70,7 @@ PyRMVtransport==0.1.3
 PyTransportNSW==0.1.1
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.12.2
+PyXiaomiGateway==0.12.3
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.5
@@ -1006,7 +1006,7 @@ pydaikin==1.4.0
 pydanfossair==0.0.7
 
 # homeassistant.components.deconz
-pydeconz==54
+pydeconz==55
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -1827,7 +1827,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.04.17
+youtube_dl==2019.04.24
 
 # homeassistant.components.zengge
 zengge==0.2
