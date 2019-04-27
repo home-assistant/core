@@ -18,6 +18,7 @@ CONF_VOICE = 'voice'
 CONF_OUTPUT_FORMAT = 'output_format'
 CONF_TEXT_TYPE = 'text'
 
+# List from https://tinyurl.com/watson-tts-docs
 SUPPORTED_VOICES = [
     "de-DE_BirgitVoice",
     "de-DE_BirgitV2Voice",
@@ -66,7 +67,7 @@ DEFAULT_OUTPUT_FORMAT = 'audio/mp3'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
-    vol.Inclusive(CONF_APIKEY, ATTR_CREDENTIALS): cv.string,
+    vol.Required(CONF_APIKEY): cv.string,
     vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORTED_VOICES),
     vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT):
         vol.In(SUPPORTED_OUTPUT_FORMATS),
@@ -78,13 +79,13 @@ def get_engine(hass, config):
     from ibm_watson import TextToSpeechV1
 
     service = TextToSpeechV1(
-        url=config.get(CONF_URL),
-        iam_apikey=config.get(CONF_APIKEY)
+        url=config[CONF_URL],
+        iam_apikey=config[CONF_APIKEY]
     )
 
     supported_languages = list({s[:5] for s in SUPPORTED_VOICES})
-    default_voice = config.get(CONF_VOICE)
-    output_format = config.get(CONF_OUTPUT_FORMAT)
+    default_voice = config[CONF_VOICE]
+    output_format = config[CONF_OUTPUT_FORMAT]
 
     return WatsonTTSProvider(
         service, supported_languages, default_voice, output_format)
@@ -98,7 +99,7 @@ class WatsonTTSProvider(Provider):
                  supported_languages,
                  default_voice,
                  output_format):
-        """Initialize Amazon Polly provider for TTS."""
+        """Initialize Watson TTS provider."""
         self.service = service
         self.supported_langs = supported_languages
         self.default_lang = default_voice[:5]
