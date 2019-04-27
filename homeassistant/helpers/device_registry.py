@@ -142,14 +142,6 @@ class DeviceRegistry:
     @callback
     def async_migrate_device_identifiers(self, device_id, identifiers: set):
         """Update the identifiers of a device."""
-        conflict = next((
-            device for device in self.devices.values()
-            if device.id != device_id
-            and any(iden in device.identifiers for iden in identifiers)), None)
-        if conflict:
-            raise ValueError(
-                "Identifiers '{}' are already in use by device id '{}'".format(
-                    identifiers, conflict.id))
         new = self.devices[device_id] = attr.evolve(
             self.devices[device_id], identifiers=identifiers)
         self.async_schedule_save()

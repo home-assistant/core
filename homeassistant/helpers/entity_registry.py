@@ -169,16 +169,17 @@ class EntityRegistry:
         )
 
     @callback
-    def async_migrate_entity_unique_id(self, entity_id, unique_id):
+    def async_migrate_entity_unique_id(self, from_unique_id, to_unique_id):
         """Migrate unique_id of a device."""
         conflict = next((entity for entity in self.entities.values()
-                         if entity.entity_id != entity_id
-                         and entity.unique_id == unique_id), None)
+                         if entity.unique_id == to_unique_id), None)
         if conflict:
             raise ValueError("Unique id '{}' is already in use by '{}'".format(
-                unique_id, conflict.entity_id))
-        new = self.entities[entity_id] = attr.evolve(
-            self.entities[entity_id], unique_id=unique_id)
+                to_unique_id, conflict.entity_id))
+        old = next(entity for entity in self.entities.values()
+                   if entity.unique_id == from_unique_id)
+        new = self.entities[old.entity_id] = attr.evolve(
+            old, unique_id=to_unique_id)
         self.async_schedule_save()
         return new
 

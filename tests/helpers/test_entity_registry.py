@@ -280,7 +280,7 @@ async def test_migrate_entity_unique_id(registry):
     new_unique_id = '1234'
     with patch.object(registry, 'async_schedule_save') as mock_schedule_save:
         updated_entry = registry.async_migrate_entity_unique_id(
-            entry.entity_id, new_unique_id)
+            entry.unique_id, new_unique_id)
     assert updated_entry != entry
     assert updated_entry.unique_id == new_unique_id
     assert mock_schedule_save.call_count == 1
@@ -294,5 +294,6 @@ async def test_migrate_entity_unique_id_collision(registry):
         'light', 'hue', '1234', config_entry_id='mock-id-1')
     with patch.object(registry, 'async_schedule_save') as mock_schedule_save, \
             pytest.raises(ValueError):
-        registry.async_migrate_entity_unique_id(entry, entry2.unique_id)
+        registry.async_migrate_entity_unique_id(
+            entry.unique_id, entry2.unique_id)
     assert mock_schedule_save.call_count == 0
