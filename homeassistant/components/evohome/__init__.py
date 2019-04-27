@@ -152,6 +152,7 @@ class EvoDevice(Entity):
     Such devices include the Controller, (up to 12) Heating Zones and
     (optionally) a DHW controller.
     """
+
     # pylint: disable=no-member
 
     def __init__(self, evo_data, client, obj_ref):
