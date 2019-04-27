@@ -274,6 +274,7 @@ class NeurioEnergy(Entity):
     def update(self):
         """Get the latest data, update state."""
         self.update_sensor()
+        self._state = self._data.dataset
 
         if self._name == ACTIVE_NAME:
             self._state = self._data.active_power
