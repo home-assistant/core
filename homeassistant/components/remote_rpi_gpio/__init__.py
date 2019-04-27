@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['gpiozero==1.4.1', 'pigpio==1.42', 'RPi.GPIO==0.6.1']
+REQUIREMENTS = ['gpiozero==1.4.1', 'pigpio==1.42', 'RPi.GPIO==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 
