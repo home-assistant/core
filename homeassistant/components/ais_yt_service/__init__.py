@@ -169,8 +169,8 @@ class YouTubeData:
                 'media_player',
                 'play_media', {
                     "entity_id": player["entity_id"],
-                    "media_content_type": "ais_info",
-                    "media_content_id": _audio_info
+                    "media_content_type": "audio/mp4",
+                    "media_content_id": media_url
                 })
 
         else:
