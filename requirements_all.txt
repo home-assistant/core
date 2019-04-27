@@ -175,7 +175,7 @@ alpha_vantage==2.1.0
 ambiclimate==0.1.2
 
 # homeassistant.components.amcrest
-amcrest==1.4.0
+amcrest==1.5.3
 
 # homeassistant.components.androidtv
 androidtv==0.0.15
