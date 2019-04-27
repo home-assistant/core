@@ -18,290 +18,295 @@ from homeassistant.components.withings.sensor import (
 from homeassistant.setup import async_setup_component
 
 
-class TestConfigSchema:
-    """Test the config schema."""
+BASE_HASS_CONFIG = {
+    http.DOMAIN: {},
+    api.DOMAIN: {
+        'base_url': 'http://localhost/'
+    },
+    const.DOMAIN: None,
+}
 
-    base_hass_config = {
-        http.DOMAIN: {},
-        api.DOMAIN: {
-            'base_url': 'http://localhost/'
-        },
-        const.DOMAIN: None,
-    }
 
-    def validate(self, config):
-        """Assert a schema config succeeds."""
-        hass_config = self.base_hass_config.copy()
-        hass_config[const.DOMAIN] = config
+def config_schema_validate(withings_config):
+    """Assert a schema config succeeds."""
+    hass_config = BASE_HASS_CONFIG.copy()
+    hass_config[const.DOMAIN] = withings_config
 
-        return CONFIG_SCHEMA(hass_config)
+    return CONFIG_SCHEMA(hass_config)
 
-    def assert_fail(self, config):
-        """Assert a schema config will fail."""
-        try:
-            self.validate(config)
-            assert False, "This line should not have run."
-        except vol.error.MultipleInvalid:
-            assert True
 
-    def test_basic_config(self):
-        """Test schema."""
-        self.validate({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-                'Person 2',
-            ],
-        })
+def config_schema_assert_fail(withings_config):
+    """Assert a schema config will fail."""
+    try:
+        config_schema_validate(withings_config)
+        assert False, "This line should not have run."
+    except vol.error.MultipleInvalid:
+        assert True
 
-    def test_client_id(self):
-        """Test schema."""
-        self.assert_fail({
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-                'Person 2',
-            ],
-        })
-        self.assert_fail({
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.CLIENT_ID: '',
-            const.PROFILES: [
-                'Person 1',
-            ],
-        })
-        self.validate({
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.CLIENT_ID: 'my_client_id',
-            const.PROFILES: [
-                'Person 1',
-            ],
-        })
 
-    def test_client_secret(self):
-        """Test schema."""
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.PROFILES: [
-                'Person 1',
-            ],
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: '',
-            const.PROFILES: [
-                'Person 1',
-            ],
-        })
-        self.validate({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-        })
+def test_config_schema_basic_config():
+    """Test schema."""
+    config_schema_validate({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+            'Person 2',
+        ],
+    })
 
-    def test_profiles(self):
-        """Test schema."""
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: ''
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: []
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-                'Person 1',
-            ]
-        })
-        self.validate({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ]
-        })
-        self.validate({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-                'Person 2',
-            ]
-        })
 
-    def test_base_url(self):
-        """Test schema."""
-        self.validate({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ]
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.BASE_URL: 123,
-            const.PROFILES: [
-                'Person 1',
-            ]
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.BASE_URL: '',
-            const.PROFILES: [
-                'Person 1',
-            ]
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.BASE_URL: 'blah blah',
-            const.PROFILES: [
-                'Person 1',
-            ]
-        })
-        self.validate({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.BASE_URL: 'https://www.blah.blah.blah/blah/blah',
-            const.PROFILES: [
-                'Person 1',
-            ]
-        })
+def test_config_schema_client_id():
+    """Test schema."""
+    config_schema_assert_fail({
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+            'Person 2',
+        ],
+    })
+    config_schema_assert_fail({
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.CLIENT_ID: '',
+        const.PROFILES: [
+            'Person 1',
+        ],
+    })
+    config_schema_validate({
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.CLIENT_ID: 'my_client_id',
+        const.PROFILES: [
+            'Person 1',
+        ],
+    })
 
-    def test_measurements(self):
-        """Test schema."""
-        result = self.validate({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ]
-        })
-        assert result[const.DOMAIN].get(const.MEASURES) == list(
-            WITHINGS_MEASUREMENTS_MAP.keys()
-        )
 
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: 123
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: ''
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: 'AAA'
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: []
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: [
-                123,
-            ]
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: [
-                'aaaa',
-            ]
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: [
-                const.MEAS_BODY_TEMP_C,
-                'AAA'
-            ]
-        })
-        self.assert_fail({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: [
-                const.MEAS_BODY_TEMP_C,
-                const.MEAS_BODY_TEMP_C,
-            ]
-        })
-        result = self.validate({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: [
-                const.MEAS_BODY_TEMP_C,
-            ]
-        })
-        assert result[const.DOMAIN].get(const.MEASURES) == [
+def test_config_schema_client_secret():
+    """Test schema."""
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.PROFILES: [
+            'Person 1',
+        ],
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: '',
+        const.PROFILES: [
+            'Person 1',
+        ],
+    })
+    config_schema_validate({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+    })
+
+
+def test_config_schema_profiles():
+    """Test schema."""
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: ''
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: []
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+            'Person 1',
+        ]
+    })
+    config_schema_validate({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ]
+    })
+    config_schema_validate({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+            'Person 2',
+        ]
+    })
+
+
+def test_config_schema_base_url():
+    """Test schema."""
+    config_schema_validate({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ]
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.BASE_URL: 123,
+        const.PROFILES: [
+            'Person 1',
+        ]
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.BASE_URL: '',
+        const.PROFILES: [
+            'Person 1',
+        ]
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.BASE_URL: 'blah blah',
+        const.PROFILES: [
+            'Person 1',
+        ]
+    })
+    config_schema_validate({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.BASE_URL: 'https://www.blah.blah.blah/blah/blah',
+        const.PROFILES: [
+            'Person 1',
+        ]
+    })
+
+
+def test_config_schema_measurements():
+    """Test schema."""
+    result = config_schema_validate({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ]
+    })
+    assert result[const.DOMAIN].get(const.MEASURES) == list(
+        WITHINGS_MEASUREMENTS_MAP.keys()
+    )
+
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: 123
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: ''
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: 'AAA'
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: []
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: [
+            123,
+        ]
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: [
+            'aaaa',
+        ]
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: [
+            const.MEAS_BODY_TEMP_C,
+            'AAA'
+        ]
+    })
+    config_schema_assert_fail({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: [
+            const.MEAS_BODY_TEMP_C,
             const.MEAS_BODY_TEMP_C,
         ]
+    })
+    result = config_schema_validate({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: [
+            const.MEAS_BODY_TEMP_C,
+        ]
+    })
+    assert result[const.DOMAIN].get(const.MEASURES) == [
+        const.MEAS_BODY_TEMP_C,
+    ]
 
-        result = self.validate({
-            const.CLIENT_ID: 'my_client_id',
-            const.CLIENT_SECRET: 'my_client_secret',
-            const.PROFILES: [
-                'Person 1',
-            ],
-            const.MEASURES: [
-                const.MEAS_BODY_TEMP_C,
-                const.MEAS_BODY_TEMP_F,
-                const.MEAS_BONE_MASS_KG,
-            ]
-        })
-        assert result[const.DOMAIN].get(const.MEASURES) == [
+    result = config_schema_validate({
+        const.CLIENT_ID: 'my_client_id',
+        const.CLIENT_SECRET: 'my_client_secret',
+        const.PROFILES: [
+            'Person 1',
+        ],
+        const.MEASURES: [
             const.MEAS_BODY_TEMP_C,
             const.MEAS_BODY_TEMP_F,
             const.MEAS_BONE_MASS_KG,
         ]
+    })
+    assert result[const.DOMAIN].get(const.MEASURES) == [
+        const.MEAS_BODY_TEMP_C,
+        const.MEAS_BODY_TEMP_F,
+        const.MEAS_BONE_MASS_KG,
+    ]
 
 
 async def test_async_setup(hass):
