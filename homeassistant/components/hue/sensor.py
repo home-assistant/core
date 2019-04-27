@@ -32,6 +32,9 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
     @property
     def state(self):
         """Return the state of the device."""
+        if self.sensor.lightlevel is None:
+            return None
+
         # https://developers.meethue.com/develop/hue-api/supported-devices/#clip_zll_lightlevel
         # Light level in 10000 log10 (lux) +1 measured by sensor. Logarithm
         # scale used because the human eye adjusts to light levels and small
@@ -59,4 +62,7 @@ class HueTemperature(GenericHueGaugeSensorEntity):
     @property
     def state(self):
         """Return the state of the device."""
+        if self.sensor.temperature is None:
+            return None
+
         return self.sensor.temperature / 100
