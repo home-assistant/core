@@ -7,8 +7,11 @@ import socket
 import urllib
 
 import async_timeout
-import requests
 import voluptuous as vol
+
+import pysonos
+import pysonos.snapshot
+from pysonos.exceptions import SoCoUPnPException, SoCoException
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -122,8 +125,6 @@ async def async_setup_platform(hass,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
-    import pysonos
-
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData(hass)
 
@@ -142,7 +143,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             for host in hosts:
                 try:
                     players.append(pysonos.SoCo(socket.gethostbyname(host)))
-                except OSError:
+                except (OSError, SoCoException):
                     _LOGGER.warning("Failed to initialize '%s'", host)
         else:
             players = pysonos.discover(
@@ -260,8 +261,6 @@ def soco_error(errorcodes=None):
         @ft.wraps(funct)
         def wrapper(*args, **kwargs):
             """Wrap for all soco UPnP exception."""
-            from pysonos.exceptions import SoCoUPnPException, SoCoException
-
             try:
                 return funct(*args, **kwargs)
             except SoCoUPnPException as err:
@@ -472,7 +471,7 @@ class SonosEntity(MediaPlayerDevice):
                 self._subscribe_to_player_events()
             else:
                 for subscription in self._subscriptions:
-                    self.hass.async_add_executor_job(subscription.unsubscribe)
+                    subscription.unsubscribe()
                 self._subscriptions = []
 
                 self._player_volume = None
@@ -488,10 +487,13 @@ class SonosEntity(MediaPlayerDevice):
                 self._media_title = None
                 self._source_name = None
         elif available and not self._receives_events:
-            self.update_groups()
-            self.update_volume()
-            if self.is_coordinator:
-                self.update_media()
+            try:
+                self.update_groups()
+                self.update_volume()
+                if self.is_coordinator:
+                    self.update_media()
+            except SoCoException:
+                pass
 
     def update_media(self, event=None):
         """Update information about currently playing media."""
@@ -574,7 +576,6 @@ class SonosEntity(MediaPlayerDevice):
         current_uri_metadata = media_info["CurrentURIMetaData"]
         if current_uri_metadata not in ('', 'NOT_IMPLEMENTED', None):
             # currently soco does not have an API for this
-            import pysonos
             current_uri_metadata = pysonos.xml.XML.fromstring(
                 pysonos.utils.really_utf8(current_uri_metadata))
 
@@ -678,7 +679,7 @@ class SonosEntity(MediaPlayerDevice):
                     coordinator_uid = self.soco.group.coordinator.uid
                     slave_uids = [p.uid for p in self.soco.group.members
                                   if p.uid != coordinator_uid]
-            except requests.exceptions.RequestException:
+            except SoCoException:
                 pass
 
             return [coordinator_uid] + slave_uids
@@ -933,7 +934,6 @@ class SonosEntity(MediaPlayerDevice):
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
-            from pysonos.exceptions import SoCoUPnPException
             try:
                 self.soco.add_uri_to_queue(media_id)
             except SoCoUPnPException:
@@ -994,9 +994,7 @@ class SonosEntity(MediaPlayerDevice):
     @soco_error()
     def snapshot(self, with_group):
         """Snapshot the state of a player."""
-        from pysonos.snapshot import Snapshot
-
-        self._soco_snapshot = Snapshot(self.soco)
+        self._soco_snapshot = pysonos.snapshot.Snapshot(self.soco)
         self._soco_snapshot.snapshot()
         if with_group:
             self._snapshot_group = self._sonos_group.copy()
@@ -1025,8 +1023,6 @@ class SonosEntity(MediaPlayerDevice):
     @soco_error()
     def restore(self):
         """Restore a snapshotted state to a player."""
-        from pysonos.exceptions import SoCoException
-
         try:
             # pylint: disable=protected-access
             self._soco_snapshot.restore()
