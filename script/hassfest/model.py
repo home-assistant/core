@@ -43,9 +43,6 @@ class Integration:
         assert path.is_dir()
         integrations = {}
         for fil in path.iterdir():
-            if fil.is_file() or fil.name == '__pycache__':
-                continue
-
             if not (fil / '__init__.py').exists():
                 continue
 
