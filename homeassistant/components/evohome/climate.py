@@ -4,6 +4,8 @@ import logging
 
 import requests.exceptions
 
+import evohomeclient2
+
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_AWAY_MODE, SUPPORT_ON_OFF,
@@ -11,8 +13,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, STATE_OFF,)
 from homeassistant.helpers.dispatcher import dispatcher_send
-
-import evohomeclient2
 
 from . import (
     EvoDevice,

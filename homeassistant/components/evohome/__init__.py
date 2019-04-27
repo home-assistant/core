@@ -11,6 +11,8 @@ import logging
 import requests.exceptions
 import voluptuous as vol
 
+import evohomeclient2
+
 from homeassistant.const import (
     CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START,
@@ -22,8 +24,6 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
-
-import evohomeclient2
 
 from .const import (
     DOMAIN, DATA_EVOHOME, DISPATCHER_EVOHOME, GWS, TCS)
