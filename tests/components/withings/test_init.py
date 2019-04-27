@@ -1,19 +1,21 @@
 """Tests for the Withings component."""
 from unittest.mock import ANY
+
 from asynctest import patch
 import voluptuous as vol
-from homeassistant.setup import async_setup_component
-import homeassistant.components.http as http
+
 import homeassistant.components.api as api
+import homeassistant.components.http as http
 from homeassistant.components.withings import (
     async_setup,
     const,
-    CONFIG_SCHEMA
+    CONFIG_SCHEMA,
 )
 from homeassistant.components.withings.config_flow import DATA_FLOW_IMPL
 from homeassistant.components.withings.sensor import (
-    WITHINGS_MEASUREMENTS_MAP
+    WITHINGS_MEASUREMENTS_MAP,
 )
+from homeassistant.setup import async_setup_component
 
 
 class TestConfigSchema:

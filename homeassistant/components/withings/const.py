@@ -1,5 +1,6 @@
 """Constants used by the Withings component."""
 import datetime
+
 import homeassistant.const as const
 
 SOURCE_USER = 'user'

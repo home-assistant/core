@@ -5,20 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/withings/
 """
 import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers import config_validation as cv
-from homeassistant.components.withings import (
-    config_flow,  # noqa  pylint_disable=unused-import
-    const
-)
-from homeassistant.components.withings.common import (
-    _LOGGER,
-    ensure_unique_list
-)
-from homeassistant.components.withings.sensor import (
-    WITHINGS_MEASUREMENTS_MAP
-)
+from . import config_flow, const
+from .common import _LOGGER, ensure_unique_list
+from .sensor import WITHINGS_MEASUREMENTS_MAP
 
 DOMAIN = const.DOMAIN
 

@@ -654,7 +654,6 @@ omit =
     homeassistant/components/whois/sensor.py
     homeassistant/components/wink/*
     homeassistant/components/wirelesstag/*
-    homeassistant/components/withings/*
     homeassistant/components/worldtidesinfo/sensor.py
     homeassistant/components/worxlandroid/sensor.py
     homeassistant/components/wunderlist/*

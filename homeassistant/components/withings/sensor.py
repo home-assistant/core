@@ -1,16 +1,14 @@
 """Sensors flow for Withings."""
 import typing as types
+
+import nokia
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
-from homeassistant.components.withings import (
-    const
-)
-from homeassistant.components.withings.common import (
-    _LOGGER,
-    WithingsDataManager
-)
+from . import const
+from .common import _LOGGER, WithingsDataManager
 
 
 async def async_setup_entry(
@@ -19,8 +17,6 @@ async def async_setup_entry(
         async_add_entities: types.Callable[[types.List[Entity], bool], None]
 ):
     """Set up the sensor config entry."""
-    import nokia
-
     profile = entry.data[const.PROFILE]
     profile_slug = slugify(profile)
     credentials = nokia.NokiaCredentials()

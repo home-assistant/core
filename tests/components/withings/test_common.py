@@ -1,9 +1,12 @@
 """Tests for the Withings component."""
 import datetime
-import callee
+
 from asynctest import patch, MagicMock
+import callee
+import nokia
+
 from homeassistant.components.withings.common import (
-    WithingsDataManager
+    WithingsDataManager,
 )
 from tests.common import get_test_home_assistant
 
@@ -16,7 +19,6 @@ class TestWithingsDataManager:
 
     def setup_method(self):
         """Set up the test."""
-        import nokia
         self.hass = get_test_home_assistant()
         self.api = nokia.NokiaApi.__new__(nokia.NokiaApi)
         self.api.get_measures = MagicMock()

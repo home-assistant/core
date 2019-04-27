@@ -2,15 +2,16 @@
 from collections import OrderedDict
 import logging
 from typing import Optional
+
+import nokia
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
 from homeassistant.util import slugify
-from homeassistant.components.withings import (
-    const
-)
+from . import const
 
 DATA_FLOW_IMPL = 'withings_flow_implementation'
 
@@ -78,7 +79,6 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
 
     def get_auth_client(self, profile: str):
         """Get a new auth client."""
-        import nokia
         flow = self.hass.data[DATA_FLOW_IMPL][profile]
         client_id = flow[const.CLIENT_ID]
         client_secret = flow[const.CLIENT_SECRET]

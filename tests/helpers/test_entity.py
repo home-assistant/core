@@ -8,9 +8,6 @@ from unittest.mock import MagicMock, patch, PropertyMock
 import pytest
 
 import homeassistant.helpers.entity as entity
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT
-)
 from homeassistant.core import Context
 from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
 from homeassistant.config import DATA_CUSTOMIZE
@@ -116,46 +113,6 @@ class TestHelpersEntity:
             self.hass.block_till_done()
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_DEVICE_CLASS) == 'test_class'
-
-    def test_default_convert_units(self):
-        """Test default convert_units attribute set to True."""
-        assert self.entity.convert_units
-
-        self.hass.config.units.temperature_unit = TEMP_CELSIUS
-        with patch('homeassistant.helpers.entity.Entity.unit_of_measurement',
-                   new=TEMP_FAHRENHEIT),\
-                patch('homeassistant.helpers.entity.Entity.state', new=32),\
-                patch.object(self.hass.states, 'async_set') as async_set_mock:
-            self.entity.async_write_ha_state()
-            self.hass.block_till_done()
-            async_set_mock.assert_called_with(
-                self.entity.entity_id,
-                '0',
-                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
-                False,
-                None
-            )
-
-    def test_overwrite_convert_units(self):
-        """Test overwritten convert_units attribute set to False."""
-        assert self.entity.convert_units
-
-        self.hass.config.units.temperature_unit = TEMP_CELSIUS
-        with patch('homeassistant.helpers.entity.Entity.unit_of_measurement',
-                   new=TEMP_FAHRENHEIT), \
-                patch('homeassistant.helpers.entity.Entity.state', new=32), \
-                patch('homeassistant.helpers.entity.Entity.convert_units',
-                      new=False),\
-                patch.object(self.hass.states, 'async_set') as async_set_mock:
-            self.entity.async_write_ha_state()
-            self.hass.block_till_done()
-            async_set_mock.assert_called_with(
-                self.entity.entity_id,
-                '32',
-                {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT},
-                False,
-                None
-            )
 
 
 @asyncio.coroutine

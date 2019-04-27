@@ -1,22 +1,23 @@
 """Tests for the Withings config flow."""
-import nokia
-import callee
-from asynctest import patch, MagicMock
 from aiohttp.web_request import BaseRequest
-from homeassistant.config_entries import ConfigEntry
+from asynctest import MagicMock, patch
+import callee
+import nokia
+
 from homeassistant import data_entry_flow, setup
-from tests.common import get_test_home_assistant
-from homeassistant.components.withings.config_flow import (
-    register_flow_implementation,
-    WithingsFlowHandler,
-    WithingsAuthCallbackView,
-    DATA_FLOW_IMPL
-)
+import homeassistant.components.api as api
+import homeassistant.components.http as http
 from homeassistant.components.withings import (
     const
 )
-import homeassistant.components.http as http
-import homeassistant.components.api as api
+from homeassistant.components.withings.config_flow import (
+    DATA_FLOW_IMPL,
+    register_flow_implementation,
+    WithingsFlowHandler,
+    WithingsAuthCallbackView,
+)
+from homeassistant.config_entries import ConfigEntry
+from tests.common import get_test_home_assistant
 
 
 class TestWithingsFlowHandler:

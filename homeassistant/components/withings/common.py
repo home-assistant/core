@@ -2,11 +2,11 @@
 import time
 import datetime
 import logging
+
 import voluptuous as vol
+
 from homeassistant.util import Throttle
-from homeassistant.components.withings import (
-    const
-)
+from . import const
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 

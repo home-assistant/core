@@ -1,25 +1,27 @@
 """Tests for the Withings component."""
 import time
-from asynctest import patch, MagicMock
-from tests.common import get_test_home_assistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.components.withings.common import (
-    WithingsDataManager
-)
+
+from asynctest import MagicMock, patch
+import nokia
+
 from homeassistant.components.withings import (
-    const
+    const,
+)
+from homeassistant.components.withings.common import (
+    WithingsDataManager,
 )
 from homeassistant.components.withings.sensor import (
-    WITHINGS_MEASUREMENTS_MAP,
-    WithingsHealthSensor,
     async_setup_entry,
-    create_sensor_entities
+    create_sensor_entities,
+    WithingsHealthSensor,
+    WITHINGS_MEASUREMENTS_MAP,
 )
+from homeassistant.config_entries import ConfigEntry
+from tests.common import get_test_home_assistant
 
 
 async def test_async_setup_entry(hass):
     """Test setup of config entry."""
-    import nokia
     nokia_api_patch = patch('nokia.NokiaApi')
     withings_data_manager_patch = patch(
         'homeassistant.components.withings.common.WithingsDataManager'
@@ -125,7 +127,6 @@ class TestWithingsHealthSensor:
 
     def setup_method(self):
         """Set up the test."""
-        import nokia
         self.hass = get_test_home_assistant()
 
         self.api = nokia.NokiaApi.__new__(nokia.NokiaApi)
@@ -166,7 +167,6 @@ class TestWithingsHealthSensor:
 
     async def test_async_update(self):
         """Test method."""
-        import nokia
         self.api.get_measures.return_value = nokia.NokiaMeasures({
             'updatetime': '',
             'timezone': '',

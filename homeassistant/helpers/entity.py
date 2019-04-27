@@ -189,16 +189,6 @@ class Entity:
         """Time that a context is considered recent."""
         return timedelta(seconds=5)
 
-    @property
-    def convert_units(self) -> bool:
-        """
-        Convert units to/from metric/imperial.
-
-        This currently only works with temperatures.
-        See Entity._async_write_ha_state() for details.
-        """
-        return True
-
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
@@ -314,8 +304,7 @@ class Entity:
         try:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             units = self.hass.config.units
-            if (self.convert_units and
-                    unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
+            if (unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
                     unit_of_measure != units.temperature_unit):
                 prec = len(state) - state.index('.') - 1 if '.' in state else 0
                 temp = units.temperature(float(state), unit_of_measure)
