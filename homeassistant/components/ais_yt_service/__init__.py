@@ -152,12 +152,35 @@ class YouTubeData:
             'input_select.ais_music_player').state
         player = ais_cloud.get_player_data(player_name)
         url = "https://www.youtube.com/watch?v="
-        self.hass.services.call(
-            'media_extractor',
-            'play_media', {
-                "entity_id": player["entity_id"],
-                "media_content_id": url + item_id,
-                "media_content_type": "video/youtube"})
+
+        # try to get media url from AIS cloud
+        media_url = None
+        try:
+            ws_resp = aisCloud.extract_media(url+item_id)
+            json_ws_resp = ws_resp.json()
+            _LOGGER.info(str(json_ws_resp))
+            media_url = json_ws_resp["url"]
+        except Exception as e:
+            _LOGGER.error("extract_media error: " + str(e))
+
+        if media_url is not None:
+            # play media extracted in cloud
+            self.hass.services.call(
+                'media_player',
+                'play_media', {
+                    "entity_id": player["entity_id"],
+                    "media_content_type": "ais_info",
+                    "media_content_id": _audio_info
+                })
+
+        else:
+            # use media_extractor
+            self.hass.services.call(
+                'media_extractor',
+                'play_media', {
+                    "entity_id": player["entity_id"],
+                    "media_content_id": url + item_id,
+                    "media_content_type": "video/youtube"})
 
         # set stream image and title
         # if entity_id == 'media_player.wbudowany_glosnik':
