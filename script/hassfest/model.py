@@ -46,6 +46,9 @@ class Integration:
             if fil.is_file() or fil.name == '__pycache__':
                 continue
 
+            if not (fil / '__init__.py').exists():
+                continue
+
             integration = cls(fil)
             integration.load_manifest()
             integrations[integration.domain] = integration
