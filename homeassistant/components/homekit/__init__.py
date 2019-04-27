@@ -110,9 +110,7 @@ def get_accessory(hass, driver, state, aid, config):
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
 
-    elif state.domain == 'binary_sensor' or \
-            state.domain == 'device_tracker' or \
-            state.domain == 'person':
+    elif state.domain in ('binary_sensor', 'device_tracker', 'person'):
         a_type = 'BinarySensor'
 
     elif state.domain == 'climate':
