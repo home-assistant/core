@@ -386,3 +386,39 @@ async def test_loading_race_condition(hass):
 
         mock_load.assert_called_once_with()
         assert results[0] == results[1]
+
+
+async def test_migrate_device_identifiers(registry):
+    """Test identifies of a device update."""
+    entry = registry.async_get_or_create(
+        config_entry_id='1234',
+        identifiers={('hue', '456'), ('bla', '123')},
+    )
+    new_identifiers = {
+        ('hue', '654'),
+        ('bla', '321')
+    }
+    with patch('homeassistant.helpers.device_registry'
+               '.DeviceRegistry.async_schedule_save') as mock_save:
+        updated_entry = registry.async_migrate_device_identifiers(
+            entry.id, new_identifiers)
+    assert updated_entry != entry
+    assert updated_entry.identifiers == new_identifiers
+    assert mock_save.call_count == 1
+
+
+async def test_migrate_device_identifies_collision(registry):
+    """Test migration raises when identifier used in another device."""
+    entry = registry.async_get_or_create(
+        config_entry_id='1234',
+        identifiers={('hue', '456'), ('bla', '123')},
+    )
+    registry.async_get_or_create(
+        config_entry_id='1234',
+        identifiers={('hue', '654'), ('bla', '321')},
+    )
+    with patch('homeassistant.helpers.device_registry'
+               '.DeviceRegistry.async_schedule_save') as mock_save, \
+         pytest.raises(ValueError):
+        registry.async_migrate_device_identifiers(entry.id, {('hue', '654')})
+    assert mock_save.call_count == 0
