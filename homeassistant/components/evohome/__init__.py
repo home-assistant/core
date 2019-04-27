@@ -63,7 +63,6 @@ def setup(hass, hass_config):
 
     # use a copy, since scan_interval is rounded up to nearest 60s
     evo_data['params'] = dict(hass_config[DOMAIN])
-    evo_data['params'][CONF_SCAN_INTERVAL] = timedelta(seconds=60)               # TODO: remove me
     scan_interval = evo_data['params'][CONF_SCAN_INTERVAL]
     scan_interval = timedelta(
         minutes=(scan_interval.total_seconds() + 59) // 60)
