@@ -1,7 +1,9 @@
 """Neurio Custom"""
 import logging
+import json
 from datetime import timedelta
 
+import requests
 import requests.exceptions
 import voluptuous as vol
 
@@ -18,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_API_SECRET = 'api_secret'
 CONF_SENSOR_ID = 'sensor_id'
+CONF_SENSOR_IP = 'sensor_ip'
 
 ACTIVE_NAME = 'Energy Usage'
 DAILY_NAME = 'Daily Energy Usage'
@@ -30,23 +33,29 @@ DAILY_TYPE = 'daily'
 
 ICON = 'mdi:flash'
 
-MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=150)
-MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_API_SECRET): cv.string,
     vol.Optional(CONF_SENSOR_ID): cv.string,
+    vol.Optional(CONF_SENSOR_IP): cv.string,
 })
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neurio sensor."""
     api_key = config.get(CONF_API_KEY)
     api_secret = config.get(CONF_API_SECRET)
     sensor_id = config.get(CONF_SENSOR_ID)
+    sensor_ip = config.get(CONF_SENSOR_IP)
 
-    data = NeurioData(api_key, api_secret, sensor_id)
+    data = NeurioData(api_key, api_secret, sensor_id, sensor_ip)
+
+    @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
+    def update_dataset():
+        """Update the data set for the other functions."""
+        data.get_dataset()
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
     def update_daily():
@@ -57,22 +66,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def update_active():
         """Update the active power usage."""
         data.get_active_power()
-		
+
     @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
     def update_generation():
         """Update the active power usage."""
         data.get_active_generation()
 
-    @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
+    @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
     def update_generation_daily():
         """Update the active power usage."""
         data.get_daily_generation()
-		
-    @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
+
+    @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
     def update_net_consumption():
         """Update the active power usage."""
         data.get_net_consumption()
 
+    update_dataset()
     update_daily()
     update_active()
     update_generation()
@@ -91,20 +101,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NeurioData:
     """Stores data retrieved from Neurio sensor."""
 
-    def __init__(self, api_key, api_secret, sensor_id):
+    def __init__(self, api_key, api_secret, sensor_id, sensor_ip):
         """Initialize the data."""
         import neurio
 
         self.api_key = api_key
         self.api_secret = api_secret
         self.sensor_id = sensor_id
-
+        self.sensor_ip = sensor_ip
+        
+        self._dataset = None
         self._daily_usage = None
         self._active_power = None
         self._active_generation = None
         self._generation_daily = None
         self._net_consumption = None
-
+        
         self._state = None
 
         neurio_tp = neurio.TokenProvider(key=api_key, secret=api_secret)
@@ -118,44 +130,75 @@ class NeurioData:
                 "locations"][0]["sensors"][0]["sensorId"]
 
     @property
+    def dataset(self):
+        """Return latest data."""
+        return self._dataset
+    @property
     def daily_usage(self):
         """Return latest daily usage value."""
         return self._daily_usage
-
+    
     @property
     def active_power(self):
         """Return latest active power value."""
         return self._active_power
-
+    
     @property
     def active_generation(self):
         """Return latest active power value."""
         return self._active_generation
-		
+    
     @property
     def daily_generation(self):
         """Return latest active power value."""
         return self._daily_generation
-		
+
     @property
     def net_consumption(self):
         """Return latest active power value."""
         return self._net_consumption
+    
+    def get_dataset(self):
+        """
+        Get the most recent data from the api once
+        so we don't hit the ratelimit each hour.
+        """
+        start_time = dt_util.start_of_local_day() \
+            .astimezone(dt_util.UTC).isoformat()
+        end_time = dt_util.utcnow().isoformat()
+
+        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
+
+        try:
+            self._dataset = self.neurio_client.get_samples_stats(self.sensor_id, start_time, 'days', end_time)
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            _LOGGER.warning("Could not update daily generation")
+            return None
 
     def get_active_power(self):
         """Return current power value."""
+        header = {'Authorization': 'bearer <token>'}
+        resp = requests.get('http://'+self.sensor_ip+'/current-sample', 
+        headers = header, 
+        verify=False)
         try:
-            sample = self.neurio_client.get_samples_live_last(self.sensor_id)
-            self._active_power = sample['consumptionPower']
+            sample = json.loads(resp.text)
+            self._active_power = sample['channels'][4]['p_W']
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update current power usage")
             return None
-			
+
     def get_active_generation(self):
         """Return current solar generation value."""
+        header = {'Authorization': 'bearer <token>'}
+        resp = requests.get('http://'+self.sensor_ip+'/current-sample', 
+        headers = header, 
+        verify=False)
+        #print(resp.status_code)
+        #print(resp.text)
         try:
-            sample = self.neurio_client.get_samples_live_last(self.sensor_id)
-            self._active_generation = sample['generationPower']
+            sample = json.loads(resp.text)
+            self._active_generation = sample['channels'][3]['p_W']
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update current generation")
             return None
@@ -163,63 +206,33 @@ class NeurioData:
     def get_daily_usage(self):
         """Return current daily power usage."""
         kwh = 0
-        start_time = dt_util.start_of_local_day() \
-            .astimezone(dt_util.UTC).isoformat()
-        end_time = dt_util.utcnow().isoformat()
 
-        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
+        history = self._dataset
+        for result in history:
+            kwh += result['consumptionEnergy'] / 3600000
+        self._daily_usage = round(kwh, 2)
 
-        try:
-            history = self.neurio_client.get_samples_stats(self.sensor_id, start_time, 'days', end_time)
-            for result in history:
-                kwh += result['consumptionEnergy'] / 3600000
-            self._daily_usage = round(kwh, 2)
-        except (requests.exceptions.RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update daily power usage")
-            return None
-		
+
     def get_daily_generation(self):
         """Return current daily power usage."""
         kwh = 0
-        start_time = dt_util.start_of_local_day() \
-            .astimezone(dt_util.UTC).isoformat()
-        end_time = dt_util.utcnow().isoformat()
 
-        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
+        history = self._dataset
+        for result in history:
+            kwh += result['generationEnergy'] / 3600000
+        self._daily_generation = round(kwh, 2)
 
-        try:
-            history = self.neurio_client.get_samples_stats(self.sensor_id, start_time, 'days', end_time)
-            for result in history:
-                kwh += result['generationEnergy'] / 3600000
-            self._daily_generation = round(kwh, 2)
-        except (requests.exceptions.RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update daily generation")
-            return None
-
-        
-		
     def get_net_consumption(self):
         """Return current daily power usage."""
         kwhIn = 0
         kwhOut = 0
-        start_time = dt_util.start_of_local_day() \
-            .astimezone(dt_util.UTC).isoformat()
-        end_time = dt_util.utcnow().isoformat()
 
-        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
-
-        try:
-            history = self.neurio_client.get_samples_stats(self.sensor_id, start_time, 'days', end_time)
-            for result in history:
-                kwhIn += result['importedEnergy'] / 3600000
-            for result in history:
-                kwhOut += result['exportedEnergy'] / 3600000
-            self._net_consumption = round(kwhIn-kwhOut, 2)
-        except (requests.exceptions.RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update net consumption")
-            return None
-
-
+        history = self._dataset
+        for result in history:
+            kwhIn += result['importedEnergy'] / 3600000
+        for result in history:
+            kwhOut += result['exportedEnergy'] / 3600000
+        self._net_consumption = round(kwhIn-kwhOut, 2)
 
 
 class NeurioEnergy(Entity):
