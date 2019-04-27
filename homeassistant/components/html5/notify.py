@@ -40,14 +40,12 @@ ATTR_VAPID_EMAIL = 'vapid_email'
 
 def gcm_api_deprecated(value):
     """Warn user that GCM API config is deprecated."""
-    if not value:
-        return value
-
-    _LOGGER.warning(
-        "Configuring html5_push_notifications via the GCM api"
-        " has been deprecated and will stop working after April 11,"
-        " 2019. Use the VAPID configuration instead. For instructions,"
-        " see https://www.home-assistant.io/components/notify.html5/")
+    if value:
+        _LOGGER.warning(
+            "Configuring html5_push_notifications via the GCM api"
+            " has been deprecated and will stop working after April 11,"
+            " 2019. Use the VAPID configuration instead. For instructions,"
+            " see https://www.home-assistant.io/components/notify.html5/")
     return value
 
 
@@ -547,7 +545,7 @@ def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):
     from py_vapid import Vapid
     try:
         from urllib.parse import urlparse
-    except ImportError:  # pragma nocover
+    except ImportError:  # pragma: no cover
         from urlparse import urlparse
     if (vapid_email and vapid_private_key and
             ATTR_ENDPOINT in subscription_info):
