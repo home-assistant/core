@@ -35,7 +35,7 @@ class TestWithingsDataManager:
 
         self.api.get_measures = MagicMock(return_value='DATA')
         results1 = await data_manager.async_update_measures()
-        self.api.get_measures.assert_called()
+        self.api.get_measures.assert_called_with()
         assert results1 == 'DATA'
 
         self.api.get_measures.reset_mock()

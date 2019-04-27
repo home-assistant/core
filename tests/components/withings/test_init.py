@@ -1,4 +1,5 @@
 """Tests for the Withings component."""
+from unittest.mock import ANY
 from asynctest import patch
 import voluptuous as vol
 from homeassistant.setup import async_setup_component
@@ -343,7 +344,7 @@ async def test_async_setup(hass):
             async_init_patch as async_init:
         result = await async_setup(hass, config)
         assert result is True
-        async_create_task.assert_called()
+        async_create_task.assert_called_with(ANY)
         async_init.assert_called_with(
             const.DOMAIN,
             context={'source': const.SOURCE_USER},
