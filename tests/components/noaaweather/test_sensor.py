@@ -370,7 +370,7 @@ def test_setup_full(hass, aioclient_mock):
     assert state.state == '-1.5'
     assert state.attributes.get('unit_of_measurement') == TEMP_CELSIUS
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather dewpoint"
+        "NOAA Weather Dew Point"
 
     state = hass.states.get('sensor.noaa_weather_kjfk_windChill')
     assert state is not None
@@ -427,7 +427,7 @@ def test_setup_full(hass, aioclient_mock):
     assert state.state == '10.0'
     assert state.attributes.get('unit_of_measurement') == 'mm'
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather Precipitation in last hour"
+        "NOAA Weather Precipitation in Last Hour"
 
     state = hass.states.get(
         'sensor.noaa_weather_kjfk_precipitationLast3Hours')
@@ -435,7 +435,7 @@ def test_setup_full(hass, aioclient_mock):
     assert state.state == '11.0'
     assert state.attributes.get('unit_of_measurement') == 'mm'
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather Precipitation in last 3 hours"
+        "NOAA Weather Precipitation in Last 3 Hours"
 
     state = hass.states.get(
         'sensor.noaa_weather_kjfk_precipitationLast6Hours')
@@ -443,7 +443,7 @@ def test_setup_full(hass, aioclient_mock):
     assert state.state == '15.0'
     assert state.attributes.get('unit_of_measurement') == 'mm'
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather Precipitation in last 6 hours"
+        "NOAA Weather Precipitation in Last 6 Hours"
 
     state = hass.states.get('sensor.noaa_weather_kjfk_relativeHumidity')
     assert state is not None
@@ -507,7 +507,7 @@ def test_setup_full_metar(hass, aioclient_mock):
     assert state.state == '17.8'
     assert state.attributes.get('unit_of_measurement') == TEMP_CELSIUS
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather dewpoint"
+        "NOAA Weather Dew Point"
 
     state = hass.states.get('sensor.noaa_weather_phng_windChill')
     assert state is not None
@@ -564,7 +564,7 @@ def test_setup_full_metar(hass, aioclient_mock):
     assert state.state == '0'
     assert state.attributes.get('unit_of_measurement') == 'mm'
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather Precipitation in last hour"
+        "NOAA Weather Precipitation in Last Hour"
 
     state = hass.states.get(
         'sensor.noaa_weather_phng_precipitationLast3Hours')
@@ -572,7 +572,7 @@ def test_setup_full_metar(hass, aioclient_mock):
     assert state.state == 'unknown'
     assert state.attributes.get('unit_of_measurement') == 'mm'
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather Precipitation in last 3 hours"
+        "NOAA Weather Precipitation in Last 3 Hours"
 
     state = hass.states.get(
         'sensor.noaa_weather_phng_precipitationLast6Hours')
@@ -580,7 +580,7 @@ def test_setup_full_metar(hass, aioclient_mock):
     assert state.state == '0'
     assert state.attributes.get('unit_of_measurement') == 'mm'
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather Precipitation in last 6 hours"
+        "NOAA Weather Precipitation in Last 6 Hours"
 
     state = hass.states.get('sensor.noaa_weather_phng_relativeHumidity')
     assert state is not None
@@ -642,7 +642,7 @@ def test_setup_full_imperial(hass, aioclient_mock):
     assert state.state == '29.3'
     assert state.attributes.get('unit_of_measurement') == TEMP_FAHRENHEIT
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather dewpoint"
+        "NOAA Weather Dew Point"
 
     state = hass.states.get('sensor.noaa_weather_kjfk_windChill')
     assert state is not None
@@ -699,7 +699,7 @@ def test_setup_full_imperial(hass, aioclient_mock):
     assert state.state == '0.394'
     assert state.attributes.get('unit_of_measurement') == LENGTH_INCHES
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather Precipitation in last hour"
+        "NOAA Weather Precipitation in Last Hour"
 
     state = hass.states.get(
         'sensor.noaa_weather_kjfk_precipitationLast3Hours')
@@ -707,7 +707,7 @@ def test_setup_full_imperial(hass, aioclient_mock):
     assert state.state == '0.433'
     assert state.attributes.get('unit_of_measurement') == LENGTH_INCHES
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather Precipitation in last 3 hours"
+        "NOAA Weather Precipitation in Last 3 Hours"
 
     state = hass.states.get(
         'sensor.noaa_weather_kjfk_precipitationLast6Hours')
@@ -715,7 +715,7 @@ def test_setup_full_imperial(hass, aioclient_mock):
     assert state.state == '0.591'
     assert state.attributes.get('unit_of_measurement') == LENGTH_INCHES
     assert state.attributes.get('friendly_name') == \
-        "NOAA Weather Precipitation in last 6 hours"
+        "NOAA Weather Precipitation in Last 6 Hours"
 
     state = hass.states.get('sensor.noaa_weather_kjfk_relativeHumidity')
     assert state is not None
