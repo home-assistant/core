@@ -130,3 +130,10 @@ def mock_failed_bridge_fixture() -> Generator[None, Any, None]:
 
     for patcher in patchers:
         patcher.stop()
+
+
+@fixture(name='mock_api')
+def mock_api_fixture() -> Generator[CoroutineMock, Any, None]:
+    """Fixture for mocking aioswitcher.api.SwitcherV2Api."""
+    with patch('aioswitcher.api.SwitcherV2Api') as api_patch:
+        yield api_patch
